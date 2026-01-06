@@ -68,91 +68,284 @@ function s5Url(guid: string): string {
   return `https://store.bblcdn.com/s5/default/${guid}.jpg${S5_PARAMS}`;
 }
 
-// ========== HARDCODED S5 PRODUCT IMAGES ==========
-// These are manually extracted gallery images for each product line and color.
-// S5 images are loaded via JavaScript and CANNOT be scraped from static HTML.
-// 
-// ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║                    MANUAL S5 GUID EXTRACTION PROCESS                        ║
-// ╠══════════════════════════════════════════════════════════════════════════════╣
-// ║ 1. Open product page: https://us.store.bambulab.com/products/{product-slug} ║
-// ║ 2. Open DevTools (F12) → Network tab                                        ║
-// ║ 3. Filter by "s5" in the search box                                         ║
-// ║ 4. Click each color swatch one by one                                       ║
-// ║ 5. Find request to: store.bblcdn.com/s5/default/{GUID}.jpg                  ║
-// ║ 6. Copy the 32-character GUID                                               ║
-// ║ 7. Add below using: 'color name': s5Url('GUID'),                           ║
-// ╚══════════════════════════════════════════════════════════════════════════════╝
-//
-// KNOWN LIMITATIONS (DO NOT ATTEMPT):
-// - Firecrawl waitFor does NOT help - S5 images require actual clicks
-// - __NEXT_DATA__ JSON does NOT contain S5 image GUIDs
-// - Variant IDs (?id= param) also cannot be scraped - accepted limitation
-//
-// Format: 'product-slug' -> { 'color name': s5Url('GUID') }
-// Run Post Sync Check to identify which products still need S5 images.
-//
-// CURRENT STATUS (Updated 2026-01-05):
-// ✅ COMPLETE: abs-filament, pla-tough-upgrade, petg-hf, petg-translucent (43 colors)
-// ⏳ PENDING:  pla-basic-filament, pla-matte, pla-silk-upgrade, pla-translucent, etc. (~124 colors)
+// ========== COMPLETE S5 PRODUCT IMAGES FROM CSV DATA ==========
+// Full image and variant mappings imported from Bambu Lab CSV exports.
+// S5 images (1920px gallery photos) are loaded via JavaScript and mapped here.
+// Updated: 2026-01-06 with ~252 color variants across all product lines.
 
 const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
   
-  // ══════════════════════════════════════════════════════════════════════════════
-  // COMPLETE - S5 Images Verified ✅
-  // ══════════════════════════════════════════════════════════════════════════════
-  
-  // ========== ABS (12 COLORS - VERIFIED) ==========
-  'abs-filament': {
-    'silver': s5Url('69834a7536c540e489913a0f8e707e5e'),
-    'black': s5Url('cfdefec225e6430c82cbe2f8766b6f70'),
-    'white': s5Url('1ad485ff4a72413b90e944ffde4fa861'),
-    'bambu green': s5Url('910be80e4fcf43ddbd66c40773ecce0f'),
-    'orange': s5Url('25d7b833bf694c70b9ef3cd649f3cf36'),
-    'red': s5Url('95bd38c6dc604bdab7b3d2fc7b67e0ee'),
-    'blue': s5Url('3b2f526b80734e429d9a424e07f3c36b'),
-    'olive': s5Url('80cf6768c03d129dfa6a01ac67a5b402'),
-    'tangerine yellow': s5Url('7376d19b161f2a93a4051e47289d0505'),
-    'azure': s5Url('0be9a584b30358020d8706f2aa8ec9c2'),
-    'navy blue': s5Url('000878ce6144c05ffac949f66b05a18b'),
-    'purple': s5Url('a840092ea2804025a123e115128c1299'),
+  // ========== PLA BASIC (30 COLORS) ==========
+  'pla-basic-filament': {
+    'jade white': 'https://store.bblcdn.com/s5/default/7970a11e9efd4d7bbf844311b4d762d0/White.jpg',
+    'beige': 'https://store.bblcdn.com/s5/default/75cdc1ae23ff485d8beaee878fe5008d/Beige.jpg',
+    'light gray': 'https://store.bblcdn.com/s5/default/dd8fec641daf48aba395f4381854050b.jpg',
+    'yellow': 'https://store.bblcdn.com/s5/default/d0058bf2c9514848bd13e01daaf60cf9/Yellow.jpg',
+    'sunflower yellow': 'https://store.bblcdn.com/s5/default/cba0bc5670a54a2ca758f650e0cadef3.jpg',
+    'gold': 'https://store.bblcdn.com/s5/default/deaa615cc1ea48abbcaf4a9800ea7296/Gold.jpg',
+    'pumpkin orange': 'https://store.bblcdn.com/s5/default/02cd259e90ee478a8ad950ebc532a7bb.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/a921a98134db4e77ba4c082586134ff7/Orange.jpg',
+    'bright green': 'https://store.bblcdn.com/s5/default/817e47d8902a42ec9614c107eafcd46c.jpg',
+    'bambu green': 'https://store.bblcdn.com/s5/default/7bb5c68af8bf4272a9ac1becb5cd477e/Bambu_Green.jpg',
+    'mistletoe green': 'https://store.bblcdn.com/s5/default/66f4e06bad1345619420cbb451f4c29e.png',
+    'pink': 'https://store.bblcdn.com/s5/default/f77a12ba2c544176ae9efd79c280ca9d/Pink.jpg',
+    'hot pink': 'https://store.bblcdn.com/s5/default/66a39723b543411e977ec8401ed6f12a.jpg',
+    'magenta': 'https://store.bblcdn.com/s5/default/50d61704a9d64124883c9735354aa14d/Magenta.jpg',
+    'red': 'https://store.bblcdn.com/s5/default/a9c13adb72ec42869bbe50948963cafa/Red.jpg',
+    'maroon red': 'https://store.bblcdn.com/s5/default/2b000e0f1d89409f8590708c5b7ac9d7.jpg',
+    'purple': 'https://store.bblcdn.com/s5/default/a1d67c7010c14c98ab1cedba3b79a55e.jpg',
+    'indigo purple': 'https://store.bblcdn.com/s5/default/dba9abb0c0384470ae2ef48fce12ebd3.jpg',
+    'turquoise': 'https://store.bblcdn.com/s5/default/d58beab50fb249329ef1b9c4db157d0a.jpg',
+    'cyan': 'https://store.bblcdn.com/s5/default/cea66355392d4cec875fb6a281d1b23a.png',
+    'cobalt blue': 'https://store.bblcdn.com/s5/default/3a08b41d25264b4c909f5ab4b049b44c.jpg',
+    'blue': 'https://store.bblcdn.com/s5/default/549c42fa49304aa5ae018edc70de4245.jpg',
+    'brown': 'https://store.bblcdn.com/s5/default/af252a613983445dad5abe80c5677f61.png',
+    'cocoa brown': 'https://store.bblcdn.com/s5/default/c1819cba3bc6474bb8b91556931896b0.jpg',
+    'bronze': 'https://store.bblcdn.com/s5/default/4dec5d9b46ec434893d984414bea6785/Bronze.jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/309b3d9363564c4e9c4616954e701c84.png',
+    'silver': 'https://store.bblcdn.com/s5/default/3c765e0b85f343a5acac4bd479df6d8f/Sliver.jpg',
+    'blue grey': 'https://store.bblcdn.com/s5/default/73432425bbbd452eab3c1999c76d6cff.png',
+    'dark gray': 'https://store.bblcdn.com/s5/default/31b905e783b34a61a449a1bccd0cde2b/pla_basic_dark_gray.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/31f2cbb9d9bc473894322fa464ea63d2.png',
   },
   
-  // ========== PLA TOUGH+ (8 COLORS - VERIFIED) ==========
+  // ========== PLA MATTE (25 COLORS) ==========
+  'pla-matte': {
+    'matte ivory white': 'https://store.bblcdn.com/s5/default/40dfc4b889e34f97b06e2980104c6c52/Matte-Ivory-White-.png',
+    'matte bone white': 'https://store.bblcdn.com/s5/default/17f20253468641e09ed65498310e26b2/7.jpg',
+    'matte lemon yellow': 'https://store.bblcdn.com/s5/default/0f33185fa699431d935b5b7dfcaa2915/Matte-Lemon-Yellow.png',
+    'matte mandarin orange': 'https://store.bblcdn.com/s5/default/2d60cdd7ff1e419ab45fcb5672e88b06/Matte-Mandarin-Orange.png',
+    'matte sakura pink': 'https://store.bblcdn.com/s5/default/4a136256e904463e83d6379496bf770d/Matte-Sakura-Pink.png',
+    'matte lilac purple': 'https://store.bblcdn.com/s5/default/7421d5d2a4af459f94b925519f9f9f0d/Matte-Lilac-purple.png',
+    'matte plum': 'https://store.bblcdn.com/s5/default/0396ee1531694c7199a973e19ad12a21/6.jpg',
+    'matte scarlet red': 'https://store.bblcdn.com/s5/default/b7693e3cc1d34ad4aa381913334ecd2d/Matte-Scarlet-Red.png',
+    'matte dark red': 'https://store.bblcdn.com/s5/default/32dd07d0d63a4781b1f757cb10b4c54f/Matte-Dark-Red.png',
+    'matte apple green': 'https://store.bblcdn.com/s5/default/5d7a744633fe4f61a133a86030dee9a3/2.jpg',
+    'matte grass green': 'https://store.bblcdn.com/s5/default/466a72ae34194f7f91a267770311e78a/Matte-Grass-Green.png',
+    'matte dark green': 'https://store.bblcdn.com/s5/default/153bb3ac156f44729df5b9b5c4d200de/Matte-Dark-Green.png',
+    'matte ice blue': 'https://store.bblcdn.com/s5/default/6681ea227f9840dc9e4b683df4aa2948/Matte-Ice-Blue.png',
+    'matte sky blue': 'https://store.bblcdn.com/s5/default/da2acfb4820042d99bf05b96b1832312/4.jpg',
+    'matte marine blue': 'https://store.bblcdn.com/s5/default/61cc94fa86d743bfb20f329fdd2bbd24/Matte-Marine-Blue.png',
+    'matte dark blue': 'https://store.bblcdn.com/s5/default/5b6c58d0094c456c9d81ff28908dc4ea/Matte-Dark-Blue.png',
+    'matte desert tan': 'https://store.bblcdn.com/s5/default/27e1b0a7d0f44aa0b741ef2b379272ed/Matte-Desert-Tan.png',
+    'matte latte brown': 'https://store.bblcdn.com/s5/default/a91809bf094d446981d81f685543a4b8/Matte-Latte-Brown.png',
+    'matte caramel': 'https://store.bblcdn.com/s5/default/23575c1bb53f4eb08a499ec1d5bbddda/8.jpg',
+    'matte terracotta': 'https://store.bblcdn.com/s5/default/9c5bc08717724172bcc6c9b6f5730559/5.jpg',
+    'matte dark brown': 'https://store.bblcdn.com/s5/default/be277b5f414d4dfab7db1080684ddfb5/Matte-Dark-Brown.png',
+    'matte dark chocolate': 'https://store.bblcdn.com/s5/default/937243c9769645efa11c1e0c539ebf3d/3.jpg',
+    'matte ash gray': 'https://store.bblcdn.com/s5/default/179b30bca747418f9a013cb0a8a17bbc/Matte-Ash-Grey.png',
+    'matte nardo gray': 'https://store.bblcdn.com/s5/default/5dd5c23fefdf4dbda7b6dd51dcd1e375/1.jpg',
+    'matte charcoal': 'https://store.bblcdn.com/s5/default/a1b596fe17af44feb9b6af51c3b6985d.png',
+  },
+  
+  // ========== PLA SILK+ (14 COLORS) ==========
+  'pla-silk-upgrade': {
+    'gold': 'https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg',
+    'titan gray': 'https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg',
+    'silver': 'https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/46aa65c617a8471da4a01cd51f2478ff.jpg',
+    'candy red': 'https://store.bblcdn.com/s5/default/d2008538df9e401e9644bfbfdf1179ac.jpg',
+    'candy green': 'https://store.bblcdn.com/s5/default/1865fd2939f745ecb89e2bf1a6e22ef7.jpg',
+    'mint': 'https://store.bblcdn.com/s5/default/6d7357a7390f4873b2d12157ee9ddd09.jpg',
+    'blue': 'https://store.bblcdn.com/s5/default/d08a4e3e041540cf9589c141a8e79a57.jpg',
+    'baby blue': 'https://store.bblcdn.com/s5/default/66beef322ddf42899a5f77f214b044d5.jpg',
+    'purple': 'https://store.bblcdn.com/s5/default/7a6ee2f6ea6a4b0193f123ab3a751898.jpg',
+    'rose gold': 'https://store.bblcdn.com/s5/default/7e807e841fe144a993b4bd5947d56d8b.jpg',
+    'pink': 'https://store.bblcdn.com/s5/default/65f72225705a4475aae0f8ba03625a1d.jpg',
+    'champagne': 'https://store.bblcdn.com/s5/default/ce958f3221c342e991a84630752e1c1d.jpg',
+  },
+  
+  // ========== PLA TRANSLUCENT (10 COLORS) ==========
+  'pla-translucent': {
+    'teal': 'https://store.bblcdn.com/s5/default/de999706468b4dc789eaa824a1620d41/teal.jpg',
+    'blue': 'https://store.bblcdn.com/s5/default/0b2e1841d10641febaabd76ca2a49f05/blue.jpg',
+    'purple': 'https://store.bblcdn.com/s5/default/caef5b3b1d944237bb2a560d5a3755aa/purple.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/4dd0599950a144148ddb845464fdc523/orange.jpg',
+    'red': 'https://store.bblcdn.com/s5/default/b97af19b96de46808b70617ef07f1661/red.jpg',
+    'light jade': 'https://store.bblcdn.com/s5/default/bd6e1981756d4390ba3170934f39dd54/Jade_green.jpg',
+    'mellow yellow': 'https://store.bblcdn.com/s5/default/8873b26c250842ef95f31ec753706a1b/mellow_yellow.jpg',
+    'cherry pink': 'https://store.bblcdn.com/s5/default/58122afc27cd4f138b3b2155f477c033/pink.jpg',
+    'ice blue': 'https://store.bblcdn.com/s5/default/c7a17dc886ba43ee99f8e23b9edf67cd/light_blue.jpg',
+    'lavender': 'https://store.bblcdn.com/s5/default/3a9edfa64b0a4a3cb1a1c88d71fbf238/lavender.jpg',
+  },
+  
+  // ========== PLA TOUGH+ (7 COLORS) ==========
   'pla-tough-upgrade': {
-    'black': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(1).jpg',
-    'white': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(2).jpg',
     'yellow': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(3).jpg',
-    'orange': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(4).jpg',
-    'gray': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(5).jpg',
-    'silver': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(6).jpg',
-    'cyan': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(7).jpg',
-    'red': 'https://store.bblcdn.com/s5/default/12ef1d98dc1e4b3e898f5bbc43dc6bbe/PLA_Tough_(8).jpg',
+    'white': 'https://store.bblcdn.com/s5/default/495f8100d89748a0bd78a3edd1571363/PLA_Tough_new.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/6284216b491247c687bbe0ad54438faa/PLA_Tough_(5).jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/fbcf9bab4663410d95709ceb729d4832/PLA_Tough_(1).jpg',
+    'silver': 'https://store.bblcdn.com/s5/default/020e0eb613d64bb794cfdea8d8b5f8b3/PLA_Tough_(2).jpg',
+    'cyan': 'https://store.bblcdn.com/s5/default/5cd2ccae43f2455b93e7df8587236d98/PLA_Tough_(4).jpg',
+    'black': 'https://store.bblcdn.com/s5/default/50ca04c59cc0464e8af86ed8293cf2ab/PLA_Tough_(2).jpg',
   },
   
-  // ========== PETG HF (14 COLORS - VERIFIED) ==========
+  // ========== PLA BASIC GRADIENT (8 COLORS) ==========
+  'pla-basic-gradient': {
+    'ocean to meadow': 'https://store.bblcdn.com/s5/default/878d72da5fee4e3296223db1ff2fa4e1.png',
+    'solar breeze': 'https://store.bblcdn.com/s5/default/64ab0bb38a4a41e48c79d3b60463e8b5.png',
+    'arctic whisper': 'https://store.bblcdn.com/s5/default/140159e159274822b3299cf9cf7bfe1c.png',
+    'pink citrus': 'https://store.bblcdn.com/s5/default/8444baddd48343b986c22239d571a22a/pink_gradient.jpg',
+    'mint lime': 'https://store.bblcdn.com/s5/default/8c10cd9963b1430591cec5e49d32a042/gradient_green.jpg',
+    'dusk glare': 'https://store.bblcdn.com/s5/default/ca4bd4a34b4c46a4860bd6dd75b29f31/sunset_orange.jpg',
+    'blueberry bubblegum': 'https://store.bblcdn.com/s5/default/8d9986037d04400098975045192b1034/bluebuble.jpg',
+    'cotton candy cloud': 'https://store.bblcdn.com/s5/default/79a2bacb10694741afcb424a3ca4ca3c/pink_blue.jpg',
+  },
+  
+  // ========== PLA WOOD (6 COLORS) ==========
+  'pla-wood': {
+    'black walnut': 'https://store.bblcdn.com/s5/default/a651dc64a2e14f1c8e85d6149bc7bdb3/4.jpg',
+    'rosewood': 'https://store.bblcdn.com/s5/default/6dc2ca14c2624f1bb182986aa6375687.jpg',
+    'clay brown': 'https://store.bblcdn.com/s5/default/1375e942e3d04f87a542c520368badff.jpg',
+    'classic birch': 'https://store.bblcdn.com/s5/default/864fe622e7974d069131b6629eda7e62.jpg',
+    'white oak': 'https://store.bblcdn.com/s5/default/cd1e7de8960046d0a67173cb37407b4e.jpg',
+    'ochre yellow': 'https://store.bblcdn.com/s5/default/32535a441fc84096a39671ef7f6eb851.jpg',
+  },
+  
+  // ========== PLA MARBLE (2 COLORS) ==========
+  'pla-marble': {
+    'red granite': 'https://store.bblcdn.com/s5/default/79b1d2427e4047649c730f2605f45354.jpg',
+    'white marble': 'https://store.bblcdn.com/s5/default/ca48e1d56ed042b7920cba9912fe5977.png',
+  },
+  
+  // ========== PLA METAL (5 COLORS) ==========
+  'pla-metal': {
+    'cobalt blue metallic': 'https://store.bblcdn.com/s5/default/9887878fdd43434489672eac577a07f3.png',
+    'oxide green metallic': 'https://store.bblcdn.com/s5/default/14d829a49ad443e59bddde42c8f6563c.png',
+    'iridium gold metallic': 'https://store.bblcdn.com/s5/default/a75ba62b433f4e80b419963e05ae0559.png',
+    'copper brown metallic': 'https://store.bblcdn.com/s5/default/168313f3cb3542a0984a00379835a607.png',
+    'iron gray metallic': 'https://store.bblcdn.com/s5/default/1fdb0b2166d3450ea180a6c83d4acbc6.png',
+  },
+  
+  // ========== PLA SILK MULTI-COLOR (10 COLORS) ==========
+  'pla-silk-multi-color': {
+    'dawn radiance': 'https://store.bblcdn.com/s5/default/48bb4b91869a4835b05317e88ebae109/Dawn_Radiance.jpg',
+    'aurora purple': 'https://store.bblcdn.com/s5/default/43b23563e3aa47fd89b26b74e2add471/Aurora_Purple_(1).jpg',
+    'south beach': 'https://store.bblcdn.com/s5/default/f1858c209fc947058c5062c720821f86/South_Beach.jpg',
+    'phantom blue': 'https://store.bblcdn.com/s5/default/722ffc6e2d6d4df58e3ce07394d17883/Phantom_Blue.jpg',
+    'mystic magenta': 'https://store.bblcdn.com/s5/default/d21fe6ca88104f9e9ff326a54a9defc7/Mystic_Magenta.jpg',
+    'velvet eclipse': 'https://store.bblcdn.com/s5/default/1a4e746a1e2b4ac290422b59df762e5f/Silk_Dual_Color_Black-red.jpg',
+    'neon city': 'https://store.bblcdn.com/s5/default/ed18d828ff054d8faca76bb37f0d6ba3.png',
+    'midnight blaze': 'https://store.bblcdn.com/s5/default/9e1569bbc0c24d188278222724abc277.png',
+    'gilded rose': 'https://store.bblcdn.com/s5/default/3fb0e2cef1d9482fa4156720ea7e87a2.png',
+    'blue hawaii': 'https://store.bblcdn.com/s5/default/f214dc0e30274035bf68151d284eafc6.png',
+  },
+  
+  // ========== PLA GALAXY (4 COLORS) ==========
+  'pla-galaxy': {
+    'purple': 'https://store.bblcdn.com/s5/default/6b3d4f9560514b32baf0a5520fcaba03.jpg',
+    'green': 'https://store.bblcdn.com/s5/default/c07ade42987e4d12b8d662e9ac7ca2e8.jpg',
+    'nebulae': 'https://store.bblcdn.com/s5/default/b9a8183bc6fe466d8237c68c2cd38a04.jpg',
+    'brown': 'https://store.bblcdn.com/s5/default/37f0e6e45d3d4f81991230198009dfd1.jpg',
+  },
+  
+  // ========== PLA GLOW (5 COLORS) ==========
+  'pla-glow': {
+    'glow green': 'https://store.bblcdn.com/s5/default/565869eeaeea4c709e2c5bc999af0a7e.png',
+    'glow pink': 'https://store.bblcdn.com/s5/default/fd8da84c11f644aebb543fbf808e4781.png',
+    'glow blue': 'https://store.bblcdn.com/s5/default/471fa997fa0543c1b0dffb1ffe0f0918.png',
+    'glow orange': 'https://store.bblcdn.com/s5/default/24e492c5a648473d90afeccb6123dd81.png',
+    'glow yellow': 'https://store.bblcdn.com/s5/default/dd226454d6204bdc85ae0454d80136a9.png',
+  },
+  
+  // ========== PLA SPARKLE (6 COLORS) ==========
+  'pla-sparkle': {
+    'alpine green sparkle': 'https://store.bblcdn.com/s5/default/8806b580276b46909df6385cff766b82.png',
+    'royal purple sparkle': 'https://store.bblcdn.com/s5/default/c2afb75286da4c9f9c299e24f0672984.png',
+    'slate gray sparkle': 'https://store.bblcdn.com/s5/default/c088bfa5936b4a35a3a421b9103c3631.png',
+    'crimson red sparkle': 'https://store.bblcdn.com/s5/default/faf72eb685014a1b94f4048c2388fe0a.png',
+    'onyx black sparkle': 'https://store.bblcdn.com/s5/default/ab419f89d31f4d9d956bc9d460abf2e0.png',
+    'classic gold sparkle': 'https://store.bblcdn.com/s5/default/45ba44449cfe40498a990f840858ae33.png',
+  },
+  
+  // ========== PLA-CF (7 COLORS) ==========
+  'pla-cf': {
+    'burgundy red': 'https://store.bblcdn.com/s5/default/15b97e3be198436e8ba8f7c7bf6ec910.png',
+    'jeans blue': 'https://store.bblcdn.com/s5/default/5f2ba769905f4acb9670e708ed025839.png',
+    'black': 'https://store.bblcdn.com/s5/default/d2e469d4f653454c810ac76aca6c4cf6.jpg',
+    'matcha green': 'https://store.bblcdn.com/s5/default/1fe4624c3f0a4149a2aaf60ca3642554.png',
+    'royal blue': 'https://store.bblcdn.com/s5/default/d279be5472374d4b89a9cbe04be1f397/20250710-180051.jpg',
+    'iris purple': 'https://store.bblcdn.com/s5/default/3473d73b325f40c484cee7dd573f6734.png',
+    'lava gray': 'https://store.bblcdn.com/s5/default/5b745a9c346e4205842ef99960dec7b2.png',
+  },
+  
+  // ========== PLA AERO (3 COLORS) ==========
+  'pla-aero': {
+    'white': 'https://store.bblcdn.com/s5/default/3b112ca34ea34dc5a11d7ca0725dcac0.png',
+    'black': 'https://store.bblcdn.com/s5/default/e80bdfdf32f34e4094d001a055595efa.png',
+    'gray': 'https://store.bblcdn.com/s5/default/6407f12c15cf4debb06de690378be64d.png',
+  },
+  
+  // ========== ABS (11 COLORS) ==========
+  'abs-filament': {
+    'black': 'https://store.bblcdn.com/s5/default/ef66b79717594fd7a32316968fbf7ac4.png',
+    'silver': 'https://store.bblcdn.com/s5/default/9cae91f6f14d4672bad03466e8fc0905.png',
+    'white': 'https://store.bblcdn.com/s5/default/dcc84bbb1ebb4feab8e7fa3c6776d603.png',
+    'bambu green': 'https://store.bblcdn.com/s5/default/ac47548b54224e6297d49459802405a7.png',
+    'olive': 'https://store.bblcdn.com/s5/default/a0d6c3c3f0ce4d94a1b50c3a0c746760.jpg',
+    'azure': 'https://store.bblcdn.com/s5/default/24c01cdd00994022b35a676e2241c943.jpg',
+    'blue': 'https://store.bblcdn.com/s5/default/ca8b7ba4f03243d1af97c06ec01d5100.png',
+    'navy blue': 'https://store.bblcdn.com/s5/default/ffe1ffc6768f49cf958439e67f98409b.jpg',
+    'tangerine yellow': 'https://store.bblcdn.com/s5/default/a8fce7027f1f4ba2b9aff377ed99a5bf.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png',
+    'red': 'https://store.bblcdn.com/s5/default/a612a441405449059b5e9215e9b4845d.png',
+  },
+  
+  // ========== ASA (6 COLORS) ==========
+  'asa-filament': {
+    'white': 'https://store.bblcdn.com/s5/default/28d11722c1a1469cb1a51f43ddb41eec.png',
+    'green': 'https://store.bblcdn.com/s5/default/8a16887420444668817786f11d2fbd52.png',
+    'gray': 'https://store.bblcdn.com/s5/default/f46c0c69f82f4e879b2ee646407a27d1.png',
+    'red': 'https://store.bblcdn.com/s5/default/9b4054cc41a34801be8ec4a8e7602edc.png',
+    'blue': 'https://store.bblcdn.com/s5/default/a97e97298dd0402cbed9a33bcc29b397.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/578073ead4ac45f3aededbecd91cc46e.png',
+  },
+  
+  // ========== ASA AERO (1 COLOR) ==========
+  'asa-aero': {
+    'white': 'https://store.bblcdn.com/s5/default/807083f9279e4ef68649dcbb243eddad.png',
+  },
+  
+  // ========== ABS-GF (8 COLORS) ==========
+  'abs-gf': {
+    'orange': 'https://store.bblcdn.com/s5/default/3091595109624a5da5d5aac0f4ffc716.png',
+    'green': 'https://store.bblcdn.com/s5/default/61deac40ee24437fad189458a3295569.png',
+    'red': 'https://store.bblcdn.com/s5/default/cdabf4b8ab65424798c99ac4b007245c.png',
+    'yellow': 'https://store.bblcdn.com/s5/default/5fab889759e040d6ba560e788d7531c5.png',
+    'blue': 'https://store.bblcdn.com/s5/default/59e0677eca7649aeae8cbc1fb6791c47.png',
+    'white': 'https://store.bblcdn.com/s5/default/60c69eb3f4664444ad13f1816c7c74da.png',
+    'gray': 'https://store.bblcdn.com/s5/default/2ec79ec301114b26a13811f7a1d54208.png',
+    'black': 'https://store.bblcdn.com/s5/default/2408b10ddd994f69982c8506e1d730a8.png',
+  },
+  
+  // ========== ASA-CF (1 COLOR) ==========
+  'asa-cf': {
+    'black': 'https://store.bblcdn.com/s5/default/390a51b2d4834c34930bc3781a0ed13d.jpg',
+  },
+  
+  // ========== PETG HF (14 COLORS) ==========
   'petg-hf': {
-    'black': 'https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg',
-    'white': 'https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg',
     'red': 'https://store.bblcdn.com/s5/default/7de1911f91d34be280040a4ef84fdbd2.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/6583fc4c677b47c78a79b5af54707241.jpg',
+    'lake blue': 'https://store.bblcdn.com/s5/default/88d2cf2480094d6cbbba24a6751eb943.jpg',
+    'blue': 'https://store.bblcdn.com/s5/default/729f2d6de88b4001938dcf49c97c2d8c.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/6f0f3ffb6bdb459f97d0f44a6d83fbf6.jpg',
     'gray': 'https://store.bblcdn.com/s5/default/22729c93daef4e0293f50584690457d0.jpg',
     'dark gray': 'https://store.bblcdn.com/s5/default/d96a3ffe711444f0a4d4b734f1519537.jpg',
     'cream': 'https://store.bblcdn.com/s5/default/132b2c639d284831ad3a65a5a2450ab3.jpg',
     'yellow': 'https://store.bblcdn.com/s5/default/695dad0142ca4d0c8ca64cd2cf5eaa6f.jpg',
-    'orange': 'https://store.bblcdn.com/s5/default/048a5c2661644b849a6a955ccde1a877.jpg',
-    'peanut brown': 'https://store.bblcdn.com/s5/default/a27c74b9bf7741b581ac70bfcb5e82f9.jpg',
     'lime green': 'https://store.bblcdn.com/s5/default/3eeb673909be49ae8cb99bd18f365614.jpg',
     'green': 'https://store.bblcdn.com/s5/default/9bd37be5d1b24bfb940af905904e7145.jpg',
     'forest green': 'https://store.bblcdn.com/s5/default/327777e6ed004cb0820532eb7e263a2d.jpg',
-    'lake blue': 'https://store.bblcdn.com/s5/default/88d2cf2480094d6cbbba24a6751eb943.jpg',
-    'blue': 'https://store.bblcdn.com/s5/default/729f2d6de88b4001938dcf49c97c2d8c.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/048a5c2661644b849a6a955ccde1a877.jpg',
+    'peanut brown': 'https://store.bblcdn.com/s5/default/a27c74b9bf7741b581ac70bfcb5e82f9.jpg',
   },
   
-  // ========== PETG TRANSLUCENT (9 COLORS - VERIFIED) ==========
+  // ========== PETG TRANSLUCENT (9 COLORS) ==========
   'petg-translucent': {
-    'translucent teal': 'https://store.bblcdn.com/s5/default/ffa37db2ff474b71b142f6f3225c7ded.jpg',
     'translucent light blue': 'https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg',
-    'clear': 'https://store.bblcdn.com/s5/default/1a74ea492a6f4b8ea23c7d84b145d316.png',
+    'translucent teal': 'https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg',
+    'clear': 'https://store.bblcdn.com/s5/default/2e8d7b9c2a4147da979f544f73f85fb5.jpg',
     'translucent gray': 'https://store.bblcdn.com/s5/default/18fb283d551c418f9246a22beec492ce.jpg',
     'translucent olive': 'https://store.bblcdn.com/s5/default/8534fe998fa145aeb6599bf16827cf58.jpg',
     'translucent brown': 'https://store.bblcdn.com/s5/default/2c6abde5b9bd4184a9a1ecf31be06500.jpg',
@@ -161,149 +354,467 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'translucent purple': 'https://store.bblcdn.com/s5/default/d437c0bf73fa4bbdadf3b3a8f139e8b0.jpg',
   },
   
-  // ══════════════════════════════════════════════════════════════════════════════
-  // PENDING - Need Manual S5 GUID Extraction ⏳
-  // Use DevTools Network tab to capture GUIDs when clicking color swatches
-  // ══════════════════════════════════════════════════════════════════════════════
-  
-  // ========== PLA BASIC (30 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-basic-filament
-  // Known colors: Jade White, Ivory White, Black, Beige, Silver, Orange, Yellow, 
-  //               Green, Grass Green, Mint Green, Lake Blue, Blue, Light Blue,
-  //               Navy Blue, Lavender, Purple, Magenta, Sakura Pink, Red, 
-  //               Wine Red, Pink, Brown, Camel, Coffee, Chocolate, Gray, 
-  //               Dark Gray, Olive, Bamboo Green, Mandarin Orange
-  'pla-basic-filament': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-    // Example: 'jade white': s5Url('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'),
+  // ========== PETG-CF (6 COLORS) ==========
+  'petg-cf': {
+    'indigo blue': 'https://store.bblcdn.com/s5/default/dd18987197f54eaca8cd318713c76786.png',
+    'brick red': 'https://store.bblcdn.com/s5/default/66bb180e5ad84cb3ad3ebad78c293c7d.png',
+    'malachite green': 'https://store.bblcdn.com/s5/default/cefecfa081164b9fb8092bcfa088acfc.png',
+    'violet purple': 'https://store.bblcdn.com/s5/default/d4702770b8b24ea796481285ab816c62.png',
+    'black': 'https://store.bblcdn.com/s5/default/093c156eacd8427d81bdceae6f9e07cc.png',
+    'titan gray': 'https://store.bblcdn.com/s5/default/b385924c792c421f87f277db246f70e8.png',
   },
   
-  // ========== PLA MATTE (24 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-matte
-  // Known colors: Charcoal, Dark Gray, Ash Gray, Silver, Ivory White, Lilac, 
-  //               Sakura Pink, Coral Pink, Candy, Mandarin Orange, Lemon Yellow,
-  //               Light Green, Teal, Aquamarine, Gray Blue, Lake Blue, Prussian Blue,
-  //               Ink Blue, Deep Blue, Lavender, Purple, Wine Red, Scarlet Red, Brown
-  'pla-matte': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA SILK+ (13 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-silk-upgrade
-  // Known colors: White, Black, Pink, Red, Orange, Yellow, Gold, Cyan, 
-  //               Blue, Dark Blue, Green, Purple, Silver
-  'pla-silk-upgrade': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA TRANSLUCENT (10 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-translucent
-  'pla-translucent': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA SILK MULTI-COLOR (5 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-silk-multicolor
-  'pla-silk-multicolor': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA BASIC GRADIENT (3 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-basic-gradient
-  'pla-basic-gradient': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA SPARKLE (6 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-sparkle
-  'pla-sparkle': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA METAL (5 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-metal
-  'pla-metal': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA GALAXY (3 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-galaxy
-  'pla-galaxy': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA WOOD (4 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-wood
-  'pla-wood': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA GLOW (5 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-glow
-  'pla-glow': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA MARBLE (2 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-marble
-  'pla-marble': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PLA-CF (7 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pla-cf
-  'pla-cf': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PETG BASIC (10 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/petg-basic
-  'petg-basic': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== SUPPORT FOR PLA (2 COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/support-for-pla
-  'support-for-pla': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== SUPPORT W (1 COLOR - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/support-w
-  'support-w': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== TPU 95A (COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/tpu-95a
-  'tpu-95a': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== ASA (COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/asa
-  'asa': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
-  },
-  
-  // ========== PAHT-CF (COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/paht-cf
+  // ========== PA/PET CARBON FIBER MATERIALS ==========
   'paht-cf': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
+    'black': 'https://store.bblcdn.com/s5/default/da8ee1568bb047c8ba323aba59c84bc0.png',
   },
-  
-  // ========== PA6-CF (COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pa6-cf
   'pa6-cf': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
+    'black': 'https://store.bblcdn.com/s5/default/3f8b8df4ab4f465db6d9b708ef8ecf1d.png',
+  },
+  'ppa-cf': {
+    'black': 'https://store.bblcdn.com/s5/default/3c2707912a164dbf8d26a1d3b62f0cbc.jpg',
+  },
+  'pet-cf': {
+    'black': 'https://store.bblcdn.com/s5/default/9afaf33071dc472e8fa3dfcb1d180207.png',
   },
   
-  // ========== PET-CF (COLORS - PENDING) ==========
-  // URL: https://us.store.bambulab.com/products/pet-cf
-  'pet-cf': {
-    // TODO: Extract S5 GUIDs via DevTools Network tab
+  // ========== PA6-GF (8 COLORS) ==========
+  'pa6-gf': {
+    'blue': 'https://store.bblcdn.com/s5/default/7251e7b0c57849d6a884668235e2c755.jpg',
+    'orange': 'https://store.bblcdn.com/s5/default/943e919667e4432b83ba53c4e3131732.jpg',
+    'yellow': 'https://store.bblcdn.com/s5/default/5cdd66fb3220432fbe7afb3c5cb118d3.jpg',
+    'lime': 'https://store.bblcdn.com/s5/default/a45ca49d1266499c8b271006e9a0a319.jpg',
+    'brown': 'https://store.bblcdn.com/s5/default/b0d043d7e72849f193f1bfbac25ca32e.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/b831c50b9af24d0fbfc861440bf2fd11.jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/9be99001191043b5a72da2e47ad25b51.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/c0ccfcf3506f4422bb447011137b06ea.jpg',
+  },
+  
+  // ========== PC (4 COLORS) ==========
+  'pc-filament': {
+    'transparent': 'https://store.bblcdn.com/s5/default/6bfeaa5bb9b448d4ba5209f855a1fd45.png',
+    'clear black': 'https://store.bblcdn.com/s5/default/3139f2baabf844be82cb72ef4f3615f0.png',
+    'black': 'https://store.bblcdn.com/s5/default/1c2f810f750a4a4cb95556c857a12a14.png',
+    'white': 'https://store.bblcdn.com/s5/default/0ba5c1ca13d3436db5bc30e1e96b27f2.jpg',
+  },
+  
+  // ========== PC FR (3 COLORS) ==========
+  'pc-fr': {
+    'black': 'https://store.bblcdn.com/s5/default/22fe535b9d3a49009285c46cff19e8ce/PC-FR.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/8ba623955ace4030a2c9fbb9546f9664.jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/e4a38f08a41147508f16d7bb0960c0cc.jpg',
+  },
+  
+  // ========== PPS-CF (1 COLOR) ==========
+  'pps-cf': {
+    'black': 'https://store.bblcdn.com/s5/default/a6da81c992134feebb407601ce257cb6.png',
+  },
+  
+  // ========== SUPPORT MATERIALS ==========
+  'pva': {
+    'clear': 'https://store.bblcdn.com/s5/default/9e8efe4a411a461eb30248adf214376e.jpg',
+  },
+  'support-for-pla-petg': {
+    'nature': 'https://store.bblcdn.com/s5/default/df26d3f606fc46d4bcef831a68970a62.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/44c2b363bdc041d6914a06e8e1b6074f.png',
+  },
+  'support-for-pla-new': {
+    'white': 'https://store.bblcdn.com/s5/default/96eb9ffa49c642bfb10e53f894c371ce/Support_3.png',
+  },
+  'support-for-pa-pet': {
+    'green': 'https://store.bblcdn.com/s5/default/0b3988046cff450d9709fc02db46ae9a.png',
+  },
+  'support-for-abs': {
+    'white': 'https://store.bblcdn.com/s5/default/de2c87dc362a4fbba85e893ef033f64e.png',
+  },
+  
+  // ========== TPU 90A (7 COLORS) ==========
+  'tpu-85a-tpu-90a': {
+    'frozen': 'https://store.bblcdn.com/s5/default/65d73fc03c7c4ef5a5f82ecda434d172/TPU_90_Frozen.jpg',
+    'blaze': 'https://store.bblcdn.com/s5/default/a09b4a9822744b92ab48369ef33bd7fd/TPU_90_Blaze.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/4ac3c59e99f94ddd829c3e985babf67b/TPU_90_White.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/ec10a06daac54460815acbfcfcfcf855/TPU_90_BK.png',
+    'grape jelly': 'https://store.bblcdn.com/s5/default/3c6c9faf544b4215957e0f98cc6d0893/grape_jelly.jpg',
+    'crystal blue': 'https://store.bblcdn.com/s5/default/04c5c9bc12e1487e8ec46933366c05f6/Crystal_Blue.jpg',
+    'cocoa brown': 'https://store.bblcdn.com/s5/default/81d60d015e7244efac0dac1ebc305791/Cocoa_Brown.jpg',
+    'neon orange': 'https://store.bblcdn.com/s5/default/216263b0e121477aae18fabdfcee5c1e/TPU_85_Orange.jpg',
+    'light cyan': 'https://store.bblcdn.com/s5/default/75540b9c97814cdabfa1b7c3f5c83987/TPU_85_Cyan.jpg',
+    'flesh': 'https://store.bblcdn.com/s5/default/52a8b71537484b7699b1fc382f11b86c/flesh.jpg',
+    'lime green': 'https://store.bblcdn.com/s5/default/bd0a1f7267764201bd791898682ee269/lime_green_(2).jpg',
+  },
+  
+  // ========== TPU 95A HF (6 COLORS) ==========
+  'tpu-95a-hf': {
+    'white': 'https://store.bblcdn.com/s5/default/813162934f57427b9f20297951ad8f56.png',
+    'black': 'https://store.bblcdn.com/s5/default/5d33093564274d6db3d593a6593dc793.png',
+    'gray': 'https://store.bblcdn.com/s5/default/7ed342a8a4d6461fbdb7ef006bb70334.png',
+    'yellow': 'https://store.bblcdn.com/s5/default/17328c906d3242ff9c64c2565deabbdd.png',
+    'blue': 'https://store.bblcdn.com/s5/default/08947e6f9164421491100cf7518c6596.png',
+    'red': 'https://store.bblcdn.com/s5/default/7ce0823b9e214525bd98a6e19b7cf786.png',
+  },
+  
+  // ========== TPU FOR AMS (7 COLORS) ==========
+  'tpu-for-ams': {
+    'blue': 'https://store.bblcdn.com/s5/default/d4fb1dd751904e1ea09d142c68d7ec36.jpg',
+    'gray': 'https://store.bblcdn.com/s5/default/f5462676e1b7452db52b095a08421c65.jpg',
+    'black': 'https://store.bblcdn.com/s5/default/f0d51ead90a849b69aff4c607379d8ed.jpg',
+    'yellow': 'https://store.bblcdn.com/s5/default/44f427a876f244cfa6fa9379cecb9b92.jpg',
+    'red': 'https://store.bblcdn.com/s5/default/a71f20c06c6941359cc1f8cb008b8474.jpg',
+    'neon green': 'https://store.bblcdn.com/s5/default/e5506620dbeb4aa7b9e1c81c08d20d64.jpg',
+    'white': 'https://store.bblcdn.com/s5/default/2f9b5bd40c774fc0bc6e48885acd7e30.jpg',
   },
 };
+
+// ========== VARIANT ID MAPPING FOR BUY NOW URLS ==========
+// Maps product slug -> color name -> variant ID for ?id= URL parameter
+// Extracted from CSV data - enables direct "Buy Now" links to specific color variants
+const BAMBULAB_VARIANT_IDS: Record<string, Record<string, string>> = {
+  // ========== PLA BASIC ==========
+  'pla-basic-filament': {
+    'jade white': '43115681841392',
+    'beige': '43115681972464',
+    'light gray': '46498490810608',
+    'yellow': '43115682038000',
+    'sunflower yellow': '46741144043760',
+    'gold': '45421234356464',
+    'pumpkin orange': '46741154332912',
+    'orange': '43115681874160',
+    'bright green': '46741147582704',
+    'bambu green': '45421183172848',
+    'mistletoe green': '45421189890288',
+    'pink': '43115682103536',
+    'hot pink': '46741151580400',
+    'magenta': '45421069598960',
+    'red': '43115682201840',
+    'maroon red': '46741142012144',
+    'purple': '45421228327152',
+    'indigo purple': '46741145813232',
+    'turquoise': '46741145321712',
+    'cyan': '45421220069616',
+    'cobalt blue': '46741152792816',
+    'blue': '43115681906928',
+    'brown': '43115682169072',
+    'cocoa brown': '46741149778160',
+    'bronze': '45421242122480',
+    'gray': '43115681939696',
+    'silver': '43115682005232',
+    'blue grey': '43115682070768',
+    'dark gray': '46498490843376',
+    'black': '43766892298480',
+  },
+  // ========== PLA MATTE ==========
+  'pla-matte': {
+    'matte lemon yellow': '43135539970288',
+    'matte mandarin orange': '43135539904752',
+    'matte sakura pink': '43135539937520',
+    'matte lilac purple': '43135540166896',
+    'matte plum': '563882858931896335',
+    'matte scarlet red': '43135540101360',
+    'matte dark red': '45421267878128',
+    'matte apple green': '563882858931896347',
+    'matte grass green': '43135540035824',
+    'matte dark green': '45421272989936',
+    'matte ice blue': '43135540134128',
+    'matte sky blue': '563882858931896341',
+    'matte marine blue': '43135540199664',
+    'matte dark blue': '45421360218352',
+    'matte desert tan': '45869359038704',
+    'matte latte brown': '43135540068592',
+    'matte caramel': '563882858931896359',
+    'matte terracotta': '563882858931896365',
+    'matte dark brown': '45421259915504',
+    'matte dark chocolate': '563882858931896353',
+    'matte ash gray': '43135539871984',
+    'matte nardo gray': '563882858931896371',
+    'matte charcoal': '43135540003056',
+  },
+  // ========== PLA SILK+ ==========
+  'pla-silk-upgrade': {
+    'candy green': '542547831280767018',
+    'mint': '542547831280767048',
+    'blue': '542547831280767024',
+    'baby blue': '542547831280767042',
+    'purple': '542547831280767030',
+    'rose gold': '542547831280767036',
+    'pink': '542547831280767054',
+    'champagne': '542547831280767060',
+  },
+  // ========== PLA TRANSLUCENT ==========
+  'pla-translucent': {
+    'teal': '594048155633315855',
+    'blue': '594048155633315861',
+    'purple': '594048155633315867',
+    'orange': '594048155633315873',
+    'red': '594048155633315879',
+    'light jade': '594048155633315885',
+    'mellow yellow': '594048155633315891',
+    'cherry pink': '594048155633315897',
+    'ice blue': '594048155633315903',
+    'lavender': '594048155633315909',
+  },
+  // ========== PLA TOUGH+ ==========
+  'pla-tough-upgrade': {
+    'yellow': '624467991622688774',
+    'white': '624467991622688768',
+    'orange': '624467991622688780',
+    'gray': '624467991622688786',
+    'silver': '624467991622688792',
+    'cyan': '624467991622688798',
+    'black': '624467991622688804',
+  },
+  // ========== PLA BASIC GRADIENT ==========
+  'pla-basic-gradient': {
+    'ocean to meadow': '44159419875568',
+    'solar breeze': '44159419842800',
+    'arctic whisper': '44159419810032',
+    'pink citrus': '545401327678750737',
+    'mint lime': '545401327678750743',
+    'dusk glare': '548991610414206978',
+    'blueberry bubblegum': '545401327678750725',
+    'cotton candy cloud': '545401327678750731',
+  },
+  // ========== PLA WOOD ==========
+  'pla-wood': {
+    'black walnut': '46788372824304',
+    'rosewood': '46788372857072',
+    'clay brown': '46788372889840',
+    'classic birch': '46788372922608',
+    'white oak': '46788372955376',
+    'ochre yellow': '46788372988144',
+  },
+  // ========== PLA MARBLE ==========
+  'pla-marble': {
+    'red granite': '44106844307696',
+    'white marble': '43867392868592',
+  },
+  // ========== PLA METAL ==========
+  'pla-metal': {
+    'cobalt blue metallic': '43809123205360',
+    'oxide green metallic': '43809123172592',
+    'iridium gold metallic': '44106847617264',
+    'copper brown metallic': '43809123238128',
+    'iron gray metallic': '44106847584496',
+  },
+  // ========== PLA SILK MULTI-COLOR ==========
+  'pla-silk-multi-color': {
+    'dawn radiance': '601307620515315716',
+    'aurora purple': '601307620515315722',
+    'south beach': '601307620515315728',
+    'phantom blue': '665320242336288777',
+    'mystic magenta': '665320242336288771',
+    'velvet eclipse': '46816416792816',
+    'neon city': '44852088242416',
+    'midnight blaze': '44852088209648',
+    'gilded rose': '44852088176880',
+    'blue hawaii': '44852088275184',
+  },
+  // ========== PLA GALAXY ==========
+  'pla-galaxy': {
+    'purple': '45164872958192',
+    'green': '45164872892656',
+    'nebulae': '45164872925424',
+    'brown': '45164872859888',
+  },
+  // ========== PLA GLOW ==========
+  'pla-glow': {
+    'glow green': '44604961226992',
+    'glow pink': '44604961259760',
+    'glow blue': '44604961194224',
+    'glow orange': '44604961161456',
+    'glow yellow': '44604961292528',
+  },
+  // ========== PLA SPARKLE ==========
+  'pla-sparkle': {
+    'alpine green sparkle': '43809130086640',
+    'royal purple sparkle': '44106863968496',
+    'slate gray sparkle': '44106863935728',
+    'crimson red sparkle': '43809130119408',
+    'onyx black sparkle': '43809130152176',
+    'classic gold sparkle': '46130440372464',
+  },
+  // ========== PLA-CF ==========
+  'pla-cf': {
+    'jeans blue': '44083777569008',
+    'black': '43845906235632',
+    'matcha green': '44148855570672',
+    'royal blue': '44235357094128',
+    'iris purple': '44235357126896',
+    'lava gray': '44083777601776',
+  },
+  // ========== PLA AERO ==========
+  'pla-aero': {
+    'white': '44189333061872',
+    'black': '44189333094640',
+    'gray': '46352156623088',
+  },
+  // ========== ABS ==========
+  'abs-filament': {
+    'black': '43115678859504',
+    'silver': '46541030883568',
+    'white': '43115678892272',
+    'bambu green': '46130964955376',
+    'olive': '46311956513008',
+    'azure': '46311955202288',
+    'blue': '43115678990576',
+    'navy blue': '46311953203440',
+    'tangerine yellow': '46311958282480',
+    'orange': '46130970886384',
+    'red': '43115678925040',
+  },
+  // ========== ASA ==========
+  'asa-filament': {
+    'white': '44173925744880',
+    'green': '44173925646576',
+    'gray': '44173925777648',
+    'red': '44173925613808',
+    'blue': '44173925679344',
+    'black': '44173925712112',
+  },
+  // ========== ASA AERO ==========
+  'asa-aero': {
+    'white': '45647640101104',
+  },
+  // ========== ABS-GF ==========
+  'abs-gf': {
+    'orange': '45758386569456',
+    'green': '45758386667760',
+    'red': '45758386634992',
+    'yellow': '45758386602224',
+    'blue': '46010148454640',
+    'white': '45758386438384',
+    'gray': '45758386536688',
+    'black': '45758386503920',
+  },
+  // ========== ASA-CF ==========
+  'asa-cf': {
+    'black': '46611883360496',
+  },
+  // ========== PETG HF ==========
+  'petg-hf': {
+    'red': '46336540737776',
+    'black': '46336540803312',
+    'lake blue': '46547460489456',
+    'blue': '46336540934384',
+    'white': '46336540868848',
+    'gray': '46336540999920',
+    'dark gray': '46547453608176',
+    'cream': '46547456131312',
+    'yellow': '46336540541168',
+    'lime green': '46547458588912',
+    'green': '46336540672240',
+    'forest green': '46547440304368',
+    'orange': '46336540606704',
+    'peanut brown': '46547447644400',
+  },
+  // ========== PETG TRANSLUCENT ==========
+  'petg-translucent': {
+    'translucent olive': '46334027956464',
+    'translucent brown': '46352469885168',
+    'translucent orange': '46311964246256',
+    'translucent pink': '46311967850736',
+    'translucent purple': '46311965098224',
+  },
+  // ========== PETG-CF ==========
+  'petg-cf': {
+    'brick red': '44180162117872',
+    'malachite green': '44180162183408',
+    'violet purple': '44180162085104',
+    'black': '43887125266672',
+    'titan gray': '44326019367152',
+  },
+  // ========== PA6-GF ==========
+  'pa6-gf': {
+    'blue': '45444547805424',
+    'orange': '45444547838192',
+    'yellow': '45444547870960',
+    'lime': '45444547903728',
+    'brown': '45444547936496',
+    'white': '45444547969264',
+    'gray': '45444548002032',
+    'black': '45444548034800',
+  },
+  // ========== PPA-CF ==========
+  'ppa-cf': {
+    'black': '46498167718128',
+  },
+  // ========== PC ==========
+  'pc-filament': {
+    'transparent': '44080188621040',
+    'clear black': '44080188588272',
+    'black': '43584501842160',
+    'white': '43584501874928',
+  },
+  // ========== PC FR ==========
+  'pc-fr': {
+    'black': '546460344590610440',
+    'white': '546460344590610446',
+    'gray': '546460344590610452',
+  },
+  // ========== PPS-CF ==========
+  'pps-cf': {
+    'black': '46512619127024',
+  },
+  // ========== SUPPORT MATERIALS ==========
+  'pva': {
+    'clear': '45303868227824',
+  },
+  'support-for-pla-petg': {
+    'nature': '46214534594800',
+    'black': '46840425578736',
+  },
+  'support-for-pla-new': {
+    'white': '579081062845280263',
+  },
+  'support-for-pa-pet': {
+    'green': '43181727580400',
+  },
+  'support-for-abs': {
+    'white': '46333844160752',
+  },
+  // ========== TPU 85A/90A ==========
+  'tpu-85a-tpu-90a': {
+    'frozen': '573761482377510924',
+    'blaze': '573761482377510930',
+    'white': '672317379708768257',
+    'black': '573761482377510942',
+    'grape jelly': '679919043689914375',
+    'crystal blue': '679919043689914381',
+    'cocoa brown': '679919043689914387',
+    'neon orange': '668354619028484097',
+    'light cyan': '573761482377510954',
+    'flesh': '679919043689914399',
+    'lime green': '679919043689914405',
+  },
+  // ========== TPU 95A HF ==========
+  'tpu-95a-hf': {
+    'white': '44405012300016',
+    'black': '44405012201712',
+    'gray': '44405012332784',
+    'yellow': '44405012365552',
+    'blue': '44405012398320',
+    'red': '44405012431088',
+  },
+  // ========== TPU FOR AMS ==========
+  'tpu-for-ams': {
+    'gray': '46779647459568',
+    'black': '46779647492336',
+    'yellow': '46779647328496',
+    'red': '46779647295728',
+    'neon green': '46779647394032',
+    'white': '46779647426800',
+  },
+};
+
+/**
+ * Get variant-specific URL for a Bambu Lab product
+ * Uses the BAMBULAB_VARIANT_IDS mapping to append ?id= parameter
+ */
+function getVariantUrl(productSlug: string, colorName: string): string {
+  const normalizedColor = colorName.toLowerCase().trim();
+  const variantId = BAMBULAB_VARIANT_IDS[productSlug]?.[normalizedColor];
+  const baseUrl = `https://us.store.bambulab.com/products/${productSlug}`;
+  return variantId ? `${baseUrl}?id=${variantId}` : baseUrl;
+}
 
 // Legacy fallback - keeping for backwards compatibility
 const ABS_COLOR_IMAGES = S5_PRODUCT_IMAGES['abs-filament'] || {};
