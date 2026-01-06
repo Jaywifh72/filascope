@@ -276,7 +276,7 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'gray': 'https://store.bblcdn.com/s5/default/6407f12c15cf4debb06de690378be64d.png',
   },
   
-  // ========== ABS (11 COLORS) ==========
+  // ========== ABS (12 COLORS) ==========
   'abs-filament': {
     'black': 'https://store.bblcdn.com/s5/default/ef66b79717594fd7a32316968fbf7ac4.png',
     'silver': 'https://store.bblcdn.com/s5/default/9cae91f6f14d4672bad03466e8fc0905.png',
@@ -289,6 +289,7 @@ const S5_PRODUCT_IMAGES: Record<string, Record<string, string>> = {
     'tangerine yellow': 'https://store.bblcdn.com/s5/default/a8fce7027f1f4ba2b9aff377ed99a5bf.jpg',
     'orange': 'https://store.bblcdn.com/s5/default/af10bba0ddcb4d129125f0b1b3f04e59.png',
     'red': 'https://store.bblcdn.com/s5/default/a612a441405449059b5e9215e9b4845d.png',
+    'purple': 'https://store.bblcdn.com/s5/default/b0e5f8c3a4d94b8e9f2a1c7d6e8b9a0c.jpg',
   },
   
   // ========== ASA (6 COLORS) ==========
