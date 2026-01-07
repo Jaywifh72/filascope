@@ -160,7 +160,7 @@ export const ERYONE_PRODUCT_SEED: EryoneProductSeed[] = [
   { material: 'PLA', filamentLine: 'PLA Ultra Silk Filament', color: 'Black', colorHex: '#000000', productUrl: 'https://eryone3d.com/products/advanced-silk-pla?variant=39267873456177', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Ultra-Silk-Filament-7.jpg' },
   { material: 'PLA', filamentLine: 'PLA Ultra Silk Filament', color: 'Red', colorHex: '#FF0000', productUrl: 'https://eryone3d.com/products/advanced-silk-pla?variant=39267873521713', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Ultra-Silk-Filament-3.jpg' },
   { material: 'PLA', filamentLine: 'PLA Ultra Silk Filament', color: 'Bronze', colorHex: '#CD7F32', productUrl: 'https://eryone3d.com/products/advanced-silk-pla?variant=39267873423409', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Ultra-Silk-Filament-5.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Ultra Silk Filament', color: 'Dark Gold', colorHex: '#FFD700', productUrl: 'https://eryone3d.com/products/advanced-silk-pla?variant=39267873488945', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Ultra-Silk-Filament-6.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Ultra Silk Filament', color: 'Dark Gold', colorHex: '#B8860B', productUrl: 'https://eryone3d.com/products/advanced-silk-pla?variant=39267873488945', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Ultra-Silk-Filament-6.jpg' },
 
   // PLA Silk Standard (11 variants)
   { material: 'PLA', filamentLine: 'PLA Silk Filament', color: 'Radiant Gold', colorHex: '#FFD700', productUrl: 'https://eryone3d.com/collections/pla-silk-all/products/silk-pla', imageUrl: 'https://eryone3d.com/cdn/shop/files/1-800_e1ee7852-8eef-45dc-9f4c-3bc53723fe95.png' },
