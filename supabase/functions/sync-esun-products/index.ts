@@ -1,10 +1,19 @@
+/**
+ * eSUN CSV-Seeded Sync Function
+ * 
+ * Uses curated product seed data for 100% reliable sync
+ * - All 444 products come from ESUN_PRODUCT_SEED
+ * - Hex codes and images are curated in the seed
+ * - Safe delete threshold: >= 300 products
+ */
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { ESUN_PRODUCT_SEED, ESUN_DEFAULT_PRICES } from '../_shared/esun-seed.ts';
 import {
   enrichEsunProduct,
-  getEsunColorHex,
   normalizeEsunMaterial,
-  isEsunPromotionalProduct,
-  getEsunPackQuantity,
+  cleanEsunTitle,
+  extractEsunFinishType,
 } from '../_shared/esun-defaults.ts';
 
 const corsHeaders = {
@@ -12,25 +21,122 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface SyncOptions {
-  dryRun?: boolean;
-  limit?: number;
-  skipScrape?: boolean;
-  tasksToRun?: string[];
+interface SyncStats {
+  discovered: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
 }
 
-interface SyncResult {
-  success: boolean;
-  message: string;
-  stats: {
-    productsDiscovered: number;
-    productsCreated: number;
-    productsUpdated: number;
-    productsFailed: number;
-    colorsExtracted: number;
-    tdsUrlsFound: number;
-  };
-  errors: string[];
+/**
+ * Generate a stable product line ID from filamentLine
+ * e.g., "eSUN PLA-Matte 1.75mm 3D Filament 1KG" → "esun__pla__matte"
+ */
+function generateProductLineIdFromSeed(filamentLine: string, material: string): string {
+  const lower = filamentLine.toLowerCase();
+  const mat = material.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // Extract line type from filament line with specific patterns first
+  const linePatterns: [RegExp, string][] = [
+    // Multi-word patterns first (most specific)
+    [/silk\s*magic/i, 'silk-magic'],
+    [/silk\s*candy/i, 'silk-candy'],
+    [/silk\s*metal/i, 'silk-metal'],
+    [/silk\s*rainbow/i, 'silk-rainbow'],
+    [/luminous\s*rainbow/i, 'luminous-rainbow'],
+    [/uv\s*color\s*change/i, 'uv-color-change'],
+    [/high[\s-]*speed/i, 'high-speed'],
+    // Single word patterns
+    [/silk/i, 'silk'],
+    [/matte/i, 'matte'],
+    [/luminous/i, 'luminous'],
+    [/chameleon/i, 'chameleon'],
+    [/rock/i, 'rock'],
+    [/stars/i, 'stars'],
+    [/magic/i, 'magic'],
+    [/wood/i, 'wood'],
+    [/metal(?!lic)/i, 'metal'],
+    [/marble/i, 'marble'],
+    [/lite/i, 'lite'],
+    [/refilament/i, 'refilament'],
+    [/\+\s*hs\b|\bhs\b/i, 'high-speed'],
+    [/\bst\b|super[\s-]*tough/i, 'super-tough'],
+    [/\blw\b|light[\s-]*weight/i, 'lightweight'],
+    [/\bcf\b|carbon[\s-]*fiber/i, 'carbon-fiber'],
+    [/\bgf\b|glass[\s-]*fiber/i, 'glass-fiber'],
+    [/\besd\b/i, 'esd'],
+    [/basic/i, 'basic'],
+    [/\+/i, 'plus'],
+  ];
+  
+  let lineSlug = 'standard';
+  for (const [pattern, slug] of linePatterns) {
+    if (pattern.test(lower)) {
+      lineSlug = slug;
+      break;
+    }
+  }
+  
+  return `esun__${mat}__${lineSlug}`;
+}
+
+/**
+ * Generate a unique product ID from seed data
+ */
+function generateProductId(seed: typeof ESUN_PRODUCT_SEED[0]): string {
+  const urlSlug = seed.productUrl.split('/products/').pop() || 'unknown';
+  const colorSlug = seed.color.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `esun-${urlSlug}-${colorSlug}`;
+}
+
+/**
+ * Extract color family from color name
+ */
+function extractColorFamily(colorName: string): string | null {
+  const lower = colorName.toLowerCase();
+  
+  const families: [RegExp, string][] = [
+    [/\b(black|charcoal|obsidian|jet|ebony)\b/i, 'Black'],
+    [/\b(white|snow|ivory|cream|pearl)\b/i, 'White'],
+    [/\b(grey|gray|silver|slate|ash)\b/i, 'Gray'],
+    [/\b(red|crimson|scarlet|ruby|maroon|burgundy|fire|cherry|strawberry)\b/i, 'Red'],
+    [/\b(blue|navy|azure|cobalt|ocean|sky|teal|cyan|lake)\b/i, 'Blue'],
+    [/\b(green|olive|mint|forest|lime|emerald|sage|matcha|holly|morandi green|peak green)\b/i, 'Green'],
+    [/\b(yellow|gold|lemon|mustard|amber|almond)\b/i, 'Yellow'],
+    [/\b(orange|tangerine|apricot|peach|sunset|sunrise)\b/i, 'Orange'],
+    [/\b(purple|violet|plum|grape|lavender|lilac|magenta|morandi purple)\b/i, 'Purple'],
+    [/\b(pink|rose|salmon|coral|blush|barbie)\b/i, 'Pink'],
+    [/\b(brown|tan|chocolate|coffee|caramel|khaki|beige|bone)\b/i, 'Brown'],
+    [/\b(rainbow|multicolor)\b/i, 'Multicolor'],
+    [/\b(transparent|clear|translucent|natural)\b/i, 'Transparent'],
+  ];
+  
+  for (const [pattern, family] of families) {
+    if (pattern.test(lower)) return family;
+  }
+  
+  return null;
+}
+
+/**
+ * Clean the product title for display
+ */
+function formatProductTitle(filamentLine: string, color: string): string {
+  // Clean the filament line first
+  let cleaned = filamentLine
+    .replace(/\besun\b\s*/gi, '')
+    .replace(/\b1\.75\s*mm\b/gi, '')
+    .replace(/\b3d\s*filament\b/gi, '')
+    .replace(/\b1\s*kg\b/gi, '')
+    .replace(/\bfilament\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  return `${cleaned} - ${color}`.trim();
 }
 
 Deno.serve(async (req) => {
@@ -41,628 +147,237 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    const options: SyncOptions = await req.json().catch(() => ({}));
-    const { dryRun = false, limit, skipScrape = false, tasksToRun } = options;
-    
-    const result: SyncResult = {
-      success: true,
-      message: '',
-      stats: {
-        productsDiscovered: 0,
-        productsCreated: 0,
-        productsUpdated: 0,
-        productsFailed: 0,
-        colorsExtracted: 0,
-        tdsUrlsFound: 0,
-      },
-      errors: [],
+
+    // Parse options (cleanSlate is supported, limit is IGNORED for CSV-seeded sync)
+    const options = await req.json().catch(() => ({}));
+    const { cleanSlate = false } = options;
+
+    console.log(`[sync-esun-products] Starting CSV-seeded sync (cleanSlate: ${cleanSlate})`);
+    console.log(`[sync-esun-products] Processing ${ESUN_PRODUCT_SEED.length} products from seed`);
+
+    const stats: SyncStats = {
+      discovered: ESUN_PRODUCT_SEED.length,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      errors: 0,
     };
 
-    const shouldRunTask = (task: string) => !tasksToRun || tasksToRun.includes(task);
+    // =========================================================================
+    // STEP 1: GET BRAND ID
+    // =========================================================================
+    const { data: brandData } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .eq('brand_slug', 'esun')
+      .single();
+
+    const brandId = brandData?.id;
+    console.log(`[sync-esun-products] Brand ID: ${brandId || 'not found'}`);
 
     // =========================================================================
-    // STEP 1: BASE SYNC VIA FIRECRAWL
+    // STEP 2: SAFE DELETE (if cleanSlate)
     // =========================================================================
-    if (shouldRunTask('base_sync')) {
-      console.log('Step 1: Base Sync via Firecrawl scraping...');
-      
-      if (!firecrawlKey) {
-        console.log('No Firecrawl key - skipping collection scrape, using existing data');
+    if (cleanSlate) {
+      // Verify we have enough products before deleting (safe delete pattern)
+      const SAFE_DELETE_THRESHOLD = 300;
+      if (ESUN_PRODUCT_SEED.length < SAFE_DELETE_THRESHOLD) {
+        throw new Error(`Safe delete failed: Only ${ESUN_PRODUCT_SEED.length} products in seed, need >= ${SAFE_DELETE_THRESHOLD}`);
+      }
+
+      console.log(`[sync-esun-products] Clean slate: Deleting existing eSUN products...`);
+      const { error: deleteError } = await supabase
+        .from('filaments')
+        .delete()
+        .ilike('vendor', 'esun');
+
+      if (deleteError) {
+        console.error(`[sync-esun-products] Delete error:`, deleteError.message);
       } else {
-        const collectionUrl = 'https://esun3dstore.com/collections/3d-filament';
-        
-        try {
-          // Scrape the collection page to get product URLs
-          const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${firecrawlKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              url: collectionUrl,
-              formats: ['html', 'links'],
-              onlyMainContent: false,
-              waitFor: 2000,
-            }),
-          });
-          
-          if (scrapeResponse.ok) {
-            const scrapeData = await scrapeResponse.json();
-            const links = scrapeData.data?.links || scrapeData.links || [];
-            
-            // Filter for product URLs
-            const productUrls = links.filter((link: string) => 
-              link.includes('/products/') && 
-              link.includes('esun3dstore.com') &&
-              !link.includes('/collections/')
-            );
-            
-            console.log(`Found ${productUrls.length} product URLs`);
-            result.stats.productsDiscovered = productUrls.length;
-            
-            // Process each product URL (with limit)
-            const urlsToProcess = limit ? productUrls.slice(0, limit) : productUrls;
-            
-            for (const productUrl of urlsToProcess) {
-              try {
-                // Scrape product detail page
-                const productResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${firecrawlKey}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    url: productUrl,
-                    formats: ['html', 'markdown'],
-                    onlyMainContent: true,
-                  }),
-                });
-                
-                if (!productResponse.ok) {
-                  console.error(`Failed to scrape ${productUrl}`);
-                  result.stats.productsFailed++;
-                  continue;
-                }
-                
-                const productData = await productResponse.json();
-                const html = productData.data?.html || productData.html || '';
-                const markdown = productData.data?.markdown || productData.markdown || '';
-                
-                // Extract product info from HTML/markdown
-                const productInfo = extractProductInfo(html, markdown, productUrl);
-                
-                if (!productInfo) {
-                  console.log(`Could not extract info from ${productUrl}`);
-                  result.stats.productsFailed++;
-                  continue;
-                }
-                
-                // Skip non-filament products
-                if (!isFilamentProduct(productInfo.title)) {
-                  console.log(`Skipping non-filament: ${productInfo.title}`);
-                  continue;
-                }
-                
-                // Process each color variant
-                for (const variant of productInfo.variants) {
-                  const enrichment = enrichEsunProduct(
-                    productInfo.title,
-                    null,
-                    productInfo.tdsUrl
-                  );
-                  
-                  const colorHex = variant.colorHex || getEsunColorHex(variant.colorName);
-                  
-                  const filamentData = {
-                    product_id: `esun-${variant.sku || generateVariantId(productInfo.title, variant.colorName)}`,
-                    product_title: `${productInfo.title} - ${variant.colorName}`,
-                    vendor: 'eSun',
-                    product_url: productUrl,
-                    featured_image: variant.imageUrl || productInfo.imageUrl,
-                    variant_price: variant.price,
-                    variant_available: variant.available,
-                    variant_sku: variant.sku,
-                    color_hex: colorHex ? `#${colorHex.replace('#', '')}` : null,
-                    color_family: extractColorFamily(variant.colorName),
-                    material: enrichment.material,
-                    finish_type: enrichment.finishType !== 'Standard' ? enrichment.finishType : null,
-                    product_line_id: enrichment.productLineId,
-                    nozzle_temp_min_c: enrichment.nozzleTempMin,
-                    nozzle_temp_max_c: enrichment.nozzleTempMax,
-                    bed_temp_min_c: enrichment.bedTempMin,
-                    bed_temp_max_c: enrichment.bedTempMax,
-                    print_speed_max_mms: enrichment.printSpeedMax,
-                    is_nozzle_abrasive: enrichment.isAbrasive || null,
-                    tds_url: enrichment.tdsUrl,
-                    high_speed_capable: enrichment.isHighSpeed || null,
-                    diameter_nominal_mm: 1.75,
-                    net_weight_g: 1000,
-                    auto_created: true,
-                    auto_updated: true,
-                    last_scraped_at: new Date().toISOString(),
-                  };
-                  
-                  if (colorHex) result.stats.colorsExtracted++;
-                  if (enrichment.tdsUrl) result.stats.tdsUrlsFound++;
-                  
-                  if (dryRun) {
-                    console.log(`[DRY RUN] Would upsert: ${filamentData.product_title}`);
-                    result.stats.productsCreated++;
-                  } else {
-                    const { error } = await supabase
-                      .from('filaments')
-                      .upsert(filamentData, { 
-                        onConflict: 'product_id',
-                        ignoreDuplicates: false 
-                      });
-                    
-                    if (error) {
-                      console.error(`Error upserting ${filamentData.product_id}:`, error.message);
-                      result.errors.push(`${filamentData.product_id}: ${error.message}`);
-                      result.stats.productsFailed++;
-                    } else {
-                      result.stats.productsCreated++;
-                    }
-                  }
-                }
-                
-                // Rate limiting
-                await new Promise(r => setTimeout(r, 1500));
-                
-              } catch (err) {
-                console.error(`Error processing ${productUrl}:`, err);
-                result.stats.productsFailed++;
-              }
-            }
-          } else {
-            console.error('Failed to scrape collection page');
-            result.errors.push('Failed to scrape collection page');
-          }
-        } catch (err) {
-          console.error('Firecrawl error:', err);
-          result.errors.push(`Firecrawl error: ${err}`);
-        }
+        console.log(`[sync-esun-products] Existing products deleted`);
       }
     }
 
     // =========================================================================
-    // STEP 2: FIRECRAWL DETAIL SCRAPING (for existing products without specs)
+    // STEP 3: PROCESS SEED DATA
     // =========================================================================
-    if (shouldRunTask('scrape_details') && firecrawlKey && !skipScrape) {
-      console.log('Step 2: Firecrawl Detail Scraping...');
-      
-      // Get products missing TDS URL or print temps
-      const { data: productsToEnrich } = await supabase
-        .from('filaments')
-        .select('id, product_title, product_url, tds_url, nozzle_temp_min_c')
-        .ilike('vendor', 'esun')
-        .or('tds_url.is.null,nozzle_temp_min_c.is.null')
-        .not('product_url', 'is', null)
-        .limit(limit || 20);
-      
-      if (productsToEnrich && productsToEnrich.length > 0) {
-        console.log(`Found ${productsToEnrich.length} products to enrich`);
+    const productsToInsert: Record<string, unknown>[] = [];
+    const productLineStats: Record<string, number> = {};
+
+    for (const seed of ESUN_PRODUCT_SEED) {
+      try {
+        const productId = generateProductId(seed);
+        const productLineId = generateProductLineIdFromSeed(seed.filamentLine, seed.material);
+        const productTitle = formatProductTitle(seed.filamentLine, seed.color);
         
-        for (const product of productsToEnrich) {
-          try {
-            const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${firecrawlKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                url: product.product_url,
-                formats: ['html'],
-                onlyMainContent: true,
-              }),
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              const html = data.data?.html || data.html || '';
-              
-              const specs = extractSpecsFromHtml(html);
-              
-              if (specs) {
-                const updates: Record<string, unknown> = {};
-                
-                if (specs.nozzleTempMin && !product.nozzle_temp_min_c) {
-                  updates.nozzle_temp_min_c = specs.nozzleTempMin;
-                }
-                if (specs.nozzleTempMax) {
-                  updates.nozzle_temp_max_c = specs.nozzleTempMax;
-                }
-                if (specs.bedTempMin) {
-                  updates.bed_temp_min_c = specs.bedTempMin;
-                }
-                if (specs.bedTempMax) {
-                  updates.bed_temp_max_c = specs.bedTempMax;
-                }
-                if (specs.tdsUrl && !product.tds_url) {
-                  updates.tds_url = specs.tdsUrl;
-                  result.stats.tdsUrlsFound++;
-                }
-                if (specs.density) {
-                  updates.density_g_cm3 = specs.density;
-                }
-                
-                if (Object.keys(updates).length > 0 && !dryRun) {
-                  await supabase
-                    .from('filaments')
-                    .update(updates)
-                    .eq('id', product.id);
-                  
-                  result.stats.productsUpdated++;
-                  console.log(`Updated specs for ${product.product_title}`);
-                }
-              }
-            }
-            
-            await new Promise(r => setTimeout(r, 1500));
-          } catch (err) {
-            console.error(`Error scraping ${product.product_url}:`, err);
-          }
-        }
+        // Track product line stats
+        productLineStats[productLineId] = (productLineStats[productLineId] || 0) + 1;
+
+        // Get enrichment data (print settings, TDS URL, etc.)
+        const enrichment = enrichEsunProduct(
+          seed.filamentLine,
+          seed.material,
+          null // No TDS URL in seed
+        );
+
+        // Get default price for this product line
+        const lineName = seed.filamentLine
+          .replace(/\besun\b\s*/gi, '')
+          .replace(/\b1\.75\s*mm\b/gi, '')
+          .replace(/\b3d\s*filament\b/gi, '')
+          .replace(/\b1\s*kg\b/gi, '')
+          .replace(/\bfilament\b/gi, '')
+          .trim();
+        const defaultPrice = ESUN_DEFAULT_PRICES[lineName] || 19.99;
+
+        // Build filament record
+        const filament = {
+          product_id: productId,
+          product_title: productTitle,
+          vendor: 'eSun',
+          brand_id: brandId || null,
+          product_url: seed.productUrl,
+          featured_image: seed.imageUrl,
+          color_hex: seed.colorHex.startsWith('#') ? seed.colorHex : `#${seed.colorHex}`,
+          color_family: extractColorFamily(seed.color),
+          material: enrichment.material || seed.material,
+          finish_type: enrichment.finishType !== 'Standard' ? enrichment.finishType : null,
+          product_line_id: productLineId,
+          variant_price: defaultPrice,
+          variant_available: true,
+          nozzle_temp_min_c: enrichment.nozzleTempMin,
+          nozzle_temp_max_c: enrichment.nozzleTempMax,
+          bed_temp_min_c: enrichment.bedTempMin,
+          bed_temp_max_c: enrichment.bedTempMax,
+          print_speed_max_mms: enrichment.printSpeedMax,
+          high_speed_capable: enrichment.isHighSpeed || null,
+          is_nozzle_abrasive: enrichment.isAbrasive || null,
+          tds_url: enrichment.tdsUrl || null,
+          diameter_nominal_mm: 1.75,
+          net_weight_g: 1000,
+          auto_created: true,
+          auto_updated: true,
+          last_scraped_at: new Date().toISOString(),
+        };
+
+        productsToInsert.push(filament);
+      } catch (err) {
+        console.error(`[sync-esun-products] Error processing seed entry:`, err);
+        stats.errors++;
+      }
+    }
+
+    console.log(`[sync-esun-products] Prepared ${productsToInsert.length} products for insertion`);
+    console.log(`[sync-esun-products] Product lines: ${Object.keys(productLineStats).length}`);
+
+    // =========================================================================
+    // STEP 4: BATCH INSERT
+    // =========================================================================
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
+      const batch = productsToInsert.slice(i, i + BATCH_SIZE);
+      
+      const { error: insertError } = await supabase
+        .from('filaments')
+        .insert(batch);
+
+      if (insertError) {
+        console.error(`[sync-esun-products] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, insertError.message);
+        stats.errors += batch.length;
+      } else {
+        stats.created += batch.length;
+        console.log(`[sync-esun-products] Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(productsToInsert.length / BATCH_SIZE)}`);
       }
     }
 
     // =========================================================================
-    // STEP 3: BRAND-SPECIFIC ENRICHMENTS
+    // STEP 5: UPDATE BRAND STATS
     // =========================================================================
-    if (shouldRunTask('enrich')) {
-      console.log('Step 3: Brand-Specific Enrichments...');
+    if (brandId) {
+      await supabase
+        .from('automated_brands')
+        .update({
+          last_scrape_at: new Date().toISOString(),
+          products_created: stats.created,
+          last_error: stats.errors > 0 ? `${stats.errors} errors during sync` : null,
+        })
+        .eq('id', brandId);
       
-      const { data: toEnrich } = await supabase
-        .from('filaments')
-        .select('id, product_title, material, tds_url, product_line_id, finish_type')
-        .ilike('vendor', 'esun')
-        .or('product_line_id.is.null,finish_type.is.null,material.is.null');
+      // Update product counts
+      await supabase.rpc('update_brand_product_counts', { brand_slug_param: 'esun' });
+    }
+
+    // =========================================================================
+    // STEP 6: FIX DUPLICATE HEX CODES
+    // =========================================================================
+    console.log(`[sync-esun-products] Checking for duplicate hex codes...`);
+    
+    const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'eSun' });
+    
+    if (duplicates && duplicates.length > 0) {
+      console.log(`[sync-esun-products] Found ${duplicates.length} duplicate hex entries, fixing...`);
       
-      if (toEnrich && toEnrich.length > 0) {
-        console.log(`Enriching ${toEnrich.length} products...`);
-        
-        for (const product of toEnrich) {
-          const enrichment = enrichEsunProduct(
-            product.product_title,
-            product.material,
-            product.tds_url
-          );
-          
-          const updates: Record<string, unknown> = {};
-          
-          if (!product.product_line_id && enrichment.productLineId) {
-            updates.product_line_id = enrichment.productLineId;
-          }
-          if (!product.finish_type && enrichment.finishType !== 'Standard') {
-            updates.finish_type = enrichment.finishType;
-          }
-          if (!product.material && enrichment.material) {
-            updates.material = enrichment.material;
-          }
-          if (!product.tds_url && enrichment.tdsUrl) {
-            updates.tds_url = enrichment.tdsUrl;
-          }
-          
-          // Apply print settings if missing
-          if (enrichment.nozzleTempMin) {
-            updates.nozzle_temp_min_c = enrichment.nozzleTempMin;
-            updates.nozzle_temp_max_c = enrichment.nozzleTempMax;
-          }
-          if (enrichment.bedTempMin) {
-            updates.bed_temp_min_c = enrichment.bedTempMin;
-            updates.bed_temp_max_c = enrichment.bedTempMax;
-          }
-          if (enrichment.printSpeedMax) {
-            updates.print_speed_max_mms = enrichment.printSpeedMax;
-          }
-          if (enrichment.isHighSpeed) {
-            updates.high_speed_capable = true;
-          }
-          if (enrichment.isAbrasive) {
-            updates.is_nozzle_abrasive = true;
-          }
-          
-          if (Object.keys(updates).length > 0 && !dryRun) {
+      const grouped = new Map<string, typeof duplicates>();
+      for (const dup of duplicates) {
+        const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key)!.push(dup);
+      }
+      
+      for (const [, items] of grouped) {
+        if (items.length > 1) {
+          for (let i = 1; i < items.length; i++) {
+            const item = items[i];
+            const baseHex = item.color_hex?.replace('#', '') || 'CCCCCC';
+            
+            const r = parseInt(baseHex.slice(0, 2), 16);
+            const g = parseInt(baseHex.slice(2, 4), 16);
+            const b = parseInt(baseHex.slice(4, 6), 16);
+            
+            const newR = Math.min(255, Math.max(0, r + (i * 5)));
+            const newG = Math.min(255, Math.max(0, g + (i * 3)));
+            const newB = Math.min(255, Math.max(0, b + (i * 2)));
+            
+            const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`.toUpperCase();
+            
             await supabase
               .from('filaments')
-              .update(updates)
-              .eq('id', product.id);
-            
-            result.stats.productsUpdated++;
+              .update({ color_hex: newHex })
+              .eq('id', item.id);
           }
         }
       }
+      console.log(`[sync-esun-products] Duplicate hex codes fixed`);
     }
 
     // =========================================================================
-    // STEP 4: DUPLICATE HEX FIX
+    // STEP 7: FINAL RESPONSE
     // =========================================================================
-    if (shouldRunTask('fix_hexes')) {
-      console.log('Step 4: Duplicate Hex Fix...');
-      
-      const { data: duplicates } = await supabase
-        .rpc('find_duplicate_hexes', { p_vendor: 'eSun' });
-      
-      if (duplicates && duplicates.length > 0) {
-        console.log(`Found ${duplicates.length} duplicate hex entries`);
-        
-        const grouped = new Map<string, typeof duplicates>();
-        for (const dup of duplicates) {
-          const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
-          if (!grouped.has(key)) {
-            grouped.set(key, []);
-          }
-          grouped.get(key)!.push(dup);
-        }
-        
-        for (const [, items] of grouped) {
-          if (items.length > 1) {
-            // Skip first, modify others
-            for (let i = 1; i < items.length; i++) {
-              const item = items[i];
-              const baseHex = item.color_hex?.replace('#', '') || 'CCCCCC';
-              
-              // Generate unique variant
-              const r = parseInt(baseHex.slice(0, 2), 16);
-              const g = parseInt(baseHex.slice(2, 4), 16);
-              const b = parseInt(baseHex.slice(4, 6), 16);
-              
-              const newR = Math.min(255, Math.max(0, r + (i * 5)));
-              const newG = Math.min(255, Math.max(0, g + (i * 3)));
-              const newB = Math.min(255, Math.max(0, b + (i * 2)));
-              
-              const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`.toUpperCase();
-              
-              if (!dryRun) {
-                await supabase
-                  .from('filaments')
-                  .update({ color_hex: newHex })
-                  .eq('id', item.id);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // =========================================================================
-    // STEP 5: TDS PARSING (triggers separate function)
-    // =========================================================================
-    if (shouldRunTask('parse_tds')) {
-      console.log('Step 5: TDS Parsing - skipped (use parse-filament-tds separately)');
-    }
-
-    // Final stats
-    result.message = `eSun sync complete: ${result.stats.productsCreated} created, ${result.stats.productsUpdated} updated, ${result.stats.productsFailed} failed`;
-    console.log(result.message);
+    const message = `eSUN CSV-seeded sync complete: ${stats.created} created, ${stats.errors} errors, ${Object.keys(productLineStats).length} product lines`;
+    console.log(`[sync-esun-products] ${message}`);
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({
+        success: stats.errors < stats.created,
+        message,
+        stats: {
+          productsDiscovered: stats.discovered,
+          productsCreated: stats.created,
+          productsUpdated: stats.updated,
+          productsFailed: stats.errors,
+          productLines: Object.keys(productLineStats).length,
+          productLineBreakdown: productLineStats,
+        },
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Fatal error:', error);
+    console.error('[sync-esun-products] Fatal error:', error);
     return new Response(
       JSON.stringify({ success: false, error: String(error) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-function isFilamentProduct(title: string): boolean {
-  const lowerTitle = title.toLowerCase();
-  
-  // Must contain filament-related terms
-  if (!/(filament|pla|petg|abs|asa|tpu|tpe|pa|nylon|pc)/i.test(lowerTitle)) {
-    return false;
-  }
-  
-  // Exclude non-filament products
-  const excludePatterns = [
-    /\bdry\s*box\b/i,
-    /\bdryer\b/i,
-    /\bspool\s*holder\b/i,
-    /\bnozzle\b/i,
-    /\bhotend\b/i,
-    /\bextruder\b/i,
-    /\bbed\s*sheet\b/i,
-    /\bprint\s*surface\b/i,
-  ];
-  
-  return !excludePatterns.some(p => p.test(title));
-}
-
-interface ProductInfo {
-  title: string;
-  imageUrl: string | null;
-  tdsUrl: string | null;
-  variants: Array<{
-    colorName: string;
-    colorHex: string | null;
-    price: number | null;
-    available: boolean;
-    sku: string | null;
-    imageUrl: string | null;
-  }>;
-}
-
-function extractProductInfo(html: string, markdown: string, url: string): ProductInfo | null {
-  // Extract title from HTML
-  const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
-                     html.match(/<title>([^<|]+)/i);
-  
-  if (!titleMatch) return null;
-  
-  const title = titleMatch[1].trim()
-    .replace(/\s*\|\s*eSun.*$/i, '')
-    .replace(/\s*-\s*eSun.*$/i, '');
-  
-  // Extract main image
-  const imageMatch = html.match(/og:image[^>]*content="([^"]+)"/i) ||
-                     html.match(/<img[^>]*class="[^"]*product[^"]*"[^>]*src="([^"]+)"/i);
-  const imageUrl = imageMatch ? imageMatch[1] : null;
-  
-  // Extract TDS URL (eSun has download links)
-  const tdsMatch = html.match(/href="([^"]*(?:tds|datasheet)[^"]*\.pdf)"/i) ||
-                   html.match(/href="([^"]*esun3d\.com\/uploads\/[^"]*\.pdf)"/i);
-  const tdsUrl = tdsMatch ? tdsMatch[1] : null;
-  
-  // Extract color variants from select options or variant data
-  const variants: ProductInfo['variants'] = [];
-  
-  // Try to find variant data in JSON
-  const variantJsonMatch = html.match(/var\s+meta\s*=\s*(\{[^;]+\});/);
-  if (variantJsonMatch) {
-    try {
-      const meta = JSON.parse(variantJsonMatch[1]);
-      if (meta.product?.variants) {
-        for (const v of meta.product.variants) {
-          variants.push({
-            colorName: v.title || v.option1 || 'Default',
-            colorHex: null,
-            price: v.price ? v.price / 100 : null,
-            available: v.available !== false,
-            sku: v.sku || null,
-            imageUrl: v.featured_image?.src || null,
-          });
-        }
-      }
-    } catch {
-      // JSON parse failed
-    }
-  }
-  
-  // Fallback: extract from select options
-  if (variants.length === 0) {
-    const optionMatches = html.matchAll(/<option[^>]*value="([^"]*)"[^>]*>([^<]+)<\/option>/gi);
-    for (const match of optionMatches) {
-      const colorName = match[2].trim();
-      if (colorName && !colorName.toLowerCase().includes('select')) {
-        variants.push({
-          colorName,
-          colorHex: null,
-          price: null,
-          available: true,
-          sku: null,
-          imageUrl: null,
-        });
-      }
-    }
-  }
-  
-  // If still no variants, create a default one
-  if (variants.length === 0) {
-    variants.push({
-      colorName: 'Default',
-      colorHex: null,
-      price: null,
-      available: true,
-      sku: null,
-      imageUrl: null,
-    });
-  }
-  
-  return { title, imageUrl, tdsUrl, variants };
-}
-
-function extractSpecsFromHtml(html: string): {
-  nozzleTempMin?: number;
-  nozzleTempMax?: number;
-  bedTempMin?: number;
-  bedTempMax?: number;
-  tdsUrl?: string;
-  density?: number;
-} | null {
-  const specs: Record<string, unknown> = {};
-  
-  // Nozzle temperature patterns
-  const nozzleMatch = html.match(/(?:nozzle|printing|print)\s*(?:temp(?:erature)?)?[:\s]*(\d{3})\s*[-–]\s*(\d{3})\s*°?C?/i) ||
-                      html.match(/(\d{3})\s*[-–]\s*(\d{3})\s*°?C?\s*(?:nozzle|hotend)/i);
-  if (nozzleMatch) {
-    specs.nozzleTempMin = parseInt(nozzleMatch[1], 10);
-    specs.nozzleTempMax = parseInt(nozzleMatch[2], 10);
-  }
-  
-  // Bed temperature patterns
-  const bedMatch = html.match(/(?:bed|platform|heated\s*bed)\s*(?:temp(?:erature)?)?[:\s]*(\d{2,3})\s*[-–]\s*(\d{2,3})\s*°?C?/i) ||
-                   html.match(/(\d{2,3})\s*[-–]\s*(\d{2,3})\s*°?C?\s*(?:bed|platform)/i);
-  if (bedMatch) {
-    specs.bedTempMin = parseInt(bedMatch[1], 10);
-    specs.bedTempMax = parseInt(bedMatch[2], 10);
-  }
-  
-  // TDS URL
-  const tdsMatch = html.match(/href="([^"]*(?:tds|datasheet)[^"]*\.pdf)"/i) ||
-                   html.match(/href="([^"]*esun3d\.com\/uploads\/[^"]*\.pdf)"/i);
-  if (tdsMatch) {
-    specs.tdsUrl = tdsMatch[1];
-  }
-  
-  // Density
-  const densityMatch = html.match(/density[:\s]*(\d+\.?\d*)\s*g\/cm/i);
-  if (densityMatch) {
-    specs.density = parseFloat(densityMatch[1]);
-  }
-  
-  return Object.keys(specs).length > 0 ? specs as ReturnType<typeof extractSpecsFromHtml> : null;
-}
-
-function generateVariantId(title: string, colorName: string): string {
-  const baseId = title
-    .toLowerCase()
-    .replace(/esun/gi, '')
-    .replace(/filament/gi, '')
-    .replace(/1\.75\s*mm/gi, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 30);
-  
-  const colorId = colorName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 20);
-  
-  return `${baseId}-${colorId}`;
-}
-
-function extractColorFamily(colorName: string): string | null {
-  const lowerColor = colorName.toLowerCase();
-  
-  const colorFamilies: Record<string, string[]> = {
-    'Black': ['black', 'carbon', 'noir'],
-    'White': ['white', 'ivory', 'bone', 'snow'],
-    'Gray': ['grey', 'gray', 'silver', 'charcoal'],
-    'Red': ['red', 'crimson', 'scarlet', 'wine', 'fire'],
-    'Orange': ['orange', 'tangerine'],
-    'Yellow': ['yellow', 'gold', 'lemon'],
-    'Green': ['green', 'olive', 'pine', 'grass', 'peak'],
-    'Blue': ['blue', 'navy', 'sky', 'water', 'cyan'],
-    'Purple': ['purple', 'violet', 'lavender', 'magenta'],
-    'Pink': ['pink', 'rose'],
-    'Brown': ['brown', 'chocolate', 'wood'],
-    'Natural': ['natural', 'clear', 'transparent'],
-  };
-  
-  for (const [family, keywords] of Object.entries(colorFamilies)) {
-    if (keywords.some(k => lowerColor.includes(k))) {
-      return family;
-    }
-  }
-  
-  return null;
-}

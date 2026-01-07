@@ -367,6 +367,18 @@ const AI_ROLES = {
       'Complex product line normalization (24+ lines)'
     ]
   },
+  esunSpecialist: {
+    title: 'eSUN Integration Specialist',
+    triggers: ['esun', 'ueeshop', 'esun3dstore', 'epla', 'pla-matte', 'pla-silk', 'tpu-95a'],
+    capabilities: [
+      'eSUN custom ueeshop platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture (444 products)',
+      'Chinese filament brand material classification',
+      'Specialty line handling (Silk Magic, Luminous, Rock, Stars)',
+      'High-speed variant detection (PLA+HS, PETG+HS, ABS+HS)',
+      'Complex product line normalization (45+ lines)'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -629,6 +641,75 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'tpu-standard': 'TPU Standard'
     },
     lastUpdated: '2026-01-07'
+  },
+  'esun': {
+    platform: 'Custom ueeshop store (esun3dstore.com) - CSV-seeded sync architecture',
+    knownLimitations: [
+      '❌ Website is NOT Shopify - no /products.json API available',
+      '❌ Custom ueeshop platform with JavaScript-heavy product pages',
+      '❌ No structured color swatch data in HTML - use CSV seed instead',
+      '❌ Dynamic pricing requires manual CSV updates when prices change',
+      '❌ Product images in seed may point to generic images (not color-specific)'
+    ],
+    workingSolutions: [
+      '✅ CSV seed (ESUN_PRODUCT_SEED) in esun-seed.ts is the single source of truth - 444 products',
+      '✅ Safe delete pattern with threshold >= 300 products before clean slate delete',
+      '✅ generateProductLineIdFromSeed() handles all eSUN product lines (45+ unique lines)',
+      '✅ enrichEsunProduct() provides print settings, finish type, TDS URL from esun-defaults.ts',
+      '✅ Curated hex codes in seed eliminate need for color extraction',
+      '✅ find_duplicate_hexes RPC function post-processes to fix remaining duplicates',
+      '✅ ESUN_DEFAULT_PRICES provides fallback pricing by product line'
+    ],
+    failedApproaches: [
+      '⚠️ Attempting Shopify /products.json API - store is ueeshop, not Shopify',
+      '⚠️ Firecrawl scraping for color swatches - JavaScript-rendered, returns incomplete data',
+      '⚠️ Using safe delete threshold of 100 when CSV has 444 products - set to 300',
+      '⚠️ Trying to extract pricing dynamically - use ESUN_DEFAULT_PRICES map instead'
+    ],
+    currentStatus: {
+      'csvSeedProducts': '444 variants in ESUN_PRODUCT_SEED (full catalog)',
+      'expectedFilaments': '~444 products (all from CSV seed)',
+      'productLines': '~45 unique product lines (cards)',
+      'materialsSupported': 'PLA, PLA+, PLA-Matte, PLA-Silk, PLA-Luminous, PETG, PETG+HS, ABS+, ABS+HS, ASA, TPU-95A, TPU-83A, PA, PA-CF, PA12-CF, PAHT-CF, PC, PVA, HIPS',
+      'specialtyLines': 'Silk Magic, Silk Candy, Silk Metal, Silk Rainbow, Luminous Rainbow, Stars, Rock, Chameleon, UV Color Change'
+    },
+    keyFiles: [
+      'supabase/functions/sync-esun-products/index.ts - Main sync function (CSV-seeded)',
+      'supabase/functions/_shared/esun-seed.ts - CSV seed data (444 products)',
+      'supabase/functions/_shared/esun-defaults.ts - Enrichment, print settings, TDS patterns',
+      'ESUN_PRODUCT_SEED constant - 444 products with color, colorHex, URLs, images',
+      'ESUN_DEFAULT_PRICES - Default prices by filament line',
+      'ESUN_PRINT_SETTINGS - Print settings by material type'
+    ],
+    extractionPriority: [
+      '1. Verify all 444 CSV products are processed (check ESUN_PRODUCT_SEED.length)',
+      '2. Verify ~45 unique product lines are created',
+      '3. Ensure no duplicate hex codes within same product_line_id',
+      '4. Validate product_line_id format (esun__material__line)',
+      '5. Check TDS URLs are populated from ESUN_TDS_PATTERNS'
+    ],
+    manualExtractionProcess: [
+      '1. Products come from ESUN_PRODUCT_SEED in esun-seed.ts - DO NOT scrape',
+      '2. To add new products: Update the CSV seed array with new entries',
+      '3. Each entry needs: material, filamentLine, color, colorHex, productUrl, imageUrl',
+      '4. For new product lines: Add TDS URL to ESUN_TDS_PATTERNS if available',
+      '5. Run clean slate sync to refresh all data from updated seed'
+    ],
+    productSlugReference: {
+      'pla-basic': 'PLA-Basic (ePLA)',
+      'pla-matte': 'PLA-Matte (ePLA-Matte)',
+      'pla-silk': 'PLA-Silk (ePLA-Silk)',
+      'pla-silk-magic': 'PLA-Silk Magic',
+      'pla-luminous': 'PLA-Luminous (Glow)',
+      'pla-plus': 'PLA+ (ePLA+)',
+      'pla-plus-hs': 'PLA+HS (High Speed)',
+      'petg-standard': 'PETG (ePETG)',
+      'petg-hs': 'PETG+HS (High Speed)',
+      'abs-plus': 'ABS+ (eABS+)',
+      'tpu-95a': 'TPU-95A (eTPU-95A)',
+      'pa-cf': 'PA-CF (ePA-CF)'
+    },
+    lastUpdated: '2026-01-07'
   }
 };
 
@@ -645,6 +726,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'eryone') {
     return AI_ROLES.colorSpecialist; // Eryone issues are primarily color/hex related
+  }
+  if (brandSlug === 'esun') {
+    return AI_ROLES.esunSpecialist; // eSUN uses CSV-seeded sync
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -3647,7 +3731,7 @@ Deno.serve(async (req) => {
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 15,           // Performance, Standard, Specialty lines
-      'esun': 18,               // PLA+, PETG, ABS+, eSilk, eMarble, TPU, etc.
+      'esun': 45,               // CSV-seeded: PLA-Basic, PLA-Matte, PLA-Silk, PLA+, PLA+HS, PETG, PETG+HS, ABS+, TPU-95A, PA-CF, PA12-CF, etc. (444 products)
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
       'fiberlogy': 15,          // Easy PLA, HD PLA, PETG, PA12, etc.
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
@@ -3722,7 +3806,7 @@ Deno.serve(async (req) => {
       '3d-fuel': [/^(Standard PLA|Pro PLA|Tough Pro|Pro PETG|Pro PCTG|Biome3D|Buzzed|Entwined|Wound Up|Landfillament)/i],
       '3dxtech': [/^(PEEK|PEKK|PEI|ULTEM|CarbonX|ESD|PETG|ABS|ASA|Nylon|PA|PC)/i],
       'proto-pasta': [/^(PLA|HTPLA|CFPLA|Carbon Fiber|Stainless Steel|Copper|Bronze|Iron)/i],
-      'esun': [/^(PLA\s*\+|PETG|ABS\s*\+|eSilk|eMarble|TPU|ePLA|ePC|ePA)/i],
+      'esun': [/^(PLA|PLA\s*\+|PLA[\s-]*Basic|PLA[\s-]*Matte|PLA[\s-]*Silk|PETG|ABS|TPU|PA|PC|ASA)/i],
       'creality': [/^(Hyper|Ender|PLA|PETG|ABS|TPU|High Speed)/i],
       'colorfabb': [
         /^(varioShore|LW[- ]?PLA|LW[- ]?ASA)/i,           // Lightweight/specialty foaming materials
@@ -4562,7 +4646,23 @@ Deno.serve(async (req) => {
                                       lineId.includes('eryone__abs-pc__') ||                          // ABS-PC alloy (single color)
                                       lineId.includes('eryone__asa__light-weight') ||                 // LW ASA (single color)
                                       lineId.includes('eryone__pa12-gf') ||                           // PA12 Glass Fiber (single color)
-                                      lineId.includes('eryone__pa6-gf');
+                                      lineId.includes('eryone__pa6-gf') ||
+                                      // eSUN single-color specialty products (CSV-seeded)
+                                      lineId.includes('esun__pla__carbon-fiber') ||
+                                      lineId.includes('esun__pla__wood') ||
+                                      lineId.includes('esun__pla__marble') ||
+                                      lineId.includes('esun__pla__super-tough') ||
+                                      lineId.includes('esun__pla__lightweight') ||
+                                      lineId.includes('esun__petg__carbon-fiber') ||
+                                      lineId.includes('esun__petg__esd') ||
+                                      lineId.includes('esun__abs__carbon-fiber') ||
+                                      lineId.includes('esun__pa__carbon-fiber') ||
+                                      lineId.includes('esun__pa12__carbon-fiber') ||
+                                      lineId.includes('esun__paht__carbon-fiber') ||
+                                      lineId.includes('esun__tpu__lightweight') ||
+                                      lineId.includes('esun__pc__') ||
+                                      lineId.includes('esun__pva__') ||
+                                      lineId.includes('esun__hips__');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
