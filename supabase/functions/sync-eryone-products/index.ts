@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
 
   try {
     console.log(`[Eryone Sync] Starting CSV-seeded sync with ${ERYONE_PRODUCT_SEED.length} products`);
+    // Deployment verification - log first/last product to detect stale bundles
+    console.log(`[Eryone Sync] CSV seed first product: ${ERYONE_PRODUCT_SEED[0]?.color}`);
+    console.log(`[Eryone Sync] CSV seed last product: ${ERYONE_PRODUCT_SEED[ERYONE_PRODUCT_SEED.length - 1]?.color}`);
 
     // Log detailed material breakdown to verify full CSV seed is loaded
     const materialBreakdown: Record<string, number> = {};
