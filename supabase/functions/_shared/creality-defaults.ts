@@ -684,6 +684,51 @@ export const CREALITY_STORE_INFO = {
 };
 
 // ============================================================================
+// DEFAULT PRICES BY PRODUCT LINE (fallback when Shopify API is blocked)
+// ============================================================================
+
+export const CREALITY_DEFAULT_PRICES: Record<string, number> = {
+  // Hyper Series (flagship high-speed)
+  'creality__hyper-pla-rfid': 24.99,
+  'creality__hyper-pla-rfid-stardust': 26.99,
+  'creality__hyper-pla': 21.99,
+  'creality__hyper-petg': 25.99,
+  'creality__hyper-abs': 24.99,
+  'creality__hyper-pc': 29.99,
+  'creality__hyper-pla-cf': 34.99,
+  'creality__hyper-petg-cf': 39.99,
+  'creality__hyper-rainbow-pla': 24.99,
+  'creality__hyper-luminous-pla': 26.99,
+  'creality__hyper-lightweight-pla': 27.99,
+  
+  // Soleyin Series (budget-friendly)
+  'creality__soleyin-ultra-pla': 18.99,
+  'creality__soleyin-basic-petg': 19.99,
+  
+  // CR Series (consumer)
+  'creality__cr-silk-pla': 22.99,
+  'creality__cr-wood-pla': 24.99,
+  'creality__cr-pla-carbon': 29.99,
+  
+  // Ender Fast (budget high-speed)
+  'creality__ender-fast-pla': 17.99,
+  
+  // HP Series (engineering)
+  'creality__hp-asa': 27.99,
+  'creality__hp-tpu': 29.99,
+  
+  // PPA-CF (engineering composite)
+  'creality__ppa-cf': 49.99,
+};
+
+/**
+ * Get default price for a product line
+ */
+export function getCrealityDefaultPrice(productLineId: string): number | null {
+  return CREALITY_DEFAULT_PRICES[productLineId] || null;
+}
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
