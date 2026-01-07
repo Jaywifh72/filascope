@@ -3602,10 +3602,26 @@ Deno.serve(async (req) => {
         // 3+ part format: "vendor__material__line-name"
         const material = parts[1]?.toUpperCase() || '';
         const lineParts = parts.slice(2).join(' ');
-        const lineName = lineParts
+        let lineName = lineParts
           .replace(/-/g, ' ')
           .replace(/\b\w/g, (c: string) => c.toUpperCase())
+          .replace(/\bHs\b/g, 'HS')
           .trim();
+        
+        // Only strip internal tags, keep product line identifiers like "Matte", "Silk"
+        lineName = lineName.replace(/\b(Composite|Standard)\b/gi, '').trim();
+        
+        // Strip redundant suffixes only if already in material slug
+        const materialLower = material.toLowerCase();
+        const redundantSuffixes = ['Metallic', 'Silk', 'Galaxy', 'Marble', 'Matte', 'Sparkle', 'Wood', 'Carbon Fiber', 'Glass Fiber'];
+        for (const suffix of redundantSuffixes) {
+          const suffixKey = suffix.toLowerCase().replace(' ', '').replace('-', '');
+          if (materialLower.includes(suffixKey) || materialLower.includes(suffix.toLowerCase().split(' ')[0])) {
+            lineName = lineName.replace(new RegExp(`\\b${suffix}\\b`, 'gi'), '').trim();
+          }
+        }
+        
+        if (!lineName) return material;
         return `${material} ${lineName}`.trim();
       }
       
