@@ -621,13 +621,30 @@ export function extractFinishType(title: string): FinishType {
 
 export function generateEryoneProductLineId(filamentLine: string, material: string): string {
   // Clean the filament line name
-  const cleaned = filamentLine
+  let cleaned = filamentLine
     .replace(/\s*-\s*1\.75mm.*$/i, '')
     .replace(/\s*filament\s*$/i, '')
     .replace(/\s*\([^)]*\)\s*/g, '')
     .trim();
   
-  // Create slug from filament line
+  // Normalize material to create matSlug
+  const matSlug = material
+    .toLowerCase()
+    .replace(/\+/g, '-plus')
+    .replace(/[^\w-]/g, '')
+    .replace(/-+/g, '-');
+  
+  // Remove material prefix from filament line if it duplicates (e.g., "PLA" from "PLA Filament")
+  // This prevents IDs like "eryone__pla__pla"
+  const materialPattern = new RegExp(`^${material.replace(/[+]/g, '\\+')}\\s*`, 'i');
+  cleaned = cleaned.replace(materialPattern, '').trim();
+  
+  // If cleaned is empty after removing material, use 'standard'
+  if (!cleaned) {
+    return `eryone__${matSlug}__standard`;
+  }
+  
+  // Create slug from cleaned filament line
   const lineSlug = cleaned
     .toLowerCase()
     .replace(/\+/g, '-plus')
@@ -636,12 +653,10 @@ export function generateEryoneProductLineId(filamentLine: string, material: stri
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
   
-  // Normalize material
-  const matSlug = material
-    .toLowerCase()
-    .replace(/\+/g, '-plus')
-    .replace(/[^\w-]/g, '')
-    .replace(/-+/g, '-');
+  // If lineSlug is empty or same as material, use 'standard'
+  if (!lineSlug || lineSlug === matSlug) {
+    return `eryone__${matSlug}__standard`;
+  }
   
   return `eryone__${matSlug}__${lineSlug}`;
 }
