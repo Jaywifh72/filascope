@@ -3220,7 +3220,7 @@ Deno.serve(async (req) => {
       'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
-      'eryone': 38,             // ~38 distinct filament lines from CSV seed after fixing product_line_id generation
+      'eryone': 50,             // ~50 distinct filament lines from 318-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, Nylon, PP variants)
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
       'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.

@@ -111,7 +111,11 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Debug logging for troubleshooting
+    const uniqueMaterials = [...new Set(productsToInsert.map(p => p.material))];
     console.log(`[Eryone Sync] Prepared ${productsToInsert.length} products for insertion`);
+    console.log(`[Eryone Sync] Unique materials (${uniqueMaterials.length}): ${uniqueMaterials.join(', ')}`);
+    console.log(`[Eryone Sync] Failed during processing: ${result.stats.productsFailed}`);
 
     // Step 2: Safe delete pattern - only delete if we have valid products
     // Lowered threshold from 200 to 100 since CSV has 356 products
