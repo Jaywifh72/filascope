@@ -560,10 +560,21 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
       .replace(/\bHs\b/g, 'HS')
       .trim();
     
-    // Remove category suffixes that shouldn't be displayed (e.g., "composite", "standard", "metallic")
-    // These are internal grouping tags, not part of the product name
-    // Also removes redundant suffixes when material slug already contains the info (e.g., "pla-metal" + "metallic")
-    lineName = lineName.replace(/\b(Composite|Standard|Metallic|Silk|Galaxy|Marble|Matte|Sparkle|Wood|Carbon Fiber|Glass Fiber)\b/gi, '').trim();
+    // Remove category suffixes ONLY when they're redundant (already present in the material slug)
+    // e.g., "pla-metal" + "metallic" → "PLA Metal" (strip "Metallic" because "metal" is in material)
+    // BUT: "esun__pla__matte" → "PLA Matte" (keep "Matte" because it's not in "pla")
+    // Always strip internal tags: "Composite", "Standard"
+    lineName = lineName.replace(/\b(Composite|Standard)\b/gi, '').trim();
+    
+    const materialLower = material.toLowerCase();
+    const redundantSuffixes = ['Metallic', 'Silk', 'Galaxy', 'Marble', 'Matte', 'Sparkle', 'Wood', 'Carbon Fiber', 'Glass Fiber'];
+    for (const suffix of redundantSuffixes) {
+      // Only strip if material already contains this word (e.g., "pla-silk" contains "silk")
+      const suffixKey = suffix.toLowerCase().replace(' ', '').replace('-', '');
+      if (materialLower.includes(suffixKey) || materialLower.includes(suffix.toLowerCase().split(' ')[0])) {
+        lineName = lineName.replace(new RegExp(`\\b${suffix}\\b`, 'gi'), '').trim();
+      }
+    }
     
     // If lineName is now empty (e.g., "bambulab__abs-gf__composite"), just return material
     if (!lineName) {
