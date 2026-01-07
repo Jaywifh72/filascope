@@ -3220,7 +3220,7 @@ Deno.serve(async (req) => {
       'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
-      'eryone': 24,             // PLA, PLA+, PETG, Silk, Galaxy, Matte, Marble, TPU, etc.
+      'eryone': 50,             // PLA (Standard, Galaxy, Marble, Glow, Dry, Antibacterial), PLA+ (Standard, High-Speed), PLA Silk (Standard, Dual, Triple, Quadruple), PLA Matte, PLA Wood, PLA Metallic, PLA Rainbow (Macarons, Fast, Burnt Titanium), PETG (Standard, High-Speed, CF), ABS+, ABS High-Speed, ABS Fiberglass, ASA (Standard, CF, High-Speed, Light-Weight), TPU (85A, 90A, High-Speed), PA-CF, PP-CF
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
       'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.
@@ -3762,7 +3762,13 @@ Deno.serve(async (req) => {
         'blue purple black', 'coral pink',
         // Creality dual-color silk patterns
         'yellow blue', 'yellow-blue', 'golden silver', 'golden-silver',
-        'pink purple', 'pink-purple', 'golden red', 'red copper'
+        'pink purple', 'pink-purple', 'golden red', 'red copper',
+        // Eryone dual-color and specialty patterns
+        'red green', 'gold silver', 'gold purple', 'gold copper',
+        'yellow green', 'orange blue', 'pink blue', 'rose red', 'red yellow',
+        'blue yellow', 'pink green', 'orange green', 'purple green', 'purple red',
+        'burnt titanium', 'rainbow macarons', 'macarons', 'quadruple color',
+        'triple color', 'night sky'
       ];
       for (const skip of skipPatterns) {
         if (text.includes(skip)) return null;
@@ -4100,12 +4106,21 @@ Deno.serve(async (req) => {
                                      lineId.includes('__bamboofill') ||
                                      lineId.includes('__glowfill') ||
                                      lineId.includes('__xt-cf20') ||
-                                     // Creality single-color specialty products
-                                     lineId.includes('creality__pc__hyper') ||        // Hyper PC only comes in Transparent
-                                     lineId.includes('creality__pla-wood__cr-wood') || // CR-Wood only comes in Wood
-                                     lineId.includes('creality__ppa-cf__standard') ||  // PPA-CF only comes in Black
-                                     lineId.includes('creality__pla-cf__cr-carbon') || // CR-PLA Carbon only comes in Black
-                                     lineId.includes('creality__asa__hp');
+                                      // Creality single-color specialty products
+                                      lineId.includes('creality__pc__hyper') ||        // Hyper PC only comes in Transparent
+                                      lineId.includes('creality__pla-wood__cr-wood') || // CR-Wood only comes in Wood
+                                      lineId.includes('creality__ppa-cf__standard') ||  // PPA-CF only comes in Black
+                                      lineId.includes('creality__pla-cf__cr-carbon') || // CR-PLA Carbon only comes in Black
+                                      lineId.includes('creality__asa__hp') ||
+                                      // Eryone single-color specialty products
+                                      lineId.includes('eryone__pla__marble') ||           // Marble comes in limited colors
+                                      lineId.includes('eryone__pla__carbon-fiber') ||     // CF only in black
+                                      lineId.includes('eryone__pla__glow') ||             // Glow products limited
+                                      lineId.includes('eryone__pla-wood') ||              // Wood filament single color
+                                      lineId.includes('eryone__pa-cf') ||                 // PA-CF only in black
+                                      lineId.includes('eryone__pp-cf') ||                 // PP-CF only in black
+                                      lineId.includes('eryone__abs__fiberglass') ||       // Fiberglass limited colors
+                                      lineId.includes('eryone__pla__antibacterial');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
@@ -4195,7 +4210,16 @@ Deno.serve(async (req) => {
                                    lineId.includes('__corkfill') ||
                                    lineId.includes('__bamboofill') ||
                                    lineId.includes('__glowfill') ||
-                                   lineId.includes('__xt-cf20');
+                                   lineId.includes('__xt-cf20') ||
+                                   // Eryone single-color specialty products
+                                   lineId.includes('eryone__pla__marble') ||
+                                   lineId.includes('eryone__pla__carbon-fiber') ||
+                                   lineId.includes('eryone__pla__glow') ||
+                                   lineId.includes('eryone__pla-wood') ||
+                                   lineId.includes('eryone__pa-cf') ||
+                                   lineId.includes('eryone__pp-cf') ||
+                                   lineId.includes('eryone__abs__fiberglass') ||
+                                   lineId.includes('eryone__pla__antibacterial');
       if (isSingleColorProduct) continue;
       
       // Count unique images (excluding null/undefined)
