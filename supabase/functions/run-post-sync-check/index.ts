@@ -3220,7 +3220,7 @@ Deno.serve(async (req) => {
       'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
-      'eryone': 42,             // ~42 distinct filament lines from CSV seed: PLA Standard, Galaxy, Marble, Glow, Carbon Fiber, Light Weight, Wood; PLA+ Standard, High-Speed; PLA Silk, Silk Dual/Triple/Quadruple, Rainbow; PLA Matte, Metallic; Rainbow variants; PETG Standard/High-Speed/CF; ABS/ABS+; ASA variants; TPU/TPU-85A; Nylon PA variants; PP
+      'eryone': 38,             // ~38 distinct filament lines from CSV seed after fixing product_line_id generation
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
       'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.
@@ -4115,12 +4115,23 @@ Deno.serve(async (req) => {
                                       // Eryone single-color specialty products
                                       lineId.includes('eryone__pla__marble') ||           // Marble comes in limited colors
                                       lineId.includes('eryone__pla__carbon-fiber') ||     // CF only in black
-                                      lineId.includes('eryone__pla__glow') ||             // Glow products limited
+                                      lineId.includes('eryone__pla__luminous') ||         // Glow products limited
+                                      lineId.includes('eryone__pla__light-weight') ||     // LW only in black
                                       lineId.includes('eryone__pla-wood') ||              // Wood filament single color
                                       lineId.includes('eryone__pa-cf') ||                 // PA-CF only in black
+                                      lineId.includes('eryone__pa12-cf') ||               // PA12-CF only in black
                                       lineId.includes('eryone__pp-cf') ||                 // PP-CF only in black
+                                      lineId.includes('eryone__pps-cf') ||                // PPS-CF only in black
+                                      lineId.includes('eryone__petg-cf') ||               // PETG-CF only in black
+                                      lineId.includes('eryone__asa-cf') ||                // ASA-CF only in black
                                       lineId.includes('eryone__abs__fiberglass') ||       // Fiberglass limited colors
-                                      lineId.includes('eryone__pla__antibacterial');
+                                      lineId.includes('eryone__pla__antibacterial') ||
+                                      // Rainbow and multi-color specialty lines (single SKU products)
+                                      lineId.includes('eryone__pla__classical-rainbow') ||
+                                      lineId.includes('eryone__pla__lagoon-rainbow') ||
+                                      lineId.includes('eryone__pla__steampunk-rainbow') ||
+                                      lineId.includes('eryone__pla__silk-rainbow') ||
+                                      lineId.includes('eryone__pla__silk-triple-color');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({

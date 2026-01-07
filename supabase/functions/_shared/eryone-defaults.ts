@@ -620,7 +620,7 @@ export function extractFinishType(title: string): FinishType {
 // ============================================================================
 
 export function generateEryoneProductLineId(filamentLine: string, material: string): string {
-  // Clean the filament line name
+  // Clean the filament line name - remove specs and "Filament" suffix
   let cleaned = filamentLine
     .replace(/\s*-\s*1\.75mm.*$/i, '')
     .replace(/\s*filament\s*$/i, '')
@@ -634,10 +634,18 @@ export function generateEryoneProductLineId(filamentLine: string, material: stri
     .replace(/[^\w-]/g, '')
     .replace(/-+/g, '-');
   
-  // Remove material prefix from filament line if it duplicates (e.g., "PLA" from "PLA Filament")
-  // This prevents IDs like "eryone__pla__pla"
-  const materialPattern = new RegExp(`^${material.replace(/[+]/g, '\\+')}\\s*`, 'i');
-  cleaned = cleaned.replace(materialPattern, '').trim();
+  // Strip ALL material prefixes from cleaned line (including with +)
+  // E.g., "PLA+ High-Speed" -> "High-Speed", "PLA Galaxy" -> "Galaxy"
+  // Also handle "PLA-Wood" -> "Wood" when material is "PLA-Wood"
+  const baseMaterial = material.replace(/[+-]/g, '').toLowerCase();
+  const materialPatterns = [
+    new RegExp(`^${material.replace(/[+]/g, '\\+').replace(/-/g, '[-\\s]?')}\\s*`, 'i'),  // Exact match with + and -
+    new RegExp(`^${baseMaterial}\\+?\\s*`, 'i'), // Base material with optional +
+  ];
+  
+  for (const pattern of materialPatterns) {
+    cleaned = cleaned.replace(pattern, '').trim();
+  }
   
   // If cleaned is empty after removing material, use 'standard'
   if (!cleaned) {
@@ -653,8 +661,9 @@ export function generateEryoneProductLineId(filamentLine: string, material: stri
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
   
-  // If lineSlug is empty or same as material, use 'standard'
-  if (!lineSlug || lineSlug === matSlug) {
+  // If lineSlug is empty or matches material slug (with or without -plus), use 'standard'
+  const matSlugBase = matSlug.replace('-plus', '');
+  if (!lineSlug || lineSlug === matSlug || lineSlug === matSlugBase) {
     return `eryone__${matSlug}__standard`;
   }
   
