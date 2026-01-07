@@ -45,6 +45,13 @@ Deno.serve(async (req) => {
   try {
     console.log(`[Eryone Sync] Starting CSV-seeded sync with ${ERYONE_PRODUCT_SEED.length} products`);
 
+    // Log detailed material breakdown to verify full CSV seed is loaded
+    const materialBreakdown: Record<string, number> = {};
+    for (const seed of ERYONE_PRODUCT_SEED) {
+      materialBreakdown[seed.material] = (materialBreakdown[seed.material] || 0) + 1;
+    }
+    console.log(`[Eryone Sync] Material breakdown (${Object.keys(materialBreakdown).length} unique):`, JSON.stringify(materialBreakdown));
+
     // Get brand ID
     const { data: brand } = await supabase
       .from('automated_brands')
@@ -118,8 +125,8 @@ Deno.serve(async (req) => {
     console.log(`[Eryone Sync] Failed during processing: ${result.stats.productsFailed}`);
 
     // Step 2: Safe delete pattern - only delete if we have valid products
-    // Lowered threshold from 200 to 100 since CSV has 356 products
-    if (cleanSlate && productsToInsert.length >= 100) {
+    // Threshold set to 350 since CSV has 419 products - prevents partial syncs from deleting data
+    if (cleanSlate && productsToInsert.length >= 350) {
       console.log(`[Eryone Sync] Clean slate: Deleting existing Eryone products (have ${productsToInsert.length} to insert)...`);
       const { error: deleteError, count } = await supabase
         .from('filaments')
