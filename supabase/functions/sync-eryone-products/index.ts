@@ -124,9 +124,15 @@ Deno.serve(async (req) => {
     console.log(`[Eryone Sync] Unique materials (${uniqueMaterials.length}): ${uniqueMaterials.join(', ')}`);
     console.log(`[Eryone Sync] Failed during processing: ${result.stats.productsFailed}`);
 
+    // Warn if we're processing fewer products than expected (indicates stale deployment)
+    const expectedMinProducts = 300;
+    if (productsToInsert.length < expectedMinProducts) {
+      console.warn(`[Eryone Sync] WARNING: Only prepared ${productsToInsert.length} products, expected ${expectedMinProducts}+. May indicate stale deployment.`);
+    }
+
     // Step 2: Safe delete pattern - only delete if we have valid products
-    // Threshold set to 350 since CSV has 419 products - prevents partial syncs from deleting data
-    if (cleanSlate && productsToInsert.length >= 350) {
+    // Threshold set to 50 to allow deletion even with partial syncs, preventing duplicate key errors
+    if (cleanSlate && productsToInsert.length >= 50) {
       console.log(`[Eryone Sync] Clean slate: Deleting existing Eryone products (have ${productsToInsert.length} to insert)...`);
       const { error: deleteError, count } = await supabase
         .from('filaments')
