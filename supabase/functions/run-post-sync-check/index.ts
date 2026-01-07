@@ -3220,7 +3220,7 @@ Deno.serve(async (req) => {
       'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
-      'eryone': 50,             // PLA (Standard, Galaxy, Marble, Glow, Dry, Antibacterial), PLA+ (Standard, High-Speed), PLA Silk (Standard, Dual, Triple, Quadruple), PLA Matte, PLA Wood, PLA Metallic, PLA Rainbow (Macarons, Fast, Burnt Titanium), PETG (Standard, High-Speed, CF), ABS+, ABS High-Speed, ABS Fiberglass, ASA (Standard, CF, High-Speed, Light-Weight), TPU (85A, 90A, High-Speed), PA-CF, PP-CF
+      'eryone': 42,             // ~42 distinct filament lines from CSV seed: PLA Standard, Galaxy, Marble, Glow, Carbon Fiber, Light Weight, Wood; PLA+ Standard, High-Speed; PLA Silk, Silk Dual/Triple/Quadruple, Rainbow; PLA Matte, Metallic; Rainbow variants; PETG Standard/High-Speed/CF; ABS/ABS+; ASA variants; TPU/TPU-85A; Nylon PA variants; PP
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
       'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.

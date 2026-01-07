@@ -1740,6 +1740,26 @@ async function scrapeCustomPlatform(supabase: any, brand: BrandConfig, materialF
     case 'recreus':
       // Recreus (Filaflex) - Spanish brand, use Firecrawl
       return await scrapeFirecrawl(brand, materialFilter, limit);
+    
+    case 'eryone':
+      // Eryone uses CSV-seeded architecture - invoke dedicated sync function
+      console.log('[custom] Routing Eryone to dedicated CSV-seeded sync');
+      try {
+        const eryoneResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/sync-eryone-products`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ cleanSlate: true }),
+        });
+        const eryoneResult = await eryoneResponse.json();
+        console.log('[custom] Eryone sync result:', eryoneResult);
+        return []; // Dedicated function handles everything
+      } catch (e) {
+        console.error('[custom] Eryone dedicated sync failed:', e);
+        return [];
+      }
       
     default:
       // Generic fallback: Try Shopify first, then Firecrawl
