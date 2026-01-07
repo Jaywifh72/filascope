@@ -558,51 +558,51 @@ const BRAND_LESSONS_LEARNED: Record<string, {
   'eryone': {
     platform: 'Shopify store (eryone3d.com) - CSV-seeded sync architecture',
     knownLimitations: [
-      '❌ CSV seed contains 356 products but some may be filtered (MOQ bundles, accessories)',
-      '❌ Product titles in DB append color (e.g., "PLA Filament - Black") which differs from page H1',
-      '❌ Dual-color products share similar hex codes causing swatch conflicts',
-      '❌ "Rainbow Stone" color was using #FFFFFF (same as White) - fixed with #E8DFD8',
-      '❌ Compound materials (PLA-Metal, PLA-Wood) had malformed product_line_ids',
-      '❌ Some products in seed have duplicate colorHex values within same product line'
+      '❌ CSV seed contains 419 products (full catalog including all materials)',
+      '❌ Product titles in DB append color (e.g., "PLA Filament - Black") which differs from page H1 (intentional for variant distinction)',
+      '❌ Website Color Names Check detects UI text like "mixable ), can mix color)" as missing colors (false positive)',
+      '❌ Dual-color products may share similar hex codes if not using blended values',
+      '❌ Compound materials (PLA-Metal, PLA-Wood) require special product_line_id handling'
     ],
     workingSolutions: [
-      '✅ CSV seed (ERYONE_PRODUCT_SEED) in eryone-defaults.ts is the single source of truth',
-      '✅ Safe delete pattern with threshold >= 100 products before clean slate delete',
-      '✅ generateEryoneProductLineId() handles compound materials (PLA-Metal, PLA-Wood)',
+      '✅ CSV seed (ERYONE_PRODUCT_SEED) in eryone-defaults.ts is the single source of truth - 419 products',
+      '✅ Safe delete pattern with threshold >= 350 products before clean slate delete',
+      '✅ generateEryoneProductLineId() handles compound materials (PLA-Metal, PLA-Wood, PETG-CF, etc.)',
       '✅ enrichEryoneProduct() provides print settings and finish type detection',
       '✅ Unique blended hex codes for dual-color products (Red & Blue → #7F007F)',
       '✅ cleanEryoneTitle() removes specs like "1.75mm±0.03mm"',
       '✅ find_duplicate_hexes RPC function post-processes to fix remaining duplicates',
-      '✅ Color family stored in seed.color, hex stored in seed.colorHex'
+      '✅ Color family stored in seed.color, hex stored in seed.colorHex',
+      '✅ Material breakdown logging shows 24+ unique materials (PLA, PLA+, PETG, PETG-CF, PETG-GF, ABS, ABS+, ABS-CF, ABS-GF, ABS-PC, ASA, ASA-CF, ASA-GF, TPU, TPU-85A, PA, PA6-CF, PA6-GF, PA12-CF, PA12-GF, PP, PP-CF, PLA-Wood, PLA-Metal)'
     ],
     failedApproaches: [
-      '⚠️ Using safe delete threshold of 200 when CSV only prepares ~100-318 products',
+      '⚠️ Using safe delete threshold of 100/200 when CSV has 419 products - set to 350',
       '⚠️ Constructing product_line_id as eryone__pla__pla (redundant material in line slug)',
       '⚠️ Using same hex code for all variants of dual-color products',
       '⚠️ Trying to scrape Eryone website dynamically - use CSV seed instead (faster, more reliable)',
-      '⚠️ Batch insert without checking for duplicate product_ids'
+      '⚠️ Not logging material breakdown - add debug logging to verify full CSV loaded'
     ],
     currentStatus: {
-      'csvSeedProducts': '356 variants in ERYONE_PRODUCT_SEED',
-      'expectedFilaments': '~318 after filtering MOQ/accessories',
-      'productLines': '~50 unique product lines (cards)',
-      'materialsSupported': 'PLA, PLA+, PETG, ABS, ASA, TPU, Nylon, PP, PA-CF, PLA-Wood, PLA-Metal',
-      'dualColorHexFixed': 'Red & Blue (#7F007F), Red & Green (#7F7F00), Rainbow Stone (#E8DFD8)'
+      'csvSeedProducts': '419 variants in ERYONE_PRODUCT_SEED (full catalog)',
+      'expectedFilaments': '~419 products (all from CSV seed)',
+      'productLines': '~48 unique product lines (cards)',
+      'materialsSupported': 'PLA, PLA+, PETG, PETG-CF, PETG-GF, ABS, ABS+, ABS-CF, ABS-GF, ABS-PC, ASA, ASA-CF, ASA-GF, TPU, TPU-85A, PA, PA6-CF, PA6-GF, PA12-CF, PA12-GF, PP, PP-CF, PLA-Wood, PLA-Metal',
+      'dualColorHexFixed': 'All dual-color products use unique blended hex codes'
     },
     keyFiles: [
       'supabase/functions/sync-eryone-products/index.ts - Main sync function (CSV-seeded)',
       'supabase/functions/_shared/eryone-defaults.ts - CSV seed, enrichment, product line ID generation',
-      'ERYONE_PRODUCT_SEED constant - 356 products with color, colorHex, URLs, images',
+      'ERYONE_PRODUCT_SEED constant - 419 products with color, colorHex, URLs, images',
       'generateEryoneProductLineId() - Generates eryone__material__line format',
       'enrichEryoneProduct() - Returns print settings, finish type, TDS URL',
       'ERYONE_DEFAULT_PRICES - Default prices by filament line'
     ],
     extractionPriority: [
-      '1. Verify all CSV products are processed (check ERYONE_PRODUCT_SEED.length)',
-      '2. Ensure no duplicate hex codes within same product_line_id',
-      '3. Validate product_line_id format (eryone__material__line, no redundant patterns)',
-      '4. Check all materials are properly normalized (PLA+, PLA-Wood, etc.)',
-      '5. Verify clean slate delete triggers only when sufficient products prepared'
+      '1. Verify all 419 CSV products are processed (check ERYONE_PRODUCT_SEED.length)',
+      '2. Verify material breakdown shows 24+ unique materials',
+      '3. Ensure no duplicate hex codes within same product_line_id',
+      '4. Validate product_line_id format (eryone__material__line, no redundant patterns)',
+      '5. Verify safe delete threshold (>= 350) triggers only when sufficient products prepared'
     ],
     manualExtractionProcess: [
       '1. Products come from ERYONE_PRODUCT_SEED in eryone-defaults.ts - DO NOT scrape',
@@ -2853,8 +2853,25 @@ Deno.serve(async (req) => {
                 .filter(Boolean)
             );
 
+            // UI text patterns to filter out (not actual color names)
+            const UI_TEXT_PATTERNS = [
+              /mixable/i,
+              /can mix color/i,
+              /out of stock/i,
+              /select option/i,
+              /choose a/i,
+              /sold out/i,
+              /coming soon/i,
+              /pre[-\s]?order/i,
+              /notify me/i,
+              /^\s*\)?\s*$/,  // Empty or just parentheses
+              /^[\d\s.,]+$/,  // Just numbers (prices, weights)
+            ];
+
             const pageColorNames = new Set(
-              pageInfo.colorSwatches.map(s => s.name.toLowerCase())
+              pageInfo.colorSwatches
+                .map(s => s.name.toLowerCase())
+                .filter(name => !UI_TEXT_PATTERNS.some(pattern => pattern.test(name)))
             );
 
             // Helper to normalize grey/gray spelling differences
@@ -3606,7 +3623,7 @@ Deno.serve(async (req) => {
       'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
-      'eryone': 50,             // ~50 distinct filament lines from 318-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, Nylon, PP variants)
+      'eryone': 48,             // ~48 distinct filament lines from 419-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, PA, PP + all variants)
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
       'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.
