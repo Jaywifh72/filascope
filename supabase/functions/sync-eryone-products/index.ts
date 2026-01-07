@@ -114,9 +114,10 @@ Deno.serve(async (req) => {
     console.log(`[Eryone Sync] Prepared ${productsToInsert.length} products for insertion`);
 
     // Step 2: Safe delete pattern - only delete if we have valid products
-    if (cleanSlate && productsToInsert.length >= 200) {
-      console.log('[Eryone Sync] Clean slate: Deleting existing Eryone products...');
-      const { error: deleteError } = await supabase
+    // Lowered threshold from 200 to 100 since CSV has 356 products
+    if (cleanSlate && productsToInsert.length >= 100) {
+      console.log(`[Eryone Sync] Clean slate: Deleting existing Eryone products (have ${productsToInsert.length} to insert)...`);
+      const { error: deleteError, count } = await supabase
         .from('filaments')
         .delete()
         .eq('vendor', 'Eryone');
@@ -124,10 +125,12 @@ Deno.serve(async (req) => {
       if (deleteError) {
         console.error('[Eryone Sync] Delete error:', deleteError.message);
         result.errors.push(`Delete failed: ${deleteError.message}`);
+      } else {
+        console.log(`[Eryone Sync] Deleted ${count || 'all'} existing products`);
       }
     }
 
-    // Step 3: Insert in batches
+    // Step 3: Insert in batches (delete already cleared existing products)
     const batchSize = 50;
     for (let i = 0; i < productsToInsert.length; i += batchSize) {
       const batch = productsToInsert.slice(i, i + batchSize);
@@ -139,6 +142,7 @@ Deno.serve(async (req) => {
         result.stats.productsFailed += batch.length;
       } else {
         result.stats.productsCreated += batch.length;
+        console.log(`[Eryone Sync] Inserted batch ${i}-${i + batch.length}`);
       }
     }
 
