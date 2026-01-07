@@ -4773,6 +4773,13 @@ Deno.serve(async (req) => {
                                    lineId.includes('eryone__pla__antibacterial');
       if (isSingleColorProduct) continue;
       
+      // Skip brands that use product-level images (not color-specific) - source data limitation
+      const isProductLevelImageBrandForColorCheck = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
+        lineId.toLowerCase().includes(b.replace(' ', '-')) || 
+        lineId.toLowerCase().includes(b.replace(' ', ''))
+      );
+      if (isProductLevelImageBrandForColorCheck) continue;
+      
       // Count unique images (excluding null/undefined)
       const imagesWithValues = variants.map(v => v.featured_image).filter(Boolean);
       const uniqueImages = new Set(imagesWithValues);
