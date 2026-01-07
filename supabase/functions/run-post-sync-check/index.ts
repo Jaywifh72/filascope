@@ -3239,7 +3239,7 @@ Deno.serve(async (req) => {
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 15,           // Performance, Standard, Specialty lines
       'esun': 18,               // PLA+, PETG, ABS+, eSilk, eMarble, TPU, etc.
-      'creality': 12,           // Hyper Series, Ender PLA, etc.
+      'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
       'fiberlogy': 15,          // Easy PLA, HD PLA, PETG, PA12, etc.
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
       'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
@@ -3759,7 +3759,10 @@ Deno.serve(async (req) => {
         // Elegoo dual-color silk patterns
         'yellow purple', 'blue green', 'blue purple', 'black green', 'black red',
         'black purple', 'green red', 'blue magenta', 'blue green orange',
-        'blue purple black', 'coral pink'
+        'blue purple black', 'coral pink',
+        // Creality dual-color silk patterns
+        'yellow blue', 'yellow-blue', 'golden silver', 'golden-silver',
+        'pink purple', 'pink-purple', 'golden red', 'red copper'
       ];
       for (const skip of skipPatterns) {
         if (text.includes(skip)) return null;
@@ -4096,7 +4099,13 @@ Deno.serve(async (req) => {
                                      lineId.includes('__corkfill') ||
                                      lineId.includes('__bamboofill') ||
                                      lineId.includes('__glowfill') ||
-                                     lineId.includes('__xt-cf20');
+                                     lineId.includes('__xt-cf20') ||
+                                     // Creality single-color specialty products
+                                     lineId.includes('creality__pc__hyper') ||        // Hyper PC only comes in Transparent
+                                     lineId.includes('creality__pla-wood__cr-wood') || // CR-Wood only comes in Wood
+                                     lineId.includes('creality__ppa-cf__standard') ||  // PPA-CF only comes in Black
+                                     lineId.includes('creality__pla-cf__cr-carbon') || // CR-PLA Carbon only comes in Black
+                                     lineId.includes('creality__asa__hp');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
