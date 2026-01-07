@@ -4534,7 +4534,13 @@ Deno.serve(async (req) => {
                                       lineId.includes('eryone__pla__lagoon-rainbow') ||
                                       lineId.includes('eryone__pla__steampunk-rainbow') ||
                                       lineId.includes('eryone__pla__silk-rainbow') ||
-                                      lineId.includes('eryone__pla__silk-triple-color');
+                                      lineId.includes('eryone__pla__silk-triple-color') ||
+                                      lineId.includes('eryone__pla__silk-high-speed-quadruple') ||   // Single SKU 4-color rainbow
+                                      lineId.includes('eryone__pla__silk-high-speed-triple-color') || // Single SKU 3-color rainbow
+                                      lineId.includes('eryone__abs-pc__') ||                          // ABS-PC alloy (single color)
+                                      lineId.includes('eryone__asa__light-weight') ||                 // LW ASA (single color)
+                                      lineId.includes('eryone__pa12-gf') ||                           // PA12 Glass Fiber (single color)
+                                      lineId.includes('eryone__pa6-gf');
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
