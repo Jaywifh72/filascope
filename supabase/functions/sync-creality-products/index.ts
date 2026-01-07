@@ -43,62 +43,124 @@ interface ShopifyProductData {
 }
 
 /**
+ * Fetch H1 titles from product pages via Firecrawl
+ * (Shopify JSON API is blocked on Creality's store)
+ */
+async function fetchPageTitles(urls: string[]): Promise<Map<string, string>> {
+  const titleMap = new Map<string, string>();
+  const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  
+  if (!firecrawlApiKey) {
+    console.log('[Creality] FIRECRAWL_API_KEY not available, skipping H1 scraping');
+    return titleMap;
+  }
+  
+  console.log(`[Creality] Fetching H1 titles for ${urls.length} URLs via Firecrawl...`);
+  
+  // Process in batches of 5 to avoid rate limiting
+  const batchSize = 5;
+  for (let i = 0; i < urls.length; i += batchSize) {
+    const batch = urls.slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (url) => {
+      try {
+        const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url,
+            formats: ['html'],
+            onlyMainContent: false,
+            waitFor: 1500,
+          }),
+        });
+        
+        const data = await response.json();
+        const html = data.data?.html || '';
+        
+        // Extract H1 title
+        const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+        if (h1Match?.[1]) {
+          const title = h1Match[1].trim();
+          titleMap.set(url, title);
+          console.log(`[Creality] H1 for ${url.split('/').pop()}: "${title}"`);
+        }
+      } catch (error) {
+        console.error(`[Creality] Error fetching H1 for ${url}:`, error);
+      }
+    }));
+    
+    // Rate limiting between batches
+    if (i + batchSize < urls.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  
+  console.log(`[Creality] Fetched ${titleMap.size}/${urls.length} H1 titles via Firecrawl`);
+  return titleMap;
+}
+
+/**
  * Fetch product data from Shopify API for price enrichment
+ * Note: Creality blocks JSON API, so this returns empty maps
+ * Prices fall back to CREALITY_DEFAULT_PRICES
  */
 async function fetchShopifyProductData(baseUrls: string[]): Promise<ShopifyProductData> {
   const priceMap = new Map<string, number>();
   const titleMap = new Map<string, string>();
   
-  // Process in batches of 5 to avoid rate limiting
+  // Try Shopify JSON API first (usually blocked by Creality)
+  console.log(`[Creality] Attempting Shopify JSON API for ${baseUrls.length} URLs...`);
+  
   const batchSize = 5;
-  for (let i = 0; i < baseUrls.length; i += batchSize) {
-    const batch = baseUrls.slice(i, i + batchSize);
-    
-    await Promise.all(batch.map(async (url) => {
-      try {
-        const jsonUrl = `${url}.json`;
-        const response = await fetch(jsonUrl, {
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (compatible; FilamentDB/1.0)',
-          },
-        });
-        
-        if (!response.ok) {
-          console.log(`[Creality] Shopify API returned ${response.status} for ${url}`);
-          return;
-        }
-        
+  let successCount = 0;
+  
+  for (let i = 0; i < Math.min(baseUrls.length, 3); i++) {
+    // Only try first 3 URLs to detect if API is blocked
+    const url = baseUrls[i];
+    try {
+      const jsonUrl = `${url}.json`;
+      const response = await fetch(jsonUrl, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; FilamentDB/1.0)',
+        },
+      });
+      
+      if (response.ok) {
+        successCount++;
         const data = await response.json();
         const product = data.product;
         
-        if (!product) return;
-        
-        // Store product title
-        titleMap.set(url, product.title);
-        
-        // Store variant prices by color name
-        if (product.variants) {
-          for (const variant of product.variants) {
-            const colorName = variant.option1 || variant.title;
-            if (colorName && variant.price) {
-              const key = `${url}|${colorName.toLowerCase()}`;
-              priceMap.set(key, parseFloat(variant.price));
+        if (product) {
+          titleMap.set(url, product.title);
+          
+          if (product.variants) {
+            for (const variant of product.variants) {
+              const colorName = variant.option1 || variant.title;
+              if (colorName && variant.price) {
+                const key = `${url}|${colorName.toLowerCase()}`;
+                priceMap.set(key, parseFloat(variant.price));
+              }
             }
           }
         }
-      } catch (error) {
-        console.error(`[Creality] Error fetching ${url}:`, error);
       }
-    }));
-    
-    // Rate limiting between batches
-    if (i + batchSize < baseUrls.length) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      // Expected - Creality blocks JSON API
     }
   }
   
-  console.log(`[Creality] Fetched prices for ${priceMap.size} variants, ${titleMap.size} product titles`);
+  if (successCount === 0) {
+    console.log(`[Creality] Shopify JSON API blocked, using default prices`);
+  } else {
+    console.log(`[Creality] Shopify JSON API working for ${successCount}/3 test URLs`);
+  }
+  
+  console.log(`[Creality] Fetched prices for ${priceMap.size} variants, ${titleMap.size} product titles from JSON API`);
   return { priceMap, titleMap };
 }
 
@@ -142,13 +204,28 @@ Deno.serve(async (req) => {
     // =========================================================================
     // STEP 1: Fetch Shopify Product Data for Prices
     // =========================================================================
-    console.log('[Step 1] Fetching Shopify product data for prices...');
+    console.log('[Step 1] Fetching product data...');
     
     const baseUrls = getUniqueBaseProductUrls();
     console.log(`[Step 1] Found ${baseUrls.length} unique product URLs to fetch`);
     
-    const { priceMap, titleMap } = await fetchShopifyProductData(baseUrls);
+    // Try Shopify JSON API (usually blocked)
+    const { priceMap, titleMap: shopifyTitleMap } = await fetchShopifyProductData(baseUrls);
     stats.pricesFetched = priceMap.size;
+    
+    // Fetch H1 titles via Firecrawl (more reliable for Creality)
+    const firecrawlTitleMap = await fetchPageTitles(baseUrls);
+    
+    // Merge title maps (Firecrawl takes priority as it's the actual H1)
+    const titleMap = new Map<string, string>();
+    for (const [url, title] of shopifyTitleMap) {
+      titleMap.set(url, title);
+    }
+    for (const [url, title] of firecrawlTitleMap) {
+      titleMap.set(url, title); // Firecrawl overwrites Shopify
+    }
+    
+    console.log(`[Step 1] Total titles: ${titleMap.size} (${firecrawlTitleMap.size} from Firecrawl)`);
 
     // =========================================================================
     // STEP 2: Optional Clean Slate
