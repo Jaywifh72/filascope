@@ -65,7 +65,10 @@ Deno.serve(async (req) => {
     const brandId = brand?.id || null;
 
     // Step 1: Process seed into product records
-    const seedToProcess = limit ? ERYONE_PRODUCT_SEED.slice(0, limit) : ERYONE_PRODUCT_SEED;
+    // For CSV-seeded brands, ignore limit - process entire curated seed
+    // The seed is already a finite list, no need to artificially limit
+    const seedToProcess = ERYONE_PRODUCT_SEED;
+    console.log(`[Eryone Sync] Processing full CSV seed (ignoring limit parameter)`);
     const productsToInsert: any[] = [];
 
     for (const seed of seedToProcess) {
