@@ -1,31 +1,25 @@
 /**
  * Creality Filament Sync Pipeline
  * 
- * 5-Step Firecrawl HTML sync for store.creality.com
- * Shopify JSON API is blocked, so we use Firecrawl HTML scraping
+ * CSV-seeded sync for store.creality.com (Shopify platform)
+ * 122 color variants across 18 product lines
  * 
- * Steps:
+ * Architecture:
  * 1. Optional clean slate (delete existing products)
- * 2. Discover product URLs via Firecrawl map
- * 3. Scrape individual product pages with variant explosion
+ * 2. Iterate through CREALITY_PRODUCT_SEED
+ * 3. Fetch live prices from Shopify API
  * 4. Apply brand-specific enrichments
- * 5. Upsert to database and finalize
+ * 5. Insert to database with proper product_line_id
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  CREALITY_PRODUCT_SEED,
   enrichCrealityProduct,
   getCrealityColorHex,
   CREALITY_STORE_INFO,
+  getUniqueBaseProductUrls,
 } from '../_shared/creality-defaults.ts';
-import {
-  shouldIncludeVariant,
-  createFilterStats,
-  updateFilterStats,
-  logFilterStats,
-  extractWeightFromText,
-  is285mmDiameter,
-} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -33,25 +27,78 @@ const corsHeaders = {
 };
 
 interface SyncStats {
-  discovered: number;
-  scraped: number;
+  seedProducts: number;
   created: number;
   updated: number;
   skipped: number;
   errors: number;
   errorDetails: string[];
+  pricesFetched: number;
 }
 
-interface ProductData {
-  productId: string;
-  title: string;
-  handle: string;
-  price: number | null;
-  compareAtPrice: number | null;
-  imageUrl: string | null;
-  productUrl: string;
-  colorName: string | null;
-  available: boolean;
+interface ShopifyProductData {
+  priceMap: Map<string, number>;
+  titleMap: Map<string, string>;
+}
+
+/**
+ * Fetch product data from Shopify API for price enrichment
+ */
+async function fetchShopifyProductData(baseUrls: string[]): Promise<ShopifyProductData> {
+  const priceMap = new Map<string, number>();
+  const titleMap = new Map<string, string>();
+  
+  // Process in batches of 5 to avoid rate limiting
+  const batchSize = 5;
+  for (let i = 0; i < baseUrls.length; i += batchSize) {
+    const batch = baseUrls.slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (url) => {
+      try {
+        const jsonUrl = `${url}.json`;
+        const response = await fetch(jsonUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (compatible; FilamentDB/1.0)',
+          },
+        });
+        
+        if (!response.ok) {
+          console.log(`[Creality] Shopify API returned ${response.status} for ${url}`);
+          return;
+        }
+        
+        const data = await response.json();
+        const product = data.product;
+        
+        if (!product) return;
+        
+        // Store product title
+        titleMap.set(url, product.title);
+        
+        // Store variant prices by color name
+        if (product.variants) {
+          for (const variant of product.variants) {
+            const colorName = variant.option1 || variant.title;
+            if (colorName && variant.price) {
+              const key = `${url}|${colorName.toLowerCase()}`;
+              priceMap.set(key, parseFloat(variant.price));
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`[Creality] Error fetching ${url}:`, error);
+      }
+    }));
+    
+    // Rate limiting between batches
+    if (i + batchSize < baseUrls.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  
+  console.log(`[Creality] Fetched prices for ${priceMap.size} variants, ${titleMap.size} product titles`);
+  return { priceMap, titleMap };
 }
 
 Deno.serve(async (req) => {
@@ -61,29 +108,26 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
   const stats: SyncStats = {
-    discovered: 0,
-    scraped: 0,
+    seedProducts: CREALITY_PRODUCT_SEED.length,
     created: 0,
     updated: 0,
     skipped: 0,
     errors: 0,
     errorDetails: [],
+    pricesFetched: 0,
   };
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request options
     const body = await req.json().catch(() => ({}));
     const cleanSlate = body.cleanSlate === true;
-    const limit = body.limit || 100;
-    const skipExisting = body.skipExisting !== false;
+    const limit = body.limit || 150; // Default high enough for full catalog
 
-    console.log(`[Creality Sync] Starting sync - cleanSlate: ${cleanSlate}, limit: ${limit}`);
+    console.log(`[Creality Sync] Starting CSV-seeded sync - cleanSlate: ${cleanSlate}, limit: ${limit}, seed: ${CREALITY_PRODUCT_SEED.length} products`);
 
     // Get brand info
     const { data: brand } = await supabase
@@ -95,306 +139,104 @@ Deno.serve(async (req) => {
     const brandId = brand?.id || null;
 
     // =========================================================================
-    // STEP 1: Optional Clean Slate
+    // STEP 1: Fetch Shopify Product Data for Prices
+    // =========================================================================
+    console.log('[Step 1] Fetching Shopify product data for prices...');
+    
+    const baseUrls = getUniqueBaseProductUrls();
+    console.log(`[Step 1] Found ${baseUrls.length} unique product URLs to fetch`);
+    
+    const { priceMap, titleMap } = await fetchShopifyProductData(baseUrls);
+    stats.pricesFetched = priceMap.size;
+
+    // =========================================================================
+    // STEP 2: Optional Clean Slate
     // =========================================================================
     if (cleanSlate) {
-      console.log('[Step 1] Clean slate - deleting existing Creality products...');
+      console.log('[Step 2] Clean slate - deleting existing Creality products...');
       const { error: deleteError } = await supabase
         .from('filaments')
         .delete()
         .ilike('vendor', 'creality');
       
       if (deleteError) {
-        console.error('[Step 1] Delete error:', deleteError);
+        console.error('[Step 2] Delete error:', deleteError);
       } else {
-        console.log('[Step 1] Deleted existing Creality products');
+        console.log(`[Step 2] Deleted existing Creality products`);
       }
     }
 
-    // Get existing products for skip logic
+    // Get existing product IDs for skip/update logic
     const existingProductIds = new Set<string>();
-    if (skipExisting && !cleanSlate) {
-      const { data: existing } = await supabase
-        .from('filaments')
-        .select('product_id')
-        .ilike('vendor', 'creality');
+    const { data: existing } = await supabase
+      .from('filaments')
+      .select('product_id')
+      .ilike('vendor', 'creality');
+    
+    existing?.forEach(p => {
+      if (p.product_id) existingProductIds.add(p.product_id);
+    });
+    console.log(`[Step 2] Found ${existingProductIds.size} existing products`);
+
+    // =========================================================================
+    // STEP 3: Process Seed Products
+    // =========================================================================
+    console.log('[Step 3] Processing seed products...');
+    
+    const productsToInsert: any[] = [];
+    let processedCount = 0;
+    
+    for (const seedItem of CREALITY_PRODUCT_SEED) {
+      if (processedCount >= limit) break;
       
-      existing?.forEach(p => {
-        if (p.product_id) existingProductIds.add(p.product_id);
-      });
-      console.log(`[Setup] Found ${existingProductIds.size} existing products`);
-    }
-
-    // =========================================================================
-    // STEP 2: Discover Product URLs
-    // =========================================================================
-    console.log('[Step 2] Discovering product URLs via Firecrawl...');
-    
-    const discoveredUrls = new Set<string>();
-    
-    if (firecrawlKey) {
-      try {
-        // Map the collection page
-        const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: CREALITY_STORE_INFO.collectionsUrl,
-            limit: 500,
-          }),
-        });
-
-        const mapData = await mapResponse.json();
-        
-        if (mapData.success && mapData.links) {
-          for (const url of mapData.links) {
-            // Filter for product URLs
-            if (url.includes('/products/') && 
-                url.includes('filament') &&
-                !url.includes('?variant=') &&
-                !url.includes('#')) {
-              discoveredUrls.add(url.split('?')[0]);
-            }
-          }
-        }
-        
-        console.log(`[Step 2] Discovered ${discoveredUrls.size} product URLs`);
-        stats.discovered = discoveredUrls.size;
-      } catch (mapError) {
-        console.error('[Step 2] Map error:', mapError);
-        stats.errorDetails.push(`Map error: ${mapError}`);
-      }
-    } else {
-      console.warn('[Step 2] No Firecrawl API key - using known product URLs');
-      // Fallback: known product URLs from research
-      const knownUrls = [
-        'https://store.creality.com/products/hyper-series-pla-3d-printing-filament-1kg',
-        'https://store.creality.com/products/hyper-series-pla-rfid-filament-1kg',
-        'https://store.creality.com/products/hyper-series-pla-rfid-stardust-filament-1kg',
-        'https://store.creality.com/products/hyper-rainbow-pla-1kg-dual-color-3d-printing-filament',
-        'https://store.creality.com/products/hyper-series-petg-3d-printing-filament-1kg',
-        'https://store.creality.com/products/hyper-series-abs-3d-printing-filament-1kg',
-        'https://store.creality.com/products/ender-fast-pla-3d-printing-filament-1-75mm-1kg',
-        'https://store.creality.com/products/cr-silk-pla-1kg-gold',
-        'https://store.creality.com/products/hp-tpu-95a-3d-printing-filament-500g',
-        'https://store.creality.com/products/hp-asa-3d-printing-filament-1kg',
-      ];
-      knownUrls.forEach(url => discoveredUrls.add(url));
-      stats.discovered = discoveredUrls.size;
-    }
-
-    // =========================================================================
-    // STEP 3: Scrape Individual Product Pages
-    // =========================================================================
-    console.log('[Step 3] Scraping product pages...');
-    
-    const discoveredProducts: ProductData[] = [];
-    let scrapeCount = 0;
-    const filterStats = createFilterStats();
-    
-    for (const productUrl of discoveredUrls) {
-      if (scrapeCount >= limit) break;
-      
-      try {
-        // Extract handle from URL
-        const handleMatch = productUrl.match(/\/products\/([^/?#]+)/);
-        if (!handleMatch) continue;
-        const handle = handleMatch[1];
-        
-        if (!firecrawlKey) {
-          // Without Firecrawl, create basic product entry
-          const baseProductId = handle;
-          if (skipExisting && existingProductIds.has(baseProductId)) {
-            stats.skipped++;
-            continue;
-          }
-          
-          discoveredProducts.push({
-            productId: baseProductId,
-            title: handle.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-            handle,
-            price: null,
-            compareAtPrice: null,
-            imageUrl: null,
-            productUrl,
-            colorName: null,
-            available: true,
-          });
-          scrapeCount++;
-          continue;
-        }
-        
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Scrape product page
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: productUrl,
-            formats: ['markdown', 'html'],
-            waitFor: 2000,
-          }),
-        });
-
-        const scrapeData = await scrapeResponse.json();
-        
-        if (!scrapeData.success) {
-          console.error(`[Step 3] Scrape failed for ${productUrl}:`, scrapeData.error);
-          stats.errors++;
-          stats.errorDetails.push(`Scrape failed: ${productUrl}`);
-          continue;
-        }
-
-        const markdown = scrapeData.data?.markdown || '';
-        const html = scrapeData.data?.html || '';
-        
-        // Extract title
-        let title = '';
-        const titleMatch = markdown.match(/^#\s+(.+?)(?:\n|$)/m) || 
-                          html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-        if (titleMatch) {
-          title = titleMatch[1].trim();
-        } else {
-          title = handle.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        }
-        
-        // Extract price
-        let price: number | null = null;
-        let compareAtPrice: number | null = null;
-        const priceMatch = markdown.match(/\$(\d+(?:\.\d{2})?)/);
-        if (priceMatch) {
-          price = parseFloat(priceMatch[1]);
-        }
-        const compareMatch = markdown.match(/~~\$(\d+(?:\.\d{2})?)~~/);
-        if (compareMatch) {
-          compareAtPrice = parseFloat(compareMatch[1]);
-        }
-        
-        // Extract image
-        let imageUrl: string | null = null;
-        const imgMatch = html.match(/property="og:image"\s+content="([^"]+)"/i) ||
-                        html.match(/<img[^>]+src="(https:\/\/cdn\.shopify\.com[^"]+)"/i);
-        if (imgMatch) {
-          imageUrl = imgMatch[1];
-        }
-        
-        // Extract color variants from swatch selectors
-        const colorVariants: string[] = [];
-        const swatchMatches = html.matchAll(/data-value="([^"]+)"[^>]*class="[^"]*swatch[^"]*"/gi);
-        for (const match of swatchMatches) {
-          const color = match[1].trim();
-          if (color && !colorVariants.includes(color)) {
-            colorVariants.push(color);
-          }
-        }
-        
-        // Alternative: extract from variant dropdown or text
-        if (colorVariants.length === 0) {
-          const colorSection = markdown.match(/Color[:\s]+([^\n]+)/i);
-          if (colorSection) {
-            const colors = colorSection[1].split(/[,|\/]/).map((c: string) => c.trim()).filter((c: string) => c.length > 0);
-            colorVariants.push(...colors);
-          }
-        }
-        
-        // If no color variants found, check title for color
-        if (colorVariants.length === 0) {
-          const titleColorMatch = title.match(/\b(black|white|grey|gray|red|blue|green|yellow|orange|purple|pink|gold|silver|rainbow)\b/i);
-          if (titleColorMatch) {
-            colorVariants.push(titleColorMatch[1]);
-          } else {
-            colorVariants.push(''); // No color - single variant
-          }
-        }
-        
-        // Create variant-exploded rows
-        for (const colorName of colorVariants) {
-          const colorSlug = colorName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-          const productId = colorSlug ? `${handle}__${colorSlug}` : handle;
-          
-          if (skipExisting && existingProductIds.has(productId)) {
-            stats.skipped++;
-            continue;
-          }
-          
-          // Extract weight for filtering
-          const weight = extractWeightFromText(title) || 1000;
-          const is285 = is285mmDiameter(title);
-          
-          // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
-          const filterResult = shouldIncludeVariant(weight, is285 ? 2.85 : 1.75, title);
-          updateFilterStats(filterStats, filterResult);
-          if (!filterResult.include) {
-            console.log(`[Creality] Skipping: ${title} - ${colorName} (${filterResult.reason})`);
-            continue;
-          }
-          
-          discoveredProducts.push({
-            productId,
-            title: colorName ? `${title} - ${colorName}` : title,
-            handle,
-            price,
-            compareAtPrice,
-            imageUrl,
-            productUrl,
-            colorName: colorName || null,
-            available: true,
-          });
-        }
-        
-        scrapeCount++;
-        stats.scraped++;
-        console.log(`[Step 3] Scraped ${scrapeCount}/${Math.min(discoveredUrls.size, limit)}: ${title} (${colorVariants.length} variants)`);
-        
-      } catch (scrapeError) {
-        console.error(`[Step 3] Error scraping ${productUrl}:`, scrapeError);
-        stats.errors++;
-        stats.errorDetails.push(`Error: ${productUrl}`);
-      }
-    }
-    
-    logFilterStats('Creality', filterStats);
-    console.log(`[Step 3] Scraped ${stats.scraped} products, ${discoveredProducts.length} variants`);
-
-    // =========================================================================
-    // STEP 4: Apply Brand-Specific Enrichments
-    // =========================================================================
-    console.log('[Step 4] Applying brand-specific enrichments...');
-    
-    for (const product of discoveredProducts) {
       try {
         // Enrich product
-        const enrichment = enrichCrealityProduct(product.title, product.colorName);
+        const enrichment = enrichCrealityProduct(
+          seedItem.filamentLine,
+          seedItem.color,
+          seedItem.material
+        );
+        
+        // Generate product ID
+        const colorSlug = seedItem.color.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        const lineSlug = seedItem.filamentLine.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        const productId = `creality__${lineSlug}__${colorSlug}`;
         
         // Get color hex
-        const colorHex = product.colorName ? getCrealityColorHex(product.colorName) : enrichment.colorHex;
+        const colorHex = getCrealityColorHex(seedItem.color) || enrichment.colorHex;
+        
+        // Get price from Shopify data
+        const baseUrl = seedItem.productUrl.split('?')[0];
+        const priceKey = `${baseUrl}|${seedItem.color.toLowerCase()}`;
+        const price = priceMap.get(priceKey) || null;
+        
+        // Get product title from Shopify data or use filament line
+        const shopifyTitle = titleMap.get(baseUrl);
+        const productTitle = shopifyTitle || seedItem.filamentLine;
         
         // Build filament data
         const filamentData = {
-          product_id: product.productId,
-          product_title: product.title,
-          product_handle: product.handle,
+          product_id: productId,
+          product_title: productTitle,
+          product_handle: lineSlug,
           vendor: CREALITY_STORE_INFO.vendor,
           brand_id: brandId,
-          product_url: product.productUrl,
-          featured_image: product.imageUrl,
-          variant_price: product.price,
-          variant_compare_at_price: product.compareAtPrice,
-          variant_available: product.available,
+          product_url: seedItem.productUrl,
+          featured_image: seedItem.imageUrl,
+          variant_price: price,
+          variant_available: true,
           material: enrichment.material,
           finish_type: enrichment.finishType,
           product_line_id: enrichment.productLineId,
           tds_url: enrichment.tdsUrl,
           color_hex: colorHex,
-          color_family: product.colorName,
+          color_family: seedItem.color,
           diameter_nominal_mm: enrichment.diameterMm,
           net_weight_g: enrichment.spoolWeightGrams,
           high_speed_capable: enrichment.highSpeedCapable,
@@ -410,58 +252,120 @@ Deno.serve(async (req) => {
           sync_status: 'synced',
         };
         
-        // Upsert
-        const { error: upsertError } = await supabase
-          .from('filaments')
-          .upsert(filamentData, { onConflict: 'product_id' });
+        productsToInsert.push(filamentData);
         
-        if (upsertError) {
-          console.error(`[Step 4] Upsert error for ${product.productId}:`, upsertError);
-          stats.errors++;
-          stats.errorDetails.push(`Upsert error: ${product.productId}`);
+        if (existingProductIds.has(productId)) {
+          stats.updated++;
         } else {
-          if (existingProductIds.has(product.productId)) {
-            stats.updated++;
-          } else {
-            stats.created++;
-          }
+          stats.created++;
         }
         
-      } catch (enrichError) {
-        console.error(`[Step 4] Enrichment error for ${product.productId}:`, enrichError);
+        processedCount++;
+        
+      } catch (error) {
+        console.error(`[Step 3] Error processing ${seedItem.filamentLine} - ${seedItem.color}:`, error);
         stats.errors++;
+        stats.errorDetails.push(`${seedItem.filamentLine} - ${seedItem.color}: ${error}`);
       }
     }
     
-    console.log(`[Step 4] Created: ${stats.created}, Updated: ${stats.updated}`);
+    console.log(`[Step 3] Prepared ${productsToInsert.length} products for insertion`);
 
     // =========================================================================
-    // STEP 5: Finalize
+    // STEP 4: Insert Products in Batches
     // =========================================================================
-    console.log('[Step 5] Finalizing sync...');
+    console.log('[Step 4] Inserting products to database...');
+    
+    const batchSize = 50;
+    for (let i = 0; i < productsToInsert.length; i += batchSize) {
+      const batch = productsToInsert.slice(i, i + batchSize);
+      
+      const { error: upsertError } = await supabase
+        .from('filaments')
+        .upsert(batch, { onConflict: 'product_id' });
+      
+      if (upsertError) {
+        console.error(`[Step 4] Batch ${i / batchSize + 1} upsert error:`, upsertError);
+        stats.errors += batch.length;
+        stats.errorDetails.push(`Batch ${i / batchSize + 1}: ${upsertError.message}`);
+      } else {
+        console.log(`[Step 4] Inserted batch ${i / batchSize + 1}/${Math.ceil(productsToInsert.length / batchSize)}`);
+      }
+    }
+
+    // =========================================================================
+    // STEP 5: Update Brand Stats and Fix Duplicates
+    // =========================================================================
+    console.log('[Step 5] Updating brand stats...');
     
     // Update automated_brands
-    await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'creality' });
-    await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: 'creality' });
-    
-    // Fix duplicate hex codes
-    try {
-      await supabase.rpc('find_duplicate_hexes', { p_vendor: 'Creality' });
-    } catch (e) {
-      console.log('[Step 5] Duplicate hex check completed');
-    }
-    
-    // Update scraping status
     await supabase
       .from('automated_brands')
       .update({
-        scraping_active: false,
         last_scrape_at: new Date().toISOString(),
+        scraping_active: false,
+        products_created: stats.created,
+        products_updated: stats.updated,
       })
       .eq('brand_slug', 'creality');
+    
+    // Update product counts
+    try {
+      await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'creality' });
+    } catch (e) {
+      console.log('[Step 5] Product count RPC not available');
+    }
+    
+    // Fix duplicate hex codes within product lines
+    console.log('[Step 5] Fixing duplicate hex codes...');
+    const { data: crealityProducts } = await supabase
+      .from('filaments')
+      .select('id, product_line_id, color_hex, color_family')
+      .ilike('vendor', 'creality')
+      .not('color_hex', 'is', null);
+    
+    if (crealityProducts) {
+      // Group by product_line_id
+      const lineGroups: Record<string, typeof crealityProducts> = {};
+      for (const p of crealityProducts) {
+        const lineId = p.product_line_id || 'unknown';
+        if (!lineGroups[lineId]) lineGroups[lineId] = [];
+        lineGroups[lineId].push(p);
+      }
+      
+      // Find and fix duplicates within each group
+      for (const [lineId, products] of Object.entries(lineGroups)) {
+        const hexCounts: Record<string, any[]> = {};
+        for (const p of products) {
+          const hex = p.color_hex?.toUpperCase() || '';
+          if (!hexCounts[hex]) hexCounts[hex] = [];
+          hexCounts[hex].push(p);
+        }
+        
+        // Adjust duplicates
+        for (const [hex, dupes] of Object.entries(hexCounts)) {
+          if (dupes.length > 1) {
+            console.log(`[Step 5] Found ${dupes.length} duplicate ${hex} in ${lineId}`);
+            for (let i = 1; i < dupes.length; i++) {
+              // Slightly adjust the hex by adding to blue channel
+              const baseHex = hex.replace('#', '');
+              const r = parseInt(baseHex.slice(0, 2), 16);
+              const g = parseInt(baseHex.slice(2, 4), 16);
+              const b = Math.min(255, parseInt(baseHex.slice(4, 6), 16) + i);
+              const newHex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+              
+              await supabase
+                .from('filaments')
+                .update({ color_hex: newHex })
+                .eq('id', dupes[i].id);
+            }
+          }
+        }
+      }
+    }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`[Creality Sync] Complete in ${duration}s`);
+    console.log(`[Creality Sync] Complete in ${duration}s - Created: ${stats.created}, Updated: ${stats.updated}, Errors: ${stats.errors}`);
 
     return new Response(
       JSON.stringify({
