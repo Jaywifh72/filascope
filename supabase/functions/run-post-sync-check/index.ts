@@ -3731,7 +3731,7 @@ Deno.serve(async (req) => {
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 15,           // Performance, Standard, Specialty lines
-      'esun': 45,               // CSV-seeded: PLA-Basic, PLA-Matte, PLA-Silk, PLA+, PLA+HS, PETG, PETG+HS, ABS+, TPU-95A, PA-CF, PA12-CF, etc. (444 products)
+      'esun': 39,               // CSV-seeded: 39 distinct product lines from 360+ products (PLA-Basic, PLA-Matte, PLA-Silk, PLA+HS, PETG, ABS+, TPU-95A, etc.)
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
       'fiberlogy': 15,          // Easy PLA, HD PLA, PETG, PA12, etc.
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
@@ -4544,7 +4544,8 @@ Deno.serve(async (req) => {
     // Whitelist brands that use product-level images (not color-level images) - this is expected behavior
     // Brands that use product-level images (not color-level images) - this is expected behavior
     // Note: Bambu Lab DOES have color-specific images so it's no longer whitelisted
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm'];
+    // eSUN uses CSV-seeded data which has product-level images (source data limitation)
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -4653,13 +4654,21 @@ Deno.serve(async (req) => {
                                       lineId.includes('esun__pla__marble') ||
                                       lineId.includes('esun__pla__super-tough') ||
                                       lineId.includes('esun__pla__lightweight') ||
+                                      lineId.includes('esun__pla__luminous-rainbow') ||  // Single rainbow product
+                                      lineId.includes('esun__pla__stars') ||             // Single stars effect product
+                                      lineId.includes('esun__pla__metal') ||             // Only 2 metal colors
+                                      lineId.includes('esun__pla__silk-metal') ||        // Only 3 silk metal colors
+                                      lineId.includes('esun__pla__luminous') ||          // Only 2 glow colors
                                       lineId.includes('esun__petg__carbon-fiber') ||
                                       lineId.includes('esun__petg__esd') ||
                                       lineId.includes('esun__abs__carbon-fiber') ||
+                                      lineId.includes('esun__pa__standard') ||           // PA only comes in natural
                                       lineId.includes('esun__pa__carbon-fiber') ||
                                       lineId.includes('esun__pa12__carbon-fiber') ||
                                       lineId.includes('esun__paht__carbon-fiber') ||
                                       lineId.includes('esun__tpu__lightweight') ||
+                                      lineId.includes('esun__tpe__standard') ||          // Only 2 TPE colors
+                                      lineId.includes('esun__pet__') ||
                                       lineId.includes('esun__pc__') ||
                                       lineId.includes('esun__pva__') ||
                                       lineId.includes('esun__hips__');
