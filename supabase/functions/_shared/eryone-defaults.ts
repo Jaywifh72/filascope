@@ -104,7 +104,7 @@ export const ERYONE_PRODUCT_SEED: EryoneProductSeed[] = [
   { material: 'PLA+', filamentLine: 'PLA+ High-Speed Filament', color: 'Mint Green', colorHex: '#98FF98', productUrl: 'https://eryone3d.com/en-ca/products/pla-plus-high-speed-filament?variant=52333616595310', imageUrl: 'https://eryone3d.com/cdn/shop/files/2_8aa6982a-dec5-47e2-98ca-7a4faf10116c.jpg' },
   { material: 'PLA+', filamentLine: 'PLA+ High-Speed Filament', color: 'Dark Brown', colorHex: '#5C4033', productUrl: 'https://eryone3d.com/en-ca/products/pla-plus-high-speed-filament?variant=52333616628078', imageUrl: 'https://eryone3d.com/cdn/shop/files/1-1600.jpg' },
   { material: 'PLA+', filamentLine: 'PLA+ High-Speed Filament', color: 'Violet', colorHex: '#EE82EE', productUrl: 'https://eryone3d.com/en-ca/products/pla-plus-high-speed-filament?variant=52349665542510', imageUrl: 'https://eryone3d.com/cdn/shop/files/1-1600_109d633a-edd9-4000-99a9-3959382613b2.jpg' },
-  { material: 'PLA+', filamentLine: 'PLA+ High-Speed Filament', color: 'Rainbow Stone', colorHex: '#FFFFFF', productUrl: 'https://eryone3d.com/en-ca/products/pla-plus-high-speed-filament?variant=51887156199790', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Plus-High-Speed-Filament-1kg-13.jpg' },
+  { material: 'PLA+', filamentLine: 'PLA+ High-Speed Filament', color: 'Rainbow Stone', colorHex: '#E8DFD8', productUrl: 'https://eryone3d.com/en-ca/products/pla-plus-high-speed-filament?variant=51887156199790', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Plus-High-Speed-Filament-1kg-13.jpg' },
 
   // PLA High-Speed (6 variants)
   { material: 'PLA', filamentLine: 'PLA High-Speed Filament', color: 'Skin Color', colorHex: '#E8BEAC', productUrl: 'https://eryone3d.com/en-ca/collections/pla-special/products/pla-high-speed-filament', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-High-Speed-Filament-1kg-skin.jpg' },
@@ -130,28 +130,28 @@ export const ERYONE_PRODUCT_SEED: EryoneProductSeed[] = [
   { material: 'PLA', filamentLine: 'PLA Silk Rainbow Filament', color: 'Rainbow', colorHex: '#FFB6C1', productUrl: 'https://eryone3d.com/collections/pla-silk-all/products/macaron-rainbow-pla-filament', imageUrl: 'https://eryone3d.com/cdn/shop/files/silk-Rainbow-Filament-PLA-3.jpg' },
 
   // PLA Silk Dual-Color (27 variants)
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Purple', colorHex: '#000000', productUrl: 'https://eryone3d.com/collections/pla-silk-all/products/silk-dual-color-pla', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-9.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Red', colorHex: '#000000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068399338', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-1.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Blue & Purple', colorHex: '#0000FF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716875498', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-2-Color-Filament-7.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Blue Green & Orange', colorHex: '#0000FF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716809962', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-13.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Red & Blue', colorHex: '#FF0000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100507701482', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-6.png' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Blue & Green', colorHex: '#0000FF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485517546', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-2-Color-Filament-6.png' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Midnight Blue & Black', colorHex: '#000000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=52196411638126', imageUrl: 'https://eryone3d.com/cdn/shop/files/7829c60bb0ab67a17fd25b0179f6005b.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Midnight Blue & Silver', colorHex: '#0000FF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=52196411670894', imageUrl: 'https://eryone3d.com/cdn/shop/files/e6dab045ef4a307322ce76a737affbf7.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Dark Gold', colorHex: '#000000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068432106', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-2.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Orange & Blue', colorHex: '#0000FF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=51992770249070', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-2-Color-Filament-5.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Red & Green', colorHex: '#FF0000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485648618', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-7.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Red & Gold', colorHex: '#FF0000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100507767018', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-22.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Silver', colorHex: '#C0C0C0', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485583082', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-25.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Purple & Orange', colorHex: '#FFA500', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716908266', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-12.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Purple & Green', colorHex: '#008000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716941034', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-15.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Blue', colorHex: '#0000FF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716842730', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-11.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Rose Red & Light Blue', colorHex: '#FF0000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068333802', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-2-Color-Filament-9.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Rose', colorHex: '#000000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068366570', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-14.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Dark Green', colorHex: '#000000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43879344799978', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-8.jpg' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Yellow & Green', colorHex: '#008000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485484778', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-24.png' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Purple', colorHex: '#800080', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485550314', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-25.png' },
-  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Copper', colorHex: '#FFD700', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485615850', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-23.png' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Purple', colorHex: '#1A0025', productUrl: 'https://eryone3d.com/collections/pla-silk-all/products/silk-dual-color-pla', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-9.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Red', colorHex: '#3F0000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068399338', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-1.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Blue & Purple', colorHex: '#4000BF', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716875498', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-2-Color-Filament-7.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Blue Green & Orange', colorHex: '#407F5F', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716809962', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-13.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Red & Blue', colorHex: '#7F007F', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100507701482', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-6.png' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Blue & Green', colorHex: '#007F7F', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485517546', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-2-Color-Filament-6.png' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Midnight Blue & Black', colorHex: '#0D0D33', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=52196411638126', imageUrl: 'https://eryone3d.com/cdn/shop/files/7829c60bb0ab67a17fd25b0179f6005b.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Midnight Blue & Silver', colorHex: '#6080B0', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=52196411670894', imageUrl: 'https://eryone3d.com/cdn/shop/files/e6dab045ef4a307322ce76a737affbf7.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Dark Gold', colorHex: '#4D4000', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068432106', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-2.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Orange & Blue', colorHex: '#7F5280', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=51992770249070', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-2-Color-Filament-5.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Red & Green', colorHex: '#7F7F00', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485648618', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-7.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Red & Gold', colorHex: '#FF6B1F', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100507767018', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-22.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Silver', colorHex: '#D9D9B3', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485583082', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-25.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Purple & Orange', colorHex: '#BF5280', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716908266', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-12.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Purple & Green', colorHex: '#404040', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716941034', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-15.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Blue', colorHex: '#7F6B7F', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=44201716842730', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-11.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Rose Red & Light Blue', colorHex: '#BF5280', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068333802', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-2-Color-Filament-9.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Rose', colorHex: '#3F1A2A', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43912068366570', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-14.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Black & Dark Green', colorHex: '#003200', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43879344799978', imageUrl: 'https://eryone3d.com/cdn/shop/products/PLA-Silk-Dual-Color-Filament-8.jpg' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Yellow & Green', colorHex: '#7FBF00', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485484778', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-24.png' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Purple', colorHex: '#BF6B40', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485550314', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-25.png' },
+  { material: 'PLA', filamentLine: 'PLA Silk Dual-Color Filament', color: 'Gold & Copper', colorHex: '#FFAB1A', productUrl: 'https://eryone3d.com/products/silk-dual-color-pla?variant=43100485615850', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Silk-Dual-Color-Filament-23.png' },
 
   // PLA Ultra Silk (7 variants)
   { material: 'PLA', filamentLine: 'PLA Ultra Silk Filament', color: 'Gold', colorHex: '#FFD700', productUrl: 'https://eryone3d.com/collections/pla-silk-all/products/advanced-silk-pla', imageUrl: 'https://eryone3d.com/cdn/shop/files/PLA-Ultra-Silk-Filament-1.jpg' },
@@ -634,17 +634,25 @@ export function generateEryoneProductLineId(filamentLine: string, material: stri
     .replace(/[^\w-]/g, '')
     .replace(/-+/g, '-');
   
-  // Strip ALL material prefixes from cleaned line (including with +)
-  // E.g., "PLA+ High-Speed" -> "High-Speed", "PLA Galaxy" -> "Galaxy"
-  // Also handle "PLA-Wood" -> "Wood" when material is "PLA-Wood"
-  const baseMaterial = material.replace(/[+-]/g, '').toLowerCase();
-  const materialPatterns = [
-    new RegExp(`^${material.replace(/[+]/g, '\\+').replace(/-/g, '[-\\s]?')}\\s*`, 'i'),  // Exact match with + and -
-    new RegExp(`^${baseMaterial}\\+?\\s*`, 'i'), // Base material with optional +
-  ];
+  // Special handling for compound materials like PLA-Metal, PLA-Wood
+  // These should NOT strip the base material, only strip "PLA " prefix
+  const isCompoundMaterial = material.includes('-');
   
-  for (const pattern of materialPatterns) {
-    cleaned = cleaned.replace(pattern, '').trim();
+  if (isCompoundMaterial) {
+    // For compound materials, just strip "PLA " or similar prefix
+    // "PLA Metallic" with material "PLA-Metal" -> "Metallic"
+    cleaned = cleaned.replace(/^(PLA|PETG|ABS)\s+/i, '').trim();
+  } else {
+    // For simple materials (PLA, PLA+, PETG), strip the material prefix
+    const baseMaterial = material.replace(/[+-]/g, '').toLowerCase();
+    const materialPatterns = [
+      new RegExp(`^${material.replace(/[+]/g, '\\+').replace(/-/g, '[-\\s]?')}\\s*`, 'i'),
+      new RegExp(`^${baseMaterial}\\+?\\s*`, 'i'),
+    ];
+    
+    for (const pattern of materialPatterns) {
+      cleaned = cleaned.replace(pattern, '').trim();
+    }
   }
   
   // If cleaned is empty after removing material, use 'standard'
@@ -662,7 +670,7 @@ export function generateEryoneProductLineId(filamentLine: string, material: stri
     .replace(/^-|-$/g, '');
   
   // If lineSlug is empty or matches material slug (with or without -plus), use 'standard'
-  const matSlugBase = matSlug.replace('-plus', '');
+  const matSlugBase = matSlug.replace(/-plus$/, '').replace(/-metal$/, '').replace(/-wood$/, '');
   if (!lineSlug || lineSlug === matSlug || lineSlug === matSlugBase) {
     return `eryone__${matSlug}__standard`;
   }
