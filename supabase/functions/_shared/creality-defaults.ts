@@ -573,15 +573,18 @@ export function getCrealityColorHex(colorName: string): string | null {
   
   const normalized = colorName.toLowerCase().trim();
   
-  // Direct match
+  // 1. Direct exact match (highest priority)
   if (CREALITY_COLOR_MAPPING[normalized]) {
     return '#' + CREALITY_COLOR_MAPPING[normalized].replace('#', '');
   }
   
-  // Partial match (longest match first)
+  // 2. Check if colorName contains a mapping key (longest match first)
+  // e.g., "Stardust Blue" contains "stardust blue"
+  // IMPORTANT: Only match if colorName CONTAINS the key, not vice versa
+  // This prevents "yellow" from matching "yellow-blue"
   const sortedKeys = Object.keys(CREALITY_COLOR_MAPPING).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
-    if (normalized.includes(key) || key.includes(normalized)) {
+    if (normalized.includes(key)) {
       return '#' + CREALITY_COLOR_MAPPING[key].replace('#', '');
     }
   }
@@ -685,40 +688,41 @@ export const CREALITY_STORE_INFO = {
 
 // ============================================================================
 // DEFAULT PRICES BY PRODUCT LINE (fallback when Shopify API is blocked)
+// Keys match generated product_line_id format: creality__<material>__<line>
 // ============================================================================
 
 export const CREALITY_DEFAULT_PRICES: Record<string, number> = {
   // Hyper Series (flagship high-speed)
-  'creality__hyper-pla-rfid': 24.99,
-  'creality__hyper-pla-rfid-stardust': 26.99,
-  'creality__hyper-pla': 21.99,
-  'creality__hyper-petg': 25.99,
-  'creality__hyper-abs': 24.99,
-  'creality__hyper-pc': 29.99,
-  'creality__hyper-pla-cf': 34.99,
-  'creality__hyper-petg-cf': 39.99,
-  'creality__hyper-rainbow-pla': 24.99,
-  'creality__hyper-luminous-pla': 26.99,
-  'creality__hyper-lightweight-pla': 27.99,
+  'creality__pla__hyper-rfid': 24.99,
+  'creality__pla__hyper-rfid-stardust': 26.99,
+  'creality__pla__hyper': 21.99,
+  'creality__petg__hyper': 25.99,
+  'creality__abs__hyper': 24.99,
+  'creality__pc__hyper': 29.99,
+  'creality__pla-cf__hyper-pla-cf': 34.99,
+  'creality__petg-cf__hyper-petg-cf': 39.99,
+  'creality__pla__hyper-rainbow': 24.99,
+  'creality__pla__hyper-luminous': 26.99,
+  'creality__pla__hyper-lightweight': 27.99,
   
   // Soleyin Series (budget-friendly)
-  'creality__soleyin-ultra-pla': 18.99,
-  'creality__soleyin-basic-petg': 19.99,
+  'creality__pla__soleyin-ultra': 18.99,
+  'creality__petg__soleyin-basic': 19.99,
   
   // CR Series (consumer)
-  'creality__cr-silk-pla': 22.99,
-  'creality__cr-wood-pla': 24.99,
-  'creality__cr-pla-carbon': 29.99,
+  'creality__pla__cr-silk': 22.99,
+  'creality__pla-wood__cr-wood': 24.99,
+  'creality__pla-cf__cr-carbon': 29.99,
   
   // Ender Fast (budget high-speed)
-  'creality__ender-fast-pla': 17.99,
+  'creality__pla__ender-fast': 17.99,
   
   // HP Series (engineering)
-  'creality__hp-asa': 27.99,
-  'creality__hp-tpu': 29.99,
+  'creality__asa__hp': 27.99,
+  'creality__tpu__hp': 29.99,
   
   // PPA-CF (engineering composite)
-  'creality__ppa-cf': 49.99,
+  'creality__ppa-cf__standard': 49.99,
 };
 
 /**
