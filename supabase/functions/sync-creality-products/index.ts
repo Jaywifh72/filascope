@@ -19,6 +19,7 @@ import {
   getCrealityColorHex,
   CREALITY_STORE_INFO,
   getUniqueBaseProductUrls,
+  getCrealityDefaultPrice,
 } from '../_shared/creality-defaults.ts';
 
 const corsHeaders = {
@@ -211,10 +212,12 @@ Deno.serve(async (req) => {
         // Get color hex
         const colorHex = getCrealityColorHex(seedItem.color) || enrichment.colorHex;
         
-        // Get price from Shopify data
+        // Get price from Shopify data, fallback to default price
         const baseUrl = seedItem.productUrl.split('?')[0];
         const priceKey = `${baseUrl}|${seedItem.color.toLowerCase()}`;
-        const price = priceMap.get(priceKey) || null;
+        const shopifyPrice = priceMap.get(priceKey);
+        const defaultPrice = getCrealityDefaultPrice(enrichment.productLineId);
+        const price = shopifyPrice || defaultPrice || null;
         
         // Get product title from Shopify data or use filament line
         const shopifyTitle = titleMap.get(baseUrl);
@@ -280,14 +283,30 @@ Deno.serve(async (req) => {
     for (let i = 0; i < productsToInsert.length; i += batchSize) {
       const batch = productsToInsert.slice(i, i + batchSize);
       
-      const { error: upsertError } = await supabase
-        .from('filaments')
-        .upsert(batch, { onConflict: 'product_id' });
+      // Use delete-then-insert pattern since table lacks unique constraint on product_id alone
+      // The vendor+product_id combination is unique but there's no DB constraint for upsert
+      const productIds = batch.map(p => p.product_id);
       
-      if (upsertError) {
-        console.error(`[Step 4] Batch ${i / batchSize + 1} upsert error:`, upsertError);
+      // Delete existing products with these IDs for this vendor
+      const { error: deleteError } = await supabase
+        .from('filaments')
+        .delete()
+        .eq('vendor', 'Creality')
+        .in('product_id', productIds);
+      
+      if (deleteError) {
+        console.error(`[Step 4] Batch ${i / batchSize + 1} delete error:`, deleteError);
+      }
+      
+      // Insert fresh
+      const { error: insertError } = await supabase
+        .from('filaments')
+        .insert(batch);
+      
+      if (insertError) {
+        console.error(`[Step 4] Batch ${i / batchSize + 1} insert error:`, insertError);
         stats.errors += batch.length;
-        stats.errorDetails.push(`Batch ${i / batchSize + 1}: ${upsertError.message}`);
+        stats.errorDetails.push(`Batch ${i / batchSize + 1}: ${insertError.message}`);
       } else {
         console.log(`[Step 4] Inserted batch ${i / batchSize + 1}/${Math.ceil(productsToInsert.length / batchSize)}`);
       }
