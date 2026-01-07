@@ -554,6 +554,81 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'allpha': 'allPHA'
     },
     lastUpdated: '2026-01-06'
+  },
+  'eryone': {
+    platform: 'Shopify store (eryone3d.com) - CSV-seeded sync architecture',
+    knownLimitations: [
+      '❌ CSV seed contains 356 products but some may be filtered (MOQ bundles, accessories)',
+      '❌ Product titles in DB append color (e.g., "PLA Filament - Black") which differs from page H1',
+      '❌ Dual-color products share similar hex codes causing swatch conflicts',
+      '❌ "Rainbow Stone" color was using #FFFFFF (same as White) - fixed with #E8DFD8',
+      '❌ Compound materials (PLA-Metal, PLA-Wood) had malformed product_line_ids',
+      '❌ Some products in seed have duplicate colorHex values within same product line'
+    ],
+    workingSolutions: [
+      '✅ CSV seed (ERYONE_PRODUCT_SEED) in eryone-defaults.ts is the single source of truth',
+      '✅ Safe delete pattern with threshold >= 100 products before clean slate delete',
+      '✅ generateEryoneProductLineId() handles compound materials (PLA-Metal, PLA-Wood)',
+      '✅ enrichEryoneProduct() provides print settings and finish type detection',
+      '✅ Unique blended hex codes for dual-color products (Red & Blue → #7F007F)',
+      '✅ cleanEryoneTitle() removes specs like "1.75mm±0.03mm"',
+      '✅ find_duplicate_hexes RPC function post-processes to fix remaining duplicates',
+      '✅ Color family stored in seed.color, hex stored in seed.colorHex'
+    ],
+    failedApproaches: [
+      '⚠️ Using safe delete threshold of 200 when CSV only prepares ~100-318 products',
+      '⚠️ Constructing product_line_id as eryone__pla__pla (redundant material in line slug)',
+      '⚠️ Using same hex code for all variants of dual-color products',
+      '⚠️ Trying to scrape Eryone website dynamically - use CSV seed instead (faster, more reliable)',
+      '⚠️ Batch insert without checking for duplicate product_ids'
+    ],
+    currentStatus: {
+      'csvSeedProducts': '356 variants in ERYONE_PRODUCT_SEED',
+      'expectedFilaments': '~318 after filtering MOQ/accessories',
+      'productLines': '~50 unique product lines (cards)',
+      'materialsSupported': 'PLA, PLA+, PETG, ABS, ASA, TPU, Nylon, PP, PA-CF, PLA-Wood, PLA-Metal',
+      'dualColorHexFixed': 'Red & Blue (#7F007F), Red & Green (#7F7F00), Rainbow Stone (#E8DFD8)'
+    },
+    keyFiles: [
+      'supabase/functions/sync-eryone-products/index.ts - Main sync function (CSV-seeded)',
+      'supabase/functions/_shared/eryone-defaults.ts - CSV seed, enrichment, product line ID generation',
+      'ERYONE_PRODUCT_SEED constant - 356 products with color, colorHex, URLs, images',
+      'generateEryoneProductLineId() - Generates eryone__material__line format',
+      'enrichEryoneProduct() - Returns print settings, finish type, TDS URL',
+      'ERYONE_DEFAULT_PRICES - Default prices by filament line'
+    ],
+    extractionPriority: [
+      '1. Verify all CSV products are processed (check ERYONE_PRODUCT_SEED.length)',
+      '2. Ensure no duplicate hex codes within same product_line_id',
+      '3. Validate product_line_id format (eryone__material__line, no redundant patterns)',
+      '4. Check all materials are properly normalized (PLA+, PLA-Wood, etc.)',
+      '5. Verify clean slate delete triggers only when sufficient products prepared'
+    ],
+    manualExtractionProcess: [
+      '1. Products come from ERYONE_PRODUCT_SEED in eryone-defaults.ts - DO NOT scrape',
+      '2. To add new products: Update the CSV seed array with new entries',
+      '3. Each entry needs: material, filamentLine, color, colorHex, productUrl, imageUrl',
+      '4. For dual-color products: Use blended hex codes (blend the two primary colors)',
+      '5. Run clean slate sync to refresh all data from updated seed'
+    ],
+    productSlugReference: {
+      'pla-standard': 'PLA Standard',
+      'pla-plus-standard': 'PLA+ Standard',
+      'pla-silk-dual-color': 'PLA Silk Dual-Color',
+      'pla-silk-triple-color': 'PLA Silk Triple-Color',
+      'pla-silk-rainbow': 'PLA Silk Rainbow',
+      'pla-galaxy-sparkly-glitter': 'PLA Galaxy Sparkly Glitter',
+      'pla-luminous': 'PLA Luminous (Glow)',
+      'pla-marble': 'PLA Marble',
+      'pla-carbon-fiber': 'PLA Carbon Fiber',
+      'pla-high-speed': 'PLA High-Speed',
+      'pla-wood-standard': 'PLA-Wood Standard',
+      'pla-metal-lic': 'PLA-Metal Metallic',
+      'petg-standard': 'PETG Standard',
+      'abs-standard': 'ABS Standard',
+      'tpu-standard': 'TPU Standard'
+    },
+    lastUpdated: '2026-01-07'
   }
 };
 
@@ -567,6 +642,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'colorfabb') {
     return AI_ROLES.colorFabbSpecialist;
+  }
+  if (brandSlug === 'eryone') {
+    return AI_ROLES.colorSpecialist; // Eryone issues are primarily color/hex related
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -1095,6 +1173,309 @@ After making fixes:
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Eryone-specific AI Fix Prompt with lessons learned
+ */
+function generateEryoneFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['eryone'];
+  const role = AI_ROLES.colorSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database and comparison platform.
+
+### CORE CAPABILITIES YOU MUST APPLY
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+### HOW YOU APPROACH PROBLEMS
+
+- **Think Modularly**: Break complex features into discrete, testable components.
+- **Anticipate Scale**: Design for growth with proper indexing and optimization.
+- **Prioritize Data Quality**: Scraped data must be accurate, consistent, and complete.
+- **Iterate Strategically**: Clarify scope first, then execute methodically.
+
+### CONSTRAINTS & GUARDRAILS
+
+- Always check robots.txt and terms of service before scraping
+- Keep Edge Functions under 10 second execution time
+- Never expose scraping URLs or API keys in frontend code
+- Test changes with sample data before full sync
+
+---
+
+---
+
+## Available APIs and Tools
+
+The following external APIs are pre-configured and available as environment variables in edge functions:
+
+### Firecrawl API (\`FIRECRAWL_API_KEY\`)
+
+A powerful web scraping and crawling API that is **already configured** and available. Use it for:
+
+- **Scrape**: Extract content from a single URL (HTML, markdown, screenshots, links)
+
+- **Map**: Quickly discover all URLs on a website (fast sitemap generation)
+
+- **Search**: Perform web search with optional content scraping
+
+- **Crawl**: Recursively scrape all pages on a website
+
+**Usage in Edge Functions:**
+
+\`\`\`typescript
+
+const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+
+// Scrape a single product page to get H1 title
+
+const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+
+  method: 'POST',
+
+  headers: {
+
+    'Authorization': \`Bearer \${firecrawlApiKey}\`,
+
+    'Content-Type': 'application/json',
+
+  },
+
+  body: JSON.stringify({
+
+    url: productUrl,
+
+    formats: ['html'],
+
+    onlyMainContent: false,
+
+    waitFor: 2000,  // Wait for JS to load
+
+  }),
+
+});
+
+const data = await response.json();
+
+const html = data.data?.html || '';
+
+// Extract H1 title
+
+const h1Match = html.match(/<h1[^>]*>([^<]+)<\\/h1>/i);
+
+const pageTitle = h1Match?.[1]?.trim() || null;
+
+\`\`\`
+
+**Key Parameters:**
+
+- \`formats\`: 'html' | 'markdown' | 'screenshot' | 'links' | 'rawHtml'
+
+- \`onlyMainContent\`: true to exclude headers/footers (default: false for full page)
+
+- \`waitFor\`: milliseconds to wait for dynamic content (default: 0)
+
+**Best Practices:**
+
+- Use **parallel batching** (5-10 concurrent requests) for multiple URLs to avoid timeout
+
+- Add **timeout protection** for large syncs (50+ products)
+
+- Cache scraped HTML in decision logs for debugging
+
+- Always access response data via \`data.data?.field\` (nested structure)
+
+---
+
+## Fix Post Sync Check Issues for ${brand}
+
+The Post Sync Check for ${brand} found the following issues that need to be fixed in the sync function.
+
+### Summary
+
+- **Brand**: ${brand} (slug: eryone)
+
+- **Total Products**: ${totalProducts}
+
+- **Failed Checks**: ${failedChecks.length}
+
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+
+---
+
+## CRITICAL: Eryone CSV-Seeded Architecture
+
+**Eryone uses a CSV-seeded sync, NOT live website scraping.**
+
+### Platform: ${lessons.platform}
+
+All ${totalProducts} products come from \`ERYONE_PRODUCT_SEED\` in \`supabase/functions/_shared/eryone-defaults.ts\`.
+
+### Known Limitations
+
+${lessons.knownLimitations.map(l => `- ${l}`).join('\n')}
+
+### Working Solutions (Use These!)
+
+${lessons.workingSolutions.map(s => `- ${s}`).join('\n')}
+
+### Failed Approaches (Avoid These!)
+
+${lessons.failedApproaches.map(f => `- ${f}`).join('\n')}
+
+---
+
+## Current Status
+
+| Metric | Value |
+|--------|-------|
+${Object.entries(lessons.currentStatus).map(([k, v]) => `| ${k} | ${v} |`).join('\n')}
+
+---
+
+## Key Files to Modify
+
+| File | Purpose |
+|------|---------|
+${lessons.keyFiles.map(f => `| ${f.split(' - ')[0]} | ${f.split(' - ')[1] || 'See code'} |`).join('\n')}
+
+---
+
+## Fix Instructions by Issue Type
+
+### For Duplicate Hex Codes (Swatch Uniqueness)
+
+1. Open \`supabase/functions/_shared/eryone-defaults.ts\`
+2. Find the \`ERYONE_PRODUCT_SEED\` array
+3. Locate dual-color products (e.g., "Red & Blue", "Red & Green")
+4. Update \`colorHex\` to unique blended values:
+   - Red (#FF0000) & Blue (#0000FF) → \`#7F007F\` (purple blend)
+   - Red (#FF0000) & Green (#00FF00) → \`#7F7F00\` (olive blend)
+   - Black (#000000) & Purple (#800080) → \`#400040\` (dark purple)
+   - Rainbow Stone → \`#E8DFD8\` (beige, NOT white #FFFFFF)
+
+**Hex Blending Formula:**
+\`\`\`typescript
+// Blend two colors: average their RGB components
+function blendColors(hex1: string, hex2: string): string {
+  const r1 = parseInt(hex1.slice(1, 3), 16);
+  const g1 = parseInt(hex1.slice(3, 5), 16);
+  const b1 = parseInt(hex1.slice(5, 7), 16);
+  const r2 = parseInt(hex2.slice(1, 3), 16);
+  const g2 = parseInt(hex2.slice(3, 5), 16);
+  const b2 = parseInt(hex2.slice(5, 7), 16);
+  
+  const r = Math.round((r1 + r2) / 2);
+  const g = Math.round((g1 + g2) / 2);
+  const b = Math.round((b1 + b2) / 2);
+  
+  return \`#\${r.toString(16).padStart(2, '0')}\${g.toString(16).padStart(2, '0')}\${b.toString(16).padStart(2, '0')}\`.toUpperCase();
+}
+\`\`\`
+
+### For Product Line ID Issues (Card Count)
+
+1. Open \`supabase/functions/_shared/eryone-defaults.ts\`
+2. Find \`generateEryoneProductLineId()\` function
+3. Ensure format is: \`eryone__\${material}__\${lineSlug}\`
+4. Avoid redundant patterns like \`eryone__pla__pla\` (should be \`eryone__pla__standard\`)
+5. Handle compound materials:
+   - PLA-Metal → \`eryone__pla-metal__metallic\`
+   - PLA-Wood → \`eryone__pla-wood__standard\`
+
+### For Title Accuracy Issues
+
+1. Current format: \`\${cleanedTitle} - \${seed.color}\`
+2. This is INTENTIONAL to distinguish variants
+3. If you need exact H1 match, remove color suffix
+4. But variant distinction is more important for swatches
+
+### For Missing Products (Processing Issues)
+
+1. Add debug logging in \`sync-eryone-products/index.ts\`:
+\`\`\`typescript
+console.log(\`[Eryone Sync] CSV seed length: \${ERYONE_PRODUCT_SEED.length}\`);
+console.log(\`[Eryone Sync] Unique materials: \${[...new Set(products.map(p => p.material))].join(', ')}\`);
+console.log(\`[Eryone Sync] Products prepared: \${productsToInsert.length}\`);
+\`\`\`
+2. Check for products being silently skipped in the processing loop
+3. Verify safe delete threshold (>= 100) matches expected product count
+
+---
+
+## Manual Extraction Process (For New Products)
+
+${lessons.manualExtractionProcess?.map((step, i) => `${step}`).join('\n') || 'N/A'}
+
+---
+
+## Product Line Reference
+
+| Slug | Display Name |
+|------|--------------|
+${Object.entries(lessons.productSlugReference || {}).map(([slug, name]) => `| ${slug} | ${name} |`).join('\n')}
+
+---
+
+## Verification Steps
+
+After making fixes:
+
+1. Run a **Clean Slate** sync for Eryone from Brand Sync Manager
+2. Check edge function logs for material counts and product totals
+3. Run **Post Sync Check** again to verify all issues are resolved
+4. Spot-check a few product cards to confirm:
+   - Correct card count (~50 product lines)
+   - No duplicate color swatches
+   - Colors match hex codes visually
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -1117,6 +1498,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for ColorFabb
   if (brandSlug === 'colorfabb') {
     return generateColorFabbFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Eryone
+  if (brandSlug === 'eryone') {
+    return generateEryoneFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
