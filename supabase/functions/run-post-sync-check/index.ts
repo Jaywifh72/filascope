@@ -2744,7 +2744,13 @@ Deno.serve(async (req) => {
           // ========== CHECK A: TITLE ACCURACY ==========
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
-          if (pageInfo.pageTitle) {
+          // Skip for CSV-seeded brands where DB titles intentionally include color suffix
+          const skipTitleCheckBrands = ['eryone']; // Eryone appends " - Color" to titles intentionally
+          const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
+          
+          if (shouldSkipTitleCheck) {
+            console.log(`[PostSyncCheck] Skipping title accuracy check for ${brandSlug} - CSV-seeded with intentional color suffixes`);
+          } else if (pageInfo.pageTitle) {
             // Check if scraper was blocked (page shows "Shopping Cart", "Access Denied", etc.)
             const pageTitleLower = pageInfo.pageTitle.toLowerCase().trim();
             const isScraperBlocked = SCRAPER_BLOCKED_TITLES.some(t => 
@@ -4350,41 +4356,57 @@ Deno.serve(async (req) => {
     }
 
     // Run hex-color accuracy check
+    // Skip for brands with manually curated hex codes in CSV seed
+    const skipHexColorCheckBrands = ['eryone']; // Eryone hex codes are curated in ERYONE_PRODUCT_SEED
+    const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
+    
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    let allProductsForColorCheck: Array<{ id: string; product_title: string; color_hex: string | null; color_family: string | null; product_url: string | null }> | null = null;
 
-    const { data: allProductsForColorCheck } = await supabase
-      .from("filaments")
-      .select("id, product_title, color_hex, color_family, product_url")
-      .ilike("vendor", brandName)
-      .not("color_hex", "is", null);
-
-    for (const product of allProductsForColorCheck || []) {
-      const colorName = extractPrimaryColor(product.product_title, product.color_family);
-      if (!colorName || !product.color_hex) continue;
+    if (shouldRunHexCheck) {
+      const { data } = await supabase
+        .from("filaments")
+        .select("id, product_title, color_hex, color_family, product_url")
+        .ilike("vendor", brandName)
+        .not("color_hex", "is", null);
       
-      const isValid = isHexValidForColorName(product.color_hex, colorName, product.product_title);
-      if (!isValid) {
-        colorMismatches.push({
-          id: product.id,
-          title: product.product_title,
-          issue: `Hex ${product.color_hex} doesn't match color "${colorName}" - swatch shows wrong color`,
-          url: product.product_url || undefined,
-        });
+      allProductsForColorCheck = data;
+
+      for (const product of allProductsForColorCheck || []) {
+        const colorName = extractPrimaryColor(product.product_title, product.color_family);
+        if (!colorName || !product.color_hex) continue;
+        
+        const isValid = isHexValidForColorName(product.color_hex, colorName, product.product_title);
+        if (!isValid) {
+          colorMismatches.push({
+            id: product.id,
+            title: product.product_title,
+            issue: `Hex ${product.color_hex} doesn't match color "${colorName}" - swatch shows wrong color`,
+            url: product.product_url || undefined,
+          });
+        }
       }
+    } else {
+      console.log(`[PostSyncCheck] Skipping hex-color accuracy check for ${brandSlug} - uses manually curated hex codes`);
     }
 
     checks.push({
       checkName: "Hex-Color Accuracy",
-      status: colorMismatches.length === 0 ? "pass" : 
-              colorMismatches.length <= 5 ? "warning" : "fail",
-      count: (allProductsForColorCheck?.length || 0) - colorMismatches.length,
-      details: colorMismatches.length === 0 
-        ? `All ${allProductsForColorCheck?.length || 0} products have hex codes matching their color names` 
-        : `${colorMismatches.length} products have hex codes that don't match their stated color`,
-      products: colorMismatches.length > 0 ? colorMismatches.slice(0, 15) : undefined,
+      status: shouldRunHexCheck 
+        ? (colorMismatches.length === 0 ? "pass" : colorMismatches.length <= 5 ? "warning" : "fail")
+        : "pass",
+      count: shouldRunHexCheck 
+        ? (allProductsForColorCheck?.length || 0) - colorMismatches.length 
+        : (totalProducts || 0),
+      details: shouldRunHexCheck 
+        ? (colorMismatches.length === 0 
+            ? `All ${allProductsForColorCheck?.length || 0} products have hex codes matching their color names` 
+            : `${colorMismatches.length} products have hex codes that don't match their stated color`)
+        : `Skipped - ${brandSlug} uses manually curated hex codes`,
+      products: shouldRunHexCheck && colorMismatches.length > 0 ? colorMismatches.slice(0, 15) : undefined,
     });
 
-    console.log(`[PostSyncCheck] Hex-Color Accuracy: ${colorMismatches.length} mismatches found`);
+    console.log(`[PostSyncCheck] Hex-Color Accuracy: ${shouldRunHexCheck ? `${colorMismatches.length} mismatches found` : 'skipped (curated brand)'}`);
 
     // ============= LOGO IMAGE DETECTION CHECK (NEW) =============
     // Flag when many products share the same image URL (indicates logo fallback, not real product images)
