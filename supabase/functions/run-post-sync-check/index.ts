@@ -4882,7 +4882,8 @@ Deno.serve(async (req) => {
     // Brands that use product-level images (not color-level images) - this is expected behavior
     // Note: Bambu Lab DOES have color-specific images so it's no longer whitelisted
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun'];
+    // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
