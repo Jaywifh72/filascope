@@ -41,14 +41,15 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json().catch(() => ({}));
-    const cleanSlate = body.cleanSlate === true;
+    // CSV-seeded brands REQUIRE clean slate for insert pattern to work
+    const cleanSlate = body.cleanSlate !== false; // Default to true
     // Ignore limit for CSV-seeded brands - always process full catalog
     
     console.log(`[Extrudr Sync] Starting CSV-seeded sync. Clean slate: ${cleanSlate}`);
     console.log(`[Extrudr Sync] Seed stats: ${EXTRUDR_SEED_STATS.totalProducts} products, ${EXTRUDR_SEED_STATS.productLines} lines`);
 
     // =========================================================================
-    // STEP 1: OPTIONAL CLEAN SLATE
+    // STEP 1: CLEAN SLATE DELETE (Required for insert pattern)
     // =========================================================================
     
     if (cleanSlate) {
@@ -68,9 +69,12 @@ Deno.serve(async (req) => {
       if (deleteError) {
         console.error('[Step 1] Delete error:', deleteError);
         stats.errors.push(`Clean slate failed: ${deleteError.message}`);
+        throw new Error(`Cannot proceed without clean slate: ${deleteError.message}`);
       } else {
         console.log(`[Step 1] Deleted ${count || 0} existing Extrudr products`);
       }
+    } else {
+      console.warn('[Step 1] WARNING: CSV-seeded brands work best with cleanSlate=true');
     }
 
     // =========================================================================
@@ -145,32 +149,32 @@ Deno.serve(async (req) => {
       }
     }
     
-    console.log(`[Step 2] Prepared ${productsToInsert.length} products for upsert`);
+    console.log(`[Step 2] Prepared ${productsToInsert.length} products for insert`);
 
     // =========================================================================
-    // STEP 3: BATCH UPSERT
+    // STEP 3: BATCH INSERT (Not upsert - uses delete-then-insert pattern)
     // =========================================================================
     
-    console.log('[Step 3] Upserting products to database');
+    console.log('[Step 3] Inserting products to database');
     
     // Batch insert in chunks of 50
     const BATCH_SIZE = 50;
     for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
       const batch = productsToInsert.slice(i, i + BATCH_SIZE);
       
-      const { error: upsertError } = await supabase
+      // Use insert (not upsert) since we already deleted existing products
+      // This avoids the "no unique constraint" error on product_id
+      const { error: insertError } = await supabase
         .from('filaments')
-        .upsert(batch, { 
-          onConflict: 'product_id',
-          ignoreDuplicates: false 
-        });
+        .insert(batch);
       
-      if (upsertError) {
-        console.error(`[Step 3] Batch upsert error (${i}-${i + batch.length}):`, upsertError);
+      if (insertError) {
+        console.error(`[Step 3] Batch insert error (${i}-${i + batch.length}):`, insertError);
         stats.failed += batch.length;
-        stats.errors.push(`Batch upsert failed: ${upsertError.message}`);
+        stats.errors.push(`Batch insert failed: ${insertError.message}`);
       } else {
         stats.created += batch.length;
+        console.log(`[Step 3] Inserted batch ${Math.floor(i/BATCH_SIZE) + 1}: ${batch.length} products`);
       }
     }
 
