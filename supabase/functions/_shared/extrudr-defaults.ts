@@ -315,73 +315,103 @@ export function normalizeExtrudrMaterial(title: string): MaterialInfo {
 export function generateExtrudrProductLineId(title: string): string {
   const t = title.toLowerCase();
   
-  // FLEX TPU Series
+  // FLEX TPU Series - use double underscore separator for brand
   if (t.includes('flex') || t.includes('tpu')) {
-    if (t.includes('esd')) return 'extrudr-flex-medium-esd';
-    if (t.includes('cf') || t.includes('carbon')) return 'extrudr-flex-hard-cf';
-    if (t.includes('semisoft') || t.includes('88a')) return 'extrudr-flex-semisoft';
-    if (t.includes('hard') || t.includes('98a')) return 'extrudr-flex-hard';
-    if (t.includes('medium') || t.includes('92a')) return 'extrudr-flex-medium';
-    return 'extrudr-flex';
+    if (t.includes('esd')) return 'extrudr__flex-medium-esd';
+    if (t.includes('cf') || t.includes('carbon')) return 'extrudr__flex-hard-cf';
+    if (t.includes('semisoft') || t.includes('88a')) return 'extrudr__flex-semisoft';
+    if (t.includes('hard') || t.includes('98a')) return 'extrudr__flex-hard';
+    if (t.includes('medium') || t.includes('92a')) return 'extrudr__flex-medium';
+    return 'extrudr__flex';
   }
   
   // GreenTEC Line
   if (t.includes('greentec')) {
-    if (t.includes('carbon') || t.includes('cf')) return 'extrudr-greentec-pro-carbon';
-    if (t.includes('pro')) return 'extrudr-greentec-pro';
-    return 'extrudr-greentec';
+    if (t.includes('carbon') || t.includes('cf')) return 'extrudr__greentec-pro-carbon';
+    if (t.includes('pro')) return 'extrudr__greentec-pro';
+    return 'extrudr__greentec';
   }
   
   // Wood/Natural
-  if (t.includes('flax')) return 'extrudr-flax';
-  if (t.includes('wood')) return 'extrudr-wood';
+  if (t.includes('flax')) return 'extrudr__flax';
+  if (t.includes('wood')) return 'extrudr__wood';
   
   // PC/PBT
   if (t.includes('pc/pbt') || t.includes('pc-pbt')) {
-    if (t.includes('cf') || t.includes('carbon')) return 'extrudr-durapro-pc-pbt-cf';
-    return 'extrudr-durapro-pc-pbt';
+    if (t.includes('cf') || t.includes('carbon')) return 'extrudr__durapro-pc-pbt-cf';
+    return 'extrudr__durapro-pc-pbt';
   }
   
   // XPETG
   if (t.includes('xpetg')) {
-    if (t.includes('cf') || t.includes('carbon')) return 'extrudr-xpetg-cf';
-    return 'extrudr-xpetg';
+    if (t.includes('cf') || t.includes('carbon')) return 'extrudr__xpetg-cf';
+    return 'extrudr__xpetg';
   }
   
   // PCTG
-  if (t.includes('pctg')) return 'extrudr-pctg';
+  if (t.includes('pctg')) return 'extrudr__pctg';
   
   // ASA
   if (t.includes('asa')) {
-    if (t.includes('gf') || t.includes('glass')) return 'extrudr-durapro-asa-gf';
-    if (t.includes('cf') || t.includes('carbon')) return 'extrudr-durapro-asa-cf';
-    return 'extrudr-durapro-asa';
+    if (t.includes('gf') || t.includes('glass')) return 'extrudr__durapro-asa-gf';
+    if (t.includes('cf') || t.includes('carbon')) return 'extrudr__durapro-asa-cf';
+    return 'extrudr__durapro-asa';
   }
   
   // ABS
   if (t.includes('abs')) {
-    if (t.includes('cf') || t.includes('carbon')) return 'extrudr-durapro-abs-cf';
-    return 'extrudr-durapro-abs';
+    if (t.includes('cf') || t.includes('carbon')) return 'extrudr__durapro-abs-cf';
+    return 'extrudr__durapro-abs';
   }
   
   // PA12
-  if (t.includes('pa12') || t.includes('nylon')) return 'extrudr-durapro-pa12';
+  if (t.includes('pa12') || t.includes('nylon')) return 'extrudr__durapro-pa12';
   
   // PETG
-  if (t.includes('petg')) return 'extrudr-petg';
+  if (t.includes('petg')) return 'extrudr__petg';
   
   // Specialty PLA
-  if (t.includes('biofusion')) return 'extrudr-biofusion';
-  if (t.includes('pearl')) return 'extrudr-pearl';
-  if (t.includes('nx2') || t.includes('matt')) return 'extrudr-pla-nx2-matt';
-  if (t.includes('cmyk')) return 'extrudr-pla-cmyk';
-  if (t.includes('basic')) return 'extrudr-pla-basic';
+  if (t.includes('biofusion')) return 'extrudr__biofusion';
+  if (t.includes('pearl')) return 'extrudr__pearl';
+  if (t.includes('nx2') || t.includes('matt')) return 'extrudr__pla-nx2-matt';
+  if (t.includes('cmyk')) return 'extrudr__pla-cmyk';
+  if (t.includes('basic')) return 'extrudr__pla-basic';
   
   // Default PLA
-  if (t.includes('pla')) return 'extrudr-pla';
+  if (t.includes('pla')) return 'extrudr__pla';
   
-  return 'extrudr-unknown';
+  return 'extrudr__unknown';
 }
+
+// ============================================================================
+// DEFAULT PRICES (EUR) - Extrudr premium filament pricing
+// ============================================================================
+
+export const EXTRUDR_DEFAULT_PRICES: Record<string, number> = {
+  // Standard materials (~€29-32 per 800g)
+  'PLA': 29.90,
+  'PETG': 29.90,
+  'PCTG': 34.90,
+  'BIO': 34.90,
+  'BIO-CF': 44.90,
+  'PLA-WOOD': 34.90,
+  // Engineering (~€39-49)
+  'ABS': 29.90,
+  'ABS-CF': 44.90,
+  'ASA': 32.90,
+  'ASA-CF': 44.90,
+  'ASA-GF': 44.90,
+  'PA12': 49.90,
+  'PC-PBT': 49.90,
+  'PC-PBT-CF': 54.90,
+  'PETG-CF': 44.90,
+  // TPU (~€39-49)
+  'TPU-88A': 39.90,
+  'TPU-92A': 39.90,
+  'TPU-98A': 39.90,
+  'TPU-CF': 49.90,
+  'TPU': 39.90,
+};
 
 // ============================================================================
 // COLOR MAPPING

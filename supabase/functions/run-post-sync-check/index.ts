@@ -3118,7 +3118,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun']; // CSV-seeded brands append " - Color" to titles intentionally
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr']; // CSV-seeded brands append " - Color" to titles intentionally
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -4746,7 +4746,7 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed
-    const skipHexColorCheckBrands = ['eryone', 'esun']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
@@ -4976,7 +4976,17 @@ Deno.serve(async (req) => {
                                       lineId.includes('esun__pet__') ||
                                       lineId.includes('esun__pc__') ||
                                       lineId.includes('esun__pva__') ||
-                                      lineId.includes('esun__hips__');
+                                      lineId.includes('esun__hips__') ||
+                                      // Extrudr single-color specialty products (CSV-seeded)
+                                      lineId.includes('extrudr__flax') ||               // FLAX only comes in natural
+                                      lineId.includes('extrudr__durapro-abs-cf') ||     // ABS-CF only in black
+                                      lineId.includes('extrudr__durapro-asa-cf') ||     // ASA-CF only in black
+                                      lineId.includes('extrudr__durapro-asa-gf') ||     // ASA-GF only in black
+                                      lineId.includes('extrudr__durapro-pc-pbt-cf') ||  // PC-PBT-CF only in black
+                                      lineId.includes('extrudr__xpetg-cf') ||           // xPETG-CF only in black
+                                      lineId.includes('extrudr__flex-hard-cf') ||       // TPU-CF only in black
+                                      lineId.includes('extrudr__flex-medium-esd') ||    // ESD only in black
+                                      lineId.includes('extrudr__greentec-pro-carbon');  // GreenTEC Pro Carbon only in black
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({

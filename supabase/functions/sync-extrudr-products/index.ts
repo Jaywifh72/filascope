@@ -4,6 +4,7 @@ import {
   enrichExtrudrProduct,
   EXTRUDR_STORE_INFO,
   generateExtrudrProductLineId,
+  EXTRUDR_DEFAULT_PRICES,
 } from '../_shared/extrudr-defaults.ts';
 
 const corsHeaders = {
@@ -109,19 +110,22 @@ Deno.serve(async (req) => {
         // Generate product_line_id
         const productLineId = generateExtrudrProductLineId(seed.filament);
         
+        // Get default price from mapping based on material
+        const defaultPrice = EXTRUDR_DEFAULT_PRICES[enrichment.material] || 29.90;
+        
         const filamentData = {
           product_id: productId,
           product_title: productTitle,
           vendor: EXTRUDR_STORE_INFO.vendor,
           product_url: seed.productUrl,
           featured_image: seed.imageUrl || null,
-          variant_price: null, // EUR pricing, conversion needed
-          price_eur: null,
+          variant_price: defaultPrice,
+          price_eur: defaultPrice,
           variant_available: true,
           material: enrichment.material,
           finish_type: enrichment.finishType,
           product_line_id: productLineId,
-          color_hex: seed.colorHex,
+          color_hex: seed.colorHex || '#FFFFFF', // Use white for transparent colors
           color_family: seed.color,
           tds_url: enrichment.tdsUrl,
           nozzle_temp_min_c: enrichment.nozzleTempMin,
