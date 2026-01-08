@@ -172,11 +172,14 @@ export const FIBERLOGY_MATERIAL_MAPPING: Record<string, string> = {
   'fibersatin': 'PLA',
   'matte pla': 'PLA',
   'fibersmooth': 'PVB',
+  'fiberwood': 'PLA-Wood',
+  'wood': 'PLA-Wood',
   
   // Flexible
   'fiberflex 30d': 'TPU-30D',
   'fiberflex 40d': 'TPU-40D',
   'fiberflex cf': 'TPU-CF',
+  'mattflex 40d': 'TPU-40D',
   'tpu 30d': 'TPU-30D',
   'tpu 40d': 'TPU-40D',
   
@@ -287,13 +290,21 @@ export function generateFiberlogyProductLineId(title: string, material?: string 
   
   let suffix = '';
   
-  // Determine base product type
-  if (/fibersilk/i.test(title)) {
+  // Determine base product type - order matters for specificity!
+  // ABS Plus must be checked BEFORE ABS
+  if (/abs\s*plus/i.test(title)) {
+    suffix = 'plus';
+  } else if (/fiberwood/i.test(title)) {
+    suffix = 'standard';
+    // Material already set to PLA-Wood by normalizeFiberlogyMaterial
+  } else if (/fibersilk/i.test(title)) {
     suffix = 'silk';
   } else if (/fibersatin/i.test(title)) {
     suffix = 'satin';
   } else if (/fibersmooth/i.test(title)) {
     suffix = 'smooth';
+  } else if (/mattflex/i.test(title)) {
+    suffix = 'matte';
   } else if (/matte/i.test(title)) {
     suffix = 'matte';
   } else if (/easy/i.test(title)) {
@@ -303,7 +314,7 @@ export function generateFiberlogyProductLineId(title: string, material?: string 
   }
   
   // Handle high-speed variants
-  if (/\bhs\b/i.test(title)) {
+  if (/\bhs\b/i.test(title) || /high\s*speed/i.test(title)) {
     suffix += '-hs';
   }
   

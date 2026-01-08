@@ -4599,6 +4599,10 @@ Deno.serve(async (req) => {
     // 3DXTech is an industrial brand with expensive specialty materials (PEEK, PEKK, PEI, etc.)
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
+    // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy']; // CSV-seeded brands don't include prices
+    const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
+    
     const isIndustrialBrand = brandSlug === '3dxtech';
     const priceUpperThreshold = isIndustrialBrand ? 800 : 200;
     
@@ -4606,45 +4610,59 @@ Deno.serve(async (req) => {
     const isCanisterProduct = (title: string): boolean => 
       /canister|^\d+x\s*\d+|multi[- ]?pack|stratasys|10\s*kg/i.test(title);
     
-    const { data: priceCheckData } = await supabase
-      .from("filaments")
-      .select("id, product_title, variant_price, product_url")
-      .ilike("vendor", brandName)
-      .or(`variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.${priceUpperThreshold}`);
+    let priceCheckData: Array<{ id: string; product_title: string; variant_price: number | null; product_url: string | null }> | null = null;
+    
+    if (shouldRunPriceCheck) {
+      const { data } = await supabase
+        .from("filaments")
+        .select("id, product_title, variant_price, product_url")
+        .ilike("vendor", brandName)
+        .or(`variant_price.is.null,variant_price.eq.0,variant_price.lt.5,variant_price.gt.${priceUpperThreshold}`);
+      priceCheckData = data;
+    }
 
     const priceIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
-    for (const p of priceCheckData || []) {
-      let issue = '';
-      if (p.variant_price === null) issue = 'Price is NULL';
-      else if (p.variant_price === 0) issue = 'Price is $0';
-      else if (p.variant_price < 5) issue = `Price too low: $${p.variant_price}`;
-      else if (p.variant_price > priceUpperThreshold) {
-        // Skip flagging very high prices for industrial canister products (up to $1600)
-        if (isIndustrialBrand && p.variant_price <= 1600 && isCanisterProduct(p.product_title)) {
-          // Allow canister/multi-pack/Stratasys products up to $1600 - legitimate pricing
-          continue;
+    
+    if (shouldRunPriceCheck) {
+      for (const p of priceCheckData || []) {
+        let issue = '';
+        if (p.variant_price === null) issue = 'Price is NULL';
+        else if (p.variant_price === 0) issue = 'Price is $0';
+        else if (p.variant_price < 5) issue = `Price too low: $${p.variant_price}`;
+        else if (p.variant_price > priceUpperThreshold) {
+          // Skip flagging very high prices for industrial canister products (up to $1600)
+          if (isIndustrialBrand && p.variant_price <= 1600 && isCanisterProduct(p.product_title)) {
+            // Allow canister/multi-pack/Stratasys products up to $1600 - legitimate pricing
+            continue;
+          }
+          issue = `Price unusually high: $${p.variant_price}`;
         }
-        issue = `Price unusually high: $${p.variant_price}`;
+        
+        if (issue) {
+          priceIssues.push({
+            id: p.id,
+            title: p.product_title,
+            issue,
+            url: p.product_url || undefined,
+          });
+        }
       }
-      
-      if (issue) {
-        priceIssues.push({
-          id: p.id,
-          title: p.product_title,
-          issue,
-          url: p.product_url || undefined,
-        });
-      }
+    } else {
+      console.log(`[PostSyncCheck] Skipping price validity check for ${brandSlug} - CSV-seeded brand without prices`);
     }
 
     checks.push({
       checkName: "Price Validity",
-      status: priceIssues.length === 0 ? "pass" : priceIssues.length <= 3 ? "warning" : "fail",
-      count: priceIssues.length,
-      details: priceIssues.length === 0 
-        ? `All prices are in valid range ($5-$${priceUpperThreshold})` 
-        : `${priceIssues.length} products have suspicious prices`,
-      products: priceIssues.length > 0 ? priceIssues : undefined,
+      status: shouldRunPriceCheck 
+        ? (priceIssues.length === 0 ? "pass" : priceIssues.length <= 3 ? "warning" : "fail")
+        : "pass",
+      count: shouldRunPriceCheck ? priceIssues.length : 0,
+      details: shouldRunPriceCheck 
+        ? (priceIssues.length === 0 
+            ? `All prices are in valid range ($5-$${priceUpperThreshold})` 
+            : `${priceIssues.length} products have suspicious prices`)
+        : `Skipped - ${brandSlug} is CSV-seeded brand without prices`,
+      products: shouldRunPriceCheck && priceIssues.length > 0 ? priceIssues : undefined,
     });
 
     // ============= PRODUCT LINE URL CONSISTENCY CHECK (UPDATED) =============
@@ -5006,7 +5024,7 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
