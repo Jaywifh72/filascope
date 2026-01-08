@@ -186,6 +186,39 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
+    // STEP 3.1: FIX NULL COLOR_HEX FOR WHITE/TRANSPARENT VARIANTS
+    // =========================================================================
+    
+    console.log('[Step 3.1] Fixing NULL color_hex for white/transparent variants');
+    
+    const { data: nullHexProducts } = await supabase
+      .from('filaments')
+      .select('id, product_id, color_family')
+      .ilike('vendor', 'extrudr')
+      .is('color_hex', null);
+    
+    if (nullHexProducts && nullHexProducts.length > 0) {
+      console.log(`[Step 3.1] Found ${nullHexProducts.length} products with NULL color_hex`);
+      
+      for (const product of nullHexProducts) {
+        const colorLower = (product.color_family || '').toLowerCase().trim();
+        // Default to #FFFFFF for white/transparent/natural, or neutral gray for unknowns
+        const fixedHex = ['white', 'transparent', 'natural', 'nature'].includes(colorLower) 
+          ? '#FFFFFF' 
+          : '#CCCCCC';
+        
+        await supabase
+          .from('filaments')
+          .update({ color_hex: fixedHex })
+          .eq('id', product.id);
+        
+        console.log(`[Step 3.1] Fixed ${product.product_id}: ${colorLower} → ${fixedHex}`);
+      }
+    } else {
+      console.log('[Step 3.1] No NULL color_hex products found');
+    }
+
+    // =========================================================================
     // STEP 3.5: CACHE IMAGES TO LOCAL STORAGE
     // =========================================================================
     
@@ -193,7 +226,45 @@ Deno.serve(async (req) => {
     
     let imagesCached = 0;
     let imagesFailed = 0;
+    let imagesPlaceholder = 0;
     const storageBaseUrl = `${supabaseUrl}/storage/v1/object/public/filament-images`;
+    const EXTRUDR_PLACEHOLDER = `${storageBaseUrl}/extrudr/placeholder.jpg`;
+    
+    // Helper: Try downloading with retries and alternate URL patterns
+    const downloadWithRetry = async (originalUrl: string): Promise<Response | null> => {
+      const headers = { 'User-Agent': 'Filascope-Sync/1.0' };
+      
+      // Try original URL first
+      try {
+        const response = await fetch(originalUrl, { headers });
+        if (response.ok) return response;
+      } catch (e) {
+        console.warn(`[Step 3.5] Original URL failed: ${originalUrl}`);
+      }
+      
+      // Try alternate URL patterns (different year folders in S3)
+      const altPatterns = [
+        originalUrl.replace('/2019/11/', '/2022/09/'),
+        originalUrl.replace('/2019/11/', '/2020/11/'),
+        originalUrl.replace('/2019/11/', '/2021/'),
+        originalUrl.replace('201905_', ''),
+      ];
+      
+      for (const altUrl of altPatterns) {
+        if (altUrl === originalUrl) continue;
+        try {
+          const response = await fetch(altUrl, { headers });
+          if (response.ok) {
+            console.log(`[Step 3.5] Alternate URL worked: ${altUrl}`);
+            return response;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      
+      return null;
+    };
     
     // Query products that still have external image URLs
     const { data: productsNeedingImageCache } = await supabase
@@ -210,11 +281,17 @@ Deno.serve(async (req) => {
       }
       
       try {
-        // Download image from external S3
-        const imageResponse = await fetch(product.featured_image);
-        if (!imageResponse.ok) {
-          console.warn(`[Step 3.5] Failed to download: ${product.featured_image}`);
-          imagesFailed++;
+        // Download image with retry logic
+        const imageResponse = await downloadWithRetry(product.featured_image);
+        
+        if (!imageResponse) {
+          // All download attempts failed - use placeholder
+          console.warn(`[Step 3.5] All downloads failed for ${product.product_id}, using placeholder`);
+          await supabase
+            .from('filaments')
+            .update({ featured_image: EXTRUDR_PLACEHOLDER })
+            .eq('id', product.id);
+          imagesPlaceholder++;
           continue;
         }
         
@@ -236,7 +313,12 @@ Deno.serve(async (req) => {
         
         if (uploadError) {
           console.warn(`[Step 3.5] Upload failed for ${product.product_id}:`, uploadError.message);
-          imagesFailed++;
+          // Use placeholder on upload failure
+          await supabase
+            .from('filaments')
+            .update({ featured_image: EXTRUDR_PLACEHOLDER })
+            .eq('id', product.id);
+          imagesPlaceholder++;
           continue;
         }
         
@@ -257,11 +339,16 @@ Deno.serve(async (req) => {
         
       } catch (err) {
         console.warn(`[Step 3.5] Image cache error for ${product.product_id}:`, err);
-        imagesFailed++;
+        // Use placeholder on any error
+        await supabase
+          .from('filaments')
+          .update({ featured_image: EXTRUDR_PLACEHOLDER })
+          .eq('id', product.id);
+        imagesPlaceholder++;
       }
     }
     
-    console.log(`[Step 3.5] Image caching complete: ${imagesCached} cached, ${imagesFailed} failed`);
+    console.log(`[Step 3.5] Image caching complete: ${imagesCached} cached, ${imagesPlaceholder} placeholders, ${imagesFailed} failed`);
 
     // =========================================================================
     // STEP 4: FINALIZE
