@@ -5351,10 +5351,12 @@ Deno.serve(async (req) => {
         .ilike('vendor', 'extrudr')
         .not('featured_image', 'is', null);
       
+      // Filter for external images (not local storage and not placeholder)
       const externalImages = (extrudrImagesData || []).filter(p => 
         p.featured_image && 
         !p.featured_image.includes('supabase.co/storage') &&
-        !p.featured_image.includes(storageBaseUrl)
+        !p.featured_image.includes(storageBaseUrl) &&
+        !p.featured_image.includes('/placeholder')
       );
       
       const totalWithImages = extrudrImagesData?.length || 0;
