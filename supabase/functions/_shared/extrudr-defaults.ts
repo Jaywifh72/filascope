@@ -489,10 +489,10 @@ export const EXTRUDR_COLOR_MAPPING: Record<string, string> = {
   'copper': '#A0583F',
   'brass': '#B5A642',
   
-  // Translucent
-  'transparent': null,
-  'clear': null,
-  'translucent': null,
+  // Translucent (use semi-transparent placeholder hex)
+  'transparent': '#FFFFFF',
+  'clear': '#FFFFFF',
+  'translucent': '#FFFFFF',
   'transparent blue': '#21697C',
   'transparent green': '#61993B',
   'transparent red': '#861A22',
