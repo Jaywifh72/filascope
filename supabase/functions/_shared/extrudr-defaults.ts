@@ -472,8 +472,8 @@ export const EXTRUDR_COLOR_MAPPING: Record<string, string> = {
   'turquoise': '#40B2BE',
   
   // Greens
-  'green': '#47DF92',
-  'signal green': '#47DF92',
+  'green': '#2ECC71',
+  'signal green': '#47DF98',
   'traffic green': '#00873E',
   'lime': '#32CD32',
   'mint': '#98FF98',

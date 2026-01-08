@@ -125,10 +125,10 @@ Deno.serve(async (req) => {
           material: enrichment.material,
           finish_type: enrichment.finishType,
           product_line_id: productLineId,
-          // Explicit fallback for white/transparent - bypass any seed data issues
-          color_hex: (seed.colorHex && seed.colorHex !== 'null') 
-            ? seed.colorHex 
-            : (['white', 'transparent'].includes(seed.color.toLowerCase().trim()) ? '#FFFFFF' : (seed.colorHex || '#FFFFFF')),
+          // Force #FFFFFF for white/transparent regardless of seed data
+          color_hex: ['white', 'transparent'].includes(seed.color.toLowerCase().trim()) 
+            ? '#FFFFFF' 
+            : (seed.colorHex || '#FFFFFF'),
           color_family: seed.color,
           tds_url: enrichment.tdsUrl,
           nozzle_temp_min_c: enrichment.nozzleTempMin,
