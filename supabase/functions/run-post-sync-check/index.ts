@@ -42,7 +42,7 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -725,10 +725,24 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
     return AI_ROLES.colorFabbSpecialist;
   }
   if (brandSlug === 'eryone') {
-    return AI_ROLES.colorSpecialist; // Eryone issues are primarily color/hex related
+    return AI_ROLES.colorSpecialist;
   }
   if (brandSlug === 'esun') {
-    return AI_ROLES.esunSpecialist; // eSUN uses CSV-seeded sync
+    return AI_ROLES.esunSpecialist;
+  }
+  if (brandSlug === 'extrudr') {
+    return {
+      title: 'Extrudr Integration Specialist',
+      capabilities: [
+        'Custom Next.js platform analysis (NOT Shopify)',
+        'CSV-seeded sync pipeline architecture',
+        'Premium Austrian filament material classification',
+        'Bio-based material handling (GreenTEC, BioFusion, FLAX)',
+        'TPU Shore hardness variant detection (88A, 92A, 98A)',
+        'Engineering plastics expertise (PC-PBT, PA12, ASA-GF)',
+        'Cardboard spool eco-friendly packaging'
+      ]
+    };
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
