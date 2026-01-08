@@ -186,6 +186,84 @@ Deno.serve(async (req) => {
     }
 
     // =========================================================================
+    // STEP 3.5: CACHE IMAGES TO LOCAL STORAGE
+    // =========================================================================
+    
+    console.log('[Step 3.5] Caching images to local storage');
+    
+    let imagesCached = 0;
+    let imagesFailed = 0;
+    const storageBaseUrl = `${supabaseUrl}/storage/v1/object/public/filament-images`;
+    
+    // Query products that still have external image URLs
+    const { data: productsNeedingImageCache } = await supabase
+      .from('filaments')
+      .select('id, product_id, featured_image')
+      .ilike('vendor', 'extrudr')
+      .not('featured_image', 'is', null);
+    
+    for (const product of productsNeedingImageCache || []) {
+      // Skip if already cached locally
+      if (product.featured_image?.includes('supabase.co/storage') || 
+          product.featured_image?.includes(storageBaseUrl)) {
+        continue;
+      }
+      
+      try {
+        // Download image from external S3
+        const imageResponse = await fetch(product.featured_image);
+        if (!imageResponse.ok) {
+          console.warn(`[Step 3.5] Failed to download: ${product.featured_image}`);
+          imagesFailed++;
+          continue;
+        }
+        
+        const imageBlob = await imageResponse.blob();
+        const imageBuffer = await imageBlob.arrayBuffer();
+        
+        // Generate storage path: extrudr/{product_id}.{ext}
+        const urlPath = product.featured_image.split('?')[0]; // Remove query params
+        const fileExt = urlPath.split('.').pop() || 'jpg';
+        const filePath = `extrudr/${product.product_id}.${fileExt}`;
+        
+        // Upload to storage bucket
+        const { error: uploadError } = await supabase.storage
+          .from('filament-images')
+          .upload(filePath, imageBuffer, {
+            contentType: imageResponse.headers.get('content-type') || 'image/jpeg',
+            upsert: true
+          });
+        
+        if (uploadError) {
+          console.warn(`[Step 3.5] Upload failed for ${product.product_id}:`, uploadError.message);
+          imagesFailed++;
+          continue;
+        }
+        
+        // Get public URL and update database
+        const { data: publicUrlData } = supabase.storage
+          .from('filament-images')
+          .getPublicUrl(filePath);
+        
+        await supabase
+          .from('filaments')
+          .update({ featured_image: publicUrlData.publicUrl })
+          .eq('id', product.id);
+        
+        imagesCached++;
+        
+        // Small delay to avoid rate limiting (100ms between uploads)
+        await new Promise(r => setTimeout(r, 100));
+        
+      } catch (err) {
+        console.warn(`[Step 3.5] Image cache error for ${product.product_id}:`, err);
+        imagesFailed++;
+      }
+    }
+    
+    console.log(`[Step 3.5] Image caching complete: ${imagesCached} cached, ${imagesFailed} failed`);
+
+    // =========================================================================
     // STEP 4: FINALIZE
     // =========================================================================
     
