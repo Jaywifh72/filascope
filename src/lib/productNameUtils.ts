@@ -520,6 +520,47 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
     return displayName;
   }
   
+  // EXTRUDR: Convert product_line_id to clean display name
+  // Format: "extrudr__biofusion" → "BioFusion", "extrudr__flex-medium" → "FLEX Medium"
+  if (parts[0] === 'extrudr' && parts.length === 2) {
+    const productSlug = parts[1]; // e.g., "biofusion", "flex-medium", "durapro-abs"
+    
+    // Map slugs to display names
+    const EXTRUDR_DISPLAY_NAMES: Record<string, string> = {
+      'biofusion': 'BioFusion',
+      'durapro-abs': 'DuraPro ABS',
+      'durapro-abs-cf': 'DuraPro ABS CF',
+      'durapro-asa': 'DuraPro ASA',
+      'durapro-asa-cf': 'DuraPro ASA CF',
+      'durapro-asa-gf': 'DuraPro ASA GF',
+      'durapro-pa12': 'DuraPro PA12',
+      'durapro-pc-pbt': 'DuraPro PC-PBT',
+      'durapro-pc-pbt-cf': 'DuraPro PC-PBT CF',
+      'flax': 'FLAX',
+      'flex-hard': 'FLEX Hard',
+      'flex-medium': 'FLEX Medium',
+      'flex-semisoft': 'FLEX Semisoft',
+      'flex-medium-esd': 'FLEX Medium ESD',
+      'flex-hard-cf': 'FLEX Hard CF',
+      'greentec': 'GreenTEC',
+      'greentec-pro': 'GreenTEC Pro',
+      'greentec-pro-carbon': 'GreenTEC Pro Carbon',
+      'pctg': 'PCTG',
+      'petg': 'PETG',
+      'xpetg': 'xPETG',
+      'xpetg-cf': 'xPETG CF',
+      'pla-nx2-matt': 'PLA NX2 Matt',
+      'pla-basic': 'PLA Basic',
+      'pla-cmyk': 'PLA CMYK',
+      'pearl': 'Pearl',
+      'wood': 'Wood',
+      'pla': 'PLA',
+    };
+    
+    return EXTRUDR_DISPLAY_NAMES[productSlug] || 
+      productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  
   if (parts.length >= 3) {
     // 3+ part format: Extract material (uppercase) and line name (title case)
     // Handle hyphenated material slugs (e.g., "pla-metal", "petg-cf", "rapid-petg")
