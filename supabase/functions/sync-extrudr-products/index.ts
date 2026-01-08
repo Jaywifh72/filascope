@@ -125,10 +125,13 @@ Deno.serve(async (req) => {
           material: enrichment.material,
           finish_type: enrichment.finishType,
           product_line_id: productLineId,
-          // Force #FFFFFF for white/transparent regardless of seed data
-          color_hex: ['white', 'transparent'].includes(seed.color.toLowerCase().trim()) 
-            ? '#FFFFFF' 
-            : (seed.colorHex || '#FFFFFF'),
+          // Use #FEFEFE for transparent to distinguish from white (#FFFFFF)
+          color_hex: (() => {
+            const colorLower = seed.color.toLowerCase().trim();
+            if (colorLower === 'transparent') return '#FEFEFE';
+            if (colorLower === 'white') return '#FFFFFF';
+            return seed.colorHex || '#FFFFFF';
+          })(),
           color_family: seed.color,
           tds_url: enrichment.tdsUrl,
           nozzle_temp_min_c: enrichment.nozzleTempMin,
@@ -202,10 +205,10 @@ Deno.serve(async (req) => {
       
       for (const product of nullHexProducts) {
         const colorLower = (product.color_family || '').toLowerCase().trim();
-        // Default to #FFFFFF for white/transparent/natural, or neutral gray for unknowns
-        const fixedHex = ['white', 'transparent', 'natural', 'nature'].includes(colorLower) 
-          ? '#FFFFFF' 
-          : '#CCCCCC';
+        // Use #FEFEFE for transparent to distinguish from white (#FFFFFF)
+        let fixedHex = '#CCCCCC';
+        if (colorLower === 'transparent') fixedHex = '#FEFEFE';
+        else if (['white', 'natural', 'nature'].includes(colorLower)) fixedHex = '#FFFFFF';
         
         await supabase
           .from('filaments')
