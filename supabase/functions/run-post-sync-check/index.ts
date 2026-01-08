@@ -5340,6 +5340,50 @@ Deno.serve(async (req) => {
       console.log(`[PostSyncCheck] Filament Detail Page Display: ${detailPageIssues.length} issues found`);
     }
 
+    // ============= LOCAL IMAGE STORAGE CHECK (EXTRUDR-SPECIFIC) =============
+    // Verify that Extrudr product images are cached in local storage, not external S3
+    if (brandSlug === 'extrudr') {
+      const storageBaseUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/filament-images`;
+      
+      const { data: extrudrImagesData } = await supabase
+        .from('filaments')
+        .select('id, product_id, product_title, featured_image')
+        .ilike('vendor', 'extrudr')
+        .not('featured_image', 'is', null);
+      
+      const externalImages = (extrudrImagesData || []).filter(p => 
+        p.featured_image && 
+        !p.featured_image.includes('supabase.co/storage') &&
+        !p.featured_image.includes(storageBaseUrl)
+      );
+      
+      const totalWithImages = extrudrImagesData?.length || 0;
+      const localImageCount = totalWithImages - externalImages.length;
+      const localImagePercentage = totalWithImages > 0 
+        ? Math.round((localImageCount / totalWithImages) * 100)
+        : 100;
+      
+      checks.push({
+        checkName: "Local Image Storage",
+        status: externalImages.length === 0 ? "pass" : 
+                localImagePercentage >= 90 ? "warning" : "fail",
+        count: localImageCount,
+        details: externalImages.length === 0 
+          ? `All ${totalWithImages} Extrudr images are cached locally in storage bucket`
+          : `${externalImages.length} images still using external URLs (${localImagePercentage}% local). Run Clean Slate sync to cache.`,
+        products: externalImages.length > 0 
+          ? externalImages.slice(0, 10).map(p => ({
+              id: p.id,
+              title: p.product_title,
+              issue: `External image: ${p.featured_image?.substring(0, 60)}...`,
+              url: p.featured_image
+            }))
+          : undefined
+      });
+      
+      console.log(`[PostSyncCheck] Local Image Storage: ${localImageCount}/${totalWithImages} (${localImagePercentage}%)`);
+    }
+
     // Calculate overall status
     const failCount = checks.filter((c) => c.status === "fail").length;
     const warnCount = checks.filter((c) => c.status === "warning").length;
