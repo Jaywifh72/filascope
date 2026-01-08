@@ -4042,7 +4042,7 @@ Deno.serve(async (req) => {
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
       'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
       'formfutura': 18,         // EasyFil, HDglass, ApolloX, etc.
-      'extrudr': 15,            // GreenTEC, BioFusion, DuraPro, etc.
+      'extrudr': 18,            // BioFusion, DuraPro (ABS/ASA/PA12/PC-PBT + CF variants), FLAX, FLEX (3), GreenTEC (3), PCTG, PETG, xPETG (2), PLA NX2 Matt
       'geeetech': 12,           // PLA, ABS, PETG, Silk, etc.
       'fusion-filaments': 11,   // PLA, PETG, ABS, TPU, etc.
       'spectrum-filaments': 30, // Large catalog with ReFill options
@@ -4127,6 +4127,7 @@ Deno.serve(async (req) => {
       'formfutura': [/^(EasyFil|HDglass|ApolloX|Volcano|Flexifil|Galaxy)/i],
       'amolen': [/^(PLA|PETG|TPU|Silk|Matte|Dual Color|Galaxy|Rainbow|Glow|Wood|Marble|Metal)/i],
       'siraya-tech': [/^(Fast|Blu|Build|Sculpt|Tenacious|Smoky|Brilliant|Infinite)/i],
+      'extrudr': [/^(BioFusion|DuraPro|FLAX|FLEX|GreenTEC|PCTG|PETG|xPETG|PLA NX2)/i],
     };
     
     const cardTitleIssues: Array<{ id: string; title: string; issue: string }> = [];
