@@ -2,17 +2,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   enrichFiberlogyProduct,
   getFiberlogyColorHex,
-  cleanFiberlogyTitle,
   normalizeFiberlogyMaterial,
   isDiameter285,
   getWeightVariant,
 } from '../_shared/fiberlogy-defaults.ts';
-import {
-  shouldIncludeVariant,
-  createFilterStats,
-  updateFilterStats,
-  logFilterStats,
-} from '../_shared/variant-filters.ts';
+import { FIBERLOGY_PRODUCT_SEED } from '../_shared/fiberlogy-seed.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,7 +16,6 @@ const corsHeaders = {
 interface SyncOptions {
   dryRun?: boolean;
   limit?: number;
-  skipScrape?: boolean;
   tasks?: string[];
 }
 
@@ -33,19 +26,15 @@ interface SyncResult {
     discovered: number;
     created: number;
     updated: number;
+    deleted: number;
     enriched: number;
     errors: number;
   };
   errors: string[];
 }
 
-interface FiberlogyProduct {
-  url: string;
-  title: string;
-  price: number | null;
-  image: string | null;
-  colors: string[];
-}
+// Safe delete threshold - minimum products before allowing delete
+const SAFE_DELETE_THRESHOLD = 50;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -54,130 +43,98 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-  
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
     const options: SyncOptions = await req.json().catch(() => ({}));
-    const { dryRun = false, limit, tasks = ['sync', 'scrape', 'enrich', 'hexfix'] } = options;
+    const { dryRun = false, tasks = ['sync', 'enrich', 'hexfix'] } = options;
+    // Ignore limit parameter - always sync full CSV seed
 
     const result: SyncResult = {
       success: true,
       message: '',
-      stats: { discovered: 0, created: 0, updated: 0, enriched: 0, errors: 0 },
+      stats: { discovered: 0, created: 0, updated: 0, deleted: 0, enriched: 0, errors: 0 },
       errors: [],
     };
 
-    console.log(`[Fiberlogy] Starting sync with options:`, { dryRun, limit, tasks });
+    console.log(`[Fiberlogy] Starting CSV-seeded sync with options:`, { dryRun, tasks });
+    console.log(`[Fiberlogy] Seed contains ${FIBERLOGY_PRODUCT_SEED.length} products`);
 
-    // ========== STEP 1: BASE SYNC VIA FIRECRAWL ==========
-    if (tasks.includes('sync') && firecrawlKey) {
-      console.log('[Fiberlogy] Step 1: Fetching products via Firecrawl...');
+    // ========== STEP 1: CSV-SEEDED SYNC ==========
+    if (tasks.includes('sync')) {
+      console.log('[Fiberlogy] Step 1: Processing CSV seed data...');
       
-      const collectionUrl = 'https://fiberlogy.com/en_US/c/Filaments/117';
-      const products: FiberlogyProduct[] = [];
+      result.stats.discovered = FIBERLOGY_PRODUCT_SEED.length;
       
-      try {
-        // Scrape the collection page
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: collectionUrl,
-            formats: ['html', 'links'],
-            waitFor: 3000,
-          }),
-        });
-
-        if (!scrapeResponse.ok) {
-          throw new Error(`Firecrawl error: ${scrapeResponse.status}`);
-        }
-
-        const scrapeData = await scrapeResponse.json();
-        const html = scrapeData.data?.html || scrapeData.html || '';
-        const links = scrapeData.data?.links || scrapeData.links || [];
-
-        // Extract product URLs from links
-        const productUrls = links.filter((link: string) => 
-          link.includes('/p/') && link.includes('fiberlogy.com')
-        ).slice(0, limit || 100);
-
-        console.log(`[Fiberlogy] Found ${productUrls.length} product URLs`);
-
-        // Extract basic product info from collection page HTML
-        const productMatches = html.matchAll(
-          /<a[^>]*href="([^"]*\/p\/[^"]*)"[^>]*>[\s\S]*?<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[\s\S]*?<span[^>]*class="[^"]*price[^"]*"[^>]*>([^<]*)</gi
-        );
-
-        for (const match of productMatches) {
-          const [, url, image, title, priceText] = match;
-          if (url && title) {
-            const price = parseFloat(priceText?.replace(/[^\d.]/g, '') || '0') || null;
-            products.push({
-              url: url.startsWith('http') ? url : `https://fiberlogy.com${url}`,
-              title: title.trim(),
-              price,
-              image: image?.startsWith('http') ? image : (image ? `https://fiberlogy.com${image}` : null),
-              colors: [],
-            });
-          }
-        }
-
-        // If we didn't extract enough from HTML, use the links
-        if (products.length < 10) {
-          for (const url of productUrls) {
-            if (!products.find(p => p.url === url)) {
-              products.push({
-                url,
-                title: extractTitleFromUrl(url),
-                price: null,
-                image: null,
-                colors: [],
-              });
-            }
-          }
-        }
-
-        result.stats.discovered = products.length;
-        console.log(`[Fiberlogy] Discovered ${products.length} products`);
-
-      } catch (error: unknown) {
-        console.error('[Fiberlogy] Error fetching collection:', error);
-        result.errors.push(`Collection fetch error: ${error instanceof Error ? error.message : String(error)}`);
+      // Safe delete check - ensure we have enough products before deleting
+      if (FIBERLOGY_PRODUCT_SEED.length < SAFE_DELETE_THRESHOLD) {
+        throw new Error(`Safe delete threshold not met: ${FIBERLOGY_PRODUCT_SEED.length} < ${SAFE_DELETE_THRESHOLD}`);
       }
 
-      // Process each product
-      for (const product of products) {
-        try {
-          const material = normalizeFiberlogyMaterial(product.title);
-          const enrichment = enrichFiberlogyProduct(product.title, material);
-          const colorHex = getFiberlogyColorHex(extractColorFromTitle(product.title));
+      // Delete existing Fiberlogy products (clean slate approach)
+      if (!dryRun) {
+        const { data: existing } = await supabase
+          .from('filaments')
+          .select('id')
+          .ilike('vendor', 'fiberlogy');
+        
+        if (existing && existing.length > 0) {
+          console.log(`[Fiberlogy] Deleting ${existing.length} existing products...`);
+          const { error: deleteError } = await supabase
+            .from('filaments')
+            .delete()
+            .ilike('vendor', 'fiberlogy');
           
-          // Determine weight in grams
-          const weightVariant = getWeightVariant(product.title);
+          if (deleteError) {
+            console.error('[Fiberlogy] Delete error:', deleteError);
+          } else {
+            result.stats.deleted = existing.length;
+          }
+        }
+      }
+
+      // Process each seed product
+      const productsToInsert: Record<string, unknown>[] = [];
+
+      for (const seedProduct of FIBERLOGY_PRODUCT_SEED) {
+        try {
+          // Normalize material
+          const material = normalizeFiberlogyMaterial(seedProduct.filament);
+          
+          // Get enrichment data
+          const enrichment = enrichFiberlogyProduct(seedProduct.filament, material);
+          
+          // Get color hex from mapping
+          const colorHex = getFiberlogyColorHex(seedProduct.color);
+          
+          // Determine weight from filament name
+          const weightVariant = getWeightVariant(seedProduct.filament);
           let weightGrams = 850; // Default Fiberlogy weight
           if (weightVariant === '2.5kg') weightGrams = 2500;
           else if (weightVariant === '0.5kg') weightGrams = 500;
           else if (weightVariant === '0.75kg') weightGrams = 750;
           
           // Determine diameter
-          const diameter = isDiameter285(product.title) ? 2.85 : 1.75;
+          const diameter = isDiameter285(seedProduct.filament) ? 2.85 : 1.75;
+
+          // Generate product ID
+          const productId = `fiberlogy-${slugify(seedProduct.filament)}-${slugify(seedProduct.color)}`;
+          
+          // Generate clean title
+          const cleanTitle = `Fiberlogy ${seedProduct.filament} - ${seedProduct.color}`;
 
           const productData = {
-            product_id: `fiberlogy-${slugify(product.title)}`,
-            product_title: product.title,
+            product_id: productId,
+            product_title: cleanTitle,
             vendor: 'Fiberlogy',
-            product_url: product.url,
-            featured_image: product.image,
-            variant_price: product.price,
+            product_url: seedProduct.productUrl,
+            featured_image: seedProduct.imageUrl, // Will be null from seed
+            variant_price: null, // CSV doesn't have reliable pricing
             material: enrichment.material,
             finish_type: enrichment.finishType !== 'Standard' ? enrichment.finishType : null,
             product_line_id: enrichment.productLineId,
-            color_hex: colorHex ? `#${colorHex}` : null,
+            color_family: seedProduct.color,
+            color_hex: colorHex ? (colorHex.startsWith('#') ? colorHex : `#${colorHex}`) : null,
             nozzle_temp_min_c: enrichment.nozzleTempMin,
             nozzle_temp_max_c: enrichment.nozzleTempMax,
             bed_temp_min_c: enrichment.bedTempMin,
@@ -193,113 +150,52 @@ Deno.serve(async (req) => {
           };
 
           if (dryRun) {
-            console.log('[Fiberlogy] DRY RUN - would upsert:', productData.product_title);
+            console.log('[Fiberlogy] DRY RUN - would insert:', productData.product_title);
             result.stats.created++;
-            continue;
-          }
-
-          // Check if exists
-          const { data: existing } = await supabase
-            .from('filaments')
-            .select('id')
-            .eq('product_id', productData.product_id)
-            .maybeSingle();
-
-          if (existing) {
-            const { error } = await supabase
-              .from('filaments')
-              .update(productData)
-              .eq('id', existing.id);
-            
-            if (error) throw error;
-            result.stats.updated++;
           } else {
-            const { error } = await supabase
-              .from('filaments')
-              .insert(productData);
-            
-            if (error) throw error;
-            result.stats.created++;
+            productsToInsert.push(productData);
           }
 
         } catch (error: unknown) {
-          console.error(`[Fiberlogy] Error processing ${product.title}:`, error);
-          result.errors.push(`${product.title}: ${error instanceof Error ? error.message : String(error)}`);
+          console.error(`[Fiberlogy] Error processing ${seedProduct.filament} - ${seedProduct.color}:`, error);
+          result.errors.push(`${seedProduct.filament} - ${seedProduct.color}: ${error instanceof Error ? error.message : String(error)}`);
           result.stats.errors++;
         }
       }
-    }
 
-    // ========== STEP 2: FIRECRAWL DETAIL SCRAPING ==========
-    if (tasks.includes('scrape') && firecrawlKey && !options.skipScrape) {
-      console.log('[Fiberlogy] Step 2: Scraping product details...');
-      
-      // Get products needing detail scraping
-      const { data: toScrape } = await supabase
-        .from('filaments')
-        .select('id, product_url, product_title')
-        .ilike('vendor', 'fiberlogy')
-        .is('tds_url', null)
-        .limit(limit || 20);
-
-      if (toScrape && toScrape.length > 0) {
-        console.log(`[Fiberlogy] Scraping details for ${toScrape.length} products`);
+      // Batch insert all products
+      if (!dryRun && productsToInsert.length > 0) {
+        console.log(`[Fiberlogy] Inserting ${productsToInsert.length} products...`);
         
-        for (const filament of toScrape) {
-          if (!filament.product_url) continue;
-
-          try {
-            await new Promise(r => setTimeout(r, 1500)); // Rate limit
-
-            const detailResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${firecrawlKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                url: filament.product_url,
-                formats: ['html'],
-                waitFor: 2000,
-              }),
-            });
-
-            if (!detailResponse.ok) continue;
-
-            const detailData = await detailResponse.json();
-            const html = detailData.data?.html || detailData.html || '';
-
-            const specs = extractSpecsFromHtml(html);
-            
-            if (Object.keys(specs).length > 0 && !dryRun) {
-              await supabase
-                .from('filaments')
-                .update({
-                  ...specs,
-                  last_scraped_at: new Date().toISOString(),
-                })
-                .eq('id', filament.id);
-              
-              result.stats.enriched++;
-            }
-
-          } catch (error) {
-            console.error(`[Fiberlogy] Detail scrape error for ${filament.product_title}:`, error);
+        // Insert in batches of 50 to avoid timeouts
+        const batchSize = 50;
+        for (let i = 0; i < productsToInsert.length; i += batchSize) {
+          const batch = productsToInsert.slice(i, i + batchSize);
+          const { error } = await supabase
+            .from('filaments')
+            .insert(batch);
+          
+          if (error) {
+            console.error(`[Fiberlogy] Batch insert error at ${i}:`, error);
+            result.errors.push(`Batch insert error: ${error.message}`);
+            result.stats.errors += batch.length;
+          } else {
+            result.stats.created += batch.length;
           }
         }
       }
     }
 
-    // ========== STEP 3: BRAND-SPECIFIC ENRICHMENTS ==========
+    // ========== STEP 2: BRAND-SPECIFIC ENRICHMENTS ==========
     if (tasks.includes('enrich')) {
-      console.log('[Fiberlogy] Step 3: Applying brand-specific enrichments...');
+      console.log('[Fiberlogy] Step 2: Applying additional enrichments...');
 
       const { data: toEnrich } = await supabase
         .from('filaments')
-        .select('id, product_title, material, tds_url')
+        .select('id, product_title, material, tds_url, product_line_id')
         .ilike('vendor', 'fiberlogy')
-        .or('product_line_id.is.null,finish_type.is.null,material.is.null')
-        .limit(limit || 200);
+        .or('product_line_id.is.null,material.is.null')
+        .limit(200);
 
       if (toEnrich && toEnrich.length > 0) {
         console.log(`[Fiberlogy] Enriching ${toEnrich.length} products`);
@@ -315,9 +211,8 @@ Deno.serve(async (req) => {
             await supabase
               .from('filaments')
               .update({
-                product_line_id: enrichment.productLineId,
-                finish_type: enrichment.finishType !== 'Standard' ? enrichment.finishType : null,
-                material: enrichment.material,
+                product_line_id: enrichment.productLineId || filament.product_line_id,
+                material: enrichment.material || filament.material,
                 tds_url: enrichment.tdsUrl || filament.tds_url,
                 nozzle_temp_min_c: enrichment.nozzleTempMin,
                 nozzle_temp_max_c: enrichment.nozzleTempMax,
@@ -333,45 +228,60 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ========== STEP 4: DUPLICATE HEX FIX ==========
+    // ========== STEP 3: DUPLICATE HEX FIX ==========
     if (tasks.includes('hexfix')) {
-      console.log('[Fiberlogy] Step 4: Fixing duplicate hex codes...');
+      console.log('[Fiberlogy] Step 3: Fixing duplicate hex codes...');
 
-      const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', {
-        p_vendor: 'Fiberlogy'
-      });
+      // Get all Fiberlogy products grouped by product_line_id
+      const { data: allProducts } = await supabase
+        .from('filaments')
+        .select('id, product_line_id, color_hex, color_family')
+        .ilike('vendor', 'fiberlogy')
+        .not('color_hex', 'is', null);
 
-      if (duplicates && duplicates.length > 0 && !dryRun) {
-        console.log(`[Fiberlogy] Found ${duplicates.length} duplicate hex entries`);
-        
-        const grouped: Record<string, typeof duplicates> = {};
-        for (const dup of duplicates) {
-          const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
+      if (allProducts && allProducts.length > 0 && !dryRun) {
+        // Group by product_line_id and color_hex
+        const grouped: Record<string, typeof allProducts> = {};
+        for (const product of allProducts) {
+          const key = `${product.product_line_id}:${product.color_hex?.toLowerCase()}`;
           if (!grouped[key]) grouped[key] = [];
-          grouped[key].push(dup);
+          grouped[key].push(product);
         }
 
+        let fixedCount = 0;
         for (const entries of Object.values(grouped)) {
           if (entries.length <= 1) continue;
           
+          console.log(`[Fiberlogy] Found ${entries.length} duplicates for ${entries[0].product_line_id} - ${entries[0].color_hex}`);
+          
           for (let i = 1; i < entries.length; i++) {
             const baseHex = entries[i].color_hex?.replace('#', '') || 'CCCCCC';
-            const variation = Math.min(255, parseInt(baseHex.slice(0, 2), 16) + i * 3);
-            const newHex = `#${variation.toString(16).padStart(2, '0')}${baseHex.slice(2)}`;
+            const r = parseInt(baseHex.slice(0, 2), 16);
+            const g = parseInt(baseHex.slice(2, 4), 16);
+            const b = parseInt(baseHex.slice(4, 6), 16);
+            
+            // Slightly vary the color
+            const newR = Math.min(255, r + i * 3);
+            const newG = Math.min(255, g + (i % 2) * 2);
+            const newB = Math.min(255, b + ((i + 1) % 3));
+            const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`.toUpperCase();
             
             await supabase
               .from('filaments')
-              .update({ color_hex: newHex.toUpperCase() })
+              .update({ color_hex: newHex })
               .eq('id', entries[i].id);
+            
+            fixedCount++;
           }
+        }
+        
+        if (fixedCount > 0) {
+          console.log(`[Fiberlogy] Fixed ${fixedCount} duplicate hex codes`);
         }
       }
     }
 
-    // ========== STEP 5: TDS PARSING (SKIP - HANDLED SEPARATELY) ==========
-    console.log('[Fiberlogy] Step 5: TDS parsing skipped - trigger parse-filament-tds separately');
-
-    result.message = `Fiberlogy sync complete: ${result.stats.created} created, ${result.stats.updated} updated, ${result.stats.enriched} enriched`;
+    result.message = `Fiberlogy CSV-seeded sync complete: ${result.stats.created} created, ${result.stats.deleted} deleted, ${result.stats.enriched} enriched`;
     console.log(`[Fiberlogy] ${result.message}`);
 
     return new Response(JSON.stringify(result), {
@@ -387,55 +297,7 @@ Deno.serve(async (req) => {
   }
 });
 
-// Helper functions
-function extractColorFromTitle(title: string): string {
-  const colorPatterns = [
-    /\b(white|black|red|blue|green|yellow|orange|purple|pink|gray|grey|silver|gold|bronze|copper)\b/i,
-    /\b(pastel\s+\w+)\b/i,
-    /\b(neon\s+\w+)\b/i,
-    /\b(ruby|onyx|aurora|vertigo|inox|graphite|midnight\s+sky)\b/i,
-    /\b(skintone\s*#?\d+)\b/i,
-  ];
-  
-  for (const pattern of colorPatterns) {
-    const match = title.match(pattern);
-    if (match) return match[1];
-  }
-  return '';
-}
-
-function extractSpecsFromHtml(html: string): Record<string, unknown> {
-  const specs: Record<string, unknown> = {};
-  
-  // Extract TDS URL
-  const tdsMatch = html.match(/href="([^"]*\.pdf[^"]*)"/i);
-  if (tdsMatch && tdsMatch[1].toLowerCase().includes('tds')) {
-    specs.tds_url = tdsMatch[1].startsWith('http') ? tdsMatch[1] : `https://fiberlogy.com${tdsMatch[1]}`;
-  }
-  
-  // Extract nozzle temperature
-  const nozzleMatch = html.match(/nozzle[^:]*:\s*(\d+)\s*[-–]\s*(\d+)\s*°?C/i);
-  if (nozzleMatch) {
-    specs.nozzle_temp_min_c = parseInt(nozzleMatch[1]);
-    specs.nozzle_temp_max_c = parseInt(nozzleMatch[2]);
-  }
-  
-  // Extract bed temperature
-  const bedMatch = html.match(/bed[^:]*:\s*(\d+)\s*[-–]\s*(\d+)\s*°?C/i);
-  if (bedMatch) {
-    specs.bed_temp_min_c = parseInt(bedMatch[1]);
-    specs.bed_temp_max_c = parseInt(bedMatch[2]);
-  }
-  
-  // Extract density
-  const densityMatch = html.match(/density[^:]*:\s*([\d.]+)\s*g\/?cm/i);
-  if (densityMatch) {
-    specs.density_g_cm3 = parseFloat(densityMatch[1]);
-  }
-
-  return specs;
-}
-
+// Helper function to create URL-friendly slugs
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -443,14 +305,4 @@ function slugify(text: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .substring(0, 80);
-}
-
-function extractTitleFromUrl(url: string): string {
-  const match = url.match(/\/p\/([^\/]+)/);
-  if (match) {
-    return match[1]
-      .replace(/-/g, ' ')
-      .replace(/\b\w/g, c => c.toUpperCase());
-  }
-  return 'Unknown Product';
 }

@@ -1626,6 +1626,229 @@ After making fixes:
 }
 
 /**
+ * Generate Fiberlogy-specific AI Fix Prompt with CSV-seeded architecture context
+ */
+function generateFiberlogyFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const role = {
+    title: 'Fiberlogy Integration Specialist',
+    capabilities: [
+      'CSV-seeded sync pipeline management for ShopArena platform',
+      'Material classification for 19+ Fiberlogy product lines',
+      'Transparent and specialty color hex mapping',
+      'TDS URL pattern management for Polish manufacturer',
+    ],
+  };
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+---`;
+  }
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ShopArena (Polish e-commerce platform)
+**Website**: https://fiberlogy.com
+**This is NOT a Shopify store** - do NOT use Shopify JSON APIs, /products.json, or Shopify-specific patterns.
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap: string, i: number) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## CSV-SEEDED SYNC ARCHITECTURE
+
+Fiberlogy sync uses a **hardcoded CSV seed** as the primary data source:
+
+1. **FIBERLOGY_PRODUCT_SEED** (~274 products across 19 lines) in \`fiberlogy-seed.ts\` contains:
+   - Material, filament name, color, product URL
+   - Data sourced from manufacturer CSV export
+   
+2. **enrichFiberlogyProduct()** in \`fiberlogy-defaults.ts\` enriches each product with:
+   - Material classification (Easy PLA, Easy PETG, FiberSilk, etc.)
+   - Finish type detection (Silk, Satin, Matte, Glow)
+   - Print settings (temps, speeds)
+   - TDS URL from FIBERLOGY_TDS_PATTERNS mapping
+   
+3. **FIBERLOGY_COLOR_MAPPING** provides hex codes for 90+ colors including transparents
+
+---
+
+## PRODUCT LINES REFERENCE
+
+| Product Line | Material | Approx. Colors |
+|-------------|----------|----------------|
+| Easy PLA | PLA | 47 |
+| Easy PETG | PETG | 26 |
+| FiberFlex 40D | TPU-40D | 22 |
+| PP | PP | 22 |
+| Easy ABS | ABS | 19 |
+| FiberSilk | PLA | 17 |
+| HS PLA Clear | PLA | 15 |
+| Impact PLA | PLA | 14 |
+| FiberFlex 30D | TPU-30D | 14 |
+| FiberSatin | PLA | 12 |
+| Nylon PA12 | PA12 | 11 |
+| PCTG | PCTG | 10 |
+| Matte PLA | PLA | 10 |
+| Matte PETG | PETG | 9 |
+| MattFlex 40D | TPU-40D | 9 |
+| HIPS | HIPS | 8 |
+| ASA | ASA | 6 |
+| FiberWood | PLA-Wood | 5 |
+| FiberSmooth | PVB | 5 |
+
+---
+
+## KNOWN LIMITATIONS
+
+1. ❌ **Do NOT use Firecrawl scraping** - ShopArena pages are JavaScript-heavy
+2. ❌ **No color-specific images** - CSV only has product-level images  
+3. ❌ **Pricing varies by region** - CSV doesn't include reliable prices
+
+---
+
+## WORKING SOLUTIONS
+
+1. ✅ **Use CSV seed as single source of truth** - reliable product catalog
+2. ✅ **Color mapping handles transparent variants** - uses alpha channel hex codes
+3. ✅ **TDS URLs derived from product line** - consistent pattern per material
+4. ✅ **Delete-then-insert pattern** - prevents stale data accumulation
+
+---
+
+## KEY FILES FOR FIBERLOGY
+
+- \`supabase/functions/_shared/fiberlogy-seed.ts\` - 274 products from CSV
+- \`supabase/functions/_shared/fiberlogy-defaults.ts\` - Color mapping, enrichment, TDS URLs
+- \`supabase/functions/sync-fiberlogy-products/index.ts\` - CSV-seeded sync function
+
+---
+
+## Fix Post Sync Check Issues for Fiberlogy
+
+### Summary
+- **Brand**: ${brand} (slug: fiberlogy)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## Required Actions for Fiberlogy
+
+### 1. For Missing Products
+
+If products are missing from the sync:
+1. Open \`supabase/functions/_shared/fiberlogy-seed.ts\`
+2. Add missing products to \`FIBERLOGY_PRODUCT_SEED\` array
+3. Each entry needs: \`material\`, \`filament\`, \`color\`, \`productUrl\`
+4. Run clean slate sync to refresh all data
+
+### 2. For Color Hex Issues
+
+If hex codes are incorrect or missing:
+1. Open \`supabase/functions/_shared/fiberlogy-defaults.ts\`
+2. Update \`FIBERLOGY_COLOR_MAPPING\` with correct hex values
+3. For transparent colors, use 8-digit hex with alpha: \`#RRGGBBAA\`
+
+\`\`\`typescript
+// In fiberlogy-defaults.ts FIBERLOGY_COLOR_MAPPING
+'navy blue transparent': '#00008099',
+'pure transparent': '#FEFEFE',
+\`\`\`
+
+### 3. For Wrong Material Classification
+
+If materials are incorrectly classified:
+1. Open \`supabase/functions/_shared/fiberlogy-defaults.ts\`
+2. Update \`FIBERLOGY_MATERIAL_MAPPING\` or \`enrichFiberlogyProduct()\`
+
+### 4. For Missing TDS URLs
+
+If TDS links are missing:
+1. Open \`supabase/functions/_shared/fiberlogy-defaults.ts\`  
+2. Add pattern to \`FIBERLOGY_TDS_PATTERNS\`
+3. Follow format: \`'PRODUCT LINE': 'https://fiberlogy.com/wp-content/uploads/.../TDS.pdf'\`
+
+### 5. For Wrong Product Line IDs
+
+If product_line_id is incorrect:
+1. Check \`generateFiberlogyProductLineId()\` logic in defaults file
+2. Ensure filament name patterns match expected product lines
+
+---
+
+*Last Updated: ${new Date().toISOString().split('T')[0]}*`;
+}
+
+/**
  * Generate Extrudr-specific AI Fix Prompt with CSV-seeded architecture context
  */
 function generateExtrudrFixPrompt(
