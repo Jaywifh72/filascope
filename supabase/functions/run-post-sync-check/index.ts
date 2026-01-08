@@ -379,6 +379,19 @@ const AI_ROLES = {
       'Complex product line normalization (45+ lines)'
     ]
   },
+  extrudrSpecialist: {
+    title: 'Extrudr Integration Specialist',
+    triggers: ['extrudr', 'durapro', 'biofusion', 'greentec', 'flex-medium', 'flex-hard', 'pctg', 'flax'],
+    capabilities: [
+      'Custom Next.js platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture (~130 products)',
+      'Premium Austrian filament material classification',
+      'Bio-based material handling (GreenTEC, BioFusion, FLAX)',
+      'TPU Shore hardness variant detection (88A, 92A, 98A)',
+      'Engineering plastics expertise (PC-PBT, PA12, ASA-GF)',
+      'Cardboard spool eco-friendly packaging'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -710,6 +723,55 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'pa-cf': 'PA-CF (ePA-CF)'
     },
     lastUpdated: '2026-01-07'
+  },
+  'extrudr': {
+    platform: 'Custom Next.js storefront (NOT Shopify) - www.extrudr.com',
+    knownLimitations: [
+      '❌ Website uses Next.js with dynamic content loading',
+      '❌ No Shopify JSON API available',
+      '❌ Product variants (colors/weights) require JavaScript interaction',
+      '❌ Some hex values stored as JSON objects in source data',
+      '❌ Transparent colors have no valid hex code (use placeholder #FFFFFF)'
+    ],
+    workingSolutions: [
+      '✅ Use CSV-seeded sync from EXTRUDR_PRODUCT_SEED (~130+ products)',
+      '✅ All color-specific images available from S3 bucket (s3.extrudr.com)',
+      '✅ enrichExtrudrProduct() provides complete material enrichment',
+      '✅ TDS URLs hardcoded in EXTRUDR_TDS_URLS mapping',
+      '✅ Shore hardness correctly mapped for FLEX TPU variants (88A/92A/98A)',
+      '✅ Cardboard spool material flag set for eco-friendly packaging'
+    ],
+    failedApproaches: [
+      '⚠️ Firecrawl scraping - timeouts and incomplete data extraction',
+      '⚠️ Dynamic URL generation from slugs - missing products',
+      '⚠️ Relying on website for color extraction - inconsistent results'
+    ],
+    currentStatus: {
+      'totalProducts': '~130 unique color variants across 17+ product lines',
+      'imageCoverage': '100% - all from S3 bucket',
+      'hexCoverage': '~95% - transparent variants use #FFFFFF placeholder',
+      'tdsCoverage': '100% - all materials have TDS mappings'
+    },
+    keyFiles: [
+      'supabase/functions/_shared/extrudr-seed.ts - CSV-seeded product data',
+      'supabase/functions/_shared/extrudr-defaults.ts - Brand enrichment and color mappings',
+      'supabase/functions/sync-extrudr-products/index.ts - Main sync function'
+    ],
+    productSlugReference: {
+      'biofusion': 'BioFusion (Silk PLA)',
+      'durapro-abs': 'DuraPro ABS',
+      'durapro-abs-cf': 'DuraPro ABS CF',
+      'durapro-asa': 'DuraPro ASA',
+      'flax': 'FLAX (Wood composite)',
+      'greentec': 'GreenTEC (Bio)',
+      'greentec-pro': 'GreenTEC Pro',
+      'pctg': 'PCTG',
+      'petg': 'PETG',
+      'flex-medium': 'FLEX Medium (TPU-92A)',
+      'flex-hard': 'FLEX Hard (TPU-98A)',
+      'flex-semisoft': 'FLEX Semisoft (TPU-88A)'
+    },
+    lastUpdated: '2026-01-08'
   }
 };
 
@@ -731,18 +793,7 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
     return AI_ROLES.esunSpecialist;
   }
   if (brandSlug === 'extrudr') {
-    return {
-      title: 'Extrudr Integration Specialist',
-      capabilities: [
-        'Custom Next.js platform analysis (NOT Shopify)',
-        'CSV-seeded sync pipeline architecture',
-        'Premium Austrian filament material classification',
-        'Bio-based material handling (GreenTEC, BioFusion, FLAX)',
-        'TPU Shore hardness variant detection (88A, 92A, 98A)',
-        'Engineering plastics expertise (PC-PBT, PA12, ASA-GF)',
-        'Cardboard spool eco-friendly packaging'
-      ]
-    };
+    return AI_ROLES.extrudrSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -1574,6 +1625,225 @@ After making fixes:
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Extrudr-specific AI Fix Prompt with CSV-seeded architecture context
+ */
+function generateExtrudrFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['extrudr'];
+  const role = AI_ROLES.extrudrSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+---`;
+  }
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ${lessons.platform}
+**This is NOT a Shopify store** - do NOT use Shopify JSON APIs, /products.json, or Shopify-specific patterns.
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## CSV-SEEDED SYNC ARCHITECTURE
+
+Extrudr sync uses a **hardcoded CSV seed** as the primary data source:
+
+1. **EXTRUDR_PRODUCT_SEED** (~130 products) in \`extrudr-seed.ts\` contains:
+   - Product names, colors, hex codes, image URLs from S3 bucket
+   - Data sourced from manufacturer CSV export
+   
+2. **enrichExtrudrProduct()** in \`extrudr-defaults.ts\` enriches each product with:
+   - Material classification (17+ product lines)
+   - Finish type detection (Silk, Matte, etc.)
+   - TPU Shore hardness (88A, 92A, 98A)
+   - Print settings (temps, speeds)
+   - TDS URL from EXTRUDR_TDS_URLS mapping
+   
+3. **EXTRUDR_COLOR_MAPPING** provides hex codes for colors
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE APPROACHES)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID REPEATING)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+
+## CURRENT SYNC STATUS
+
+| Metric | Value |
+|--------|-------|
+| **Total Products** | ${lessons.currentStatus.totalProducts} |
+| **Image Coverage** | ${lessons.currentStatus.imageCoverage} |
+| **Hex Coverage** | ${lessons.currentStatus.hexCoverage} |
+| **TDS Coverage** | ${lessons.currentStatus.tdsCoverage} |
+
+---
+
+## KEY FILES FOR EXTRUDR
+
+${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+
+---
+
+## Fix Post Sync Check Issues for Extrudr
+
+### Summary
+- **Brand**: ${brand} (slug: extrudr)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## Required Actions for Extrudr
+
+### 1. For Missing Products
+
+If products are missing from the sync:
+1. Open \`supabase/functions/_shared/extrudr-seed.ts\`
+2. Add missing products to \`EXTRUDR_PRODUCT_SEED\` array
+3. Each entry needs: \`productLine\`, \`material\`, \`color\`, \`hex\`, \`imageUrl\`, \`productUrl\`
+4. Run clean slate sync to refresh all data
+
+### 2. For Color Hex Issues
+
+If hex codes are incorrect or missing:
+1. Open \`supabase/functions/_shared/extrudr-defaults.ts\`
+2. Update \`EXTRUDR_COLOR_MAPPING\` with correct hex values
+3. For transparent colors, use \`#FFFFFF\` as placeholder
+
+\`\`\`typescript
+// In extrudr-defaults.ts EXTRUDR_COLOR_MAPPING
+'color name': '#HEXCODE',
+\`\`\`
+
+### 3. For TDS Coverage Issues
+
+If TDS URLs are missing:
+1. Open \`supabase/functions/_shared/extrudr-defaults.ts\`
+2. Update \`EXTRUDR_TDS_URLS\` mapping with correct URLs
+3. TDS PDFs are hosted at extrudr.com/pdf/
+
+### 4. For Shore Hardness Issues
+
+TPU variants should have correct Shore hardness:
+- FLEX Semisoft → TPU-88A
+- FLEX Medium → TPU-92A
+- FLEX Hard → TPU-98A
+
+Check \`enrichExtrudrProduct()\` for Shore hardness logic.
+
+---
+
+## Product Line Reference
+
+| Slug | Display Name |
+|------|--------------|
+${Object.entries(lessons.productSlugReference || {}).map(([slug, name]) => `| ${slug} | ${name} |`).join('\n')}
+
+---
+
+## Verification Steps
+
+After making fixes:
+
+1. Run a **Clean Slate** sync for Extrudr from Brand Sync Manager
+2. Check edge function logs for product counts
+3. Run **Post Sync Check** again to verify all issues are resolved
+4. Spot-check a few product cards to confirm:
+   - Correct card count (~17 product lines)
+   - Unique color swatches per product line
+   - Colors match hex codes visually
+   - TDS URLs are populated
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -1603,6 +1873,11 @@ function generateAIFixPrompt(
     return generateEryoneFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
+  // Use brand-specific prompt generator for Extrudr
+  if (brandSlug === 'extrudr') {
+    return generateExtrudrFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
   // Determine the best AI role for this specific set of issues
   const role = determineAIRole(checks, brandSlug);
   
@@ -1610,7 +1885,7 @@ function generateAIFixPrompt(
   const hasDedicatedSyncFunction = [
     'anycubic', 'amolen', 'polymaker', 'hatchbox', '3d-fuel', 'sunlu', 
     'eryone', 'overture', 'push-plastic', 'proto-pasta', '3dxtech', 
-    'ninjatek', 'fiberlogy', 'colorfabb', 'prusament'
+    'ninjatek', 'fiberlogy', 'colorfabb', 'prusament', 'extrudr'
   ].includes(brandSlug);
   
   const syncFilePath = hasDedicatedSyncFunction 
