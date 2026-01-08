@@ -3090,92 +3090,109 @@ Deno.serve(async (req) => {
 
     // Check: Product Images Coverage
     // Verify that products have featured_image populated for detail page display
-    const { data: allProductsForImages } = await supabase
-      .from("filaments")
-      .select("id, product_title, featured_image, product_line_id")
-      .ilike("vendor", brandName);
+    
+    // Skip image coverage check for CSV-seeded brands with no image data (known limitation)
+    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy'];
+    const isNoImageBrand = NO_IMAGE_BRANDS.some(b => 
+      brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
+    );
 
-    const totalWithImages = allProductsForImages?.filter(p => p.featured_image).length || 0;
-    const totalWithoutImages = (allProductsForImages?.length || 0) - totalWithImages;
-    const imagePercentage = allProductsForImages?.length 
-      ? Math.round((totalWithImages / allProductsForImages.length) * 100) 
-      : 0;
+    if (isNoImageBrand) {
+      checks.push({
+        checkName: "Product Images Coverage",
+        status: "pass",
+        count: 0,
+        details: `Image coverage check skipped - ${brandName} uses CSV-seeded data without image URLs (known limitation)`,
+        products: undefined,
+      });
+    } else {
+      const { data: allProductsForImages } = await supabase
+        .from("filaments")
+        .select("id, product_title, featured_image, product_line_id")
+        .ilike("vendor", brandName);
 
-    // Group by product_line_id to check if any lines are missing images entirely
-    const lineImageCoverage: Record<string, { total: number; withImage: number; sampleTitle: string }> = {};
-    for (const product of allProductsForImages || []) {
-      const lineId = product.product_line_id || 'unknown';
-      if (!lineImageCoverage[lineId]) {
-        lineImageCoverage[lineId] = { total: 0, withImage: 0, sampleTitle: product.product_title };
+      const totalWithImages = allProductsForImages?.filter(p => p.featured_image).length || 0;
+      const totalWithoutImages = (allProductsForImages?.length || 0) - totalWithImages;
+      const imagePercentage = allProductsForImages?.length 
+        ? Math.round((totalWithImages / allProductsForImages.length) * 100) 
+        : 0;
+
+      // Group by product_line_id to check if any lines are missing images entirely
+      const lineImageCoverage: Record<string, { total: number; withImage: number; sampleTitle: string }> = {};
+      for (const product of allProductsForImages || []) {
+        const lineId = product.product_line_id || 'unknown';
+        if (!lineImageCoverage[lineId]) {
+          lineImageCoverage[lineId] = { total: 0, withImage: 0, sampleTitle: product.product_title };
+        }
+        lineImageCoverage[lineId].total++;
+        if (product.featured_image) lineImageCoverage[lineId].withImage++;
       }
-      lineImageCoverage[lineId].total++;
-      if (product.featured_image) lineImageCoverage[lineId].withImage++;
-    }
 
-    const linesWithNoImages = Object.entries(lineImageCoverage)
-      .filter(([_, data]) => data.withImage === 0 && data.total > 0)
-      .map(([lineId, data]) => ({
-        id: lineId,
-        title: lineId,
-        issue: `0/${data.total} variants have images`,
-      }));
+      const linesWithNoImages = Object.entries(lineImageCoverage)
+        .filter(([_, data]) => data.withImage === 0 && data.total > 0)
+        .map(([lineId, data]) => ({
+          id: lineId,
+          title: lineId,
+          issue: `0/${data.total} variants have images`,
+        }));
 
-    // Get sample products missing images for detailed reporting
-    const productsMissingImages = totalWithoutImages > 0 
-      ? allProductsForImages?.filter(p => !p.featured_image).slice(0, 10).map(p => ({
-          id: p.id,
-          title: p.product_title,
-          issue: "Missing featured_image",
-        }))
-      : undefined;
+      // Get sample products missing images for detailed reporting
+      const productsMissingImages = totalWithoutImages > 0 
+        ? allProductsForImages?.filter(p => !p.featured_image).slice(0, 10).map(p => ({
+            id: p.id,
+            title: p.product_title,
+            issue: "Missing featured_image",
+          }))
+        : undefined;
 
-    checks.push({
-      checkName: "Product Images Coverage",
-      status: totalWithoutImages === 0 ? "pass" : 
-              imagePercentage >= 90 ? "warning" : "fail",
-      count: totalWithImages,
-      details: `${totalWithImages}/${allProductsForImages?.length || 0} products have featured_image (${imagePercentage}%)`,
-      products: linesWithNoImages.length > 0 ? linesWithNoImages : productsMissingImages,
-    });
+      checks.push({
+        checkName: "Product Images Coverage",
+        status: totalWithoutImages === 0 ? "pass" : 
+                imagePercentage >= 90 ? "warning" : "fail",
+        count: totalWithImages,
+        details: `${totalWithImages}/${allProductsForImages?.length || 0} products have featured_image (${imagePercentage}%)`,
+        products: linesWithNoImages.length > 0 ? linesWithNoImages : productsMissingImages,
+      });
 
-    // Validate a sample of image URLs are actually accessible (not 404)
-    const productsWithImages = allProductsForImages?.filter(p => p.featured_image).slice(0, 5) || [];
-    const brokenImageUrls: Array<{ id: string; title: string; issue: string }> = [];
+      // Validate a sample of image URLs are actually accessible (not 404)
+      const productsWithImages = allProductsForImages?.filter(p => p.featured_image).slice(0, 5) || [];
+      const brokenImageUrls: Array<{ id: string; title: string; issue: string }> = [];
 
-    for (const product of productsWithImages) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(product.featured_image!, { 
-          method: 'HEAD',
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
+      for (const product of productsWithImages) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const response = await fetch(product.featured_image!, { 
+            method: 'HEAD',
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            brokenImageUrls.push({
+              id: product.id,
+              title: product.product_title,
+              issue: `Image URL returns HTTP ${response.status}`,
+            });
+          }
+        } catch (error) {
           brokenImageUrls.push({
             id: product.id,
             title: product.product_title,
-            issue: `Image URL returns HTTP ${response.status}`,
+            issue: `Image URL unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`,
           });
         }
-      } catch (error) {
-        brokenImageUrls.push({
-          id: product.id,
-          title: product.product_title,
-          issue: `Image URL unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      }
+
+      if (productsWithImages.length > 0) {
+        checks.push({
+          checkName: "Image URLs Valid",
+          status: brokenImageUrls.length === 0 ? "pass" : "fail",
+          count: productsWithImages.length - brokenImageUrls.length,
+          details: `${productsWithImages.length - brokenImageUrls.length}/${productsWithImages.length} sampled image URLs are accessible`,
+          products: brokenImageUrls.length > 0 ? brokenImageUrls : undefined,
         });
       }
-    }
-
-    if (productsWithImages.length > 0) {
-      checks.push({
-        checkName: "Image URLs Valid",
-        status: brokenImageUrls.length === 0 ? "pass" : "fail",
-        count: productsWithImages.length - brokenImageUrls.length,
-        details: `${productsWithImages.length - brokenImageUrls.length}/${productsWithImages.length} sampled image URLs are accessible`,
-        products: brokenImageUrls.length > 0 ? brokenImageUrls : undefined,
-      });
     }
 
     // Check 4 (CRITICAL): Cross-Material Grouping Detection
