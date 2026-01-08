@@ -324,22 +324,29 @@ export function generateFiberlogyProductLineId(title: string, material?: string 
   return `fiberlogy__${mat.toLowerCase().replace(/[^a-z0-9]/g, '-')}__${suffix}`;
 }
 
-// COLOR MAPPING
+// COLOR MAPPING - Extended for CSV seed
 export const FIBERLOGY_COLOR_MAPPING: Record<string, string> = {
   // Standard colors
   'white': 'FFFFFF',
   'pure white': 'FFFFFF',
+  'lithophane white': 'FAFAFA',
   'black': '1A1A1A',
   'graphite': '4A4A4A',
   'gray': '808080',
   'grey': '808080',
   'silver': 'C0C0C0',
+  'beige': 'F5DEB3',
+  'brown': '8B4513',
+  'natural': 'F5E6D3',
   
-  // Reds
+  // Reds/Oranges
   'red': 'E41E26',
   'ruby red': 'B01D27',
   'burgundy': '722F37',
+  'scarlet': 'FF2400',
+  'carmine': '960018',
   'orange': 'FF6B00',
+  'red orange': 'FF4500',
   'brick': 'A52A2A',
   
   // Blues
@@ -348,27 +355,39 @@ export const FIBERLOGY_COLOR_MAPPING: Record<string, string> = {
   'navy blue': '000080',
   'spectra blue': '4169E1',
   'light blue': 'ADD8E6',
+  'cyan': '00FFFF',
+  'steel blue': '4682B4',
+  'turquoise': '40E0D0',
   
   // Greens
   'green': '228B22',
+  'light green': '90EE90',
   'alien green': '7CFC00',
   'olive green': '808000',
+  'irish green': '009A49',
+  'army green': '4B5320',
+  'sage green': '9DC183',
   'vertigo': '006400',
   
-  // Yellows
+  // Yellows/Golds
   'yellow': 'FFD700',
   'gold': 'FFD700',
   'true gold': 'D4AF37',
+  'brass': 'B5A642',
+  'khaki': 'C3B091',
   
   // Purples/Pinks
   'purple': '800080',
   'pink': 'FFC0CB',
+  'candy': 'FF66B2',
   'magenta': 'FF00FF',
   
   // Special effects
   'inox': 'B4B4B4',
   'onyx': '353839',
   'onyx gold': '4A4A2A',
+  'anthracite': '293133',
+  'pearl': 'F0EAD6',
   'midnight sky': '191970',
   'aurora': '00CED1',
   
@@ -385,19 +404,29 @@ export const FIBERLOGY_COLOR_MAPPING: Record<string, string> = {
   'neon yellow': 'CCFF00',
   
   // Skin tones
+  'skin tone 1': 'F5CBA7',
+  'skin tone 2': 'D4A574',
+  'skin tone 3': '8D5524',
   'skintone #1': 'F5CBA7',
   'skintone #2': 'D4A574',
   'skintone #3': '8D5524',
   
   // Natural/Special
-  'natural': 'F5E6D3',
-  'transparent': 'FFFFFF',
-  'lithophane white': 'FAFAFA',
   'granite': '676767',
   'sandstone': 'C2B280',
   'wood': '8B4513',
   'copper': 'B87333',
   'bronze': 'CD7F32',
+  
+  // Transparent variants (with alpha suffix for visual distinction)
+  'pure transparent': 'FEFEFE',
+  'transparent': 'FEFEFE',
+  'burgundy transparent': '722F37',
+  'orange transparent': 'FF6B00',
+  'light green transparent': '90EE90',
+  'bottle green transparent': '006A4E',
+  'navy blue transparent': '000080',
+  'blue transparent': '0066CC',
 };
 
 export function getFiberlogyColorHex(colorName: string): string | null {

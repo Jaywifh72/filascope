@@ -1878,6 +1878,11 @@ function generateAIFixPrompt(
     return generateExtrudrFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
+  // Use brand-specific prompt generator for Fiberlogy
+  if (brandSlug === 'fiberlogy') {
+    return generateFiberlogyFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
   // Determine the best AI role for this specific set of issues
   const role = determineAIRole(checks, brandSlug);
   
@@ -4069,7 +4074,7 @@ Deno.serve(async (req) => {
       'matter3d': 15,           // Performance, Standard, Specialty lines
       'esun': 39,               // CSV-seeded: 39 distinct product lines from 360+ products (PLA-Basic, PLA-Matte, PLA-Silk, PLA+HS, PETG, ABS+, TPU-95A, etc.)
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
-      'fiberlogy': 15,          // Easy PLA, HD PLA, PETG, PA12, etc.
+      'fiberlogy': 19,          // CSV-seeded: ABS, ABS Plus, Easy ABS, ASA, Easy PLA, Easy PETG, FiberFlex 30D/40D, FiberSilk, FiberWood, HIPS, HS PLA Clear, Impact PLA, Matte PLA, Matte PETG, MattFlex 40D, Nylon PA12, PCTG, PP
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
       'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
       'formfutura': 18,         // EasyFil, HDglass, ApolloX, etc.
@@ -4134,7 +4139,7 @@ Deno.serve(async (req) => {
       'fillamentum': [/^(Extrafill|Flexfill|NonOilen|CPE|ASA|Timberfill|Vinyl)/i],
       'azurefilm': [/^(PLA|PETG|ABS|ASA|Silk|Wood|Hyper Speed|High Speed|LumberLay|Lumos)/i],
       'ninjatek': [/^(Cheetah|NinjaFlex|Armadillo|Eel|SemiFlex)/i],
-      'fiberlogy': [/^(Easy PLA|HD PLA|PETG|PA12|PCTG|FiberFlex)/i],
+      'fiberlogy': [/^(ABS|ABS Plus|Easy ABS|ASA|Easy PLA|Easy PETG|FiberFlex|FiberSilk|FiberWood|HIPS|HS PLA|Impact PLA|Matte PLA|Matte PETG|MattFlex|Nylon PA12|PCTG|PP)/i],
       'overture': [/^(PLA|PLA Pro|PLA\s*\+|PETG|TPU|ABS|Silk|Matte|Rock|Air)/i],
       'hatchbox': [/^(PLA|PLA\s*\+|PETG|ABS|TPU|Silk|Wood|Reload)/i],
       'sunlu': [/^(PLA|PLA\s*\+|PETG|TPU|ABS|ASA|Silk|Meta|E-ABS)/i],
@@ -4883,7 +4888,8 @@ Deno.serve(async (req) => {
     // Note: Bambu Lab DOES have color-specific images so it's no longer whitelisted
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr'];
+    // Fiberlogy: CSV-seeded data has placeholder images only
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
