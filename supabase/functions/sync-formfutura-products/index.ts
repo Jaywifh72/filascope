@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
 
       const { error: insertError } = await supabase
         .from('filaments')
-        .upsert(batch, { onConflict: 'product_id' });
+        .insert(batch);
 
       if (insertError) {
         console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} insert error:`, insertError);
