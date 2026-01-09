@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  FORMFUTURA_PRODUCT_SEED,
+  FORMFUTURA_SEED_VERSION,
+  FORMFUTURA_DEFAULT_COLORS,
+  EUR_TO_USD_RATE,
+  FORMFUTURA_SAFE_DELETE_THRESHOLD,
+} from '../_shared/formfutura-seed.ts';
+import {
   enrichFormFuturaProduct,
   cleanFormFuturaTitle,
   getFormFuturaColorHex,
@@ -7,13 +14,9 @@ import {
   extractFormFuturaWeight,
   isFormFuturaRefill,
   isFormFuturaBambuCompatible,
+  generateFormFuturaProductLineId,
+  FORMFUTURA_DEFAULTS_VERSION,
 } from '../_shared/formfutura-defaults.ts';
-import {
-  shouldIncludeVariant,
-  createFilterStats,
-  updateFilterStats,
-  logFilterStats,
-} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,25 +32,6 @@ interface SyncStats {
   errors: string[];
 }
 
-interface ProductData {
-  url: string;
-  slug: string;
-  title: string;
-  price: number | null;
-  currency: string;
-  imageUrl: string | null;
-  sku: string | null;
-  ean: string | null;
-  colors: string[];
-  diameters: string[];
-  weights: string[];
-  formats: string[];
-  tdsUrl: string | null;
-}
-
-// EUR to USD conversion rate
-const EUR_TO_USD = 1.08;
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -57,23 +41,42 @@ Deno.serve(async (req) => {
   const stats: SyncStats = { discovered: 0, created: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
 
   try {
-    const { cleanSlate = false, limit = 100, skipExisting = false } = await req.json().catch(() => ({}));
+    // Parse options - ignore limit for CSV-seeded sync (process all products)
+    const { cleanSlate = false } = await req.json().catch(() => ({}));
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('=== FormFutura Sync Started ===');
-    console.log(`Options: cleanSlate=${cleanSlate}, limit=${limit}, skipExisting=${skipExisting}`);
+    console.log('=== FormFutura CSV-Seeded Sync Started ===');
+    console.log(`Seed version: ${FORMFUTURA_SEED_VERSION}`);
+    console.log(`Defaults version: ${FORMFUTURA_DEFAULTS_VERSION}`);
+    console.log(`Options: cleanSlate=${cleanSlate}`);
+    console.log(`Seed products: ${FORMFUTURA_PRODUCT_SEED.length}`);
 
     // =========================================================================
-    // STEP 1: OPTIONAL CLEAN SLATE
+    // STEP 1: SAFE DELETE THRESHOLD CHECK
     // =========================================================================
-    let existingProductIds: Set<string> = new Set();
+    const seedProductCount = FORMFUTURA_PRODUCT_SEED.length;
+    stats.discovered = seedProductCount;
 
+    if (seedProductCount < FORMFUTURA_SAFE_DELETE_THRESHOLD) {
+      console.error(`[SAFETY] Seed only has ${seedProductCount} products, minimum is ${FORMFUTURA_SAFE_DELETE_THRESHOLD}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Safe delete threshold not met: ${seedProductCount} < ${FORMFUTURA_SAFE_DELETE_THRESHOLD}`,
+          stats,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // =========================================================================
+    // STEP 2: OPTIONAL CLEAN SLATE DELETE
+    // =========================================================================
     if (cleanSlate) {
-      console.log('Step 1: Clean slate - deleting existing FormFutura products...');
+      console.log('Step 2: Clean slate - deleting existing FormFutura products...');
       const { data: deleted, error: deleteError } = await supabase
         .from('filaments')
         .delete()
@@ -82,305 +85,85 @@ Deno.serve(async (req) => {
 
       if (deleteError) {
         console.error('Delete error:', deleteError);
+        stats.errors.push(`Delete error: ${deleteError.message}`);
       } else {
         console.log(`Deleted ${deleted?.length || 0} existing products`);
       }
-    } else {
-      // Collect existing product IDs
-      const { data: existing } = await supabase
-        .from('filaments')
-        .select('product_id')
-        .ilike('vendor', 'formfutura');
-
-      if (existing) {
-        existingProductIds = new Set(existing.map(p => p.product_id).filter(Boolean));
-        console.log(`Found ${existingProductIds.size} existing products`);
-      }
     }
 
     // =========================================================================
-    // STEP 2: DISCOVER PRODUCT URLS VIA FIRECRAWL
+    // STEP 3: GET BRAND ID
     // =========================================================================
-    console.log('Step 2: Discovering product URLs...');
-    let productUrls: string[] = [];
+    const { data: brand } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .eq('brand_slug', 'formfutura')
+      .single();
 
-    if (firecrawlKey) {
+    const brandId = brand?.id || null;
+    console.log(`Brand ID: ${brandId}`);
+
+    // =========================================================================
+    // STEP 4: PROCESS SEED DATA WITH COLOR EXPLOSION
+    // =========================================================================
+    console.log('Step 4: Processing seed data...');
+    const filamentRecords: any[] = [];
+
+    for (const seed of FORMFUTURA_PRODUCT_SEED) {
       try {
-        // Use Firecrawl map to discover all product URLs
-        const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: 'https://www.formfutura.com/shop/category/filaments-1',
-            limit: 500,
-          }),
-        });
+        // Determine colors for this product
+        const productSlug = seed.filamentName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        let colors = FORMFUTURA_DEFAULT_COLORS[productSlug] || FORMFUTURA_DEFAULT_COLORS['default'];
 
-        const mapData = await mapResponse.json();
-        
-        if (mapData.success && mapData.links) {
-          // Filter for product URLs
-          productUrls = mapData.links.filter((url: string) => 
-            url.includes('/filaments/') && 
-            !url.includes('/category/') &&
-            !url.includes('/shop/category/')
-          );
-          console.log(`Firecrawl discovered ${productUrls.length} product URLs`);
-        }
-      } catch (error) {
-        console.error('Firecrawl map error:', error);
-      }
-    }
-
-    // Fallback: use known product slugs
-    if (productUrls.length === 0) {
-      console.log('Using fallback product slugs...');
-      const FORMFUTURA_PRODUCT_SLUGS = [
-        'easyfil-epla', 'premium-pla', 'volcano-pla', 'tough-pla',
-        'matt-pla', 'high-gloss-pla', 'galaxy-pla', 'glow-in-the-dark-pla',
-        'premium-pla-cf03', 'reform-rpla', 'reform-organic-rpla', 'bulk-pla',
-        'hdglass', 'hdglass-blinded', 'reform-rpetg', 'bulk-petg',
-        'apollox', 'apollox-cf10', 'clearscent-abs',
-        'styx-pa6', 'styx-pa6-gf30', 'luvocom-3f-paht-cf-9891',
-        'centaur-pp', 'python-flex-90a', 'python-flex-98a',
-        'easywood', 'biofil-pcl', 'easyfil-hips', 'helios-pva',
-        'colormorph-high-gloss-pla',
-      ];
-      productUrls = FORMFUTURA_PRODUCT_SLUGS.map(slug => 
-        `https://www.formfutura.com/filaments/${slug}`
-      );
-    }
-
-    // Deduplicate and limit
-    productUrls = [...new Set(productUrls)].slice(0, limit);
-    stats.discovered = productUrls.length;
-    console.log(`Processing ${productUrls.length} product URLs`);
-
-    // =========================================================================
-    // STEP 3: SCRAPE INDIVIDUAL PRODUCT PAGES
-    // =========================================================================
-    console.log('Step 3: Scraping product pages...');
-    const products: ProductData[] = [];
-
-    for (let i = 0; i < productUrls.length; i++) {
-      const url = productUrls[i];
-      const slug = url.split('/filaments/')[1]?.split('?')[0] || '';
-      
-      console.log(`[${i + 1}/${productUrls.length}] Scraping: ${slug}`);
-
-      try {
-        if (!firecrawlKey) {
-          console.log('No Firecrawl key, skipping scrape');
-          continue;
+        // Single-color products
+        if (/metalfil|carbonfil|stonefil|luvocom|paht|peek|pekk|pps|pei|ultem|atlas|bvoh|refill.*system/i.test(seed.filamentName)) {
+          colors = ['Standard'];
         }
 
-        // Rate limiting
-        if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
+        // Enrich product data
+        const enrichment = enrichFormFuturaProduct(seed.filamentName);
 
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url,
-            formats: ['markdown', 'html'],
-            waitFor: 3000,
-          }),
-        });
-
-        const scrapeData = await scrapeResponse.json();
-
-        if (!scrapeData.success) {
-          console.error(`Scrape failed for ${slug}:`, scrapeData.error);
-          stats.failed++;
-          continue;
-        }
-
-        const markdown = scrapeData.data?.markdown || '';
-        const html = scrapeData.data?.html || '';
-        const metadata = scrapeData.data?.metadata || {};
-
-        // Extract title
-        let title = metadata.title || '';
-        const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-        if (h1Match) {
-          title = h1Match[1].trim();
-        }
-
-        // Extract price (EUR format with comma)
-        let price: number | null = null;
-        const priceMatch = markdown.match(/€\s*([\d,]+(?:\.\d{2})?)/);
-        if (priceMatch) {
-          price = parseFloat(priceMatch[1].replace(',', '.'));
-        }
-
-        // Extract image
-        let imageUrl = metadata.ogImage || null;
-        const imgMatch = html.match(/og:image['"]\s*content=['"]([^'"]+)['"]/i);
-        if (imgMatch) {
-          imageUrl = imgMatch[1];
-        }
-
-        // Extract SKU
-        let sku: string | null = null;
-        const skuMatch = markdown.match(/SKU\s*:?\s*([A-Z0-9-]+)/i);
-        if (skuMatch) {
-          sku = skuMatch[1];
-        }
-
-        // Extract EAN
-        let ean: string | null = null;
-        const eanMatch = markdown.match(/EAN\s*:?\s*(\d{13})/i);
-        if (eanMatch) {
-          ean = eanMatch[1];
-        }
-
-        // Extract TDS URL
-        let tdsUrl: string | null = null;
-        const tdsMatch = html.match(/href=['"]([^'"]*(?:tds|datasheet|technical)[^'"]*\.pdf)['"]/i) ||
-                        html.match(/href=['"]([^'"]*\/web\/content\/\d+)['"]/i);
-        if (tdsMatch) {
-          tdsUrl = tdsMatch[1];
-          if (tdsUrl && tdsUrl.startsWith('/')) {
-            tdsUrl = `https://www.formfutura.com${tdsUrl}`;
-          }
-        }
-
-        // Extract color options
-        const colors: string[] = [];
-        const colorMatches = markdown.matchAll(/(?:color|colour)[:\s]*([A-Za-z\s]+?)(?:\n|,|\||$)/gi);
-        for (const match of colorMatches) {
-          const color = match[1].trim();
-          if (color && color.length > 2 && color.length < 30) {
-            colors.push(color);
-          }
-        }
-
-        // Also try to extract from variant selectors in HTML
-        const variantMatches = html.matchAll(/data-value-name=['"]([^'"]+)['"]/g);
-        for (const match of variantMatches) {
-          const value = match[1].trim();
-          // Check if it looks like a color (not a number/weight/diameter)
-          if (value && !/^\d/.test(value) && !/mm|kg|g\b/i.test(value)) {
-            if (!colors.includes(value)) {
-              colors.push(value);
-            }
-          }
-        }
-
-        // Extract diameter options
-        const diameters: string[] = [];
-        if (/1\.75\s*mm/i.test(markdown)) diameters.push('1.75');
-        if (/2\.85\s*mm/i.test(markdown)) diameters.push('2.85');
-        if (/3\.00?\s*mm/i.test(markdown)) diameters.push('2.85'); // 3mm = 2.85mm
-
-        // Extract weight options
-        const weights: string[] = [];
-        const weightMatches = markdown.matchAll(/(\d+(?:\.\d+)?)\s*(g|kg)\b/gi);
-        for (const match of weightMatches) {
-          const value = match[1];
-          const unit = match[2].toLowerCase();
-          const grams = unit === 'kg' ? parseFloat(value) * 1000 : parseInt(value, 10);
-          if (grams >= 100 && grams <= 20000) {
-            weights.push(`${grams}g`);
-          }
-        }
-
-        // Extract format options (Spool, ReFill, Bambu)
-        const formats: string[] = ['Spool'];
-        if (/refill|coil/i.test(markdown)) formats.push('ReFill');
-        if (/bambu/i.test(markdown)) formats.push('Bambu');
-
-        products.push({
-          url,
-          slug,
-          title,
-          price,
-          currency: 'EUR',
-          imageUrl,
-          sku,
-          ean,
-          colors: colors.length > 0 ? colors : ['Standard'],
-          diameters: diameters.length > 0 ? diameters : ['1.75'],
-          weights: [...new Set(weights)],
-          formats,
-          tdsUrl,
-        });
-
-      } catch (error) {
-        console.error(`Error scraping ${slug}:`, error);
-        stats.failed++;
-        stats.errors.push(`${slug}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-
-    console.log(`Scraped ${products.length} products with data`);
-
-    // =========================================================================
-    // STEP 4: ENRICH AND UPSERT PRODUCTS
-    // =========================================================================
-    console.log('Step 4: Enriching and upserting products...');
-
-    for (const product of products) {
-      try {
-        // Explode by color (create one row per color)
-        const colorsToProcess = product.colors.length > 0 ? product.colors : ['Standard'];
-
-        for (const color of colorsToProcess) {
-          const productId = `${product.slug}-${color.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-
-          // Skip if exists and skipExisting is true
-          if (skipExisting && existingProductIds.has(productId)) {
-            stats.skipped++;
-            continue;
-          }
-
-          // Enrich the product
-          const enrichment = enrichFormFuturaProduct(product.title);
+        // Create one record per color
+        for (const color of colors) {
+          const colorSlug = color.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const productId = `formfutura-${productSlug}-${colorSlug}`;
 
           // Get color hex
           const colorHex = getFormFuturaColorHex(color);
 
-          // Get weight
-          const weightG = extractFormFuturaWeight(product.title, product.weights[0]);
+          // Determine weight
+          const weightG = extractFormFuturaWeight(seed.filamentName);
 
           // Check format flags
-          const isRefill = isFormFuturaRefill(product.title);
-          const isBambuCompatible = isFormFuturaBambuCompatible(product.title);
-
-          // Convert EUR to USD
-          const priceUsd = product.price ? Math.round(product.price * EUR_TO_USD * 100) / 100 : null;
+          const isRefill = isFormFuturaRefill(seed.filamentName);
+          const isBambuCompatible = isFormFuturaBambuCompatible(seed.filamentName);
 
           // Clean title and add color
-          let cleanTitle = cleanFormFuturaTitle(product.title);
-          if (color !== 'Standard' && !cleanTitle.toLowerCase().includes(color.toLowerCase())) {
+          let cleanTitle = cleanFormFuturaTitle(seed.filamentName);
+          if (color !== 'Standard') {
             cleanTitle = `${cleanTitle} - ${color}`;
           }
 
-          // Determine diameter
-          const diameter = product.diameters.includes('2.85') ? 2.85 : 1.75;
+          // Normalize image URL
+          let imageUrl = seed.imageUrl;
+          if (imageUrl && imageUrl.startsWith('/')) {
+            imageUrl = `https://www.formfutura.com${imageUrl}`;
+          }
 
-          // Prepare filament data
-          const filamentData = {
+          const record = {
             product_id: productId,
             product_title: cleanTitle,
             vendor: 'FormFutura',
-            product_url: product.url,
-            featured_image: product.imageUrl,
-            variant_price: priceUsd,
+            brand_id: brandId,
+            product_url: seed.productUrl,
+            featured_image: imageUrl,
+            variant_price: null, // Prices in EUR, conversion would need live data
             variant_available: true,
             material: enrichment.material,
             finish_type: enrichment.finishType,
             product_line_id: enrichment.productLineId,
-            tds_url: product.tdsUrl || enrichment.tdsUrl,
-            color_hex: colorHex,
+            tds_url: enrichment.tdsUrl,
+            color_hex: colorHex ? `#${colorHex}` : null,
             color_family: color,
             nozzle_temp_min_c: enrichment.nozzleTempMin,
             nozzle_temp_max_c: enrichment.nozzleTempMax,
@@ -389,10 +172,8 @@ Deno.serve(async (req) => {
             print_speed_max_mms: enrichment.printSpeedMax,
             is_nozzle_abrasive: enrichment.isAbrasive,
             high_speed_capable: enrichment.highSpeedCapable,
-            diameter_nominal_mm: diameter,
+            diameter_nominal_mm: 1.75,
             net_weight_g: weightG,
-            mpn: product.sku,
-            ean: product.ean,
             spool_material: isRefill ? 'Cardboard' : 'Plastic',
             spool_ams_fit: isBambuCompatible,
             auto_created: true,
@@ -401,74 +182,101 @@ Deno.serve(async (req) => {
             sync_status: 'synced',
           };
 
-          // Check if product exists
-          const { data: existing } = await supabase
-            .from('filaments')
-            .select('id')
-            .eq('product_id', productId)
-            .ilike('vendor', 'formfutura')
-            .maybeSingle();
-
-          if (existing) {
-            // Update
-            const { error: updateError } = await supabase
-              .from('filaments')
-              .update(filamentData)
-              .eq('id', existing.id);
-
-            if (updateError) {
-              console.error(`Update error for ${productId}:`, updateError);
-              stats.failed++;
-            } else {
-              stats.updated++;
-            }
-          } else {
-            // Insert
-            const { error: insertError } = await supabase
-              .from('filaments')
-              .insert(filamentData);
-
-            if (insertError) {
-              console.error(`Insert error for ${productId}:`, insertError);
-              stats.failed++;
-            } else {
-              stats.created++;
-            }
-          }
+          filamentRecords.push(record);
         }
       } catch (error) {
-        console.error(`Error processing ${product.slug}:`, error);
+        console.error(`Error processing ${seed.filamentName}:`, error);
         stats.failed++;
-        stats.errors.push(`${product.slug}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        stats.errors.push(`${seed.filamentName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    console.log(`Prepared ${filamentRecords.length} filament records`);
+
+    // =========================================================================
+    // STEP 5: BATCH INSERT
+    // =========================================================================
+    console.log('Step 5: Batch inserting products...');
+    const BATCH_SIZE = 50;
+
+    for (let i = 0; i < filamentRecords.length; i += BATCH_SIZE) {
+      const batch = filamentRecords.slice(i, i + BATCH_SIZE);
+
+      const { error: insertError } = await supabase
+        .from('filaments')
+        .upsert(batch, { onConflict: 'product_id' });
+
+      if (insertError) {
+        console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} insert error:`, insertError);
+        stats.failed += batch.length;
+        stats.errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${insertError.message}`);
+      } else {
+        stats.created += batch.length;
+        console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: Inserted ${batch.length} products`);
       }
     }
 
     // =========================================================================
-    // STEP 5: FINALIZE
+    // STEP 6: FINALIZE - UPDATE BRAND COUNTS
     // =========================================================================
-    console.log('Step 5: Finalizing sync...');
+    console.log('Step 6: Finalizing sync...');
 
-    // Update brand product counts
     try {
       await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'formfutura' });
+      console.log('Brand product counts updated');
     } catch (error) {
       console.error('Error updating brand counts:', error);
     }
 
-    // Check for duplicate hex codes
+    // =========================================================================
+    // STEP 7: FIX DUPLICATE HEX CODES
+    // =========================================================================
     try {
       const { data: dupes } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'FormFutura' });
       if (dupes && dupes.length > 0) {
-        console.log(`Found ${dupes.length} duplicate hex codes to review`);
+        console.log(`Found ${dupes.length} duplicate hex codes, applying variations...`);
+
+        // Group by product_line_id and hex
+        const groups: Record<string, any[]> = {};
+        for (const dupe of dupes) {
+          const key = `${dupe.product_line_id}__${dupe.color_hex?.toLowerCase()}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(dupe);
+        }
+
+        // Fix each group by varying hex slightly
+        for (const [key, group] of Object.entries(groups)) {
+          for (let i = 1; i < group.length; i++) {
+            const item = group[i];
+            const originalHex = item.color_hex || '#808080';
+            
+            // Parse hex and vary
+            const r = parseInt(originalHex.slice(1, 3), 16);
+            const g = parseInt(originalHex.slice(3, 5), 16);
+            const b = parseInt(originalHex.slice(5, 7), 16);
+            
+            const newR = Math.min(255, Math.max(0, r + i * 2));
+            const newG = Math.min(255, Math.max(0, g + i));
+            const newB = Math.min(255, Math.max(0, b - i));
+            
+            const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+            
+            await supabase
+              .from('filaments')
+              .update({ color_hex: newHex })
+              .eq('id', item.id);
+          }
+        }
+        console.log('Duplicate hex codes fixed');
       }
     } catch (error) {
-      console.error('Error checking duplicates:', error);
+      console.error('Error fixing duplicates:', error);
     }
 
     // Mark brand as not actively scraping
     await supabase
       .from('automated_brands')
-      .update({ 
+      .update({
         scraping_active: false,
         last_scrape_at: new Date().toISOString(),
       })
@@ -477,13 +285,21 @@ Deno.serve(async (req) => {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log('=== FormFutura Sync Complete ===');
     console.log(`Duration: ${duration}s`);
-    console.log(`Stats: ${JSON.stringify(stats)}`);
+    console.log(`Stats: discovered=${stats.discovered}, created=${stats.created}, failed=${stats.failed}`);
+
+    // Count unique product lines
+    const uniqueProductLines = new Set(filamentRecords.map(r => r.product_line_id)).size;
+    console.log(`Unique product lines: ${uniqueProductLines}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        stats,
+        stats: {
+          ...stats,
+          uniqueProductLines,
+        },
         duration: `${duration}s`,
+        seedVersion: FORMFUTURA_SEED_VERSION,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

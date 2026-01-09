@@ -405,6 +405,21 @@ const AI_ROLES = {
       'Cross-product swatch architecture (each color = separate URL)'
     ]
   },
+  formFuturaSpecialist: {
+    title: 'FormFutura Integration Specialist',
+    triggers: ['formfutura', 'odoo', 'hdglass', 'apollox', 'volcano', 'epla', 'easyfil', 'reform', 'luvocom', 'athenax', 'pythonflex', 'styx'],
+    capabilities: [
+      'Odoo 16 e-commerce platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture (~80 product lines)',
+      'Premium Dutch filament material classification',
+      'High-performance materials (PEEK, PEKK, PAHT-CF, PEI ULTEM, PPSU)',
+      'Volcano PLA high-speed variant handling (150C)',
+      'ReForm recycled material line (rPLA, rPETG, rTPU, rApollo)',
+      'Multi-format variants (Spool, Bambu Coil, Cardboard ReFill)',
+      'RAL-style color naming system (Traffic, Signal colors)',
+      'EUR to USD price conversion (1.08 rate)'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -860,6 +875,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'extrudr') {
     return AI_ROLES.extrudrSpecialist;
+  }
+  if (brandSlug === 'formfutura') {
+    return AI_ROLES.formFuturaSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -4383,7 +4401,7 @@ Deno.serve(async (req) => {
       'fiberlogy': 19,          // CSV-seeded: ABS, ABS Plus, Easy ABS, ASA, Easy PLA, Easy PETG, FiberFlex 30D/40D, FiberSilk, FiberWood, HIPS, HS PLA Clear, Impact PLA, Matte PLA, Matte PETG, MattFlex 40D, Nylon PA12, PCTG, PP
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
       'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
-      'formfutura': 18,         // EasyFil, HDglass, ApolloX, etc.
+      'formfutura': 80,         // CSV-seeded: 80 product lines (EasyFil ePLA, Volcano PLA, HDglass, ApolloX, AthenaX, LUVOCOM, PEI ULTEM, etc.)
       'extrudr': 18,            // BioFusion, DuraPro (ABS/ASA/PA12/PC-PBT + CF variants), FLAX, FLEX (3), GreenTEC (3), PCTG, PETG, xPETG (2), PLA NX2 Matt
       'geeetech': 12,           // PLA, ABS, PETG, Silk, etc.
       'fusion-filaments': 11,   // PLA, PETG, ABS, TPU, etc.
