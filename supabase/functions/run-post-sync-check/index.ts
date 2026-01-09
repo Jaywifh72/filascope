@@ -5355,7 +5355,16 @@ Deno.serve(async (req) => {
                                       lineId.includes('extrudr__xpetg-cf') ||           // xPETG-CF only in black
                                       lineId.includes('extrudr__flex-hard-cf') ||       // TPU-CF only in black
                                       lineId.includes('extrudr__flex-medium-esd') ||    // ESD only in black
-                                      lineId.includes('extrudr__greentec-pro-carbon');  // GreenTEC Pro Carbon only in black
+                                      lineId.includes('extrudr__greentec-pro-carbon') ||  // GreenTEC Pro Carbon only in black
+                                      // Fillamentum single-color specialty products (CSV-seeded)
+                                      lineId.includes('fillamentum__bio-pla__nonoilen') ||  // NonOilen only comes in natural
+                                      lineId.includes('fillamentum__pa-af__nylon-af80') || // Aramid Fiber only in gold
+                                      lineId.includes('fillamentum__pa-cf__nylon-cf15') || // Nylon CF15 only in black
+                                      lineId.includes('fillamentum__cpe-cf__cpe-cf112') || // CPE CF112 only in black
+                                      lineId.includes('fillamentum__asa-cf__asa-cf10') ||  // ASA CF10 only in black
+                                      lineId.includes('fillamentum__asa-cf__0rca') ||      // 0rCA Nylon only in black
+                                      lineId.includes('fillamentum__pa__porthcurno') ||    // Porthcurno only in ocean blue
+                                      lineId.includes('fillamentum__pp__pp-2320')
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
