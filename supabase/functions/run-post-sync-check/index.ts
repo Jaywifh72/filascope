@@ -42,7 +42,7 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -390,6 +390,19 @@ const AI_ROLES = {
       'TPU Shore hardness variant detection (88A, 92A, 98A)',
       'Engineering plastics expertise (PC-PBT, PA12, ASA-GF)',
       'Cardboard spool eco-friendly packaging'
+    ]
+  },
+  fillamentumSpecialist: {
+    title: 'Fillamentum Integration Specialist',
+    triggers: ['fillamentum', 'extrafill', 'flexfill', 'timberfill', 'nonoilen', 'cpe-hg100', 'vinyl-303', 'vertigo'],
+    capabilities: [
+      'Shopify platform (shop.fillamentum.com / fillamentumusa.com)',
+      'CSV-seeded sync pipeline architecture (~200 products)',
+      'Premium Czech filament material classification',
+      'Unique color naming system (Vertigo, Luminous effects)',
+      'TPU/TPE Shore hardness variants (98A, 92A, 90A, 96A)',
+      'Specialty materials (CPE, Nylon FX256, Vinyl 303, NonOilen)',
+      'Cross-product swatch architecture (each color = separate URL)'
     ]
   },
   architect: {
@@ -772,6 +785,56 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'flex-semisoft': 'FLEX Semisoft (TPU-88A)'
     },
     lastUpdated: '2026-01-08'
+  },
+  'fillamentum': {
+    platform: 'Shopify storefront (shop.fillamentum.com / fillamentumusa.com)',
+    knownLimitations: [
+      '❌ Each color variant is a separate Shopify product (cross-product architecture)',
+      '❌ No variant options within products - URL consistency check will flag false positives',
+      '❌ CSV seed data has no prices - price validity check should be skipped',
+      '❌ Some specialty colors (Vertigo effects) have unique hex codes not derivable from name'
+    ],
+    workingSolutions: [
+      '✅ Use CSV-seeded sync from FILLAMENTUM_PRODUCT_SEED (~200 products)',
+      '✅ All product images come from Shopify CDN with proper protocol',
+      '✅ enrichFillamentumProduct() provides complete material/finish enrichment',
+      '✅ Color extraction via quoted names: PLA Extrafill "Traffic Black"',
+      '✅ Shore hardness correctly mapped for Flexfill variants (98A/92A/90A/96A)',
+      '✅ TDS URLs from FILLAMENTUM_PRODUCT_LINES config'
+    ],
+    failedApproaches: [
+      '⚠️ Firecrawl scraping - slow and incomplete due to 200+ individual pages',
+      '⚠️ URL consistency checks - false positive due to cross-product architecture',
+      '⚠️ Price scraping - requires region-specific store access'
+    ],
+    currentStatus: {
+      'totalProducts': '~200 unique color variants across 24 product lines',
+      'imageCoverage': '100% - all from Shopify CDN',
+      'hexCoverage': '~95% - specialty Vertigo effects may need manual mapping',
+      'tdsCoverage': '100% - all materials have TDS from product line config'
+    },
+    keyFiles: [
+      'supabase/functions/_shared/fillamentum-seed.ts - CSV-seeded product data',
+      'supabase/functions/_shared/fillamentum-defaults.ts - Brand enrichment and color mappings',
+      'supabase/functions/sync-fillamentum-products/index.ts - Main sync function'
+    ],
+    productSlugReference: {
+      'pla-extrafill': 'PLA Extrafill (standard PLA)',
+      'pla-crystal-clear': 'PLA Crystal Clear (transparent)',
+      'abs-extrafill': 'ABS Extrafill',
+      'asa-extrafill': 'ASA Extrafill',
+      'petg': 'PETG',
+      'cpe-hg100': 'CPE HG100 (high-temp copolyester)',
+      'flexfill-tpu-98a': 'Flexfill TPU 98A (flexible)',
+      'flexfill-tpu-92a': 'Flexfill TPU 92A (more flexible)',
+      'flexfill-tpe-90a': 'Flexfill TPE 90A',
+      'nylon-fx256': 'Nylon FX256 (PA)',
+      'nylon-cf15': 'Nylon CF15 Carbon (PA-CF)',
+      'timberfill': 'Timberfill (PLA-Wood)',
+      'nonoilen': 'NonOilen (Bio-PLA)',
+      'vinyl-303': 'Vinyl 303 (PVC)'
+    },
+    lastUpdated: '2026-01-09'
   }
 };
 
@@ -785,6 +848,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'colorfabb') {
     return AI_ROLES.colorFabbSpecialist;
+  }
+  if (brandSlug === 'fillamentum') {
+    return AI_ROLES.fillamentumSpecialist;
   }
   if (brandSlug === 'eryone') {
     return AI_ROLES.colorSpecialist;
@@ -4305,7 +4371,7 @@ Deno.serve(async (req) => {
       // Medium-confidence counts (product_line_id may need population)
       'overture': 15,           // PLA, PLA Pro, PETG, TPU, ABS, Silk, Matte, etc.
       'bambu-lab': 40,          // PLA, PETG, ABS, ASA, TPU 85A, TPU 90A, TPU 95A HF, PLA-CF, PAHT-CF, Marble, Silk, Sparkle, etc.
-      'fillamentum': 25,        // PLA, ASA, PETG, Flexfill, CPE, Nylon, Timberfill, etc.
+      'fillamentum': 24,        // PLA Extrafill, Crystal Clear, ASA, ABS, PETG, CPE HG100, CPE-CF, Flexfill TPU 98A/92A, TPE-90A/96A, Nylon, Timberfill, HIPS, Vinyl, PP, NonOilen, Orca, Porthcurno
       'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PC-ABS, PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Matte HS, Silk, Translucent, Strongman), LumberLay, PVA
       'ninjatek': 10,           // Cheetah, NinjaFlex, Armadillo, Eel, SemiFlex, etc.
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
@@ -4617,7 +4683,7 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy']; // CSV-seeded brands don't include prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum']; // CSV-seeded brands don't include prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -5041,7 +5107,7 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
