@@ -3,7 +3,11 @@
  * 
  * Premium Dutch manufacturer with RAL-style color naming,
  * high-precision engineering materials, and eco-friendly ReFill system.
+ * 
+ * Version: 2026-01-09-v2 (CSV-seeded architecture)
  */
+
+export const FORMFUTURA_DEFAULTS_VERSION = '2026-01-09-v2';
 
 // ============================================================================
 // TDS URL PATTERNS
@@ -267,47 +271,114 @@ export function generateFormFuturaProductLineId(title: string, material?: string
   if (/volcano[- ]?pla/i.test(t)) return `formfutura__pla__volcano-pla`;
   if (/tough[- ]?pla/i.test(t)) return `formfutura__pla-plus__tough-pla`;
   if (/matt[- ]?pla|matte[- ]?pla/i.test(t)) return `formfutura__pla__matt-pla`;
+  if (/high[- ]?gloss[- ]?pla.*colormorph/i.test(t)) return `formfutura__pla__colormorph`;
   if (/high[- ]?gloss[- ]?pla/i.test(t)) return `formfutura__pla__high-gloss-pla`;
   if (/galaxy[- ]?pla/i.test(t)) return `formfutura__pla__galaxy-pla`;
   if (/glow.*pla|pla.*glow/i.test(t)) return `formfutura__pla__glow-pla`;
-  if (/colormorph/i.test(t)) return `formfutura__pla__colormorph`;
   if (/reform.*organic.*rpla/i.test(t)) return `formfutura__rpla__reform-organic`;
   if (/reform.*rpla|rpla/i.test(t)) return `formfutura__rpla__reform`;
+  if (/refill[- ]?pla/i.test(t)) return `formfutura__pla__refill`;
   if (/bulk[- ]?pla/i.test(t)) return `formfutura__pla__bulk`;
   if (/premium[- ]?pla[- ]?cf/i.test(t)) return `formfutura__pla-cf__premium-cf03`;
+  if (/premium[- ]?pla.*flame/i.test(t)) return `formfutura__pla__premium-flame-retardant`;
   if (/premium[- ]?pla/i.test(t)) return `formfutura__pla__premium`;
   
   // PETG lines
   if (/hdglass.*blinded|hd[- ]?glass.*blinded/i.test(t)) return `formfutura__petg__hdglass-blinded`;
   if (/hdglass|hd[- ]?glass/i.test(t)) return `formfutura__petg__hdglass`;
+  if (/easyfil[- ]?epetg|epetg/i.test(t)) return `formfutura__petg__easyfil-epetg`;
+  if (/refill[- ]?petg/i.test(t)) return `formfutura__petg__refill`;
   if (/reform.*rpetg|rpetg/i.test(t)) return `formfutura__rpetg__reform`;
   if (/bulk[- ]?petg/i.test(t)) return `formfutura__petg__bulk`;
+  if (/premium[- ]?petg.*flame/i.test(t)) return `formfutura__petg__premium-flame-retardant`;
   
   // ASA lines
+  if (/athenax[- ]?cf/i.test(t)) return `formfutura__asa-cf__athenax-cf10`;
+  if (/athenax[- ]?gf/i.test(t)) return `formfutura__asa-gf__athenax-gf10`;
+  if (/athenax/i.test(t)) return `formfutura__asa__athenax`;
   if (/apollox[- ]?cf/i.test(t)) return `formfutura__asa-cf__apollox-cf10`;
+  if (/apollox[- ]?kevlar/i.test(t)) return `formfutura__asa-kevlar__apollox-kevlar`;
+  if (/apollox.*flame/i.test(t)) return `formfutura__asa__apollox-flame-retardant`;
+  if (/apollox.*foaming/i.test(t)) return `formfutura__asa__apollox-foaming`;
   if (/apollox/i.test(t)) return `formfutura__asa__apollox`;
+  if (/premium[- ]?asa/i.test(t)) return `formfutura__asa__premium`;
+  if (/reform.*rapollo/i.test(t)) return `formfutura__rasa__reform-rapollo`;
   
-  // ABS
+  // ABS lines
+  if (/abspro.*flame/i.test(t)) return `formfutura__abs__abspro-flame-retardant`;
+  if (/abspro/i.test(t)) return `formfutura__abs__abspro`;
+  if (/easyfil[- ]?abs.*glow/i.test(t)) return `formfutura__abs__easyfil-glow`;
+  if (/easyfil[- ]?abs/i.test(t)) return `formfutura__abs__easyfil`;
+  if (/premium[- ]?abs.*medical/i.test(t)) return `formfutura__abs__premium-medical`;
   if (/clearscent/i.test(t)) return `formfutura__abs__clearscent`;
   
-  // PA/Nylon
-  if (/styx.*pa6.*gf|styx.*gf/i.test(t)) return `formfutura__pa-gf__styx-gf30`;
+  // PA/Nylon lines
+  if (/styx.*pa6.*gf|styx.*gf30/i.test(t)) return `formfutura__pa-gf__styx-gf30`;
+  if (/styx.*pa6.*cf|styx.*cf15/i.test(t)) return `formfutura__pa-cf__styx-cf15`;
   if (/styx.*pa6|styx[- ]?pa/i.test(t)) return `formfutura__pa__styx`;
   
-  // High-performance
+  // High-performance LUVOCOM lines
+  if (/luvocom.*pekk/i.test(t)) return `formfutura__pekk__luvocom-pekk`;
+  if (/luvocom.*peek.*cf/i.test(t)) return `formfutura__peek-cf__luvocom-peek-cf`;
+  if (/luvocom.*peek/i.test(t)) return `formfutura__peek__luvocom-peek`;
+  if (/luvocom.*pps.*cf/i.test(t)) return `formfutura__pps-cf__luvocom-pps-cf`;
+  if (/luvocom.*pp.*cf/i.test(t)) return `formfutura__pp-cf__luvocom-pp-cf`;
+  if (/luvocom.*pei/i.test(t)) return `formfutura__pei__luvocom-pei`;
+  if (/luvocom.*paht.*cf.*9742/i.test(t)) return `formfutura__paht-cf__luvocom-9742`;
+  if (/luvocom.*paht.*kk.*fr/i.test(t)) return `formfutura__paht-cf__luvocom-fr`;
+  if (/luvocom.*paht.*9936/i.test(t)) return `formfutura__paht__luvocom-9936`;
+  if (/luvocom.*paht.*9825/i.test(t)) return `formfutura__paht__luvocom-9825`;
   if (/luvocom|paht[- ]?cf/i.test(t)) return `formfutura__paht-cf__luvocom`;
-  if (/centaur/i.test(t)) return `formfutura__pp__centaur`;
   
-  // Flexible
+  // PEI/ULTEM lines
+  if (/pei.*ultem.*9085/i.test(t)) return `formfutura__pei__ultem-9085`;
+  if (/pei.*ultem.*1010/i.test(t)) return `formfutura__pei__ultem-1010`;
+  if (/pei|ultem/i.test(t)) return `formfutura__pei__ultem`;
+  
+  // PC lines
+  if (/kratos.*pc.*cf/i.test(t)) return `formfutura__pc-cf__kratos-cf10`;
+  if (/kratos.*pc|kratos/i.test(t)) return `formfutura__pc__kratos`;
+  
+  // TPU/TPC/Flexible lines
+  if (/reform.*rtpu.*85a/i.test(t)) return `formfutura__rtpu-85a__reform`;
+  if (/reform.*rtpu.*90a/i.test(t)) return `formfutura__rtpu-90a__reform`;
+  if (/reform.*rtpu.*95a/i.test(t)) return `formfutura__rtpu-95a__reform`;
   if (/python[- ]?flex.*90a/i.test(t)) return `formfutura__tpu-90a__pythonflex`;
   if (/python[- ]?flex.*98a/i.test(t)) return `formfutura__tpu-98a__pythonflex`;
   if (/python[- ]?flex/i.test(t)) return `formfutura__tpu__pythonflex`;
+  if (/flexifil.*tpc.*30d/i.test(t)) return `formfutura__tpc-30d__flexifil`;
+  if (/flexifil.*tpc.*40d/i.test(t)) return `formfutura__tpc-40d__flexifil`;
+  if (/flexifil.*tpc/i.test(t)) return `formfutura__tpc__flexifil`;
   
-  // Specialty
+  // Metal lines
+  if (/metalfil.*brass/i.test(t)) return `formfutura__metal__metalfil-brass`;
+  if (/metalfil.*copper/i.test(t)) return `formfutura__metal__metalfil-copper`;
+  if (/metalfil.*bronze/i.test(t)) return `formfutura__metal__metalfil-bronze`;
+  if (/metalfil/i.test(t)) return `formfutura__metal__metalfil`;
+  
+  // Specialty lines
+  if (/titanx/i.test(t)) return `formfutura__abs__titanx`;
+  if (/ppsu/i.test(t)) return `formfutura__ppsu__ppsu`;
+  if (/centaur/i.test(t)) return `formfutura__pp__centaur`;
+  if (/stonefil/i.test(t)) return `formfutura__pla-stone__stonefil`;
+  if (/carbonfil.*cf03/i.test(t)) return `formfutura__petg-cf__carbonfil-cf03`;
+  if (/carbonfil/i.test(t)) return `formfutura__petg-cf__carbonfil`;
+  if (/biofil.*wood/i.test(t)) return `formfutura__pla-wood__biofil-wood`;
   if (/easywood/i.test(t)) return `formfutura__pla-wood__easywood`;
   if (/biofil[- ]?pcl|pcl/i.test(t)) return `formfutura__pcl__biofil`;
+  
+  // Support lines
+  if (/atlas.*support/i.test(t)) return `formfutura__support__atlas`;
+  if (/aquasolve.*pva/i.test(t)) return `formfutura__pva__aquasolve`;
+  if (/bvoh/i.test(t)) return `formfutura__bvoh__bvoh`;
+  if (/easyfil.*hips/i.test(t)) return `formfutura__hips__easyfil`;
   if (/hips/i.test(t)) return `formfutura__hips__easyfil`;
   if (/pva|helios/i.test(t)) return `formfutura__pva__helios`;
+  
+  // Recycled lines
+  if (/reform.*rtitan/i.test(t)) return `formfutura__recycled__reform-rtitan`;
+  if (/reform.*rpet(?!g)/i.test(t)) return `formfutura__rpet__reform-rpet`;
+  if (/refill[- ]?system/i.test(t)) return `formfutura__other__refill-system`;
   
   // Generic fallback
   const matSlug = mat.toLowerCase().replace(/[^a-z0-9]+/g, '-');
