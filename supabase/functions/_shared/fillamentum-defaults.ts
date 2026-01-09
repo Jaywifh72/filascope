@@ -5,7 +5,7 @@
  */
 
 // Version constant to force module cache refresh on deployment
-export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v2';
+export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v3';
 
 // ============================================================================
 // PRODUCT LINE DEFINITIONS
@@ -669,17 +669,35 @@ export function extractFillamentumColor(title: string): string | null {
 export function getFillamentumColorHex(colorName: string): string | null {
   if (!colorName) return null;
   
-  const normalized = colorName.toLowerCase().trim();
+  // Normalize: lowercase, trim, normalize unicode, collapse whitespace
+  const normalized = colorName
+    .toLowerCase()
+    .trim()
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ');
   
   // Direct match
   if (FILLAMENTUM_COLOR_MAPPING[normalized]) {
     return FILLAMENTUM_COLOR_MAPPING[normalized];
   }
   
-  // Partial match
+  // Partial match (bidirectional)
   for (const [key, hex] of Object.entries(FILLAMENTUM_COLOR_MAPPING)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return hex;
+    }
+  }
+  
+  // Try stripping "transparent" suffix and retry
+  const withoutTransparent = normalized.replace(/\s+transparent$/i, '').trim();
+  if (withoutTransparent !== normalized) {
+    if (FILLAMENTUM_COLOR_MAPPING[withoutTransparent]) {
+      return FILLAMENTUM_COLOR_MAPPING[withoutTransparent];
+    }
+    // Also try with "transparent" appended to handle reverse case
+    const withTransparent = `${withoutTransparent} transparent`;
+    if (FILLAMENTUM_COLOR_MAPPING[withTransparent]) {
+      return FILLAMENTUM_COLOR_MAPPING[withTransparent];
     }
   }
   
