@@ -107,15 +107,38 @@ Deno.serve(async (req) => {
           materialInfo.material
         );
 
-        // Get hex code from seed or mapping
+        // ALWAYS resolve hex from color mapping at runtime (bypasses cached seed data issues)
         const colorFromSeed = seedProduct.color;
-        const hexFromSeed = seedProduct.colorHex;
-        const hexFromMapping = colorFromSeed ? getFillamentumColorHex(colorFromSeed) : null;
-        const colorHex = hexFromSeed || hexFromMapping;
+        let colorHex: string | null = null;
         
-        // Debug: Log missing hex codes
+        if (colorFromSeed) {
+          // Strategy 1: Direct color name lookup
+          colorHex = getFillamentumColorHex(colorFromSeed);
+          
+          // Strategy 2: Try with material context (e.g., "PLA iceland blue")
+          if (!colorHex && materialInfo.material) {
+            colorHex = getFillamentumColorHex(`${materialInfo.material.toLowerCase()} ${colorFromSeed.toLowerCase()}`);
+          }
+          
+          // Strategy 3: Try with "crystal clear" prefix for transparent products
+          if (!colorHex && /crystal\s*clear/i.test(seedProduct.filamentName)) {
+            colorHex = getFillamentumColorHex(`crystal clear ${colorFromSeed.toLowerCase()}`);
+          }
+          
+          // Strategy 4: Try with "transparent" suffix
+          if (!colorHex) {
+            colorHex = getFillamentumColorHex(`${colorFromSeed.toLowerCase()} transparent`);
+          }
+        }
+        
+        // Debug: Log first 10 products with hex resolution trace
+        if (productsToInsert.length < 10) {
+          console.log(`[TRACE] "${seedProduct.filamentName}" | color: "${colorFromSeed}" => hex: ${colorHex || 'NULL'}`);
+        }
+        
+        // Log any remaining missing hex codes
         if (colorFromSeed && !colorHex) {
-          console.log(`[DEBUG] Missing hex for color: "${colorFromSeed}" (normalized: "${colorFromSeed?.toLowerCase().trim()}")`);
+          console.log(`[MISSING HEX] "${colorFromSeed}" - add to FILLAMENTUM_COLOR_MAPPING`);
         }
 
         // Generate product line ID

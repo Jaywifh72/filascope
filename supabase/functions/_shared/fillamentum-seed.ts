@@ -5,7 +5,7 @@
  */
 
 // Version tracking to force module cache invalidation
-export const FILLAMENTUM_SEED_VERSION = '2026-01-09-v1';
+export const FILLAMENTUM_SEED_VERSION = '2026-01-09-v2';
 export interface FillamentumSeedProduct {
   material: string;        // CSV Material column (e.g., "PLA Extrafill", "Flexfill TPU")
   filamentName: string;    // Full product title from CSV

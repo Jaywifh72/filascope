@@ -5,7 +5,7 @@
  */
 
 // Version constant to force module cache refresh on deployment
-export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v3';
+export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v4';
 
 // ============================================================================
 // PRODUCT LINE DEFINITIONS
@@ -298,7 +298,8 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   // Blues
   'cobalt blue': '#0047AB',
   'sky blue': '#87CEEB',
-  'iceland blue': '#5BC0EB',
+  'iceland blue': '#87CEEB80',        // Transparent version for Crystal Clear
+  'iceland blue opaque': '#5BC0EB',   // Opaque version
   'gentlemen blue': '#1E3A5F',
   'prussian blue': '#003153',
   'steel blue': '#4682B4',
@@ -315,8 +316,11 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'ufo blue metallic': '#1976D2',
   'mistake blue metallic': '#283593',
   'bunny blue transparent': '#81D4FA80',
+  'bunny blue': '#81D4FA80',
   'lagoon transparent': '#00BCD480',
+  'lagoon': '#00BCD480',
   'deep sea transparent': '#00487880',
+  'deep sea': '#00487880',
   'blue transparent': '#2196F380',
   
   // Reds & Pinks
@@ -417,16 +421,27 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'crystal clear iceland blue': '#87CEEB80',
   'crystal clear aquamarine': '#7FFFD480',
   'crystal clear smaragd green': '#50C87880',
+  'crystal clear kiwi green': '#8EE53F80',
+  'crystal clear amethyst purple': '#9966CC80',
   'amethyst purple': '#9966CC80',
+  'amethyst purple transparent': '#9966CC80',
   'kiwi green': '#8EE53F80',
+  'kiwi green transparent': '#8EE53F80',
   'smaragd green': '#50C87880',
-  'light grey': '#BDBDBD',
-  'baby blue': '#89CFF0',
-  'light ivory': '#FFFFF0',
-  'orange orange': '#FF6600',
-  'peppered mustard': '#E1AD01',
-  'volcanic dust': '#383838',
-  'lilac': '#C8A2C8',
+  'smaragd green transparent': '#50C87880',
+  'light grey': '#BDBDBD80',
+  'light grey transparent': '#BDBDBD80',
+  'baby blue': '#89CFF080',
+  'baby blue transparent': '#89CFF080',
+  'light ivory': '#FFFFF080',
+  'light ivory transparent': '#FFFFF080',
+  'orange orange': '#FF660080',
+  'orange orange transparent': '#FF660080',
+  'peppered mustard': '#E1AD0180',
+  'volcanic dust': '#38383880',
+  'volcanic dust transparent': '#38383880',
+  'lilac': '#C8A2C880',
+  'lilac transparent': '#C8A2C880',
   
   // Additional PETG/CPE transparent colors
   'iced coffee transparent': '#A1887F80',
