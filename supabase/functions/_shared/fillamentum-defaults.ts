@@ -115,7 +115,15 @@ export const FILLAMENTUM_PRODUCT_LINES: Record<string, {
   },
   'flexfill-tpe-90a': {
     material: 'TPE-90A',
-    productLine: 'Flexfill TPE',
+    productLine: 'Flexfill TPE 90A',
+    isAbrasive: false,
+    enclosureRequired: false,
+    highSpeedCapable: false,
+    tdsUrl: 'https://fillamentum.com/wp-content/uploads/2020/10/Technical-Data-Sheet_Flexfill-TPE_26082019.pdf'
+  },
+  'flexfill-tpe-96a': {
+    material: 'TPE-96A',
+    productLine: 'Flexfill TPE 96A',
     isAbrasive: false,
     enclosureRequired: false,
     highSpeedCapable: false,
@@ -241,6 +249,7 @@ export const FILLAMENTUM_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'TPU-98A': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 50, bedTempMax: 60 },
   'TPU-92A': { nozzleTempMin: 215, nozzleTempMax: 235, bedTempMin: 50, bedTempMax: 60 },
   'TPE-90A': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 50, bedTempMax: 70 },
+  'TPE-96A': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 50, bedTempMax: 70 },
   'PEBA-90A': { nozzleTempMin: 245, nozzleTempMax: 265, bedTempMin: 80, bedTempMax: 100 },
   'PA': { nozzleTempMin: 240, nozzleTempMax: 260, bedTempMin: 80, bedTempMax: 95 },
   'PA-CF': { nozzleTempMin: 250, nozzleTempMax: 270, bedTempMin: 85, bedTempMax: 100 },
@@ -397,11 +406,22 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'copper with me': '#B87333',
   'rapunzel silver': '#9E9E9E',
   
-  // Transparents
+  // Transparents (used across PETG, ABS, CPE, PLA Crystal Clear)
+  'transparent': '#F0F0F080',
   'crystal clear': '#FFFFFF00',
   'crystal clear iceland blue': '#87CEEB80',
   'crystal clear aquamarine': '#7FFFD480',
   'crystal clear smaragd green': '#50C87880',
+  'amethyst purple': '#9966CC80',
+  'kiwi green': '#8EE53F80',
+  'smaragd green': '#50C87880',
+  'light grey': '#BDBDBD',
+  'baby blue': '#89CFF0',
+  'light ivory': '#FFFFF0',
+  'orange orange': '#FF6600',
+  'peppered mustard': '#E1AD01',
+  'volcanic dust': '#383838',
+  'lilac': '#C8A2C8',
   
   // Timberfill (Wood)
   'light wood tone': '#DEB887',
@@ -435,14 +455,15 @@ const MATERIAL_PATTERNS: MaterialPattern[] = [
   // Carbon Fiber variants (must check before base materials)
   { patterns: [/asa[- ]?cf/i, /cf10/i], material: 'ASA-CF', isAbrasive: true, enclosureRequired: true },
   { patterns: [/cpe[- ]?cf/i, /cf112/i], material: 'CPE-CF', isAbrasive: true, enclosureRequired: true },
-  { patterns: [/nylon[- ]?cf/i, /cf15/i, /pa[- ]?cf/i], material: 'PA-CF', isAbrasive: true, enclosureRequired: true },
+  { patterns: [/nylon[- ]?cf/i, /cf15/i, /\bpa[- ]?cf\b/i], material: 'PA-CF', isAbrasive: true, enclosureRequired: true },
   
   // Aramid Fiber
-  { patterns: [/af80/i, /aramid/i, /pa[- ]?af/i], material: 'PA-AF', isAbrasive: true, enclosureRequired: true },
+  { patterns: [/af80/i, /aramid/i, /\bpa[- ]?af\b/i], material: 'PA-AF', isAbrasive: true, enclosureRequired: true },
   
-  // TPU/TPE/PEBA with Shore grades
+  // TPU/TPE/PEBA with Shore grades (check TPE-96A before generic TPE)
   { patterns: [/tpu[- ]?98a/i, /flexfill[- ]?98/i], material: 'TPU-98A', isAbrasive: false, enclosureRequired: false },
   { patterns: [/tpu[- ]?92a/i, /flexfill[- ]?92/i], material: 'TPU-92A', isAbrasive: false, enclosureRequired: false },
+  { patterns: [/tpe[- ]?96a/i, /flexfill[- ]?tpe[- ]?96/i], material: 'TPE-96A', isAbrasive: false, enclosureRequired: false },
   { patterns: [/tpe[- ]?90a/i, /flexfill[- ]?tpe/i], material: 'TPE-90A', isAbrasive: false, enclosureRequired: false },
   { patterns: [/peba[- ]?90a/i, /flexfill[- ]?peba/i], material: 'PEBA-90A', isAbrasive: false, enclosureRequired: true },
   
@@ -453,15 +474,19 @@ const MATERIAL_PATTERNS: MaterialPattern[] = [
   { patterns: [/pp[- ]?2320/i, /polypropylene/i], material: 'PP', isAbrasive: false, enclosureRequired: false },
   { patterns: [/lw[- ]?pla/i, /lightweight/i], material: 'LW-PLA', isAbrasive: false, enclosureRequired: false },
   
-  // Engineering plastics
-  { patterns: [/cpe[- ]?hg100/i, /cpe(?![- ]?cf)/i], material: 'CPE', isAbrasive: false, enclosureRequired: true },
-  { patterns: [/hips/i], material: 'HIPS', isAbrasive: false, enclosureRequired: true },
-  { patterns: [/nylon[- ]?fx256/i, /(?<!cf|af)nylon(?![- ]?cf|[- ]?af)/i, /pa(?![- ]?cf|[- ]?af)/i], material: 'PA', isAbrasive: false, enclosureRequired: true },
+  // Engineering plastics (CPE, HIPS)
+  { patterns: [/cpe[- ]?hg100/i, /\bcpe\b(?![- ]?cf)/i], material: 'CPE', isAbrasive: false, enclosureRequired: true },
+  { patterns: [/\bhips\b/i], material: 'HIPS', isAbrasive: false, enclosureRequired: true },
   
-  // Standard materials
-  { patterns: [/\basa(?![- ]?cf)/i], material: 'ASA', isAbrasive: false, enclosureRequired: true },
-  { patterns: [/\babs(?![- ]?cf)/i], material: 'ABS', isAbrasive: false, enclosureRequired: true },
-  { patterns: [/petg/i], material: 'PETG', isAbrasive: false, enclosureRequired: false },
+  // CRITICAL: Standard materials BEFORE PA to prevent "transparent" matching "/pa/"
+  { patterns: [/\bpetg\b/i], material: 'PETG', isAbrasive: false, enclosureRequired: false },
+  { patterns: [/\babs[- ]?extrafill\b/i, /\babs\b/i], material: 'ABS', isAbrasive: false, enclosureRequired: true },
+  { patterns: [/\basa(?![- ]?cf)\b/i], material: 'ASA', isAbrasive: false, enclosureRequired: true },
+  
+  // PA/Nylon - FIXED: use word boundary \b to prevent matching "transparent"
+  { patterns: [/nylon[- ]?fx256/i, /\bnylon\b(?![- ]?cf|[- ]?af)/i, /\bpa\b(?![- ]?cf|[- ]?af)/i], material: 'PA', isAbrasive: false, enclosureRequired: true },
+  
+  // PLA as last fallback
   { patterns: [/pla(?![- ]?wood|[- ]?cf)/i, /extrafill/i], material: 'PLA', isAbrasive: false, enclosureRequired: false }
 ];
 
