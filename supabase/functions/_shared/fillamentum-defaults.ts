@@ -459,6 +459,41 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   
   // Vertigo Special Effects
   'vertigo cherry': '#8B0000',
+  
+  // ==== MISSING COLORS ADDED FOR POST SYNC CHECK FIXES ====
+  
+  // Missing PLA Crystal Clear transparent colors (without existing keys)
+  'aquamarine': '#7FFFD480',
+  
+  // Missing PETG transparent colors (without "transparent" suffix)
+  'iced coffee': '#A1887F80',
+  'limeade': '#CDDC3980',
+  'bottle green': '#00695C80',
+  'grass green': '#43A04780',
+  'pastel green': '#B2DFDB80',
+  'beer': '#F5DEB380',
+  'mandarin orange': '#FF980080',
+  'voodoo black': '#1A1A1A80',
+  
+  // Missing CPE HG100 colors
+  'misty pink transparent': '#FFD1DC80',
+  'sky blue transparent': '#87CEEB80',
+  'desert grey': '#9E9E9E',
+  'pearl green': '#88D8C0',
+  'pearl pink': '#E8B4B8',
+  'egypt blue': '#1034A6',
+  'urban grey': '#5A5A5A',
+  
+  // Single-variant product defaults (Bio-PLA, PP, specialty)
+  'nonoilen': '#C9D6B8',           // Bio-PLA natural green-beige
+  'cf10': '#2D2D2D',                // ASA Carbon Fiber black
+  'cf15': '#2D2D2D',                // Nylon Carbon Fiber black
+  'cf112': '#2D2D2D',               // CPE Carbon Fiber black
+  'af80': '#D4A017',                // Aramid Fiber gold
+  'pp 2320': '#F5F5F5',             // Polypropylene natural
+  'porthcurno': '#1E3A5F',          // Ocean blue (Fishy Filaments)
+  '0rca': '#1A1A1A',                // Carbon black (Fishy Filaments)
+  'orca': '#1A1A1A',                // Carbon black (alias)
 };
 
 // ============================================================================
