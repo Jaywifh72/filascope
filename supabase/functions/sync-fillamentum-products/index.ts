@@ -7,6 +7,7 @@ import {
   generateFillamentumProductLineId,
   normalizeFillamentumMaterial
 } from '../_shared/fillamentum-defaults.ts';
+import { getColorFamily } from '../_shared/color-mapping.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -109,6 +110,9 @@ Deno.serve(async (req) => {
           weight = 1000;
         }
 
+        // Determine color family from hex
+        const colorFamily = colorHex ? getColorFamily(colorHex) : null;
+
         const filamentData = {
           product_id: productId,
           product_title: enrichment.cleanedTitle || seedProduct.filamentName,
@@ -117,6 +121,7 @@ Deno.serve(async (req) => {
           finish_type: enrichment.finishType,
           product_line_id: productLineId,
           color_hex: colorHex,
+          color_family: colorFamily,
           product_url: seedProduct.productUrl,
           featured_image: seedProduct.imageUrl,
           diameter_nominal_mm: FILLAMENTUM_STORE_INFO.defaultDiameter,

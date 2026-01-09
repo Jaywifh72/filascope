@@ -266,8 +266,12 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'vertigo galaxy': '#1F1F3D',
   'concrete grey': '#808080',
   'anthracite grey': '#383838',
-  'electric grey': '#5C5C5C',
+  'electric grey': '#607D8B',
   'signal black': '#0A0A0A',
+  'iron grey': '#424242',
+  'koala grey': '#9E9E9E',
+  'black soul': '#1A1A1A',
+  'grey mouse transparent': '#9E9E9E80',
   
   // Whites & Naturals
   'traffic white': '#F5F5F5',
@@ -275,6 +279,9 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'natural': '#F0E6D3',
   'ivory white': '#FFFFF0',
   'pearl white': '#F8F6F0',
+  'ghost white': '#FAFAFA',
+  'snow white': '#FFFFFF',
+  'white aluminium': '#E8E8E8',
   
   // Blues
   'cobalt blue': '#0047AB',
@@ -289,12 +296,21 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'noble blue': '#1A237E',
   'ultramarine blue': '#4169E1',
   'azure blue': '#007FFF',
+  'grey blue': '#546E7A',
+  'sea wave': '#00ACC1',
+  'ufo blue metallic': '#1976D2',
+  'mistake blue metallic': '#283593',
+  'bunny blue transparent': '#81D4FA80',
+  'lagoon transparent': '#00BCD480',
+  'deep sea transparent': '#00487880',
+  'blue transparent': '#2196F380',
   
   // Reds & Pinks
   'traffic red': '#CC0000',
   'signal red': '#FF0000',
   'carmine red': '#960018',
   'ruby red': '#9B111E',
+  'pearl ruby red': '#9B111E',
   'purple red': '#800020',
   'extrafill red': '#E31E24',
   'terracotta red': '#CB4335',
@@ -302,15 +318,32 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'luminous red': '#FF2400',
   'pink': '#FFC0CB',
   'traffic magenta': '#CC0066',
+  'marrakesh red': '#C62828',
+  'red hood transparent': '#D32F2F80',
+  'vivid pink': '#FF4081',
+  'everybody\'s magenta': '#AD1457',
+  'flirty plum': '#7B1FA2',
+  'neon pink transparent': '#FF148080',
+  'pink lollipop transparent': '#F48FB180',
+  'pink blush transparent': '#F8BBD080',
   
   // Oranges & Yellows
-  'traffic yellow': '#FFD700',
+  'traffic yellow': '#FFEA00',  // Distinct from gold happens
   'signal yellow': '#FFE135',
   'melon yellow': '#FEDF00',
   'luminous orange': '#FF6600',
   'traffic orange': '#FF5500',
   'signal orange': '#FF8C00',
   'tangerine orange': '#FF9966',
+  'calendula orange': '#FF9800',
+  'carrot orange': '#FF5722',
+  'neon orange transparent': '#FF570080',
+  'neon yellow transparent': '#FFFF0080',
+  'morning sun transparent': '#FFE08280',
+  'lemonade translucent': '#FFF17680',
+  'lemon yellow transparent': '#FFEB3B80',
+  'dijon mustard': '#C6A600',
+  'flash yellow metallic': '#FBC02D',
   
   // Greens
   'luminous green': '#50FF50',
@@ -319,17 +352,28 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'crystal clear green': '#98FB98',
   'vertigo jade': '#00A86B',
   'jungle green': '#29AB87',
+  'jungle green metallic': '#1B5E20',
   'leaf green': '#4CBB17',
   'turquoise green': '#00CED1',
   'mint': '#98FF98',
   'concrete green': '#708238',
+  'abu dhabi green': '#2E7D32',
+  'aloe green': '#8BC34A',
+  'green grass': '#7CB342',
+  'greedy dragon': '#388E3C',
+  'army green': '#4B5320',
+  'iced green transparent': '#69F0AE80',
+  'fresh poison transparent': '#76FF0380',
   
   // Purples & Violets
   'vertigo mystique': '#663399',
   'traffic violet': '#8B008B',
+  'traffic purple': '#800080',
   'signal violet': '#8B00FF',
   'purple rain': '#483D8B',
   'purple': '#800080',
+  'witch please!': '#6B2D5B',
+  'wizard\'s voodoo': '#673AB7',
   
   // Browns & Beiges
   'signal brown': '#8B4513',
@@ -337,6 +381,10 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'cinnamon': '#D2691E',
   'leather brown': '#9A7B4F',
   'beige': '#F5DEB3',
+  'mukha': '#8D6E63',
+  'turkey egg': '#B0BEC5',
+  'powder beige': '#D7CCC8',
+  'caramel brown metallic': '#795548',
   
   // Metallics
   'gold happens': '#FFD700',
@@ -344,6 +392,10 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'aluminium': '#A9A9A9',
   'bronze': '#CD7F32',
   'copper': '#B87333',
+  'cairo gold': '#D4AF37',
+  'gold cloud': '#FFD54F',
+  'copper with me': '#B87333',
+  'rapunzel silver': '#9E9E9E',
   
   // Transparents
   'crystal clear': '#FFFFFF00',
@@ -354,9 +406,18 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   // Timberfill (Wood)
   'light wood tone': '#DEB887',
   'rosewood': '#65000B',
+  'southern pine': '#FFE082',
+  'redheart': '#C62828',
+  'terracotta': '#CB4335',
+  'charcoal': '#424242',
+  'champagne': '#F7E7CE',
   
   // Special Effects
-  'luminous': '#7FFF00'
+  'luminous': '#7FFF00',
+  'luminous yellow': '#FFFF00',
+  
+  // Vertigo Special Effects
+  'vertigo cherry': '#8B0000',
 };
 
 // ============================================================================
@@ -456,6 +517,22 @@ export function extractFillamentumFinishType(title: string, colorName: string): 
 
 export function generateFillamentumProductLineId(title: string, material: string): string {
   const normalizedTitle = title.toLowerCase();
+  
+  // Priority matches - detect specific products before general patterns
+  // PETG products (must check before PA which matches "petg" incorrectly)
+  if (/\bpetg\b/i.test(normalizedTitle)) {
+    return 'fillamentum__petg__petg';
+  }
+  
+  // ABS products (before PA check)
+  if (/abs[- ]?extrafill/i.test(normalizedTitle)) {
+    return 'fillamentum__abs__abs-extrafill';
+  }
+  
+  // Flexfill TPE-96A (missing from product lines)
+  if (/flexfill[- ]?tpe[- ]?96a/i.test(normalizedTitle)) {
+    return 'fillamentum__tpe-96a__flexfill-tpe-96a';
+  }
   
   // Match against known product lines
   for (const [slug, config] of Object.entries(FILLAMENTUM_PRODUCT_LINES)) {
