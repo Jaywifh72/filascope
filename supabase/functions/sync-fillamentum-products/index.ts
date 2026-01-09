@@ -5,7 +5,8 @@ import {
   getFillamentumColorHex,
   FILLAMENTUM_STORE_INFO,
   generateFillamentumProductLineId,
-  normalizeFillamentumMaterial
+  normalizeFillamentumMaterial,
+  FILLAMENTUM_DEFAULTS_VERSION
 } from '../_shared/fillamentum-defaults.ts';
 import { getColorFamily } from '../_shared/color-mapping.ts';
 
@@ -46,6 +47,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('=== Fillamentum CSV-Seeded Sync Starting ===');
+    console.log(`Using fillamentum-defaults version: ${FILLAMENTUM_DEFAULTS_VERSION}`);
     console.log(`Seed contains ${FILLAMENTUM_SEED_COUNT} products`);
     console.log(`Clean slate: ${cleanSlate}`);
 

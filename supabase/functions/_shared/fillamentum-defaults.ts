@@ -4,6 +4,9 @@
  * unique color names, and engineering materials including CPE, Nylon, and Flexfill lines.
  */
 
+// Version constant to force module cache refresh on deployment
+export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v2';
+
 // ============================================================================
 // PRODUCT LINE DEFINITIONS
 // ============================================================================
