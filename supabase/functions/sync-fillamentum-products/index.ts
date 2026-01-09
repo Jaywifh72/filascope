@@ -50,6 +50,13 @@ Deno.serve(async (req) => {
     console.log(`Using fillamentum-defaults version: ${FILLAMENTUM_DEFAULTS_VERSION}`);
     console.log(`Seed contains ${FILLAMENTUM_SEED_COUNT} products`);
     console.log(`Clean slate: ${cleanSlate}`);
+    
+    // Debug: Verify color mapping is working
+    console.log('[DEBUG] Color mapping tests:');
+    console.log(`  'deep sea transparent' => ${getFillamentumColorHex('deep sea transparent')}`);
+    console.log(`  'amethyst purple' => ${getFillamentumColorHex('amethyst purple')}`);
+    console.log(`  'iced coffee transparent' => ${getFillamentumColorHex('iced coffee transparent')}`);
+    console.log(`  'crystal clear iceland blue' => ${getFillamentumColorHex('crystal clear iceland blue')}`);
 
     // Safety check: Ensure we have enough products in seed
     const SAFE_DELETE_THRESHOLD = 100;
@@ -100,8 +107,15 @@ Deno.serve(async (req) => {
         );
 
         // Get hex code from seed or mapping
-        const colorHex = seedProduct.colorHex || 
-                         (seedProduct.color ? getFillamentumColorHex(seedProduct.color) : null);
+        const colorFromSeed = seedProduct.color;
+        const hexFromSeed = seedProduct.colorHex;
+        const hexFromMapping = colorFromSeed ? getFillamentumColorHex(colorFromSeed) : null;
+        const colorHex = hexFromSeed || hexFromMapping;
+        
+        // Debug: Log missing hex codes
+        if (colorFromSeed && !colorHex) {
+          console.log(`[DEBUG] Missing hex for color: "${colorFromSeed}" (normalized: "${colorFromSeed?.toLowerCase().trim()}")`);
+        }
 
         // Generate product line ID
         const productLineId = generateFillamentumProductLineId(seedProduct.filamentName, enrichment.material);
