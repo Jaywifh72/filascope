@@ -5,7 +5,7 @@
  */
 
 // Version constant to force module cache refresh on deployment
-export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v4';
+export const FILLAMENTUM_DEFAULTS_VERSION = '2026-01-09-v5';
 
 // ============================================================================
 // PRODUCT LINE DEFINITIONS
@@ -283,7 +283,7 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'iron grey': '#424242',
   'koala grey': '#9E9E9E',
   'black soul': '#1A1A1A',
-  'grey mouse transparent': '#9E9E9E80',
+  'grey mouse transparent': '#9E9E9E',
   
   // Whites & Naturals
   'traffic white': '#F5F5F5',
@@ -298,7 +298,7 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   // Blues
   'cobalt blue': '#0047AB',
   'sky blue': '#87CEEB',
-  'iceland blue': '#87CEEB80',        // Transparent version for Crystal Clear
+  'iceland blue': '#87CEEB',        // Crystal Clear version (alpha removed for DB trigger)
   'iceland blue opaque': '#5BC0EB',   // Opaque version
   'gentlemen blue': '#1E3A5F',
   'prussian blue': '#003153',
@@ -315,13 +315,13 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'sea wave': '#00ACC1',
   'ufo blue metallic': '#1976D2',
   'mistake blue metallic': '#283593',
-  'bunny blue transparent': '#81D4FA80',
-  'bunny blue': '#81D4FA80',
-  'lagoon transparent': '#00BCD480',
-  'lagoon': '#00BCD480',
-  'deep sea transparent': '#00487880',
-  'deep sea': '#00487880',
-  'blue transparent': '#2196F380',
+  'bunny blue transparent': '#81D4FA',
+  'bunny blue': '#81D4FA',
+  'lagoon transparent': '#00BCD4',
+  'lagoon': '#00BCD4',
+  'deep sea transparent': '#004878',
+  'deep sea': '#004878',
+  'blue transparent': '#2196F3',
   
   // Reds & Pinks
   'traffic red': '#CC0000',
@@ -337,13 +337,13 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'pink': '#FFC0CB',
   'traffic magenta': '#CC0066',
   'marrakesh red': '#C62828',
-  'red hood transparent': '#D32F2F80',
+  'red hood transparent': '#D32F2F',
   'vivid pink': '#FF4081',
   'everybody\'s magenta': '#AD1457',
   'flirty plum': '#7B1FA2',
-  'neon pink transparent': '#FF148080',
-  'pink lollipop transparent': '#F48FB180',
-  'pink blush transparent': '#F8BBD080',
+  'neon pink transparent': '#FF1480',
+  'pink lollipop transparent': '#F48FB1',
+  'pink blush transparent': '#F8BBD0',
   
   // Oranges & Yellows
   'traffic yellow': '#FFEA00',  // Distinct from gold happens
@@ -355,11 +355,11 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'tangerine orange': '#FF9966',
   'calendula orange': '#FF9800',
   'carrot orange': '#FF5722',
-  'neon orange transparent': '#FF570080',
-  'neon yellow transparent': '#FFFF0080',
-  'morning sun transparent': '#FFE08280',
-  'lemonade translucent': '#FFF17680',
-  'lemon yellow transparent': '#FFEB3B80',
+  'neon orange transparent': '#FF5700',
+  'neon yellow transparent': '#FFFF00',
+  'morning sun transparent': '#FFE082',
+  'lemonade translucent': '#FFF176',
+  'lemon yellow transparent': '#FFEB3B',
   'dijon mustard': '#C6A600',
   'flash yellow metallic': '#FBC02D',
   
@@ -380,8 +380,8 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'green grass': '#7CB342',
   'greedy dragon': '#388E3C',
   'army green': '#4B5320',
-  'iced green transparent': '#69F0AE80',
-  'fresh poison transparent': '#76FF0380',
+  'iced green transparent': '#69F0AE',
+  'fresh poison transparent': '#76FF03',
   
   // Purples & Violets
   'vertigo mystique': '#663399',
@@ -416,45 +416,46 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'rapunzel silver': '#9E9E9E',
   
   // Transparents (used across PETG, ABS, CPE, PLA Crystal Clear)
-  'transparent': '#F0F0F080',
-  'crystal clear': '#FFFFFF00',
-  'crystal clear iceland blue': '#87CEEB80',
-  'crystal clear aquamarine': '#7FFFD480',
-  'crystal clear smaragd green': '#50C87880',
-  'crystal clear kiwi green': '#8EE53F80',
-  'crystal clear amethyst purple': '#9966CC80',
-  'amethyst purple': '#9966CC80',
-  'amethyst purple transparent': '#9966CC80',
-  'kiwi green': '#8EE53F80',
-  'kiwi green transparent': '#8EE53F80',
-  'smaragd green': '#50C87880',
-  'smaragd green transparent': '#50C87880',
-  'light grey': '#BDBDBD80',
-  'light grey transparent': '#BDBDBD80',
-  'baby blue': '#89CFF080',
-  'baby blue transparent': '#89CFF080',
-  'light ivory': '#FFFFF080',
-  'light ivory transparent': '#FFFFF080',
-  'orange orange': '#FF660080',
-  'orange orange transparent': '#FF660080',
-  'peppered mustard': '#E1AD0180',
-  'volcanic dust': '#38383880',
-  'volcanic dust transparent': '#38383880',
-  'lilac': '#C8A2C880',
-  'lilac transparent': '#C8A2C880',
+  // NOTE: All hex codes are 6-char (no alpha) to pass DB normalize_color_hex trigger
+  'transparent': '#F0F0F0',
+  'crystal clear': '#FFFFFF',
+  'crystal clear iceland blue': '#87CEEB',
+  'crystal clear aquamarine': '#7FFFD4',
+  'crystal clear smaragd green': '#50C878',
+  'crystal clear kiwi green': '#8EE53F',
+  'crystal clear amethyst purple': '#9966CC',
+  'amethyst purple': '#9966CC',
+  'amethyst purple transparent': '#9966CC',
+  'kiwi green': '#8EE53F',
+  'kiwi green transparent': '#8EE53F',
+  'smaragd green': '#50C878',
+  'smaragd green transparent': '#50C878',
+  'light grey': '#BDBDBD',
+  'light grey transparent': '#BDBDBD',
+  'baby blue': '#89CFF0',
+  'baby blue transparent': '#89CFF0',
+  'light ivory': '#FFFFF0',
+  'light ivory transparent': '#FFFFF0',
+  'orange orange': '#FF6600',
+  'orange orange transparent': '#FF6600',
+  'peppered mustard': '#E1AD01',
+  'volcanic dust': '#383838',
+  'volcanic dust transparent': '#383838',
+  'lilac': '#C8A2C8',
+  'lilac transparent': '#C8A2C8',
   
   // Additional PETG/CPE transparent colors
-  'iced coffee transparent': '#A1887F80',
-  'apple green transparent': '#8BC34A80',
-  'limeade transparent': '#CDDC3980',
-  'bottle green transparent': '#00695C80',
-  'grass green transparent': '#43A04780',
-  'pastel green transparent': '#B2DFDB80',
-  'champagne transparent': '#F7E7CE80',
-  'beer transparent': '#F5DEB380',
-  'mandarin orange transparent': '#FF980080',
-  'cobalt blue transparent': '#0047AB80',
-  'voodoo black transparent': '#1A1A1A80',
+  'iced coffee transparent': '#A1887F',
+  'apple green transparent': '#8BC34A',
+  'limeade transparent': '#CDDC39',
+  'bottle green transparent': '#00695C',
+  'grass green transparent': '#43A047',
+  'pastel green transparent': '#B2DFDB',
+  'champagne transparent': '#F7E7CE',
+  'beer transparent': '#F5DEB3',
+  'mandarin orange transparent': '#FF9800',
+  'cobalt blue transparent': '#0047AB',
+  'voodoo black transparent': '#1A1A1A',
   
   // Single-variant product colors
   'carbon': '#2D2D2D',
@@ -483,21 +484,21 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   // ==== MISSING COLORS ADDED FOR POST SYNC CHECK FIXES ====
   
   // Missing PLA Crystal Clear transparent colors (without existing keys)
-  'aquamarine': '#7FFFD480',
+  'aquamarine': '#7FFFD4',
   
   // Missing PETG transparent colors (without "transparent" suffix)
-  'iced coffee': '#A1887F80',
-  'limeade': '#CDDC3980',
-  'bottle green': '#00695C80',
-  'grass green': '#43A04780',
-  'pastel green': '#B2DFDB80',
-  'beer': '#F5DEB380',
-  'mandarin orange': '#FF980080',
-  'voodoo black': '#1A1A1A80',
+  'iced coffee': '#A1887F',
+  'limeade': '#CDDC39',
+  'bottle green': '#00695C',
+  'grass green': '#43A047',
+  'pastel green': '#B2DFDB',
+  'beer': '#F5DEB3',
+  'mandarin orange': '#FF9800',
+  'voodoo black': '#1A1A1A',
   
   // Missing CPE HG100 colors
-  'misty pink transparent': '#FFD1DC80',
-  'sky blue transparent': '#87CEEB80',
+  'misty pink transparent': '#FFD1DC',
+  'sky blue transparent': '#87CEEB',
   'desert grey': '#9E9E9E',
   'pearl green': '#88D8C0',
   'pearl pink': '#E8B4B8',
