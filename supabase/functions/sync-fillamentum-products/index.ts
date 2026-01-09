@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { FILLAMENTUM_FILTERED_SEED, FILLAMENTUM_SEED_COUNT } from '../_shared/fillamentum-seed.ts';
+import { FILLAMENTUM_FILTERED_SEED, FILLAMENTUM_SEED_COUNT, FILLAMENTUM_SEED_VERSION } from '../_shared/fillamentum-seed.ts';
 import {
   enrichFillamentumProduct,
   getFillamentumColorHex,
@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
 
     console.log('=== Fillamentum CSV-Seeded Sync Starting ===');
     console.log(`Using fillamentum-defaults version: ${FILLAMENTUM_DEFAULTS_VERSION}`);
+    console.log(`Using fillamentum-seed version: ${FILLAMENTUM_SEED_VERSION}`);
     console.log(`Seed contains ${FILLAMENTUM_SEED_COUNT} products`);
     console.log(`Clean slate: ${cleanSlate}`);
     
