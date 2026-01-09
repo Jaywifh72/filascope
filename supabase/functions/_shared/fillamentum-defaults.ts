@@ -423,6 +423,27 @@ export const FILLAMENTUM_COLOR_MAPPING: Record<string, string> = {
   'volcanic dust': '#383838',
   'lilac': '#C8A2C8',
   
+  // Additional PETG/CPE transparent colors
+  'iced coffee transparent': '#A1887F80',
+  'apple green transparent': '#8BC34A80',
+  'limeade transparent': '#CDDC3980',
+  'bottle green transparent': '#00695C80',
+  'grass green transparent': '#43A04780',
+  'pastel green transparent': '#B2DFDB80',
+  'champagne transparent': '#F7E7CE80',
+  'beer transparent': '#F5DEB380',
+  'mandarin orange transparent': '#FF980080',
+  'cobalt blue transparent': '#0047AB80',
+  'voodoo black transparent': '#1A1A1A80',
+  
+  // Single-variant product colors
+  'carbon': '#2D2D2D',
+  'nonoilen natural': '#C9D6B8',
+  'porthcurno blue': '#1E3A5F',
+  'polypropylene natural': '#F5F5F5',
+  'aramid gold': '#D4A017',
+  'orca black': '#1A1A1A',
+  
   // Timberfill (Wood)
   'light wood tone': '#DEB887',
   'rosewood': '#65000B',

@@ -110,8 +110,8 @@ Deno.serve(async (req) => {
           weight = 1000;
         }
 
-        // Determine color family from hex
-        const colorFamily = colorHex ? getColorFamily(colorHex) : null;
+        // Determine color family from color NAME (not hex - getColorFamily expects a name)
+        const colorFamily = seedProduct.color ? getColorFamily(seedProduct.color) : null;
 
         const filamentData = {
           product_id: productId,
