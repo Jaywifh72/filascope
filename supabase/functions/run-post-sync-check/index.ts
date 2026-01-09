@@ -5131,8 +5131,14 @@ Deno.serve(async (req) => {
     }
     
     // Issue 2: Check if too many products are missing images entirely
+    // Skip this check for CSV-seeded brands that intentionally have no images
+    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy'];
+    const isNoImageBrandForQuality = NO_IMAGE_BRANDS_FOR_QUALITY.some(b => 
+      brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
+    );
+    
     const missingImageCount = totalProductsCount - totalProductsWithImages;
-    if (missingImageCount > totalProductsCount * 0.3) {
+    if (!isNoImageBrandForQuality && missingImageCount > totalProductsCount * 0.3) {
       logoImageIssues.push({
         id: 'missing-images',
         title: 'Missing Product Images',
