@@ -3447,7 +3447,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr']; // CSV-seeded brands append " - Color" to titles intentionally
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments']; // CSV-seeded brands append " - Color" to titles intentionally
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -4419,7 +4419,7 @@ Deno.serve(async (req) => {
       'formfutura': 80,         // CSV-seeded: 80 product lines (EasyFil ePLA, Volcano PLA, HDglass, ApolloX, AthenaX, LUVOCOM, PEI ULTEM, etc.)
       'extrudr': 18,            // BioFusion, DuraPro (ABS/ASA/PA12/PC-PBT + CF variants), FLAX, FLEX (3), GreenTEC (3), PCTG, PETG, xPETG (2), PLA NX2 Matt
       'geeetech': 12,           // PLA, ABS, PETG, Silk, etc.
-      'fusion-filaments': 11,   // PLA, PETG, ABS, TPU, etc.
+      'fusion-filaments': 8,    // CSV-seeded: HTPLA+, HT-PET, ASA, EasyASA, ABS Gloss, ABS Matte, HT-ABS Matte, PCTG
       'spectrum-filaments': 30, // Large catalog with ReFill options
       'ultimaker': 10,          // S-Series materials
       'numakers': 8,            // PLA, PETG, TPU lines
