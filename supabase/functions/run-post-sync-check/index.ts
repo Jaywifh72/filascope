@@ -4579,6 +4579,44 @@ Deno.serve(async (req) => {
           productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       }
       
+      // GEEETECH: Handle underscore-based slugs in product_line_id
+      // Examples: geeetech__pla__silk_tri → "PLA Silk Tri-Color"
+      //           geeetech__pla__hs_pla → "PLA High Speed"
+      //           geeetech__pla_marble__standard → "PLA Marble"
+      if (parts[0] === 'geeetech' && parts.length >= 3) {
+        const materialSlug = parts[1]; // e.g., "pla", "pla_cf", "pla_marble"
+        const lineSlug = parts[2];     // e.g., "silk_tri", "standard", "hs_pla"
+        
+        // Build material name from slug
+        let material = materialSlug
+          .replace(/_/g, ' ')
+          .toUpperCase()
+          .replace(/\bCF\b/g, '-CF')     // "PLA CF" → "PLA-CF"
+          .replace(/\bGF\b/g, '-GF')     // "PETG GF" → "PETG-GF"
+          .replace(/\bMARBLE\b/g, 'Marble')  // "PLA MARBLE" → "PLA Marble"
+          .replace(/\bWOOD\b/g, 'Wood')      // "PLA WOOD" → "PLA Wood"
+          .trim();
+        
+        // Format line name (skip "standard")
+        let lineName = '';
+        if (lineSlug && lineSlug !== 'standard') {
+          lineName = lineSlug
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase())
+            // Fix specific Geeetech patterns
+            .replace(/^Silk Tri$/i, 'Silk Tri-Color')
+            .replace(/^Silk Dual$/i, 'Silk Dual-Color')
+            .replace(/^Silk Rainbow$/i, 'Silk Rainbow')
+            .replace(/^Hs Pla$/i, 'High Speed')
+            .replace(/^Hs$/i, 'High Speed')
+            .replace(/\bPla\b/g, '')  // Remove redundant "Pla" from line name
+            .trim();
+        }
+        
+        // Combine material and line name
+        return lineName ? `${material} ${lineName}`.trim() : material.trim();
+      }
+      
       if (parts.length >= 3) {
         // 3+ part format: "vendor__material__line-name"
         const material = parts[1]?.toUpperCase() || '';
