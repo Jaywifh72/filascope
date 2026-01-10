@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { normalizeColorHex } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
+import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
 
 // Platform color mapping
 const PLATFORM_COLORS: Record<string, string> = {
@@ -453,20 +454,35 @@ const BrandDetail = () => {
     const isPrusament = decodedBrand.toLowerCase() === 'prusament';
 
     filteredFilaments.forEach((filament) => {
-      // Use product line for Prusament, base name for others
-      const groupKey = isPrusament 
-        ? getPrusamentProductLine(filament.material, filament.product_title)
-        : getBaseProductName(filament.product_title, filament.material);
+      // PRIORITY 1: Use product_line_id if available (authoritative from database)
+      // This ensures consistent grouping with the Finder page for brands like Geeetech
+      let groupKey: string;
+      let displayName: string;
+      
+      if (filament.product_line_id) {
+        // Use product_line_id for grouping - this is the authoritative source
+        groupKey = filament.product_line_id;
+        // Convert to display-friendly name using the utility function
+        displayName = formatProductLineIdForDisplay(filament.product_line_id, filament.product_title);
+      } else if (isPrusament) {
+        // Prusament-specific logic (legacy)
+        groupKey = getPrusamentProductLine(filament.material, filament.product_title);
+        displayName = groupKey;
+      } else {
+        // Fallback: parse from title (for products without product_line_id)
+        groupKey = getBaseProductName(filament.product_title, filament.material);
+        displayName = groupKey;
+      }
       
       if (!groups.has(groupKey)) {
         groups.set(groupKey, {
-          baseName: groupKey,
+          baseName: displayName,
           material: filament.material,
           variants: [],
           representativeImage: null,
           priceRange: { min: null, max: null },
           productUrl: filament.product_url,
-          categoryUrl: getCategoryUrl(decodedBrand, filament.material, groupKey),
+          categoryUrl: getCategoryUrl(decodedBrand, filament.material, displayName),
           availableWeights: new Set<number>(),
         });
       }
