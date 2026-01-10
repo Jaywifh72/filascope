@@ -4339,9 +4339,11 @@ Deno.serve(async (req) => {
         const missingWords = [...dbWords].filter(w => !uiWords.has(w) && w.length > 2);
         
         // Only flag if significant words are missing (like "high", "speed", "silk", etc.)
-        const significantMissingWords = missingWords.filter(w => 
-          ['high', 'speed', 'silk', 'matte', 'marble', 'glow', 'galaxy', 'metal', 'plus', 'basic', 'special', 'translucent'].includes(w)
-        );
+        // Exclude "glow" for FormFutura since "Glow in the Dark" products have glow in line name
+        const significantMissingWords = missingWords.filter(w => {
+          if (brandSlug === 'formfutura' && w === 'glow') return false;
+          return ['high', 'speed', 'silk', 'matte', 'marble', 'glow', 'galaxy', 'metal', 'plus', 'basic', 'special', 'translucent'].includes(w);
+        });
         
         if (significantMissingWords.length > 0) {
           uiDisplayIssues.push({
@@ -4497,7 +4499,11 @@ Deno.serve(async (req) => {
         /^(wood[Ff]ill|cork[Ff]ill|bamboo[Ff]ill|stone[Ff]ill)/i,    // Natural fills
         /^(allPHA)/i,                                      // Biodegradable
       ],
-      'formfutura': [/^(EasyFil|HDglass|ApolloX|Volcano|Flexifil|Galaxy)/i],
+      'formfutura': [
+        /^(EasyFil|HDglass|ApolloX|Volcano|Flexifil|Galaxy|ReForm|Premium|Tough)/i,
+        /^(LUVOCOM|Styx|Kratos|BioFil|MetalFil|CarbonFil|StoneFil|AquaSolve|Atlas|BVOH|Centaur|PPSU|ULTEM)/i,
+        /^(PLA|PETG|ABS|ASA|TPU|PA|PC|PP|HIPS|PVA|PEEK|PEKK|PEI|PAHT|PPS)/i,  // Base materials
+      ],
       'amolen': [/^(PLA|PETG|TPU|Silk|Matte|Dual Color|Galaxy|Rainbow|Glow|Wood|Marble|Metal)/i],
       'siraya-tech': [/^(Fast|Blu|Build|Sculpt|Tenacious|Smoky|Brilliant|Infinite)/i],
       'extrudr': [/^(BioFusion|DuraPro|FLAX|FLEX|GreenTEC|PCTG|PETG|xPETG|PLA NX2)/i],
@@ -5416,7 +5422,11 @@ Deno.serve(async (req) => {
                                       lineId.includes('formfutura__pa-gf__') ||            // PA-GF only in natural
                                       lineId.includes('formfutura__pa-cf__') ||            // PA-CF only in black
                                       lineId.includes('formfutura__asa-cf__') ||           // ASA-CF only in black
-                                      lineId.includes('formfutura__asa-kevlar__')
+                                      lineId.includes('formfutura__asa-kevlar__') ||
+                                      lineId.includes('formfutura__pla-wood__biofil-wood') || // BioFil Wood only in wood color
+                                      lineId.includes('formfutura__petg-cf__carbonfil') ||    // CarbonFil only in black
+                                      lineId.includes('formfutura__ppsu__') ||                // PPSU only in amber
+                                      lineId.includes('formfutura__support__atlas')
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
