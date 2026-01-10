@@ -390,7 +390,7 @@ const BrandDetail = () => {
       const { data, error } = await supabase
         .from("filaments")
         .select("*")
-        .eq("vendor", decodedBrand)
+        .ilike("vendor", decodedBrand.replace(/-/g, ' '))
         .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .order("product_title");
 
