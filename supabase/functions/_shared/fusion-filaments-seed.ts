@@ -1,11 +1,11 @@
 /**
  * FUSION FILAMENTS CSV SEED DATA
  * 
- * CSV-seeded sync architecture (195 products from Odoo 16 store)
+ * CSV-seeded sync architecture (Odoo 16 store)
  * Science-themed color names, AMS compatibility, cardboard spools
  * 
- * Source: fusionfilaments.com manual export (January 2026)
- * Materials: HTPLA+, HT-PET, ASA, ABS Gloss, ABS Matte, HT-ABS Matte, PCTG, HSPLA, EasyASA, PLA
+ * Source: fusionfilaments.com manual export (January 2026 - Updated with UPC-based URLs)
+ * Materials: HTPLA+ (28), HT-PET (21), ASA (18), ABS Gloss (23), ABS Matte (14), HT-ABS Matte (6), PCTG (10), EasyASA (3)
  */
 
 export interface FusionFilamentsSeedProduct {
@@ -189,30 +189,22 @@ export const FUSION_FILAMENTS_PRODUCT_SEED: FusionFilamentsSeedProduct[] = [
   { material: 'ABS Matte', filamentName: '1KG ABS Matte Filament - Cosmic Magnetism Grey', productUrl: 'https://www.fusionfilaments.com/shop/abs1-5175cosmg-1kg-abs-matte-filament-cosmic-magnetism-grey-9175', color: 'Cosmic Magnetism Grey', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9175/image_512' },
   { material: 'ABS Matte', filamentName: '1KG ABS Matte Filament - Electrolytic Deuterium', productUrl: 'https://www.fusionfilaments.com/shop/abs1-5175ed-1kg-abs-matte-filament-electrolytic-deuterium-9176', color: 'Electrolytic Deuterium', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9176/image_512' },
   
-  // PCTG Products (15 colors)
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Carbon Rod Black', productUrl: 'https://www.fusionfilaments.com/shop/pctg175crb-1kg-pctg-filament-carbon-rod-black-9196', color: 'Carbon Rod Black', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9196/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Nuclear Winter White', productUrl: 'https://www.fusionfilaments.com/shop/pctg175nww-1kg-pctg-filament-nuclear-winter-white-9197', color: 'Nuclear Winter White', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9197/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Mushroom Cloud Grey', productUrl: 'https://www.fusionfilaments.com/shop/pctg175mcg-1kg-pctg-filament-mushroom-cloud-grey-9198', color: 'Mushroom Cloud Grey', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9198/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Ionized Cobalt Black', productUrl: 'https://www.fusionfilaments.com/shop/pctg175icb-1kg-pctg-filament-ionized-cobalt-black-9199', color: 'Ionized Cobalt Black', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9199/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Seismic Red', productUrl: 'https://www.fusionfilaments.com/shop/pctg175sr-1kg-pctg-filament-seismic-red-9200', color: 'Seismic Red', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9200/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Cold Fusion Blue', productUrl: 'https://www.fusionfilaments.com/shop/pctg175cfb-1kg-pctg-filament-cold-fusion-blue-9201', color: 'Cold Fusion Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9201/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Cosmic Ray Blue', productUrl: 'https://www.fusionfilaments.com/shop/pctg175cmrb-1kg-pctg-filament-cosmic-ray-blue-9202', color: 'Cosmic Ray Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9202/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Neutron Green', productUrl: 'https://www.fusionfilaments.com/shop/pctg175ng-1kg-pctg-filament-neutron-green-9203', color: 'Neutron Green', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9203/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Tritium Green', productUrl: 'https://www.fusionfilaments.com/shop/pctg175tg-1kg-pctg-filament-tritium-green-9204', color: 'Tritium Green', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9204/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Natural', productUrl: 'https://www.fusionfilaments.com/shop/pctg175nat-1kg-pctg-filament-natural-9205', color: 'Natural', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9205/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Geomagnetic Mauve', productUrl: 'https://www.fusionfilaments.com/shop/pctg175gm-1kg-pctg-filament-geomagnetic-mauve-9206', color: 'Geomagnetic Mauve', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9206/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Radium Green 2.0', productUrl: 'https://www.fusionfilaments.com/shop/pctg175rg-1kg-pctg-filament-radium-green-2-0-9207', color: 'Radium Green 2.0', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9207/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Radiated Fog', productUrl: 'https://www.fusionfilaments.com/shop/pctg175rf-1kg-pctg-filament-radiated-fog-9208', color: 'Radiated Fog', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9208/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Heavy Water Blue', productUrl: 'https://www.fusionfilaments.com/shop/pctg175hwb-1kg-pctg-filament-heavy-water-blue-9209', color: 'Heavy Water Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9209/image_512' },
-  { material: 'PCTG', filamentName: '1KG PCTG Filament - Uranium Yellow', productUrl: 'https://www.fusionfilaments.com/shop/pctg175uy-1kg-pctg-filament-uranium-yellow-9210', color: 'Uranium Yellow', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9210/image_512' },
+  // PCTG Products (10 colors - January 2026 update to UPC-based URLs)
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Heavy Water Blue', productUrl: 'https://www.fusionfilaments.com/shop/00850076511289-1kg-pctg-filament-heavy-water-blue-9911', color: 'Heavy Water Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9911/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Nuclear Winter White', productUrl: 'https://www.fusionfilaments.com/shop/00850076511296-1kg-pctg-filament-nuclear-winter-white-9912', color: 'Nuclear Winter White', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9912/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Carbon Rod Black', productUrl: 'https://www.fusionfilaments.com/shop/00850076511302-1kg-pctg-filament-carbon-rod-black-9913', color: 'Carbon Rod Black', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9913/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Natural', productUrl: 'https://www.fusionfilaments.com/shop/00850076511319-1kg-pctg-filament-natural-9914', color: 'Natural', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9914/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Sievert Silver', productUrl: 'https://www.fusionfilaments.com/shop/00850076511494-1kg-pctg-filament-sievert-silver-10138', color: 'Sievert Silver', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10138/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Reactor Red', productUrl: 'https://www.fusionfilaments.com/shop/00850076511500-1kg-pctg-filament-reactor-red-10139', color: 'Reactor Red', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10139/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Cold Fusion Blue', productUrl: 'https://www.fusionfilaments.com/shop/00850076511586-1kg-pctg-filament-cold-fusion-blue-10163', color: 'Cold Fusion Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10163/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Cosmic Ray Blue', productUrl: 'https://www.fusionfilaments.com/shop/00850076511579-1kg-pctg-filament-cosmic-ray-blue-10164', color: 'Cosmic Ray Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10164/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Geomagnetic Mauve', productUrl: 'https://www.fusionfilaments.com/shop/00850076511593-1kg-pctg-filament-geomagnetic-mauve-10165', color: 'Geomagnetic Mauve', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10165/image_512' },
+  { material: 'PCTG', filamentName: '1KG PCTG Filament - Plutonic Purple', productUrl: 'https://www.fusionfilaments.com/shop/00850076511609-1kg-pctg-filament-plutonic-purple-10169', color: 'Plutonic Purple', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10169/image_512' },
   
-  // EasyASA Products (6 colors)
-  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Carbon Rod Black', productUrl: 'https://www.fusionfilaments.com/shop/easa175crb-1kg-easyasa-filament-carbon-rod-black-9211', color: 'Carbon Rod Black', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9211/image_512' },
-  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Nuclear Winter White', productUrl: 'https://www.fusionfilaments.com/shop/easa175nww-1kg-easyasa-filament-nuclear-winter-white-9212', color: 'Nuclear Winter White', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9212/image_512' },
-  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Nano Tube Grey', productUrl: 'https://www.fusionfilaments.com/shop/easa175ntg-1kg-easyasa-filament-nano-tube-grey-9213', color: 'Nano Tube Grey', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9213/image_512' },
-  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Seismic Red', productUrl: 'https://www.fusionfilaments.com/shop/easa175sr-1kg-easyasa-filament-seismic-red-9214', color: 'Seismic Red', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9214/image_512' },
-  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Cosmic Ray Blue', productUrl: 'https://www.fusionfilaments.com/shop/easa175cmrb-1kg-easyasa-filament-cosmic-ray-blue-9215', color: 'Cosmic Ray Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9215/image_512' },
-  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Mushroom Cloud Grey', productUrl: 'https://www.fusionfilaments.com/shop/easa175mcg-1kg-easyasa-filament-mushroom-cloud-grey-9216', color: 'Mushroom Cloud Grey', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9216/image_512' },
+  // EasyASA Products (3 colors - January 2026 update to UPC-based URLs, discontinued colors removed)
+  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Carbon Rod Black', productUrl: 'https://www.fusionfilaments.com/shop/00850076511371-1kg-easyasa-filament-carbon-rod-black-10035', color: 'Carbon Rod Black', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10035/image_512' },
+  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Geomagnetic Mauve', productUrl: 'https://www.fusionfilaments.com/shop/00850076511401-1kg-easyasa-filament-geomagnetic-mauve-10047', color: 'Geomagnetic Mauve', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10047/image_512' },
+  { material: 'EasyASA', filamentName: '1KG EasyASA Filament - Cosmic Ray Blue', productUrl: 'https://www.fusionfilaments.com/shop/00850076511395-1kg-easyasa-filament-cosmic-ray-blue-10048', color: 'Cosmic Ray Blue', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/10048/image_512' },
   
   // HT-ABS Matte Products (6 colors)
   { material: 'HT-ABS Matte', filamentName: '1KG HT-ABS Matte Filament - Carbon Rod Black', productUrl: 'https://www.fusionfilaments.com/shop/htabs175crb-1kg-ht-abs-matte-filament-carbon-rod-black-9217', color: 'Carbon Rod Black', imageUrl: 'https://www.fusionfilaments.com/web/image/product.template/9217/image_512' },
