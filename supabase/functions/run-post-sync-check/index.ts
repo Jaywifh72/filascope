@@ -5783,7 +5783,9 @@ Deno.serve(async (req) => {
                                       lineId.includes('formfutura__pla-wood__biofil-wood') || // BioFil Wood only in wood color
                                       lineId.includes('formfutura__petg-cf__carbonfil') ||    // CarbonFil only in black
                                       lineId.includes('formfutura__ppsu__') ||                // PPSU only in amber
-                                      lineId.includes('formfutura__support__atlas')
+                                      lineId.includes('formfutura__support__atlas') ||
+                                      // Geeetech single-color specialty products (CSV-seeded)
+                                      lineId.includes('geeetech__pla__gradient')    // PLA Gradient is a single rainbow multicolor product
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
