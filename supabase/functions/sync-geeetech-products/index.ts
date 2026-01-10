@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       const { data: deleted, error: deleteError } = await supabase
         .from('filaments')
         .delete()
-        .ilike('vendor', 'geeetech')
+        .eq('vendor', 'Geeetech')
         .select('id');
 
       if (deleteError) {
@@ -101,13 +101,13 @@ Deno.serve(async (req) => {
           .from('filaments')
           .select('id, color_hex')
           .eq('product_id', productId)
-          .ilike('vendor', 'geeetech')
+        .eq('vendor', 'Geeetech')
           .maybeSingle();
 
         const filamentData = {
           product_id: productId,
           product_title: seedProduct.title,
-          vendor: 'GEEETECH',
+          vendor: 'Geeetech',
           product_url: seedProduct.url,
           featured_image: seedProduct.imageUrl,
           material: material,
