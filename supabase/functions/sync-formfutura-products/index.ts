@@ -163,9 +163,12 @@ Deno.serve(async (req) => {
           const isRefill = isFormFuturaRefill(seed.filamentName);
           const isBambuCompatible = isFormFuturaBambuCompatible(seed.filamentName);
 
-          // Clean title and add color
+          // Clean title and add color (only if not already present)
           let cleanTitle = cleanFormFuturaTitle(seed.filamentName);
-          if (color !== 'Standard') {
+          const colorLower = color.toLowerCase();
+          const titleLower = cleanTitle.toLowerCase();
+          // Only append color if not already in the title (prevents "MetalFil - Brass - Brass")
+          if (color !== 'Standard' && !titleLower.includes(colorLower)) {
             cleanTitle = `${cleanTitle} - ${color}`;
           }
 

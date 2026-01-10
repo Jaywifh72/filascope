@@ -497,6 +497,7 @@ export const FORMFUTURA_COLOR_MAPPING: Record<string, string> = {
   'chocolate brown': '3D2314',
   'sepia brown': '704214',
   'ochre brown': 'CC7722',
+  'curry': 'CC9900',           // Yellow-brown curry color (EasyFil ePLA)
   'beige': 'F5F5DC',
   'sand': 'C2B280',
   
