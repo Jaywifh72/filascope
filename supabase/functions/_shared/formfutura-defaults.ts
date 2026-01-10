@@ -511,12 +511,43 @@ export const FORMFUTURA_COLOR_MAPPING: Record<string, string> = {
   'gold': 'FFD700',
   'silver': 'C0C0C0',
   
-  // Luminous/Glow
+  // Luminous/Glow (distinct hex codes to avoid duplicates)
   'luminous green': '50FF50',
-  'luminous bright orange': 'FF6600',
+  'luminous bright orange': 'FF5500',  // Distinct from fluor orange
   'luminous yellow': 'CCFF00',
   'luminous blue': '00FFFF',
   'luminous red': 'FF3333',
+  'glow green': '39FF14',
+  'glow blue': '00BFFF',
+  'glow red': 'FF6B6B',
+  
+  // Specialty: StoneFil (mineral/stone textures)
+  'granite': '8B8589',
+  'terracotta': 'E2725B',
+  'concrete': 'C5C5C5',
+  'pottery clay': 'C19A6B',
+  
+  // Specialty: EasyWood (wood tones)
+  'pine': 'DEB887',
+  'cedar': 'A0522D',
+  'olive': '808000',
+  'coconut': '8B5A2B',
+  'ebony': '555D50',
+  
+  // Specialty: ColorMorph (temperature-changing - use primary color)
+  'lava': 'FF4500',
+  'ocean': '006994',
+  'forest': '228B22',
+  'sunset': 'FA8072',
+  'aurora': '00FF7F',
+  
+  // Specialty: Galaxy (sparkle variants)
+  'galaxy black': '1C1C1C',
+  'galaxy blue': '191970',
+  'galaxy green': '006400',
+  'galaxy purple': '4B0082',
+  'galaxy red': '8B0000',
+  'galaxy silver': 'C0C0C0',
   
   // Matt colors
   'matt black': '1C1C1C',
