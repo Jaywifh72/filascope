@@ -4701,7 +4701,7 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum']; // CSV-seeded brands don't include prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -5216,7 +5216,7 @@ Deno.serve(async (req) => {
     
     // Issue 2: Check if too many products are missing images entirely
     // Skip this check for CSV-seeded brands that intentionally have no images
-    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy'];
+    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura'];
     const isNoImageBrandForQuality = NO_IMAGE_BRANDS_FOR_QUALITY.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
@@ -5237,7 +5237,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))

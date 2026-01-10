@@ -111,13 +111,28 @@ Deno.serve(async (req) => {
 
     for (const seed of FORMFUTURA_PRODUCT_SEED) {
       try {
-        // Determine colors for this product
+        // Determine colors for this product using product-specific color lists
         const productSlug = seed.filamentName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        let colors = FORMFUTURA_DEFAULT_COLORS[productSlug] || FORMFUTURA_DEFAULT_COLORS['default'];
-
-        // Single-color products
-        if (/metalfil|carbonfil|stonefil|luvocom|paht|peek|pekk|pps|pei|ultem|atlas|bvoh|refill.*system/i.test(seed.filamentName)) {
-          colors = ['Standard'];
+        
+        // Try exact match first, then partial match, then default
+        let colors: string[];
+        if (FORMFUTURA_DEFAULT_COLORS[productSlug]) {
+          colors = FORMFUTURA_DEFAULT_COLORS[productSlug];
+        } else {
+          // Check for partial matches (e.g., 'luvocom-3f-pekk-50082' matches 'luvocom-3f-pekk')
+          const partialMatch = Object.keys(FORMFUTURA_DEFAULT_COLORS).find(key => 
+            productSlug.includes(key) || key.includes(productSlug.split('-')[0])
+          );
+          colors = partialMatch 
+            ? FORMFUTURA_DEFAULT_COLORS[partialMatch] 
+            : FORMFUTURA_DEFAULT_COLORS['default'];
+        }
+        
+        // Override for known single-color specialty materials (these only come in one color)
+        if (/metalfil|carbonfil|luvocom|paht|peek|pekk|pps|pei|ultem|atlas|bvoh|aquasolve|ppsu|biofil-pcl|refill.*system/i.test(seed.filamentName)) {
+          if (!FORMFUTURA_DEFAULT_COLORS[productSlug]) {
+            colors = ['Standard'];
+          }
         }
 
         // Enrich product data
@@ -157,7 +172,7 @@ Deno.serve(async (req) => {
             brand_id: brandId,
             product_url: seed.productUrl,
             featured_image: imageUrl,
-            variant_price: null, // Prices in EUR, conversion would need live data
+            variant_price: seed.basePriceEur ? Math.round(seed.basePriceEur * EUR_TO_USD_RATE * 100) / 100 : null,
             variant_available: true,
             material: enrichment.material,
             finish_type: enrichment.finishType,
