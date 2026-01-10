@@ -491,6 +491,19 @@ function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: str
   // - Atomic: "atomic-filament__material" (2 parts) - extract material as display name
   const parts = productLineId.split('__');
   
+  // FORMFUTURA: Use cleaned product_title directly (removes color suffix)
+  // The product_title is authoritative, e.g., "High Gloss PLA ColorMorph - Lava" → "High Gloss PLA ColorMorph"
+  if (parts[0] === 'formfutura' && fallbackTitle) {
+    const cleaned = fallbackTitle
+      .replace(/\s*-\s*[^-]+$/, '')  // Remove trailing color suffix
+      .replace(/^FormFutura\s+/gi, '')
+      .replace(/\s+Filament\s*$/i, '')
+      .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
+      .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')
+      .trim();
+    return cleaned || fallbackTitle;
+  }
+  
   // ELEGOO: Use the database product_title directly (from Shopify H1)
   // The product_title is the authoritative source, not the product_line_id
   // This ensures card titles match detail page titles exactly
