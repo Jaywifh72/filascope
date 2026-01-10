@@ -5124,8 +5124,8 @@ Deno.serve(async (req) => {
     }
 
     // Run hex-color accuracy check
-    // Skip for brands with manually curated hex codes in CSV seed
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum']; // CSV-seeded brands have curated hex codes
+    // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];

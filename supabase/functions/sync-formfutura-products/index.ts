@@ -114,14 +114,24 @@ Deno.serve(async (req) => {
         // Determine colors for this product using product-specific color lists
         const productSlug = seed.filamentName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         
-        // Try exact match first, then partial match, then default
+        // Special handling for Glow in the Dark products (match slug pattern)
         let colors: string[];
-        if (FORMFUTURA_DEFAULT_COLORS[productSlug]) {
+        if (/glow.*dark/i.test(seed.filamentName)) {
+          // These products have specific 3-color glow palettes
+          if (/abs/i.test(seed.filamentName)) {
+            colors = FORMFUTURA_DEFAULT_COLORS['easyfil-abs-glow'] || ['Glow Green', 'Glow Blue'];
+          } else {
+            colors = FORMFUTURA_DEFAULT_COLORS['easyfil-pla-glow'] || ['Glow Green', 'Glow Blue', 'Glow Red'];
+          }
+        } else if (FORMFUTURA_DEFAULT_COLORS[productSlug]) {
+          // Exact match
           colors = FORMFUTURA_DEFAULT_COLORS[productSlug];
         } else {
           // Check for partial matches (e.g., 'luvocom-3f-pekk-50082' matches 'luvocom-3f-pekk')
-          const partialMatch = Object.keys(FORMFUTURA_DEFAULT_COLORS).find(key => 
-            productSlug.includes(key) || key.includes(productSlug.split('-')[0])
+          // Sort keys by length descending for more specific matches first
+          const sortedKeys = Object.keys(FORMFUTURA_DEFAULT_COLORS).sort((a, b) => b.length - a.length);
+          const partialMatch = sortedKeys.find(key => 
+            productSlug.includes(key) || (key !== 'default' && key.includes(productSlug.split('-')[0]))
           );
           colors = partialMatch 
             ? FORMFUTURA_DEFAULT_COLORS[partialMatch] 

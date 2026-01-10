@@ -216,12 +216,17 @@ export const FORMFUTURA_DEFAULT_COLORS: Record<string, string[]> = {
   'atlas-support': ['Natural'],
   'easyfil-hips': ['Natural', 'Traffic Black', 'Traffic White'],
   
-  // Glow in the Dark
+  // Glow in the Dark (multiple key variants to match different product slugs)
   'easyfil-pla-glow': ['Glow Green', 'Glow Blue', 'Glow Red'],
+  'easyfil-pla---glow-in-the-dark': ['Glow Green', 'Glow Blue', 'Glow Red'],
+  'easyfil-pla-glow-in-the-dark': ['Glow Green', 'Glow Blue', 'Glow Red'],
   'easyfil-abs-glow': ['Glow Green', 'Glow Blue'],
+  'easyfil-abs---glow-in-the-dark': ['Glow Green', 'Glow Blue'],
+  'easyfil-abs-glow-in-the-dark': ['Glow Green', 'Glow Blue'],
   
   // ColorMorph (color-changing)
   'high-gloss-pla-colormorph': ['Lava', 'Ocean', 'Forest', 'Sunset', 'Aurora'],
+  'colormorph': ['Lava', 'Ocean', 'Forest', 'Sunset', 'Aurora'],
   
   // Default fallback for unlisted products
   'default': ['Traffic Black', 'Traffic White', 'Pure White', 'Traffic Red', 'Traffic Yellow', 'Traffic Blue', 'Traffic Green', 'Traffic Orange', 'Light Grey', 'Anthracite Grey'],
