@@ -420,6 +420,20 @@ const AI_ROLES = {
       'EUR to USD price conversion (1.08 rate)'
     ]
   },
+  geeetechSpecialist: {
+    title: 'Geeetech Integration Specialist',
+    triggers: ['geeetech', 'opencart', 'hs-pla', 'silk-dual', 'silk-tri', 'luminous', 'sparkly', 'gradient'],
+    capabilities: [
+      'Custom OpenCart-based PHP platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture (168 products)',
+      'Budget Chinese filament brand material classification',
+      'Silk multi-color variant handling (Dual, Tri-Color, Rainbow)',
+      'High-Speed PLA (HS-PLA) variant detection (300mm/s)',
+      'Cross-product swatch architecture (each color = separate URL)',
+      'Multi-warehouse pricing (CN vs US shipping)',
+      'Specialty finish detection (Sparkly, Gradient, Luminous, Wood, Marble, Carbon Fiber)'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -850,6 +864,64 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'vinyl-303': 'Vinyl 303 (PVC)'
     },
     lastUpdated: '2026-01-09'
+  },
+  'geeetech': {
+    platform: 'Custom OpenCart PHP store (NOT Shopify) - www.geeetech.com',
+    knownLimitations: [
+      '❌ No Shopify JSON API - must use CSV seed (NOT live scraping)',
+      '❌ Cross-product swatches - each color is a separate product URL',
+      '❌ No formal TDS documents published by manufacturer',
+      '❌ Multi-warehouse pricing varies by destination (CN vs US)',
+      '❌ Some products only ship from CN warehouse (higher shipping cost)',
+      '❌ Product URLs use -p-#### pattern (OpenCart style)'
+    ],
+    workingSolutions: [
+      '✅ CSV-seeded sync with 168 verified products in GEEETECH_PRODUCT_SEED',
+      '✅ getGeeetechProductLineFromMaterial() handles all 18 product lines',
+      '✅ getGeeetechFinishFromMaterial() extracts finish types (Silk, Matte, Sparkly, etc.)',
+      '✅ normalizeGeeetechMaterialFromSeed() normalizes material names for DB',
+      '✅ HS-PLA detection from title/material pattern sets high_speed_capable=true, 300mm/s',
+      '✅ Carbon Fiber detection sets is_nozzle_abrasive=true',
+      '✅ Hex codes provided in CSV seed for most products'
+    ],
+    failedApproaches: [
+      '⚠️ Firecrawl discovery was slow and hit rate limits on OpenCart',
+      '⚠️ Some color names have typos in source (e.g., inconsistent capitalization)',
+      '⚠️ Bundle/accessory products may appear in category pages - filtered by CSV curation'
+    ],
+    currentStatus: {
+      'csvSeedProducts': '168 products in GEEETECH_PRODUCT_SEED',
+      'productLines': '18 unique product lines',
+      'materialsSupported': 'PLA, PLA-Silk, PLA-Silk-Dual, PLA-Silk-Tri, PLA-Silk-Rainbow, PLA-Sparkly, PLA-Gradient, PLA-Matte, PLA-Luminous, PLA-CF, PLA-Marble, PLA-Wood, HS-PLA, PETG, PETG-Metallic, ABS+, ASA, TPU',
+      'imageCoverage': '100% - all from geeetech.com CDN',
+      'hexCoverage': '~95% - most colors have hex codes in seed'
+    },
+    keyFiles: [
+      'supabase/functions/sync-geeetech-products/index.ts - Main sync function (CSV-seeded)',
+      'supabase/functions/_shared/geeetech-seed.ts - CSV seed data (168 products)',
+      'supabase/functions/_shared/geeetech-defaults.ts - Print settings, TDS (empty), enrichment utilities'
+    ],
+    productSlugReference: {
+      'pla-standard': 'PLA Standard (26 colors)',
+      'pla-silk': 'PLA Silk (13 colors)',
+      'pla-silk-dual': 'PLA Silk Dual (10 colors)',
+      'pla-silk-tri': 'PLA Silk Tri-Color (8 colors)',
+      'pla-silk-rainbow': 'PLA Silk Rainbow (3 colors)',
+      'pla-sparkly': 'PLA Sparkly (3 colors)',
+      'pla-gradient': 'PLA Gradient (1 color)',
+      'pla-matte': 'PLA Matte (14 colors)',
+      'pla-luminous': 'PLA Luminous (9 colors)',
+      'pla-cf': 'PLA Carbon Fiber (4 colors)',
+      'pla-marble': 'PLA Marble (3 colors)',
+      'pla-wood': 'PLA Wood (5 colors)',
+      'hs-pla': 'HS-PLA High Speed (16 colors)',
+      'petg-standard': 'PETG Standard (15 colors)',
+      'petg-metallic': 'PETG Metallic (3 colors)',
+      'abs-plus': 'ABS+ (17 colors)',
+      'asa-standard': 'ASA (8 colors)',
+      'tpu-standard': 'TPU (24 colors, incl. transparent)'
+    },
+    lastUpdated: '2026-01-10'
   }
 };
 
@@ -878,6 +950,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'formfutura') {
     return AI_ROLES.formFuturaSpecialist;
+  }
+  if (brandSlug === 'geeetech') {
+    return AI_ROLES.geeetechSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -2151,6 +2226,245 @@ After making fixes:
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Geeetech-specific AI Fix Prompt with lessons learned
+ */
+function generateGeeetechFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['geeetech'];
+  const role = AI_ROLES.geeetechSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+---`;
+  }
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ${lessons.platform}
+**This is NOT a Shopify store** - do NOT use Shopify JSON APIs, /products.json, or Shopify-specific patterns.
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## CSV-SEEDED SYNC ARCHITECTURE
+
+Geeetech sync uses a **hardcoded CSV seed** as the primary data source:
+
+1. **GEEETECH_PRODUCT_SEED** (168 products) in \`geeetech-seed.ts\` contains:
+   - Product names, colors, hex codes, image URLs from geeetech.com
+   - Data sourced from manually curated product catalog
+   
+2. **Helper functions** in \`geeetech-seed.ts\`:
+   - \`getGeeetechProductLineFromMaterial()\` - Generates product_line_id from material
+   - \`getGeeetechFinishFromMaterial()\` - Extracts finish type (Silk, Matte, etc.)
+   - \`normalizeGeeetechMaterialFromSeed()\` - Normalizes material names
+   
+3. **Enrichment** from \`geeetech-defaults.ts\`:
+   - \`getGeeetechPrintSettings()\` - Print settings by material type
+   - HS-PLA detection sets \`high_speed_capable=true\`, \`print_speed_max_mms=300\`
+   - Carbon Fiber detection sets \`is_nozzle_abrasive=true\`
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE APPROACHES)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID REPEATING)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+
+## CURRENT SYNC STATUS
+
+| Metric | Value |
+|--------|-------|
+| **CSV Seed Products** | ${lessons.currentStatus.csvSeedProducts} |
+| **Product Lines** | ${lessons.currentStatus.productLines} |
+| **Materials Supported** | ${lessons.currentStatus.materialsSupported} |
+| **Image Coverage** | ${lessons.currentStatus.imageCoverage} |
+| **Hex Coverage** | ${lessons.currentStatus.hexCoverage} |
+
+---
+
+## KEY FILES FOR GEEETECH
+
+${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+
+---
+
+## Fix Post Sync Check Issues for Geeetech
+
+### Summary
+- **Brand**: ${brand} (slug: geeetech)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## Required Actions for Geeetech
+
+### 1. For Missing Products
+
+If products are missing from the sync:
+1. Open \`supabase/functions/_shared/geeetech-seed.ts\`
+2. Add missing products to \`GEEETECH_PRODUCT_SEED\` array
+3. Each entry needs: \`material\`, \`title\`, \`url\`, \`color\`, \`imageUrl\`, \`hexCode\` (optional)
+4. Run clean slate sync to refresh all data
+
+### 2. For Product Line ID Issues
+
+If products are not grouping correctly:
+1. Check \`getGeeetechProductLineFromMaterial()\` in \`geeetech-seed.ts\`
+2. Material patterns map to product line slugs:
+   - 'HS-PLA' → 'hs-pla'
+   - 'PLA Silk Dual' → 'pla-silk-dual'
+   - 'PLA Matte' → 'pla-matte'
+   - 'PLA Luminous' → 'pla-luminous'
+   - 'PETG Metallic' → 'petg-metallic'
+
+### 3. For Color Hex Issues
+
+If hex codes are incorrect or missing:
+1. Add hex codes directly in \`GEEETECH_PRODUCT_SEED\` entries
+2. Use format: \`hexCode: '#FF0000'\`
+3. For multi-color products (Dual, Tri, Rainbow), use dominant color
+
+### 4. For High-Speed Detection Issues
+
+HS-PLA products should have:
+- \`high_speed_capable: true\`
+- \`print_speed_max_mms: 300\`
+
+The sync function detects this from material name containing 'hs-pla' or 'high speed'.
+
+### 5. For Finish Type Issues
+
+Finish types are extracted by \`getGeeetechFinishFromMaterial()\`:
+- 'Silk' → Silk finish
+- 'Matte' → Matte finish
+- 'Luminous' → Glow finish
+- 'Sparkly' → Sparkle finish
+- 'Gradient' / 'Rainbow' → Gradient finish
+- 'Marble' → Marble finish
+
+---
+
+## Product Line Reference
+
+| Slug | Display Name |
+|------|--------------|
+${Object.entries(lessons.productSlugReference || {}).map(([slug, name]) => `| ${slug} | ${name} |`).join('\n')}
+
+---
+
+## Cross-Product Swatch Architecture
+
+Geeetech uses **cross-product swatches** where each color is a separate product URL:
+- This is by design (OpenCart platform limitation)
+- URL consistency checks are SKIPPED for this brand
+- Grouping is done by \`product_line_id\`, not URL
+
+---
+
+## Verification Steps
+
+After making fixes:
+
+1. Run a **Clean Slate** sync for Geeetech from Brand Sync Manager
+2. Check edge function logs for product counts (expect 168 products)
+3. Run **Post Sync Check** again to verify all issues are resolved
+4. Spot-check a few product cards to confirm:
+   - Correct card count (18 product lines)
+   - Unique color swatches per product line
+   - HS-PLA products show 300mm/s print speed
+   - Colors match hex codes visually
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -2190,6 +2504,11 @@ function generateAIFixPrompt(
     return generateFiberlogyFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
+  // Use brand-specific prompt generator for Geeetech
+  if (brandSlug === 'geeetech') {
+    return generateGeeetechFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
   // Determine the best AI role for this specific set of issues
   const role = determineAIRole(checks, brandSlug);
   
@@ -2197,7 +2516,7 @@ function generateAIFixPrompt(
   const hasDedicatedSyncFunction = [
     'anycubic', 'amolen', 'polymaker', 'hatchbox', '3d-fuel', 'sunlu', 
     'eryone', 'overture', 'push-plastic', 'proto-pasta', '3dxtech', 
-    'ninjatek', 'fiberlogy', 'colorfabb', 'prusament', 'extrudr'
+    'ninjatek', 'fiberlogy', 'colorfabb', 'prusament', 'extrudr', 'geeetech'
   ].includes(brandSlug);
   
   const syncFilePath = hasDedicatedSyncFunction 
@@ -3447,7 +3766,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments']; // CSV-seeded brands append " - Color" to titles intentionally
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech']; // CSV-seeded brands append " - Color" to titles intentionally
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -4720,7 +5039,7 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'geeetech']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
