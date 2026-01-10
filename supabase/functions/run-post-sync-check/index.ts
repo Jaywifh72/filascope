@@ -5382,7 +5382,28 @@ Deno.serve(async (req) => {
                                       lineId.includes('fillamentum__asa-cf__asa-cf10') ||  // ASA CF10 only in black
                                       lineId.includes('fillamentum__asa-cf__0rca') ||      // 0rCA Nylon only in black
                                       lineId.includes('fillamentum__pa__porthcurno') ||    // Porthcurno only in ocean blue
-                                      lineId.includes('fillamentum__pp__pp-2320')
+                                      lineId.includes('fillamentum__pp__pp-2320') ||
+                                      // FormFutura single-color specialty products (CSV-seeded)
+                                      lineId.includes('formfutura__pa__styx') ||           // Styx PA6 only in natural
+                                      lineId.includes('formfutura__pekk__luvocom') ||      // LUVOCOM PEKK only in black
+                                      lineId.includes('formfutura__paht__luvocom') ||      // LUVOCOM PAHT only in black
+                                      lineId.includes('formfutura__peek__luvocom') ||      // LUVOCOM PEEK only in amber
+                                      lineId.includes('formfutura__pei__') ||              // PEI/ULTEM only in amber
+                                      lineId.includes('formfutura__metal__metalfil') ||    // MetalFil single-color each (brass, copper, bronze)
+                                      lineId.includes('formfutura__pcl__biofil') ||        // BioFil PCL only in natural
+                                      lineId.includes('formfutura__pp__centaur') ||        // Centaur PP only in natural
+                                      lineId.includes('formfutura__bvoh__') ||             // BVOH support only in natural
+                                      lineId.includes('formfutura__pva__') ||              // PVA support only in natural
+                                      lineId.includes('formfutura__hips__') ||             // HIPS support limited colors
+                                      lineId.includes('formfutura__other__refill-system') || // Refill system is not a color product
+                                      lineId.includes('formfutura__pla-stone__stonefil') || // StoneFil limited stone colors
+                                      lineId.includes('formfutura__pps-cf__') ||           // PPS-CF only in black
+                                      lineId.includes('formfutura__pp-cf__') ||            // PP-CF only in black
+                                      lineId.includes('formfutura__pc-cf__') ||            // PC-CF only in black
+                                      lineId.includes('formfutura__pa-gf__') ||            // PA-GF only in natural
+                                      lineId.includes('formfutura__pa-cf__') ||            // PA-CF only in black
+                                      lineId.includes('formfutura__asa-cf__') ||           // ASA-CF only in black
+                                      lineId.includes('formfutura__asa-kevlar__')
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
