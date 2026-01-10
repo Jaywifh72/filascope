@@ -280,8 +280,8 @@ export const FUSION_COLOR_MAPPING: Record<string, string> = {
   'ion silver': 'C0C0C0',
   'titanium silver': 'B8B8B8',
   
-  // Naturals
-  'nuclide natural': 'F5F5DC',
+  // Naturals - Use distinct hex codes to avoid duplicate swatch issues
+  'nuclide natural': 'F8F8DC',  // Slightly different from 'natural' to avoid duplicate hex
   'natural': 'F5F5DC',
   'translucent natural': 'FFFAF0',
   

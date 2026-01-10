@@ -4720,7 +4720,7 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -4798,7 +4798,7 @@ Deno.serve(async (req) => {
     // Check if this brand uses cross-product swatch architecture
     // Include Anycubic since they group products across promotional and regular URLs
     // Include Atomic Filament since each color variant IS a different product with its own URL
-    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament'];
+    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments'];
     const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {
@@ -5144,7 +5144,7 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
