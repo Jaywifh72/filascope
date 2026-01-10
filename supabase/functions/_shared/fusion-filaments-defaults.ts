@@ -222,6 +222,7 @@ export const FUSION_COLOR_MAPPING: Record<string, string> = {
   
   // Whites
   'nuclear winter white': 'FFFFFF',
+  'nuclear winter white 2.0': 'FEFEFE',
   'electrolytic deuterium': 'E0E7ED',
   'radiated fog': 'D3D3D3',
   
@@ -233,19 +234,23 @@ export const FUSION_COLOR_MAPPING: Record<string, string> = {
   
   // Greens
   'radium green': '7CFC00',
+  'radium green 2.0': '39FF14',
   'tritium green': '00FF00',
   'interstellar emerald': '50C878',
   'radioactive green': '32CD32',
+  'neutron green': '00FA9A',
   
   // Reds
   'red dwarf': '8B0000',
   'seismic red': 'DC143C',
   'solar flare red': 'FF4500',
+  'reactor red': 'B22222',
   
   // Oranges
   'radioactive orange': 'FF4500',
   'alpha particle orange': 'FF8C00',
   'solar corona orange': 'FF6347',
+  'plasma burst orange': 'FF5500',
   
   // Yellows
   'uranium yellow': 'FFFF00',
@@ -256,6 +261,8 @@ export const FUSION_COLOR_MAPPING: Record<string, string> = {
   'geomagnetic mauve': 'E0B0FF',
   'nebula purple': '9370DB',
   'quantum violet': '8A2BE2',
+  'plutonic purple': '9932CC',
+  'electron indigo': '4B0082',
   
   // Pinks
   'proton pink': 'FF69B4',
@@ -267,18 +274,21 @@ export const FUSION_COLOR_MAPPING: Record<string, string> = {
   'graphene grey': '4A4A4A',
   'asteroid grey': 'A9A9A9',
   
+  // Silvers
+  'sievert silver': 'C0C0C0',
+  'thorium thilver': 'B8B8B8',
+  'ion silver': 'C0C0C0',
+  'titanium silver': 'B8B8B8',
+  
   // Naturals
   'nuclide natural': 'F5F5DC',
   'natural': 'F5F5DC',
   'translucent natural': 'FFFAF0',
   
   // Browns
+  'supercritical brown': '8B4513',
   'meteor brown': '8B4513',
   'cosmic dust brown': 'A0522D',
-  
-  // Silvers/Metallics
-  'ion silver': 'C0C0C0',
-  'titanium silver': 'B8B8B8',
   
   // Standard fallbacks
   'black': '000000',
