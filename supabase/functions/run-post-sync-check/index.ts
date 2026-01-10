@@ -42,7 +42,7 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -4418,7 +4418,7 @@ Deno.serve(async (req) => {
       'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
       'formfutura': 80,         // CSV-seeded: 80 product lines (EasyFil ePLA, Volcano PLA, HDglass, ApolloX, AthenaX, LUVOCOM, PEI ULTEM, etc.)
       'extrudr': 18,            // BioFusion, DuraPro (ABS/ASA/PA12/PC-PBT + CF variants), FLAX, FLEX (3), GreenTEC (3), PCTG, PETG, xPETG (2), PLA NX2 Matt
-      'geeetech': 12,           // PLA, ABS, PETG, Silk, etc.
+      'geeetech': 18,           // CSV-seeded: 18 product lines (PLA, Silk, Silk Dual/Tri/Rainbow, Sparkly, CF, Marble, Wood, Matte, Luminous, HS-PLA, PETG, PETG Metallic, ABS+, ASA, TPU)
       'fusion-filaments': 8,    // CSV-seeded: HTPLA+, HT-PET, ASA, EasyASA, ABS Gloss, ABS Matte, HT-ABS Matte, PCTG
       'spectrum-filaments': 30, // Large catalog with ReFill options
       'ultimaker': 10,          // S-Series materials
