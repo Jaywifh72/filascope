@@ -439,7 +439,7 @@ export const FORMFUTURA_COLOR_MAPPING: Record<string, string> = {
   'wine red': '722F37',
   'coral red': 'FF7F50',
   'salmon red': 'FA8072',
-  'pure orange': 'FF6600',
+  'pure orange': 'FF6500',  // Distinct from fluor orange (FF6700)
   'bright red orange': 'FF4500',
   'fluor orange': 'FF6700',
   'yellow orange': 'FFAE42',
@@ -549,6 +549,21 @@ export const FORMFUTURA_COLOR_MAPPING: Record<string, string> = {
   'galaxy red': '8B0000',
   'galaxy silver': 'C0C0C0',
   
+  // Standard/Single-color product colors
+  'standard': 'D4C4A8',         // Beige/natural tone for generic "Standard" color
+  'amber': 'FFBF00',            // PEI/ULTEM amber color
+  'brass': 'B5A642',            // MetalFil Brass
+  'classic copper': 'B87333',   // MetalFil Copper
+  'ancient bronze': 'CD7F32',   // MetalFil Bronze
+  'wood': 'DEB887',             // BioFil Wood (natural wood tone)
+  'recycled black': '2A2A2A',
+  'recycled grey': '6B6B6B',
+  'recycled white': 'F0F0F0',
+  'recycled blue': '4A6FA5',
+  'recycled green': '4A8C4A',
+  'recycled clear': 'E8E8E8',
+  'recycled natural': 'E8DCC8',
+  
   // Matt colors
   'matt black': '1C1C1C',
   'matt white': 'F8F8F8',
@@ -583,13 +598,16 @@ export function getFormFuturaColorHex(colorName: string): string | null {
   if (!colorName) return null;
   const normalized = colorName.toLowerCase().trim();
   
-  // Direct match
+  // PRIORITY 1: Direct/exact match
   if (FORMFUTURA_COLOR_MAPPING[normalized]) {
     return FORMFUTURA_COLOR_MAPPING[normalized];
   }
   
-  // Partial match
-  for (const [key, hex] of Object.entries(FORMFUTURA_COLOR_MAPPING)) {
+  // PRIORITY 2: Sorted partial match - longer keys first for more specific matches
+  const sortedEntries = Object.entries(FORMFUTURA_COLOR_MAPPING)
+    .sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [key, hex] of sortedEntries) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return hex;
     }
