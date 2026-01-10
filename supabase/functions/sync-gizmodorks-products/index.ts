@@ -1,9 +1,49 @@
+/**
+ * GIZMO DORKS SYNC FUNCTION
+ * 
+ * CSV-seeded sync pipeline for Gizmo Dorks filaments
+ * Platform: BigCommerce storefront (NOT Shopify)
+ * 
+ * Architecture:
+ * 1. Uses GIZMODORKS_PRODUCT_SEED as single source of truth (131 products)
+ * 2. Enriches each product with print settings, finish type, and product line ID
+ * 3. Upserts to database using product_id (vendor|material|color slug)
+ * 4. Ignores UI limit parameter to always process full catalog
+ * 
+ * Product Lines (17):
+ * - ABS Standard (33 colors)
+ * - PLA Standard (41 colors)
+ * - Low Odor ABS (10 colors)
+ * - Silk PLA (4 colors)
+ * - HIPS (12 colors)
+ * - TPU (5 colors)
+ * - Acetal/POM (2 colors)
+ * - PETG (6 colors)
+ * - Polycarbonate (3 colors)
+ * - Nylon/PA (3 colors)
+ * - Wood PLA (1 color)
+ * - PVA (1 color)
+ * - Metal Filled PLA (2 colors)
+ * - Carbon Fiber PLA (1 color)
+ * - PLA Pro Plus (1 color)
+ * - Glitter Sparkle PLA (6 colors)
+ * - Conductive (1 color)
+ */
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  GIZMODORKS_PRODUCT_SEED,
+  getGizmoDorksProductLineFromMaterial,
+  normalizeGizmoDorksMaterialFromSeed,
+  getGizmoDorksFinishFromMaterial,
+  logGizmoDorksSeedStats,
+} from '../_shared/gizmodorks-seed.ts';
+import {
   enrichGizmoDocksProduct,
-  GIZMODORKS_STORE_INFO,
   getGizmoDocksColorHex,
+  GIZMODORKS_STORE_INFO,
 } from '../_shared/gizmodorks-defaults.ts';
+import { buildFieldCoverage, createProductResult, buildSyncResponse } from '../_shared/sync-response-builder.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,18 +52,8 @@ const corsHeaders = {
 
 interface SyncOptions {
   cleanSlate?: boolean;
-  limit?: number;
+  limit?: number;  // Ignored for CSV-seeded sync - always processes full catalog
   dryRun?: boolean;
-}
-
-interface ProductVariant {
-  title: string;
-  color: string;
-  diameter: number;
-  price: number;
-  productUrl: string;
-  imageUrl: string | null;
-  productId: string;
 }
 
 Deno.serve(async (req) => {
@@ -34,22 +64,28 @@ Deno.serve(async (req) => {
   const startTime = Date.now();
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
     const options: SyncOptions = await req.json().catch(() => ({}));
-    const { cleanSlate = false, limit = 500, dryRun = false } = options;
+    const { cleanSlate = false, dryRun = false } = options;
 
-    console.log(`[Gizmo Dorks Sync] Starting sync with options:`, { cleanSlate, limit, dryRun });
+    console.log(`[Gizmo Dorks Sync] Starting CSV-seeded sync`);
+    console.log(`[Gizmo Dorks Sync] Options: cleanSlate=${cleanSlate}, dryRun=${dryRun}`);
+    console.log(`[Gizmo Dorks Sync] Seed contains ${GIZMODORKS_PRODUCT_SEED.length} products`);
+    
+    // Log seed statistics for debugging
+    logGizmoDorksSeedStats();
 
-    if (!firecrawlKey) {
-      throw new Error('FIRECRAWL_API_KEY not configured');
-    }
-
-    // Step 1: Clean slate if requested
+    // Safe Delete Pattern: Only delete if we have sufficient products to insert
+    const SAFE_DELETE_THRESHOLD = 100;
     let deletedCount = 0;
+
     if (cleanSlate && !dryRun) {
+      if (GIZMODORKS_PRODUCT_SEED.length < SAFE_DELETE_THRESHOLD) {
+        throw new Error(`Safe delete aborted: Only ${GIZMODORKS_PRODUCT_SEED.length} products in seed (minimum: ${SAFE_DELETE_THRESHOLD})`);
+      }
+
       console.log('[Gizmo Dorks Sync] Clean slate: deleting existing products...');
       const { data: deleted, error: deleteError } = await supabase
         .from('filaments')
@@ -59,214 +95,129 @@ Deno.serve(async (req) => {
 
       if (deleteError) {
         console.error('[Gizmo Dorks Sync] Delete error:', deleteError);
-      } else {
-        deletedCount = deleted?.length || 0;
-        console.log(`[Gizmo Dorks Sync] Deleted ${deletedCount} existing products`);
+        throw deleteError;
       }
+      
+      deletedCount = deleted?.length || 0;
+      console.log(`[Gizmo Dorks Sync] Deleted ${deletedCount} existing products`);
     }
 
-    // Step 2: Discover product URLs via Firecrawl map
-    console.log('[Gizmo Dorks Sync] Discovering products via Firecrawl map...');
-    const mapResponse = await fetch('https://api.firecrawl.dev/v1/map', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${firecrawlKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: GIZMODORKS_STORE_INFO.productsUrl,
-        limit: 200,
-      }),
-    });
-
-    const mapData = await mapResponse.json();
-    if (!mapData.success) {
-      throw new Error(`Firecrawl map failed: ${mapData.error || 'Unknown error'}`);
-    }
-
-    // Filter for filament product URLs
-    const productUrls: string[] = (mapData.links || []).filter((url: string) => {
-      return url.includes('gizmodorks.com/') && 
-             (url.includes('filament') || url.includes('pla') || url.includes('abs') || 
-              url.includes('petg') || url.includes('tpu') || url.includes('nylon')) &&
-             !url.includes('/cart') &&
-             !url.includes('/account') &&
-             !url.includes('/checkout') &&
-             !url.includes('?') &&
-             !url.endsWith('/');
-    });
-
-    console.log(`[Gizmo Dorks Sync] Discovered ${productUrls.length} potential product URLs`);
-
-    // Step 3: Scrape each product page
-    const allVariants: ProductVariant[] = [];
+    // Process all products from seed
+    const productsToInsert: any[] = [];
+    const productResults: any[] = [];
     let processedCount = 0;
     let errorCount = 0;
 
-    for (const productUrl of productUrls.slice(0, limit)) {
+    for (const seedProduct of GIZMODORKS_PRODUCT_SEED) {
       try {
-        console.log(`[Gizmo Dorks Sync] Scraping: ${productUrl}`);
-        
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Generate unique product_id
+        const colorSlug = seedProduct.color
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        const materialSlug = seedProduct.material
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        const productId = `gizmodorks_${materialSlug}_${colorSlug}`;
 
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: productUrl,
-            formats: ['markdown', 'html'],
-            onlyMainContent: true,
-          }),
-        });
+        // Get product line ID
+        const productLineId = getGizmoDorksProductLineFromMaterial(seedProduct.material);
 
-        const scrapeData = await scrapeResponse.json();
-        if (!scrapeData.success) {
-          console.warn(`[Gizmo Dorks Sync] Failed to scrape ${productUrl}: ${scrapeData.error}`);
-          errorCount++;
-          continue;
-        }
+        // Normalize material
+        const normalizedMaterial = normalizeGizmoDorksMaterialFromSeed(seedProduct.material);
 
-        const content = scrapeData.data?.markdown || '';
-        const html = scrapeData.data?.html || '';
-        const metadata = scrapeData.data?.metadata || {};
+        // Get finish type
+        const finishType = getGizmoDorksFinishFromMaterial(seedProduct.material, seedProduct.color);
 
-        // Extract product title
-        const title = metadata.title || extractTitleFromContent(content);
-        if (!title) {
-          console.warn(`[Gizmo Dorks Sync] No title found for ${productUrl}`);
-          continue;
-        }
+        // Enrich with print settings
+        const enriched = enrichGizmoDocksProduct(seedProduct.title, seedProduct.color);
 
-        // Skip non-filament products
-        if (!isFilamentProduct(title)) {
-          console.log(`[Gizmo Dorks Sync] Skipping non-filament: ${title}`);
-          continue;
-        }
+        // Get hex code (prefer seed, fallback to mapping)
+        const colorHex = seedProduct.hexCode || 
+                         getGizmoDocksColorHex(seedProduct.color) || 
+                         null;
 
-        // Extract price
-        const price = extractPrice(content, html);
+        // Determine if abrasive (CF, metal filled, wood)
+        const isAbrasive = normalizedMaterial.includes('CF') || 
+                           normalizedMaterial.includes('Metal') || 
+                           normalizedMaterial.includes('Wood');
 
-        // Extract image URL
-        const imageUrl = extractImageUrl(html, metadata);
+        // Build filament record
+        const filamentRecord = {
+          product_id: productId,
+          product_title: seedProduct.title,
+          vendor: GIZMODORKS_STORE_INFO.vendor,
+          material: normalizedMaterial,
+          finish_type: finishType,
+          product_line_id: productLineId,
+          color_hex: colorHex,
+          color_family: extractColorFamily(seedProduct.color),
+          variant_price: 23.95, // Standard price for 1kg spools
+          product_url: seedProduct.url,
+          featured_image: seedProduct.imageUrl,
+          diameter_nominal_mm: 1.75, // Primary diameter
+          net_weight_g: GIZMODORKS_STORE_INFO.defaultWeight,
+          nozzle_temp_min_c: enriched.nozzleTempMin,
+          nozzle_temp_max_c: enriched.nozzleTempMax,
+          bed_temp_min_c: enriched.bedTempMin,
+          bed_temp_max_c: enriched.bedTempMax,
+          print_speed_max_mms: enriched.printSpeedMax,
+          is_nozzle_abrasive: isAbrasive,
+          tds_url: null, // Gizmo Dorks does not provide TDS
+          auto_created: true,
+          auto_updated: true,
+          last_scraped_at: new Date().toISOString(),
+        };
 
-        // Extract colors from dropdown/options
-        const colors = extractColorOptions(content, html);
-
-        // Extract diameter options
-        const diameters = extractDiameterOptions(content, html);
-
-        // Generate slug from URL
-        const urlSlug = productUrl.split('/').pop()?.replace(/\/$/, '') || 'unknown';
-
-        // Create variants (color x diameter explosion)
-        if (colors.length > 0 && diameters.length > 0) {
-          for (const color of colors) {
-            for (const diameter of diameters) {
-              const variantId = `${urlSlug}_${color.toLowerCase().replace(/\s+/g, '-')}_${diameter}mm`;
-              allVariants.push({
-                title,
-                color,
-                diameter,
-                price,
-                productUrl,
-                imageUrl,
-                productId: variantId,
-              });
-            }
-          }
-        } else if (colors.length > 0) {
-          // Only colors, use default diameters
-          for (const color of colors) {
-            for (const diameter of GIZMODORKS_STORE_INFO.diameters) {
-              const variantId = `${urlSlug}_${color.toLowerCase().replace(/\s+/g, '-')}_${diameter}mm`;
-              allVariants.push({
-                title,
-                color,
-                diameter,
-                price,
-                productUrl,
-                imageUrl,
-                productId: variantId,
-              });
-            }
-          }
-        } else {
-          // No colors found, extract color from title
-          const titleColor = extractColorFromTitle(title);
-          for (const diameter of diameters.length > 0 ? diameters : GIZMODORKS_STORE_INFO.diameters) {
-            const variantId = `${urlSlug}_${titleColor.toLowerCase().replace(/\s+/g, '-')}_${diameter}mm`;
-            allVariants.push({
-              title,
-              color: titleColor,
-              diameter,
-              price,
-              productUrl,
-              imageUrl,
-              productId: variantId,
-            });
-          }
-        }
-
+        productsToInsert.push(filamentRecord);
         processedCount++;
+
+        // Track for rich response
+        productResults.push(createProductResult(
+          productId,
+          seedProduct.title,
+          'created',
+          {
+            featured_image: seedProduct.imageUrl,
+            variant_price: 23.95,
+            tds_url: null,
+            color_hex: colorHex,
+          }
+        ));
+
       } catch (error) {
-        console.error(`[Gizmo Dorks Sync] Error scraping ${productUrl}:`, error);
+        console.error(`[Gizmo Dorks Sync] Error processing ${seedProduct.color}:`, error);
         errorCount++;
+        productResults.push(createProductResult(
+          `error_${seedProduct.color}`,
+          seedProduct.title,
+          'error',
+          {},
+          error instanceof Error ? error.message : 'Unknown error'
+        ));
       }
     }
 
-    console.log(`[Gizmo Dorks Sync] Created ${allVariants.length} variants from ${processedCount} products`);
+    console.log(`[Gizmo Dorks Sync] Prepared ${productsToInsert.length} products for upsert`);
 
-    // Step 4: Enrich and upsert products
+    // Upsert products
     let upsertedCount = 0;
     const upsertErrors: string[] = [];
 
-    if (!dryRun && allVariants.length > 0) {
+    if (!dryRun && productsToInsert.length > 0) {
       // Process in batches
       const batchSize = 50;
-      for (let i = 0; i < allVariants.length; i += batchSize) {
-        const batch = allVariants.slice(i, i + batchSize);
+      for (let i = 0; i < productsToInsert.length; i += batchSize) {
+        const batch = productsToInsert.slice(i, i + batchSize);
         
-        const filaments = batch.map(variant => {
-          const enriched = enrichGizmoDocksProduct(variant.title, variant.color);
-          
-          return {
-            product_id: variant.productId,
-            product_title: variant.title,
-            vendor: GIZMODORKS_STORE_INFO.vendor,
-            material: enriched.material,
-            finish_type: enriched.finishType,
-            product_line_id: enriched.productLineId,
-            color_hex: enriched.colorHex || getGizmoDocksColorHex(variant.color),
-            color_family: normalizeColorFamily(variant.color),
-            variant_price: variant.price,
-            product_url: variant.productUrl,
-            featured_image: variant.imageUrl,
-            diameter_nominal_mm: variant.diameter,
-            net_weight_g: GIZMODORKS_STORE_INFO.defaultWeight,
-            nozzle_temp_min_c: enriched.nozzleTempMin,
-            nozzle_temp_max_c: enriched.nozzleTempMax,
-            bed_temp_min_c: enriched.bedTempMin,
-            bed_temp_max_c: enriched.bedTempMax,
-            print_speed_max_mms: enriched.printSpeedMax,
-            is_nozzle_abrasive: enriched.isAbrasive,
-            tds_url: null, // No TDS available
-            auto_created: true,
-            auto_updated: true,
-            last_scraped_at: new Date().toISOString(),
-          };
-        });
-
         const { data: upserted, error: upsertError } = await supabase
           .from('filaments')
-          .upsert(filaments, { onConflict: 'product_id' })
+          .upsert(batch, { onConflict: 'product_id' })
           .select('id');
 
         if (upsertError) {
-          console.error(`[Gizmo Dorks Sync] Upsert error:`, upsertError);
+          console.error(`[Gizmo Dorks Sync] Upsert error (batch ${Math.floor(i/batchSize) + 1}):`, upsertError);
           upsertErrors.push(upsertError.message);
         } else {
           upsertedCount += upserted?.length || 0;
@@ -276,7 +227,7 @@ Deno.serve(async (req) => {
       console.log(`[Gizmo Dorks Sync] Upserted ${upsertedCount} products`);
     }
 
-    // Step 5: Update automated_brands
+    // Update automated_brands
     if (!dryRun) {
       const { error: brandError } = await supabase
         .from('automated_brands')
@@ -284,7 +235,6 @@ Deno.serve(async (req) => {
           product_count: upsertedCount,
           active_product_count: upsertedCount,
           last_scrape_at: new Date().toISOString(),
-          successful_scrapes: 1,
         })
         .eq('brand_slug', 'gizmo-dorks');
 
@@ -294,40 +244,39 @@ Deno.serve(async (req) => {
 
       // Fix duplicate hex codes
       try {
-        const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', {
+        await supabase.rpc('find_duplicate_hexes', {
           p_vendor: GIZMODORKS_STORE_INFO.vendor
         });
-
-        if (duplicates && duplicates.length > 0) {
-          console.log(`[Gizmo Dorks Sync] Found ${duplicates.length} duplicate hex groups to fix`);
-          // The RPC handles the fixing
-        }
+        console.log('[Gizmo Dorks Sync] Duplicate hex check completed');
       } catch (e) {
         console.warn('[Gizmo Dorks Sync] Could not check for duplicate hexes:', e);
       }
     }
 
-    const duration = Math.round((Date.now() - startTime) / 1000);
+    // Build field coverage stats
+    const fieldCoverage = await buildFieldCoverage(supabase, GIZMODORKS_STORE_INFO.vendor);
 
-    const result = {
-      success: true,
-      vendor: GIZMODORKS_STORE_INFO.vendor,
-      stats: {
-        productsDiscovered: productUrls.length,
-        productsProcessed: processedCount,
-        variantsCreated: allVariants.length,
-        productsUpserted: upsertedCount,
-        productsDeleted: deletedCount,
+    const durationMs = Date.now() - startTime;
+
+    // Build rich response
+    const response = buildSyncResponse(
+      true,
+      durationMs,
+      {
+        totalDiscovered: GIZMODORKS_PRODUCT_SEED.length,
+        created: cleanSlate ? upsertedCount : 0,
+        updated: cleanSlate ? 0 : upsertedCount,
+        skipped: 0,
         errors: errorCount,
-        upsertErrors: upsertErrors.length,
-        durationSeconds: duration,
       },
-      dryRun,
-    };
+      productResults,
+      fieldCoverage
+    );
 
-    console.log(`[Gizmo Dorks Sync] Completed in ${duration}s:`, result.stats);
+    console.log(`[Gizmo Dorks Sync] Completed in ${Math.round(durationMs / 1000)}s`);
+    console.log(`[Gizmo Dorks Sync] Stats: ${upsertedCount} upserted, ${deletedCount} deleted, ${errorCount} errors`);
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
@@ -350,169 +299,31 @@ Deno.serve(async (req) => {
 // HELPER FUNCTIONS
 // ============================================================================
 
-function extractTitleFromContent(content: string): string | null {
-  // Try to find title in markdown
-  const h1Match = content.match(/^#\s+(.+)$/m);
-  if (h1Match) return h1Match[1].trim();
-
-  // Try first line
-  const firstLine = content.split('\n')[0];
-  if (firstLine && firstLine.length < 200) return firstLine.trim();
-
-  return null;
-}
-
-function isFilamentProduct(title: string): boolean {
-  const t = title.toLowerCase();
-  return (
-    (t.includes('filament') || t.includes('pla') || t.includes('abs') || 
-     t.includes('petg') || t.includes('tpu') || t.includes('nylon') ||
-     t.includes('hips') || t.includes('pva') || t.includes('polycarbonate')) &&
-    !t.includes('nozzle') && 
-    !t.includes('bed') && 
-    !t.includes('extruder') &&
-    !t.includes('hotend')
-  );
-}
-
-function extractPrice(content: string, html: string): number {
-  // Try various price patterns
-  const patterns = [
-    /\$(\d+\.?\d*)/,
-    /USD\s*(\d+\.?\d*)/i,
-    /price[:\s]*\$?(\d+\.?\d*)/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = content.match(pattern) || html.match(pattern);
-    if (match) {
-      const price = parseFloat(match[1]);
-      if (price > 5 && price < 200) return price;
-    }
-  }
-
-  return 0;
-}
-
-function extractImageUrl(html: string, metadata: any): string | null {
-  // Try metadata first
-  if (metadata.ogImage) return metadata.ogImage;
-
-  // Try to find product image in HTML
-  const imgMatch = html.match(/src=["']([^"']*(?:cdn|product|filament)[^"']*\.(?:jpg|jpeg|png|webp))["']/i);
-  if (imgMatch) return imgMatch[1];
-
-  return null;
-}
-
-function extractColorOptions(content: string, html: string): string[] {
-  const colors: string[] = [];
-  
-  // Look for color dropdown/select options
-  const optionMatches = html.matchAll(/<option[^>]*value=["']([^"']+)["'][^>]*>([^<]+)<\/option>/gi);
-  for (const match of optionMatches) {
-    const value = match[2].trim();
-    if (isLikelyColor(value)) {
-      colors.push(value);
-    }
-  }
-
-  // Look for color swatches or radio buttons
-  const swatchMatches = html.matchAll(/data-color=["']([^"']+)["']/gi);
-  for (const match of swatchMatches) {
-    colors.push(match[1].trim());
-  }
-
-  // Look for color mentions in content
-  if (colors.length === 0) {
-    const colorSection = content.match(/colors?:?\s*([^\n]+)/i);
-    if (colorSection) {
-      const possibleColors = colorSection[1].split(/[,|]/);
-      for (const c of possibleColors) {
-        const trimmed = c.trim();
-        if (isLikelyColor(trimmed)) {
-          colors.push(trimmed);
-        }
-      }
-    }
-  }
-
-  return [...new Set(colors)];
-}
-
-function extractDiameterOptions(content: string, html: string): number[] {
-  const diameters: number[] = [];
-
-  // Look for diameter mentions
-  if (/1\.75\s*mm/i.test(content) || /1\.75\s*mm/i.test(html)) {
-    diameters.push(1.75);
-  }
-  if (/3\s*mm|2\.85\s*mm/i.test(content) || /3\s*mm|2\.85\s*mm/i.test(html)) {
-    diameters.push(2.85);
-  }
-
-  return diameters;
-}
-
-function extractColorFromTitle(title: string): string {
-  const colorKeywords = [
-    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple',
-    'pink', 'grey', 'gray', 'brown', 'gold', 'silver', 'bronze', 'copper',
-    'translucent', 'clear', 'natural', 'glow', 'fluorescent', 'silk', 'rainbow'
-  ];
-
-  const lowerTitle = title.toLowerCase();
-  for (const color of colorKeywords) {
-    if (lowerTitle.includes(color)) {
-      // Capitalize first letter
-      return color.charAt(0).toUpperCase() + color.slice(1);
-    }
-  }
-
-  return 'Standard';
-}
-
-function isLikelyColor(value: string): boolean {
-  const colorKeywords = [
-    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple',
-    'pink', 'grey', 'gray', 'brown', 'gold', 'silver', 'bronze', 'copper',
-    'translucent', 'clear', 'natural', 'glow', 'fluorescent', 'silk',
-    'dark', 'light', 'navy', 'sky', 'hot', 'lime', 'grass', 'rainbow',
-    'violet', 'beige', 'rose', 'lava', 'frost', 'stainless', 'wood'
-  ];
-
-  const lower = value.toLowerCase();
-  
-  // Skip size/diameter values
-  if (/mm|kg|gram|1\.75|2\.85|3mm/i.test(value)) return false;
-  
-  // Skip if too long (probably not a color)
-  if (value.length > 30) return false;
-
-  return colorKeywords.some(kw => lower.includes(kw));
-}
-
-function normalizeColorFamily(color: string): string | null {
+/**
+ * Extract color family from color name for grouping
+ */
+function extractColorFamily(color: string): string | null {
   const lower = color.toLowerCase();
   
   const families: Record<string, string[]> = {
-    'Black': ['black'],
-    'White': ['white', 'natural', 'clear'],
-    'Red': ['red', 'lava', 'crimson', 'maroon'],
-    'Blue': ['blue', 'navy', 'sky', 'azure', 'cobalt', 'teal'],
-    'Green': ['green', 'lime', 'grass', 'olive', 'mint', 'forest'],
-    'Yellow': ['yellow', 'gold', 'lemon'],
-    'Orange': ['orange', 'tangerine', 'coral'],
-    'Purple': ['purple', 'violet', 'lavender', 'plum'],
-    'Pink': ['pink', 'rose', 'magenta', 'fuchsia'],
-    'Brown': ['brown', 'bronze', 'copper', 'tan', 'wood'],
-    'Grey': ['grey', 'gray', 'silver', 'charcoal'],
-    'Multi': ['rainbow', 'multicolor', 'gradient'],
+    'Black': ['black', 'conductive'],
+    'White': ['white', 'natural', 'clear', 'bone'],
+    'Grey': ['grey', 'gray', 'silver'],
+    'Red': ['red', 'lava', 'pink', 'rose', 'hot pink'],
+    'Blue': ['blue', 'navy', 'sky'],
+    'Green': ['green', 'grass', 'lime'],
+    'Yellow': ['yellow', 'gold'],
+    'Orange': ['orange'],
+    'Purple': ['purple', 'violet'],
+    'Brown': ['brown', 'bronze', 'copper', 'beige', 'wood'],
+    'Special': ['glow', 'fluorescent', 'color change', 'translucent', 'glitter', 'silk'],
   };
 
   for (const [family, keywords] of Object.entries(families)) {
-    if (keywords.some(kw => lower.includes(kw))) {
-      return family;
+    for (const keyword of keywords) {
+      if (lower.includes(keyword)) {
+        return family;
+      }
     }
   }
 
