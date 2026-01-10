@@ -42,7 +42,9 @@ export function getProductLineFromMaterial(material: string): string {
   const m = material.toUpperCase();
   if (m.includes('HTPLA') || m === 'HTPLA+') return 'htpla';
   if (m.includes('HTPET') || m === 'HT-PET') return 'htpet';
-  if (m.includes('HTABS') || m === 'HT-ABS') return 'htabs-matte';
+  // CRITICAL: Check HT-ABS BEFORE ABS to prevent HT-ABS Matte falling through to abs-matte
+  // HT-ABS Matte has 'HT-ABS' with hyphen/space, not 'HTABS' 
+  if (m.includes('HTABS') || m.includes('HT-ABS') || m.includes('HT ABS')) return 'htabs-matte';
   if (m.includes('HSPLA') || m === 'HS-PLA') return 'hspla';
   if (m.includes('EASYASA') || m === 'EASY-ASA') return 'easyasa';
   if (m === 'PCTG') return 'pctg';
