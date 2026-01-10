@@ -484,7 +484,7 @@ interface FilamentBase {
  * e.g., "amolen__pla__silk-basic" -> "PLA Silk Basic"
  * e.g., "amolen__petg__transparent-rainbow" -> "PETG Transparent Rainbow"
  */
-function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: string): string {
+export function formatProductLineIdForDisplay(productLineId: string, fallbackTitle: string): string {
   // product_line_id format varies by brand:
   // - Amolen/etc: "vendor__material__line-name" (3+ parts)
   // - Anycubic: "vendor__slug" (2 parts) - use fallbackTitle
