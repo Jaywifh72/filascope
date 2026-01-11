@@ -86,11 +86,12 @@ function isWeightOrSizeOrSpool(value: string | null): boolean {
   if (!value) return true;
   const v = value.trim().toLowerCase();
   
-  // Exact matches for known non-colors
+  // Exact matches for known non-colors (Matter3D-specific)
   const exactNonColors = [
     'single', 'default', 'default title', 'quote', 'minimum',
     'prototyping', 'functional use', 'cardboard', 'plastic',
-    'cardboard spool', 'plastic spool'
+    'cardboard spool', 'plastic spool',
+    '10% - prototyping', '15% - functional use'  // Matter3D percentage placeholders
   ];
   if (exactNonColors.includes(v)) return true;
   
@@ -109,8 +110,8 @@ function isWeightOrSizeOrSpool(value: string | null): boolean {
   // Industrial/bulk patterns
   if (/100\s*kg|minimum|quote|industrial/i.test(v)) return true;
   
-  // Percentage patterns (CF percentages like "10%", "15%")
-  if (/^\d+\s*%$/i.test(v)) return true;
+  // Percentage patterns - REMOVED $ anchor to catch "15% - Functional Use"
+  if (/^\d+\s*%/i.test(v)) return true;
   
   return false;
 }
@@ -261,6 +262,9 @@ Deno.serve(async (req) => {
 
     console.log(`[Matter3D] Starting sync - dryRun: ${dryRun}, limit: ${limit}, tasks: ${tasks.join(', ')}`);
 
+    // Safe delete threshold - only delete existing records if we have this many valid products
+    const SAFE_DELETE_THRESHOLD = 50;
+
     // ========================================
     // STEP 1: BASE SYNC VIA SHOPIFY API
     // ========================================
@@ -300,6 +304,34 @@ Deno.serve(async (req) => {
 
         // Process each product
         const productsToProcess = limit ? filamentProducts.slice(0, limit) : filamentProducts;
+
+        // ========================================
+        // PHASE 1: COLLECT ALL VALID FILAMENTS
+        // ========================================
+        interface FilamentRecord {
+          product_id: string;
+          product_title: string;
+          vendor: string;
+          material: string | null;
+          color_hex: string | null;
+          color_family: string | null;
+          variant_price: number | null;
+          variant_compare_at_price: number | null;
+          variant_available: boolean;
+          variant_sku: string | null;
+          product_url: string;
+          featured_image: string | null;
+          product_line_id: string;
+          finish_type: string | null;
+          diameter_nominal_mm: number;
+          auto_created: boolean;
+          auto_updated: boolean;
+          last_scraped_at: string;
+          sync_status: string;
+        }
+        
+        const validFilaments: FilamentRecord[] = [];
+        const seenProductIds = new Set<string>();
 
         for (const product of productsToProcess) {
           try {
@@ -348,6 +380,10 @@ Deno.serve(async (req) => {
 
               const productId = `${product.id}_${variant.id}`;
               
+              // Dedupe by product_id
+              if (seenProductIds.has(productId)) continue;
+              seenProductIds.add(productId);
+              
               // Build variant title - remove trailing dashes first, then append color
               let baseTitle = cleanedTitle.replace(/[\s-]+$/, '').trim();
               let variantTitle: string;
@@ -380,7 +416,7 @@ Deno.serve(async (req) => {
                 success: !!colorHex
               });
 
-              const filamentData = {
+              validFilaments.push({
                 product_id: productId,
                 product_title: variantTitle,
                 vendor: 'Matter3D',
@@ -400,53 +436,96 @@ Deno.serve(async (req) => {
                 auto_updated: true,
                 last_scraped_at: new Date().toISOString(),
                 sync_status: 'synced',
-              };
-
-              if (!dryRun) {
-                // Check if exists
-                const { data: existing } = await supabase
-                  .from('filaments')
-                  .select('id')
-                  .eq('product_id', productId)
-                  .eq('vendor', 'Matter3D')
-                  .maybeSingle();
-
-                if (existing) {
-                  const { error } = await supabase
-                    .from('filaments')
-                    .update(filamentData)
-                    .eq('id', existing.id);
-
-                  if (error) {
-                    console.error(`[Matter3D] Update error: ${error.message}`);
-                    stats.errors++;
-                    errors.push(`Update ${productId}: ${error.message}`);
-                  } else {
-                    stats.updated++;
-                  }
-                } else {
-                  const { error } = await supabase
-                    .from('filaments')
-                    .insert(filamentData);
-
-                  if (error) {
-                    console.error(`[Matter3D] Insert error: ${error.message}`);
-                    stats.errors++;
-                    errors.push(`Insert ${productId}: ${error.message}`);
-                  } else {
-                    stats.created++;
-                  }
-                }
-              } else {
-                console.log(`[DRY RUN] Would upsert: ${variantTitle}`);
-                stats.created++;
-              }
+              });
             }
           } catch (productError) {
             console.error(`[Matter3D] Product error: ${productError}`);
             stats.errors++;
             errors.push(`Product ${product.id}: ${productError}`);
           }
+        }
+
+        console.log(`[Matter3D] Collected ${validFilaments.length} valid filaments for sync`);
+
+        // ========================================
+        // PHASE 2: SAFE DELETE THEN INSERT
+        // ========================================
+        if (!dryRun && validFilaments.length >= SAFE_DELETE_THRESHOLD) {
+          console.log(`[Matter3D] Safe delete: ${validFilaments.length} products collected (threshold: ${SAFE_DELETE_THRESHOLD})`);
+          
+          // Delete all existing Matter3D records
+          const { error: deleteError } = await supabase
+            .from('filaments')
+            .delete()
+            .eq('vendor', 'Matter3D');
+            
+          if (deleteError) {
+            throw new Error(`Delete failed: ${deleteError.message}`);
+          }
+          
+          console.log(`[Matter3D] Deleted existing records, inserting ${validFilaments.length} fresh records`);
+          
+          // Batch insert in chunks of 100
+          const BATCH_SIZE = 100;
+          for (let i = 0; i < validFilaments.length; i += BATCH_SIZE) {
+            const batch = validFilaments.slice(i, i + BATCH_SIZE);
+            const { error: insertError } = await supabase
+              .from('filaments')
+              .insert(batch);
+              
+            if (insertError) {
+              console.error(`[Matter3D] Batch insert error: ${insertError.message}`);
+              stats.errors++;
+              errors.push(`Batch insert: ${insertError.message}`);
+            } else {
+              stats.created += batch.length;
+            }
+          }
+          
+          console.log(`[Matter3D] Inserted ${stats.created} records`);
+        } else if (!dryRun) {
+          // Fallback to upsert pattern if below threshold (shouldn't happen normally)
+          console.log(`[Matter3D] Below threshold (${validFilaments.length} < ${SAFE_DELETE_THRESHOLD}), using upsert pattern`);
+          
+          for (const filamentData of validFilaments) {
+            const { data: existing } = await supabase
+              .from('filaments')
+              .select('id')
+              .eq('product_id', filamentData.product_id)
+              .eq('vendor', 'Matter3D')
+              .maybeSingle();
+
+            if (existing) {
+              const { error } = await supabase
+                .from('filaments')
+                .update(filamentData)
+                .eq('id', existing.id);
+
+              if (error) {
+                console.error(`[Matter3D] Update error: ${error.message}`);
+                stats.errors++;
+                errors.push(`Update ${filamentData.product_id}: ${error.message}`);
+              } else {
+                stats.updated++;
+              }
+            } else {
+              const { error } = await supabase
+                .from('filaments')
+                .insert(filamentData);
+
+              if (error) {
+                console.error(`[Matter3D] Insert error: ${error.message}`);
+                stats.errors++;
+                errors.push(`Insert ${filamentData.product_id}: ${error.message}`);
+              } else {
+                stats.created++;
+              }
+            }
+          }
+        } else {
+          // Dry run
+          console.log(`[DRY RUN] Would insert ${validFilaments.length} filaments`);
+          stats.created = validFilaments.length;
         }
 
         console.log(`[Matter3D] Step 1 complete - Created: ${stats.created}, Updated: ${stats.updated}`);
