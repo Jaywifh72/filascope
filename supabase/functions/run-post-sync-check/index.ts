@@ -42,10 +42,10 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -486,6 +486,36 @@ const AI_ROLES = {
       'Product titles are clean line names without color suffix (CSV-seeded pattern)',
       'Use delete-then-insert pattern with safe threshold (30+ products) for clean slate',
       'Vendor name is "IC3D" (not "IC3D Printers") for database consistency'
+    ]
+  },
+  kingroonSpecialist: {
+    title: 'Kingroon Integration Specialist',
+    triggers: ['kingroon', 'silk tricolor', 'silk rainbow', 'macaroon', 'candy', 'hs-petg', 'silk gold', 'matte pla', 'warehouse', 'fresh', '10kg', 'bulk'],
+    capabilities: [
+      'Shopify platform analysis (kingroon.com) with multi-warehouse fulfillment',
+      'CSV-seeded sync pipeline architecture (~100 products, 17 product lines)',
+      'Budget Chinese filament brand material classification',
+      'Multi-warehouse variant filtering (US/EU/UK/CA - sync US only)',
+      'Silk Rainbow specialty line handling (Candy, Macaroon, Universer)',
+      'Tri-color/Dual-color silk variant detection and representative hex generation',
+      'High-Speed PETG (HS-PETG) variant detection (300mm/s)',
+      'Carbon Fiber multi-material products (PLA-CF, PETG-CF, ABS-CF, PA-CF)',
+      'Bulk pack (2KG, 5KG, 10KG) filtering from sync',
+      'Clearance Sale product filtering'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (kingroon-seed.ts) as primary source - never rely on Shopify API',
+      'Filter out region-only variants (AU, CA, MX, UK in color field = warehouse selector)',
+      'Filter out weight-only variants (2KG, 5KG, 10KG in color field = pack size selector)',
+      'Filter out bulk products (10KG PLA, 5KG EU Stock) - only sync standard 1kg spools',
+      'Silk Rainbow has sub-variants: Candy, Macaroon, Universer - each is separate product_line_id',
+      'Tri-color products use first color as representative hex (e.g., "Red/Green/Blue" = red hex)',
+      'HS-PETG is high-speed variant (300mm/s capable) - separate from standard PETG',
+      'All prices are USD regardless of warehouse region',
+      'Skip hex validation for multi-color products (Rainbow, Tri-color, Dual-color)',
+      'Images in CSV are product-line level (not color-specific) - expected behavior',
+      'Product titles follow pattern "Line Name - Color" for variant distinction',
+      'Use delete-then-insert pattern with safe threshold (50+ products) for clean slate'
     ]
   },
   architect: {
@@ -1007,6 +1037,15 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'geeetech') {
     return AI_ROLES.geeetechSpecialist;
+  }
+  if (brandSlug === 'kingroon') {
+    return AI_ROLES.kingroonSpecialist;
+  }
+  if (brandSlug === 'hatchbox') {
+    return AI_ROLES.hatchboxSpecialist;
+  }
+  if (brandSlug === 'ic3d-printers') {
+    return AI_ROLES.ic3dSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
