@@ -11,11 +11,15 @@
 // ============================================================================
 
 const HATCHBOX_MATERIAL_PATTERNS: { pattern: RegExp; material: string }[] = [
-  // PLA variants
+  // PLA variants (order matters - specific before generic)
   { pattern: /pla\s*pro\+?|pla\+/i, material: 'PLA+' },
   { pattern: /pla\s*max/i, material: 'PLA+' }, // USA-made premium PLA
-  { pattern: /reload.*pla|pla.*reload/i, material: 'PLA' }, // Recycled PLA
+  { pattern: /reload.*pla|pla.*reload|refill.*pla|pla.*refill/i, material: 'PLA' }, // Recycled/Refill PLA
+  { pattern: /rapid\s*petg/i, material: 'PETG-HS' }, // High-speed PETG
   { pattern: /\bpla\b/i, material: 'PLA' },
+  // Engineering materials
+  { pattern: /\bpa\b|\bnylon\b/i, material: 'PA6/66' }, // Nylon/PA
+  { pattern: /\bpc\b(?!blue)/i, material: 'PC' }, // Polycarbonate (not peacock blue)
   // Other materials
   { pattern: /\babs\b/i, material: 'ABS' },
   { pattern: /\bpetg\b/i, material: 'PETG' },
@@ -35,6 +39,16 @@ const HATCHBOX_ACCESSORY_PATTERNS: RegExp[] = [
   /storage/i,
   /\bkit\b/i,
   /\bbundle\b.*accessory/i,
+  // T-shirts and apparel (critical fix)
+  /t[-\s]?shirt/i,
+  /\bshirt\b/i,
+  /\bapparel\b/i,
+  /merchandise/i,
+  /\bclothing\b/i,
+  // Other non-filament items
+  /\b2\.85\s*mm\b/i, // Filter 2.85mm variants
+  /\b3\.00\s*mm\b/i, // Filter 3.00mm variants
+  /\b3mm\b/i,
 ];
 
 export function isHatchboxAccessory(title: string): boolean {
@@ -216,20 +230,22 @@ export function getHatchboxTdsUrl(material: string | null): string | null {
 export function extractHatchboxDiameter(title: string, sku?: string | null): number {
   const lowerTitle = title.toLowerCase();
   
-  // Check for 2.85mm/3mm
-  if (lowerTitle.includes('2.85') || lowerTitle.includes('3mm') || lowerTitle.includes('285')) {
+  // CRITICAL FIX: 285C is a Pantone color code (e.g., "Light Blue" 285C), NOT a diameter!
+  // Only match explicit diameter patterns with mm suffix
+  if (/\b2\.85\s*mm\b/.test(lowerTitle) || /\b3\.00\s*mm\b/.test(lowerTitle) || /\b3mm\b/.test(lowerTitle)) {
     return 2.85;
   }
   
-  // Check SKU for diameter hint
+  // Check SKU for explicit diameter hint (avoid Pantone codes)
   if (sku) {
     const lowerSku = sku.toLowerCase();
-    if (lowerSku.includes('285') || lowerSku.includes('3mm')) {
+    // Only match if followed by mm or at end after a separator
+    if (/[-_]285mm/i.test(lowerSku) || /[-_]3mm/i.test(lowerSku)) {
       return 2.85;
     }
   }
   
-  // Default to 1.75mm
+  // Default to 1.75mm (Hatchbox standard)
   return 1.75;
 }
 

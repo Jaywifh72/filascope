@@ -384,16 +384,25 @@ const AI_ROLES = {
   },
   hatchboxSpecialist: {
     title: 'Hatchbox Integration Specialist',
-    triggers: ['hatchbox', 'rapid petg', 'pla max', 'reload', 'refill', 'matte pla', 'silk pla', 'metallic pla'],
+    triggers: ['hatchbox', 'rapid petg', 'pla max', 'reload', 'refill', 'matte pla', 'silk pla', 'metallic pla', '285c', 'pantone'],
     capabilities: [
       'Shopify platform analysis (hatchbox3d.com)',
-      'CSV-seeded sync pipeline architecture (~200 products)',
+      'CSV-seeded sync pipeline architecture (~200 products, 18 product lines)',
       'Popular consumer filament brand material classification',
       'Cross-product swatch architecture (each color = separate URL)',
       'Rapid PETG high-speed variant detection',
       'PLA MAX V2 USA-made premium line handling',
       'Reload/Refill eco-spool product line grouping',
-      'Finish type detection (Matte, Silk, Metallic, Glow, Wood, Stone)'
+      'Finish type detection (Matte, Silk, Metallic, Glow, Wood, Stone, Rainbow, UV)'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed as primary source - never rely on Shopify API for product discovery',
+      '285C in SKU/URL is a Pantone color code for Light Blue, NOT a 2.85mm diameter',
+      'T-shirts and apparel are in Shopify catalog - MUST be filtered with accessory patterns',
+      'Hex codes MUST be unique within each product_line_id to prevent swatch deduplication',
+      'Ignore UI limit parameter - CSV-seeded brands always process full curated catalog',
+      'Use delete-then-insert pattern with safe threshold (50+ products) for clean slate',
+      'PA (Nylon) and PC (Polycarbonate) are valid materials that must be recognized'
     ]
   },
   extrudrSpecialist: {
