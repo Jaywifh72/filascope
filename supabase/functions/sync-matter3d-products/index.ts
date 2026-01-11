@@ -61,41 +61,119 @@ interface ShopifyProduct {
   }>;
 }
 
+// Sync decision logging for AI Fix Prompt evolution
+interface SyncDecision {
+  type: 'skip' | 'color_extract' | 'product_line' | 'hex_lookup' | 'filter';
+  product: string;
+  variant: string;
+  input: Record<string, string | null>;
+  output: string | null;
+  reason: string;
+  success: boolean;
+}
+
+const syncDecisions: SyncDecision[] = [];
+
+function logDecision(decision: SyncDecision) {
+  syncDecisions.push(decision);
+  const status = decision.success ? '✓' : '✗';
+  console.log(`[Matter3D] [${decision.type}] ${status} ${decision.product}: ${decision.reason}`);
+}
+
 // Weight/size/spool type pattern check - excludes non-color values
+// CRITICAL: This must catch spool types (Cardboard/Plastic) but ALLOW valid colors from option3
 function isWeightOrSizeOrSpool(value: string | null): boolean {
   if (!value) return true;
   const v = value.trim().toLowerCase();
   
-  // Weight/size patterns
-  if (/^\d+(\.\d+)?\s*(kg|g|mm|lb|oz)$/i.test(v)) return true;
+  // Exact matches for known non-colors
+  const exactNonColors = [
+    'single', 'default', 'default title', 'quote', 'minimum',
+    'prototyping', 'functional use', 'cardboard', 'plastic',
+    'cardboard spool', 'plastic spool'
+  ];
+  if (exactNonColors.includes(v)) return true;
+  
+  // Weight patterns (multiple formats)
+  if (/^\d+(\.\d+)?\s*(kg|g|lb|oz)$/i.test(v)) return true;
+  if (/^(0\.5|0\.75|1|2|3|5|10)\s*kg$/i.test(v)) return true;
+  if (/^\d+\s*x\s*\d+\s*(kg|g)$/i.test(v)) return true;  // "10 x 1 kg"
+  
+  // Size/diameter patterns
+  if (/^\d+(\.\d+)?\s*mm$/i.test(v)) return true;
   if (/^(1\.75|2\.85|3\.0)\s*mm$/i.test(v)) return true;
-  if (/^\d+\s*kg$/i.test(v)) return true;
-  if (/^(0\.5|1|2|3|5|10)\s*kg$/i.test(v)) return true;
   
-  // Spool type patterns - these are NOT colors (ANY mention of cardboard/plastic)
-  if (/cardboard|plastic/i.test(v)) return true;
+  // Spool type patterns (substring match for edge cases like "Cardboard Spool")
+  if (/\bcardboard\b|\bplastic\b/i.test(v)) return true;
   
-  // Quantity/placeholder patterns
-  if (/single|default|quote|minimum/i.test(v)) return true;
+  // Industrial/bulk patterns
+  if (/100\s*kg|minimum|quote|industrial/i.test(v)) return true;
+  
+  // Percentage patterns (CF percentages like "10%", "15%")
+  if (/^\d+\s*%$/i.test(v)) return true;
   
   return false;
 }
 
-// Extract color from Shopify variant options (prioritize option2)
-function extractColorFromShopifyVariant(variant: ShopifyProduct['variants'][0]): string | null {
-  // Option2 is usually the color for Matter3D (option1=size, option2=color, option3=spool)
-  if (variant.option2 && !isWeightOrSizeOrSpool(variant.option2)) {
-    return variant.option2.trim();
-  }
-  // Option1 might be color for simple 2-option products (Color / Size structure)
-  if (variant.option1 && !isWeightOrSizeOrSpool(variant.option1)) {
-    return variant.option1.trim();
-  }
-  // DO NOT check option3 - for Matter3D it's ALWAYS spool type (Cardboard/Plastic)
-  // Checking option3 would return "Plastic" or "Cardboard" as color names
+// Derive color family from color name for better categorization
+function deriveColorFamily(colorName: string): string | null {
+  const c = colorName.toLowerCase();
+  if (/black|charcoal|jet|carbon/i.test(c)) return 'Black';
+  if (/white|snow|cream|eggshell|bone/i.test(c)) return 'White';
+  if (/grey|gray|silver|gunmetal|slate|steel/i.test(c)) return 'Grey';
+  if (/blue|ocean|sky|navy|cobalt|teal|cayman|fighter|industrial|ice|royal|electric/i.test(c)) return 'Blue';
+  if (/green|forest|olive|mint|lime|sage|hunter|grass|evergreen|neon/i.test(c)) return 'Green';
+  if (/red|wine|brick|burgundy|crimson|maroon|rust|fire|clay/i.test(c)) return 'Red';
+  if (/pink|fuchsia|magenta|rose|salmon|hot|coral|bubblegum/i.test(c)) return 'Pink';
+  if (/orange|coral|tangerine|peach|burnt|safety|fire/i.test(c)) return 'Orange';
+  if (/yellow|gold|sunshine|lemon|mustard|banana|caterpillar/i.test(c)) return 'Yellow';
+  if (/purple|violet|lavender|plum|grape|royal/i.test(c)) return 'Purple';
+  if (/brown|chocolate|mocha|tan|wood|natural|sandstone|khaki|desert|coffee|beige/i.test(c)) return 'Brown';
+  if (/transparent|clear|translucent/i.test(c)) return 'Transparent';
+  if (/aqua|turquoise|cyan|seafoam/i.test(c)) return 'Aqua';
+  return null;
+}
+
+// Extract color from Shopify variant options
+// CRITICAL FIX: Matter3D has INCONSISTENT option structures:
+// - Matte products: option1=Size, option2=Color, option3=SpoolType
+// - Performance products: option1=Diameter, option2=Size, option3=Color
+// - Simple products: option1=Color or option1=Size only
+// We MUST check ALL three options using isWeightOrSizeOrSpool() to filter non-colors
+function extractColorFromShopifyVariant(variant: ShopifyProduct['variants'][0], productTitle: string = ''): string | null {
+  // Check options in priority order, using isWeightOrSizeOrSpool() to filter
+  const candidates = [
+    { opt: variant.option2, name: 'option2' },
+    { opt: variant.option1, name: 'option1' },
+    { opt: variant.option3, name: 'option3' },
+  ];
   
-  // No valid color found
-  console.log(`[Matter3D] No color found in variant options: o1=${variant.option1}, o2=${variant.option2}, o3=${variant.option3}`);
+  for (const { opt, name } of candidates) {
+    if (opt && !isWeightOrSizeOrSpool(opt)) {
+      logDecision({
+        type: 'color_extract',
+        product: productTitle,
+        variant: variant.title || '',
+        input: { option1: variant.option1, option2: variant.option2, option3: variant.option3 },
+        output: opt.trim(),
+        reason: `Extracted color "${opt}" from ${name}`,
+        success: true
+      });
+      return opt.trim();
+    }
+  }
+  
+  logDecision({
+    type: 'color_extract',
+    product: productTitle,
+    variant: variant.title || '',
+    input: { option1: variant.option1, option2: variant.option2, option3: variant.option3 },
+    output: null,
+    reason: `All options are weights/sizes/spool types`,
+    success: false
+  });
+  
+  console.log(`[Matter3D] No color found: o1=${variant.option1}, o2=${variant.option2}, o3=${variant.option3}`);
   return null;
 }
 
@@ -240,8 +318,8 @@ Deno.serve(async (req) => {
                 continue;
               }
 
-              // Extract color from Shopify option fields (NOT slash-split)
-              const colorName = extractColorFromShopifyVariant(variant);
+              // Extract color from Shopify option fields (checks ALL options with filter)
+              const colorName = extractColorFromShopifyVariant(variant, product.title);
               
               // Skip duplicate spool types (keep first instance - cardboard preferred)
               const variantParts = variant.title.split('/').map(p => p.trim());
@@ -287,6 +365,20 @@ Deno.serve(async (req) => {
               const colorHex = getMatter3dColorHex(colorName || '');
               const finishType = extractFinishType(product.title);
               const productLineId = generateMatter3dProductLineId(product.title, material);
+              
+              // Derive color family even if hex lookup fails
+              const colorFamily = colorName ? deriveColorFamily(colorName) : null;
+              
+              // Log hex lookup decision
+              logDecision({
+                type: 'hex_lookup',
+                product: product.title,
+                variant: variant.title,
+                input: { colorName: colorName || null },
+                output: colorHex,
+                reason: colorHex ? `Found hex #${colorHex} for "${colorName}"` : `No hex mapping for "${colorName}"`,
+                success: !!colorHex
+              });
 
               const filamentData = {
                 product_id: productId,
@@ -294,6 +386,7 @@ Deno.serve(async (req) => {
                 vendor: 'Matter3D',
                 material,
                 color_hex: colorHex ? `#${colorHex}` : null,
+                color_family: colorFamily,
                 variant_price: parseFloat(variant.price) || null,
                 variant_compare_at_price: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
                 variant_available: variant.available,
