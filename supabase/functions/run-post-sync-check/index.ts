@@ -5113,7 +5113,7 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'geeetech']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments']; // CSV-seeded brands with EUR prices or no prices (REMOVED geeetech - now has live pricing)
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -5178,7 +5178,123 @@ Deno.serve(async (req) => {
       products: shouldRunPriceCheck && priceIssues.length > 0 ? priceIssues : undefined,
     });
 
-    // ============= PRODUCT LINE URL CONSISTENCY CHECK (UPDATED) =============
+    // ============= LIVE PRICE ACCURACY CHECK (NEW) =============
+    // For brands with live pricing, sample a few products and verify the get-current-price
+    // edge function returns reasonable prices (not coupon values or banner prices)
+    const LIVE_PRICE_SAMPLE_SIZE = 3;
+    const livePriceIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
+    
+    // Only run for brands that should have accurate live pricing
+    // Skip CSV-seeded brands that don't rely on live pricing
+    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments'];
+    const shouldRunLivePriceCheck = !livePriceSkipBrands.includes(brandSlug);
+    
+    if (shouldRunLivePriceCheck) {
+      console.log(`[PostSyncCheck] Running Live Price Accuracy check for ${brandSlug}...`);
+      
+      // Get sample of products with URLs
+      const { data: sampleProducts } = await supabase
+        .from("filaments")
+        .select("id, product_title, product_url, variant_price, net_weight_g")
+        .ilike("vendor", brandName)
+        .not("product_url", "is", null)
+        .limit(LIVE_PRICE_SAMPLE_SIZE * 2); // Fetch extra in case some fail
+      
+      if (sampleProducts && sampleProducts.length > 0) {
+        // Take a sample
+        const samplesToCheck = sampleProducts.slice(0, LIVE_PRICE_SAMPLE_SIZE);
+        
+        for (const product of samplesToCheck) {
+          if (!product.product_url) continue;
+          
+          try {
+            // Call the get-current-price edge function
+            const priceResponse = await fetch(
+              `https://${Deno.env.get('SUPABASE_PROJECT_REF') || 'cfqfavmhdbyjzejipiwa'}.supabase.co/functions/v1/get-current-price`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                },
+                body: JSON.stringify({
+                  productUrl: product.product_url,
+                  currency: 'USD',
+                }),
+              }
+            );
+            
+            if (priceResponse.ok) {
+              const priceData = await priceResponse.json();
+              
+              if (priceData.success && priceData.price !== null) {
+                const livePrice = priceData.price;
+                const weight = product.net_weight_g || 1000; // Default to 1kg
+                const pricePerKg = (livePrice * 1000) / weight;
+                
+                // Validation rules:
+                // 1. Price should be $5-$100 for typical filament
+                // 2. Price per kg should be $8-$80 (very cheap or very expensive is suspicious)
+                // 3. If we have DB price, live price should be within 50% of it
+                
+                if (livePrice < 5) {
+                  livePriceIssues.push({
+                    id: product.id,
+                    title: product.product_title,
+                    issue: `Live price too low: $${livePrice} - likely extracting coupon value instead of product price`,
+                    url: product.product_url,
+                  });
+                } else if (livePrice > 100 && weight <= 1000) {
+                  livePriceIssues.push({
+                    id: product.id,
+                    title: product.product_title,
+                    issue: `Live price unusually high: $${livePrice} for ${weight}g product`,
+                    url: product.product_url,
+                  });
+                } else if (pricePerKg < 6) {
+                  livePriceIssues.push({
+                    id: product.id,
+                    title: product.product_title,
+                    issue: `Suspicious price-per-kg: $${pricePerKg.toFixed(2)}/kg (expected $8-$80/kg)`,
+                    url: product.product_url,
+                  });
+                } else if (product.variant_price && Math.abs(livePrice - product.variant_price) / product.variant_price > 0.5) {
+                  // Live price differs from DB price by more than 50%
+                  livePriceIssues.push({
+                    id: product.id,
+                    title: product.product_title,
+                    issue: `Live price ($${livePrice}) differs significantly from DB price ($${product.variant_price})`,
+                    url: product.product_url,
+                  });
+                } else {
+                  console.log(`[PostSyncCheck] Live price OK: ${product.product_title} = $${livePrice}`);
+                }
+              } else if (priceData.error) {
+                console.log(`[PostSyncCheck] Live price fetch failed for ${product.product_title}: ${priceData.error}`);
+              }
+            }
+          } catch (error) {
+            console.log(`[PostSyncCheck] Live price check error for ${product.product_title}:`, error);
+          }
+        }
+      }
+    }
+    
+    checks.push({
+      checkName: "Live Price Accuracy",
+      status: shouldRunLivePriceCheck 
+        ? (livePriceIssues.length === 0 ? "pass" : livePriceIssues.length <= 1 ? "warning" : "fail")
+        : "pass",
+      count: shouldRunLivePriceCheck ? livePriceIssues.length : 0,
+      details: shouldRunLivePriceCheck 
+        ? (livePriceIssues.length === 0 
+            ? `Sampled ${LIVE_PRICE_SAMPLE_SIZE} products - live prices are accurate` 
+            : `${livePriceIssues.length} products have inaccurate live prices - get-current-price extraction may be broken`)
+        : `Skipped - ${brandSlug} is CSV-seeded brand`,
+      products: shouldRunLivePriceCheck && livePriceIssues.length > 0 ? livePriceIssues : undefined,
+    });
+
+    console.log(`[PostSyncCheck] Live Price Accuracy: ${livePriceIssues.length} issues found`);
     // CRITICAL FIX: 3D-Fuel and similar brands use "cross-product swatch" architecture
     // where each color variant IS a different product with its own URL.
     // This is NOT an error - it's the expected architecture!

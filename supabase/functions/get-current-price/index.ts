@@ -37,9 +37,10 @@ interface PriceResponse {
 }
 
 // Detect custom storefronts that don't support Shopify JSON API
-function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | null {
+function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | 'opencart' | null {
   if (url.includes('store.bambulab.com')) return 'bambulab';
   if (url.includes('prusa3d.com')) return 'prusa';
+  if (url.includes('geeetech.com')) return 'opencart'; // OpenCart-based PHP store
   return null;
 }
 
@@ -52,7 +53,7 @@ function isMultiCurrencyShopifyStore(url: string): boolean {
     'esun3d.com',
     'sunlu.com',
     'overture3d.com',
-    'geeetech.com',
+    // Note: geeetech.com is NOT Shopify - it's OpenCart
     // Add other known multi-currency Shopify stores here
   ];
   const urlLower = url.toLowerCase();
@@ -79,6 +80,101 @@ function getFirecrawlLocation(currency: string): { country: string; languages: s
     case 'JPY': return { country: 'JP', languages: ['ja-JP', 'en'] };
     default: return { country: 'US', languages: ['en-US', 'en'] };
   }
+}
+
+// Extract price specifically from GEEETECH OpenCart pages
+// GEEETECH page structure shows prices like:
+// $9.79 (sale price)
+// $15.00 (original price - crossed out)
+// -35% (discount badge)
+// The key is to find the price AFTER the product title/SKU, not coupon banners
+function extractOpenCartPrice(markdown: string): {
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  available: boolean;
+} {
+  console.log('Extracting OpenCart/GEEETECH price...');
+  
+  // Find the SKU line which appears just before the price
+  // Format: "SKU: 700-001-042651 Reviews" or similar
+  const skuIndex = markdown.search(/SKU:\s*[\d\-]+/i);
+  
+  // If we found SKU, look for prices after it (within 500 chars)
+  let priceSection = skuIndex > -1 
+    ? markdown.slice(skuIndex, skuIndex + 500)
+    : '';
+  
+  // Alternative: look for "Add to Cart" button area
+  if (!priceSection) {
+    const cartIndex = markdown.search(/Add\s*to\s*Cart/i);
+    if (cartIndex > -1) {
+      // Look backwards for prices (they appear before Add to Cart)
+      priceSection = markdown.slice(Math.max(0, cartIndex - 300), cartIndex);
+    }
+  }
+  
+  // Fallback: look in the middle section of the page (after header, before footer)
+  if (!priceSection) {
+    const lines = markdown.split('\n');
+    const startLine = Math.floor(lines.length * 0.15); // Skip first 15% (header/banner)
+    const endLine = Math.floor(lines.length * 0.5); // Take up to 50%
+    priceSection = lines.slice(startLine, endLine).join('\n');
+  }
+  
+  console.log(`Price section (${priceSection.length} chars): ${priceSection.slice(0, 200)}...`);
+  
+  // Pattern 1: Look for sale price followed by strikethrough original price
+  // e.g., "$9.79\n$15.00" or "$9.79 $15.00"
+  const salePriceMatch = priceSection.match(/\$(\d+(?:\.\d{2})?)\s*(?:\n|\s)*\$(\d+(?:\.\d{2})?)/);
+  if (salePriceMatch) {
+    const price1 = parseFloat(salePriceMatch[1]);
+    const price2 = parseFloat(salePriceMatch[2]);
+    // Smaller is sale price, larger is compare-at
+    const salePrice = Math.min(price1, price2);
+    const comparePrice = Math.max(price1, price2);
+    
+    // Validate: prices should be in reasonable range for filament ($5-$50)
+    if (salePrice >= 5 && salePrice <= 50 && comparePrice <= 60) {
+      console.log(`Found OpenCart sale price: $${salePrice}, compare-at: $${comparePrice}`);
+      return {
+        price: salePrice,
+        compareAtPrice: comparePrice,
+        currency: 'USD',
+        available: true,
+      };
+    }
+  }
+  
+  // Pattern 2: Single price (no sale)
+  // Find all prices in the section, filter out coupon values
+  const allPrices = priceSection.match(/\$(\d+(?:\.\d{2})?)/g);
+  if (allPrices) {
+    // Filter to reasonable filament prices ($5-$50)
+    const validPrices = allPrices
+      .map(p => parseFloat(p.replace('$', '')))
+      .filter(p => p >= 5 && p <= 50);
+    
+    if (validPrices.length > 0) {
+      // Take the first valid price (most likely to be the product price)
+      const price = validPrices[0];
+      console.log(`Found OpenCart single price: $${price}`);
+      return {
+        price,
+        compareAtPrice: null,
+        currency: 'USD',
+        available: true,
+      };
+    }
+  }
+  
+  console.log('No valid OpenCart price found');
+  return {
+    price: null,
+    compareAtPrice: null,
+    currency: 'USD',
+    available: false,
+  };
 }
 
 // Extract price from page content using various patterns
@@ -311,7 +407,11 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
     console.log(`Firecrawl returned ${markdown.length} chars of content`);
     
     // Extract price based on storefront type
-    const priceData = extractBambuLabPrice(markdown, preferredCurrency);
+    // Detect if this is an OpenCart/GEEETECH page and use specialized extraction
+    const isOpenCart = productUrl.includes('geeetech.com');
+    const priceData = isOpenCart 
+      ? extractOpenCartPrice(markdown)
+      : extractBambuLabPrice(markdown, preferredCurrency);
     const weightGrams = extractWeightFromContent(markdown);
     const diameterMm = extractDiameterFromContent(markdown, productUrl);
     
