@@ -346,17 +346,6 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
     ],
   },
   
-  'flashforge': {
-    specialBehaviors: [
-      { name: 'Creator Series Detection', description: 'Identifies Creator Pro and Adventurer lines.' },
-      { name: 'Shopify Pipeline', description: 'Standard Shopify API extraction.' },
-    ],
-    notes: [
-      'Printer manufacturer with filament line',
-      'Consumer-focused materials',
-    ],
-  },
-  
   'formfutura': {
     specialBehaviors: [
       { name: 'Complex Variant Matrix', description: 'Handles Diameter × Color × Weight × Format combinations.' },

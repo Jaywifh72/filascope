@@ -5,7 +5,7 @@
 export const BRAND_SPECIFIC_FUNCTIONS = [
   '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'bambu-lab', 'cc3d',
   'colorfabb', 'creality', 'duramic-3d', 'elegoo', 'eryone', 'esun', 'extrudr',
-  'fiberlogy', 'fillamentum', 'flashforge', 'formfutura', 'fusion-filaments',
+  'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments',
   'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',
   'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker',
   'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech',
