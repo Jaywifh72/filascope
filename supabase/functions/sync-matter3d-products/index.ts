@@ -70,31 +70,30 @@ function isWeightOrSizeOrSpool(value: string | null): boolean {
   if (/^\d+(\.\d+)?\s*(kg|g|mm|lb|oz)$/i.test(v)) return true;
   if (/^(1\.75|2\.85|3\.0)\s*mm$/i.test(v)) return true;
   if (/^\d+\s*kg$/i.test(v)) return true;
+  if (/^(0\.5|1|2|3|5|10)\s*kg$/i.test(v)) return true;
   
-  // Spool type patterns - these are NOT colors
-  if (/cardboard|plastic/i.test(v) && /spool/i.test(v)) return true;
-  if (v === 'cardboard' || v === 'plastic') return true;
+  // Spool type patterns - these are NOT colors (ANY mention of cardboard/plastic)
+  if (/cardboard|plastic/i.test(v)) return true;
   
   // Quantity/placeholder patterns
-  if (/100 kg minimum|quote|single|default title/i.test(v)) return true;
+  if (/single|default|quote|minimum/i.test(v)) return true;
   
   return false;
 }
 
 // Extract color from Shopify variant options (prioritize option2)
 function extractColorFromShopifyVariant(variant: ShopifyProduct['variants'][0]): string | null {
-  // Option2 is usually the color (option1=size, option2=color, option3=spool)
+  // Option2 is usually the color for Matter3D (option1=size, option2=color, option3=spool)
   if (variant.option2 && !isWeightOrSizeOrSpool(variant.option2)) {
     return variant.option2.trim();
   }
-  // Option1 might be color for simple products
+  // Option1 might be color for simple 2-option products (Color / Size structure)
   if (variant.option1 && !isWeightOrSizeOrSpool(variant.option1)) {
     return variant.option1.trim();
   }
-  // Option3 fallback (rare)
-  if (variant.option3 && !isWeightOrSizeOrSpool(variant.option3)) {
-    return variant.option3.trim();
-  }
+  // DO NOT check option3 - for Matter3D it's ALWAYS spool type (Cardboard/Plastic)
+  // Checking option3 would return "Plastic" or "Cardboard" as color names
+  
   // No valid color found
   console.log(`[Matter3D] No color found in variant options: o1=${variant.option1}, o2=${variant.option2}, o3=${variant.option3}`);
   return null;
@@ -107,20 +106,26 @@ function shouldSkipMatter3dProduct(product: ShopifyProduct, variant: ShopifyProd
   const price = parseFloat(variant.price);
   
   // Skip pellets (industrial format)
-  if (/pellets?|granules/i.test(title)) {
+  if (/pellets?|granules?/i.test(title)) {
     console.log(`[Matter3D] SKIP pellets: ${product.title}`);
     return true;
   }
   
+  // Skip large format industrial products
+  if (/large.?format/i.test(title)) {
+    console.log(`[Matter3D] SKIP large format: ${product.title}`);
+    return true;
+  }
+  
   // Skip custom color orders
-  if (/custom\s*color/i.test(title)) {
+  if (/custom\s*colou?r/i.test(title)) {
     console.log(`[Matter3D] SKIP custom color: ${product.title}`);
     return true;
   }
   
-  // Skip bundles and bulk buy multi-packs
-  if (/bundle|cmyk|pack|bulk\s*buy|\d+\s*rolls/i.test(title)) {
-    console.log(`[Matter3D] SKIP bundle: ${product.title}`);
+  // Skip bundles, multi-packs, and bulk buy (including "10 packs")
+  if (/bundle|cmyk|\d+\s*packs?|multi.?pack|bulk\s*buy|\d+\s*rolls/i.test(title)) {
+    console.log(`[Matter3D] SKIP bundle/multi-pack: ${product.title}`);
     return true;
   }
   
@@ -131,8 +136,8 @@ function shouldSkipMatter3dProduct(product: ShopifyProduct, variant: ShopifyProd
   }
   
   // Skip variants with "Single" as the color (placeholder)
-  if (variant.option2?.toLowerCase() === 'single' || 
-      variant.option1?.toLowerCase() === 'single') {
+  const color = variant.option2 || variant.option1 || '';
+  if (/^single$/i.test(color.trim())) {
     console.log(`[Matter3D] SKIP single placeholder: ${variant.title}`);
     return true;
   }
