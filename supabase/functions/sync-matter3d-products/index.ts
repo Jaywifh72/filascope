@@ -436,13 +436,15 @@ Deno.serve(async (req) => {
               // Build variant title - remove trailing dashes first, then append color
               let baseTitle = cleanedTitle.replace(/[\s-]+$/, '').trim();
               let variantTitle: string;
-              if (colorName) {
-                // Don't add color if it's already in the title
-                if (!baseTitle.toLowerCase().includes(colorName.toLowerCase())) {
-                  variantTitle = `${baseTitle} - ${colorName}`;
-                } else {
-                  variantTitle = baseTitle;
-                }
+              // Skip variants with no extracted color (colorless pack sizes, bulk quantities)
+              if (!colorName) {
+                console.log(`[Matter3D] SKIP colorless variant: ${product.title} - ${variant.title}`);
+                continue;
+              }
+              
+              // Don't add color if it's already in the title
+              if (!baseTitle.toLowerCase().includes(colorName.toLowerCase())) {
+                variantTitle = `${baseTitle} - ${colorName}`;
               } else {
                 variantTitle = baseTitle;
               }
