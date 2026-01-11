@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,11 @@ import {
   AlertTriangle,
   SkipForward,
   Filter,
-  Download
+  Download,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  History
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -59,14 +63,73 @@ interface QualityReport {
   };
 }
 
+interface Comparison {
+  passedDiff: number;
+  warningsDiff: number;
+  failedDiff: number;
+  totalDiff: number;
+  taskChanges: {
+    taskName: string;
+    oldPassRate: number;
+    newPassRate: number;
+    diff: number;
+  }[];
+  previousDate: string;
+}
+
 type FilterType = 'all' | 'fail' | 'warning' | 'pass';
+
+const STORAGE_KEY = 'sync-quality-check-previous-report';
+
+function parsePassRate(passRate: string): number {
+  return parseFloat(passRate.replace('%', '')) || 0;
+}
 
 export function SyncQualityCheckPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<QualityReport | null>(null);
+  const [previousReport, setPreviousReport] = useState<QualityReport | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
   const [expandedFilaments, setExpandedFilaments] = useState<Set<string>>(new Set());
   const [showDetails, setShowDetails] = useState(false);
+
+  // Load previous report from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setPreviousReport(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Failed to load previous report:', e);
+    }
+  }, []);
+
+  // Calculate comparison between current and previous report
+  const comparison = useMemo<Comparison | null>(() => {
+    if (!report || !previousReport) return null;
+
+    const taskChanges = report.taskSummary.map(task => {
+      const prevTask = previousReport.taskSummary.find(t => t.taskName === task.taskName);
+      const newRate = parsePassRate(task.passRate);
+      const oldRate = prevTask ? parsePassRate(prevTask.passRate) : 0;
+      return {
+        taskName: task.taskName,
+        oldPassRate: oldRate,
+        newPassRate: newRate,
+        diff: newRate - oldRate,
+      };
+    }).filter(t => t.diff !== 0);
+
+    return {
+      passedDiff: report.overallStats.passed - previousReport.overallStats.passed,
+      warningsDiff: report.overallStats.warnings - previousReport.overallStats.warnings,
+      failedDiff: report.overallStats.failed - previousReport.overallStats.failed,
+      totalDiff: report.totalFilaments - previousReport.totalFilaments,
+      taskChanges: taskChanges.sort((a, b) => b.diff - a.diff),
+      previousDate: previousReport.generatedAt,
+    };
+  }, [report, previousReport]);
 
   const runQualityCheck = async () => {
     setIsLoading(true);
@@ -74,6 +137,12 @@ export function SyncQualityCheckPanel() {
       const { data, error } = await supabase.functions.invoke('run-sync-quality-check');
       
       if (error) throw error;
+      
+      // Store current report as previous before updating
+      if (report) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(report));
+        setPreviousReport(report);
+      }
       
       setReport(data);
       setShowDetails(true);
@@ -201,6 +270,72 @@ export function SyncQualityCheckPanel() {
               <span>Last run: {new Date(report.generatedAt).toLocaleString()}</span>
               <span>{report.totalFilaments} filaments checked</span>
             </div>
+
+            {/* Comparison Section - Shows improvements since last check */}
+            {comparison && (
+              <div className="bg-muted/30 rounded-lg p-3 space-y-3 border">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  <span>Changes since {new Date(comparison.previousDate).toLocaleDateString()}</span>
+                </div>
+                
+                {/* Overall stat changes */}
+                <div className="grid grid-cols-4 gap-2 text-sm">
+                  <ComparisonStat 
+                    label="Total" 
+                    value={comparison.totalDiff} 
+                    suffix=" filaments"
+                    invertColors={false}
+                  />
+                  <ComparisonStat 
+                    label="Passed" 
+                    value={comparison.passedDiff} 
+                    isGoodWhenPositive={true}
+                  />
+                  <ComparisonStat 
+                    label="Warnings" 
+                    value={comparison.warningsDiff} 
+                    isGoodWhenPositive={false}
+                  />
+                  <ComparisonStat 
+                    label="Failed" 
+                    value={comparison.failedDiff} 
+                    isGoodWhenPositive={false}
+                  />
+                </div>
+
+                {/* Task-level improvements */}
+                {comparison.taskChanges.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium">Task Changes:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {comparison.taskChanges.slice(0, 6).map(task => (
+                        <Badge 
+                          key={task.taskName}
+                          variant={task.diff > 0 ? 'default' : 'destructive'}
+                          className={`text-xs ${task.diff > 0 ? 'bg-green-500/20 text-green-700 border-green-500/30' : 'bg-destructive/20'}`}
+                        >
+                          {task.diff > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                          {task.taskName}: {task.diff > 0 ? '+' : ''}{task.diff.toFixed(0)}%
+                        </Badge>
+                      ))}
+                      {comparison.taskChanges.length > 6 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{comparison.taskChanges.length - 6} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {comparison.taskChanges.length === 0 && comparison.passedDiff === 0 && comparison.failedDiff === 0 && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Minus className="h-3 w-3" />
+                    No significant changes detected
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Overall Progress */}
             <div className="space-y-2">
@@ -341,5 +476,39 @@ export function SyncQualityCheckPanel() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// Helper component to show comparison stats with trend indicators
+function ComparisonStat({ 
+  label, 
+  value, 
+  suffix = '', 
+  isGoodWhenPositive = true,
+  invertColors = true 
+}: { 
+  label: string; 
+  value: number; 
+  suffix?: string;
+  isGoodWhenPositive?: boolean;
+  invertColors?: boolean;
+}) {
+  const isPositive = value > 0;
+  const isNegative = value < 0;
+  const isGood = invertColors ? (isGoodWhenPositive ? isPositive : isNegative) : false;
+  const isBad = invertColors ? (isGoodWhenPositive ? isNegative : isPositive) : false;
+
+  return (
+    <div className="flex flex-col items-center p-2 bg-background rounded border">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className={`text-sm font-medium flex items-center gap-1 ${
+        isGood ? 'text-green-600' : isBad ? 'text-destructive' : 'text-muted-foreground'
+      }`}>
+        {isPositive && <TrendingUp className="h-3 w-3" />}
+        {isNegative && <TrendingDown className="h-3 w-3" />}
+        {value === 0 && <Minus className="h-3 w-3" />}
+        {value > 0 ? '+' : ''}{value}{suffix}
+      </span>
+    </div>
   );
 }
