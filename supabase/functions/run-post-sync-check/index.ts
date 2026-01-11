@@ -42,7 +42,10 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks'];
+
+// Brands that use CSV-seeded sync and should skip certain checks
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -377,6 +380,20 @@ const AI_ROLES = {
       'Specialty line handling (Silk Magic, Luminous, Rock, Stars)',
       'High-speed variant detection (PLA+HS, PETG+HS, ABS+HS)',
       'Complex product line normalization (45+ lines)'
+    ]
+  },
+  hatchboxSpecialist: {
+    title: 'Hatchbox Integration Specialist',
+    triggers: ['hatchbox', 'rapid petg', 'pla max', 'reload', 'refill', 'matte pla', 'silk pla', 'metallic pla'],
+    capabilities: [
+      'Shopify platform analysis (hatchbox3d.com)',
+      'CSV-seeded sync pipeline architecture (~200 products)',
+      'Popular consumer filament brand material classification',
+      'Cross-product swatch architecture (each color = separate URL)',
+      'Rapid PETG high-speed variant detection',
+      'PLA MAX V2 USA-made premium line handling',
+      'Reload/Refill eco-spool product line grouping',
+      'Finish type detection (Matte, Silk, Metallic, Glow, Wood, Stone)'
     ]
   },
   extrudrSpecialist: {
