@@ -511,12 +511,29 @@ export const KINGROON_COLOR_MAPPING: Record<string, string> = {
   'brown': '#795548',
   'skin': '#FFCC99',
   'beige': '#F5DEB3',
-  'transparent': '#FFFFFF00',
-  'clear': '#FFFFFF00',
+  'transparent': '#FEFEFE',
+  'clear': '#FEFEFE',
   'natural': '#F5F5DC',
+  
+  // Extended colors from CSV
+  'sky blue': '#87CEEB',
+  'dark gray': '#4A4A4A',
+  'dark grey': '#4A4A4A',
+  'golden': '#FFD700',
+  'grass green': '#7CB342',
+  'mint green': '#98FF98',
+  'light apricot': '#FBCEB1',
+  'cyan blue': '#00BCD4',
+  'cyan-blue': '#00BCD4',
+  'light pink': '#FFB6C1',
+  'army green': '#4B5320',
+  'coffee': '#6F4E37',
+  'rose red': '#C21E56',
+  'olive green': '#808000',
   
   // Metallic/Silk colors
   'gold': '#FFD700',
+  'silk gold': '#FFD700',
   'copper': '#B87333',
   'bronze': '#CD7F32',
   'rose gold': '#B76E79',
@@ -526,22 +543,66 @@ export const KINGROON_COLOR_MAPPING: Record<string, string> = {
   'glow blue': '#00FFFF',
   'glow orange': '#FF6600',
   
+  // Matte variants
+  'white matte': '#F5F5F5',
+  'black matte': '#2A2A2A',
+  'gray matte': '#888888',
+  'red matte': '#C62828',
+  'blue matte': '#1565C0',
+  'yellow matte': '#F9A825',
+  'orange matte': '#EF6C00',
+  'green matte': '#388E3C',
+  'matte grass green': '#7CB342',
+  'matte rainbow': '#FF6B6B',
+  
   // Multicolor descriptions
   'rainbow': '#FF6B6B',
   'macaroons color': '#FFB6C1',
   'macaroon': '#FFB6C1',
+  'macaroon rainbow': '#FFB6C1',
   'candy color': '#FF69B4',
   'candy': '#FF69B4',
+  'candy rainbow': '#FF69B4',
+  'universer rainbow': '#9C27B0',
   '4 mixed colors': '#FF6B6B',
   'mixed colors': '#FF6B6B',
-  'multicolor': '#FF6B6B',
+  'mixed color': '#FF6B6B',
+  'multicolor': '#FF5252',
   
   // Marble
   'marble white': '#F0F0F0',
   'marble black': '#2A2A2A',
   'marble gray': '#888888',
   
-  // Color combinations (common tri-color/dual patterns)
+  // Carbon Fiber variants
+  'black pla carbon fiber': '#2D2D2D',
+  'black petg carbon fiber': '#3A3A3A',
+  'black abs carbon fiber': '#404040',
+  'nylon + carbon fiber': '#1A1A1A',
+  
+  // Tri-color combinations (use first color as representative hex)
+  'silk blue green purple tri-color': '#7B68EE',
+  'silk red yellow blue tri-color': '#FF6B6B',
+  'silk blue yellow green tri-color': '#4DD0E1',
+  'silk gold green rose red tri-color': '#FFD700',
+  'silk gold silver copper tri-color': '#D4AF37',
+  'silk green purple copper tri-color': '#66BB6A',
+  'silk red gold blue tri-color': '#E53935',
+  'silk red gold purple tri-color': '#C62828',
+  'silk blue green orange tri-color': '#1E88E5',
+  'silk gold purple red black tri-color': '#FFC107',
+  'silk gold purple red blue tri-color': '#FFEB3B',
+  'silk gold green black tri-color': '#CDDC39',
+  'silk purple red blue green tri-color': '#9C27B0',
+  'silk red green blue tri-color': '#F44336',
+  'silk gold green blue tri-color': '#FDD835',
+  
+  // Dual-color combinations
+  'silk red green dual-color': '#8B4513',
+  'silk blue green dual-color': '#00CED1',
+  'silk red gold dual-color': '#FF8C00',
+  
+  // Color combinations (legacy)
   'red-blue': '#9B59B6',
   'blue-green': '#00CED1',
   'yellow-orange': '#FFA500',
