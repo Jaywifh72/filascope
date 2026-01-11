@@ -61,54 +61,93 @@ interface ShopifyProduct {
   }>;
 }
 
-// Weight/size pattern check
-function isWeightOrSize(value: string | null): boolean {
+// Weight/size/spool type pattern check - excludes non-color values
+function isWeightOrSizeOrSpool(value: string | null): boolean {
   if (!value) return true;
   const v = value.trim().toLowerCase();
-  return /^\d+(\.\d+)?\s*(kg|g|mm|lb|oz)$/i.test(v) ||
-         /^(1\.75|2\.85|3\.0)\s*mm$/i.test(v) ||
-         /^(cardboard|plastic)\s*spool$/i.test(v) ||
-         /^\d+\s*kg$/i.test(v);
+  
+  // Weight/size patterns
+  if (/^\d+(\.\d+)?\s*(kg|g|mm|lb|oz)$/i.test(v)) return true;
+  if (/^(1\.75|2\.85|3\.0)\s*mm$/i.test(v)) return true;
+  if (/^\d+\s*kg$/i.test(v)) return true;
+  
+  // Spool type patterns - these are NOT colors
+  if (/cardboard|plastic/i.test(v) && /spool/i.test(v)) return true;
+  if (v === 'cardboard' || v === 'plastic') return true;
+  
+  // Quantity/placeholder patterns
+  if (/100 kg minimum|quote|single|default title/i.test(v)) return true;
+  
+  return false;
 }
 
-// Extract color from Shopify variant options
+// Extract color from Shopify variant options (prioritize option2)
 function extractColorFromShopifyVariant(variant: ShopifyProduct['variants'][0]): string | null {
-  // Check option2 first (most common color location: option1=size, option2=color)
-  if (variant.option2 && !isWeightOrSize(variant.option2)) {
-    return variant.option2;
+  // Option2 is usually the color (option1=size, option2=color, option3=spool)
+  if (variant.option2 && !isWeightOrSizeOrSpool(variant.option2)) {
+    return variant.option2.trim();
   }
-  // Check option1 if option2 is size/weight
-  if (variant.option1 && !isWeightOrSize(variant.option1)) {
-    return variant.option1;
+  // Option1 might be color for simple products
+  if (variant.option1 && !isWeightOrSizeOrSpool(variant.option1)) {
+    return variant.option1.trim();
   }
-  // Check option3 as fallback
-  if (variant.option3 && !isWeightOrSize(variant.option3)) {
-    return variant.option3;
+  // Option3 fallback (rare)
+  if (variant.option3 && !isWeightOrSizeOrSpool(variant.option3)) {
+    return variant.option3.trim();
   }
+  // No valid color found
+  console.log(`[Matter3D] No color found in variant options: o1=${variant.option1}, o2=${variant.option2}, o3=${variant.option3}`);
   return null;
 }
 
 // Check if product should be filtered out
 function shouldSkipMatter3dProduct(product: ShopifyProduct, variant: ShopifyProduct['variants'][0]): boolean {
   const title = product.title.toLowerCase();
-  const variantTitle = variant.title.toLowerCase();
+  const variantTitle = (variant.title || '').toLowerCase();
   const price = parseFloat(variant.price);
   
   // Skip pellets (industrial format)
-  if (/pellets?/i.test(title)) return true;
+  if (/pellets?|granules/i.test(title)) {
+    console.log(`[Matter3D] SKIP pellets: ${product.title}`);
+    return true;
+  }
   
   // Skip custom color orders
-  if (/custom\s*color/i.test(title)) return true;
+  if (/custom\s*color/i.test(title)) {
+    console.log(`[Matter3D] SKIP custom color: ${product.title}`);
+    return true;
+  }
   
-  // Skip bundles
-  if (/bundle|cmyk|pack/i.test(title)) return true;
+  // Skip bundles and bulk buy multi-packs
+  if (/bundle|cmyk|pack|bulk\s*buy|\d+\s*rolls/i.test(title)) {
+    console.log(`[Matter3D] SKIP bundle: ${product.title}`);
+    return true;
+  }
   
-  // Skip very high price items (>$200 - industrial/bulk)
-  if (price > 200) return true;
+  // Skip conductive/specialty materials
+  if (/conductive|cnt|esd/i.test(title)) {
+    console.log(`[Matter3D] SKIP specialty: ${product.title}`);
+    return true;
+  }
   
-  // Skip 10kg+ (industrial bulk)
-  const weightMatch = variantTitle.match(/(\d+)\s*kg/i) || title.match(/(\d+)\s*kg/i);
-  if (weightMatch && parseInt(weightMatch[1]) >= 10) return true;
+  // Skip variants with "Single" as the color (placeholder)
+  if (variant.option2?.toLowerCase() === 'single' || 
+      variant.option1?.toLowerCase() === 'single') {
+    console.log(`[Matter3D] SKIP single placeholder: ${variant.title}`);
+    return true;
+  }
+  
+  // Skip Default Title variants (non-color products)
+  if (variant.option1 === 'Default Title') {
+    console.log(`[Matter3D] SKIP default title: ${product.title}`);
+    return true;
+  }
+  
+  // Skip very high price items (>$100 for single unit - likely bulk/industrial)
+  if (price > 100) {
+    console.log(`[Matter3D] SKIP high price: ${product.title} ($${price})`);
+    return true;
+  }
   
   return false;
 }
@@ -225,9 +264,21 @@ Deno.serve(async (req) => {
               }
 
               const productId = `${product.id}_${variant.id}`;
-              const variantTitle = colorName 
-                ? `${cleanedTitle} - ${colorName}`.replace(/\s*-\s*$/, '').trim()
-                : cleanedTitle.replace(/\s*-\s*$/, '').trim();
+              
+              // Build variant title - remove trailing dashes first, then append color
+              let baseTitle = cleanedTitle.replace(/[\s-]+$/, '').trim();
+              let variantTitle: string;
+              if (colorName) {
+                // Don't add color if it's already in the title
+                if (!baseTitle.toLowerCase().includes(colorName.toLowerCase())) {
+                  variantTitle = `${baseTitle} - ${colorName}`;
+                } else {
+                  variantTitle = baseTitle;
+                }
+              } else {
+                variantTitle = baseTitle;
+              }
+              
               const colorHex = getMatter3dColorHex(colorName || '');
               const finishType = extractFinishType(product.title);
               const productLineId = generateMatter3dProductLineId(product.title, material);

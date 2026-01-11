@@ -244,13 +244,12 @@ export function extractSpoolType(variantTitle: string): 'cardboard' | 'plastic' 
 }
 
 // PRODUCT LINE ID GENERATION
-// Consolidate standard weight variants (1kg, 500g) into single product lines
-// Only separate 5kg bulk products as distinct lines
+// Consolidate ALL weight variants (500g, 1kg, 5kg) into single product lines
+// NO weight suffixes - weights are merged together
 export function generateMatter3dProductLineId(title: string, material?: string | null): string {
   const mat = material || normalizeMatter3dMaterial(title) || 'unknown';
   const matLower = mat.toLowerCase().replace(/-/g, '_');
   const finish = extractFinishType(title);
-  const weight = extractWeightKg(title);
   const isEssentials = isEssentialsVariant(title);
   const isPerformance = isPerformanceVariant(title);
   const isBasics = isBasicsVariant(title);
@@ -260,7 +259,7 @@ export function generateMatter3dProductLineId(title: string, material?: string |
   // Build product line ID
   let lineId = `matter3d__${matLower}`;
   
-  // Add series suffix
+  // Add series suffix (mutually exclusive)
   if (isEssentials) {
     lineId += '__essentials';
   } else if (isPerformance) {
@@ -287,11 +286,8 @@ export function generateMatter3dProductLineId(title: string, material?: string |
     lineId += '-hf';
   }
   
-  // ONLY add bulk suffix for 5kg+ products (separate product line for bulk)
-  // DO NOT add weight suffixes for standard weights (500g, 1kg) to consolidate
-  if (weight >= 5) {
-    lineId += '-5kg';
-  }
+  // NO WEIGHT SUFFIXES - all weights (500g, 1kg, 5kg) merge into same product line
+  // This consolidates all weight variants together for proper grouping
   
   return lineId;
 }
@@ -340,6 +336,7 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'grass green': '7CFC00',
   'evergreen': '05472A',
   'dark green': '013220',
+  'dark/forest green': '228B22',
   'forest green': '228B22',
   'neon green': '39FF14',
   'lime green': '32CD32',
@@ -406,8 +403,12 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   
   // Transparency
   'transparent': 'FFFFFF',
+  'transparent / natural': 'DEB887',
   'clear': 'FFFFFF',
   'natural clear': 'F5F5DC',
+  
+  // Additional specialty colors
+  'clay/brick red': 'CB4154',
 };
 
 export function getMatter3dColorHex(colorName: string): string | null {
