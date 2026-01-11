@@ -205,17 +205,17 @@ export const GIZMODORKS_PRODUCT_SEED: GizmoDorksSeedProduct[] = [
   // ============================================================================
   // TPU (5 colors)
   // ============================================================================
-  { material: 'TPU', title: 'TPU 3D Printer Filament', url: 'https://gizmodorks.com/tpu-3d-printer-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19128/TPU_Black_1__73655.1689872318.jpg', hexCode: '#1A1A1A' },
-  { material: 'TPU', title: 'TPU 3D Printer Filament', url: 'https://gizmodorks.com/tpu-3d-printer-filament/', color: 'Blue', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19171/TPU_Blue_1__02548.1689872320.jpg', hexCode: '#0066CC' },
-  { material: 'TPU', title: 'TPU 3D Printer Filament', url: 'https://gizmodorks.com/tpu-3d-printer-filament/', color: 'Red', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19214/TPU_Red_1__76438.1689872322.jpg', hexCode: '#CC0000' },
-  { material: 'TPU', title: 'TPU 3D Printer Filament', url: 'https://gizmodorks.com/tpu-3d-printer-filament/', color: 'White', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19257/TPU_White_1__84762.1689872324.jpg', hexCode: '#FFFFFF' },
-  { material: 'TPU', title: 'TPU 3D Printer Filament', url: 'https://gizmodorks.com/tpu-3d-printer-filament/', color: 'Clear', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19300/TPU_Clear_1__82426.1689872326.jpg', hexCode: '#F5F5F5' },
+  { material: 'TPU', title: '3D Printing Flexible TPU Filament', url: 'https://gizmodorks.com/3d-printing-flexible-tpu-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19128/TPU_Black_1__73655.1689872318.jpg', hexCode: '#1A1A1A' },
+  { material: 'TPU', title: '3D Printing Flexible TPU Filament', url: 'https://gizmodorks.com/3d-printing-flexible-tpu-filament/', color: 'Blue', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19171/TPU_Blue_1__02548.1689872320.jpg', hexCode: '#0066CC' },
+  { material: 'TPU', title: '3D Printing Flexible TPU Filament', url: 'https://gizmodorks.com/3d-printing-flexible-tpu-filament/', color: 'Red', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19214/TPU_Red_1__76438.1689872322.jpg', hexCode: '#CC0000' },
+  { material: 'TPU', title: '3D Printing Flexible TPU Filament', url: 'https://gizmodorks.com/3d-printing-flexible-tpu-filament/', color: 'White', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19257/TPU_White_1__84762.1689872324.jpg', hexCode: '#FFFFFF' },
+  { material: 'TPU', title: '3D Printing Flexible TPU Filament', url: 'https://gizmodorks.com/3d-printing-flexible-tpu-filament/', color: 'Clear', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/256/19300/TPU_Clear_1__82426.1689872326.jpg', hexCode: '#F5F5F5' },
 
   // ============================================================================
   // Acetal / POM (2 colors)
   // ============================================================================
-  { material: 'Acetal (POM)', title: 'Acetal (POM) 3D Printer Filament', url: 'https://gizmodorks.com/acetal-pom-3d-printer-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/289/19456/Acetal_Black__73655.1689873318.jpg', hexCode: '#1A1A1A' },
-  { material: 'Acetal (POM)', title: 'Acetal (POM) 3D Printer Filament', url: 'https://gizmodorks.com/acetal-pom-3d-printer-filament/', color: 'Natural', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/289/19499/Acetal_Natural__56347.1689873320.jpg', hexCode: '#F5F5DC' },
+  { material: 'Acetal (POM)', title: 'Acetal 3D Printer Filament', url: 'https://gizmodorks.com/acetal-3d-printer-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/289/19456/Acetal_Black__73655.1689873318.jpg', hexCode: '#1A1A1A' },
+  { material: 'Acetal (POM)', title: 'Acetal 3D Printer Filament', url: 'https://gizmodorks.com/acetal-3d-printer-filament/', color: 'Natural', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/289/19499/Acetal_Natural__56347.1689873320.jpg', hexCode: '#F5F5DC' },
 
   // ============================================================================
   // PETG (6 colors)
@@ -246,20 +246,20 @@ export const GIZMODORKS_PRODUCT_SEED: GizmoDorksSeedProduct[] = [
   // ============================================================================
   
   // Wood PLA (1 color)
-  { material: 'Wood PLA', title: 'Wood PLA 3D Printer Filament', url: 'https://gizmodorks.com/wood-pla-3d-printer-filament/', color: 'Wood Brown', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/312/19858/Wood_PLA_1__A0522D.1689874418.jpg', hexCode: '#A0522D' },
+  { material: 'Wood PLA', title: '3D Printer Wood Filament', url: 'https://gizmodorks.com/wood-3d-printer-filament/', color: 'Wood Brown', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/312/19858/Wood_PLA_1__A0522D.1689874418.jpg', hexCode: '#A0522D' },
 
   // PVA (1 color - support material)
-  { material: 'PVA', title: 'PVA 3D Printer Filament', url: 'https://gizmodorks.com/pva-3d-printer-filament/', color: 'Natural', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/323/19901/PVA_Natural_1__56347.1689874518.jpg', hexCode: '#F5F5DC' },
+  { material: 'PVA', title: '3D Printer PVA Filament', url: 'https://gizmodorks.com/pva-3d-printer-filament/', color: 'Natural', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/323/19901/PVA_Natural_1__56347.1689874518.jpg', hexCode: '#F5F5DC' },
 
   // Metal Filled PLA (2 colors)
-  { material: 'Metal Filled PLA', title: 'Metal Filled PLA 3D Printer Filament', url: 'https://gizmodorks.com/metal-filled-pla-3d-printer-filament/', color: 'Bronze', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/334/19944/Metal_PLA_Bronze__CD7F32.1689874618.jpg', hexCode: '#CD7F32' },
-  { material: 'Metal Filled PLA', title: 'Metal Filled PLA 3D Printer Filament', url: 'https://gizmodorks.com/metal-filled-pla-3d-printer-filament/', color: 'Copper', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/334/19987/Metal_PLA_Copper__B87333.1689874620.jpg', hexCode: '#B87333' },
+  { material: 'Metal Filled PLA', title: '3D Printing Metal Filled Filament', url: 'https://gizmodorks.com/3d-printing-metal-filled-filament/', color: 'Bronze', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/334/19944/Metal_PLA_Bronze__CD7F32.1689874618.jpg', hexCode: '#CD7F32' },
+  { material: 'Metal Filled PLA', title: '3D Printing Metal Filled Filament', url: 'https://gizmodorks.com/3d-printing-metal-filled-filament/', color: 'Copper', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/334/19987/Metal_PLA_Copper__B87333.1689874620.jpg', hexCode: '#B87333' },
 
   // Carbon Fiber PLA (1 color)
-  { material: 'Carbon Fiber PLA', title: 'Carbon Fiber PLA 3D Printer Filament', url: 'https://gizmodorks.com/carbon-fiber-pla-3d-printer-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/356/20030/CF_PLA_Black__1C1C1C.1689874718.jpg', hexCode: '#1C1C1C' },
+  { material: 'Carbon Fiber PLA', title: '3D Printing Carbon Fiber Filament', url: 'https://gizmodorks.com/3d-printing-carbon-fiber-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/356/20030/CF_PLA_Black__1C1C1C.1689874718.jpg', hexCode: '#1C1C1C' },
 
   // PLA Pro Plus (1 color - engineering grade)
-  { material: 'PLA Pro Plus', title: 'PLA Pro Plus 3D Printer Filament', url: 'https://gizmodorks.com/pla-pro-plus-3d-printer-filament/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/367/20073/PLA_Pro_Plus_Black__1A1A1A.1689874818.jpg', hexCode: '#1A1A1A' },
+  { material: 'PLA Pro Plus', title: 'PLA Pro Plus 3D Printer Filament Engineering Grade', url: 'https://gizmodorks.com/pla-pro-plus-3d-printer-filament-engineering-grade/', color: 'Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/367/20073/PLA_Pro_Plus_Black__1A1A1A.1689874818.jpg', hexCode: '#1A1A1A' },
 
   // Conductive (1 color)
   { material: 'Conductive', title: 'Conductive 3D Printer Filament', url: 'https://gizmodorks.com/conductive-3d-printer-filament/', color: 'Conductive Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/378/20116/Conductive_Black__2C2C2C.1689874918.jpg', hexCode: '#2C2C2C' },
@@ -267,12 +267,12 @@ export const GIZMODORKS_PRODUCT_SEED: GizmoDorksSeedProduct[] = [
   // ============================================================================
   // Glitter Sparkle PLA (6 colors)
   // ============================================================================
-  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA 3D Printer Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-3d-printer-filament/', color: 'Glitter Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20159/Glitter_PLA_Black__2C2C2C.1689875018.jpg', hexCode: '#2C2C2C' },
-  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA 3D Printer Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-3d-printer-filament/', color: 'Glitter Blue', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20202/Glitter_PLA_Blue__4682B4.1689875020.jpg', hexCode: '#4682B4' },
-  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA 3D Printer Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-3d-printer-filament/', color: 'Glitter Gold', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20245/Glitter_PLA_Gold__FFD700.1689875022.jpg', hexCode: '#FFD700' },
-  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA 3D Printer Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-3d-printer-filament/', color: 'Glitter Purple', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20288/Glitter_PLA_Purple__9370DB.1689875024.jpg', hexCode: '#9370DB' },
-  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA 3D Printer Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-3d-printer-filament/', color: 'Glitter Red', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20331/Glitter_PLA_Red__DC143C.1689875026.jpg', hexCode: '#DC143C' },
-  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA 3D Printer Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-3d-printer-filament/', color: 'Glitter Silver', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20374/Glitter_PLA_Silver__C0C0C0.1689875028.jpg', hexCode: '#C0C0C0' },
+  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-filament/', color: 'Glitter Black', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20159/Glitter_PLA_Black__2C2C2C.1689875018.jpg', hexCode: '#2C2C2C' },
+  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-filament/', color: 'Glitter Blue', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20202/Glitter_PLA_Blue__4682B4.1689875020.jpg', hexCode: '#4682B4' },
+  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-filament/', color: 'Glitter Gold', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20245/Glitter_PLA_Gold__FFD700.1689875022.jpg', hexCode: '#FFD700' },
+  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-filament/', color: 'Glitter Purple', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20288/Glitter_PLA_Purple__9370DB.1689875024.jpg', hexCode: '#9370DB' },
+  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-filament/', color: 'Glitter Red', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20331/Glitter_PLA_Red__DC143C.1689875026.jpg', hexCode: '#DC143C' },
+  { material: 'Glitter Sparkle PLA', title: 'Glitter Sparkle PLA Filament', url: 'https://gizmodorks.com/glitter-sparkle-pla-filament/', color: 'Glitter Silver', imageUrl: 'https://cdn11.bigcommerce.com/s-b5vac/images/stencil/1280x1280/products/389/20374/Glitter_PLA_Silver__C0C0C0.1689875028.jpg', hexCode: '#C0C0C0' },
 ];
 
 // ============================================================================
