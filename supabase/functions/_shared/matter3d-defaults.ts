@@ -493,6 +493,25 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'carbon': '2F2F2F',
   'carbon black': '1C1C1C',
   'carbon fiber': '2F2F2F',
+  
+  // Silk/Metallic specialty colors (from logs with missing hex)
+  'silk purple': '8E4585',
+  'metallic (silk) blue': '4A90D9',
+  'metallic (silk) orange': 'CD7F32',
+  'metallic blue': '4A90D9',
+  'metallic orange': 'CD7F32',
+  'silk blue': '4A90D9',
+  'silk orange': 'CD7F32',
+  'silk red': 'B22222',
+  'silk green': '228B22',
+  'silk gold': 'CFB53B',
+  'silk silver': 'C0C0C0',
+  'silk copper': 'B87333',
+  
+  // Additional matte colors
+  'matte natural': 'DEB887',
+  'matte sand': 'C2B280',
+  'matte beige': 'F5F5DC',
 };
 
 export function getMatter3dColorHex(colorName: string): string | null {
