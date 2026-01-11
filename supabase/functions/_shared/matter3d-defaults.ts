@@ -301,9 +301,15 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'bone white': 'F9F6EE',
   'cream': 'FFFDD0',
   
+  // Matte Whites
+  'matte white': 'F5F5F5',
+  
   // Blacks
   'black': '000000',
   'jet black': '0A0A0A',
+  
+  // Matte Blacks
+  'matte black': '1A1A1A',
   
   // Greys
   'grey': '808080',
@@ -316,6 +322,10 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'gunmetal gray': '2C3539',
   'charcoal': '36454F',
   'silver': 'C0C0C0',
+  
+  // Matte Greys
+  'matte grey': '6B6B6B',
+  'matte gray': '6B6B6B',
   
   // Blues
   'blue': '0066CC',
@@ -331,6 +341,9 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'electric blue': '7DF9FF',
   'cobalt blue': '0047AB',
   
+  // Matte Blues
+  'matte blue': '1E3A5F',
+  
   // Greens
   'green': '00AA00',
   'grass green': '7CFC00',
@@ -345,6 +358,9 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'mint green': '98FB98',
   'teal': '008080',
   
+  // Matte Greens
+  'matte green': '228B22',
+  
   // Reds
   'red': 'CC0000',
   'wine red': '722F37',
@@ -353,6 +369,9 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'burgundy': '800020',
   'maroon': '800000',
   'crimson': 'DC143C',
+  
+  // Matte Reds
+  'matte red': 'B22222',
   
   // Pinks - UNIQUE hex values to prevent duplicates
   'pink': 'FFC0CB',
@@ -364,12 +383,18 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'hot pink': 'FF69B4',
   'salmon': 'FA8072',
   
+  // Matte Pinks
+  'matte pink': 'FFB6C1',
+  
   // Oranges
   'orange': 'FF8C00',
   'safety orange': 'FF6700',
   'burnt orange': 'CC5500',
   'coral': 'FF7F50',
   'peach': 'FFCBA4',
+  
+  // Matte Oranges
+  'matte orange': 'CC5500',
   
   // Yellows
   'yellow': 'FFD700',
@@ -378,6 +403,9 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'gold': 'FFD700',
   'mustard': 'FFDB58',
   'lemon': 'FFF44F',
+  
+  // Matte Yellows
+  'matte yellow': 'F0C420',
   
   // Browns
   'brown': '8B4513',
@@ -404,6 +432,7 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   // Transparency
   'transparent': 'FFFFFF',
   'transparent / natural': 'DEB887',
+  'transparent/natural': 'DEB887',
   'clear': 'FFFFFF',
   'natural clear': 'F5F5DC',
   
