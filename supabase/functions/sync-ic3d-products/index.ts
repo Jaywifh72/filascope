@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       const { data: deleted } = await supabase
         .from('filaments')
         .delete()
-        .eq('vendor', 'IC3D')
+        .eq('vendor', 'IC3D Printers')
         .select('id');
       
       stats.deleted = deleted?.length || 0;
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         const filamentRecord = {
           product_id: productId,
           product_title: seedProduct.productLine,  // Clean title (no color suffix for CSV-seeded)
-          vendor: 'IC3D',
+          vendor: 'IC3D Printers',
           brand_id: brand.id,
           product_url: seedProduct.url,
           featured_image: seedProduct.image,
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
         const { data: existing } = await supabase
           .from('filaments')
           .select('id')
-          .eq('vendor', 'IC3D')
+          .eq('vendor', 'IC3D Printers')
           .eq('product_id', productId)
           .maybeSingle();
 
@@ -214,30 +214,30 @@ Deno.serve(async (req) => {
     const { count: totalProducts } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .eq('vendor', 'IC3D');
+      .eq('vendor', 'IC3D Printers');
 
     const { count: productsWithHex } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .eq('vendor', 'IC3D')
+      .eq('vendor', 'IC3D Printers')
       .not('color_hex', 'is', null);
 
     const { count: productsWithTds } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .eq('vendor', 'IC3D')
+      .eq('vendor', 'IC3D Printers')
       .not('tds_url', 'is', null);
 
     const { count: productsWithImages } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .eq('vendor', 'IC3D')
+      .eq('vendor', 'IC3D Printers')
       .not('featured_image', 'is', null);
 
     const { count: productsWithPrices } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .eq('vendor', 'IC3D')
+      .eq('vendor', 'IC3D Printers')
       .not('variant_price', 'is', null);
 
     await supabase
@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
     console.log('[IC3D Sync] Checking for duplicate hex codes...');
     
     try {
-      const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'IC3D' });
+      const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'IC3D Printers' });
       
       if (duplicates && duplicates.length > 0) {
         console.log(`[IC3D Sync] Found ${duplicates.length} duplicate hex codes, applying variations...`);
