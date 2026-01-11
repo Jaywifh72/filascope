@@ -1,7 +1,7 @@
 /**
  * IC3D Product Seed Data
  * 
- * Premium USA-based manufacturer (Ohio) - 56 variants across 11 product lines
+ * Premium USA-based manufacturer (Ohio) - 56 variants across 10 product lines
  * Known for tight tolerances (±0.03mm), Open Source Hardware certification,
  * and sustainability initiatives (spool return program, recycled materials).
  * 

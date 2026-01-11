@@ -4894,7 +4894,7 @@ Deno.serve(async (req) => {
       'paramount-3d': 8,        // FlexPLA, Stone, Shimmer lines
       'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
       'kingroon': 6,            // Basic filament lines
-      'ic3d-printers': 8,       // Industrial materials
+      'ic3d-printers': 10,      // 10 product lines: ABS, PETG, PETG-CF, PLA, PLA+, Matte PLA+, UV-PETG, rPETG, Matte rPETG, PolyHex
       'yousu': 8,               // PLA, PETG, Silk lines
     };
 
