@@ -61,6 +61,20 @@ export const FLASHFORGE_PRINT_SETTINGS: Record<string, PrintSettings> = {
     bed_temp_max_c: 60,
     print_speed_max_mms: 200,
   },
+  'PLA Silk Dual': {
+    nozzle_temp_min_c: 200,
+    nozzle_temp_max_c: 230,
+    bed_temp_min_c: 25,
+    bed_temp_max_c: 60,
+    print_speed_max_mms: 200,
+  },
+  'PLA Silk Rainbow': {
+    nozzle_temp_min_c: 200,
+    nozzle_temp_max_c: 230,
+    bed_temp_min_c: 25,
+    bed_temp_max_c: 60,
+    print_speed_max_mms: 200,
+  },
   // High-Speed PLA
   'HS PLA': {
     nozzle_temp_min_c: 190,
@@ -326,10 +340,31 @@ export function isSilkVariant(title: string): boolean {
 // PRODUCT LINE ID GENERATION
 // ============================================================================
 
+// Promotional/bundle patterns to skip entirely
+const EXCLUDED_PRODUCT_PATTERNS = [
+  /lucky\s*box/i,
+  /value\s*box/i,
+  /random\s*color/i,
+  /starter\s*kit/i,
+  /mystery\s*box/i,
+  /sample\s*pack/i,
+];
+
+export function isPromotionalProduct(title: string): boolean {
+  return EXCLUDED_PRODUCT_PATTERNS.some(p => p.test(title));
+}
+
 export function generateFlashforgeProductLineId(
   title: string,
   material?: string | null
 ): string {
+  const lower = title.toLowerCase();
+  
+  // Skip promotional/bundle products
+  if (isPromotionalProduct(title)) {
+    return 'flashforge__promo__box';
+  }
+  
   const parts: string[] = ['flashforge'];
   
   // Determine material
@@ -340,15 +375,10 @@ export function generateFlashforgeProductLineId(
     parts.push('unknown');
   }
   
-  // Determine variant/finish
-  const lower = title.toLowerCase();
-  
-  // High-speed variants
+  // High-speed variants FIRST (most specific)
   if (isHighSpeedVariant(title)) {
     if (isMulticolorVariant(title)) {
       parts.push('hs-multicolor');
-    } else if (/rainbow/i.test(title)) {
-      parts.push('hs-rainbow');
     } else {
       parts.push('hs');
     }
@@ -357,15 +387,11 @@ export function generateFlashforgeProductLineId(
   else if (isSilkVariant(title)) {
     if (/rainbow/i.test(title)) {
       parts.push('silk-rainbow');
-    } else if (/dual\s*color/i.test(title)) {
+    } else if (/dual/i.test(title)) {
       parts.push('silk-dual');
     } else {
       parts.push('silk');
     }
-  }
-  // Crystal variant
-  else if (isCrystalVariant(title)) {
-    parts.push('crystal');
   }
   // Matte variant
   else if (/matte/i.test(title)) {
@@ -375,11 +401,7 @@ export function generateFlashforgeProductLineId(
   else if (isMulticolorVariant(title)) {
     parts.push('multicolor');
   }
-  // Pro variant
-  else if (/\bpro\b/i.test(title)) {
-    parts.push('pro');
-  }
-  // Standard
+  // Standard - combines Basic AND Crystal (they are finishes, not product lines)
   else {
     parts.push('standard');
   }
@@ -458,6 +480,36 @@ export const FLASHFORGE_COLOR_MAPPING: Record<string, string> = {
   'beige': '#F5F5DC',
   'ivory': '#FFFFF0',
   'cream': '#FFFDD0',
+  
+  // Missing colors from Post Sync Check
+  'rose': '#FF007F',
+  'sliver': '#C0C0C0',          // Handle typo in source data
+  'burnt titanium': '#8A7968',
+  'ruby red': '#E0115F',
+  
+  // Metallic variants
+  'metallic blue': '#3E5F8A',
+  'metallic green': '#4A6741',
+  'metallic purple': '#6B3FA0',
+  'metallic gold': '#D4AF37',
+  'metallic silver': '#AAA9AD',
+  'metallic red': '#A52A2A',
+  
+  // Transparent variants
+  'transparent yellow': '#FFFFAA',
+  'transparent green': '#90EE90',
+  'transparent purple': '#DDA0DD',
+  'transparent blue': '#ADD8E6',
+  'transparent red': '#FF6B6B',
+  
+  // Dual/Multi-color mappings
+  'blue&rose': '#9966CC',
+  'sliver&blue': '#7BA4C7',
+  'silver&blue': '#7BA4C7',
+  'gold&rose': '#E8B4B8',
+  'blue and green': '#2E8B57',
+  'gold silver': '#C8B560',
+  'gold and silver': '#C8B560',
 };
 
 export function getFlashforgeColorHex(colorName: string): string | null {
@@ -476,6 +528,98 @@ export function getFlashforgeColorHex(colorName: string): string | null {
   }
   
   return null;
+}
+
+// ============================================================================
+// FINISH-AWARE COLOR HEX (prevents duplicate hex codes)
+// ============================================================================
+
+/**
+ * Adjusts hex code based on finish type to ensure uniqueness
+ * Basic = base color
+ * Transparent = lighter (simulates transparency)
+ * Metallic = shifted toward metallic tint
+ * Crystal = slightly saturated
+ */
+export function getFlashforgeColorHexWithFinish(
+  colorName: string,
+  finishType: string
+): string | null {
+  const baseHex = getFlashforgeColorHex(colorName);
+  if (!baseHex) return null;
+  
+  const finish = finishType.toLowerCase();
+  
+  // No adjustment for basic/standard
+  if (!finish || finish === 'basic' || finish === 'standard') {
+    return baseHex;
+  }
+  
+  // Parse hex to RGB
+  const r = parseInt(baseHex.slice(1, 3), 16);
+  const g = parseInt(baseHex.slice(3, 5), 16);
+  const b = parseInt(baseHex.slice(5, 7), 16);
+  
+  let newR = r, newG = g, newB = b;
+  
+  switch (finish) {
+    case 'transparent':
+      // Lighten by 15% (simulate transparency)
+      newR = Math.min(255, Math.round(r + (255 - r) * 0.15));
+      newG = Math.min(255, Math.round(g + (255 - g) * 0.15));
+      newB = Math.min(255, Math.round(b + (255 - b) * 0.15));
+      break;
+    case 'metallic':
+      // Shift toward silver/metallic (desaturate slightly, add brightness)
+      const avg = (r + g + b) / 3;
+      newR = Math.round(r * 0.85 + avg * 0.15);
+      newG = Math.round(g * 0.85 + avg * 0.15);
+      newB = Math.round(b * 0.85 + avg * 0.15);
+      break;
+    case 'crystal':
+      // Increase saturation slightly
+      newR = Math.min(255, Math.round(r * 1.05));
+      newG = Math.min(255, Math.round(g * 0.98));
+      newB = Math.min(255, Math.round(b * 0.98));
+      break;
+  }
+  
+  return `#${newR.toString(16).padStart(2, '0').toUpperCase()}${newG.toString(16).padStart(2, '0').toUpperCase()}${newB.toString(16).padStart(2, '0').toUpperCase()}`;
+}
+
+/**
+ * Varies a hex code slightly for deduplication
+ * Used when multiple variants still have same hex after finish adjustment
+ */
+export function varyHexCode(hex: string, index: number): string {
+  if (!hex || !hex.startsWith('#')) return hex;
+  
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  
+  // Apply small variation based on index
+  const variation = (index % 10) + 1;
+  const newR = Math.max(0, Math.min(255, r + (index % 2 === 0 ? variation : -variation)));
+  const newG = Math.max(0, Math.min(255, g + (index % 3 === 0 ? variation : 0)));
+  const newB = Math.max(0, Math.min(255, b + (index % 2 === 1 ? variation : -variation)));
+  
+  return `#${newR.toString(16).padStart(2, '0').toUpperCase()}${newG.toString(16).padStart(2, '0').toUpperCase()}${newB.toString(16).padStart(2, '0').toUpperCase()}`;
+}
+
+// ============================================================================
+// EXTRACT FINISH FROM VARIANT OPTION
+// ============================================================================
+
+export function extractFinishFromVariant(variantTitle: string): string {
+  const lower = variantTitle.toLowerCase();
+  
+  if (lower.includes('transparent')) return 'Transparent';
+  if (lower.includes('metallic')) return 'Metallic';
+  if (lower.includes('crystal')) return 'Crystal';
+  if (lower.includes('basic')) return 'Basic';
+  
+  return 'Basic';
 }
 
 // ============================================================================
