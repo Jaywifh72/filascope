@@ -5620,7 +5620,7 @@ Deno.serve(async (req) => {
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
-      'matter3d': 15,           // Performance, Basics, Standard, Essentials lines - realistic count based on actual product architecture
+      'matter3d': 12,           // Performance, Basics, Standard lines - excluding bulk packs (Essentials) that have no color variants
       'esun': 39,               // CSV-seeded: 39 distinct product lines from 360+ products (PLA-Basic, PLA-Matte, PLA-Silk, PLA+HS, PETG, ABS+, TPU-95A, etc.)
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
       'fiberlogy': 19,          // CSV-seeded: ABS, ABS Plus, Easy ABS, ASA, Easy PLA, Easy PETG, FiberFlex 30D/40D, FiberSilk, FiberWood, HIPS, HS PLA Clear, Impact PLA, Matte PLA, Matte PETG, MattFlex 40D, Nylon PA12, PCTG, PP
@@ -6584,7 +6584,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
