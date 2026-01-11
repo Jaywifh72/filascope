@@ -1090,40 +1090,47 @@ const BRAND_LESSONS_LEARNED: Record<string, {
     },
     lastUpdated: '2026-01-11'
   },
-  'matter3d': {
+'matter3d': {
     platform: 'Shopify store (matter3d.com) - Canadian manufacturer with Size/Color/Spool variant structure',
     knownLimitations: [
-      '❌ Variant titles use slash-split format (Color / Size / Spool Type) - NOT reliable for color extraction',
-      '❌ Includes bulk products (5kg spools, pellets) that should be filtered or separated',
-      '❌ Custom color orders and bundles (CMYK) included in catalog',
-      '❌ Industrial pellet products with $1000+ pricing',
-      '❌ Fuchsia and Magenta previously shared same hex code (#FF00FF) - causes duplicates'
+      '❌ Variant option structure varies by product type (2 or 3 options)',
+      '❌ Matte products use 3 options: Size/Color/Spool (option3 is spool type NOT color)',
+      '❌ Standard products use 2 options: Size/Color or Color/Size',
+      '❌ Pellets and industrial bulk ($1000+) in catalog - must filter',
+      '❌ Custom color orders and bundles (CMYK) must be filtered',
+      '❌ Weight suffixes in product_line_id cause over-fragmentation (30 vs 18 lines)',
+      '❌ Fuchsia (#FF00FF), Magenta (#FF0099), Fuchsia/Magenta (#FF00CC) need unique hex codes'
     ],
     workingSolutions: [
-      '✅ Extract color from Shopify variant.option2 (or option1/option3 fallback)',
-      '✅ Filter pellets, custom colors, bundles, and items >$200',
-      '✅ Filter 10kg+ industrial bulk products',
-      '✅ Use variant.image_id for color-specific images with alt-text fallback',
-      '✅ Consolidate 500g/1kg variants into main product line',
-      '✅ Separate 5kg+ products as distinct bulk product lines',
-      '✅ Unique hex codes: Fuchsia (#FF00FF) vs Magenta (#FF0099)',
-      '✅ Matter3D-specific color mapping in matter3d-defaults.ts'
+      '✅ Extract color from option2 first, then option1, then option3',
+      '✅ Detect spool types (Cardboard, Plastic) and skip them as colors',
+      '✅ Use $100 price ceiling for consumer products (filter higher)',
+      '✅ Filter pellets, custom colors, bundles, "Single" placeholders, "Default Title"',
+      '✅ Remove ALL weight suffixes from product_line_id (0.5kg, 1kg, 5kg)',
+      '✅ Use variant.image_id for color-specific images',
+      '✅ Unique hex codes for similar colors (fuchsia vs magenta)',
+      '✅ Delete-then-insert pattern with safe threshold'
     ],
     failedApproaches: [
-      '⚠️ Slash-split parsing of variant.title - misses colors or gets size/spool type instead',
-      '⚠️ Creating separate product lines for each weight (1kg, 500g, 0.5kg) - over-fragmentation',
-      '⚠️ Using first product image for all variants - loses color-specific images',
-      '⚠️ Same hex code for similar colors (fuchsia/magenta) - causes duplicate hex errors'
+      '⚠️ Slash-split parsing of variant.title - unreliable, misses colors',
+      '⚠️ Using option3 without checking for spool type - gets "Cardboard" as color',
+      '⚠️ Creating weight-based product lines (0.5kg, 1kg, 5kg separate) - over-fragmentation',
+      '⚠️ Same hex code for fuchsia/magenta - causes duplicate hex errors',
+      '⚠️ Not filtering products over $100 - includes industrial bulk',
+      '⚠️ Title construction with trailing dashes - creates "Performance ASA - - Red"'
     ],
     currentStatus: {
-      'totalProducts': '~100 filament variants (after filtering bulk/pellets)',
-      'expectedCards': '15 product lines',
+      'totalProducts': '~150-200 filament variants (after filtering bulk/pellets)',
+      'expectedCards': '18 product lines (consolidated)',
       'seriesTypes': 'Basics, Performance, Essentials, Standard',
-      'materialsSupported': 'PLA, PLA+, PETG, ASA, ABS, PA, PA-CF, TPU-95A'
+      'materialsSupported': 'PLA, PLA+, PETG, PETG-HF, PETG-CF, ASA, ABS, ABS-CF, PA, PA-CF, TPU-95A'
     },
     keyFiles: [
-      'supabase/functions/sync-matter3d-products/index.ts - Main sync function with Shopify option extraction',
-      'supabase/functions/_shared/matter3d-defaults.ts - Color mappings, print settings, product line ID generation'
+      'supabase/functions/sync-matter3d-products/index.ts - Main sync with Shopify option extraction',
+      'supabase/functions/_shared/matter3d-defaults.ts - Color mappings, product line ID generation',
+      'shouldSkipMatter3dProduct() - Filters pellets, bundles, custom, high-price',
+      'extractColorFromShopifyVariant() - Extracts color from correct option, skips spool types',
+      'generateMatter3dProductLineId() - Consolidates weights, detects series/finish'
     ],
     productSlugReference: {
       'basics-pla': 'Basics Series PLA',
@@ -1134,11 +1141,15 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'performance-petg': 'Performance PETG',
       'performance-petg-matte': 'Performance PETG Matte',
       'performance-petg-hf': 'Performance PETG High-Flow',
+      'performance-petg-cf-hf': 'Performance PETG CF High-Flow',
       'performance-asa': 'Performance ASA',
+      'performance-abs-cf': 'Performance ABS Carbon Fiber',
       'performance-pla-plus': 'Performance PLA+',
       'performance-pa-cf': 'Performance PA Carbon Fiber',
       'essentials-pla': 'Essentials PLA',
-      'tpu-95a': 'TPU 95A'
+      'standard-petg': 'Standard PETG',
+      'standard-pa': 'Standard PA (Nylon)',
+      'standard-tpu-95a': 'Standard TPU 95A'
     },
     lastUpdated: '2026-01-11'
   }
@@ -2696,6 +2707,555 @@ After making fixes:
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Matter3D-specific AI Fix Prompt with comprehensive root cause analysis
+ * Goal: Fix ALL issues in a single pass with zero remaining issues after the next sync
+ */
+function generateMatter3dFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['matter3d'];
+  const role = AI_ROLES.matter3dSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+---`;
+  }
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## GOAL: Fix ALL Issues in ONE Pass
+
+This prompt is structured to fix every sync issue systematically. Follow the numbered steps in order.
+**After implementing these fixes, the next Post Sync Check should show ZERO errors.**
+
+---
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ${lessons.platform}
+**This IS a Shopify store** - but with non-standard variant structure (Size/Color/Spool in options).
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## ROOT CAUSE ANALYSIS
+
+The following issues are interconnected. Fixing them in the correct order is critical.
+
+### RC1: Incorrect Color Extraction from Shopify Variant Options
+**Affected Checks:**
+- Color Names Match (missing colors like "magenta")
+- Swatch Uniqueness (missing color_hex)
+- Color Variant Count (missing hex)
+- Detail Page Content (incomplete swatches)
+
+**Root Cause:** The \`extractColorFromShopifyVariant()\` function fails when:
+- option2 contains spool type ("Cardboard", "Plastic") instead of color
+- option1 contains size ("1 kg") instead of color
+- Some products use 3-option structure: Size/Color/Spool
+- Some products use 2-option structure: Size/Color or Color/Size
+
+**Fix Location:** \`supabase/functions/sync-matter3d-products/index.ts\`
+
+### RC2: Over-Granular Product Line IDs
+**Affected Checks:**
+- Filament Card Count (30 vs 18 expected)
+
+**Root Cause:** Weight suffixes like \`-0.5kg\`, \`-5kg\`, \`-1kg\` are creating separate product lines when they should be consolidated.
+
+**Fix Location:** \`supabase/functions/_shared/matter3d-defaults.ts\` - \`generateMatter3dProductLineId()\`
+
+### RC3: Insufficient Product Filtering
+**Affected Checks:**
+- Title Accuracy (pellet products in DB)
+- Price Validity (industrial bulk pricing)
+- Image Quality (pellet product images)
+
+**Root Cause:** \`shouldSkipMatter3dProduct()\` doesn't filter:
+- Pellets and industrial products
+- Custom color orders
+- CMYK bundles
+- Products over $100 (non-standard consumer products)
+- "Single" placeholder variants
+
+**Fix Location:** \`supabase/functions/sync-matter3d-products/index.ts\`
+
+### RC4: Title Construction Creates Double Dashes
+**Affected Checks:**
+- Title Accuracy (titles like "Performance ASA - - Red")
+
+**Root Cause:** \`cleanMatter3dTitle()\` leaves trailing dashes, then color is appended with another dash.
+
+**Fix Location:** \`supabase/functions/sync-matter3d-products/index.ts\`
+
+### RC5: Missing Color Hex Mappings
+**Affected Checks:**
+- Swatch Uniqueness (variants missing color_hex)
+- Color Variant Count (missing hex codes)
+
+**Root Cause:** \`MATTER3D_COLOR_MAP\` in \`matter3d-defaults.ts\` is missing mappings for matte colors and some specialty colors.
+
+**Fix Location:** \`supabase/functions/_shared/matter3d-defaults.ts\`
+
+---
+
+## FIX IMPLEMENTATION ORDER (Follow Exactly)
+
+### Step 1: Fix Product Filtering (CRITICAL - Must be done first)
+
+**File:** \`supabase/functions/sync-matter3d-products/index.ts\`
+
+Update \`shouldSkipMatter3dProduct()\` to filter ALL non-standard products:
+
+\`\`\`typescript
+function shouldSkipMatter3dProduct(product: ShopifyProduct, variant: ShopifyProduct['variants'][0]): boolean {
+  const title = product.title.toLowerCase();
+  const variantTitle = (variant.title || '').toLowerCase();
+  const price = parseFloat(variant.price || '0');
+  
+  // Skip pellets (industrial format)
+  if (/pellets?|granules?/i.test(title)) {
+    console.log(\`[Matter3D] SKIP pellets: \${product.title}\`);
+    return true;
+  }
+  
+  // Skip custom color orders
+  if (/custom\\s*colou?r/i.test(title)) {
+    console.log(\`[Matter3D] SKIP custom color: \${product.title}\`);
+    return true;
+  }
+  
+  // Skip bundles and bulk buy multi-packs
+  if (/bundle|cmyk|multi.?pack|\\d+\\s*rolls?/i.test(title)) {
+    console.log(\`[Matter3D] SKIP bundle: \${product.title}\`);
+    return true;
+  }
+  
+  // Skip conductive/specialty materials
+  if (/conductive|cnt|esd/i.test(title)) {
+    console.log(\`[Matter3D] SKIP specialty: \${product.title}\`);
+    return true;
+  }
+  
+  // Skip "Single" placeholder variants (not real color)
+  const color = variant.option2 || variant.option1 || '';
+  if (/^single$/i.test(color.trim())) {
+    console.log(\`[Matter3D] SKIP single placeholder: \${variant.title}\`);
+    return true;
+  }
+  
+  // Skip Default Title variants (non-color products)
+  if (variant.option1 === 'Default Title') {
+    console.log(\`[Matter3D] SKIP default title: \${product.title}\`);
+    return true;
+  }
+  
+  // Skip very high price items (>$100 for single unit typically indicates bulk/industrial)
+  if (price > 100) {
+    console.log(\`[Matter3D] SKIP high price: \${product.title} ($\${price})\`);
+    return true;
+  }
+  
+  return false;
+}
+\`\`\`
+
+---
+
+### Step 2: Fix Color Extraction (CRITICAL - Depends on Step 1)
+
+**File:** \`supabase/functions/sync-matter3d-products/index.ts\`
+
+The current extraction picks up spool types ("Cardboard", "Plastic") as colors. Fix:
+
+\`\`\`typescript
+// Add spool type detection to skip non-color values
+function isWeightOrSizeOrSpool(value: string | null): boolean {
+  if (!value) return true;
+  const v = value.trim().toLowerCase();
+  
+  // Weight/size patterns
+  if (/^\\d+(\\.\\d+)?\\s*(kg|g|mm|lb|oz)$/i.test(v)) return true;
+  if (/^(1\\.75|2\\.85|3\\.0)\\s*mm$/i.test(v)) return true;
+  if (/^\\d+\\s*kg$/i.test(v)) return true;
+  if (/^(0\\.5|1|2|5|10)\\s*kg$/i.test(v)) return true;
+  
+  // Spool type patterns - these are NOT colors
+  if (/cardboard|plastic/i.test(v)) return true;
+  
+  // Quantity patterns
+  if (/100 kg minimum|quote|single|default/i.test(v)) return true;
+  
+  return false;
+}
+
+function extractColorFromShopifyVariant(variant: any): string | null {
+  // Priority: option2 > option1 > option3
+  // But skip if it's weight/size/spool
+  
+  // Option2 is usually the color for Matter3D
+  if (variant.option2 && !isWeightOrSizeOrSpool(variant.option2)) {
+    return variant.option2.trim();
+  }
+  
+  // Option1 might be color for simple products
+  if (variant.option1 && !isWeightOrSizeOrSpool(variant.option1)) {
+    return variant.option1.trim();
+  }
+  
+  // Option3 fallback (rare)
+  if (variant.option3 && !isWeightOrSizeOrSpool(variant.option3)) {
+    return variant.option3.trim();
+  }
+  
+  console.log(\`[Matter3D] No valid color found for variant: \${variant.title}\`);
+  return null;
+}
+\`\`\`
+
+---
+
+### Step 3: Fix Product Line ID Generation (HIGH - Depends on Step 2)
+
+**File:** \`supabase/functions/_shared/matter3d-defaults.ts\`
+
+Remove ALL weight suffixes to consolidate variants:
+
+\`\`\`typescript
+export function generateMatter3dProductLineId(title: string, material?: string | null): string {
+  const mat = material || normalizeMatter3dMaterial(title) || 'unknown';
+  const matLower = mat.toLowerCase().replace(/-/g, '_');
+  const titleLower = title.toLowerCase();
+  
+  // Detect series (mutually exclusive)
+  const isEssentials = /essentials?/i.test(titleLower);
+  const isPerformance = /performance/i.test(titleLower);
+  const isBasics = /basics?/i.test(titleLower);
+  
+  // Detect finish types
+  const isMatte = /matte/i.test(titleLower);
+  const isSilk = /silk/i.test(titleLower);
+  const isCarbon = /carbon|\\bcf\\b/i.test(titleLower);
+  const isRecycled = /recycled/i.test(titleLower);
+  const isHF = /high.?flow|\\bhf\\b/i.test(titleLower);
+  
+  // Build base product line ID
+  let lineId = \`matter3d__\${matLower}\`;
+  
+  // Add series suffix
+  if (isEssentials) {
+    lineId += '__essentials';
+  } else if (isPerformance) {
+    lineId += '__performance';
+  } else if (isBasics) {
+    lineId += '__basics';
+  } else {
+    lineId += '__standard';
+  }
+  
+  // Add finish suffix
+  if (isMatte) {
+    lineId += '-matte';
+  } else if (isSilk) {
+    lineId += '-silk';
+  } else if (isCarbon && !matLower.includes('cf')) {
+    lineId += '-cf';
+  } else if (isRecycled) {
+    lineId += '-recycled';
+  }
+  
+  // Add high-flow suffix for PETG HF
+  if (isHF) {
+    lineId += '-hf';
+  }
+  
+  // DO NOT add weight suffixes - consolidate all weights into same product line
+  // 500g, 1kg, 5kg variants all belong to the same product line
+  
+  return lineId;
+}
+\`\`\`
+
+---
+
+### Step 4: Fix Title Construction (MEDIUM - Depends on Step 2)
+
+**File:** \`supabase/functions/sync-matter3d-products/index.ts\`
+
+Prevent double-dash artifacts:
+
+\`\`\`typescript
+function buildVariantTitle(cleanedTitle: string, colorName: string | null): string {
+  // Remove any trailing dashes or spaces from cleaned title
+  let baseTitle = cleanedTitle.replace(/[\\s-]+$/, '').trim();
+  
+  if (colorName) {
+    // Don't add color if it's already in the title
+    const colorLower = colorName.toLowerCase();
+    if (!baseTitle.toLowerCase().includes(colorLower)) {
+      return \`\${baseTitle} - \${colorName}\`;
+    }
+  }
+  
+  return baseTitle;
+}
+\`\`\`
+
+---
+
+### Step 5: Add Missing Color Hex Mappings (LOW - Independent)
+
+**File:** \`supabase/functions/_shared/matter3d-defaults.ts\`
+
+Add to \`MATTER3D_COLOR_MAP\`:
+
+\`\`\`typescript
+// Matte colors (often missing)
+'matte black': '1A1A1A',
+'matte white': 'F5F5F5',
+'matte grey': '808080',
+'matte gray': '808080',
+'matte red': 'B22222',
+'matte blue': '1E3A5F',
+'matte green': '228B22',
+
+// Differentiate similar colors (CRITICAL to prevent duplicate hex)
+'fuchsia': 'FF00FF',
+'magenta': 'FF0099',
+'fuchsia/magenta': 'FF00CC',
+
+// Specialty colors
+'dark/forest green': '228B22',
+'transparent / natural': 'DEB887',
+'transparent/natural': 'DEB887',
+'fighter jet blue': '1E3A5F',
+'ocean blue': '006994',
+'cayman blue': '00C5CD',
+'clay/brick red': 'CB4154',
+'gunmetal grey': '2A3439',
+'gunmetal gray': '2A3439',
+\`\`\`
+
+---
+
+### Step 6: Update Expected Card Count
+
+**File:** \`supabase/functions/run-post-sync-check/index.ts\`
+
+In \`EXPECTED_CARD_COUNTS\`, set:
+\`\`\`typescript
+'matter3d': 18,  // Consolidated from 30 after removing weight suffixes
+\`\`\`
+
+---
+
+## EXPECTED PRODUCT LINES (18 total)
+
+After fixes, these should be the only product_line_ids:
+
+| Product Line ID | Description |
+|-----------------|-------------|
+| matter3d__pla__basics | Basics PLA (standard) |
+| matter3d__pla__basics-matte | Basics PLA Matte |
+| matter3d__pla__basics-silk | Basics PLA Silk |
+| matter3d__pla__basics-cf | Basics PLA Carbon Fiber |
+| matter3d__pla__basics-recycled | Basics Recycled PLA |
+| matter3d__pla__performance | Performance PLA |
+| matter3d__pla__performance-matte | Performance PLA Matte |
+| matter3d__pla__essentials | Essentials PLA |
+| matter3d__pla_plus__performance | Performance PLA+ |
+| matter3d__petg__performance | Performance PETG |
+| matter3d__petg__performance-matte | Performance PETG Matte |
+| matter3d__petg__performance-hf | Performance PETG High-Flow |
+| matter3d__petg__performance-cf-hf | Performance PETG CF High-Flow |
+| matter3d__petg__standard | Standard PETG |
+| matter3d__asa__performance | Performance ASA |
+| matter3d__abs__performance-cf | Performance ABS Carbon Fiber |
+| matter3d__pa__performance | Performance PA (Nylon) |
+| matter3d__pa_cf__performance-cf | Performance PA Carbon Fiber |
+| matter3d__tpu_95a__standard | Standard TPU 95A |
+
+---
+
+## VERIFICATION CHECKLIST
+
+After implementing fixes, verify each assertion:
+
+### Filtering Verification
+\`\`\`sql
+-- Should return 0 rows
+SELECT * FROM filaments WHERE vendor ILIKE '%matter3d%' AND product_title ILIKE '%pellet%';
+
+-- Should return 0 rows
+SELECT * FROM filaments WHERE vendor ILIKE '%matter3d%' AND variant_price > 100;
+
+-- Should return 0 rows (no bundles)
+SELECT * FROM filaments WHERE vendor ILIKE '%matter3d%' AND product_title ILIKE '%cmyk%';
+\`\`\`
+
+### Color Extraction Verification
+\`\`\`sql
+-- Should return 0 rows (no spool types as colors)
+SELECT * FROM filaments 
+WHERE vendor ILIKE '%matter3d%' 
+AND (product_title ILIKE '% - Cardboard%' OR product_title ILIKE '% - Plastic%');
+
+-- Color hex population should be >95%
+SELECT 
+  COUNT(*) AS total,
+  COUNT(color_hex) AS with_hex,
+  ROUND(100.0 * COUNT(color_hex) / COUNT(*), 1) AS percent_with_hex
+FROM filaments WHERE vendor ILIKE '%matter3d%';
+\`\`\`
+
+### Product Line Verification
+\`\`\`sql
+-- Should return exactly 18 unique product lines (or close to it)
+SELECT DISTINCT product_line_id 
+FROM filaments 
+WHERE vendor ILIKE '%matter3d%' 
+ORDER BY product_line_id;
+
+-- Should return 0 rows (no weight suffixes)
+SELECT DISTINCT product_line_id 
+FROM filaments 
+WHERE vendor ILIKE '%matter3d%' 
+AND (product_line_id LIKE '%-0.5kg' OR product_line_id LIKE '%-5kg' OR product_line_id LIKE '%-1kg');
+\`\`\`
+
+### Title Verification
+\`\`\`sql
+-- Should return 0 rows (no double dashes)
+SELECT * FROM filaments 
+WHERE vendor ILIKE '%matter3d%' 
+AND product_title LIKE '% - - %';
+\`\`\`
+
+---
+
+## CURRENT STATUS
+
+- **Total Products in DB**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+---
+
+## Issues Found
+
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## KEY FILES FOR MATTER3D
+
+- \`supabase/functions/sync-matter3d-products/index.ts\` - Main sync function
+- \`supabase/functions/_shared/matter3d-defaults.ts\` - Color mappings, enrichment, product line ID
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+
+## SYNC EXECUTION STEPS
+
+1. **Deploy** updated edge functions (\`sync-matter3d-products\` and \`run-post-sync-check\`)
+2. **Run Clean Slate** sync for Matter3D from Brand Sync Manager
+3. **Check edge function logs** for:
+   - "SKIP pellets" messages (filtering working)
+   - "No valid color found" messages (should be minimal)
+   - Product count around ~150-200 (after filtering bulk/pellets)
+4. **Run Post Sync Check** again - should show 0 errors
+5. **Spot-check** a few product cards to confirm:
+   - Correct card count (~18 product lines)
+   - No duplicate color swatches
+   - Colors match hex codes visually
+   - No double-dash titles
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -2738,6 +3298,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Geeetech
   if (brandSlug === 'geeetech') {
     return generateGeeetechFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Matter3D
+  if (brandSlug === 'matter3d') {
+    return generateMatter3dFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
