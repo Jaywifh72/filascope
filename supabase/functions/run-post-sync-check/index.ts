@@ -42,7 +42,7 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
 const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek'];
@@ -544,6 +544,31 @@ const AI_ROLES = {
       'Expected 15 product lines after proper consolidation',
       'Skip price check - variable pricing across product lines',
       'Skip hex validation - curated color mappings in matter3d-defaults.ts'
+    ]
+  },
+  ninjatekSpecialist: {
+    title: 'NinjaTek Integration Specialist',
+    triggers: ['ninjatek', 'ninjaflex', 'cheetah', 'armadillo', 'chinchilla', 'eel', 'edge', 'tpu-85a', 'tpu-95a', 'shore hardness', 'flexible', 'colorfabb'],
+    capabilities: [
+      'WooCommerce (WordPress) platform analysis (ninjatek.com)',
+      'CSV-seeded sync pipeline architecture (~70 products, 10 product lines)',
+      'Premium TPU filament specialist (Fenner Precision Polymers)',
+      'Shore hardness variant classification (75A, 83A, 85A, 90A, 95A, 75D)',
+      'ColorFabb reseller product separation (ASA, PLA, Co-Polyesters, Specials)',
+      'TPU print settings optimization (slow speed, low temps)',
+      'Specialty material handling (Eel conductive, Chinchilla skin-safe)'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (ninjatek-seed.csv) as primary source - WooCommerce API is complex',
+      'Exclude 2.85mm/3mm diameter products (consumer focus on 1.75mm)',
+      'Exclude bulk products (>5.5kg) and sample products (<300g)',
+      'Eel 90A (Conductive) and colorFabb PA have diameter-only variants - skip entirely',
+      'ColorFabb products sold via NinjaTek have separate product_line_ids (colorfabb-*)',
+      'Product titles follow pattern "ProductLine - Color" for variant distinction',
+      'Shore hardness stored in shore_hardness_d field as integer (e.g., 85 for 85A)',
+      'All NinjaTek TPU products are 0.5kg spools (500g)',
+      'Skip hex validation - curated color mappings in ninjatek-defaults.ts',
+      'Skip color-specific image check - product-line level images are expected'
     ]
   },
   architect: {
@@ -1153,7 +1178,75 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'essentials-pla': 'Essentials PLA',
       'standard-petg': 'Standard PETG',
       'standard-pa': 'Standard PA (Nylon)',
-      'standard-tpu-95a': 'Standard TPU 95A'
+    'standard-tpu-95a': 'Standard TPU 95A'
+    },
+    lastUpdated: '2026-01-11'
+  },
+  'ninjatek': {
+    platform: 'WooCommerce (WordPress) store (ninjatek.com) - CSV-seeded sync architecture',
+    knownLimitations: [
+      '❌ WooCommerce REST API requires authentication - use CSV seed instead',
+      '❌ Eel 90A (Conductive TPU) has only diameter variants (1.75mm, 3mm), no color options - excluded',
+      '❌ colorFabb PA (Nylon) has only diameter variants - excluded',
+      '❌ 2.85mm/3mm variants must be filtered (consumer focus on 1.75mm)',
+      '❌ Product images are product-line level, not color-specific',
+      '❌ No live pricing in CSV - prices would need manual update or scraping'
+    ],
+    workingSolutions: [
+      '✅ CSV seed (NINJATEK_SEED_DATA) embedded in sync function - ~70 products',
+      '✅ Safe delete pattern for clean slate refresh',
+      '✅ enrichNinjatekProduct() provides print settings by Shore hardness',
+      '✅ Hardcoded NINJATEK_TDS_URLS for all NinjaTek product lines',
+      '✅ NINJATEK_COLOR_MAPPING provides hex codes for all colors (40+)',
+      '✅ Separate product_line_ids for NinjaTek TPU vs ColorFabb materials',
+      '✅ fixDuplicateHexCodes() post-processes to ensure unique swatches'
+    ],
+    failedApproaches: [
+      '⚠️ Attempting WooCommerce API scraping - requires auth tokens',
+      '⚠️ Including Eel/colorFabb PA - these only have diameter variants, not colors',
+      '⚠️ Including 2.85mm/3mm variants - not consumer focused',
+      '⚠️ Using generic TPU material - must specify Shore hardness (TPU-85A, TPU-95A, etc.)'
+    ],
+    currentStatus: {
+      'csvSeedProducts': '~70 variants (after filtering diameter-only products)',
+      'productLines': '10 unique lines (6 NinjaTek TPU + 4 ColorFabb)',
+      'ninjatekTPU': 'NinjaFlex 85A (11), Edge 83A (2), Chinchilla 75A (4), Cheetah 95A (11), Armadillo 75D (9)',
+      'colorFabb': 'ASA (2), PLA (12), Co-Polyesters (14), Specials (7)',
+      'excluded': 'Eel 90A (diameter-only), colorFabb PA (diameter-only)'
+    },
+    keyFiles: [
+      'supabase/functions/sync-ninjatek-products/index.ts - Main sync function (CSV-seeded)',
+      'supabase/functions/_shared/ninjatek-defaults.ts - Enrichment, color mappings, TDS URLs',
+      'supabase/functions/_shared/ninjatek-seed.csv - Raw CSV data (reference)',
+      'NINJATEK_SEED_DATA constant - Embedded CSV in sync function',
+      'NINJATEK_COLOR_MAPPING - 40+ color-to-hex mappings',
+      'NINJATEK_TDS_URLS - TDS PDF URLs for all NinjaTek product lines'
+    ],
+    extractionPriority: [
+      '1. Verify all CSV products are processed (check for skipped entries)',
+      '2. Ensure 10 unique product lines are created',
+      '3. Validate Shore hardness is correctly parsed and stored',
+      '4. Confirm TDS URLs are populated for NinjaTek lines',
+      '5. Verify ColorFabb products are separated into colorfabb-* product_line_ids'
+    ],
+    manualExtractionProcess: [
+      '1. Products come from embedded CSV in sync function - DO NOT scrape WooCommerce',
+      '2. To add new products: Update NINJATEK_SEED_DATA in sync function',
+      '3. To add new colors: Update NINJATEK_COLOR_MAPPING in ninjatek-defaults.ts',
+      '4. To add new TDS URLs: Update NINJATEK_TDS_URLS in ninjatek-defaults.ts',
+      '5. Run clean slate sync to refresh all data from updated seed'
+    ],
+    productSlugReference: {
+      'ninjaflex': 'NinjaFlex 85A TPU - Original soft flexible',
+      'edge': 'Edge 83A TPU - Improved tear resistance',
+      'chinchilla': 'Chinchilla 75A TPU - Softest, skin-safe',
+      'cheetah': 'Cheetah 95A TPU - Fastest printing semi-flex',
+      'armadillo': 'Armadillo 75D TPU - Rigid, abrasion resistant',
+      'eel': 'Eel 90A TPU - Conductive (EXCLUDED)',
+      'colorfabb-asa': 'colorFabb ASA',
+      'colorfabb-pla': 'colorFabb PLA',
+      'colorfabb-co-polyesters': 'colorFabb Co-Polyesters (nGen)',
+      'colorfabb-specials': 'colorFabb Specials (Fills)'
     },
     lastUpdated: '2026-01-11'
   }
@@ -1199,6 +1292,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'matter3d') {
     return AI_ROLES.matter3dSpecialist;
+  }
+  if (brandSlug === 'ninjatek') {
+    return AI_ROLES.ninjatekSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -3260,6 +3356,342 @@ ${lessons.failedApproaches.map(f => `${f}`).join('\n')}
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate NinjaTek-specific AI Fix Prompt with comprehensive context
+ */
+function generateNinjatekFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['ninjatek'];
+  const role = AI_ROLES.ninjatekSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+**Extraction Pattern**:
+${aiAnalysis.extractionPattern}
+
+**Missing Reason**:
+${aiAnalysis.missingReason}
+
+### Missing Color Hex Mappings
+
+Add these to NINJATEK_COLOR_MAPPING in \`_shared/ninjatek-defaults.ts\`:
+
+\`\`\`typescript
+${Object.entries(aiAnalysis.colorMappings || {}).map(([name, hex]) => `'${name.toLowerCase()}': '${hex}',`).join('\n')}
+\`\`\`
+
+---`;
+  }
+
+  return `# ${role.title} - NinjaTek Post Sync Check Fixes
+
+You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database and comparison platform.
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+## CRITICAL LESSONS LEARNED
+
+${(role as any).lessons?.map((lesson: string) => `- ${lesson}`).join('\n') || 'See BRAND_LESSONS_LEARNED for details.'}
+
+---
+
+## NINJATEK PLATFORM OVERVIEW
+
+**Website**: ninjatek.com (WooCommerce/WordPress)
+**Sync Architecture**: CSV-seeded (NOT live scraping)
+**Primary Data Source**: NINJATEK_SEED_DATA constant in sync function
+**Parent Company**: Fenner Precision Polymers (premium TPU manufacturer)
+
+### Product Line Architecture
+
+NinjaTek sells two categories:
+1. **NinjaTek TPU Products** (5 lines) - Premium flexible filaments
+   - NinjaFlex 85A (11 colors) - Original soft TPU
+   - Edge 83A (2 colors) - Improved tear/chemical resistance
+   - Chinchilla 75A (4 colors) - Softest, skin-safe
+   - Cheetah 95A (11 colors) - Fastest printing semi-flex
+   - Armadillo 75D (9 colors) - Rigid, abrasion resistant
+   
+2. **ColorFabb Reseller Products** (4 lines) - European materials
+   - colorFabb ASA (2 colors)
+   - colorFabb PLA (12 colors)
+   - colorFabb Co-Polyesters (14 colors) - nGen, HT, XT lines
+   - colorFabb Specials (7 colors) - Fills, allPHA
+
+### Excluded Products (NOT synced)
+
+- **Eel 90A (Conductive TPU)**: Only has diameter variants (1.75mm, 3mm), no colors
+- **colorFabb PA (Nylon)**: Only has diameter variants, no colors
+- **All 2.85mm/3mm variants**: Consumer focus on 1.75mm only
+- **Bulk products (>5.5kg)**: Industrial, not consumer
+- **Sample products (<300g)**: Non-standard spool sizes
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+When diagnosing NinjaTek sync issues, check in this order:
+
+### RC1: CSV Seed Data Issues
+- Is the product missing from NINJATEK_SEED_DATA?
+- Is the CSV row format correct (material,name,url,color,image)?
+- Are excluded products (Eel, colorFabb PA) incorrectly included?
+
+### RC2: Color Extraction Issues
+- Is the color correctly extracted from CSV column 4?
+- Is the color name normalized for hex lookup?
+- Is there a duplicate hex within the product line?
+
+### RC3: Product Line ID Issues
+- Is the product_line_id correctly generated (ninjatek__material__line)?
+- Are ColorFabb products using colorfabb-* prefix in line slug?
+- Is Shore hardness correctly parsed for material type?
+
+### RC4: Material Classification Issues
+- Is TPU Shore hardness correctly identified (75A, 83A, 85A, 90A, 95A, 75D)?
+- Is ColorFabb material correctly mapped (ASA, PLA, Copolyester)?
+- Are nGen/HT/XT correctly classified as Copolyester?
+
+### RC5: Enrichment Issues
+- Are print settings correct for the Shore hardness?
+- Is TDS URL populated for NinjaTek products?
+- Is shore_hardness_d field set correctly?
+
+---
+
+## FIX IMPLEMENTATION ORDER
+
+### Step 1: Check CSV Seed Data
+
+**File:** \`supabase/functions/sync-ninjatek-products/index.ts\`
+
+Verify NINJATEK_SEED_DATA contains the product. Check for:
+- Correct row format: \`material,name,url,color,image\`
+- No extra whitespace or malformed entries
+- Excluded entries in EXCLUDED_ENTRIES constant
+
+### Step 2: Fix Color Extraction
+
+**File:** \`supabase/functions/_shared/ninjatek-defaults.ts\`
+
+The \`extractColorFromTitle()\` function extracts color from CSV. Check:
+- Color name normalization (lowercase, trim)
+- Multi-word colors handled correctly
+
+### Step 3: Fix Hex Lookup
+
+**File:** \`supabase/functions/_shared/ninjatek-defaults.ts\`
+
+Add missing colors to NINJATEK_COLOR_MAPPING:
+
+\`\`\`typescript
+export const NINJATEK_COLOR_MAPPING: Record<string, string> = {
+  // NinjaFlex colors
+  'midnight': '#1A1A2E',
+  'snow': '#FFFAFA',
+  'water': '#87CEEB',
+  // ... add missing colors here
+};
+\`\`\`
+
+### Step 4: Fix Product Line ID Generation
+
+**File:** \`supabase/functions/_shared/ninjatek-defaults.ts\`
+
+Check \`generateNinjatekProductLineId()\` logic:
+
+\`\`\`typescript
+// NinjaTek TPU products: ninjatek__tpu_85a__ninjaflex
+// ColorFabb products: ninjatek__asa__colorfabb-asa
+\`\`\`
+
+### Step 5: Fix Material Classification
+
+**File:** \`supabase/functions/_shared/ninjatek-defaults.ts\`
+
+Check \`normalizeNinjatekMaterial()\` and \`extractProductLine()\`:
+
+| Line | Material | Shore Hardness |
+|------|----------|----------------|
+| NinjaFlex | TPU-85A | 85 (Shore A) |
+| Edge | TPU-83A | 83 (Shore A) |
+| Chinchilla | TPU-75A | 75 (Shore A) |
+| Cheetah | TPU-95A | 95 (Shore A) |
+| Armadillo | TPU-75D | 75 (Shore D) |
+
+---
+
+## VERIFICATION QUERIES
+
+### Product Line Count (should be 10)
+\`\`\`sql
+SELECT COUNT(DISTINCT product_line_id) as product_lines
+FROM filaments WHERE vendor ILIKE '%ninjatek%';
+\`\`\`
+
+### Product Breakdown by Line
+\`\`\`sql
+SELECT product_line_id, COUNT(*) as variants
+FROM filaments WHERE vendor ILIKE '%ninjatek%'
+GROUP BY product_line_id ORDER BY product_line_id;
+\`\`\`
+
+### Hex Coverage (should be ~100%)
+\`\`\`sql
+SELECT 
+  COUNT(*) as total,
+  COUNT(color_hex) as with_hex,
+  ROUND(100.0 * COUNT(color_hex) / COUNT(*), 1) as percent
+FROM filaments WHERE vendor ILIKE '%ninjatek%';
+\`\`\`
+
+### TDS Coverage (NinjaTek lines only)
+\`\`\`sql
+SELECT 
+  COUNT(*) as total,
+  COUNT(tds_url) as with_tds
+FROM filaments 
+WHERE vendor ILIKE '%ninjatek%'
+AND product_line_id NOT LIKE '%colorfabb%';
+\`\`\`
+
+### Shore Hardness Verification
+\`\`\`sql
+SELECT DISTINCT product_line_id, shore_hardness_d
+FROM filaments WHERE vendor ILIKE '%ninjatek%'
+ORDER BY product_line_id;
+\`\`\`
+
+### No Excluded Products
+\`\`\`sql
+-- Should return 0 rows
+SELECT * FROM filaments 
+WHERE vendor ILIKE '%ninjatek%' 
+AND (product_title ILIKE '%eel%' OR product_title ILIKE '%colorFabb PA%');
+\`\`\`
+
+---
+
+## CURRENT STATUS
+
+- **Total Products in DB**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+---
+
+## Issues Found
+
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## KEY FILES FOR NINJATEK
+
+- \`supabase/functions/sync-ninjatek-products/index.ts\` - Main sync function with CSV seed
+- \`supabase/functions/_shared/ninjatek-defaults.ts\` - Enrichment, color mappings, TDS URLs
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+
+## SYNC EXECUTION STEPS
+
+1. **Deploy** updated edge functions (\`sync-ninjatek-products\` and \`run-post-sync-check\`)
+2. **Run Clean Slate** sync for NinjaTek from Brand Sync Manager
+3. **Check edge function logs** for:
+   - Skipped entries logged (Eel 90A, colorFabb PA)
+   - Product count around ~70 variants
+   - 10 unique product_line_ids
+4. **Run Post Sync Check** again - should show 0 errors
+5. **Spot-check** a few product cards to confirm:
+   - Correct card count (10 product lines)
+   - Shore hardness displayed correctly
+   - TDS links work for NinjaTek products
+   - ColorFabb products separated correctly
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -3307,6 +3739,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Matter3D
   if (brandSlug === 'matter3d') {
     return generateMatter3dFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for NinjaTek
+  if (brandSlug === 'ninjatek') {
+    return generateNinjatekFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -5620,7 +6057,7 @@ Deno.serve(async (req) => {
       'bambu-lab': 40,          // PLA, PETG, ABS, ASA, TPU 85A, TPU 90A, TPU 95A HF, PLA-CF, PAHT-CF, Marble, Silk, Sparkle, etc.
       'fillamentum': 22,        // PLA Extrafill, Crystal Clear, ASA, ABS, PETG, CPE HG100, CPE-CF, Flexfill TPU 98A/92A, TPE-90A/96A, Nylon FX256, Nylon CF15, Nylon AF80, Timberfill, HIPS, Vinyl, PP, NonOilen, 0rCA, Porthcurno
       'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PC-ABS, PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Matte HS, Silk, Translucent, Strongman), LumberLay, PVA
-      'ninjatek': 11,           // NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D + colorFabb ASA, PLA, Co-Polyesters, Specials (Eel/PA excluded - diameter-only variants)
+      'ninjatek': 10,           // NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D + colorFabb ASA, PLA, Co-Polyesters, Specials (Eel/PA excluded - diameter-only variants)
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
@@ -5935,7 +6372,7 @@ Deno.serve(async (req) => {
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -6476,7 +6913,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
@@ -6588,7 +7025,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
