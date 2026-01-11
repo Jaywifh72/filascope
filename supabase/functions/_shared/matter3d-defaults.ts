@@ -512,6 +512,23 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'matte natural': 'DEB887',
   'matte sand': 'C2B280',
   'matte beige': 'F5F5DC',
+  
+  // Essentials/Performance specialty colors
+  'deep black': '0F0F0F',
+  'pure white': 'FEFEFE',
+  'signal red': 'E52B50',
+  'ocean teal': '0077BE',
+  'forest': '228B22',
+  'midnight': '191970',
+  'arctic white': 'F0F8FF',
+  'jet': '0A0A0A',
+  'slate': '708090',
+  'graphite': '383838',
+  'onyx': '0F0F0F',
+  'pearl': 'FDEEF4',
+  'ivory': 'FFFFF0',
+  'storm grey': '717D7E',
+  'storm gray': '717D7E',
 };
 
 export function getMatter3dColorHex(colorName: string): string | null {

@@ -164,17 +164,36 @@ function extractColorFromShopifyVariant(variant: ShopifyProduct['variants'][0], 
     }
   }
   
+  // Fallback: try to extract color from variant.title by parsing slash-separated parts
+  if (variant.title) {
+    const titleParts = variant.title.split(/[\/\-]/).map((p: string) => p.trim());
+    for (const part of titleParts) {
+      if (part && !isWeightOrSizeOrSpool(part)) {
+        logDecision({
+          type: 'color_extract',
+          product: productTitle,
+          variant: variant.title || '',
+          input: { option1: variant.option1, option2: variant.option2, option3: variant.option3, variantTitle: variant.title },
+          output: part,
+          reason: `Extracted color "${part}" from variant.title fallback`,
+          success: true
+        });
+        return part;
+      }
+    }
+  }
+  
   logDecision({
     type: 'color_extract',
     product: productTitle,
     variant: variant.title || '',
     input: { option1: variant.option1, option2: variant.option2, option3: variant.option3 },
     output: null,
-    reason: `All options are weights/sizes/spool types`,
+    reason: `All options and title parts are weights/sizes/spool types`,
     success: false
   });
   
-  console.log(`[Matter3D] No color found: o1=${variant.option1}, o2=${variant.option2}, o3=${variant.option3}`);
+  console.log(`[Matter3D] No color found: o1=${variant.option1}, o2=${variant.option2}, o3=${variant.option3}, title=${variant.title}`);
   return null;
 }
 
@@ -227,8 +246,9 @@ function shouldSkipMatter3dProduct(product: ShopifyProduct, variant: ShopifyProd
     return true;
   }
   
-  // Skip very high price items (>$100 for single unit - likely bulk/industrial)
-  if (price > 100) {
+  // Skip very high price items (>$120 CAD for single unit - likely bulk/industrial)
+  // Increased from $100 to $120 to accommodate Canadian pricing
+  if (price > 120) {
     console.log(`[Matter3D] SKIP high price: ${product.title} ($${price})`);
     return true;
   }
