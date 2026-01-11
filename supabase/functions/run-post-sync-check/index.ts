@@ -4606,7 +4606,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers']; // CSV-seeded brands append " - Color" to titles intentionally
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -4690,7 +4690,11 @@ Deno.serve(async (req) => {
           }
 
           // ========== CHECK C: COLOR NAME MATCHING ==========
-          if (pageInfo.colorSwatches.length > 0) {
+          // Skip for brands with known website scraping false positives (e.g., page shows unrelated colors)
+          const skipColorNameCheckBrands = ['matter3d']; // Matter3D's website HTML shows incorrect "magenta" from other page elements
+          const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
+          
+          if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {
             const dbColorNames = new Set(
               variants
                 .map(v => {
@@ -5620,7 +5624,7 @@ Deno.serve(async (req) => {
       'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
-      'matter3d': 12,           // Performance, Basics, Standard lines - excluding bulk packs (Essentials) that have no color variants
+      'matter3d': 9,            // Performance, Basics, Standard lines - Basics, Basics-CF, Basics-Matte, Basics-Silk, PETG-HF, PETG-Matte, ASA, PA, PLA+
       'esun': 39,               // CSV-seeded: 39 distinct product lines from 360+ products (PLA-Basic, PLA-Matte, PLA-Silk, PLA+HS, PETG, ABS+, TPU-95A, etc.)
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
       'fiberlogy': 19,          // CSV-seeded: ABS, ABS Plus, Easy ABS, ASA, Easy PLA, Easy PETG, FiberFlex 30D/40D, FiberSilk, FiberWood, HIPS, HS PLA Clear, Impact PLA, Matte PLA, Matte PETG, MattFlex 40D, Nylon PA12, PCTG, PP
