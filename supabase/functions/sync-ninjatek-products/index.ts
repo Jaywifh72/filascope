@@ -1,16 +1,18 @@
 /**
- * NINJATEK FULL SYNC PIPELINE
+ * NINJATEK CSV-SEEDED SYNC PIPELINE
  * 
- * 5-step sync for NinjaTek premium TPU filaments:
- * 1. Discover products via shop page (WooCommerce)
- * 2. Scrape product pages with Firecrawl
- * 3. Apply brand-specific enrichments
- * 4. Fix duplicate hex codes
- * 5. Populate TDS URLs
+ * Uses a curated CSV seed for NinjaTek TPU filaments:
+ * - NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D, Eel 90A
+ * - Plus ColorFabb filaments sold via NinjaTek store
  * 
- * Platform: WooCommerce (WordPress) - requires HTML scraping
+ * Filtering (per requirements):
+ * - No 2.85mm/3mm diameter products
+ * - No bulk products (>5.5kg)
+ * - No sample products (<300g)
+ * - No gift cards or non-filament products
+ * 
+ * Platform: WooCommerce (WordPress) - uses curated CSV seed
  * Currency: USD
- * Specialty: Premium TPU in various Shore hardness grades
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
@@ -20,24 +22,27 @@ import {
   extractProductLine,
   getNinjatekColorHex,
   NINJATEK_TDS_URLS,
-  type ProductLine,
+  shouldIncludeNinjatekVariant,
+  type NinjatekProductLine,
 } from '../_shared/ninjatek-defaults.ts';
-import {
-  shouldIncludeVariant,
-  createFilterStats,
-  updateFilterStats,
-  logFilterStats,
-} from '../_shared/variant-filters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface SyncDecision {
+  type: 'color_extraction' | 'product_line' | 'filter' | 'hex_lookup' | 'material_separation';
+  input: Record<string, unknown>;
+  output: Record<string, unknown>;
+  reason: string;
+}
+
 interface ProductVariant {
   productId: string;
   title: string;
-  productLine: ProductLine | null;
+  productLine: NinjatekProductLine | null;
+  material: string;
   color: string;
   colorHex: string | null;
   price: number | null;
@@ -50,224 +55,237 @@ interface ProductVariant {
 
 interface SyncResult {
   success: boolean;
-  step: string;
   created: number;
   updated: number;
+  skipped: number;
   errors: number;
-  details?: any;
+  products: Array<{ id: string; title: string; action: string; reason?: string }>;
+  fieldCoverage: Record<string, number>;
+  decisions: SyncDecision[];
 }
 
 // ============================================================================
-// STEP 1: DISCOVER PRODUCTS FROM SHOP PAGE
+// CSV SEED DATA (from ninjatek_filaments.csv)
 // ============================================================================
 
-const NINJATEK_PRODUCT_URLS: Record<ProductLine, string> = {
-  ninjaflex: 'https://ninjatek.com/shop/ninjaflex/',
-  edge: 'https://ninjatek.com/shop/edge/',
-  chinchilla: 'https://ninjatek.com/shop/chinchilla/',
-  cheetah: 'https://ninjatek.com/shop/cheetah/',
-  armadillo: 'https://ninjatek.com/shop/armadillo/',
-  eel: 'https://ninjatek.com/shop/eel/',
-};
+const NINJATEK_SEED_DATA = `Material,Filament Name,Filament URL,Filament Color,Product Image,Hex Code
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Fire Red,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Flamingo Pink,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Grass Green,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Lava Orange,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Midnight Black,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Neon Glow,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Sapphire Blue,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Snow White,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Steel Gray,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Sun Yellow,,N/A
+NinjaFlex 85A TPU,NinjaFlex 3D Printer Filament (85A),https://ninjatek.com/shop/ninjaflex/,Water Translucent,,N/A
+Edge 83A TPU,NinjaFlex Edge 3D Printer Filament (83A),https://ninjatek.com/shop/edge/,Midnight Black,,N/A
+Edge 83A TPU,NinjaFlex Edge 3D Printer Filament (83A),https://ninjatek.com/shop/edge/,Snow White,,N/A
+Chinchilla 75A TPU,Chinchilla 3D Printer Filament (75A),https://ninjatek.com/shop/chinchilla/,Midnight Black,,N/A
+Chinchilla 75A TPU,Chinchilla 3D Printer Filament (75A),https://ninjatek.com/shop/chinchilla/,Sky Blue,,N/A
+Chinchilla 75A TPU,Chinchilla 3D Printer Filament (75A),https://ninjatek.com/shop/chinchilla/,Snow White,,N/A
+Chinchilla 75A TPU,Chinchilla 3D Printer Filament (75A),https://ninjatek.com/shop/chinchilla/,Steel Gray,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Fire Red,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Flamingo Pink,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Grass Green,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Lava Orange,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Midnight Black,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Neon Glow,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Sapphire Blue,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Snow White,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Steel Gray,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Sun Yellow,,N/A
+Cheetah 95A TPU,Cheetah 3D Printer Filament (95A),https://ninjatek.com/shop/cheetah/,Water Translucent,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Fire Red,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Grass Green,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Lava Orange,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Midnight Black,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Sapphire Blue,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Snow White,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Steel Gray,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Sun Yellow,,N/A
+Armadillo 75D TPU,Armadillo 3D Printer Filament (75D),https://ninjatek.com/shop/armadillo/,Water Translucent,,N/A
+colorFabb ASA,colorFabb ASA 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-asa/,Black,,N/A
+colorFabb ASA,colorFabb ASA 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-asa/,Natural,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Black,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Dutch Orange,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Gray Silver,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Green,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Leaf Green,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Natural,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Red,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Shining Silver,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Signal Yellow,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Silver,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,White,,N/A
+colorFabb PLA,colorFabb PLA 3D Printer Filament,https://ninjatek.com/shop/colorfabb-pla/,Yellow,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Black,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Carbon Gray,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Clear,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Dark Blue,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Dark Gray,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Dark Green,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Gold Metalic,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Gray Metalic,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Light Blue,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Light Green,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Orange,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Red,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,Silver,,N/A
+colorFabb Co-Polyester,colorFabb Co-Polyesters 3D Printer Filament,https://ninjatek.com/shop/colorfabb-co-polyesters/,White,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,Black,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,Natural,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,bronzeFill,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,copperFill,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,glowFill,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,steelFill,,N/A
+colorFabb Specials,colorFabb Specials 3D Printer Filaments,https://ninjatek.com/shop/colorfabb-specials/,woodFill,,N/A`;
 
-async function discoverProducts(firecrawlKey: string): Promise<{ productLine: ProductLine; url: string; html: string }[]> {
-  console.log('[NINJATEK-SYNC] Step 1: Discovering products from shop pages...');
-  const results: { productLine: ProductLine; url: string; html: string }[] = [];
-  
-  for (const [productLine, url] of Object.entries(NINJATEK_PRODUCT_URLS)) {
-    try {
-      console.log(`[NINJATEK-SYNC] Scraping ${productLine}: ${url}`);
-      
-      const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${firecrawlKey}`,
-        },
-        body: JSON.stringify({
-          url,
-          formats: ['html', 'markdown'],
-          onlyMainContent: false,
-          waitFor: 3000,
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error(`[NINJATEK-SYNC] Failed to scrape ${productLine}: ${response.status}`);
-        continue;
-      }
-      
-      const data = await response.json();
-      if (data.success && data.data?.html) {
-        results.push({
-          productLine: productLine as ProductLine,
-          url,
-          html: data.data.html,
-        });
-        console.log(`[NINJATEK-SYNC] ✓ Got HTML for ${productLine}`);
-      }
-      
-      // Rate limit
-      await new Promise(r => setTimeout(r, 1500));
-    } catch (error) {
-      console.error(`[NINJATEK-SYNC] Error scraping ${productLine}:`, error);
-    }
-  }
-  
-  return results;
-}
+// Excluded rows (per requirements: no 2.85mm/3mm, no Eel with only diameter options)
+const EXCLUDED_ENTRIES = [
+  'Eel 90A (Conductive TPU)', // Has only diameter variants (1.75mm, 3mm) not colors
+  'colorFabb PA (Nylon)',     // Has only diameter variants (1.75mm, 2.85mm) not colors
+];
 
-// ============================================================================
-// STEP 2: PARSE COLOR VARIANTS FROM HTML
-// ============================================================================
-
-function parseColorVariants(html: string, productLine: ProductLine, baseUrl: string): ProductVariant[] {
+function parseCsvSeed(): ProductVariant[] {
   const variants: ProductVariant[] = [];
+  const lines = NINJATEK_SEED_DATA.split('\n');
   
-  // Extract product title
-  const titleMatch = html.match(/<h1[^>]*class="[^"]*product[_-]title[^"]*"[^>]*>([^<]+)</i) ||
-                     html.match(/<h1[^>]*>([^<]+NinjaTek[^<]+)</i) ||
-                     html.match(/<h1[^>]*>([^<]+)</i);
-  const baseTitle = titleMatch ? titleMatch[1].trim() : `NinjaTek ${productLine.charAt(0).toUpperCase() + productLine.slice(1)}`;
-  
-  // Extract price
-  const priceMatch = html.match(/\$(\d+(?:\.\d{2})?)/);
-  const price = priceMatch ? parseFloat(priceMatch[1]) : null;
-  
-  // Extract product image
-  const imageMatch = html.match(/src="([^"]+ninjatek[^"]+(?:jpg|png|webp))"/i) ||
-                     html.match(/src="([^"]+wp-content\/uploads[^"]+(?:jpg|png|webp))"/i);
-  const baseImageUrl = imageMatch ? imageMatch[1] : null;
-  
-  // Try to extract color swatches from WooCommerce variation data
-  // WooCommerce often has data-attribute-pa_color or similar
-  const colorMatches = html.matchAll(/data-value="([^"]+)"[^>]*title="([^"]+)"/gi);
-  const swatchMatches = html.matchAll(/class="[^"]*swatch[^"]*"[^>]*style="[^"]*background(?:-color)?:\s*#?([A-Fa-f0-9]{6})[^"]*"[^>]*(?:title|data-title)="([^"]+)"/gi);
-  
-  const colorsFound: Set<string> = new Set();
-  
-  // Parse swatch data
-  for (const match of swatchMatches) {
-    const hex = match[1];
-    const colorName = match[2];
-    if (colorName && !colorsFound.has(colorName.toLowerCase())) {
-      colorsFound.add(colorName.toLowerCase());
-      variants.push({
-        productId: `ninjatek-${productLine}-${colorName.toLowerCase().replace(/\s+/g, '-')}`,
-        title: `${baseTitle} - ${colorName}`,
-        productLine,
-        color: colorName,
-        colorHex: hex ? `#${hex.toUpperCase()}` : getNinjatekColorHex(colorName),
-        price,
-        weightKg: 1.0,
-        diameterMm: 1.75,
-        url: baseUrl,
-        imageUrl: baseImageUrl,
-        available: true,
-      });
-    }
-  }
-  
-  // Also look for select options
-  const optionMatches = html.matchAll(/<option[^>]*value="([^"]+)"[^>]*>([^<]+)</gi);
-  for (const match of optionMatches) {
-    const value = match[1];
-    const label = match[2].trim();
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
     
-    // Skip non-color options (sizes, etc.)
-    if (/\d+\s*(kg|g|mm)/i.test(label)) continue;
-    if (label.toLowerCase() === 'choose an option') continue;
+    // Parse CSV (handles quoted fields with commas)
+    const fields: string[] = [];
+    let current = '';
+    let inQuotes = false;
     
-    const colorName = label;
-    if (colorName && !colorsFound.has(colorName.toLowerCase())) {
-      colorsFound.add(colorName.toLowerCase());
-      variants.push({
-        productId: `ninjatek-${productLine}-${colorName.toLowerCase().replace(/\s+/g, '-')}`,
-        title: `${baseTitle} - ${colorName}`,
-        productLine,
-        color: colorName,
-        colorHex: getNinjatekColorHex(colorName),
-        price,
-        weightKg: 1.0,
-        diameterMm: 1.75,
-        url: baseUrl,
-        imageUrl: baseImageUrl,
-        available: true,
-      });
-    }
-  }
-  
-  // If no variants found, try parsing from markdown/text
-  if (variants.length === 0) {
-    // Known NinjaTek colors to look for
-    const knownColors = [
-      'Midnight', 'Snow', 'Steel', 'Fire', 'Lava', 'Sun', 
-      'Grass', 'Sapphire', 'Flamingo', 'Neon', 'Water', 'Sky',
-      'Carbon', 'Bone', 'Silver'
-    ];
-    
-    for (const color of knownColors) {
-      if (html.toLowerCase().includes(color.toLowerCase())) {
-        if (!colorsFound.has(color.toLowerCase())) {
-          colorsFound.add(color.toLowerCase());
-          variants.push({
-            productId: `ninjatek-${productLine}-${color.toLowerCase()}`,
-            title: `${baseTitle} - ${color}`,
-            productLine,
-            color,
-            colorHex: getNinjatekColorHex(color),
-            price,
-            weightKg: 1.0,
-            diameterMm: 1.75,
-            url: baseUrl,
-            imageUrl: baseImageUrl,
-            available: true,
-          });
-        }
+    for (const char of line) {
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += char;
       }
     }
+    fields.push(current.trim());
+    
+    const [material, filamentName, filamentUrl, filamentColor] = fields;
+    
+    // Skip excluded entries
+    if (EXCLUDED_ENTRIES.some(e => material?.includes(e))) {
+      console.log(`[NINJATEK-SYNC] SKIP excluded entry: ${material} - ${filamentColor}`);
+      continue;
+    }
+    
+    // Skip non-color entries (diameter values like "1.75mm", "3mm", "2.85mm")
+    if (/^\d+\.?\d*\s*mm$/i.test(filamentColor)) {
+      console.log(`[NINJATEK-SYNC] SKIP diameter variant: ${material} - ${filamentColor}`);
+      continue;
+    }
+    
+    const cleanedName = cleanNinjatekTitle(filamentName);
+    const productLine = extractProductLine(filamentName);
+    const enriched = enrichNinjatekProduct(filamentName, filamentColor);
+    
+    // Generate unique product ID
+    const colorSlug = filamentColor.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const productId = `ninjatek-${productLine || 'generic'}-${colorSlug}`;
+    
+    variants.push({
+      productId,
+      title: `${cleanedName} - ${filamentColor}`,
+      productLine,
+      material: enriched.material,
+      color: filamentColor,
+      colorHex: enriched.colorHex,
+      price: null, // Will be scraped or set manually
+      weightKg: 0.5, // Default NinjaTek spool
+      diameterMm: 1.75, // Default (we filter out 3mm)
+      url: filamentUrl,
+      imageUrl: null, // Will be scraped
+      available: true,
+    });
   }
   
-  console.log(`[NINJATEK-SYNC] Parsed ${variants.length} color variants for ${productLine}`);
+  console.log(`[NINJATEK-SYNC] Parsed ${variants.length} variants from CSV seed`);
   return variants;
 }
 
 // ============================================================================
-// STEP 3: UPSERT TO DATABASE WITH ENRICHMENTS
+// DATABASE OPERATIONS
 // ============================================================================
 
-async function upsertVariants(
-  supabase: any, 
-  variants: ProductVariant[], 
-  brandId: string | null
-): Promise<SyncResult> {
-  console.log(`[NINJATEK-SYNC] Step 3: Upserting ${variants.length} variants with enrichments...`);
+async function deleteExistingProducts(supabase: any): Promise<number> {
+  console.log('[NINJATEK-SYNC] Deleting existing NinjaTek products for clean slate...');
   
-  let created = 0, updated = 0, errors = 0;
+  const { data: existing, error: countError } = await supabase
+    .from('filaments')
+    .select('id')
+    .ilike('vendor', 'ninjatek');
+  
+  const existingCount = existing?.length || 0;
+  console.log(`[NINJATEK-SYNC] Found ${existingCount} existing products`);
+  
+  if (existingCount > 0) {
+    const { error: deleteError } = await supabase
+      .from('filaments')
+      .delete()
+      .ilike('vendor', 'ninjatek');
+    
+    if (deleteError) {
+      console.error('[NINJATEK-SYNC] Delete error:', deleteError);
+      throw deleteError;
+    }
+    console.log(`[NINJATEK-SYNC] Deleted ${existingCount} existing products`);
+  }
+  
+  return existingCount;
+}
+
+async function upsertVariants(
+  supabase: any,
+  variants: ProductVariant[],
+  brandId: string | null,
+  decisions: SyncDecision[]
+): Promise<{ created: number; updated: number; skipped: number; errors: number; products: Array<{ id: string; title: string; action: string; reason?: string }> }> {
+  console.log(`[NINJATEK-SYNC] Upserting ${variants.length} variants...`);
+  
+  let created = 0, updated = 0, skipped = 0, errors = 0;
+  const products: Array<{ id: string; title: string; action: string; reason?: string }> = [];
   
   for (const variant of variants) {
     try {
-      // Apply enrichments
-      const enriched = enrichNinjatekProduct(variant.title);
-      const cleanedTitle = cleanNinjatekTitle(variant.title);
+      const enriched = enrichNinjatekProduct(variant.title, variant.color);
       
-      // Check if exists
-      const { data: existing } = await supabase
-        .from('filaments')
-        .select('id')
-        .eq('product_id', variant.productId)
-        .ilike('vendor', 'ninjatek')
-        .maybeSingle();
+      // Log decision for color extraction
+      decisions.push({
+        type: 'color_extraction',
+        input: { title: variant.title, color: variant.color },
+        output: { colorHex: enriched.colorHex, colorName: enriched.colorName },
+        reason: enriched.colorHex ? 'Matched color in mapping' : 'No hex mapping found',
+      });
+      
+      // Log decision for product line
+      decisions.push({
+        type: 'product_line',
+        input: { title: variant.title },
+        output: { productLineId: enriched.productLineId, productLine: enriched.productLine },
+        reason: `Extracted product line: ${enriched.productLine || 'generic'}`,
+      });
       
       const filamentData = {
         product_id: variant.productId,
-        product_title: cleanedTitle || variant.title,
+        product_title: variant.title,
         vendor: 'NinjaTek',
         brand_id: brandId,
         material: enriched.material,
         product_line_id: enriched.productLineId,
         finish_type: enriched.finishType,
-        color_hex: variant.colorHex || (enriched.colorHex ? `#${enriched.colorHex}` : null),
+        color_hex: variant.colorHex || enriched.colorHex,
         color_family: variant.color,
         variant_price: variant.price,
         variant_available: variant.available,
@@ -284,74 +302,69 @@ async function upsertVariants(
         shore_hardness_d: enriched.shoreHardness ? parseInt(enriched.shoreHardness.replace(/[AD]/i, ''), 10) : null,
         last_scraped_at: new Date().toISOString(),
         sync_status: 'synced',
-        auto_created: !existing,
-        auto_updated: !!existing,
+        auto_created: true,
+        auto_updated: false,
       };
       
-      if (existing) {
-        const { error } = await supabase
-          .from('filaments')
-          .update(filamentData)
-          .eq('id', existing.id);
-        
-        if (error) throw error;
-        updated++;
-      } else {
-        const { error } = await supabase
-          .from('filaments')
-          .insert(filamentData);
-        
-        if (error) throw error;
-        created++;
-      }
+      const { error } = await supabase
+        .from('filaments')
+        .insert(filamentData);
+      
+      if (error) throw error;
+      
+      created++;
+      products.push({ id: variant.productId, title: variant.title, action: 'created' });
+      
     } catch (error) {
       console.error(`[NINJATEK-SYNC] Error upserting ${variant.productId}:`, error);
       errors++;
+      products.push({ 
+        id: variant.productId, 
+        title: variant.title, 
+        action: 'error',
+        reason: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
   
-  return { success: errors === 0, step: 'upsert', created, updated, errors };
+  return { created, updated, skipped, errors, products };
 }
 
 // ============================================================================
-// STEP 4: FIX DUPLICATE HEX CODES
+// FIX DUPLICATE HEX CODES
 // ============================================================================
 
-async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
-  console.log('[NINJATEK-SYNC] Step 4: Fixing duplicate hex codes...');
+async function fixDuplicateHexCodes(supabase: any): Promise<number> {
+  console.log('[NINJATEK-SYNC] Fixing duplicate hex codes within product lines...');
   
   try {
-    const { data: duplicates, error } = await supabase.rpc('find_duplicate_hexes', {
-      p_vendor: 'ninjatek'
-    });
+    // Find duplicates within same product_line_id
+    const { data: allFilaments } = await supabase
+      .from('filaments')
+      .select('id, product_line_id, color_hex, color_family')
+      .ilike('vendor', 'ninjatek')
+      .not('color_hex', 'is', null);
     
-    if (error) throw error;
+    if (!allFilaments || allFilaments.length === 0) return 0;
     
-    if (!duplicates || duplicates.length === 0) {
-      console.log('[NINJATEK-SYNC] No duplicate hex codes found');
-      return { success: true, step: 'fix_hexes', created: 0, updated: 0, errors: 0 };
-    }
-    
-    console.log(`[NINJATEK-SYNC] Found ${duplicates.length} products with duplicate hexes`);
-    
-    // Group by product_line_id and hex
-    const groups: Record<string, typeof duplicates> = {};
-    for (const dup of duplicates) {
-      const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
+    // Group by product_line_id + color_hex
+    const groups: Record<string, typeof allFilaments> = {};
+    for (const f of allFilaments) {
+      const key = `${f.product_line_id}:${f.color_hex?.toLowerCase()}`;
       if (!groups[key]) groups[key] = [];
-      groups[key].push(dup);
+      groups[key].push(f);
     }
     
-    let updated = 0;
-    for (const [, items] of Object.entries(groups)) {
-      // Skip first item (keep original), adjust others
+    let fixed = 0;
+    for (const [key, items] of Object.entries(groups)) {
+      if (items.length <= 1) continue;
+      
+      // Skip first, adjust others
       for (let i = 1; i < items.length; i++) {
         const item = items[i];
         const originalHex = item.color_hex?.replace('#', '') || 'FFFFFF';
-        
-        // Modify hex slightly
         const hexNum = parseInt(originalHex, 16);
-        const newHexNum = (hexNum + i * 17) % 0xFFFFFF; // Small variation
+        const newHexNum = (hexNum + i * 17) % 0xFFFFFF;
         const newHex = `#${newHexNum.toString(16).padStart(6, '0').toUpperCase()}`;
         
         const { error } = await supabase
@@ -359,56 +372,42 @@ async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
           .update({ color_hex: newHex })
           .eq('id', item.id);
         
-        if (!error) updated++;
+        if (!error) {
+          console.log(`[NINJATEK-SYNC] Fixed duplicate hex: ${item.color_family} ${item.color_hex} -> ${newHex}`);
+          fixed++;
+        }
       }
     }
     
-    return { success: true, step: 'fix_hexes', created: 0, updated, errors: 0 };
+    return fixed;
   } catch (error) {
     console.error('[NINJATEK-SYNC] Error fixing hex codes:', error);
-    return { success: false, step: 'fix_hexes', created: 0, updated: 0, errors: 1, details: error };
+    return 0;
   }
 }
 
 // ============================================================================
-// STEP 5: POPULATE TDS URLs
+// CALCULATE FIELD COVERAGE
 // ============================================================================
 
-async function populateTdsUrls(supabase: any): Promise<SyncResult> {
-  console.log('[NINJATEK-SYNC] Step 5: Populating TDS URLs...');
+async function calculateFieldCoverage(supabase: any): Promise<Record<string, number>> {
+  const { data: filaments } = await supabase
+    .from('filaments')
+    .select('color_hex, featured_image, tds_url, variant_price, product_url')
+    .ilike('vendor', 'ninjatek');
   
-  try {
-    // Get NinjaTek filaments without TDS
-    const { data: filaments, error: fetchError } = await supabase
-      .from('filaments')
-      .select('id, product_title, product_line_id')
-      .ilike('vendor', 'ninjatek')
-      .is('tds_url', null);
-    
-    if (fetchError) throw fetchError;
-    
-    let updated = 0;
-    for (const filament of filaments || []) {
-      // Extract product line from product_line_id (e.g., "ninjatek__tpu-85a__ninjaflex" -> "ninjaflex")
-      const productLine = filament.product_line_id?.split('__').pop() as ProductLine;
-      const tdsUrl = NINJATEK_TDS_URLS[productLine];
-      
-      if (tdsUrl) {
-        const { error } = await supabase
-          .from('filaments')
-          .update({ tds_url: tdsUrl })
-          .eq('id', filament.id);
-        
-        if (!error) updated++;
-      }
-    }
-    
-    console.log(`[NINJATEK-SYNC] Updated ${updated} filaments with TDS URLs`);
-    return { success: true, step: 'tds_urls', created: 0, updated, errors: 0 };
-  } catch (error) {
-    console.error('[NINJATEK-SYNC] Error populating TDS URLs:', error);
-    return { success: false, step: 'tds_urls', created: 0, updated: 0, errors: 1, details: error };
+  if (!filaments || filaments.length === 0) {
+    return { color_hex: 0, featured_image: 0, tds_url: 0, variant_price: 0, product_url: 0 };
   }
+  
+  const total = filaments.length;
+  return {
+    color_hex: Math.round((filaments.filter((f: any) => f.color_hex).length / total) * 100),
+    featured_image: Math.round((filaments.filter((f: any) => f.featured_image).length / total) * 100),
+    tds_url: Math.round((filaments.filter((f: any) => f.tds_url).length / total) * 100),
+    variant_price: Math.round((filaments.filter((f: any) => f.variant_price).length / total) * 100),
+    product_url: Math.round((filaments.filter((f: any) => f.product_url).length / total) * 100),
+  };
 }
 
 // ============================================================================
@@ -422,32 +421,22 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
   console.log('[NINJATEK-SYNC] ═══════════════════════════════════════════════════════');
-  console.log('[NINJATEK-SYNC] 🚀 NINJATEK FULL SYNC STARTED');
+  console.log('[NINJATEK-SYNC] 🚀 NINJATEK CSV-SEEDED SYNC STARTED');
   console.log('[NINJATEK-SYNC] ═══════════════════════════════════════════════════════');
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    
-    if (!firecrawlKey) {
-      throw new Error('FIRECRAWL_API_KEY is required');
-    }
-    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Parse options
-    let options = { 
-      skipDiscovery: false, 
-      skipEnrichment: false,
-      skipHexFix: false,
-      skipTds: false,
-      limit: 100 
-    };
+    // Parse options (limit is ignored for CSV-seeded brands)
+    let options: { dryRun?: boolean; cleanSlate?: boolean } = {};
     try {
       const body = await req.json();
-      options = { ...options, ...body };
+      options = body;
     } catch {}
+
+    const decisions: SyncDecision[] = [];
 
     // Get brand ID
     const { data: brand } = await supabase
@@ -457,63 +446,88 @@ Deno.serve(async (req) => {
       .maybeSingle();
     
     const brandId = brand?.id || null;
-    const results: SyncResult[] = [];
 
-    // Step 1 & 2: Discover and parse products
-    if (!options.skipDiscovery) {
-      const pages = await discoverProducts(firecrawlKey);
-      console.log(`[NINJATEK-SYNC] Discovered ${pages.length} product pages`);
-      
-      const allVariants: ProductVariant[] = [];
-      for (const page of pages) {
-        const variants = parseColorVariants(page.html, page.productLine, page.url);
-        allVariants.push(...variants);
+    // Step 1: Parse CSV seed
+    const variants = parseCsvSeed();
+    console.log(`[NINJATEK-SYNC] Step 1: Parsed ${variants.length} variants from CSV`);
+    
+    // Log filter decisions
+    decisions.push({
+      type: 'filter',
+      input: { totalCsvRows: 76 },
+      output: { includedVariants: variants.length, excludedEntries: EXCLUDED_ENTRIES },
+      reason: 'Filtered out Eel (diameter-only) and colorFabb PA (diameter-only)',
+    });
+
+    let created = 0, updated = 0, skipped = 0, errors = 0;
+    let products: Array<{ id: string; title: string; action: string; reason?: string }> = [];
+
+    if (!options.dryRun) {
+      // Step 2: Delete existing products (clean slate for CSV-seeded sync)
+      const deleted = await deleteExistingProducts(supabase);
+      console.log(`[NINJATEK-SYNC] Step 2: Deleted ${deleted} existing products`);
+
+      // Step 3: Upsert all variants
+      const result = await upsertVariants(supabase, variants, brandId, decisions);
+      created = result.created;
+      updated = result.updated;
+      skipped = result.skipped;
+      errors = result.errors;
+      products = result.products;
+      console.log(`[NINJATEK-SYNC] Step 3: Created ${created}, Updated ${updated}, Errors ${errors}`);
+
+      // Step 4: Fix duplicate hex codes
+      const hexFixed = await fixDuplicateHexCodes(supabase);
+      console.log(`[NINJATEK-SYNC] Step 4: Fixed ${hexFixed} duplicate hex codes`);
+
+      // Step 5: Update brand counts
+      if (brandId) {
+        try {
+          await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'ninjatek' });
+          await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: 'ninjatek' });
+        } catch (e) {
+          console.warn('[NINJATEK-SYNC] Warning: Could not update brand counts:', e);
+        }
       }
-      
-      console.log(`[NINJATEK-SYNC] Total variants parsed: ${allVariants.length}`);
-      
-      // Step 3: Upsert with enrichments
-      if (!options.skipEnrichment && allVariants.length > 0) {
-        const upsertResult = await upsertVariants(supabase, allVariants, brandId);
-        results.push(upsertResult);
-      }
+    } else {
+      console.log('[NINJATEK-SYNC] DRY RUN - No database changes made');
+      products = variants.map(v => ({ id: v.productId, title: v.title, action: 'would_create' }));
     }
 
-    // Step 4: Fix duplicate hex codes
-    if (!options.skipHexFix) {
-      const hexResult = await fixDuplicateHexCodes(supabase);
-      results.push(hexResult);
-    }
-
-    // Step 5: Populate TDS URLs
-    if (!options.skipTds) {
-      const tdsResult = await populateTdsUrls(supabase);
-      results.push(tdsResult);
-    }
-
-    // Update brand counts
-    if (brandId) {
-      await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'ninjatek' });
-      await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: 'ninjatek' });
-    }
+    // Calculate field coverage
+    const fieldCoverage = options.dryRun ? {} : await calculateFieldCoverage(supabase);
 
     const duration = Math.round((Date.now() - startTime) / 1000);
-    const totalCreated = results.reduce((sum, r) => sum + r.created, 0);
-    const totalUpdated = results.reduce((sum, r) => sum + r.updated, 0);
-    const totalErrors = results.reduce((sum, r) => sum + r.errors, 0);
-
+    
     console.log('[NINJATEK-SYNC] ═══════════════════════════════════════════════════════');
     console.log(`[NINJATEK-SYNC] ✅ SYNC COMPLETED in ${duration}s`);
-    console.log(`[NINJATEK-SYNC] Created: ${totalCreated}, Updated: ${totalUpdated}, Errors: ${totalErrors}`);
+    console.log(`[NINJATEK-SYNC] Created: ${created}, Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
     console.log('[NINJATEK-SYNC] ═══════════════════════════════════════════════════════');
 
+    const result: SyncResult = {
+      success: errors === 0,
+      created,
+      updated,
+      skipped,
+      errors,
+      products,
+      fieldCoverage,
+      decisions,
+    };
+
     return new Response(JSON.stringify({
-      success: totalErrors === 0,
+      success: result.success,
       duration,
-      created: totalCreated,
-      updated: totalUpdated,
-      errors: totalErrors,
-      steps: results,
+      summary: {
+        totalDiscovered: variants.length,
+        created: result.created,
+        updated: result.updated,
+        skipped: result.skipped,
+        errors: result.errors,
+      },
+      products: result.products,
+      fieldCoverage: result.fieldCoverage,
+      scrapeDecisionLogs: result.decisions,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
