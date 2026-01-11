@@ -49,10 +49,68 @@ interface ShopifyProduct {
     compare_at_price: string | null;
     sku: string;
     available: boolean;
+    option1: string | null;
+    option2: string | null;
+    option3: string | null;
+    image_id: number | null;
   }>;
   images: Array<{
+    id: number;
     src: string;
+    alt: string | null;
   }>;
+}
+
+// Weight/size pattern check
+function isWeightOrSize(value: string | null): boolean {
+  if (!value) return true;
+  const v = value.trim().toLowerCase();
+  return /^\d+(\.\d+)?\s*(kg|g|mm|lb|oz)$/i.test(v) ||
+         /^(1\.75|2\.85|3\.0)\s*mm$/i.test(v) ||
+         /^(cardboard|plastic)\s*spool$/i.test(v) ||
+         /^\d+\s*kg$/i.test(v);
+}
+
+// Extract color from Shopify variant options
+function extractColorFromShopifyVariant(variant: ShopifyProduct['variants'][0]): string | null {
+  // Check option2 first (most common color location: option1=size, option2=color)
+  if (variant.option2 && !isWeightOrSize(variant.option2)) {
+    return variant.option2;
+  }
+  // Check option1 if option2 is size/weight
+  if (variant.option1 && !isWeightOrSize(variant.option1)) {
+    return variant.option1;
+  }
+  // Check option3 as fallback
+  if (variant.option3 && !isWeightOrSize(variant.option3)) {
+    return variant.option3;
+  }
+  return null;
+}
+
+// Check if product should be filtered out
+function shouldSkipMatter3dProduct(product: ShopifyProduct, variant: ShopifyProduct['variants'][0]): boolean {
+  const title = product.title.toLowerCase();
+  const variantTitle = variant.title.toLowerCase();
+  const price = parseFloat(variant.price);
+  
+  // Skip pellets (industrial format)
+  if (/pellets?/i.test(title)) return true;
+  
+  // Skip custom color orders
+  if (/custom\s*color/i.test(title)) return true;
+  
+  // Skip bundles
+  if (/bundle|cmyk|pack/i.test(title)) return true;
+  
+  // Skip very high price items (>$200 - industrial/bulk)
+  if (price > 200) return true;
+  
+  // Skip 10kg+ (industrial bulk)
+  const weightMatch = variantTitle.match(/(\d+)\s*kg/i) || title.match(/(\d+)\s*kg/i);
+  if (weightMatch && parseInt(weightMatch[1]) >= 10) return true;
+  
+  return false;
 }
 
 Deno.serve(async (req) => {
@@ -109,6 +167,15 @@ Deno.serve(async (req) => {
         const filamentProducts = products.filter(p => isFilamentProduct(p.title, p.product_type));
         console.log(`[Matter3D] Filtered to ${filamentProducts.length} filament products`);
 
+        // Build image lookup map
+        const buildImageMap = (product: ShopifyProduct): Map<number, string> => {
+          const imageMap = new Map<number, string>();
+          for (const img of product.images || []) {
+            imageMap.set(img.id, img.src);
+          }
+          return imageMap;
+        };
+
         // Process each product
         const productsToProcess = limit ? filamentProducts.slice(0, limit) : filamentProducts;
 
@@ -117,29 +184,50 @@ Deno.serve(async (req) => {
             const cleanedTitle = cleanMatter3dTitle(product.title);
             const material = normalizeMatter3dMaterial(product.title);
             const productUrl = `https://matter3d.com/products/${product.handle}`;
-            const featuredImage = product.images?.[0]?.src || null;
+            const imageMap = buildImageMap(product);
 
             // Process each variant (color explosion)
             for (const variant of product.variants) {
               stats.discovered++;
 
-              const parsed = parseVariantTitle(variant.title);
-              const colorName = parsed.color;
-              const spoolType = parsed.spool;
+              // Skip bulk/pellet/custom products
+              if (shouldSkipMatter3dProduct(product, variant)) {
+                console.log(`[Matter3D] Skipping: ${product.title} - ${variant.title} (filtered)`);
+                continue;
+              }
 
-              // Skip duplicate spool types (keep first instance)
-              // We'll consolidate cardboard/plastic to same color entry
-              if (spoolType && spoolType.toLowerCase().includes('plastic')) {
-                // Skip plastic spool variant if cardboard exists
+              // Extract color from Shopify option fields (NOT slash-split)
+              const colorName = extractColorFromShopifyVariant(variant);
+              
+              // Skip duplicate spool types (keep first instance - cardboard preferred)
+              const variantParts = variant.title.split('/').map(p => p.trim());
+              const hasPlasticSpool = variantParts.some(p => /plastic/i.test(p));
+              if (hasPlasticSpool) {
+                // Skip plastic spool variant if cardboard exists for same color
                 const cardboardExists = product.variants.some(v => {
-                  const p = parseVariantTitle(v.title);
-                  return p.color === colorName && p.spool?.toLowerCase().includes('cardboard');
+                  const vc = extractColorFromShopifyVariant(v);
+                  const vParts = v.title.split('/').map(p => p.trim());
+                  return vc === colorName && vParts.some(p => /cardboard/i.test(p));
                 });
                 if (cardboardExists) continue;
               }
 
+              // Find variant-specific image
+              let featuredImage: string | null = null;
+              if (variant.image_id && imageMap.has(variant.image_id)) {
+                featuredImage = imageMap.get(variant.image_id)!;
+              } else {
+                // Fallback: find image with matching alt text or first image
+                const altMatch = product.images?.find(img => 
+                  img.alt?.toLowerCase().includes(colorName?.toLowerCase() || '')
+                );
+                featuredImage = altMatch?.src || product.images?.[0]?.src || null;
+              }
+
               const productId = `${product.id}_${variant.id}`;
-              const variantTitle = colorName ? `${cleanedTitle} - ${colorName}` : cleanedTitle;
+              const variantTitle = colorName 
+                ? `${cleanedTitle} - ${colorName}`.replace(/\s*-\s*$/, '').trim()
+                : cleanedTitle.replace(/\s*-\s*$/, '').trim();
               const colorHex = getMatter3dColorHex(colorName || '');
               const finishType = extractFinishType(product.title);
               const productLineId = generateMatter3dProductLineId(product.title, material);

@@ -244,11 +244,12 @@ export function extractSpoolType(variantTitle: string): 'cardboard' | 'plastic' 
 }
 
 // PRODUCT LINE ID GENERATION
+// Consolidate standard weight variants (1kg, 500g) into single product lines
+// Only separate 5kg bulk products as distinct lines
 export function generateMatter3dProductLineId(title: string, material?: string | null): string {
   const mat = material || normalizeMatter3dMaterial(title) || 'unknown';
   const matLower = mat.toLowerCase().replace(/-/g, '_');
   const finish = extractFinishType(title);
-  const isBulk = isBulkVariant(title);
   const weight = extractWeightKg(title);
   const isEssentials = isEssentialsVariant(title);
   const isPerformance = isPerformanceVariant(title);
@@ -286,9 +287,10 @@ export function generateMatter3dProductLineId(title: string, material?: string |
     lineId += '-hf';
   }
   
-  // Add bulk suffix
-  if (isBulk) {
-    lineId += `-${weight}kg`;
+  // ONLY add bulk suffix for 5kg+ products (separate product line for bulk)
+  // DO NOT add weight suffixes for standard weights (500g, 1kg) to consolidate
+  if (weight >= 5) {
+    lineId += '-5kg';
   }
   
   return lineId;
@@ -355,12 +357,13 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'maroon': '800000',
   'crimson': 'DC143C',
   
-  // Pinks
+  // Pinks - UNIQUE hex values to prevent duplicates
   'pink': 'FFC0CB',
   'light pink': 'FFB6C1',
   'bubblegum pink': 'FF69B4',
-  'fuchsia': 'FF00FF',
-  'magenta': 'FF00FF',
+  'fuchsia': 'FF00FF',        // Pure magenta
+  'magenta': 'FF0099',        // Slightly redder magenta (unique)
+  'fuchsia/magenta': 'FF00CC', // Blend for combined variants
   'hot pink': 'FF69B4',
   'salmon': 'FA8072',
   
