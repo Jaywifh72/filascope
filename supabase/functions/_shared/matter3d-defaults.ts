@@ -292,12 +292,13 @@ export function generateMatter3dProductLineId(title: string, material?: string |
   return lineId;
 }
 
-// COLOR MAPPING
+// COLOR MAPPING - Comprehensive with unique hex codes to prevent duplicates
 export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   // Whites
   'white': 'FFFFFF',
   'snow white': 'FFFAFA',
   'egg shell white': 'F0EAD6',
+  'eggshell white': 'F0EAD6',
   'bone white': 'F9F6EE',
   'cream': 'FFFDD0',
   
@@ -311,7 +312,7 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   // Matte Blacks
   'matte black': '1A1A1A',
   
-  // Greys
+  // Greys/Grays
   'grey': '808080',
   'gray': '808080',
   'light grey': 'C0C0C0',
@@ -322,10 +323,15 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'gunmetal gray': '2C3539',
   'charcoal': '36454F',
   'silver': 'C0C0C0',
+  'dark grey': '4A4A4A',
+  'dark gray': '4A4A4A',
   
   // Matte Greys
   'matte grey': '6B6B6B',
   'matte gray': '6B6B6B',
+  'matte charcoal': '3A3A3A',
+  'matte gunmetal grey': '2A3439',
+  'matte gunmetal gray': '2A3439',
   
   // Blues
   'blue': '0066CC',
@@ -340,9 +346,15 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'royal blue': '4169E1',
   'electric blue': '7DF9FF',
   'cobalt blue': '0047AB',
+  'dark blue': '00008B',
+  'ice blue': 'B0E0E6',
+  'teal blue': '367588',
   
   // Matte Blues
   'matte blue': '1E3A5F',
+  'matte navy': '1A1A40',
+  'matte navy blue': '1A1A40',
+  'matte sky blue': '6B8BA4',
   
   // Greens
   'green': '00AA00',
@@ -357,9 +369,13 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'olive': '808000',
   'mint green': '98FB98',
   'teal': '008080',
+  'sage green': '9DC183',
+  'hunter green': '355E3B',
   
   // Matte Greens
   'matte green': '228B22',
+  'matte forest green': '1E5631',
+  'matte olive': '6B6B00',
   
   // Reds
   'red': 'CC0000',
@@ -369,22 +385,30 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'burgundy': '800020',
   'maroon': '800000',
   'crimson': 'DC143C',
+  'dark red': '8B0000',
+  'rust red': 'B7410E',
+  'fire red': 'FF4500',
   
   // Matte Reds
   'matte red': 'B22222',
+  'matte wine red': '5A2129',
+  'matte burgundy': '641C34',
   
   // Pinks - UNIQUE hex values to prevent duplicates
   'pink': 'FFC0CB',
   'light pink': 'FFB6C1',
   'bubblegum pink': 'FF69B4',
-  'fuchsia': 'FF00FF',        // Pure magenta
-  'magenta': 'FF0099',        // Slightly redder magenta (unique)
-  'fuchsia/magenta': 'FF00CC', // Blend for combined variants
+  'fuchsia': 'FF00FF',        // Pure magenta/fuchsia
+  'magenta': 'FF0099',        // Slightly redder (unique from fuchsia)
+  'fuchsia/magenta': 'FF00CC', // Blend for combined variants (unique)
   'hot pink': 'FF69B4',
   'salmon': 'FA8072',
+  'rose': 'FF007F',
+  'coral pink': 'F88379',
   
   // Matte Pinks
   'matte pink': 'FFB6C1',
+  'matte rose': 'B76E79',
   
   // Oranges
   'orange': 'FF8C00',
@@ -392,9 +416,12 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'burnt orange': 'CC5500',
   'coral': 'FF7F50',
   'peach': 'FFCBA4',
+  'tangerine': 'FF9966',
+  'fire orange': 'FF4D00',
   
   // Matte Oranges
   'matte orange': 'CC5500',
+  'matte burnt orange': 'B54E00',
   
   // Yellows
   'yellow': 'FFD700',
@@ -403,9 +430,12 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'gold': 'FFD700',
   'mustard': 'FFDB58',
   'lemon': 'FFF44F',
+  'lemon yellow': 'FFF44F',
+  'banana yellow': 'FFE135',
   
   // Matte Yellows
   'matte yellow': 'F0C420',
+  'matte gold': 'CFB53B',
   
   // Browns
   'brown': '8B4513',
@@ -416,6 +446,12 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'desert tan': 'C19A6B',
   'wood': 'DEB887',
   'natural': 'DEB887',
+  'beige': 'F5F5DC',
+  'tan': 'D2B48C',
+  'coffee': '6F4E37',
+  
+  // Matte Browns
+  'matte brown': '6B4423',
   
   // Purples
   'purple': '800080',
@@ -423,11 +459,23 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'grape drink purple': '6F2DA8',
   'lavender': 'E6E6FA',
   'violet': 'EE82EE',
+  'dark purple': '301934',
+  'plum': 'DDA0DD',
+  
+  // Matte Purples
+  'matte purple': '5C2D73',
+  'matte violet': '8B668B',
+  'matte lavender': 'B0A4C8',
   
   // Aquas/Teals
   'aqua': '00FFFF',
   'turquoise': '40E0D0',
   'cyan': '00FFFF',
+  'seafoam': '93E9BE',
+  
+  // Matte Aquas
+  'matte teal': '006666',
+  'matte turquoise': '2E8B8B',
   
   // Transparency
   'transparent': 'FFFFFF',
@@ -435,9 +483,15 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'transparent/natural': 'DEB887',
   'clear': 'FFFFFF',
   'natural clear': 'F5F5DC',
+  'translucent': 'FFFFFF',
   
-  // Additional specialty colors
+  // Additional specialty colors with slashes
   'clay/brick red': 'CB4154',
+  
+  // Carbon Fiber colors (typically black/grey)
+  'carbon': '2F2F2F',
+  'carbon black': '1C1C1C',
+  'carbon fiber': '2F2F2F',
 };
 
 export function getMatter3dColorHex(colorName: string): string | null {
