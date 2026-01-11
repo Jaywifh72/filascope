@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
         
         const { data: upserted, error: upsertError } = await supabase
           .from('filaments')
-          .upsert(batch, { onConflict: 'product_id' })
+          .upsert(batch, { onConflict: 'vendor,product_id' })
           .select('id');
 
         if (upsertError) {
