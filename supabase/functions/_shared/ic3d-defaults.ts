@@ -385,7 +385,8 @@ export function generateIC3DProductLineId(title: string, material?: string | nul
   return `ic3d__${baseMaterial}__standard`;
 }
 
-// Color to hex mapping - IC3D has distinctive color names
+// Complete color to hex mapping - IC3D has distinctive color names
+// All colors from CSV seed plus common variations
 export const IC3D_COLOR_MAPPING: Record<string, string> = {
   // Standard colors
   'black': '#1A1A1A',
@@ -399,8 +400,9 @@ export const IC3D_COLOR_MAPPING: Record<string, string> = {
   'gray': '#808080',
   'green': '#00AA00',
   'bright green': '#00FF00',
+  'green (bright)': '#00FF00',
   
-  // Translucent flavors
+  // Translucent flavors (IC3D fruit-inspired names)
   'translucent blue razz': '#4169E1',
   'translucent cherry': '#DC143C',
   'translucent grape': '#8B008B',
@@ -411,11 +413,21 @@ export const IC3D_COLOR_MAPPING: Record<string, string> = {
   'natural (clear)': '#E8E8E8',
   'clear': '#E8E8E8',
   
-  // Matte colors
-  'moss green': '#8A9A5B',
-  'olive green': '#808000',
+  // Matte colors (from CSV)
+  'matte balanced beige': '#C4B7A6',
+  'matte drifting fog': '#D3D3D3',
+  'matte graphite grey': '#4A4A4A',
+  'moss green (matte)': '#8A9A5B',
   'white (matte)': '#F5F5F5',
   'black (matte)': '#2A2A2A',
+  
+  // UV-PETG specialty colors
+  'concrete': '#A9A9A9',
+  'charcoal': '#36454F',
+  
+  // Standard color variations
+  'moss green': '#8A9A5B',
+  'olive green': '#808000',
   'grey (matte)': '#6B6B6B',
   'tan': '#D2B48C',
   'brown': '#8B4513',
@@ -423,7 +435,8 @@ export const IC3D_COLOR_MAPPING: Record<string, string> = {
   'burgundy': '#800020',
   'forest green': '#228B22',
   
-  // Specialty
+  // Specialty / Carbon Fiber
+  'standard': '#1A1A1A',  // CF-PETG standard color is black
   'sterling': '#C0C0C0',
   'silver': '#C0C0C0',
   'gold': '#FFD700',

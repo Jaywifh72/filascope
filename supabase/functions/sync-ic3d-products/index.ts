@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { enrichIC3DProduct } from '../_shared/ic3d-defaults.ts';
+import { IC3D_PRODUCT_SEED, getIC3DDefaultPrice } from '../_shared/ic3d-seed.ts';
+import { enrichIC3DProduct, getIC3DColorHex, generateIC3DProductLineId } from '../_shared/ic3d-defaults.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,25 +9,32 @@ const corsHeaders = {
 
 interface SyncStats {
   discovered: number;
-  scraped: number;
   created: number;
   updated: number;
   skipped: number;
-  errors: number;
+  failed: number;
   deleted: number;
 }
 
-interface ProductData {
-  url: string;
-  title: string;
-  price: number | null;
-  compareAtPrice: number | null;
-  image: string | null;
-  colors: string[];
-  material: string | null;
-  slug: string;
-}
+// Safe delete threshold - prevents accidental data loss
+const SAFE_DELETE_THRESHOLD = 30;
 
+/**
+ * IC3D CSV-Seeded Sync Function
+ * 
+ * Premium USA-based manufacturer (Ohio) - 56 variants across 11 product lines
+ * 
+ * Architecture:
+ * - CSV-seeded sync (ignores limit parameter)
+ * - Delete-then-insert pattern with safe threshold
+ * - One row per color variant
+ * - WooCommerce platform (Avada theme)
+ * 
+ * Filtering constraints (enforced at CSV level):
+ * - Only 1.75mm diameter
+ * - Only 1kg spools
+ * - No samples, bulk, or non-filament products
+ */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,53 +43,53 @@ Deno.serve(async (req) => {
   const startTime = Date.now();
   const stats: SyncStats = {
     discovered: 0,
-    scraped: 0,
     created: 0,
     updated: 0,
     skipped: 0,
-    errors: 0,
+    failed: 0,
     deleted: 0,
   };
 
   try {
-    const { cleanSlate = false, limit } = await req.json().catch(() => ({}));
+    // Parse options (limit is ignored for CSV-seeded syncs)
+    const { cleanSlate = false } = await req.json().catch(() => ({}));
     
-    console.log('Starting IC3D sync...', { cleanSlate, limit });
+    console.log('[IC3D Sync] Starting CSV-seeded sync...', { cleanSlate, seedCount: IC3D_PRODUCT_SEED.length });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-
-    if (!firecrawlKey) {
-      throw new Error('FIRECRAWL_API_KEY not configured');
-    }
-
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get brand info
     const { data: brand } = await supabase
       .from('automated_brands')
-      .select('id, brand_slug')
-      .eq('brand_slug', 'ic3d')
+      .select('id, brand_name')
+      .eq('brand_slug', 'ic3d-printers')
       .single();
 
     if (!brand) {
-      throw new Error('IC3D brand not found in automated_brands');
+      throw new Error('IC3D brand not found in automated_brands (slug: ic3d-printers)');
     }
+
+    console.log(`[IC3D Sync] Found brand: ${brand.brand_name} (${brand.id})`);
 
     // Mark as scraping
     await supabase
       .from('automated_brands')
       .update({ 
         scraping_active: true, 
-        last_scrape_at: new Date().toISOString(),
         last_error: null 
       })
       .eq('id', brand.id);
 
-    // Clean slate if requested
-    if (cleanSlate) {
-      console.log('Clean slate requested - deleting existing IC3D products...');
+    stats.discovered = IC3D_PRODUCT_SEED.length;
+
+    // ========================================
+    // STEP 1: SAFE DELETE (if clean slate requested)
+    // ========================================
+    if (cleanSlate && IC3D_PRODUCT_SEED.length >= SAFE_DELETE_THRESHOLD) {
+      console.log('[IC3D Sync] Clean slate requested - deleting existing products...');
+      
       const { data: deleted } = await supabase
         .from('filaments')
         .delete()
@@ -89,287 +97,225 @@ Deno.serve(async (req) => {
         .select('id');
       
       stats.deleted = deleted?.length || 0;
-      console.log(`Deleted ${stats.deleted} existing products`);
+      console.log(`[IC3D Sync] Deleted ${stats.deleted} existing products`);
+    } else if (cleanSlate) {
+      console.log(`[IC3D Sync] Clean slate skipped - seed (${IC3D_PRODUCT_SEED.length}) below safe threshold (${SAFE_DELETE_THRESHOLD})`);
     }
 
     // ========================================
-    // STEP 1: Discover product URLs
+    // STEP 2: PROCESS CSV SEED
     // ========================================
-    console.log('Step 1: Discovering product URLs...');
-    
-    const shopPages = [
-      'https://www.ic3dprinters.com/shop/',
-      'https://www.ic3dprinters.com/shop/page/2/',
-    ];
-    
-    const productUrls: Set<string> = new Set();
-    
-    for (const pageUrl of shopPages) {
-      console.log(`Scraping shop page: ${pageUrl}`);
-      
+    console.log('[IC3D Sync] Processing CSV seed data...');
+
+    for (const seedProduct of IC3D_PRODUCT_SEED) {
       try {
-        const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: pageUrl,
-            formats: ['html', 'links'],
-            waitFor: 2000,
-          }),
-        });
+        // Generate unique product ID from product line and color
+        const colorSlug = seedProduct.color
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        const productLineSlug = seedProduct.productLine
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        const productId = `ic3d-${productLineSlug}-${colorSlug}`;
 
-        if (!response.ok) {
-          console.error(`Failed to scrape ${pageUrl}: ${response.status}`);
-          continue;
+        // Get enrichment data
+        const enriched = enrichIC3DProduct(
+          seedProduct.filamentName,
+          seedProduct.material,
+          seedProduct.color,
+          undefined
+        );
+
+        // Get color hex (prioritize enrichment, fallback to lookup)
+        let colorHex = enriched.colorHex;
+        if (!colorHex) {
+          colorHex = getIC3DColorHex(seedProduct.color);
         }
 
-        const data = await response.json();
-        const links = data.data?.links || data.links || [];
-        
-        // Filter for product URLs - IC3D products are in /shop/{slug}/
-        for (const link of links) {
-          if (typeof link === 'string' && 
-              link.includes('/shop/') && 
-              !link.endsWith('/shop/') &&
-              !link.includes('/page/') &&
-              !link.includes('/cart/') &&
-              !link.includes('/checkout/') &&
-              !link.includes('/my-account/') &&
-              !link.includes('?add-to-cart=')) {
-            
-            // Filter for filament products only
-            const slug = link.split('/shop/')[1]?.replace(/\/$/, '') || '';
-            if (slug && isFilamentProduct(slug)) {
-              productUrls.add(link.replace(/\/$/, ''));
-            }
-          }
-        }
-        
-        // Rate limiting
-        await new Promise(r => setTimeout(r, 1000));
-      } catch (err) {
-        console.error(`Error scraping ${pageUrl}:`, err);
-      }
-    }
-    
-    stats.discovered = productUrls.size;
-    console.log(`Discovered ${stats.discovered} product URLs`);
+        // Generate proper product line ID
+        const productLineId = generateIC3DProductLineId(seedProduct.filamentName, seedProduct.material);
 
-    // ========================================
-    // STEP 2: Scrape individual product pages
-    // ========================================
-    console.log('Step 2: Scraping product pages...');
-    
-    const products: ProductData[] = [];
-    let urlArray = Array.from(productUrls);
-    
-    if (limit && limit > 0) {
-      urlArray = urlArray.slice(0, limit);
-    }
-    
-    for (const productUrl of urlArray) {
-      console.log(`Scraping: ${productUrl}`);
-      
-      try {
-        const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: productUrl,
-            formats: ['html', 'markdown'],
-            waitFor: 2000,
-          }),
-        });
+        // Build filament record
+        const filamentRecord = {
+          product_id: productId,
+          product_title: seedProduct.productLine,  // Clean title (no color suffix for CSV-seeded)
+          vendor: 'IC3D',
+          brand_id: brand.id,
+          product_url: seedProduct.url,
+          featured_image: seedProduct.image,
+          variant_price: seedProduct.priceUSD || getIC3DDefaultPrice(seedProduct.material),
+          variant_available: true,
+          material: seedProduct.material,
+          finish_type: enriched.finishType,
+          product_line_id: productLineId,
+          color_hex: colorHex,
+          color_family: extractColorFamily(seedProduct.color),
+          tds_url: enriched.tdsUrl,
+          diameter_nominal_mm: 1.75,
+          net_weight_g: 1000,
+          is_nozzle_abrasive: enriched.isNozzleAbrasive,
+          nozzle_temp_min_c: enriched.printSettings?.nozzle_temp_min_c || null,
+          nozzle_temp_max_c: enriched.printSettings?.nozzle_temp_max_c || null,
+          bed_temp_min_c: enriched.printSettings?.bed_temp_min_c || null,
+          bed_temp_max_c: enriched.printSettings?.bed_temp_max_c || null,
+          auto_created: true,
+          auto_updated: true,
+          last_scraped_at: new Date().toISOString(),
+          sync_status: 'synced',
+        };
 
-        if (!response.ok) {
-          console.error(`Failed to scrape ${productUrl}: ${response.status}`);
-          stats.errors++;
-          continue;
-        }
+        // Upsert using composite key (vendor + product_id)
+        const { data: existing } = await supabase
+          .from('filaments')
+          .select('id')
+          .eq('vendor', 'IC3D')
+          .eq('product_id', productId)
+          .maybeSingle();
 
-        const data = await response.json();
-        const html = data.data?.html || data.html || '';
-        const markdown = data.data?.markdown || data.markdown || '';
-        
-        // Extract product data
-        const productData = parseIC3DProduct(productUrl, html, markdown);
-        
-        if (productData) {
-          products.push(productData);
-          stats.scraped++;
-        } else {
-          console.log(`Could not parse product: ${productUrl}`);
-          stats.skipped++;
-        }
-        
-        // Rate limiting
-        await new Promise(r => setTimeout(r, 2000));
-      } catch (err) {
-        console.error(`Error scraping ${productUrl}:`, err);
-        stats.errors++;
-      }
-    }
-    
-    console.log(`Scraped ${stats.scraped} products`);
-
-    // ========================================
-    // STEP 3 & 4: Variant explosion and enrichment
-    // ========================================
-    console.log('Step 3 & 4: Exploding variants and enriching...');
-    
-    for (const product of products) {
-      // If no colors found, create a single entry
-      const colors = product.colors.length > 0 ? product.colors : ['Natural'];
-      
-      for (const color of colors) {
-        try {
-          // Generate product ID from slug and color
-          const colorSlug = color.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-          const productId = `ic3d-${product.slug}-${colorSlug}`;
-          
-          // Enrich with brand-specific logic
-          const enriched = enrichIC3DProduct(
-            product.title,
-            product.material || undefined,
-            color,
-            undefined
-          );
-          
-          // Build filament record
-          const filamentData: Record<string, unknown> = {
-            product_id: productId,
-            product_title: `${enriched.cleanedTitle} - ${color}`.trim(),
-            vendor: 'IC3D',
-            brand_id: brand.id,
-            product_url: product.url,
-            featured_image: product.image,
-            variant_price: product.price,
-            variant_compare_at_price: product.compareAtPrice,
-            variant_available: true,
-            material: enriched.material,
-            finish_type: enriched.finishType,
-            product_line_id: enriched.productLineId,
-            color_hex: enriched.colorHex,
-            tds_url: enriched.tdsUrl,
-            diameter_nominal_mm: 1.75,
-            net_weight_g: 1000,
-            is_nozzle_abrasive: enriched.isNozzleAbrasive,
-            auto_created: true,
-            auto_updated: true,
-            last_scraped_at: new Date().toISOString(),
-          };
-          
-          // Add print settings if available
-          if (enriched.printSettings) {
-            filamentData.nozzle_temp_min_c = enriched.printSettings.nozzle_temp_min_c;
-            filamentData.nozzle_temp_max_c = enriched.printSettings.nozzle_temp_max_c;
-            filamentData.bed_temp_min_c = enriched.printSettings.bed_temp_min_c;
-            filamentData.bed_temp_max_c = enriched.printSettings.bed_temp_max_c;
-          }
-          
-          // Check if exists
-          const { data: existing } = await supabase
+        if (existing) {
+          const { error } = await supabase
             .from('filaments')
-            .select('id')
-            .eq('product_id', productId)
-            .maybeSingle();
+            .update(filamentRecord)
+            .eq('id', existing.id);
           
-          if (existing) {
-            // Update
-            const { error } = await supabase
-              .from('filaments')
-              .update(filamentData)
-              .eq('id', existing.id);
-            
-            if (error) {
-              console.error(`Error updating ${productId}:`, error);
-              stats.errors++;
-            } else {
-              stats.updated++;
-            }
+          if (error) {
+            console.error(`[IC3D Sync] Failed to update ${productId}:`, error.message);
+            stats.failed++;
           } else {
-            // Insert
-            const { error } = await supabase
-              .from('filaments')
-              .insert(filamentData);
-            
-            if (error) {
-              console.error(`Error inserting ${productId}:`, error);
-              stats.errors++;
-            } else {
-              stats.created++;
-            }
+            stats.updated++;
           }
-        } catch (err) {
-          console.error(`Error processing ${product.title} - ${color}:`, err);
-          stats.errors++;
+        } else {
+          const { error } = await supabase
+            .from('filaments')
+            .insert(filamentRecord);
+          
+          if (error) {
+            console.error(`[IC3D Sync] Failed to insert ${productId}:`, error.message);
+            stats.failed++;
+          } else {
+            stats.created++;
+          }
         }
+      } catch (err) {
+        console.error(`[IC3D Sync] Error processing ${seedProduct.productLine} - ${seedProduct.color}:`, err);
+        stats.failed++;
       }
     }
 
     // ========================================
-    // STEP 5: Finalize
+    // STEP 3: UPDATE BRAND COUNTS
     // ========================================
-    console.log('Step 5: Finalizing...');
-    
-    // Update brand product counts
+    console.log('[IC3D Sync] Updating brand product counts...');
+
     const { count: totalProducts } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
       .eq('vendor', 'IC3D');
-    
+
     const { count: productsWithHex } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
       .eq('vendor', 'IC3D')
       .not('color_hex', 'is', null);
-    
+
     const { count: productsWithTds } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
       .eq('vendor', 'IC3D')
       .not('tds_url', 'is', null);
-    
+
+    const { count: productsWithImages } = await supabase
+      .from('filaments')
+      .select('*', { count: 'exact', head: true })
+      .eq('vendor', 'IC3D')
+      .not('featured_image', 'is', null);
+
+    const { count: productsWithPrices } = await supabase
+      .from('filaments')
+      .select('*', { count: 'exact', head: true })
+      .eq('vendor', 'IC3D')
+      .not('variant_price', 'is', null);
+
     await supabase
       .from('automated_brands')
       .update({
         scraping_active: false,
+        last_scrape_at: new Date().toISOString(),
         product_count: totalProducts || 0,
         active_product_count: totalProducts || 0,
         products_with_color_hex: productsWithHex || 0,
         products_with_tds: productsWithTds || 0,
-        successful_scrapes: (await supabase.from('automated_brands').select('successful_scrapes').eq('id', brand.id).single()).data?.successful_scrapes + 1 || 1,
-        total_scrapes: (await supabase.from('automated_brands').select('total_scrapes').eq('id', brand.id).single()).data?.total_scrapes + 1 || 1,
+        products_with_images: productsWithImages || 0,
+        products_with_prices: productsWithPrices || 0,
+        products_created: stats.created,
+        products_updated: stats.updated,
+        last_error: null,
       })
       .eq('id', brand.id);
 
-    // Check for duplicate hex codes
+    // ========================================
+    // STEP 4: FIX DUPLICATE HEX CODES
+    // ========================================
+    console.log('[IC3D Sync] Checking for duplicate hex codes...');
+    
     try {
-      await supabase.rpc('find_duplicate_hexes');
+      const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', { p_vendor: 'IC3D' });
+      
+      if (duplicates && duplicates.length > 0) {
+        console.log(`[IC3D Sync] Found ${duplicates.length} duplicate hex codes, applying variations...`);
+        
+        // Group by product_line_id and hex
+        const dupeGroups: Record<string, typeof duplicates> = {};
+        for (const dupe of duplicates) {
+          const key = `${dupe.product_line_id}|${dupe.color_hex?.toLowerCase()}`;
+          if (!dupeGroups[key]) dupeGroups[key] = [];
+          dupeGroups[key].push(dupe);
+        }
+        
+        // Apply hex variations within each group
+        for (const [key, group] of Object.entries(dupeGroups)) {
+          for (let i = 1; i < group.length; i++) {
+            const variant = group[i];
+            const baseHex = variant.color_hex || '#808080';
+            // Adjust brightness slightly for each duplicate
+            const adjustment = i * 5;
+            const adjustedHex = adjustHexBrightness(baseHex, adjustment);
+            
+            await supabase
+              .from('filaments')
+              .update({ color_hex: adjustedHex })
+              .eq('id', variant.id);
+          }
+        }
+      }
     } catch (err) {
-      console.log('Duplicate hex check skipped:', err);
+      console.log('[IC3D Sync] Duplicate hex check skipped:', err);
     }
 
     const duration = Math.round((Date.now() - startTime) / 1000);
     
-    console.log('IC3D sync complete:', { ...stats, duration: `${duration}s` });
+    console.log('[IC3D Sync] Complete:', { 
+      ...stats, 
+      duration: `${duration}s`,
+      totalInDb: totalProducts,
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
+        message: `IC3D sync complete: ${stats.created} created, ${stats.updated} updated, ${stats.failed} failed`,
         stats,
         duration: `${duration}s`,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
-    console.error('IC3D sync error:', error);
+    console.error('[IC3D Sync] Fatal error:', error);
     
     // Reset scraping status
     try {
@@ -383,11 +329,10 @@ Deno.serve(async (req) => {
           scraping_active: false,
           last_error: error instanceof Error ? error.message : 'Unknown error',
           last_error_at: new Date().toISOString(),
-          failed_scrapes: (await supabase.from('automated_brands').select('failed_scrapes').eq('brand_slug', 'ic3d').single()).data?.failed_scrapes + 1 || 1,
         })
-        .eq('brand_slug', 'ic3d');
+        .eq('brand_slug', 'ic3d-printers');
     } catch (e) {
-      console.error('Error resetting scraping status:', e);
+      console.error('[IC3D Sync] Error resetting status:', e);
     }
 
     return new Response(
@@ -401,192 +346,77 @@ Deno.serve(async (req) => {
   }
 });
 
-// Helper: Check if a slug represents a filament product
-function isFilamentProduct(slug: string): boolean {
-  const slugLower = slug.toLowerCase();
+/**
+ * Extract color family from color name
+ */
+function extractColorFamily(colorName: string): string | null {
+  const colorLower = colorName.toLowerCase();
   
-  // Filament product patterns
-  const filamentPatterns = [
-    'pla',
-    'petg',
-    'abs',
-    'polyhex',
-    'filament',
-  ];
+  // Handle compound colors
+  if (colorLower.includes('matte')) {
+    // Extract base color from matte variants
+    if (colorLower.includes('black')) return 'Black';
+    if (colorLower.includes('white')) return 'White';
+    if (colorLower.includes('grey') || colorLower.includes('gray')) return 'Gray';
+    if (colorLower.includes('green')) return 'Green';
+    if (colorLower.includes('beige') || colorLower.includes('fog')) return 'Neutral';
+  }
   
-  // Exclusion patterns
-  const excludePatterns = [
-    'resin',
-    'pellet',
-    'colorant',
-    't-shirt',
-    'shirt',
-    'spool-holder',
-    'printer',
-    '3d-model',
-    'accessory',
-    'nozzle',
-    'bed',
-    'build-plate',
-    'gift',
-    'sample',
-  ];
+  // Handle translucent colors (IC3D fruit-inspired names)
+  if (colorLower.includes('translucent')) {
+    if (colorLower.includes('blue razz')) return 'Blue';
+    if (colorLower.includes('cherry')) return 'Red';
+    if (colorLower.includes('grape')) return 'Purple';
+    if (colorLower.includes('honey')) return 'Yellow';
+    if (colorLower.includes('watermelon')) return 'Pink';
+  }
   
-  // Check exclusions first
-  for (const exclude of excludePatterns) {
-    if (slugLower.includes(exclude)) {
-      return false;
+  // Standard color mapping
+  const colorFamilyMap: Record<string, string> = {
+    'black': 'Black',
+    'white': 'White',
+    'red': 'Red',
+    'blue': 'Blue',
+    'green': 'Green',
+    'yellow': 'Yellow',
+    'orange': 'Orange',
+    'grey': 'Gray',
+    'gray': 'Gray',
+    'natural': 'Natural',
+    'clear': 'Clear',
+    'concrete': 'Gray',
+    'charcoal': 'Gray',
+    'bright green': 'Green',
+    'moss': 'Green',
+    'standard': 'Black',  // CF-PETG standard is black
+  };
+  
+  for (const [keyword, family] of Object.entries(colorFamilyMap)) {
+    if (colorLower.includes(keyword)) {
+      return family;
     }
   }
   
-  // Check inclusions
-  for (const include of filamentPatterns) {
-    if (slugLower.includes(include)) {
-      return true;
-    }
-  }
-  
-  return false;
+  return null;
 }
 
-// Helper: Parse IC3D product page
-function parseIC3DProduct(url: string, html: string, markdown: string): ProductData | null {
-  try {
-    // Extract slug from URL
-    const urlParts = url.split('/shop/');
-    const slug = urlParts[1]?.replace(/\/$/, '') || '';
-    
-    if (!slug) return null;
-    
-    // Extract title from markdown or HTML
-    let title = '';
-    const titleMatch = markdown.match(/^#\s+(.+)$/m) || 
-                       html.match(/<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>([^<]+)<\/h1>/i) ||
-                       html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    if (titleMatch) {
-      title = titleMatch[1].trim();
-    }
-    
-    if (!title) {
-      // Derive from slug
-      title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
-    
-    // Extract price
-    let price: number | null = null;
-    let compareAtPrice: number | null = null;
-    
-    const priceMatch = markdown.match(/\$(\d+\.?\d*)/g) || html.match(/\$(\d+\.?\d*)/g);
-    if (priceMatch && priceMatch.length > 0) {
-      const prices = priceMatch.map(p => parseFloat(p.replace('$', ''))).filter(p => !isNaN(p) && p > 0);
-      if (prices.length > 0) {
-        // Usually the first reasonable price is the current price
-        price = prices.find(p => p >= 10 && p <= 500) || prices[0];
-        
-        // If there's a higher price, it might be compare-at
-        const higherPrices = prices.filter(p => p > (price || 0));
-        if (higherPrices.length > 0) {
-          compareAtPrice = Math.min(...higherPrices);
-        }
-      }
-    }
-    
-    // Extract featured image
-    let image: string | null = null;
-    const imageMatch = html.match(/src="([^"]+ic3d[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/i) ||
-                       html.match(/src="([^"]+wp-content\/uploads[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/i);
-    if (imageMatch) {
-      image = imageMatch[1];
-    }
-    
-    // Extract colors from variant options
-    const colors: string[] = [];
-    
-    // WooCommerce color options pattern
-    const colorOptionMatches = html.matchAll(/data-value="([^"]+)"[^>]*class="[^"]*color[^"]*"/gi);
-    for (const match of colorOptionMatches) {
-      colors.push(match[1]);
-    }
-    
-    // Also check select options
-    const selectMatches = html.matchAll(/<option[^>]*value="([^"]+)"[^>]*>([^<]+)<\/option>/gi);
-    for (const match of selectMatches) {
-      const value = match[2].trim();
-      // Filter for color-like values
-      if (isColorName(value) && !colors.includes(value)) {
-        colors.push(value);
-      }
-    }
-    
-    // Extract from markdown list items that look like colors
-    const listItems = markdown.match(/^\*\s+(.+)$/gm) || [];
-    for (const item of listItems) {
-      const value = item.replace(/^\*\s+/, '').trim();
-      if (isColorName(value) && !colors.includes(value)) {
-        colors.push(value);
-      }
-    }
-    
-    // Determine material from title
-    let material: string | null = null;
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('polyhex')) material = 'Copolyester';
-    else if (titleLower.includes('cf-petg') || titleLower.includes('carbon fiber petg')) material = 'PETG-CF';
-    else if (titleLower.includes('petg')) material = 'PETG';
-    else if (titleLower.includes('pla')) material = 'PLA';
-    else if (titleLower.includes('abs')) material = 'ABS';
-    
-    return {
-      url,
-      title,
-      price,
-      compareAtPrice,
-      image,
-      colors: [...new Set(colors)], // Dedupe
-      material,
-      slug,
-    };
-  } catch (err) {
-    console.error('Error parsing product:', err);
-    return null;
-  }
-}
-
-// Helper: Check if a string looks like a color name
-function isColorName(value: string): boolean {
-  const valueLower = value.toLowerCase();
+/**
+ * Adjust hex color brightness for duplicate differentiation
+ */
+function adjustHexBrightness(hex: string, adjustment: number): string {
+  // Remove # if present
+  const cleanHex = hex.replace('#', '');
   
-  // Common color keywords
-  const colorKeywords = [
-    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'grey', 'gray',
-    'natural', 'clear', 'translucent', 'transparent', 'matte', 'silver', 'gold',
-    'bronze', 'copper', 'brown', 'tan', 'navy', 'burgundy', 'forest', 'moss',
-    'olive', 'lime', 'cherry', 'grape', 'honey', 'watermelon', 'tangerine',
-    'sterling', 'razz', 'bright',
-  ];
+  // Parse RGB values
+  let r = parseInt(cleanHex.substring(0, 2), 16);
+  let g = parseInt(cleanHex.substring(2, 4), 16);
+  let b = parseInt(cleanHex.substring(4, 6), 16);
   
-  for (const keyword of colorKeywords) {
-    if (valueLower.includes(keyword)) {
-      return true;
-    }
-  }
+  // Adjust each channel
+  r = Math.min(255, Math.max(0, r + adjustment));
+  g = Math.min(255, Math.max(0, g + adjustment));
+  b = Math.min(255, Math.max(0, b + adjustment));
   
-  // Exclude non-color values
-  const excludePatterns = [
-    '1.75', '2.85', '3mm', 'kg', 'size', 'weight', 'diameter', 'choose',
-    'select', 'option', 'add', 'cart', 'wishlist', 'compare', 'share',
-  ];
-  
-  for (const exclude of excludePatterns) {
-    if (valueLower.includes(exclude)) {
-      return false;
-    }
-  }
-  
-  // If short and capitalized, might be a color
-  if (value.length >= 3 && value.length <= 30 && /^[A-Z]/.test(value)) {
-    return true;
-  }
-  
-  return false;
+  // Convert back to hex
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
 }

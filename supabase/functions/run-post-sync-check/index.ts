@@ -42,10 +42,10 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -461,6 +461,31 @@ const AI_ROLES = {
       'Cross-product swatch architecture (each color = separate URL)',
       'Multi-warehouse pricing (CN vs US shipping)',
       'Specialty finish detection (Sparkly, Gradient, Luminous, Wood, Marble, Carbon Fiber)'
+    ]
+  },
+  ic3dSpecialist: {
+    title: 'IC3D Integration Specialist',
+    triggers: ['ic3d', 'ic3d-printers', 'polyhex', 'recycled petg', 'rpetg', 'impact modified', 'uv-petg', 'woocommerce avada'],
+    capabilities: [
+      'WooCommerce with Avada theme platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture (56 products, 11 product lines)',
+      'Premium USA (Ohio) filament brand material classification',
+      'Recycled PETG (rPETG) sustainability line handling',
+      'Impact Modified PLA (PLA+) variant detection',
+      'PolyHex high-temp copolyester specialty product',
+      'UV-PETG outdoor/UV-resistant material handling',
+      'Carbon Fiber PETG single-variant product line',
+      'Translucent fruit-inspired color naming (Blue Razz, Cherry, Grape, Honey, Watermelon)',
+      'Matte finish color variants (Balanced Beige, Drifting Fog, Graphite Grey)'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (ic3d-seed.ts) as primary source - never rely on WooCommerce API',
+      'Only sync 1.75mm diameter products (filter out 2.85mm from website)',
+      'Only sync 1kg spools (filter out 2.5kg and 10kg bulk options)',
+      'PolyHex (Copolyester) and Carbon Fiber PETG are single-color products - not sync errors',
+      'Product titles are clean line names without color suffix (CSV-seeded pattern)',
+      'Use delete-then-insert pattern with safe threshold (30+ products) for clean slate',
+      'Vendor name is "IC3D" (not "IC3D Printers") for database consistency'
     ]
   },
   architect: {
@@ -3835,7 +3860,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox']; // CSV-seeded brands append " - Color" to titles intentionally
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers']; // CSV-seeded brands append " - Color" to titles intentionally
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -6000,7 +6025,10 @@ Deno.serve(async (req) => {
                                       lineId.includes('hatchbox__pla__color-change') ||       // Color change limited variants
                                       lineId.includes('hatchbox__pla-plus__max-v2') ||        // MAX V2 premium limited colors
                                       lineId.includes('hatchbox__pla__reload') ||             // Reload/refill limited colors
-                                      lineId.includes('hatchbox__pla__wood')                  // Wood texture limited colors
+                                      lineId.includes('hatchbox__pla__wood') ||               // Wood texture limited colors
+                                      // IC3D single-color specialty products (CSV-seeded)
+                                      lineId.includes('ic3d__copolyester__polyhex') ||        // PolyHex only comes in Black
+                                      lineId.includes('ic3d__petg-cf__standard')              // Carbon Fiber PETG only in Standard (black)
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
