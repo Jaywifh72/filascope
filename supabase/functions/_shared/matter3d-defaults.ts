@@ -319,6 +319,7 @@ export const MATTER3D_COLOR_MAPPING: Record<string, string> = {
   'light gray': 'C0C0C0',
   'slate grey': '708090',
   'slate gray': '708090',
+  'steel wool': 'B0B0B0',
   'gunmetal grey': '2C3539',
   'gunmetal gray': '2C3539',
   'charcoal': '36454F',

@@ -1091,29 +1091,32 @@ const BRAND_LESSONS_LEARNED: Record<string, {
     lastUpdated: '2026-01-11'
   },
 'matter3d': {
-    platform: 'Shopify store (matter3d.com) - Canadian manufacturer with Size/Color/Spool variant structure',
+    platform: 'Shopify store (matter3d.com) - Canadian manufacturer with INCONSISTENT Size/Color/Spool variant structure',
     knownLimitations: [
-      '❌ Variant option structure varies by product type (2 or 3 options)',
-      '❌ Matte products use 3 options: Size/Color/Spool (option3 is spool type NOT color)',
-      '❌ Standard products use 2 options: Size/Color or Color/Size',
+      '❌ Variant option structure is INCONSISTENT across products:',
+      '   - Matte products: option1=Size, option2=Color, option3=SpoolType (Cardboard/Plastic)',
+      '   - Performance products: option1=Diameter, option2=Size, option3=Color',
+      '   - Simple products: option1=Color or option1=Size only',
       '❌ Pellets and industrial bulk ($1000+) in catalog - must filter',
       '❌ Custom color orders and bundles (CMYK) must be filtered',
       '❌ Weight suffixes in product_line_id cause over-fragmentation (30 vs 18 lines)',
       '❌ Fuchsia (#FF00FF), Magenta (#FF0099), Fuchsia/Magenta (#FF00CC) need unique hex codes'
     ],
     workingSolutions: [
-      '✅ Extract color from option2 first, then option1, then option3',
-      '✅ Detect spool types (Cardboard, Plastic) and skip them as colors',
+      '✅ Check ALL three options (option2, option1, option3) for color extraction',
+      '✅ Use isWeightOrSizeOrSpool() filter to skip weights, sizes, AND spool types',
+      '✅ isWeightOrSizeOrSpool() catches "Cardboard", "Plastic", "1 kg", "1.75 mm"',
       '✅ Use $100 price ceiling for consumer products (filter higher)',
       '✅ Filter pellets, custom colors, bundles, "Single" placeholders, "Default Title"',
       '✅ Remove ALL weight suffixes from product_line_id (0.5kg, 1kg, 5kg)',
       '✅ Use variant.image_id for color-specific images',
       '✅ Unique hex codes for similar colors (fuchsia vs magenta)',
+      '✅ Derive color_family even when hex lookup fails',
       '✅ Delete-then-insert pattern with safe threshold'
     ],
     failedApproaches: [
+      '⚠️ SKIPPING option3 entirely - WRONG for Performance products where option3=Color',
       '⚠️ Slash-split parsing of variant.title - unreliable, misses colors',
-      '⚠️ Using option3 without checking for spool type - gets "Cardboard" as color',
       '⚠️ Creating weight-based product lines (0.5kg, 1kg, 5kg separate) - over-fragmentation',
       '⚠️ Same hex code for fuchsia/magenta - causes duplicate hex errors',
       '⚠️ Not filtering products over $100 - includes industrial bulk',
@@ -1129,8 +1132,9 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'supabase/functions/sync-matter3d-products/index.ts - Main sync with Shopify option extraction',
       'supabase/functions/_shared/matter3d-defaults.ts - Color mappings, product line ID generation',
       'shouldSkipMatter3dProduct() - Filters pellets, bundles, custom, high-price',
-      'extractColorFromShopifyVariant() - Extracts color from correct option, skips spool types',
-      'generateMatter3dProductLineId() - Consolidates weights, detects series/finish'
+      'extractColorFromShopifyVariant() - Checks ALL options with isWeightOrSizeOrSpool() filter',
+      'generateMatter3dProductLineId() - Consolidates weights, detects series/finish',
+      'deriveColorFamily() - Fallback color family when hex lookup fails'
     ],
     productSlugReference: {
       'basics-pla': 'Basics Series PLA',
