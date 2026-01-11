@@ -8,13 +8,65 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Wand2, ChevronDown, Loader2, CheckCircle2, XCircle, AlertTriangle, Trash2, Zap, Settings2, Info, Ban, Sparkles, Filter } from "lucide-react";
+import { Wand2, ChevronDown, Loader2, CheckCircle2, XCircle, AlertTriangle, Trash2, Zap, Settings2, Info, Ban, Sparkles, Filter, BookOpen, Copy, Check } from "lucide-react";
 import { useBrandSyncManager } from "@/hooks/useBrandSyncManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Slider } from "@/components/ui/slider";
 import { PostSyncCheckPanel } from "./PostSyncCheckPanel";
 import { BRAND_SYNC_DOCS, SHARED_FILTER_RULES } from "@/config/brand-sync-docs";
+
+// Onboarding constants
+const PROMPT_TEMPLATE = `## [Brand Name] Integration Request
+
+### Platform Context
+- **Website URL**: https://[brand].com
+- **Platform**: [Shopify/BigCommerce/WooCommerce/OpenCart/Odoo/Custom]
+- **Region**: [US/EU/Global]
+- **Currency**: [USD/EUR/GBP]
+- **Database Slug**: [brand-slug]
+
+### Attached CSV Data
+- **CSV Uploaded**: ✅ [filename.csv]
+- **Total Products**: [X] color variants
+- **Product Lines**: [Y] material groups
+
+### Product Line Structure
+| Material | Count | Finish Type |
+|----------|-------|-------------|
+| PLA | 26 | Standard |
+| PLA Silk | 12 | Silk |
+| PETG | 15 | Standard |
+
+### Brand Characteristics
+- **Specialty Finishes**: [Silk, Matte, Galaxy, Glow, etc.]
+- **High-Speed Variants**: [Yes/No]
+- **Abrasive Materials**: [Yes/No - list CF/GF variants]
+- **TDS Documents**: [Available/Not Available]
+- **Image Architecture**: [Shared per line / Unique per color]
+
+### Required Implementation
+1. Create \`[brand]-seed.ts\` with CSV data
+2. Create \`[brand]-defaults.ts\` with enrichment logic
+3. Update \`sync-[brand]-products/index.ts\`
+4. Add to \`brand-sync-config.ts\`
+5. Add Post Sync Check customizations`;
+
+const CSV_FORMAT_EXAMPLE = `material,title,color,hexCode,productUrl,imageUrl,price,finish
+PLA,PLA Standard,White,#FFFFFF,https://brand.com/pla?v=white,https://cdn.brand.com/pla-white.jpg,19.99,Standard
+PLA Silk,PLA Silk,Gold,#FFD700,https://brand.com/pla-silk?v=gold,https://cdn.brand.com/silk-gold.jpg,24.99,Silk`;
+
+const CSV_SEEDED_BRANDS = [
+  { name: 'Eryone', slug: 'eryone', products: 420 },
+  { name: 'FormFutura', slug: 'formfutura', products: 460 },
+  { name: 'Fiberlogy', slug: 'fiberlogy', products: 274 },
+  { name: 'Fillamentum', slug: 'fillamentum', products: 194 },
+  { name: 'Geeetech', slug: 'geeetech', products: 168 },
+  { name: 'Gizmo Dorks', slug: 'gizmo-dorks', products: 131 },
+  { name: 'Extrudr', slug: 'extrudr', products: 131 },
+  { name: 'Fusion', slug: 'fusion-filaments', products: 123 },
+  { name: 'Creality', slug: 'creality', products: 122 },
+];
 
 interface Brand {
   id: string;
@@ -35,6 +87,8 @@ export function BrandSyncManager() {
   const [limit, setLimit] = useState<number>(100);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [syncDocsOpen, setSyncDocsOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
   const {
     executeSync,
@@ -137,6 +191,121 @@ export function BrandSyncManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Onboarding Section */}
+        <Collapsible open={onboardingOpen} onOpenChange={setOnboardingOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 w-full justify-start border-dashed">
+              <ChevronDown className={`w-4 h-4 transition-transform ${onboardingOpen ? 'rotate-180' : ''}`} />
+              <BookOpen className="w-4 h-4 text-primary" />
+              <span className="font-medium">Onboarding: Add a New Brand</span>
+              <Badge variant="secondary" className="ml-auto">Template</Badge>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-4">
+            <div className="bg-muted/30 rounded-lg p-4 space-y-6 text-sm border">
+              {/* Prompt Template */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">1</span>
+                    Ideal Prompt Template
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(PROMPT_TEMPLATE);
+                      setCopiedSection('prompt');
+                      setTimeout(() => setCopiedSection(null), 2000);
+                    }}
+                  >
+                    {copiedSection === 'prompt' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                    {copiedSection === 'prompt' ? 'Copied!' : 'Copy'}
+                  </Button>
+                </div>
+                <pre className="bg-background rounded-md p-3 text-xs overflow-x-auto whitespace-pre-wrap font-mono border">
+{PROMPT_TEMPLATE}
+                </pre>
+              </div>
+
+              {/* CSV Format */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">2</span>
+                    Ideal CSV Format
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(CSV_FORMAT_EXAMPLE);
+                      setCopiedSection('csv');
+                      setTimeout(() => setCopiedSection(null), 2000);
+                    }}
+                  >
+                    {copiedSection === 'csv' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                    {copiedSection === 'csv' ? 'Copied!' : 'Copy'}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="text-xs font-medium text-muted-foreground mb-2">Required Columns</h5>
+                    <ul className="space-y-1 text-xs">
+                      <li><code className="bg-muted px-1 rounded">material</code> - PLA, PETG, ABS</li>
+                      <li><code className="bg-muted px-1 rounded">title</code> - Product display name</li>
+                      <li><code className="bg-muted px-1 rounded">color</code> - Color variant name</li>
+                      <li><code className="bg-muted px-1 rounded">productUrl</code> - Full URL</li>
+                      <li><code className="bg-muted px-1 rounded">imageUrl</code> - CDN image URL</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-medium text-muted-foreground mb-2">Recommended Columns</h5>
+                    <ul className="space-y-1 text-xs">
+                      <li><code className="bg-muted px-1 rounded">hexCode</code> - #RRGGBB format</li>
+                      <li><code className="bg-muted px-1 rounded">price</code> - Numeric value</li>
+                      <li><code className="bg-muted px-1 rounded">finish</code> - Silk, Matte, etc.</li>
+                      <li><code className="bg-muted px-1 rounded">sku</code> - Product SKU/MPN</li>
+                    </ul>
+                  </div>
+                </div>
+                <pre className="bg-background rounded-md p-3 text-xs overflow-x-auto font-mono border">
+{CSV_FORMAT_EXAMPLE}
+                </pre>
+              </div>
+
+              {/* Current Brands Reference */}
+              <div className="space-y-3">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs">3</span>
+                  Current CSV-Seeded Brands
+                </h4>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  {CSV_SEEDED_BRANDS.map((brand) => (
+                    <div key={brand.slug} className="bg-background rounded p-2 border flex justify-between items-center">
+                      <span className="font-medium">{brand.name}</span>
+                      <Badge variant="outline" className="text-xs">{brand.products}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Tips */}
+              <div className="space-y-2 pt-3 border-t">
+                <h4 className="font-semibold text-xs text-muted-foreground">Quick Tips</h4>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• <strong>One row per color variant</strong> — Essential for color swatches</li>
+                  <li>• <strong>Include hex codes</strong> — Reduces reliance on color mapping</li>
+                  <li>• <strong>Full product URLs</strong> — Include variant IDs where applicable</li>
+                  <li>• <strong>Reference: Eryone</strong> — Gold standard with 420 products, 54 lines</li>
+                </ul>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Brand Selector */}
         <div className="space-y-2">
           <Label>Select Brand</Label>
