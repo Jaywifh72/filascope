@@ -309,6 +309,35 @@ Deno.serve(async (req) => {
 function extractColorFamily(color: string): string | null {
   const lower = color.toLowerCase();
   
+  // Skip specialty descriptors before family matching
+  // "Fluorescent Blue (Black Light Reactive)" -> should match Blue, not Black
+  const skipPatterns = ['black light', 'heat activated', 'color change'];
+  let cleanedColor = lower;
+  for (const pattern of skipPatterns) {
+    cleanedColor = cleanedColor.replace(pattern, '').trim();
+  }
+  
+  // Special finishes - extract the actual color from the finish name
+  if (lower.includes('fluorescent') || lower.includes('glow') || 
+      lower.includes('color change') || lower.includes('glitter') || lower.includes('silk')) {
+    // "Fluorescent Blue (Black Light Reactive)" → extract "Blue"
+    const colorMatch = cleanedColor.match(/(?:fluorescent|glow|glitter|silk)\s*(\w+)/i);
+    if (colorMatch && colorMatch[1]) {
+      return findBaseColorFamily(colorMatch[1]);
+    }
+    // Fallback: try to find color in the cleaned string
+    return findBaseColorFamily(cleanedColor) || 'Special';
+  }
+  
+  return findBaseColorFamily(cleanedColor);
+}
+
+/**
+ * Find base color family using word boundary matching to avoid false positives
+ */
+function findBaseColorFamily(color: string): string | null {
+  const lower = color.toLowerCase();
+  
   const families: Record<string, string[]> = {
     'Black': ['black', 'conductive'],
     'White': ['white', 'natural', 'clear', 'bone'],
@@ -320,12 +349,13 @@ function extractColorFamily(color: string): string | null {
     'Orange': ['orange'],
     'Purple': ['purple', 'violet'],
     'Brown': ['brown', 'bronze', 'copper', 'beige', 'wood'],
-    'Special': ['glow', 'fluorescent', 'color change', 'translucent', 'glitter', 'silk'],
   };
 
   for (const [family, keywords] of Object.entries(families)) {
     for (const keyword of keywords) {
-      if (lower.includes(keyword)) {
+      // Use word boundary matching to avoid false positives like "black" in "black light"
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+      if (regex.test(lower)) {
         return family;
       }
     }
