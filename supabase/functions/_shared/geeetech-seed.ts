@@ -33,6 +33,47 @@ export interface GeeetechSeedProduct {
   color: string;
   imageUrl: string;
   hexCode?: string;
+  priceUsd?: number; // Retail price in USD
+}
+
+/**
+ * Default prices by material type (USD)
+ * Based on Geeetech.com January 2026 pricing
+ */
+export function getGeeetechDefaultPrice(material: string, title: string): number {
+  const materialLower = material.toLowerCase();
+  const titleLower = title.toLowerCase();
+  
+  // 0.5kg rolls
+  if (titleLower.includes('0.5kg')) {
+    return 8.99;
+  }
+  
+  // Premium materials
+  if (materialLower.includes('carbon fiber')) return 17.99;
+  if (materialLower.includes('hs-pla') || titleLower.includes('hs-pla')) return 15.99;
+  if (materialLower.includes('tpu')) return 14.99;
+  if (materialLower.includes('abs')) return 12.99;
+  if (materialLower.includes('asa')) return 13.99;
+  
+  // Specialty PLA
+  if (materialLower.includes('silk tri')) return 14.99;
+  if (materialLower.includes('silk dual')) return 13.99;
+  if (materialLower.includes('silk rainbow')) return 13.99;
+  if (materialLower.includes('silk')) return 12.99;
+  if (materialLower.includes('luminous') || materialLower.includes('glow')) return 13.99;
+  if (materialLower.includes('sparkly')) return 11.99;
+  if (materialLower.includes('marble')) return 11.99;
+  if (materialLower.includes('wood')) return 12.99;
+  if (materialLower.includes('gradient')) return 12.99;
+  if (materialLower.includes('matte')) return 10.99;
+  
+  // PETG
+  if (materialLower.includes('petg metallic')) return 12.99;
+  if (materialLower.includes('petg')) return 11.99;
+  
+  // Standard PLA
+  return 9.79;
 }
 
 /**
