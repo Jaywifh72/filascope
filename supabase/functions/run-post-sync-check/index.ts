@@ -5991,7 +5991,16 @@ Deno.serve(async (req) => {
                                       lineId.includes('gizmodorks__pla__conductive') ||        // Conductive only in black
                                       lineId.includes('gizmodorks__pva__') ||                  // PVA support only in natural
                                       lineId.includes('gizmodorks__acetal__') ||               // Acetal/POM limited colors
-                                      lineId.includes('gizmodorks__pla__glow')                 // Glow PLA limited colors
+                                      lineId.includes('gizmodorks__pla__glow') ||              // Glow PLA limited colors
+                                      // Hatchbox single-color specialty products (CSV-seeded)
+                                      lineId.includes('hatchbox__pla__cf') ||                 // Carbon Fiber only in black
+                                      lineId.includes('hatchbox__pla__stone') ||              // Stone texture single variant
+                                      lineId.includes('hatchbox__pla__glow') ||               // Glow limited colors
+                                      lineId.includes('hatchbox__pla__rainbow') ||            // Rainbow multi-color single SKU
+                                      lineId.includes('hatchbox__pla__color-change') ||       // Color change limited variants
+                                      lineId.includes('hatchbox__pla-plus__max-v2') ||        // MAX V2 premium limited colors
+                                      lineId.includes('hatchbox__pla__reload') ||             // Reload/refill limited colors
+                                      lineId.includes('hatchbox__pla__wood')                  // Wood texture limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
