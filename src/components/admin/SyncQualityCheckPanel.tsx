@@ -273,10 +273,18 @@ export function SyncQualityCheckPanel() {
 
             {/* Comparison Section - Shows improvements since last check */}
             {comparison && (
-              <div className="bg-muted/30 rounded-lg p-3 space-y-3 border">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <History className="h-4 w-4 text-muted-foreground" />
-                  <span>Changes since {new Date(comparison.previousDate).toLocaleDateString()}</span>
+              <div className="bg-muted/30 rounded-lg p-4 space-y-4 border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    <span>Changes since {new Date(comparison.previousDate).toLocaleDateString()}</span>
+                  </div>
+                  {(comparison.passedDiff > 0 || comparison.failedDiff < 0) && (
+                    <Badge className="bg-green-500/20 text-green-700 border-green-500/30">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Improved
+                    </Badge>
+                  )}
                 </div>
                 
                 {/* Overall stat changes */}
@@ -304,34 +312,53 @@ export function SyncQualityCheckPanel() {
                   />
                 </div>
 
-                {/* Task-level improvements */}
-                {comparison.taskChanges.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium">Task Changes:</p>
+                {/* Improvements Section - Highlight what got better */}
+                {comparison.taskChanges.filter(t => t.diff > 0).length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-green-500/20">
+                    <p className="text-xs font-medium text-green-700 flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      Improvements
+                    </p>
                     <div className="flex flex-wrap gap-1">
-                      {comparison.taskChanges.slice(0, 6).map(task => (
+                      {comparison.taskChanges.filter(t => t.diff > 0).map(task => (
                         <Badge 
                           key={task.taskName}
-                          variant={task.diff > 0 ? 'default' : 'destructive'}
-                          className={`text-xs ${task.diff > 0 ? 'bg-green-500/20 text-green-700 border-green-500/30' : 'bg-destructive/20'}`}
+                          className="text-xs bg-green-500/20 text-green-700 border-green-500/30"
                         >
-                          {task.diff > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                          {task.taskName}: {task.diff > 0 ? '+' : ''}{task.diff.toFixed(0)}%
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          {task.taskName}: +{task.diff.toFixed(0)}%
                         </Badge>
                       ))}
-                      {comparison.taskChanges.length > 6 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{comparison.taskChanges.length - 6} more
+                    </div>
+                  </div>
+                )}
+
+                {/* Regressions Section - Highlight what got worse */}
+                {comparison.taskChanges.filter(t => t.diff < 0).length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-destructive/20">
+                    <p className="text-xs font-medium text-destructive flex items-center gap-1">
+                      <TrendingDown className="h-3 w-3" />
+                      Regressions
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {comparison.taskChanges.filter(t => t.diff < 0).map(task => (
+                        <Badge 
+                          key={task.taskName}
+                          variant="destructive"
+                          className="text-xs bg-destructive/20"
+                        >
+                          <TrendingDown className="h-3 w-3 mr-1" />
+                          {task.taskName}: {task.diff.toFixed(0)}%
                         </Badge>
-                      )}
+                      ))}
                     </div>
                   </div>
                 )}
 
                 {comparison.taskChanges.length === 0 && comparison.passedDiff === 0 && comparison.failedDiff === 0 && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 pt-2">
                     <Minus className="h-3 w-3" />
-                    No significant changes detected
+                    No significant changes detected since last check
                   </p>
                 )}
               </div>
