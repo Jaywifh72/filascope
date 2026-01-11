@@ -3369,6 +3369,42 @@ Deno.serve(async (req) => {
 
     console.log(`[PostSyncCheck] Total products for ${brandName}: ${totalProducts}`);
 
+    // ============= CRITICAL VISIBILITY CHECK =============
+    // Verify that automated_brands.brand_name matches filaments.vendor case-sensitively
+    // This is critical because the UI uses case-sensitive filtering
+    
+    const { data: automatedBrand } = await supabase
+      .from("automated_brands")
+      .select("brand_name, display_name")
+      .eq("brand_slug", brandSlug)
+      .single();
+    
+    if (automatedBrand) {
+      // Get the actual vendor values used in filaments for this brand
+      const { data: vendorSample } = await supabase
+        .from("filaments")
+        .select("vendor")
+        .ilike("vendor", brandName)
+        .limit(1);
+      
+      const actualVendor = vendorSample?.[0]?.vendor;
+      const brandNameMatches = actualVendor === automatedBrand.brand_name;
+      
+      checks.push({
+        checkName: "Brand Name UI Visibility",
+        status: brandNameMatches ? "pass" : "fail",
+        count: brandNameMatches ? 1 : 0,
+        details: brandNameMatches 
+          ? `Brand name "${automatedBrand.brand_name}" matches filaments vendor "${actualVendor}"` 
+          : `CRITICAL: automated_brands.brand_name="${automatedBrand.brand_name}" does NOT match filaments.vendor="${actualVendor}". Products will NOT appear in Finder UI!`,
+        products: !brandNameMatches && actualVendor ? [{
+          id: brandSlug,
+          title: `Fix automated_brands.brand_name`,
+          issue: `Change "${automatedBrand.brand_name}" to "${actualVendor}" in automated_brands table`,
+        }] : undefined,
+      });
+    }
+
     // ============= DATABASE CHECKS =============
 
     // Check 1: Bulk Products (>5.5kg / 5500g) - updated to match variant-filters.ts MAX_WEIGHT_GRAMS
