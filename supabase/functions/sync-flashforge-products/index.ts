@@ -14,7 +14,10 @@ import {
   enrichFlashforgeProduct,
   isFilamentProduct,
   cleanFlashforgeTitle,
-  getFlashforgeColorHex,
+  getFlashforgeColorHexWithFinish,
+  isPromotionalProduct,
+  extractFinishFromVariant,
+  varyHexCode,
 } from '../_shared/flashforge-defaults.ts';
 import {
   shouldIncludeVariant,
@@ -50,6 +53,25 @@ interface SyncResult {
   details?: Record<string, unknown>;
 }
 
+interface ShopifyImage {
+  id: number;
+  src: string;
+  variant_ids?: number[];
+}
+
+interface ShopifyVariant {
+  id: number;
+  title: string;
+  price: string;
+  compare_at_price: string | null;
+  sku: string;
+  available: boolean;
+  image_id?: number | null;
+  option1?: string | null;
+  option2?: string | null;
+  option3?: string | null;
+}
+
 interface ShopifyProduct {
   id: number;
   title: string;
@@ -57,15 +79,8 @@ interface ShopifyProduct {
   product_type: string;
   vendor: string;
   published_at: string;
-  images: Array<{ src: string }>;
-  variants: Array<{
-    id: number;
-    title: string;
-    price: string;
-    compare_at_price: string | null;
-    sku: string;
-    available: boolean;
-  }>;
+  images: ShopifyImage[];
+  variants: ShopifyVariant[];
 }
 
 // Regional store configurations
@@ -115,10 +130,34 @@ async function fetchShopifyProducts(domain: string, limit = 250): Promise<Shopif
   return allProducts;
 }
 
-function extractColorFromVariant(variantTitle: string): string {
-  // Variant titles are usually just the color name
-  // e.g., "Black", "White", "Crystal Clear"
-  return variantTitle.trim();
+/**
+ * Extract color name from variant options
+ * Flashforge uses: option1 = Size (1kg), option2 = Finish (Basic/Crystal/Metallic/Transparent), option3 = Color
+ */
+function extractColorFromVariant(variant: ShopifyVariant): { color: string; finish: string } {
+  // option2 typically contains finish type, option3 contains color
+  const finish = variant.option2 || 'Basic';
+  const color = variant.option3 || variant.title || 'Unknown';
+  
+  return { color: color.trim(), finish: finish.trim() };
+}
+
+/**
+ * Get base product title (without variant info) for DB storage
+ * Matches the page H1 title pattern
+ */
+function extractBaseProductTitle(productTitle: string): string {
+  // Clean up and normalize the product title
+  let title = productTitle
+    .replace(/flashforge\s*/gi, '')
+    .replace(/filament\s*/gi, '')
+    .replace(/1\.75\s*mm/gi, '')
+    .replace(/1\s*kg/gi, '')
+    .replace(/\b3d\s*printer?\b/gi, '')
+    .trim();
+  
+  // Return cleaned title or the original if we over-stripped
+  return title || productTitle;
 }
 
 Deno.serve(async (req) => {
@@ -159,20 +198,32 @@ Deno.serve(async (req) => {
       const products = await fetchShopifyProducts('www.flashforge.com', 250);
       console.log(`Fetched ${products.length} products from Shopify`);
       
-      // Filter to filaments only
+      // Filter to filaments only AND exclude promotional products
       const filamentProducts = products.filter(p => 
-        isFilamentProduct(p.title, p.product_type)
+        isFilamentProduct(p.title, p.product_type) && !isPromotionalProduct(p.title)
       );
-      console.log(`Filtered to ${filamentProducts.length} filament products`);
+      console.log(`Filtered to ${filamentProducts.length} filament products (excluding promos)`);
       
       stats.discovered = filamentProducts.length;
       const filterStats = createFilterStats();
       
       // Process each product's variants
       for (const product of filamentProducts.slice(0, limit)) {
+        // Build image lookup map for variant-specific images
+        const imageMap = new Map<number, string>();
+        for (const img of product.images || []) {
+          if (img.id && img.src) {
+            imageMap.set(img.id, img.src);
+          }
+        }
+        const defaultImage = product.images?.[0]?.src || null;
+        
+        // Get base product title (matches page H1)
+        const baseTitle = extractBaseProductTitle(product.title);
+        
         for (const variant of product.variants) {
           try {
-            const colorName = extractColorFromVariant(variant.title);
+            const { color: colorName, finish: finishType } = extractColorFromVariant(variant);
             
             // Extract weight and diameter for filtering
             const weight = extractWeightFromText(product.title) || 1000;
@@ -191,13 +242,23 @@ Deno.serve(async (req) => {
             // Generate unique product_id for this variant
             const productId = `flashforge-${product.id}-${variant.id}`;
             
-            // Get featured image
-            const featuredImage = product.images?.[0]?.src || null;
+            // Get variant-specific image if available, otherwise fall back to default
+            const variantImage = variant.image_id 
+              ? (imageMap.get(variant.image_id) || defaultImage)
+              : defaultImage;
+            
+            // Get color hex with finish differentiation to prevent duplicates
+            const colorHex = getFlashforgeColorHexWithFinish(colorName, finishType) || enrichment.color_hex;
+            
+            // Determine finish type for DB (Crystal, Transparent, Metallic, or null for Basic/Standard)
+            const dbFinishType = finishType !== 'Basic' && finishType !== 'Standard' 
+              ? finishType 
+              : (enrichment.finish_type !== 'Standard' ? enrichment.finish_type : null);
             
             // Build filament record
             const filamentData = {
               product_id: productId,
-              product_title: `${cleanFlashforgeTitle(product.title)} - ${colorName}`,
+              product_title: baseTitle, // Use clean base title, not constructed variant title
               vendor: 'Flashforge',
               product_url: `https://www.flashforge.com/products/${product.handle}`,
               product_handle: product.handle,
@@ -205,12 +266,13 @@ Deno.serve(async (req) => {
               variant_compare_at_price: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
               variant_available: variant.available,
               variant_sku: variant.sku || null,
-              featured_image: featuredImage,
+              featured_image: variantImage, // Use variant-specific image
               material: enrichment.material,
-              finish_type: enrichment.finish_type !== 'Standard' ? enrichment.finish_type : null,
+              finish_type: dbFinishType,
               product_line_id: enrichment.product_line_id,
               high_speed_capable: enrichment.high_speed_capable || null,
-              color_hex: enrichment.color_hex,
+              color_hex: colorHex, // Use finish-aware hex
+              color_family: colorName, // Store color name separately
               nozzle_temp_min_c: enrichment.print_settings?.nozzle_temp_min_c || null,
               nozzle_temp_max_c: enrichment.print_settings?.nozzle_temp_max_c || null,
               bed_temp_min_c: enrichment.print_settings?.bed_temp_min_c || null,
@@ -426,7 +488,7 @@ Deno.serve(async (req) => {
     }
 
     // ========================================================================
-    // STEP 4: Duplicate Hex Fix
+    // STEP 4: Duplicate Hex Fix - Actually fix duplicates!
     // ========================================================================
     if (tasks.includes('fix-hex')) {
       console.log('=== Step 4: Duplicate Hex Fix ===');
@@ -434,9 +496,42 @@ Deno.serve(async (req) => {
       const { data: duplicates } = await supabase
         .rpc('find_duplicate_hexes', { p_vendor: 'Flashforge' });
       
+      let fixed = 0;
+      
+      if (duplicates && duplicates.length > 0 && !dryRun) {
+        // Group duplicates by product_line_id + hex
+        const dupGroups = new Map<string, typeof duplicates>();
+        for (const dup of duplicates) {
+          const key = `${dup.product_line_id}|${dup.color_hex?.toLowerCase()}`;
+          if (!dupGroups.has(key)) {
+            dupGroups.set(key, []);
+          }
+          dupGroups.get(key)!.push(dup);
+        }
+        
+        // Fix each group - vary hex for all but the first
+        for (const [key, group] of dupGroups) {
+          for (let i = 1; i < group.length; i++) {
+            const originalHex = group[i].color_hex;
+            const newHex = varyHexCode(originalHex, i);
+            
+            const { error } = await supabase
+              .from('filaments')
+              .update({ color_hex: newHex })
+              .eq('id', group[i].id);
+            
+            if (!error) {
+              fixed++;
+              console.log(`Fixed duplicate hex: ${originalHex} -> ${newHex} for ${group[i].product_title}`);
+            }
+          }
+        }
+      }
+      
       details.step4 = { 
         duplicatesFound: duplicates?.length || 0,
-        message: duplicates?.length ? 'Review duplicates manually' : 'No duplicates found',
+        fixed,
+        message: fixed > 0 ? `Fixed ${fixed} duplicate hex codes` : 'No duplicates to fix',
       };
     }
 
