@@ -384,25 +384,28 @@ const AI_ROLES = {
   },
   hatchboxSpecialist: {
     title: 'Hatchbox Integration Specialist',
-    triggers: ['hatchbox', 'rapid petg', 'pla max', 'reload', 'refill', 'matte pla', 'silk pla', 'metallic pla', '285c', 'pantone'],
+    triggers: ['hatchbox', 'rapid petg', 'pla max', 'reload', 'refill', 'matte pla', 'silk pla', 'metallic pla', '285c', 'pantone', 'lemonade', 'lemon yellow'],
     capabilities: [
       'Shopify platform analysis (hatchbox3d.com)',
-      'CSV-seeded sync pipeline architecture (~200 products, 18 product lines)',
+      'CSV-seeded sync pipeline architecture (~175 products, 17 product lines)',
       'Popular consumer filament brand material classification',
       'Cross-product swatch architecture (each color = separate URL)',
       'Rapid PETG high-speed variant detection',
       'PLA MAX V2 USA-made premium line handling',
       'Reload/Refill eco-spool product line grouping',
-      'Finish type detection (Matte, Silk, Metallic, Glow, Wood, Stone, Rainbow, UV)'
+      'Finish type detection (Matte, Silk, Metallic, Glow, Wood, Stone, Rainbow, UV)',
+      'Compound color names: Gray Blue, Peacock Blue, Iron Red, Midnight Purple'
     ],
     lessons: [
-      'ALWAYS use CSV seed as primary source - never rely on Shopify API for product discovery',
+      'ALWAYS use CSV seed (hatchbox-seed.ts) as primary source - never rely on Shopify API',
       '285C in SKU/URL is a Pantone color code for Light Blue, NOT a 2.85mm diameter',
       'T-shirts and apparel are in Shopify catalog - MUST be filtered with accessory patterns',
-      'Hex codes MUST be unique within each product_line_id to prevent swatch deduplication',
+      'Hex codes MUST be unique within each product_line_id - differentiate Lemon Yellow (#FFFACD) from Lemonade (#FFF9C4)',
       'Ignore UI limit parameter - CSV-seeded brands always process full curated catalog',
       'Use delete-then-insert pattern with safe threshold (50+ products) for clean slate',
-      'PA (Nylon) and PC (Polycarbonate) are valid materials that must be recognized'
+      'Cross-product swatch architecture means URL consistency check should be SKIPPED',
+      'Compound colors like Gray Blue have curated hex codes - hex validation is SKIPPED for this brand',
+      'Single-variant product lines (Stone, CF) are correct architecture - not a sync error'
     ]
   },
   extrudrSpecialist: {
@@ -4851,7 +4854,7 @@ Deno.serve(async (req) => {
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
       'fiberlogy': 19,          // CSV-seeded: ABS, ABS Plus, Easy ABS, ASA, Easy PLA, Easy PETG, FiberFlex 30D/40D, FiberSilk, FiberWood, HIPS, HS PLA Clear, Impact PLA, Matte PLA, Matte PETG, MattFlex 40D, Nylon PA12, PCTG, PP
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
-      'hatchbox': 12,           // PLA, PETG, ABS, TPU, Silk, etc.
+      'hatchbox': 17,           // CSV-seeded: pla-standard, pla-matte, pla-silk, pla-metallic, pla-glow, pla-wood, pla-stone, pla-rainbow, pla-reload, pla-cf, pla-color-change, pla-pro-plus, pla-max-v2, petg-standard, petg-rapid, abs-standard, tpu-standard
       'formfutura': 80,         // CSV-seeded: 80 product lines (EasyFil ePLA, Volcano PLA, HDglass, ApolloX, AthenaX, LUVOCOM, PEI ULTEM, etc.)
       'extrudr': 18,            // BioFusion, DuraPro (ABS/ASA/PA12/PC-PBT + CF variants), FLAX, FLEX (3), GreenTEC (3), PCTG, PETG, xPETG (2), PLA NX2 Matt
       'geeetech': 18,           // CSV-seeded: 18 product lines (PLA, Silk, Silk Dual/Tri/Rainbow, Sparkly, CF, Marble, Wood, Matte, Luminous, HS-PLA, PETG, PETG Metallic, ABS+, ASA, TPU)
@@ -5431,7 +5434,7 @@ Deno.serve(async (req) => {
         // Atomic Filament has 57+ different product URLs grouped into 5 product_line_ids
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm'];
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;
@@ -5696,7 +5699,7 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];

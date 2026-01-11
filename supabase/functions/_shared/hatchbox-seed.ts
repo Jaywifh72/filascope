@@ -85,8 +85,8 @@ const HATCHBOX_HEX_MAP: Record<string, string> = {
   'light periwinkle matte': '#C3CDE6',
   'seafoam blue matte': '#71EEB8',
   'cool mint matte': '#A8E4D4',
-  'lemonade matte': '#FFFACD',
-  'lemon yellow matte': '#FFFACD',
+  'lemonade matte': '#FFF9C4',       // Warmer lemonade - distinct from lemon yellow
+  'lemon yellow matte': '#FFFACD',   // Classic lemon yellow
   'dusty plum matte': '#8E4585',
   'blush pink matte': '#DE5D83',
   'butter yellow matte': '#FFFDD0',
