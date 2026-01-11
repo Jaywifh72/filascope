@@ -42,10 +42,10 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -520,6 +520,30 @@ const AI_ROLES = {
       'Expected 17 product lines, not 6',
       'Product titles follow pattern "Line Name - Color" for variant distinction',
       'Use delete-then-insert pattern with safe threshold (50+ products) for clean slate'
+    ]
+  },
+  matter3dSpecialist: {
+    title: 'Matter3D Integration Specialist',
+    triggers: ['matter3d', 'basics', 'performance', 'essentials', 'bambu ams', 'canadian', 'high flow', 'matte petg'],
+    capabilities: [
+      'Shopify platform analysis (matter3d.com) with Size/Color/Spool variant structure',
+      'Canadian manufacturer with USD pricing',
+      'Basics vs Performance vs Essentials series differentiation',
+      'High-flow (HF) PETG variant detection',
+      'Bulk (5kg) product line separation',
+      'Product filtering (pellets, custom colors, bundles, industrial bulk)',
+      'Variant-to-image mapping using Shopify image_id'
+    ],
+    lessons: [
+      'Extract color from variant.option2 (or option1/option3 fallback), NOT from slash-split title',
+      'Filter pellets, custom colors, bundles, and items >$200 (non-standard products)',
+      'Filter 10kg+ industrial bulk products',
+      'Use variant.image_id for color-specific images with alt-text fallback',
+      'Differentiate Fuchsia (#FF00FF) from Magenta (#FF0099) to prevent duplicate hexes',
+      'Consolidate 500g/1kg variants into main product line, separate only 5kg+ as bulk',
+      'Expected 15 product lines after proper consolidation',
+      'Skip price check - variable pricing across product lines',
+      'Skip hex validation - curated color mappings in matter3d-defaults.ts'
     ]
   },
   architect: {
@@ -1065,6 +1089,58 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'pa-cf': 'PA Carbon Fiber (single variant - black)'
     },
     lastUpdated: '2026-01-11'
+  },
+  'matter3d': {
+    platform: 'Shopify store (matter3d.com) - Canadian manufacturer with Size/Color/Spool variant structure',
+    knownLimitations: [
+      '❌ Variant titles use slash-split format (Color / Size / Spool Type) - NOT reliable for color extraction',
+      '❌ Includes bulk products (5kg spools, pellets) that should be filtered or separated',
+      '❌ Custom color orders and bundles (CMYK) included in catalog',
+      '❌ Industrial pellet products with $1000+ pricing',
+      '❌ Fuchsia and Magenta previously shared same hex code (#FF00FF) - causes duplicates'
+    ],
+    workingSolutions: [
+      '✅ Extract color from Shopify variant.option2 (or option1/option3 fallback)',
+      '✅ Filter pellets, custom colors, bundles, and items >$200',
+      '✅ Filter 10kg+ industrial bulk products',
+      '✅ Use variant.image_id for color-specific images with alt-text fallback',
+      '✅ Consolidate 500g/1kg variants into main product line',
+      '✅ Separate 5kg+ products as distinct bulk product lines',
+      '✅ Unique hex codes: Fuchsia (#FF00FF) vs Magenta (#FF0099)',
+      '✅ Matter3D-specific color mapping in matter3d-defaults.ts'
+    ],
+    failedApproaches: [
+      '⚠️ Slash-split parsing of variant.title - misses colors or gets size/spool type instead',
+      '⚠️ Creating separate product lines for each weight (1kg, 500g, 0.5kg) - over-fragmentation',
+      '⚠️ Using first product image for all variants - loses color-specific images',
+      '⚠️ Same hex code for similar colors (fuchsia/magenta) - causes duplicate hex errors'
+    ],
+    currentStatus: {
+      'totalProducts': '~100 filament variants (after filtering bulk/pellets)',
+      'expectedCards': '15 product lines',
+      'seriesTypes': 'Basics, Performance, Essentials, Standard',
+      'materialsSupported': 'PLA, PLA+, PETG, ASA, ABS, PA, PA-CF, TPU-95A'
+    },
+    keyFiles: [
+      'supabase/functions/sync-matter3d-products/index.ts - Main sync function with Shopify option extraction',
+      'supabase/functions/_shared/matter3d-defaults.ts - Color mappings, print settings, product line ID generation'
+    ],
+    productSlugReference: {
+      'basics-pla': 'Basics Series PLA',
+      'basics-pla-matte': 'Basics Matte PLA',
+      'basics-pla-silk': 'Basics Silk PLA',
+      'basics-pla-recycled': 'Basics Recycled PLA',
+      'basics-pla-cf': 'Basics PLA Carbon Fiber',
+      'performance-petg': 'Performance PETG',
+      'performance-petg-matte': 'Performance PETG Matte',
+      'performance-petg-hf': 'Performance PETG High-Flow',
+      'performance-asa': 'Performance ASA',
+      'performance-pla-plus': 'Performance PLA+',
+      'performance-pa-cf': 'Performance PA Carbon Fiber',
+      'essentials-pla': 'Essentials PLA',
+      'tpu-95a': 'TPU 95A'
+    },
+    lastUpdated: '2026-01-11'
   }
 };
 
@@ -1105,6 +1181,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'ic3d-printers') {
     return AI_ROLES.ic3dSpecialist;
+  }
+  if (brandSlug === 'matter3d') {
+    return AI_ROLES.matter3dSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -5282,7 +5361,8 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon']; // CSV-seeded brands with EUR prices or no prices (REMOVED geeetech - now has live pricing)
+    // Matter3D has bulk/pellet products with high prices that are filtered separately
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -5822,7 +5902,8 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon']; // CSV-seeded brands have curated hex codes
+    // Matter3D has curated color mappings in defaults file
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
