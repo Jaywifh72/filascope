@@ -6,7 +6,7 @@ import {
   isDiameter285,
   getWeightVariant,
 } from '../_shared/fiberlogy-defaults.ts';
-import { FIBERLOGY_PRODUCT_SEED } from '../_shared/fiberlogy-seed.ts';
+import { FIBERLOGY_PRODUCT_SEED, getFiberlogyDefaultPrice } from '../_shared/fiberlogy-seed.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -123,13 +123,17 @@ Deno.serve(async (req) => {
           // Generate clean title
           const cleanTitle = `Fiberlogy ${seedProduct.filament} - ${seedProduct.color}`;
 
+          // Get price from seed or default
+          const variantPrice = seedProduct.priceEur || getFiberlogyDefaultPrice(seedProduct.material, seedProduct.filament);
+
           const productData = {
             product_id: productId,
             product_title: cleanTitle,
             vendor: 'Fiberlogy',
             product_url: seedProduct.productUrl,
             featured_image: seedProduct.imageUrl, // Will be null from seed
-            variant_price: null, // CSV doesn't have reliable pricing
+            variant_price: variantPrice,
+            price_eur: variantPrice,
             material: enrichment.material,
             finish_type: enrichment.finishType !== 'Standard' ? enrichment.finishType : null,
             product_line_id: enrichment.productLineId,

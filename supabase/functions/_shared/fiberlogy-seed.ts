@@ -35,6 +35,56 @@ export interface FiberlogySeedProduct {
   productUrl: string;      // Product page URL
   imageUrl: string | null; // Will be null (CSV images are placeholders)
   colorHex: string | null; // Will be derived from color mapping
+  priceEur?: number;       // Price in EUR
+}
+
+/**
+ * Default prices by material type (EUR)
+ * Based on Fiberlogy.com January 2026 pricing (0.85kg spools)
+ */
+export function getFiberlogyDefaultPrice(material: string, filamentName: string): number {
+  const m = material.toLowerCase();
+  const f = filamentName.toLowerCase();
+  
+  // Large 2.5kg spools
+  if (f.includes('2.5kg') || f.includes('2500')) return 59.99;
+  
+  // Small 0.5kg / 0.75kg spools
+  if (f.includes('0.5kg') || f.includes('500g')) return 14.99;
+  if (f.includes('0.75kg') || f.includes('750g')) return 18.99;
+  
+  // Premium/Technical materials
+  if (m.includes('nylon') || m.includes('pa12')) return 34.99;
+  if (m.includes('pp') || m.includes('polypropylene')) return 29.99;
+  if (m.includes('pctg')) return 27.99;
+  if (m.includes('hips')) return 21.99;
+  
+  // TPU/Flex
+  if (m.includes('flex') || m.includes('tpu')) return 29.99;
+  
+  // Specialty PLA/PETG
+  if (f.includes('silk') || m.includes('silk')) return 24.99;
+  if (f.includes('impact')) return 23.99;
+  if (f.includes('matte')) return 22.99;
+  if (f.includes('wood')) return 25.99;
+  if (f.includes('hs pla') || f.includes('high speed')) return 24.99;
+  
+  // ABS variants
+  if (m.includes('abs plus')) return 24.99;
+  if (m.includes('easy abs')) return 23.99;
+  if (m.includes('abs')) return 22.99;
+  
+  // ASA
+  if (m.includes('asa')) return 26.99;
+  
+  // Easy PETG
+  if (m.includes('petg')) return 21.99;
+  
+  // Easy PLA (standard)
+  if (m.includes('pla')) return 19.99;
+  
+  // Default
+  return 21.99;
 }
 
 export const FIBERLOGY_PRODUCT_SEED: FiberlogySeedProduct[] = [

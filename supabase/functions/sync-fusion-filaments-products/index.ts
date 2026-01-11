@@ -16,6 +16,7 @@ import {
   normalizeMaterialFromSeed,
   getProductLineFromMaterial,
   shouldExcludeProduct,
+  getFusionFilamentsDefaultPrice,
 } from '../_shared/fusion-filaments-seed.ts';
 
 const corsHeaders = {
@@ -136,6 +137,9 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         // Build filament record
+        // Get price from seed or default
+        const variantPrice = product.priceUsd || getFusionFilamentsDefaultPrice(product.material);
+        
         const filamentRecord: Record<string, unknown> = {
           product_id: productId,
           product_title: product.filamentName,
@@ -143,6 +147,7 @@ Deno.serve(async (req) => {
           brand_id: brandId,
           product_url: product.productUrl,
           featured_image: product.imageUrl,
+          variant_price: variantPrice,
           material: normalizedMaterial,
           finish_type: enrichment.finishType,
           product_line_id: `fusionfilaments__${normalizedMaterial.toLowerCase()}__${productLine}`,

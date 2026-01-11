@@ -32,6 +32,49 @@ export interface GizmoDorksSeedProduct {
   color: string;
   imageUrl: string;
   hexCode?: string;
+  priceUsd?: number;
+}
+
+/**
+ * Default prices by material type (USD)
+ * Based on GizmoDorks.com January 2026 pricing (1kg spools)
+ */
+export function getGizmoDorksDefaultPrice(material: string): number {
+  const m = material.toLowerCase();
+  
+  // Premium/Technical materials
+  if (m.includes('polycarbonate') || m.includes('pc')) return 34.95;
+  if (m.includes('nylon') || m.includes('pa')) return 32.95;
+  if (m.includes('pva')) return 44.95;
+  if (m.includes('conductive')) return 49.95;
+  if (m.includes('carbon fiber')) return 39.95;
+  if (m.includes('metal')) return 34.95;
+  if (m.includes('acetal') || m.includes('pom')) return 29.95;
+  
+  // TPU
+  if (m.includes('tpu')) return 27.95;
+  
+  // Specialty PLA
+  if (m.includes('silk')) return 26.95;
+  if (m.includes('glitter') || m.includes('sparkle')) return 25.95;
+  if (m.includes('wood')) return 27.95;
+  if (m.includes('pro plus')) return 25.95;
+  
+  // HIPS
+  if (m.includes('hips')) return 24.95;
+  
+  // PETG
+  if (m.includes('petg')) return 24.95;
+  
+  // ABS variants
+  if (m.includes('low odor')) return 25.95;
+  if (m.includes('abs')) return 23.95;
+  
+  // Standard PLA
+  if (m.includes('pla')) return 23.95;
+  
+  // Default
+  return 23.95;
 }
 
 /**
