@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { FILLAMENTUM_FILTERED_SEED, FILLAMENTUM_SEED_COUNT, FILLAMENTUM_SEED_VERSION } from '../_shared/fillamentum-seed.ts';
+import { FILLAMENTUM_FILTERED_SEED, FILLAMENTUM_SEED_COUNT, FILLAMENTUM_SEED_VERSION, getFillamentumDefaultPrice } from '../_shared/fillamentum-seed.ts';
 import {
   enrichFillamentumProduct,
   getFillamentumColorHex,
@@ -153,6 +153,9 @@ Deno.serve(async (req) => {
         // Determine color family from color NAME (not hex - getColorFamily expects a name)
         const colorFamily = seedProduct.color ? getColorFamily(seedProduct.color) : null;
 
+        // Get price from seed or default
+        const variantPrice = seedProduct.priceEur || getFillamentumDefaultPrice(seedProduct.material, seedProduct.filamentName);
+
         const filamentData = {
           product_id: productId,
           product_title: enrichment.cleanedTitle || seedProduct.filamentName,
@@ -164,6 +167,8 @@ Deno.serve(async (req) => {
           color_family: colorFamily,
           product_url: seedProduct.productUrl,
           featured_image: seedProduct.imageUrl,
+          variant_price: variantPrice,
+          price_eur: variantPrice,
           diameter_nominal_mm: FILLAMENTUM_STORE_INFO.defaultDiameter,
           net_weight_g: weight,
           spool_material: FILLAMENTUM_STORE_INFO.spoolMaterial,

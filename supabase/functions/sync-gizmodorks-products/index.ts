@@ -37,6 +37,7 @@ import {
   normalizeGizmoDorksMaterialFromSeed,
   getGizmoDorksFinishFromMaterial,
   logGizmoDorksSeedStats,
+  getGizmoDorksDefaultPrice,
 } from '../_shared/gizmodorks-seed.ts';
 import {
   enrichGizmoDocksProduct,
@@ -143,6 +144,9 @@ Deno.serve(async (req) => {
                            normalizedMaterial.includes('Metal') || 
                            normalizedMaterial.includes('Wood');
 
+        // Get price from seed or default
+        const variantPrice = seedProduct.priceUsd || getGizmoDorksDefaultPrice(seedProduct.material);
+
         // Build filament record
         const filamentRecord = {
           product_id: productId,
@@ -153,7 +157,7 @@ Deno.serve(async (req) => {
           product_line_id: productLineId,
           color_hex: colorHex,
           color_family: extractColorFamily(seedProduct.color),
-          variant_price: 23.95, // Standard price for 1kg spools
+          variant_price: variantPrice,
           product_url: seedProduct.url,
           featured_image: seedProduct.imageUrl,
           diameter_nominal_mm: 1.75, // Primary diameter
@@ -180,7 +184,7 @@ Deno.serve(async (req) => {
           'created',
           {
             featured_image: seedProduct.imageUrl,
-            variant_price: 23.95,
+            variant_price: variantPrice,
             tds_url: null,
             color_hex: colorHex,
           }

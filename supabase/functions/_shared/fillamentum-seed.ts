@@ -13,6 +13,48 @@ export interface FillamentumSeedProduct {
   color: string | null;    // Extracted color name (null for single-color products)
   imageUrl: string | null; // Shopify CDN image URL (with fixed protocol)
   colorHex: string | null; // Hex code if provided in CSV (null if N/A or empty)
+  priceEur?: number;       // Price in EUR
+}
+
+/**
+ * Default prices by material type (EUR)
+ * Based on Fillamentum.com January 2026 pricing (750g spools)
+ * Premium Czech brand - higher pricing tier
+ */
+export function getFillamentumDefaultPrice(material: string, title: string): number {
+  const m = material.toLowerCase();
+  const t = title.toLowerCase();
+  
+  // 1KG spools (special variants)
+  if (t.includes('1 kg') || t.includes('1kg')) return 34.99;
+  
+  // Premium specialty materials
+  if (m.includes('timberfill') || m.includes('wood')) return 32.99;
+  if (m.includes('vertigo')) return 28.99;
+  if (m.includes('crystal clear')) return 27.99;
+  if (m.includes('nylon') || m.includes('pa')) return 39.99;
+  if (m.includes('pva')) return 44.99;
+  if (m.includes('hips')) return 24.99;
+  
+  // TPU/Flex
+  if (m.includes('flexfill') || m.includes('tpu') || m.includes('flex')) return 36.99;
+  
+  // PETG variants
+  if (m.includes('cpehg') || m.includes('cpe hg')) return 32.99;
+  if (m.includes('cpe')) return 29.99;
+  if (m.includes('petg')) return 26.99;
+  
+  // ASA
+  if (m.includes('asa')) return 28.99;
+  
+  // ABS
+  if (m.includes('abs')) return 25.99;
+  
+  // PLA Extrafill (flagship)
+  if (m.includes('pla')) return 24.99;
+  
+  // Default
+  return 25.99;
 }
 
 // Helper to fix image URLs from CSV (convert escaped slashes to proper https URLs)

@@ -15,6 +15,36 @@ export interface FusionFilamentsSeedProduct {
   color: string;              // Science-themed color name
   imageUrl: string;           // 512x512 product image
   colorHex?: string;          // Derived from FUSION_COLOR_MAPPING
+  priceUsd?: number;          // Price in USD
+}
+
+/**
+ * Default prices by material type (USD)
+ * Based on FusionFilaments.com January 2026 pricing (1kg spools)
+ */
+export function getFusionFilamentsDefaultPrice(material: string): number {
+  const m = material.toUpperCase();
+  
+  // Premium materials
+  if (m.includes('PCTG')) return 32.99;
+  if (m.includes('HT-ABS') || m.includes('HTABS')) return 27.99;
+  if (m.includes('EASYASA') || m.includes('EASY-ASA')) return 29.99;
+  
+  // Mid-tier
+  if (m.includes('ASA')) return 26.99;
+  if (m.includes('ABS MATTE')) return 25.99;
+  if (m.includes('ABS GLOSS') || m.includes('ABS')) return 24.99;
+  
+  // HT variants
+  if (m.includes('HT-PET') || m.includes('HTPET')) return 28.99;
+  if (m.includes('HTPLA') || m.includes('HT-PLA')) return 24.99;
+  if (m.includes('HSPLA') || m.includes('HS-PLA')) return 26.99;
+  
+  // Standard PLA
+  if (m.includes('PLA')) return 23.99;
+  
+  // Default
+  return 24.99;
 }
 
 /**
