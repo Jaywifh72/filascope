@@ -322,8 +322,37 @@ Deno.serve(async (req) => {
           return imageMap;
         };
 
+        // Check if product has ANY color option (not just pack sizes or bulk quantities)
+        // This filters out Essentials PLA (bulk packs) and PETG CF HF (industrial)
+        const hasColorVariants = (product: ShopifyProduct): boolean => {
+          // Check if any option is named "Color" or similar
+          const options = (product as any).options || [];
+          const optionNames = options.map((o: any) => o.name?.toLowerCase() || '');
+          if (optionNames.some((n: string) => ['color', 'colour'].includes(n))) {
+            return true;
+          }
+          
+          // Check if any variant has a non-weight/size option value
+          for (const variant of product.variants) {
+            const colorCandidate = extractColorFromShopifyVariant(variant, product.title);
+            if (colorCandidate) return true;
+          }
+          
+          return false;
+        };
+
+        // Filter out products with no color variants (bulk packs only)
+        const colorProducts = filamentProducts.filter(p => {
+          if (!hasColorVariants(p)) {
+            console.log(`[Matter3D] SKIP no color variants (bulk pack): ${p.title}`);
+            return false;
+          }
+          return true;
+        });
+        console.log(`[Matter3D] After color filter: ${colorProducts.length} products with colors`);
+
         // Process each product
-        const productsToProcess = limit ? filamentProducts.slice(0, limit) : filamentProducts;
+        const productsToProcess = limit ? colorProducts.slice(0, limit) : colorProducts;
 
         // ========================================
         // PHASE 1: COLLECT ALL VALID FILAMENTS
