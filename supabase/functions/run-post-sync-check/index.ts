@@ -501,7 +501,7 @@ const AI_ROLES = {
       'High-Speed PETG (HS-PETG) variant detection (300mm/s)',
       'Carbon Fiber multi-material products (PLA-CF, PETG-CF, ABS-CF, PA-CF)',
       'Bulk pack (2KG, 5KG, 10KG) filtering from sync',
-      'Clearance Sale product filtering'
+      'Product-line level image architecture (not color-specific)'
     ],
     lessons: [
       'ALWAYS use CSV seed (kingroon-seed.ts) as primary source - never rely on Shopify API',
@@ -509,11 +509,15 @@ const AI_ROLES = {
       'Filter out weight-only variants (2KG, 5KG, 10KG in color field = pack size selector)',
       'Filter out bulk products (10KG PLA, 5KG EU Stock) - only sync standard 1kg spools',
       'Silk Rainbow has sub-variants: Candy, Macaroon, Universer - each is separate product_line_id',
+      'Silk Rainbow and Silk Gold are SINGLE-VARIANT products - not sync errors',
+      'Carbon Fiber lines (PA-CF, PLA-CF, PETG-CF, ABS-CF) are SINGLE-VARIANT (Black only)',
       'Tri-color products use first color as representative hex (e.g., "Red/Green/Blue" = red hex)',
       'HS-PETG is high-speed variant (300mm/s capable) - separate from standard PETG',
       'All prices are USD regardless of warehouse region',
-      'Skip hex validation for multi-color products (Rainbow, Tri-color, Dual-color)',
-      'Images in CSV are product-line level (not color-specific) - expected behavior',
+      'Skip hex validation - product uses swatch images not CSS colors',
+      'Skip color-specific image check - images are product-line level (EXPECTED)',
+      'Skip price check - multi-warehouse Shopify pricing complexity',
+      'Expected 17 product lines, not 6',
       'Product titles follow pattern "Line Name - Color" for variant distinction',
       'Use delete-then-insert pattern with safe threshold (50+ products) for clean slate'
     ]
@@ -1006,6 +1010,61 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'tpu-standard': 'TPU (24 colors, incl. transparent)'
     },
     lastUpdated: '2026-01-10'
+  },
+  'kingroon': {
+    platform: 'Shopify storefront (kingroon.com) with multi-warehouse fulfillment',
+    knownLimitations: [
+      '❌ Shopify variants include warehouse region in option2 - creates duplicate entries if not filtered',
+      '❌ Some colors in CSV are weight/region selectors, not actual colors (2KG, 10KG, AU, CA, UK)',
+      '❌ Product images are shared across all colors (not color-specific)',
+      '❌ Tri-color/Rainbow products cannot have single hex representation - use first color',
+      '❌ Multi-warehouse pricing varies by region - synced prices are US warehouse only'
+    ],
+    workingSolutions: [
+      '✅ CSV seed file (kingroon-seed.ts) filters to unique color variants only',
+      '✅ Skip warehouse variants (process US region only)',
+      '✅ product_line_id groups silk rainbow sub-variants correctly',
+      '✅ Use representative hex for multi-color products (first color in name)',
+      '✅ Skip price check, hex validation, and color-specific image checks',
+      '✅ Single-variant products (Silk Gold, Silk Rainbow, Carbon Fiber) whitelisted'
+    ],
+    failedApproaches: [
+      '⚠️ Processing all Shopify variants creates 4x duplicates per color (warehouse regions)',
+      '⚠️ Using CSV color field directly without filtering creates invalid entries',
+      '⚠️ Expected card count of 6 was incorrect - actual is 17'
+    ],
+    currentStatus: {
+      'csvSeedProducts': '~100 unique color variants in KINGROON_PRODUCT_SEED',
+      'productLines': '17 product lines',
+      'materialsSupported': 'PLA, PLA+, Silk PLA, Matte PLA, PETG, HS-PETG, TPU, ABS, PA, Carbon Fiber (PLA/PETG/ABS/PA)',
+      'imageCoverage': '100% - product-line level images (not color-specific)',
+      'hexCoverage': '~95% - most colors have hex codes in seed'
+    },
+    keyFiles: [
+      'supabase/functions/sync-kingroon-products/index.ts - Main sync function',
+      'supabase/functions/_shared/kingroon-seed.ts - CSV seed data',
+      'supabase/functions/_shared/kingroon-defaults.ts - Material/color mappings and enrichment'
+    ],
+    productSlugReference: {
+      'pla-basic': 'PLA Basic (standard PLA)',
+      'matte-pla': 'Matte PLA',
+      'silk-gold-pla': 'Silk Gold PLA (single variant)',
+      'silk-tricolor-pla': 'Silk Tricolor PLA (multi-color variants)',
+      'silk-rainbow-candy': 'Silk Rainbow Candy (single variant)',
+      'silk-rainbow-macaroon': 'Silk Rainbow Macaroon (single variant)',
+      'silk-rainbow-universer': 'Silk Rainbow Universer (single variant)',
+      'petg-standard': 'PETG Standard',
+      'hs-petg': 'HS-PETG High Speed (300mm/s)',
+      'tpu-standard': 'TPU 95A Standard',
+      'abs-standard': 'ABS Standard',
+      'marble-pla': 'Marble PLA',
+      'glow-in-the-dark-pla': 'Glow PLA',
+      'pla-cf': 'PLA Carbon Fiber (single variant - black)',
+      'petg-cf': 'PETG Carbon Fiber (single variant - black)',
+      'abs-cf': 'ABS Carbon Fiber (single variant - black)',
+      'pa-cf': 'PA Carbon Fiber (single variant - black)'
+    },
+    lastUpdated: '2026-01-11'
   }
 };
 
@@ -4932,7 +4991,7 @@ Deno.serve(async (req) => {
       'ziro': 10,               // PLA, PETG, Silk, etc.
       'paramount-3d': 8,        // FlexPLA, Stone, Shimmer lines
       'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
-      'kingroon': 6,            // Basic filament lines
+      'kingroon': 17,           // CSV-seeded: PLA Basic, Matte PLA, Silk Gold, Silk Tricolor, Silk Rainbow (Candy/Macaroon/Universer), PETG Standard, HS-PETG, TPU Standard, ABS Standard, Marble PLA, Glow PLA, PLA-CF, PETG-CF, ABS-CF, PA-CF
       'ic3d-printers': 10,      // 10 product lines: ABS, PETG, PETG-CF, PLA, PLA+, Matte PLA+, UV-PETG, rPETG, Matte rPETG, PolyHex
       'yousu': 8,               // PLA, PETG, Silk lines
     };
@@ -5223,7 +5282,7 @@ Deno.serve(async (req) => {
     // Standard threshold is $200, but for industrial brands we use $800
     // Industrial canister/multi-pack products can reach $1600+
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments']; // CSV-seeded brands with EUR prices or no prices (REMOVED geeetech - now has live pricing)
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon']; // CSV-seeded brands with EUR prices or no prices (REMOVED geeetech - now has live pricing)
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -5763,7 +5822,7 @@ Deno.serve(async (req) => {
 
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
@@ -5854,7 +5913,7 @@ Deno.serve(async (req) => {
     
     // Issue 2: Check if too many products are missing images entirely
     // Skip this check for CSV-seeded brands that intentionally have no images
-    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks'];
+    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon'];
     const isNoImageBrandForQuality = NO_IMAGE_BRANDS_FOR_QUALITY.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
@@ -5875,7 +5934,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -6067,7 +6126,16 @@ Deno.serve(async (req) => {
                                       lineId.includes('hatchbox__pla__wood') ||               // Wood texture limited colors
                                       // IC3D single-color specialty products (CSV-seeded)
                                       lineId.includes('ic3d__copolyester__polyhex') ||        // PolyHex only comes in Black
-                                      lineId.includes('ic3d__petg-cf__standard')              // Carbon Fiber PETG only in Standard (black)
+                                      lineId.includes('ic3d__petg-cf__standard') ||           // Carbon Fiber PETG only in Standard (black)
+                                      // Kingroon single-color specialty products (CSV-seeded)
+                                      lineId.includes('kingroon__pla__silk-gold-pla') ||      // Silk Gold only one color
+                                      lineId.includes('kingroon__pla__silk-rainbow-universer') || // Silk Rainbow Universer single SKU
+                                      lineId.includes('kingroon__pla__silk-rainbow-candy') || // Silk Rainbow Candy single SKU
+                                      lineId.includes('kingroon__pla__silk-rainbow-macaroon') || // Silk Rainbow Macaroon single SKU
+                                      lineId.includes('kingroon__pa-cf__') ||                 // PA-CF only in black
+                                      lineId.includes('kingroon__pla-cf__') ||                // PLA-CF only in black
+                                      lineId.includes('kingroon__petg-cf__') ||               // PETG-CF only in black
+                                      lineId.includes('kingroon__abs-cf__')                   // ABS-CF only in black
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
