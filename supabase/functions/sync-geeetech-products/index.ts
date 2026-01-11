@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { GEEETECH_PRODUCT_SEED, getGeeetechProductLineFromMaterial, getGeeetechFinishFromMaterial, normalizeGeeetechMaterialFromSeed } from '../_shared/geeetech-seed.ts';
+import { GEEETECH_PRODUCT_SEED, getGeeetechProductLineFromMaterial, getGeeetechFinishFromMaterial, normalizeGeeetechMaterialFromSeed, getGeeetechDefaultPrice } from '../_shared/geeetech-seed.ts';
 import { getGeeetechPrintSettings } from '../_shared/geeetech-defaults.ts';
 
 const corsHeaders = {
@@ -96,6 +96,9 @@ Deno.serve(async (req) => {
                            seedProduct.title.toLowerCase().includes('hs-pla') ||
                            seedProduct.title.toLowerCase().includes('high speed');
 
+        // Get price from seed or default
+        const variantPrice = seedProduct.priceUsd || getGeeetechDefaultPrice(seedProduct.material, seedProduct.title);
+
         // Check if product exists
         const { data: existing } = await supabase
           .from('filaments')
@@ -115,6 +118,7 @@ Deno.serve(async (req) => {
           product_line_id: productLineId,
           color_hex: seedProduct.hexCode || existing?.color_hex || null,
           color_family: seedProduct.color,
+          variant_price: variantPrice,
           nozzle_temp_min_c: printSettings?.nozzle_temp_min_c || null,
           nozzle_temp_max_c: printSettings?.nozzle_temp_max_c || null,
           bed_temp_min_c: printSettings?.bed_temp_min_c || null,
