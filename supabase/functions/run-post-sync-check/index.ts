@@ -3531,7 +3531,7 @@ Deno.serve(async (req) => {
     // Verify that products have featured_image populated for detail page display
     
     // Skip image coverage check for CSV-seeded brands with no image data (known limitation)
-    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy'];
+    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy', 'gizmo-dorks'];
     const isNoImageBrand = NO_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
@@ -5744,7 +5744,7 @@ Deno.serve(async (req) => {
     
     // Issue 2: Check if too many products are missing images entirely
     // Skip this check for CSV-seeded brands that intentionally have no images
-    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura'];
+    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks'];
     const isNoImageBrandForQuality = NO_IMAGE_BRANDS_FOR_QUALITY.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
@@ -5765,7 +5765,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -5937,7 +5937,15 @@ Deno.serve(async (req) => {
                                       lineId.includes('formfutura__ppsu__') ||                // PPSU only in amber
                                       lineId.includes('formfutura__support__atlas') ||
                                       // Geeetech single-color specialty products (CSV-seeded)
-                                      lineId.includes('geeetech__pla__gradient')    // PLA Gradient is a single rainbow multicolor product
+                                      lineId.includes('geeetech__pla__gradient') ||    // PLA Gradient is a single rainbow multicolor product
+                                      // Gizmo Dorks single-color specialty products (CSV-seeded)
+                                      lineId.includes('gizmodorks__pla__wood') ||              // Wood PLA only comes in wood color
+                                      lineId.includes('gizmodorks__pla__carbon-fiber') ||      // Carbon Fiber PLA only in black
+                                      lineId.includes('gizmodorks__pla-plus__pro') ||          // PLA Pro Plus only 1 color
+                                      lineId.includes('gizmodorks__pla__conductive') ||        // Conductive only in black
+                                      lineId.includes('gizmodorks__pva__') ||                  // PVA support only in natural
+                                      lineId.includes('gizmodorks__acetal__') ||               // Acetal/POM limited colors
+                                      lineId.includes('gizmodorks__pla__glow')                 // Glow PLA limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
