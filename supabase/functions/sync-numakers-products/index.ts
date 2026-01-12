@@ -1,25 +1,35 @@
 /**
- * NUMAKERS FULL SYNC PIPELINE
+ * NUMAKERS CSV-SEEDED SYNC PIPELINE
  * 
- * 5-step sync for Numakers filaments:
- * 1. Fetch products from Shopify JSON API
- * 2. Explode color variants (each color = DB row)
+ * Architecture: CSV-seeded sync (like Eryone, NinjaTek, Kingroon)
+ * 
+ * Steps:
+ * 1. Load products from NUMAKERS_SEED_DATA constant
+ * 2. Filter excluded products (NuBox Surplus, Hueforge Packs, Warehouse Clearance)
  * 3. Apply brand-specific enrichments
- * 4. Fix duplicate hex codes
- * 5. Populate cheat sheet URLs (no TDS available)
+ * 4. Safe delete existing products (if threshold met)
+ * 5. Batch insert all products
+ * 6. Fix duplicate hex codes
  * 
- * Platform: Shopify (JSON API)
+ * Platform: Shopify (numakers.com)
  * Currency: USD
- * Specialty: Vibrant colors, PETG-HS (high-speed), creative color names
+ * Region: US
+ * 
+ * Key Features:
+ * - 125+ products across 13 product lines
+ * - Creative color names (Thanos Purple, Ryobix Green)
+ * - High-speed PETG (PETG-HS)
+ * - PLA Specialty lines (Silk, Matte, Starlight, Glow, Wood, CF, Marble)
+ * - No TDS PDFs - uses Cheat Sheet blog posts
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import {
+  NUMAKERS_SEED_DATA,
   enrichNumakersProduct,
+  shouldExcludeNumakersProduct,
+  getNumakersDefaultPrice,
   cleanNumakersTitle,
-  isFilamentProduct,
-  getNumakersColorHex,
-  NUMAKERS_COLOR_MAPPING,
 } from '../_shared/numakers-defaults.ts';
 
 const corsHeaders = {
@@ -27,356 +37,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ShopifyProduct {
-  id: number;
-  title: string;
-  handle: string;
-  product_type: string;
-  vendor: string;
-  tags: string[];
-  images: { src: string }[];
-  variants: {
-    id: number;
-    title: string;
-    price: string;
-    compare_at_price: string | null;
-    available: boolean;
-    sku: string;
-    option1: string | null;
-    option2: string | null;
-    option3: string | null;
-  }[];
-  options: {
-    name: string;
-    values: string[];
-  }[];
-}
-
-interface ProductVariant {
-  productId: string;
-  title: string;
-  color: string;
-  colorHex: string | null;
-  price: number | null;
-  compareAtPrice: number | null;
-  available: boolean;
-  url: string;
-  imageUrl: string | null;
-  sku: string | null;
-  weightKg: number;
-}
-
-interface SyncResult {
-  success: boolean;
-  step: string;
+interface SyncStats {
+  discovered: number;
+  excluded: number;
   created: number;
   updated: number;
+  skipped: number;
   errors: number;
-  details?: any;
-}
-
-// ============================================================================
-// STEP 1: FETCH PRODUCTS FROM SHOPIFY JSON API
-// ============================================================================
-
-async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
-  console.log('[NUMAKERS-SYNC] Step 1: Fetching products from Shopify API...');
-  
-  const allProducts: ShopifyProduct[] = [];
-  let page = 1;
-  const limit = 250;
-  
-  while (true) {
-    try {
-      const url = `https://numakers.com/products.json?limit=${limit}&page=${page}`;
-      console.log(`[NUMAKERS-SYNC] Fetching page ${page}: ${url}`);
-      
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'FilaScope/1.0 (Filament Database Sync)'
-        }
-      });
-      
-      if (!response.ok) {
-        console.error(`[NUMAKERS-SYNC] Failed to fetch page ${page}: ${response.status}`);
-        break;
-      }
-      
-      const data = await response.json();
-      const products = data.products || [];
-      
-      if (products.length === 0) break;
-      
-      // Filter to filament products only
-      const filaments = products.filter((p: ShopifyProduct) => isFilamentProduct(p));
-      allProducts.push(...filaments);
-      
-      console.log(`[NUMAKERS-SYNC] Page ${page}: ${products.length} products, ${filaments.length} filaments`);
-      
-      if (products.length < limit) break;
-      page++;
-      
-      // Rate limit
-      await new Promise(r => setTimeout(r, 500));
-    } catch (error) {
-      console.error(`[NUMAKERS-SYNC] Error fetching page ${page}:`, error);
-      break;
-    }
-  }
-  
-  console.log(`[NUMAKERS-SYNC] Total filament products fetched: ${allProducts.length}`);
-  return allProducts;
-}
-
-// ============================================================================
-// STEP 2: EXPLODE COLOR VARIANTS
-// ============================================================================
-
-function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
-  console.log('[NUMAKERS-SYNC] Step 2: Exploding color variants...');
-  const variants: ProductVariant[] = [];
-  
-  for (const product of products) {
-    const baseUrl = `https://numakers.com/products/${product.handle}`;
-    const baseImage = product.images?.[0]?.src || null;
-    
-    // Find color option index
-    const colorOptionIndex = product.options.findIndex(
-      opt => opt.name.toLowerCase() === 'color' || opt.name.toLowerCase() === 'colour'
-    );
-    
-    if (colorOptionIndex >= 0 && product.variants.length > 1) {
-      // Multiple color variants - explode each
-      for (const variant of product.variants) {
-        const colorValue = colorOptionIndex === 0 ? variant.option1 :
-                          colorOptionIndex === 1 ? variant.option2 :
-                          variant.option3;
-        
-        if (!colorValue) continue;
-        
-        const colorName = colorValue;
-        const productId = `numakers-${product.handle}-${colorName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
-        
-        variants.push({
-          productId,
-          title: `${product.title} - ${colorName}`,
-          color: colorName,
-          colorHex: getNumakersColorHex(colorName),
-          price: variant.price ? parseFloat(variant.price) : null,
-          compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
-          available: variant.available,
-          url: baseUrl,
-          imageUrl: baseImage,
-          sku: variant.sku || null,
-          weightKg: 1.0, // Default
-        });
-      }
-    } else {
-      // Single variant or no color option - create one entry
-      const variant = product.variants[0];
-      if (!variant) continue;
-      
-      variants.push({
-        productId: `numakers-${product.handle}`,
-        title: product.title,
-        color: variant.option1 || 'Standard',
-        colorHex: variant.option1 ? getNumakersColorHex(variant.option1) : null,
-        price: variant.price ? parseFloat(variant.price) : null,
-        compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
-        available: variant.available,
-        url: baseUrl,
-        imageUrl: baseImage,
-        sku: variant.sku || null,
-        weightKg: 1.0,
-      });
-    }
-  }
-  
-  console.log(`[NUMAKERS-SYNC] Exploded into ${variants.length} color variants`);
-  return variants;
-}
-
-// ============================================================================
-// STEP 3: UPSERT TO DATABASE WITH ENRICHMENTS
-// ============================================================================
-
-async function upsertVariants(
-  supabase: any,
-  variants: ProductVariant[],
-  brandId: string | null
-): Promise<SyncResult> {
-  console.log(`[NUMAKERS-SYNC] Step 3: Upserting ${variants.length} variants with enrichments...`);
-  
-  let created = 0, updated = 0, errors = 0;
-  
-  for (const variant of variants) {
-    try {
-      // Apply enrichments
-      const enriched = enrichNumakersProduct(variant.title);
-      const cleanedTitle = cleanNumakersTitle(variant.title);
-      
-      // Check if exists
-      const { data: existing } = await supabase
-        .from('filaments')
-        .select('id')
-        .eq('product_id', variant.productId)
-        .ilike('vendor', 'numakers')
-        .maybeSingle();
-      
-      const filamentData = {
-        product_id: variant.productId,
-        product_title: cleanedTitle || variant.title,
-        vendor: 'Numakers',
-        brand_id: brandId,
-        material: enriched.material,
-        product_line_id: enriched.productLineId,
-        finish_type: enriched.finishType,
-        color_hex: variant.colorHex ? `#${variant.colorHex}` : (enriched.colorHex ? `#${enriched.colorHex}` : null),
-        color_family: variant.color,
-        variant_price: variant.price,
-        variant_compare_at_price: variant.compareAtPrice,
-        variant_available: variant.available,
-        variant_sku: variant.sku,
-        product_url: variant.url,
-        featured_image: variant.imageUrl,
-        tds_url: enriched.cheatSheetUrl, // Use cheat sheet as "TDS" equivalent
-        nozzle_temp_min_c: enriched.nozzleTempMin,
-        nozzle_temp_max_c: enriched.nozzleTempMax,
-        bed_temp_min_c: enriched.bedTempMin,
-        bed_temp_max_c: enriched.bedTempMax,
-        print_speed_max_mms: enriched.printSpeedMax,
-        net_weight_g: enriched.weightKg * 1000,
-        diameter_nominal_mm: 1.75,
-        is_nozzle_abrasive: enriched.isAbrasive,
-        last_scraped_at: new Date().toISOString(),
-        sync_status: 'synced',
-        auto_created: !existing,
-        auto_updated: !!existing,
-      };
-      
-      if (existing) {
-        const { error } = await supabase
-          .from('filaments')
-          .update(filamentData)
-          .eq('id', existing.id);
-        
-        if (error) throw error;
-        updated++;
-      } else {
-        const { error } = await supabase
-          .from('filaments')
-          .insert(filamentData);
-        
-        if (error) throw error;
-        created++;
-      }
-    } catch (error) {
-      console.error(`[NUMAKERS-SYNC] Error upserting ${variant.productId}:`, error);
-      errors++;
-    }
-  }
-  
-  return { success: errors === 0, step: 'upsert', created, updated, errors };
-}
-
-// ============================================================================
-// STEP 4: FIX DUPLICATE HEX CODES
-// ============================================================================
-
-async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
-  console.log('[NUMAKERS-SYNC] Step 4: Fixing duplicate hex codes...');
-  
-  try {
-    const { data: duplicates, error } = await supabase.rpc('find_duplicate_hexes', {
-      p_vendor: 'numakers'
-    });
-    
-    if (error) throw error;
-    
-    if (!duplicates || duplicates.length === 0) {
-      console.log('[NUMAKERS-SYNC] No duplicate hex codes found');
-      return { success: true, step: 'fix_hexes', created: 0, updated: 0, errors: 0 };
-    }
-    
-    console.log(`[NUMAKERS-SYNC] Found ${duplicates.length} products with duplicate hexes`);
-    
-    // Group by product_line_id and hex
-    const groups: Record<string, typeof duplicates> = {};
-    for (const dup of duplicates) {
-      const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(dup);
-    }
-    
-    let updated = 0;
-    for (const [, items] of Object.entries(groups)) {
-      // Skip first item (keep original), adjust others
-      for (let i = 1; i < items.length; i++) {
-        const item = items[i];
-        const originalHex = item.color_hex?.replace('#', '') || 'FFFFFF';
-        
-        // Modify hex slightly
-        const hexNum = parseInt(originalHex, 16);
-        const newHexNum = (hexNum + i * 17) % 0xFFFFFF;
-        const newHex = `#${newHexNum.toString(16).padStart(6, '0').toUpperCase()}`;
-        
-        const { error } = await supabase
-          .from('filaments')
-          .update({ color_hex: newHex })
-          .eq('id', item.id);
-        
-        if (!error) updated++;
-      }
-    }
-    
-    return { success: true, step: 'fix_hexes', created: 0, updated, errors: 0 };
-  } catch (error) {
-    console.error('[NUMAKERS-SYNC] Error fixing hex codes:', error);
-    return { success: false, step: 'fix_hexes', created: 0, updated: 0, errors: 1, details: error };
-  }
-}
-
-// ============================================================================
-// STEP 5: ENSURE CHEAT SHEET URLS
-// ============================================================================
-
-async function populateCheatSheetUrls(supabase: any): Promise<SyncResult> {
-  console.log('[NUMAKERS-SYNC] Step 5: Populating cheat sheet URLs...');
-  
-  try {
-    // Numakers doesn't have TDS PDFs - they use cheat sheet blog posts
-    // The enrichment already populates tds_url with cheat sheet links
-    // This step validates and fills any gaps
-    
-    const { data: filaments, error: fetchError } = await supabase
-      .from('filaments')
-      .select('id, product_title, material, tds_url')
-      .ilike('vendor', 'numakers')
-      .is('tds_url', null);
-    
-    if (fetchError) throw fetchError;
-    
-    let updated = 0;
-    for (const filament of filaments || []) {
-      const enriched = enrichNumakersProduct(filament.product_title, filament.material);
-      
-      if (enriched.cheatSheetUrl) {
-        const { error } = await supabase
-          .from('filaments')
-          .update({ tds_url: enriched.cheatSheetUrl })
-          .eq('id', filament.id);
-        
-        if (!error) updated++;
-      }
-    }
-    
-    console.log(`[NUMAKERS-SYNC] Updated ${updated} filaments with cheat sheet URLs`);
-    return { success: true, step: 'cheat_sheets', created: 0, updated, errors: 0 };
-  } catch (error) {
-    console.error('[NUMAKERS-SYNC] Error populating cheat sheet URLs:', error);
-    return { success: false, step: 'cheat_sheets', created: 0, updated: 0, errors: 1, details: error };
-  }
 }
 
 // ============================================================================
@@ -390,85 +57,315 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
   console.log('[NUMAKERS-SYNC] ═══════════════════════════════════════════════════════');
-  console.log('[NUMAKERS-SYNC] 🚀 NUMAKERS FULL SYNC STARTED');
+  console.log('[NUMAKERS-SYNC] 🚀 NUMAKERS CSV-SEEDED SYNC STARTED');
   console.log('[NUMAKERS-SYNC] ═══════════════════════════════════════════════════════');
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Parse options
-    let options = {
-      skipFetch: false,
-      skipEnrichment: false,
-      skipHexFix: false,
-      skipCheatSheets: false,
-      limit: 500
-    };
+    // Parse options (limit is ignored for CSV-seeded brands)
+    let cleanSlate = false;
     try {
       const body = await req.json();
-      options = { ...options, ...body };
+      cleanSlate = body.cleanSlate || false;
     } catch {}
 
-    // Get brand ID
-    const { data: brand } = await supabase
+    const stats: SyncStats = {
+      discovered: NUMAKERS_SEED_DATA.length,
+      excluded: 0,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      errors: 0,
+    };
+
+    console.log(`[NUMAKERS-SYNC] CSV Seed contains ${stats.discovered} products`);
+
+    // ============================================================================
+    // STEP 1: GET BRAND ID
+    // ============================================================================
+    
+    console.log('[NUMAKERS-SYNC] Step 1: Getting brand ID...');
+    
+    const { data: brand, error: brandError } = await supabase
       .from('automated_brands')
       .select('id')
       .eq('brand_slug', 'numakers')
       .maybeSingle();
     
+    if (brandError) {
+      console.error('[NUMAKERS-SYNC] Error fetching brand:', brandError);
+    }
+    
     const brandId = brand?.id || null;
-    const results: SyncResult[] = [];
+    console.log(`[NUMAKERS-SYNC] Brand ID: ${brandId || 'not found'}`);
+    
+    // Mark brand as actively scraping
+    if (brandId) {
+      await supabase
+        .from('automated_brands')
+        .update({ 
+          scraping_active: true,
+          last_scrape_at: new Date().toISOString()
+        })
+        .eq('id', brandId);
+    }
 
-    // Step 1 & 2: Fetch and explode products
-    if (!options.skipFetch) {
-      const products = await fetchShopifyProducts();
-      const variants = explodeVariants(products);
+    // ============================================================================
+    // STEP 2: FILTER AND PROCESS PRODUCTS
+    // ============================================================================
+    
+    console.log('[NUMAKERS-SYNC] Step 2: Processing CSV seed data...');
+    
+    const productsToInsert: any[] = [];
+    const productLineCount: Record<string, number> = {};
+    const materialBreakdown: Record<string, number> = {};
+    
+    for (const seed of NUMAKERS_SEED_DATA) {
+      // Check for exclusions
+      if (shouldExcludeNumakersProduct(seed.filamentLine) || shouldExcludeNumakersProduct(seed.color)) {
+        stats.excluded++;
+        console.log(`[NUMAKERS-SYNC] Excluded: ${seed.filamentLine} - ${seed.color}`);
+        continue;
+      }
       
-      // Step 3: Upsert with enrichments
-      if (!options.skipEnrichment && variants.length > 0) {
-        const upsertResult = await upsertVariants(supabase, variants, brandId);
-        results.push(upsertResult);
+      // Apply enrichments
+      const enriched = enrichNumakersProduct(seed);
+      
+      // Generate product ID
+      const colorSlug = seed.color.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      const productId = `numakers-${enriched.productLineId.replace('numakers__', '').replace(/_/g, '-')}-${colorSlug}`;
+      
+      // Clean title for display
+      const displayTitle = `${cleanNumakersTitle(seed.filamentLine)} - ${seed.color}`;
+      
+      // Get default price
+      const price = getNumakersDefaultPrice(seed.filamentLine);
+      
+      // Ensure hex has # prefix
+      const colorHex = enriched.colorHex ? 
+        (enriched.colorHex.startsWith('#') ? enriched.colorHex : `#${enriched.colorHex}`) : 
+        null;
+      
+      const filamentData = {
+        product_id: productId,
+        product_title: displayTitle,
+        vendor: 'Numakers',
+        brand_id: brandId,
+        material: enriched.material,
+        product_line_id: enriched.productLineId,
+        finish_type: enriched.finishType,
+        color_hex: colorHex,
+        color_family: seed.color,
+        variant_price: price,
+        variant_available: true,
+        product_url: seed.productUrl,
+        featured_image: seed.imageUrl,
+        tds_url: enriched.cheatSheetUrl,
+        nozzle_temp_min_c: enriched.nozzleTempMin,
+        nozzle_temp_max_c: enriched.nozzleTempMax,
+        bed_temp_min_c: enriched.bedTempMin,
+        bed_temp_max_c: enriched.bedTempMax,
+        print_speed_max_mms: enriched.printSpeedMax,
+        net_weight_g: enriched.weightKg * 1000,
+        diameter_nominal_mm: 1.75,
+        is_nozzle_abrasive: enriched.isAbrasive,
+        high_speed_capable: enriched.highSpeedCapable,
+        last_scraped_at: new Date().toISOString(),
+        sync_status: 'synced',
+        auto_created: true,
+        auto_updated: false,
+      };
+      
+      productsToInsert.push(filamentData);
+      
+      // Track stats
+      productLineCount[enriched.productLineId] = (productLineCount[enriched.productLineId] || 0) + 1;
+      materialBreakdown[enriched.material] = (materialBreakdown[enriched.material] || 0) + 1;
+    }
+    
+    console.log(`[NUMAKERS-SYNC] Prepared ${productsToInsert.length} products for insert`);
+    console.log(`[NUMAKERS-SYNC] Excluded ${stats.excluded} products (NuBox/Hueforge/Clearance)`);
+    console.log(`[NUMAKERS-SYNC] Product lines: ${Object.keys(productLineCount).length}`);
+    console.log('[NUMAKERS-SYNC] Material breakdown:', materialBreakdown);
+
+    // ============================================================================
+    // STEP 3: SAFE DELETE EXISTING PRODUCTS
+    // ============================================================================
+    
+    const SAFE_DELETE_THRESHOLD = 50;
+    
+    if (productsToInsert.length >= SAFE_DELETE_THRESHOLD) {
+      console.log(`[NUMAKERS-SYNC] Step 3: Safe delete (${productsToInsert.length} >= ${SAFE_DELETE_THRESHOLD} threshold)...`);
+      
+      const { error: deleteError, count: deleteCount } = await supabase
+        .from('filaments')
+        .delete()
+        .ilike('vendor', 'numakers');
+      
+      if (deleteError) {
+        console.error('[NUMAKERS-SYNC] Delete error:', deleteError);
+        stats.errors++;
+      } else {
+        console.log(`[NUMAKERS-SYNC] Deleted ${deleteCount || 'unknown'} existing Numakers products`);
+      }
+    } else {
+      console.log(`[NUMAKERS-SYNC] Step 3: Skipping delete (${productsToInsert.length} < ${SAFE_DELETE_THRESHOLD} threshold)`);
+    }
+
+    // ============================================================================
+    // STEP 4: BATCH INSERT PRODUCTS
+    // ============================================================================
+    
+    console.log('[NUMAKERS-SYNC] Step 4: Batch inserting products...');
+    
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
+      const batch = productsToInsert.slice(i, i + BATCH_SIZE);
+      
+      const { error: insertError } = await supabase
+        .from('filaments')
+        .insert(batch);
+      
+      if (insertError) {
+        console.error(`[NUMAKERS-SYNC] Batch ${Math.floor(i / BATCH_SIZE) + 1} insert error:`, insertError);
+        stats.errors += batch.length;
+      } else {
+        stats.created += batch.length;
+        console.log(`[NUMAKERS-SYNC] Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.length} products`);
       }
     }
 
-    // Step 4: Fix duplicate hex codes
-    if (!options.skipHexFix) {
-      const hexResult = await fixDuplicateHexCodes(supabase);
-      results.push(hexResult);
+    // ============================================================================
+    // STEP 5: FIX DUPLICATE HEX CODES
+    // ============================================================================
+    
+    console.log('[NUMAKERS-SYNC] Step 5: Fixing duplicate hex codes...');
+    
+    try {
+      const { data: duplicates, error: dupError } = await supabase.rpc('find_duplicate_hexes', {
+        p_vendor: 'numakers'
+      });
+      
+      if (dupError) {
+        console.log('[NUMAKERS-SYNC] Note: find_duplicate_hexes RPC not available');
+      } else if (duplicates && duplicates.length > 0) {
+        console.log(`[NUMAKERS-SYNC] Found ${duplicates.length} duplicate hex codes, fixing...`);
+        
+        // Group by product_line_id and hex
+        const groups: Record<string, typeof duplicates> = {};
+        for (const dup of duplicates) {
+          const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(dup);
+        }
+        
+        let fixed = 0;
+        for (const [, items] of Object.entries(groups)) {
+          // Skip first item (keep original), adjust others
+          for (let i = 1; i < items.length; i++) {
+            const item = items[i];
+            const originalHex = item.color_hex?.replace('#', '') || 'FFFFFF';
+            
+            // Modify hex slightly
+            const hexNum = parseInt(originalHex, 16);
+            const newHexNum = (hexNum + i * 17) % 0xFFFFFF;
+            const newHex = `#${newHexNum.toString(16).padStart(6, '0').toUpperCase()}`;
+            
+            const { error } = await supabase
+              .from('filaments')
+              .update({ color_hex: newHex })
+              .eq('id', item.id);
+            
+            if (!error) fixed++;
+          }
+        }
+        console.log(`[NUMAKERS-SYNC] Fixed ${fixed} duplicate hex codes`);
+      } else {
+        console.log('[NUMAKERS-SYNC] No duplicate hex codes found');
+      }
+    } catch (error) {
+      console.log('[NUMAKERS-SYNC] Hex fix skipped:', error);
     }
 
-    // Step 5: Populate cheat sheet URLs
-    if (!options.skipCheatSheets) {
-      const cheatResult = await populateCheatSheetUrls(supabase);
-      results.push(cheatResult);
-    }
-
-    // Update brand counts
+    // ============================================================================
+    // STEP 6: UPDATE BRAND STATS
+    // ============================================================================
+    
+    console.log('[NUMAKERS-SYNC] Step 6: Updating brand statistics...');
+    
     if (brandId) {
-      await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'numakers' });
-      await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: 'numakers' });
+      // Get final counts
+      const { count: totalProducts } = await supabase
+        .from('filaments')
+        .select('*', { count: 'exact', head: true })
+        .ilike('vendor', 'numakers');
+      
+      const { count: productsWithImages } = await supabase
+        .from('filaments')
+        .select('*', { count: 'exact', head: true })
+        .ilike('vendor', 'numakers')
+        .not('featured_image', 'is', null);
+      
+      const { count: productsWithPrices } = await supabase
+        .from('filaments')
+        .select('*', { count: 'exact', head: true })
+        .ilike('vendor', 'numakers')
+        .not('variant_price', 'is', null);
+      
+      const { count: productsWithHex } = await supabase
+        .from('filaments')
+        .select('*', { count: 'exact', head: true })
+        .ilike('vendor', 'numakers')
+        .not('color_hex', 'is', null);
+      
+      await supabase
+        .from('automated_brands')
+        .update({
+          scraping_active: false,
+          product_count: totalProducts || 0,
+          active_product_count: totalProducts || 0,
+          products_created: stats.created,
+          products_updated: stats.updated,
+          products_with_images: productsWithImages || 0,
+          products_with_prices: productsWithPrices || 0,
+          products_with_color_hex: productsWithHex || 0,
+          last_error: stats.errors > 0 ? `${stats.errors} errors during sync` : null,
+          last_error_at: stats.errors > 0 ? new Date().toISOString() : null,
+        })
+        .eq('id', brandId);
+      
+      console.log(`[NUMAKERS-SYNC] Updated brand stats: ${totalProducts} products, ${productsWithHex} with hex, ${productsWithImages} with images`);
     }
 
+    // ============================================================================
+    // DONE
+    // ============================================================================
+    
     const duration = Math.round((Date.now() - startTime) / 1000);
-    const totalCreated = results.reduce((sum, r) => sum + r.created, 0);
-    const totalUpdated = results.reduce((sum, r) => sum + r.updated, 0);
-    const totalErrors = results.reduce((sum, r) => sum + r.errors, 0);
-
+    
     console.log('[NUMAKERS-SYNC] ═══════════════════════════════════════════════════════');
     console.log(`[NUMAKERS-SYNC] ✅ SYNC COMPLETED in ${duration}s`);
-    console.log(`[NUMAKERS-SYNC] Created: ${totalCreated}, Updated: ${totalUpdated}, Errors: ${totalErrors}`);
+    console.log(`[NUMAKERS-SYNC] Discovered: ${stats.discovered}, Excluded: ${stats.excluded}`);
+    console.log(`[NUMAKERS-SYNC] Created: ${stats.created}, Errors: ${stats.errors}`);
+    console.log(`[NUMAKERS-SYNC] Product Lines: ${Object.keys(productLineCount).length}`);
     console.log('[NUMAKERS-SYNC] ═══════════════════════════════════════════════════════');
 
     return new Response(JSON.stringify({
-      success: totalErrors === 0,
+      success: stats.errors === 0,
       duration,
-      created: totalCreated,
-      updated: totalUpdated,
-      errors: totalErrors,
-      steps: results,
+      stats: {
+        discovered: stats.discovered,
+        excluded: stats.excluded,
+        created: stats.created,
+        updated: stats.updated,
+        errors: stats.errors,
+        productLines: Object.keys(productLineCount).length,
+      },
+      productLineBreakdown: productLineCount,
+      materialBreakdown,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

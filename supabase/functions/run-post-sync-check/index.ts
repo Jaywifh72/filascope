@@ -42,14 +42,14 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
 const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
