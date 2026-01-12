@@ -5916,7 +5916,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -7962,7 +7962,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -8166,7 +8166,12 @@ Deno.serve(async (req) => {
                                       lineId.includes('kingroon__abs-cf__') ||                // ABS-CF only in black
                                       // Numakers single-color specialty products (CSV-seeded)
                                       lineId.includes('numakers__pla_marble__pla-marble') ||  // Marble only 1 color (White Marble)
-                                      lineId.includes('numakers__pla_wood__pla-wood')         // Wood only 1 color
+                                      lineId.includes('numakers__pla_wood__pla-wood') ||      // Wood only 1 color
+                                      // Overture single-color specialty products (CSV-seeded)
+                                      lineId.includes('overture__pla-refill__refill') ||      // PLA Refill only 1 variant
+                                      lineId.includes('overture__nylon__easy-nylon') ||       // Easy Nylon only 1 color
+                                      lineId.includes('overture__abs__standard') ||           // ABS only 1 color
+                                      lineId.includes('overture__asa__standard')              // ASA only 1 color
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
