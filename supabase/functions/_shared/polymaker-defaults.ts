@@ -1054,6 +1054,80 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'gradient tropical': '#FFB347',
   'gradient matte pastel rainbow': '#FFB6C1',
   'gradient halloween neon': '#FF6600',
+  
+  // === STARLIGHT PLANETS (MISSING) ===
+  'starlight jupiter': '#D4A574',
+  'starlight mars': '#CD5C5C',
+  'starlight mercury': '#C0C0C0',
+  'starlight meteor': '#5F5F5F',
+  'starlight midnight': '#191970',
+  'starlight pulsar': '#9370DB',
+  'jupiter': '#D4A574',
+  'mars': '#CD5C5C',
+  'mercury': '#C0C0C0',
+  'meteor': '#5F5F5F',
+  'midnight': '#191970',
+  'pulsar': '#9370DB',
+  
+  // === GRADIENT MATTE (MISSING) ===
+  'gradient matte cappuccino': '#6F4E37',
+  'gradient matte lavender fizz': '#E6E6FA',
+  'gradient matte sandstorm': '#C2B280',
+  'gradient matte sky': '#87CEEB',
+  'gradient matte tornado': '#708090',
+  'gradient matte tropical squeeze': '#FFD700',
+  'cappuccino': '#6F4E37',
+  'lavender fizz': '#E6E6FA',
+  'sandstorm': '#C2B280',
+  'tornado': '#708090',
+  'tropical squeeze': '#FFD700',
+  
+  // === MARBLE (MISSING) ===
+  'marble brick': '#CB4154',
+  'marble limestone': '#D9D2BE',
+  'marble sandstone': '#786D5F',
+  'brick': '#CB4154',
+  'limestone': '#D9D2BE',
+  'sandstone': '#786D5F',
+  
+  // === MATTE PASTEL (MISSING) ===
+  'matte electric indigo': '#4B0082',
+  'matte pastel candy': '#FFC0CB',
+  'matte pastel periwinkle': '#CCCCFF',
+  'matte pastel watermelon': '#FD4659',
+  'electric indigo': '#4B0082',
+  'candy': '#FFC0CB',
+  'periwinkle': '#CCCCFF',
+  'watermelon': '#FD4659',
+  
+  // === SILK (MISSING) ===
+  'silk brass': '#B5A642',
+  'silk chrome': '#C0C0C0',
+  'silk periwinkle': '#CCCCFF',
+  'silk rose': '#FF007F',
+  'brass': '#B5A642',
+  'chrome': '#C0C0C0',
+  'rose': '#FF007F',
+  
+  // === DUAL SILK (MISSING) ===
+  'dual silk crown': '#FFD700',
+  'dual silk crown (gold-silver)': '#FFD700',
+  'crown': '#FFD700',
+  
+  // === DUAL SPECIAL (MISSING) ===
+  'dual yin-yang': '#FFFFFF',
+  'yin-yang': '#FFFFFF',
+  
+  // === COSPLA (SPECIALTY) ===
+  'version a': '#808080',
+  'version b': '#808080',
+  'durability with extra sand-ability': '#808080',
+  'sand-ability with extra durability': '#808080',
+  
+  // === MISC (MISSING) ===
+  '3d print general flat dark earth': '#A67C52',
+  'flat dark earth': '#A67C52',
+  'dark earth': '#A67C52',
 };
 
 // Marketing/invalid text patterns to exclude from color extraction
@@ -1112,9 +1186,33 @@ export function getPolymakerColorHex(colorName: string): string | null {
 export function extractPolymakerColorFromTitle(title: string): { colorName: string; hex: string | null } | null {
   const lower = title.toLowerCase();
   
-  // Skip marketing text
-  if (POLYMAKER_COLOR_EXCLUSION_PATTERNS.some(p => lower.includes(p))) {
+  // Skip products that are clearly marketing text or no color suffix
+  const fullExclusionPatterns = [
+    'you will love it',
+    'coming soon',
+    'out of stock',
+    'pre-order',
+    'formerly',
+  ];
+  if (fullExclusionPatterns.some(p => lower.includes(p))) {
     return null;
+  }
+  
+  // Special handling for CosPLA which uses "Version A/B" instead of colors
+  if (lower.includes('cospla')) {
+    if (lower.includes('version a')) {
+      return { colorName: 'Version A', hex: '#808080' };
+    }
+    if (lower.includes('version b')) {
+      return { colorName: 'Version B', hex: '#808080' };
+    }
+    // CosPLA with descriptions instead of colors
+    if (lower.includes('durability')) {
+      return { colorName: 'Durability', hex: '#808080' };
+    }
+    if (lower.includes('sand-ability')) {
+      return { colorName: 'Sand-ability', hex: '#808080' };
+    }
   }
   
   // Extract color after " - " separator (most common format)
@@ -1123,8 +1221,13 @@ export function extractPolymakerColorFromTitle(title: string): { colorName: stri
     const colorPart = dashMatch[1].trim();
     const colorLower = colorPart.toLowerCase();
     
-    // Skip if it looks like marketing text
+    // Skip if it looks like marketing text - check BEFORE hex lookup
     if (POLYMAKER_COLOR_EXCLUSION_PATTERNS.some(p => colorLower.includes(p))) {
+      return null;
+    }
+    
+    // Skip if color part ends with "pla", "petg", etc. (not a real color)
+    if (/\b(pla|petg|abs|asa|tpu|pc|nylon|pa)\s*$/i.test(colorPart)) {
       return null;
     }
     
