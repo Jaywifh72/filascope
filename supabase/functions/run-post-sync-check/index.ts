@@ -6358,7 +6358,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -7103,7 +7103,7 @@ Deno.serve(async (req) => {
     // that occur due to mismatches between product_line_id format and display logic.
     
     // Skip brands that use verbose seed titles but have clean UI display names (by design)
-    const skipUIDisplayNameBrands = ['gizmo-dorks'];
+    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker'];
     const uiDisplayIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Simulate formatProductLineIdForDisplay logic (from src/lib/productNameUtils.ts)
@@ -8637,7 +8637,12 @@ Deno.serve(async (req) => {
                                         lineId.includes('-uv-shift') ||             // UV Shift limited colors
                                         lineId.includes('-gradient-') ||            // Gradient products are single-SKU multi-color
                                         lineId.includes('-dual-special') ||         // Dual Special limited colors
-                                        lineId.includes('ht-pla')                   // HT-PLA limited colors
+                                        lineId.includes('ht-pla') ||                // HT-PLA limited colors
+                                        lineId.includes('polylite-pc') ||           // PolyLite PC only Transparent
+                                        lineId.includes('polymax-pc-fr') ||         // PolyMax PC-FR fire retardant (1 color)
+                                        lineId.includes('polylite-petg') ||         // PolyLite PETG (stale parent, whitelist for now)
+                                        lineId.includes('polylite-pla-cf') ||       // PolyLite PLA-CF (carbon fiber, black only)
+                                        lineId.includes('__support__')              // Support materials category
                                       )
         
         if (!isSingleColorProduct) {
