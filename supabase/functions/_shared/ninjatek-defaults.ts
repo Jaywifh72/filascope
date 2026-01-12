@@ -197,12 +197,14 @@ export function extractProductLine(title: string): NinjatekProductLine | null {
     if (t.includes('special')) return 'colorfabb-specials';
   }
   
-  // NinjaTek TPU products
+  // NinjaTek TPU products - EDGE MUST BE FIRST
+  // "NinjaFlex Edge 3D Printer Filament (83A)" contains both "edge" and "ninjaflex"
+  // so we must check for "edge" first to correctly identify Edge products
+  if (t.includes('edge')) return 'edge';
   if (t.includes('ninjaflex') || t.includes('ninja flex')) return 'ninjaflex';
   if (t.includes('chinchilla')) return 'chinchilla';
   if (t.includes('cheetah')) return 'cheetah';
   if (t.includes('armadillo')) return 'armadillo';
-  if (t.includes('edge')) return 'edge';
   if (t.includes('eel')) return 'eel';
   
   return null;
@@ -314,6 +316,30 @@ export const NINJATEK_TDS_URLS: Record<string, string> = {
   'eel': 'https://ninjatek.com/wp-content/uploads/Eel-TDS.pdf',
   // ColorFabb TDS URLs would be different - they're hosted on ColorFabb's site
 };
+
+// ============================================================================
+// PRODUCT IMAGE URLS (product-line level images)
+// ============================================================================
+
+export const NINJATEK_PRODUCT_IMAGES: Record<string, string> = {
+  // NinjaTek TPU product images (from ninjatek.com product pages)
+  'ninjaflex': 'https://ninjatek.com/wp-content/uploads/2016/11/NinjaFlex.png',
+  'edge': 'https://ninjatek.com/wp-content/uploads/2018/09/Edge.png',
+  'chinchilla': 'https://ninjatek.com/wp-content/uploads/2019/01/Chinchilla.png',
+  'cheetah': 'https://ninjatek.com/wp-content/uploads/2016/11/Cheetah.png',
+  'armadillo': 'https://ninjatek.com/wp-content/uploads/2016/11/Armadillo.png',
+  'eel': 'https://ninjatek.com/wp-content/uploads/2018/04/Eel.png',
+  // ColorFabb products (use NinjaTek-hosted images when available)
+  'colorfabb-asa': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-ASA.png',
+  'colorfabb-pla': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-PLA.png',
+  'colorfabb-co-polyesters': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-nGen.png',
+  'colorfabb-specials': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-Specials.png',
+};
+
+export function getNinjatekProductImage(productLine: NinjatekProductLine | null): string | null {
+  if (!productLine) return null;
+  return NINJATEK_PRODUCT_IMAGES[productLine] || null;
+}
 
 export function getNinjatekTdsUrl(title: string): string | null {
   const productLine = extractProductLine(title);
@@ -619,10 +645,11 @@ export function parseNinjatekCsvRow(row: string[]): NinjatekSeedRow | null {
 // ============================================================================
 
 // Based on CSV analysis:
-// NinjaTek TPU: NinjaFlex (11 colors), Edge (2), Chinchilla (4), Eel (2 - but 1 is 3mm), Cheetah (11), Armadillo (9)
-// ColorFabb: ASA (2), PA (2 - but diameter options), PLA (12), Co-Polyester (14), Specials (7)
-// After filtering 2.85mm/3mm: ~10 product lines expected for NinjaTek-only
-export const NINJATEK_EXPECTED_PRODUCT_LINES = 10; // 6 NinjaTek + 4 ColorFabb after 3mm filtering
+// NinjaTek TPU: NinjaFlex (11 colors), Edge (2), Chinchilla (4), Cheetah (11), Armadillo (9)
+// ColorFabb: ASA (2), PLA (12), Co-Polyester (14), Specials (7)
+// EXCLUDED: Eel 90A (diameter-only), colorFabb PA (diameter-only)
+// After filtering 2.85mm/3mm: 9 product lines expected
+export const NINJATEK_EXPECTED_PRODUCT_LINES = 9; // 5 NinjaTek TPU + 4 ColorFabb
 
 // Products per line (for validation)
 export const NINJATEK_EXPECTED_COLORS: Record<string, number> = {
@@ -631,7 +658,7 @@ export const NINJATEK_EXPECTED_COLORS: Record<string, number> = {
   'chinchilla': 4, // Midnight Black, Sky Blue, Snow White, Steel Gray
   'cheetah': 11,   // Same colors as NinjaFlex
   'armadillo': 9,  // Fire Red, Grass Green, Lava Orange, Midnight Black, Sapphire Blue, Snow White, Steel Gray, Sun Yellow, Water Translucent
-  'eel': 1,        // Only 1.75mm has 1 color (after filtering 3mm)
+  // Eel excluded - only has diameter variants, not color variants
   'colorfabb-asa': 2,
   'colorfabb-pla': 12,
   'colorfabb-co-polyesters': 14,

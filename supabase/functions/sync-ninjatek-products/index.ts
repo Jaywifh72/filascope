@@ -21,6 +21,7 @@ import {
   cleanNinjatekTitle,
   extractProductLine,
   getNinjatekColorHex,
+  getNinjatekProductImage,
   NINJATEK_TDS_URLS,
   shouldIncludeNinjatekVariant,
   type NinjatekProductLine,
@@ -191,9 +192,12 @@ function parseCsvSeed(): ProductVariant[] {
     const productLine = extractProductLine(filamentName);
     const enriched = enrichNinjatekProduct(filamentName, filamentColor);
     
-    // Generate unique product ID
+    // Generate unique product ID - include material to avoid duplicates between Edge and NinjaFlex
     const colorSlug = filamentColor.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const productId = `ninjatek-${productLine || 'generic'}-${colorSlug}`;
+    const productId = `ninjatek-${productLine || 'generic'}-${enriched.material.toLowerCase()}-${colorSlug}`;
+    
+    // Get product-level image for this product line
+    const productImage = getNinjatekProductImage(productLine);
     
     variants.push({
       productId,
@@ -206,7 +210,7 @@ function parseCsvSeed(): ProductVariant[] {
       weightKg: 0.5, // Default NinjaTek spool
       diameterMm: 1.75, // Default (we filter out 3mm)
       url: filamentUrl,
-      imageUrl: null, // Will be scraped
+      imageUrl: productImage, // Use product-line level image
       available: true,
     });
   }
