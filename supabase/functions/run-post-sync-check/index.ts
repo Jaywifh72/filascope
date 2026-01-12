@@ -440,6 +440,52 @@ const AI_ROLES = {
   },
   formFuturaSpecialist: {
     title: 'FormFutura Integration Specialist',
+    triggers: ['formfutura', 'odoo', 'hdglass', 'apollox', 'volcano', 'epla', 'easyfil', 'reform', 'luvocom', 'athenax', 'pythonflex', 'styx'],
+    capabilities: [
+      'Odoo 16 e-commerce platform analysis (NOT Shopify)',
+      'CSV-seeded sync pipeline architecture (~80 product lines)',
+      'Premium Dutch filament material classification',
+      'High-performance materials (PEEK, PEKK, PAHT-CF, PEI ULTEM, PPSU)',
+      'Volcano PLA high-speed variant handling (150C)',
+      'ReForm recycled material line (rPLA, rPETG, rTPU, rApollo)',
+      'Multi-format variants (Spool, Bambu Coil, Cardboard ReFill)',
+      'RAL-style color naming system (Traffic, Signal colors)',
+      'EUR to USD price conversion (1.08 rate)'
+    ]
+  },
+  polymakerSpecialist: {
+    title: 'Polymaker Integration Specialist',
+    triggers: ['polymaker', 'panchroma', 'polyterra', 'polylite', 'polymax', 'polysonic', 'polyflex', 'fiberon', 'polymide', 'polycast', 'polysmooth', 'polysupport', 'polydissolve', 'cope', 'uv shift'],
+    capabilities: [
+      'Shopify platform analysis (us.polymaker.com, ca.polymaker.com - regional subdomains)',
+      'Multi-region pricing (US USD, CA CAD, EU EUR, UK GBP, AU AUD)',
+      'Panchroma line rebranding (formerly PolyTerra, PolyLite Silk, etc.)',
+      'Fiberon engineering composites (CF, GF, ESD materials)',
+      'SKU-embedded HEX codes (format: CA04015 | HEX Code:#2F2E30 | TD:0.1)',
+      'Transmission Distance (TD) extraction for color matching',
+      'Product line detection: Panchroma (25+ sub-variants), PolyLite, PolyMax, PolySonic, PolyFlex, Fiberon',
+      'TDS URL generation (Shopify CDN + legacy polymaker.com patterns)',
+      '50+ product variants across consumer and engineering lines',
+      'High-speed capable lines: PolySonic (300mm/s), PolyFlex TPU95-HF (250mm/s)'
+    ],
+    lessons: [
+      'Polymaker uses regional Shopify stores: us.polymaker.com (USD), ca.polymaker.com (CAD)',
+      'Variant format: option1=Diameter, option2=Weight, option3=Color',
+      'SKU contains HEX code and TD value - parse with extractHexFromSku() in polymaker-defaults.ts',
+      'Panchroma is the new umbrella brand for consumer PLA (Matte=PolyTerra, Silk=PolyLite Silk)',
+      'Fiberon is the engineering brand (formerly PolyMide) - CF/GF/ESD materials',
+      'Bundle products MUST be excluded (holiday bundles, sample packs, Hueforge packs)',
+      '3D Pen Filaments and Creator Special Editions are NOT standard spools - exclude them',
+      'Refill variants (Panchroma PLA Refill) are spools without packaging - valid products',
+      'PolySonic and PolySonic Pro are high-speed capable lines (300mm/s)',
+      'PolyMax PC-FR is flame retardant variant - separate from standard PolyMax PC',
+      'Product type "Bundle Packs", "Hardware", "Virtual" should be excluded',
+      'Tags containing "bundle", "holidaybundle", "hidden", "virtual" indicate non-filament',
+      'Use isFilamentProduct() in polymaker-defaults.ts for proper filtering',
+      'Expected 50+ product lines for comprehensive consumer + engineering catalog',
+      'Cross-product swatch architecture - URL consistency check is SKIPPED'
+    ]
+  },
   paramountSpecialist: {
     title: 'Paramount 3D Integration Specialist',
     triggers: ['paramount', 'paramount 3d', 'paramount-3d', 'geode', 'flexpla', 'stone gray', 'military green', 'master spool', 'wix', 'aztec gold', 'colossus copper'],
@@ -464,19 +510,6 @@ const AI_ROLES = {
       'Expected 11+ product lines for consumer filaments',
       'PVA and Nylon are single-color products (Natural only)',
       'Curated hex codes in paramount-seed.ts - hex validation is SKIPPED'
-    ]
-  },
-    triggers: ['formfutura', 'odoo', 'hdglass', 'apollox', 'volcano', 'epla', 'easyfil', 'reform', 'luvocom', 'athenax', 'pythonflex', 'styx'],
-    capabilities: [
-      'Odoo 16 e-commerce platform analysis (NOT Shopify)',
-      'CSV-seeded sync pipeline architecture (~80 product lines)',
-      'Premium Dutch filament material classification',
-      'High-performance materials (PEEK, PEKK, PAHT-CF, PEI ULTEM, PPSU)',
-      'Volcano PLA high-speed variant handling (150C)',
-      'ReForm recycled material line (rPLA, rPETG, rTPU, rApollo)',
-      'Multi-format variants (Spool, Bambu Coil, Cardboard ReFill)',
-      'RAL-style color naming system (Traffic, Signal colors)',
-      'EUR to USD price conversion (1.08 rate)'
     ]
   },
   geeetechSpecialist: {
@@ -1475,6 +1508,110 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'nylon-1-75mm-1-pack': 'Easy Nylon (1 color)'
     },
     lastUpdated: '2026-01-12'
+  },
+  'polymaker': {
+    platform: 'Shopify storefront (us.polymaker.com, ca.polymaker.com) with regional subdomains',
+    knownLimitations: [
+      '❌ Bundle products (Holiday, CMYK, Hueforge packs) pollute catalog if not filtered',
+      '❌ Hardware (PolyDryer, PolyBox, Nebulizer) must be excluded',
+      '❌ Virtual products (Gift Card, Shipping Insurance) must be excluded',
+      '❌ 3D Pen Filaments and Creator Special Editions are not standard spools',
+      '❌ Regional stores have different prices (USD vs CAD) - sync from US, add CA prices separately',
+      '❌ Product types "Bundle Packs", "Hardware", "Virtual" indicate non-filament'
+    ],
+    workingSolutions: [
+      '✅ isFilamentProduct() in polymaker-defaults.ts handles all bundle/hardware exclusions',
+      '✅ extractProductLine() detects 50+ unique product lines (Panchroma 25+, PolyLite 12+, Fiberon 13+)',
+      '✅ SKU contains HEX and TD values - extractHexFromSku() and extractTdFromSku() parse these',
+      '✅ enrichPolymakerProduct() returns complete print settings from POLYMAKER_PRINT_SETTINGS',
+      '✅ Cross-product swatch architecture supported (each color = separate Shopify product)',
+      '✅ generatePolymakerProductLineId() handles Panchroma rebranding (PolyTerra → Panchroma Matte)',
+      '✅ normalizePolymakerMaterial() covers 50+ material name patterns',
+      '✅ Regional CA prices synced via fetchRegionalPrices() from ca.polymaker.com'
+    ],
+    failedApproaches: [
+      '⚠️ Including Bundle Packs product type - must be filtered',
+      '⚠️ Not excluding "holidaybundle" tag - creates holiday pack contamination',
+      '⚠️ Treating Creator Special Editions as regular filament',
+      '⚠️ Using simple product line patterns - Panchroma has 25+ sub-variants requiring specific detection'
+    ],
+    currentStatus: {
+      'totalProducts': '~500 color variants across 50+ product lines',
+      'productLines': '50+ (Panchroma 25, PolyLite 12, Fiberon 13, PolyMax 4, PolyFlex 3, PolySonic 2, Specialty 8)',
+      'materialsSupported': 'PLA, PETG, ABS, ASA, PC, PC-ABS, PC-PBT, TPU-90A, TPU-95A, PA12-CF, PA6-CF, PA6-GF, PA612-CF, PA612-ESD, PET-CF, PET-GF, PPS-CF, PPS-GF, ASA-CF, PETG-ESD, PETG-rCF, LW-PLA, HT-PLA, HT-PLA-GF, PVB, PVA',
+      'hexCoverage': '99% - extracted from SKU (most reliable source)',
+      'regionalPricing': 'US (USD) primary, CA (CAD) secondary'
+    },
+    keyFiles: [
+      'supabase/functions/sync-polymaker-products/index.ts - Main sync with Shopify product fetch',
+      'supabase/functions/_shared/polymaker-defaults.ts - Product line detection, material normalization, print settings',
+      'isFilamentProduct() - Excludes bundles, hardware, virtual, 3D pen, creator editions',
+      'extractProductLine() - 50+ specific product line patterns including all Panchroma sub-variants',
+      'enrichPolymakerProduct() - Complete print settings from POLYMAKER_PRINT_SETTINGS (45+ entries)',
+      'extractHexFromSku() / extractTdFromSku() - Parse "CA04015 | HEX Code:#2F2E30 | TD:0.1" format'
+    ],
+    productSlugReference: {
+      'panchroma-matte': 'Panchroma Matte PLA (formerly PolyTerra)',
+      'panchroma-silk': 'Panchroma Silk PLA (formerly PolyLite Silk)',
+      'panchroma-dual-silk': 'Panchroma Dual Silk PLA',
+      'panchroma-dual-matte': 'Panchroma Dual Matte PLA (formerly PolyTerra Dual)',
+      'panchroma-gradient-matte': 'Panchroma Gradient Matte (formerly PolyTerra Gradient)',
+      'panchroma-gradient-silk': 'Panchroma Gradient Silk',
+      'panchroma-marble': 'Panchroma Marble PLA',
+      'panchroma-galaxy': 'Panchroma Galaxy PLA (formerly PolyLite Galaxy)',
+      'panchroma-starlight': 'Panchroma Starlight PLA (formerly PolyLite Starlight)',
+      'panchroma-luminous': 'Panchroma Luminous PLA (formerly PolyLite Luminous)',
+      'panchroma-glow': 'Panchroma Glow PLA (formerly PolyLite Glow)',
+      'panchroma-neon': 'Panchroma Neon PLA',
+      'panchroma-metallic': 'Panchroma Metallic PLA',
+      'panchroma-translucent': 'Panchroma Translucent PLA',
+      'panchroma-satin': 'Panchroma Satin PLA (formerly PolyTerra PLA+)',
+      'panchroma-uv-shift': 'Panchroma UV Shift PLA (formerly PolyLite UV Changing)',
+      'panchroma-cope': 'Panchroma CoPE',
+      'panchroma-refill': 'Panchroma PLA Refill',
+      'polylite-pla': 'PolyLite PLA Standard',
+      'polylite-pla-pro': 'PolyLite PLA Pro',
+      'polylite-pla-cf': 'PolyLite PLA-CF',
+      'polylite-lw-pla': 'PolyLite LW-PLA',
+      'polylite-abs': 'PolyLite ABS',
+      'polylite-petg': 'PolyLite PETG',
+      'polylite-petg-translucent': 'PolyLite PETG Translucent',
+      'polylite-pc': 'PolyLite PC',
+      'polylite-asa': 'PolyLite ASA',
+      'polymax-pla': 'PolyMax PLA',
+      'polymax-petg': 'PolyMax PETG',
+      'polymax-pc': 'PolyMax PC',
+      'polymax-pc-fr': 'PolyMax PC-FR (Flame Retardant)',
+      'polysonic': 'PolySonic PLA (High Speed)',
+      'polysonic-pro': 'PolySonic PLA Pro (High Speed)',
+      'polyflex-tpu90': 'PolyFlex TPU90',
+      'polyflex-tpu95': 'PolyFlex TPU95',
+      'polyflex-tpu95-hf': 'PolyFlex TPU95-HF (High Flow)',
+      'fiberon-pa12-cf': 'Fiberon PA12-CF (formerly PolyMide PA12-CF)',
+      'fiberon-pa6-cf': 'Fiberon PA6-CF (formerly PolyMide PA6-CF)',
+      'fiberon-pa6-gf': 'Fiberon PA6-GF (formerly PolyMide PA6-GF)',
+      'fiberon-pa612-cf': 'Fiberon PA612-CF',
+      'fiberon-pa612-esd': 'Fiberon PA612-ESD',
+      'fiberon-pet-cf': 'Fiberon PET-CF',
+      'fiberon-pet-gf': 'Fiberon PET-GF',
+      'fiberon-petg-esd': 'Fiberon PETG-ESD (formerly PolyMax PETG-ESD)',
+      'fiberon-petg-rcf': 'Fiberon PETG-rCF',
+      'fiberon-asa-cf': 'Fiberon ASA-CF',
+      'fiberon-pps-cf': 'Fiberon PPS-CF',
+      'fiberon-pps-gf': 'Fiberon PPS-GF',
+      'polycast': 'PolyCast (Investment Casting PLA)',
+      'polysmooth': 'PolySmooth (Polishable PVB)',
+      'polydissolve': 'PolyDissolve S1 (PVA Support)',
+      'polysupport-pla': 'PolySupport for PLA',
+      'polysupport-pa12': 'PolySupport for PA12',
+      'ht-pla': 'HT-PLA (High Temperature)',
+      'ht-pla-gf': 'HT-PLA-GF',
+      'cospla': 'CosPLA (Cosplay-optimized)',
+      'wood-pla': 'Wood PLA',
+      'pc-abs': 'PC-ABS Alloy',
+      'pc-pbt': 'PC-PBT Alloy'
+    },
+    lastUpdated: '2026-01-12'
   }
 };
 
@@ -1521,6 +1658,18 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'ninjatek') {
     return AI_ROLES.ninjatekSpecialist;
+  }
+  if (brandSlug === 'polymaker') {
+    return AI_ROLES.polymakerSpecialist;
+  }
+  if (brandSlug === 'numakers') {
+    return AI_ROLES.numakersSpecialist;
+  }
+  if (brandSlug === 'overture') {
+    return AI_ROLES.overtureSpecialist;
+  }
+  if (brandSlug === 'paramount-3d') {
+    return AI_ROLES.paramountSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -4569,6 +4718,247 @@ ${lessons.failedApproaches.map(f => `${f}`).join('\n')}
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Polymaker-specific AI Fix Prompt with comprehensive context
+ * Covers Panchroma rebranding, Fiberon engineering line, and regional pricing
+ */
+function generatePolymakerFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['polymaker'];
+  const role = AI_ROLES.polymakerSpecialist;
+  
+  if (!lessons) {
+    // Fallback if lessons not defined
+    return generateAIFixPrompt(brand, 'polymaker', checks, totalProducts, aiAnalysis) || '';
+  }
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.wrongDecisions?.length ? `### Wrong Decisions Identified
+${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+---`;
+  }
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ${lessons.platform}
+**Regional Stores**: us.polymaker.com (USD), ca.polymaker.com (CAD), eu.polymaker.com (EUR)
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## LESSONS LEARNED (${role.title})
+
+${(role as typeof AI_ROLES.polymakerSpecialist).lessons?.map(l => `- ${l}`).join('\n') || 'See documentation.'}
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `- ${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE APPROACHES)
+
+${lessons.workingSolutions.map(s => `- ${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID REPEATING)
+
+${lessons.failedApproaches.map(f => `- ${f}`).join('\n')}
+
+---
+
+## POLYMAKER PRODUCT LINE ARCHITECTURE
+
+| Category | Product Lines | Count |
+|----------|--------------|-------|
+| **Panchroma** | Matte, Silk, Dual Silk, Dual Matte, Gradient (10+ variants), Marble, Galaxy, Starlight, Luminous, Glow, Neon, Metallic, Translucent, Satin, UV Shift, CoPE, Refill | 25+ |
+| **PolyLite** | PLA, PLA Pro, PLA-CF, LW-PLA, PETG, PETG Translucent, ABS, Metallic ABS, Neon ABS, Galaxy ABS, ASA, PC | 12+ |
+| **Fiberon** | PA12-CF, PA6-CF, PA6-GF, PA612-CF, PA612-ESD, PET-CF, PET-GF, PETG-ESD, PETG-rCF, ASA-CF, PPS-CF, PPS-GF, CoPA | 13+ |
+| **PolyMax** | PLA, PETG, PC, PC-FR | 4 |
+| **PolyFlex** | TPU90, TPU95, TPU95-HF | 3 |
+| **PolySonic** | Standard, Pro | 2 |
+| **Specialty** | PolyCast, PolySmooth, PolyDissolve, PolySupport PLA, PolySupport PA12, HT-PLA, HT-PLA-GF, CosPLA, Wood PLA, PC-ABS, PC-PBT | 11 |
+
+---
+
+## CURRENT STATUS
+
+| Metric | Value |
+|--------|-------|
+| **Total Products** | ${lessons.currentStatus.totalProducts} |
+| **Product Lines** | ${lessons.currentStatus.productLines} |
+| **Materials** | ${lessons.currentStatus.materialsSupported} |
+| **HEX Coverage** | ${lessons.currentStatus.hexCoverage} |
+| **Regional Pricing** | ${lessons.currentStatus.regionalPricing} |
+
+---
+
+## KEY FILES FOR POLYMAKER
+
+${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+
+---
+
+## PANCHROMA REBRANDING REFERENCE
+
+| Old Name | New Name | Product Line ID |
+|----------|----------|-----------------|
+| PolyTerra PLA | Panchroma Matte PLA | \`panchroma-matte\` |
+| PolyLite Silk | Panchroma Silk PLA | \`panchroma-silk\` |
+| PolyTerra Dual | Panchroma Dual Matte | \`panchroma-dual-matte\` |
+| PolyTerra Gradient | Panchroma Gradient Matte | \`panchroma-gradient-matte\` |
+| PolyTerra PLA+ | Panchroma Satin PLA | \`panchroma-satin\` |
+| PolyLite UV Changing | Panchroma UV Shift | \`panchroma-uv-shift\` |
+| PolyLite Galaxy | Panchroma Galaxy | \`panchroma-galaxy\` |
+| PolyLite Starlight | Panchroma Starlight | \`panchroma-starlight\` |
+| PolyLite Luminous | Panchroma Luminous | \`panchroma-luminous\` |
+| PolyLite Glow | Panchroma Glow | \`panchroma-glow\` |
+| PolyTerra Marble | Panchroma Marble | \`panchroma-marble\` |
+${aiInsightsSection}
+---
+
+## Fix Post Sync Check Issues for Polymaker
+
+### Summary
+
+- **Brand**: Polymaker (slug: polymaker)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+
+---
+
+## VERIFICATION QUERIES
+
+\`\`\`sql
+-- Product line distribution
+SELECT product_line_id, COUNT(*) as variants 
+FROM filaments 
+WHERE vendor ILIKE 'Polymaker' AND product_line_id IS NOT NULL
+GROUP BY product_line_id ORDER BY variants DESC;
+
+-- Missing product_line_id (should be 0)
+SELECT COUNT(*) as missing_product_line_id
+FROM filaments 
+WHERE vendor ILIKE 'Polymaker' AND product_line_id IS NULL;
+
+-- Material breakdown
+SELECT material, COUNT(*) as count 
+FROM filaments 
+WHERE vendor ILIKE 'Polymaker'
+GROUP BY material ORDER BY count DESC;
+
+-- Bundles that should be excluded (should be 0)
+SELECT product_title, product_url 
+FROM filaments 
+WHERE vendor ILIKE 'Polymaker' 
+AND (product_title ILIKE '%bundle%' OR product_title ILIKE '%dryer%' OR product_title ILIKE '%gift card%');
+
+-- Panchroma line breakdown
+SELECT product_line_id, COUNT(*) as variants
+FROM filaments 
+WHERE vendor ILIKE 'Polymaker' AND product_line_id LIKE '%panchroma%'
+GROUP BY product_line_id ORDER BY variants DESC;
+
+-- Fiberon engineering line
+SELECT product_line_id, material, COUNT(*) 
+FROM filaments 
+WHERE vendor ILIKE 'Polymaker' AND product_line_id LIKE '%fiberon%'
+GROUP BY product_line_id, material;
+\`\`\`
+
+---
+
+## SYNC EXECUTION STEPS
+
+1. **Deploy** updated edge functions (\`sync-polymaker-products\` and \`run-post-sync-check\`)
+2. **Run Clean Slate** sync for Polymaker from Brand Sync Manager
+3. **Check edge function logs** for:
+   - Skipped bundles/hardware logged
+   - Product count around ~500 variants
+   - 50+ unique product_line_ids
+4. **Run Post Sync Check** again - should show 0 errors
+5. **Spot-check** a few product cards to confirm:
+   - Panchroma lines properly grouped (Matte separate from Silk)
+   - Fiberon engineering materials have correct specs
+   - Gradient sub-variants are separate product lines
+   - HEX codes extracted from SKU
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -4631,6 +5021,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Overture
   if (brandSlug === 'overture') {
     return generateOvertureFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Polymaker
+  if (brandSlug === 'polymaker') {
+    return generatePolymakerFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -7021,7 +7416,7 @@ Deno.serve(async (req) => {
       'fillamentum': 22,        // PLA Extrafill, Crystal Clear, ASA, ABS, PETG, CPE HG100, CPE-CF, Flexfill TPU 98A/92A, TPE-90A/96A, Nylon FX256, Nylon CF15, Nylon AF80, Timberfill, HIPS, Vinyl, PP, NonOilen, 0rCA, Porthcurno
       'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PC-ABS, PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Matte HS, Silk, Translucent, Strongman), LumberLay, PVA
       'ninjatek': 9,            // NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D + colorFabb ASA, PLA, Co-Polyesters, Specials (Eel/PA excluded - diameter-only variants)
-      'polymaker': 25,          // PolyLite, PolyTerra, PolyMax, PolyMide, PolyDissolve, etc.
+      'polymaker': 50,          // Panchroma (25+ sub-variants), PolyLite (12), PolyMax (4), PolyFlex (3), Fiberon (13), PolySonic (2), Specialty (8)
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 18,           // Consolidated lines: pla__basics, pla__basics-matte, pla__basics-silk, pla__basics-cf, pla__basics-recycled, pla__performance, pla__performance-matte, pla__essentials, pla_plus__performance, petg__performance, petg__performance-matte, petg__performance-hf, petg__performance-cf-hf, petg__standard, asa__performance, abs__performance-cf, pa__performance, tpu_95a__standard
@@ -7086,7 +7481,7 @@ Deno.serve(async (req) => {
       'atomic-filament': [/^(PLA|PETG|ABS|ASA|PLA Silk|TPU|Nylon)$/i],
       'elegoo': [/^(PLA|PLA\s*\+?|PETG|ABS|ASA|TPU|Rapid|Marble|Silk|Matte|Glow|Wood|High\s*Speed)/i],
       'anycubic': [/^(PLA|PLA\s*\+|PLA Basic|PLA Silk|PLA High Speed|PETG|ABS|ASA|TPU|High Speed)/i],
-      'polymaker': [/^(PolyLite|PolyTerra|PolyMax|PolyMide|PolyDissolve|PolySmooth|PolyCast|PolyFlex)/i],
+      'polymaker': [/^(Panchroma|PolyLite|PolyTerra|PolyMax|PolyMide|PolyDissolve|PolySmooth|PolyCast|PolyFlex|PolySonic|PolySupport|Fiberon|HT-PLA|CosPLA|Draft|Wood|Galaxy|PC-|Matte PLA)/i],
       'prusament': [/^(PLA|PETG|ASA|PC Blend|PA11|PVB|rPLA)/i],
       'bambu-lab': [/^(PLA|PETG|ABS|ASA|TPU|PLA-CF|PAHT-CF|PA6-CF|Marble|Silk|Sparkle|Matte|Glow|Galaxy|Metal|Wood)/i],
       'fillamentum': [/^(Extrafill|Flexfill|NonOilen|CPE|ASA|Timberfill|Vinyl)/i],
@@ -7408,7 +7803,7 @@ Deno.serve(async (req) => {
     
     // Only run for brands that should have accurate live pricing
     // Skip CSV-seeded brands that don't rely on live pricing
-    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture'];
+    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'polymaker'];
     const shouldRunLivePriceCheck = !livePriceSkipBrands.includes(brandSlug);
     
     if (shouldRunLivePriceCheck) {
