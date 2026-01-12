@@ -1158,8 +1158,7 @@ const POLYMAKER_COLOR_EXCLUSION_PATTERNS = [
   'free shipping',
   'bundle',
   'pack',
-  'n/a',
-  'default',
+  // NOTE: 'n/a' and 'default' removed - they have valid hex mappings in POLYMAKER_COLOR_MAPPING
 ];
 
 export function getPolymakerColorHex(colorName: string): string | null {

@@ -7439,7 +7439,7 @@ Deno.serve(async (req) => {
       'fillamentum': 22,        // PLA Extrafill, Crystal Clear, ASA, ABS, PETG, CPE HG100, CPE-CF, Flexfill TPU 98A/92A, TPE-90A/96A, Nylon FX256, Nylon CF15, Nylon AF80, Timberfill, HIPS, Vinyl, PP, NonOilen, 0rCA, Porthcurno
       'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PC-ABS, PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Matte HS, Silk, Translucent, Strongman), LumberLay, PVA
       'ninjatek': 9,            // NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D + colorFabb ASA, PLA, Co-Polyesters, Specials (Eel/PA excluded - diameter-only variants)
-      'polymaker': 74,          // Panchroma (28 sub-lines: standard, matte, silk, marble, refill, dual x3, gradient x12, luminous, luminous-rainbow, starlight, celestial, galaxy, glow, neon, metallic, translucent, satin, uv-shift, cope) + PolyLite (12) + PolyMax (4) + PolyFlex (3) + Fiberon (14) + PolySonic (2) + Specialty (9) + Polymaker ASA/PETG (2)
+      'polymaker': 78,          // Panchroma (28 sub-lines) + PolyLite (12) + PolyMax (4) + PolyFlex (3) + Fiberon (14) + PolySonic (2) + Specialty (9) + Polymaker ASA/PETG (2) + New lines (4)
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 18,           // Consolidated lines: pla__basics, pla__basics-matte, pla__basics-silk, pla__basics-cf, pla__basics-recycled, pla__performance, pla__performance-matte, pla__essentials, pla_plus__performance, petg__performance, petg__performance-matte, petg__performance-hf, petg__performance-cf-hf, petg__standard, asa__performance, abs__performance-cf, pa__performance, tpu_95a__standard
@@ -8621,7 +8621,24 @@ Deno.serve(async (req) => {
                                       lineId.includes('paramount__pva__') ||                  // PVA only 1 color (Natural)
                                       lineId.includes('paramount__nylon__') ||                // Nylon only 1 color (Natural)
                                       lineId.includes('paramount__pla__masterspool') ||       // Master Spool refill only 1 variant
-                                      lineId.includes('paramount__pla__matte')                // Matte Black only 1 color
+                                      lineId.includes('paramount__pla__matte') ||             // Matte Black only 1 color
+                                      // Polymaker single-color specialty products
+                                      lineId.includes('polymaker__') && (
+                                        lineId.includes('fiberon-') ||              // All Fiberon engineering materials (CF/GF/ESD)
+                                        lineId.includes('draft-pla') ||             // Draft PLA only 1 color
+                                        lineId.includes('wood-pla') ||              // Wood PLA limited colors
+                                        lineId.includes('cospla') ||                // CosPLA limited colors
+                                        lineId.includes('pc-pbt') ||                // PC-PBT only 1 color
+                                        lineId.includes('pc-abs') ||                // PC-ABS only 1 color
+                                        lineId.includes('polycast') ||              // PolyCast limited colors
+                                        lineId.includes('polysmooth') ||            // PolySmooth limited colors
+                                        lineId.includes('polydissolve') ||          // PolyDissolve support only 1 color
+                                        lineId.includes('polysupport') ||           // PolySupport limited colors
+                                        lineId.includes('-uv-shift') ||             // UV Shift limited colors
+                                        lineId.includes('-gradient-') ||            // Gradient products are single-SKU multi-color
+                                        lineId.includes('-dual-special') ||         // Dual Special limited colors
+                                        lineId.includes('ht-pla')                   // HT-PLA limited colors
+                                      )
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
