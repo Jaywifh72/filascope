@@ -475,7 +475,64 @@ async function fixDuplicateHexCodes(
 }
 
 // ============================================================================
-// Step 5b: Validate TDS URLs
+// Step 5b: Clean Up Stale Parent Products (no color suffix)
+// ============================================================================
+
+async function cleanupStaleParentProducts(supabase: any): Promise<number> {
+  console.log('[Polymaker] Cleaning up stale parent products...');
+  
+  // Find products with NULL product_line_id that don't have color suffix
+  const { data: staleProducts, error: findError } = await supabase
+    .from('filaments')
+    .select('id, product_title, product_handle')
+    .ilike('vendor', 'Polymaker')
+    .is('product_line_id', null);
+  
+  if (findError || !staleProducts) {
+    console.error('[Polymaker] Failed to find stale products:', findError);
+    return 0;
+  }
+  
+  if (staleProducts.length === 0) {
+    console.log('[Polymaker] No stale parent products found');
+    return 0;
+  }
+  
+  let deleted = 0;
+  
+  for (const product of staleProducts) {
+    // Check if title lacks color suffix (no " - ")
+    if (product.product_title && !product.product_title.includes(' - ')) {
+      // Check if this product has color-suffixed siblings
+      const { data: siblings } = await supabase
+        .from('filaments')
+        .select('id')
+        .ilike('vendor', 'Polymaker')
+        .eq('product_handle', product.product_handle)
+        .not('product_line_id', 'is', null)
+        .limit(1);
+      
+      if (siblings && siblings.length > 0) {
+        // This is a stale parent - delete it
+        const { error: deleteError } = await supabase
+          .from('filaments')
+          .delete()
+          .eq('id', product.id);
+        
+        if (!deleteError) {
+          deleted++;
+          console.log(`[Polymaker] Deleted stale parent: ${product.product_title}`);
+        }
+      }
+    }
+  }
+  
+  console.log(`[Polymaker] Deleted ${deleted} stale parent products`);
+  return deleted;
+}
+
+// ============================================================================
+// Step 5c: Validate TDS URLs
 // ============================================================================
 
 async function validateTdsUrls(
@@ -620,9 +677,18 @@ Deno.serve(async (req) => {
       count: hexesFixed,
     });
     
-    // Step 5b: Validate TDS URLs (optional, can be slow)
+    // Step 5b: Clean up stale parent products
+    console.log('[Polymaker] === Step 5b: Clean Up Stale Products ===');
+    const staleDeleted = await cleanupStaleParentProducts(supabase);
+    results.push({
+      step: 'cleanup_stale_parents',
+      success: true,
+      count: staleDeleted,
+    });
+    
+    // Step 5c: Validate TDS URLs (optional, can be slow)
     if (!options.skipTdsValidation) {
-      console.log('[Polymaker] === Step 5b: Validate TDS URLs ===');
+      console.log('[Polymaker] === Step 5c: Validate TDS URLs ===');
       const tdsValidated = await validateTdsUrls(supabase);
       results.push({
         step: 'validate_tds_urls',

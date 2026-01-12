@@ -1021,12 +1021,39 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'translucent orange': '#FFA07A',
   'translucent purple': '#DDA0DD',
   'translucent yellow': '#FFFACD',
+  'translucent cyan': '#00FFFF',
+  'translucent magenta': '#FF00FF',
   
   // === GLOW/LUMINOUS COLORS ===
   'glow green': '#32CD32',
   'glow blue': '#00BFFF',
   'luminous green': '#39FF14',
   'luminous blue': '#1E90FF',
+  
+  // === MISSING STANDARD COLORS ===
+  'magenta': '#FF00FF',
+  'tan': '#D2B48C',
+  'dark olive drab': '#556B2F',
+  'wood': '#C4A76C',
+  'desert sand': '#EDC9AF',
+  
+  // === MISSING METALLIC COLORS ===
+  'metallic chrome': '#C0C0C0',
+  'metallic magenta': '#8B008B',
+  
+  // === MISSING NEON COLORS ===
+  'neon magenta': '#FF1493',
+  
+  // === MISSING GRADIENT COLORS ===
+  'gradient crystal carnelian': '#B31B1B',
+  'gradient crystal rose quartz': '#AA98A9',
+  'gradient starlight rainbow': '#FF00FF',
+  'gradient celestial rainbow': '#7FFFD4',
+  'gradient fire': '#FF4500',
+  'gradient rainbow': '#FF6B6B',
+  'gradient tropical': '#FFB347',
+  'gradient matte pastel rainbow': '#FFB6C1',
+  'gradient halloween neon': '#FF6600',
 };
 
 // Marketing/invalid text patterns to exclude from color extraction
@@ -1344,9 +1371,29 @@ export function enrichPolymakerProduct(
   const weightKg = extractWeightKg(title);
   const diameterMm = extractDiameterMm(title);
   
-  // Extract HEX and TD from SKU
+  // ENHANCED: Multi-step color_hex extraction with fallbacks
   const skuVal = sku ?? null;
-  const colorHex = extractHexFromSku(skuVal) || getPolymakerColorHex(extractColorFromTitle(title) || '');
+  let colorHex: string | null = null;
+  
+  // 1. Primary: Try SKU extraction (highest accuracy when available)
+  colorHex = extractHexFromSku(skuVal);
+  
+  // 2. Fallback: Title-based extraction using extractPolymakerColorFromTitle
+  if (!colorHex) {
+    const titleColor = extractPolymakerColorFromTitle(title);
+    if (titleColor?.hex) {
+      colorHex = titleColor.hex;
+    }
+  }
+  
+  // 3. Final fallback: Search for any known color name in title
+  if (!colorHex) {
+    const colorName = extractColorFromTitle(title);
+    if (colorName) {
+      colorHex = getPolymakerColorHex(colorName);
+    }
+  }
+  
   const transmissionDistance = extractTdFromSku(skuVal);
   
   // Get print settings
