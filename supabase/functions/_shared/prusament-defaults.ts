@@ -289,21 +289,49 @@ export function generatePrusamentProductLineId(
   switch (materialNorm) {
     case 'PLA':
       settingsKey = 'pla';
+      // Check for specialty PLA lines
       if (titleLower.includes('premium') || titleLower.includes('mystic')) {
         subLine = 'premium';
         settingsKey = 'pla-premium';
+      } else if (titleLower.includes('galaxy')) {
+        subLine = 'galaxy';
+        settingsKey = 'pla-blend';
       } else if (titleLower.includes('blend') || titleLower.includes('viva la') || 
-                 titleLower.includes('royal') || titleLower.includes('galaxy')) {
+                 titleLower.includes('royal') || titleLower.includes('oh my') ||
+                 titleLower.includes('ms.') || titleLower.includes('silverness')) {
         subLine = 'blend';
         settingsKey = 'pla-blend';
+      } else if (titleLower.includes('opal')) {
+        subLine = 'opal';
+        settingsKey = 'pla';
+      } else if (titleLower.includes('noctua')) {
+        subLine = 'noctua';
+        settingsKey = 'pla';
+      } else if (titleLower.includes('marble')) {
+        subLine = 'marble';
+        settingsKey = 'pla';
+      } else if (titleLower.includes('recycled')) {
+        subLine = 'recycled';
+        settingsKey = 'pla';
       }
       break;
     case 'rPLA':
       settingsKey = 'rpla';
-      subLine = 'recycled';
+      subLine = 'pigment';
       break;
     case 'PETG':
       settingsKey = 'petg';
+      if (titleLower.includes('tungsten')) {
+        subLine = 'tungsten';
+      } else if (titleLower.includes('magnetite')) {
+        subLine = 'magnetite';
+      } else if (titleLower.includes('recycled')) {
+        subLine = 'recycled';
+      } else if (titleLower.includes('matte')) {
+        subLine = 'matte';
+      } else if (titleLower.includes('shimmering') || titleLower.includes('shimmer')) {
+        subLine = 'shimmer';
+      }
       break;
     case 'PETG-CF':
       settingsKey = 'petg-cf';
@@ -314,7 +342,13 @@ export function generatePrusamentProductLineId(
       break;
     case 'PC':
       settingsKey = 'pc';
-      subLine = 'blend';
+      if (titleLower.includes('carbon') || titleLower.includes(' cf')) {
+        subLine = 'carbon';
+      } else if (titleLower.includes('space grade')) {
+        subLine = 'space-grade';
+      } else {
+        subLine = 'blend';
+      }
       break;
     case 'PA11-CF':
       settingsKey = 'pa11-cf';
@@ -330,6 +364,18 @@ export function generatePrusamentProductLineId(
       break;
     case 'TPU-95A':
       settingsKey = 'tpu';
+      break;
+    case 'PVB':
+      settingsKey = 'pla'; // PVB uses similar settings
+      subLine = 'smoothable';
+      break;
+    case 'Woodfill':
+      settingsKey = 'pla';
+      subLine = 'woodfill';
+      break;
+    case 'PEI':
+      settingsKey = 'pa11-cf'; // High-temp similar settings
+      subLine = 'ultem';
       break;
   }
   
@@ -415,74 +461,142 @@ export function getPrusamentTdsUrl(settingsKey: string): string {
 // ============================================================================
 
 export const PRUSAMENT_COLOR_MAPPING: Record<string, string> = {
+  // Signature Prusa Colors
+  'prusa orange': '#FA6831',
+  'prusa galaxy black': '#1C1C1C',
+  'prusa pro green': '#228B22',
+  
   // Blacks
-  'jet black': '#1A1A1A',
-  'galaxy black': '#0D0D0D',
-  'black': '#1A1A1A',
+  'jet black': '#0A0A0A',
+  'galaxy black': '#1C1C1C',
+  'matte black': '#1C1C1C',
+  'carbon fiber black': '#1C1C1C',
+  'space grade black': '#1C1C1C',
+  'recycled black': '#1C1C1C',
+  'black': '#1C1C1C',
+  
   // Whites
-  'signal white': '#F5F5F5',
+  'signal white': '#FFFFFF',
+  'pristine white': '#FFFFFF',
+  'vanilla white': '#F3E5AB',
+  'pearl white': '#FAEBD7',
   'white': '#FFFFFF',
-  // Oranges (Prusa signature)
-  'prusa orange': '#FA6900',
-  'orange': '#FA6900',
-  // Greens
-  'prusa pro green': '#00C853',
-  'neon green': '#39FF14',
-  'mystic green': '#2E7D32',
-  'opal green': '#4DB6AC',
-  'army green': '#4B5320',
-  'green': '#2E7D32',
-  // Blues
-  'royal blue': '#1E3A8A',
-  'sapphire blue': '#0D47A1',
-  'azure blue': '#007FFF',
-  'gentleman blue': '#1C3A6E',
-  'blue': '#0D47A1',
-  // Reds
-  'lipstick red': '#C62828',
-  'carmine red': '#960018',
-  'red': '#C62828',
-  // Purples
-  'galaxy purple': '#453A72',
-  'purple': '#6A1B9A',
-  // Browns/Bronze
-  'viva la bronze': '#CD7F32',
-  'mystic brown': '#6D4C41',
-  'brown': '#6D4C41',
-  // Yellows
-  'pineapple yellow': '#FFD54F',
-  'yellow': '#FFEB3B',
-  // Grays
-  'silver': '#C0C0C0',
-  'anthracite grey': '#383838',
+  
+  // Greys
+  'anthracite grey': '#293133',
+  'urban grey': '#5A5A5A',
+  'gravity grey': '#808080',
+  "gentleman's grey": '#808080',
+  'marble grey': '#808080',
+  'magnetite 40% grey': '#808080',
   'grey': '#808080',
   'gray': '#808080',
-  // Naturals/Clear
-  'natural': '#DFDFD3',
-  'clear': '#E8E8E8',
-  'transparent': '#E8E8E8',
-  // Pink
-  'ms. pink': '#F48FB1',
-  'pink': '#E91E63',
-  // Others
-  'vanilla white': '#FFF8E7',
-  'urban grey': '#6B6B6B',
+  
+  // Blues
+  'azure blue': '#007FFF',
+  'chalky blue': '#0066CC',
+  'sky blue': '#0066CC',
+  'ultramarine blue': '#4166F5',
+  'sapphire blue': '#0066CC',
+  'royal blue': '#4169E1',
+  'blue': '#0066CC',
+  
+  // Greens
+  'neon green': '#39FF14',
+  'jungle green': '#228B22',
+  'pistachio green': '#93C572',
+  'army green': '#4B5320',
+  'simply green': '#4CBB17',
+  'opal green': '#7CB9A8',
+  'galaxy green': '#228B22',
+  'mystic green': '#5E8B65',
+  'algae pigment': '#7E9B5E',
+  'green': '#228B22',
+  
+  // Reds
+  'lipstick red': '#C41E3A',
+  'carmine red': '#960018',
+  'galaxy red': '#C41E3A',
+  'red': '#C41E3A',
+  
+  // Oranges
+  'orange for ppe': '#FF6B35',
+  'orange': '#FA6831',
+  
+  // Yellows
+  'mango yellow': '#FFD700',
+  'oh my gold': '#FFD700',
+  'pineapple yellow': '#FFD700',
+  'corn pigment': '#F5DEB3',
+  'risotto pigment': '#DAA520',
+  'yellow': '#FFD700',
+  
+  // Purples/Violets
+  'galaxy purple': '#7B68EE',
+  'shimmering violet': '#9400D3',
+  'purple': '#7B68EE',
+  'violet': '#9400D3',
+  
+  // Pinks
+  'ms. pink': '#FF69B4',
+  'pink': '#FF69B4',
+  
+  // Browns
+  'viva la bronze': '#CD7F32',
+  'mystic brown': '#7B5544',
+  'chocolate brown': '#7B3F00',
+  'pastel brown': '#8B4513',
+  'noctua brown': '#8B4513',
+  'wine pigment': '#722F37',
+  'brown': '#8B4513',
+  
+  // Beiges/Naturals
+  'natural': '#F5F5DC',
+  'noctua beige': '#D4B896',
+  'linden light': '#DEB887',
+  'beige': '#D4B896',
+  
+  // Silvers/Metallics
+  'galaxy silver': '#C0C0C0',
+  'my silverness': '#C0C0C0',
+  'tungsten 75%': '#848482',
+  'silver': '#C0C0C0',
+  
+  // Specialty
+  'clear': '#FFFFFF',
+  'transparent': '#FFFFFF',
+  'recycled': '#808080',
 };
 
 export function getPrusamentColorHex(colorName: string): string | null {
   const colorLower = colorName.toLowerCase().trim();
   
-  // Direct match
+  // Direct match first
   if (PRUSAMENT_COLOR_MAPPING[colorLower]) {
     return PRUSAMENT_COLOR_MAPPING[colorLower];
   }
   
-  // Partial match
+  // Partial match - check if any key is contained in color name
   for (const [key, hex] of Object.entries(PRUSAMENT_COLOR_MAPPING)) {
     if (colorLower.includes(key) || key.includes(colorLower)) {
       return hex;
     }
   }
+  
+  // Check for common color words
+  if (colorLower.includes('black')) return '#1C1C1C';
+  if (colorLower.includes('white')) return '#FFFFFF';
+  if (colorLower.includes('grey') || colorLower.includes('gray')) return '#808080';
+  if (colorLower.includes('blue')) return '#0066CC';
+  if (colorLower.includes('red')) return '#C41E3A';
+  if (colorLower.includes('green')) return '#228B22';
+  if (colorLower.includes('orange')) return '#FA6831';
+  if (colorLower.includes('yellow') || colorLower.includes('gold')) return '#FFD700';
+  if (colorLower.includes('purple') || colorLower.includes('violet')) return '#7B68EE';
+  if (colorLower.includes('pink')) return '#FF69B4';
+  if (colorLower.includes('brown')) return '#8B4513';
+  if (colorLower.includes('natural') || colorLower.includes('beige')) return '#F5F5DC';
+  if (colorLower.includes('silver')) return '#C0C0C0';
   
   return null;
 }
