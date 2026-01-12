@@ -24,6 +24,8 @@ import {
   extractProtoPastaDiameter,
   getProtoPastaColorHex,
   extractColorFromProductTitle,
+  extractColorNameFromTitle,
+  getColorFamily,
 } from '../_shared/protopasta-defaults.ts';
 import {
   shouldIncludeVariant,
@@ -286,6 +288,10 @@ async function upsertVariants(
         colorHex = getProtoPastaColorHex(variant.variantTitle);
       }
 
+      // Extract color name and derive color_family
+      const colorName = extractColorNameFromTitle(variant.fullTitle);
+      const colorFamily = colorName ? getColorFamily(colorName) : null;
+
       const record = {
         product_id: variant.productId,
         product_title: cleanedTitle || variant.fullTitle,
@@ -304,6 +310,7 @@ async function upsertVariants(
         product_line_id: enrichment.productLineId,
         tds_url: enrichment.tdsUrl,
         color_hex: colorHex,
+        color_family: colorFamily,
         nozzle_temp_min_c: enrichment.nozzleTempMin,
         nozzle_temp_max_c: enrichment.nozzleTempMax,
         bed_temp_min_c: enrichment.bedTempMin,

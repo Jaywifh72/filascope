@@ -14,7 +14,9 @@
  * - Electrically Conductive PLA
  */
 
-import { getColorHex as getSharedColorHex } from './color-mapping.ts';
+import { getColorHex as getSharedColorHex, getColorFamily } from './color-mapping.ts';
+
+export { getColorFamily };
 
 // ============= PRINT SETTINGS =============
 
@@ -799,6 +801,39 @@ export function extractColorFromProductTitle(title: string): string | null {
   
   // Try with lowercase
   return getProtoPastaColorHex(colorPart.toLowerCase());
+}
+
+/**
+ * Extract color NAME from title (for color_family lookup)
+ * Used to populate color_family field in database
+ */
+export function extractColorNameFromTitle(title: string): string | null {
+  if (!title) return null;
+  
+  const titleLower = title.toLowerCase();
+  
+  // Handle single-color specialty products
+  if (/carbon\s*fiber/i.test(titleLower)) return 'Black';
+  if (/glass\s*fiber/i.test(titleLower)) return 'Beige';
+  if (/electrically\s*conductive/i.test(titleLower)) return 'Black';
+  if (/static\s*dissipative/i.test(titleLower)) return 'Black';
+  if (/brass/i.test(titleLower)) return 'Gold';
+  if (/bronze/i.test(titleLower)) return 'Bronze';
+  if (/copper/i.test(titleLower)) return 'Copper';
+  if (/iron/i.test(titleLower)) return 'Gray';
+  if (/steel|stainless/i.test(titleLower)) return 'Silver';
+  
+  // Remove product line descriptors to isolate color
+  const colorPart = title
+    .replace(/HTPLA|PLA|PETG|TPU|TPE|Composite|Metal|Carbon\s*Fiber|CF|Conductive|Glass\s*Fiber|c-Matte|Reflective|Matte\s*Fiber|Smoothie|Nebula|Multicolor|Glitter|Metallic|Thermochromic|Marble|Wood|Static\s*Dissipative|Electrically|High\s*Density|Stainless\s*Steel|Iron-filled|Brass-filled|Bronze-filled|Copper-filled|filled/gi, '')
+    .replace(/\s*-\s*\/\s*.*/g, '')
+    .replace(/\s*-?\s*(?:Spool|Coil)\s*$/gi, '')
+    .replace(/\s*(?:50g|100g|500g|1kg|2kg|3kg)\s*/gi, '')
+    .replace(/[']/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  return colorPart || null;
 }
 
 // ============= PRODUCT FILTERING =============
