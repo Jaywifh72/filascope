@@ -8150,7 +8150,7 @@ Deno.serve(async (req) => {
     
     // Only run for brands that should have accurate live pricing
     // Skip CSV-seeded brands that don't rely on live pricing
-    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'polymaker'];
+    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'polymaker', 'proto-pasta'];
     const shouldRunLivePriceCheck = !livePriceSkipBrands.includes(brandSlug);
     
     if (shouldRunLivePriceCheck) {
@@ -8271,7 +8271,8 @@ Deno.serve(async (req) => {
     // Check if this brand uses cross-product swatch architecture
     // Include Anycubic since they group products across promotional and regular URLs
     // Include Atomic Filament since each color variant IS a different product with its own URL
-    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments'];
+    // Include Proto-Pasta since each color variant IS a different Shopify product with its own URL
+    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments', 'proto-pasta'];
     const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {
@@ -8300,6 +8301,13 @@ Deno.serve(async (req) => {
           'illusion', 'mysterious-abyss', 'chameleon', 'sparkle',
           'carbon-fiber', 'silky', 'silk', 'translucent', 'metallic',
           'sample-coil', 'neon', 'uv-reactive', 'glow',
+          // Proto-Pasta patterns (each color is a separate Shopify product)
+          'matte-fiber-htpla', 'carbon-fiber-composite', 'brass-metal-composite',
+          'bronze-metal-composite', 'copper-metal-composite', 'iron-filled-metal',
+          'stainless-steel-metal', 'electrically-conductive', 'high-performance-htpla',
+          'opaque-htpla', 'translucent-htpla', 'metallic-htpla', 'nebula-htpla',
+          'glitter-htpla', 'reflective-htpla', 'thermochromic-htpla', 'marble-htpla',
+          'simply-petg', 'c-matte-pla', 'smoothie-htpla',
         ];
         
         // Pattern aliases for rebranded products - map old patterns to canonical pattern

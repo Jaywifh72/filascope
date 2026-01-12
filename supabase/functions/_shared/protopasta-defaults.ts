@@ -256,6 +256,11 @@ export function generateProtoPastaProductLineId(title: string, material?: string
     return { productLineId: 'protopasta__pla-cf__carbon-fiber', settingsKey: 'pla-cf' };
   }
 
+  // Glass Fiber (before standard HTPLA check)
+  if (/glass\s*fiber/i.test(t)) {
+    return { productLineId: 'protopasta__htpla-gf__glass-fiber', settingsKey: 'htpla-standard' };
+  }
+
   // Metal Composites
   if (/brass/i.test(t)) {
     return { productLineId: 'protopasta__htpla__brass', settingsKey: 'htpla-brass' };
@@ -278,8 +283,76 @@ export function generateProtoPastaProductLineId(title: string, material?: string
     return { productLineId: 'protopasta__pla-conductive__conductive', settingsKey: 'pla-conductive' };
   }
 
+  // Static Dissipative / ESD
+  if (/static.*dissipative|esd/i.test(t)) {
+    if (/petg/i.test(t)) {
+      return { productLineId: 'protopasta__petg-esd__dissipative', settingsKey: 'htpla-standard' };
+    }
+    return { productLineId: 'protopasta__pla-esd__dissipative', settingsKey: 'pla-conductive' };
+  }
+
+  // Polyketone (POK)
+  if (/polyketone|pok/i.test(t)) {
+    if (/carbon\s*fiber|cf/i.test(t)) {
+      return { productLineId: 'protopasta__pok-cf__carbon-fiber', settingsKey: 'htpla-standard' };
+    }
+    if (/glass\s*fiber|gf/i.test(t)) {
+      return { productLineId: 'protopasta__pok-gf__glass-fiber', settingsKey: 'htpla-standard' };
+    }
+    return { productLineId: 'protopasta__pok__standard', settingsKey: 'htpla-standard' };
+  }
+
+  // PETG lines
+  if (/petg/i.test(t)) {
+    if (/carbon\s*fiber|cf/i.test(t)) {
+      return { productLineId: 'protopasta__petg-cf__carbon-fiber', settingsKey: 'pla-cf' };
+    }
+    return { productLineId: 'protopasta__petg__standard', settingsKey: 'htpla-standard' };
+  }
+
+  // TPU/TPE lines
+  if (/tpu|tpe|flexible/i.test(t)) {
+    if (/rigid/i.test(t)) {
+      return { productLineId: 'protopasta__tpu__rigid', settingsKey: 'htpla-standard' };
+    }
+    return { productLineId: 'protopasta__tpu__flexible', settingsKey: 'htpla-standard' };
+  }
+
+  // Calcium Carbonate
+  if (/calcium\s*carbonate/i.test(t)) {
+    return { productLineId: 'protopasta__pla__calcium-carbonate', settingsKey: 'htpla-standard' };
+  }
+
   // HTPLA Sub-lines based on finish
   if (/htpla|ht-pla|high.?temp/i.test(t) || normalizedMaterial === 'HTPLA') {
+    // Smoothie line (food names)
+    if (/smoothie|blueberry|dragonfruit|papaya|pineapple\s*banana/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__smoothie', settingsKey: 'htpla-standard' };
+    }
+    // Reflective
+    if (/reflective/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__reflective', settingsKey: 'htpla-standard' };
+    }
+    // Glow-in-the-Dark
+    if (/glow.*dark|glow-in-the-dark/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__glow', settingsKey: 'htpla-standard' };
+    }
+    // Thermochromic
+    if (/thermochromic/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__thermochromic', settingsKey: 'htpla-standard' };
+    }
+    // Marble
+    if (/marble/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__marble', settingsKey: 'htpla-standard' };
+    }
+    // Wood variants
+    if (/wood|walnut|mahogany|daffodil/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__wood', settingsKey: 'htpla-matte-fiber' };
+    }
+    // c-Matte / High Flow PLA
+    if (/c-matte/i.test(t)) {
+      return { productLineId: 'protopasta__hfpla__c-matte', settingsKey: 'htpla-standard' };
+    }
     // Nebula Multicolor
     if (/nebula|multicolor/i.test(t)) {
       return { productLineId: 'protopasta__htpla__nebula', settingsKey: 'htpla-nebula' };
@@ -289,7 +362,7 @@ export function generateProtoPastaProductLineId(title: string, material?: string
       return { productLineId: 'protopasta__htpla__metallic', settingsKey: 'htpla-metallic' };
     }
     // Glitter
-    if (/glitter|candy\s*apple|flake/i.test(t)) {
+    if (/glitter|candy\s*apple|flake|confetti|stardust|obsidian|sparkling/i.test(t)) {
       return { productLineId: 'protopasta__htpla__glitter', settingsKey: 'htpla-glitter' };
     }
     // Translucent/Sparkly
@@ -300,7 +373,11 @@ export function generateProtoPastaProductLineId(title: string, material?: string
     if (/matte\s*fiber/i.test(t)) {
       return { productLineId: 'protopasta__htpla__matte-fiber', settingsKey: 'htpla-matte-fiber' };
     }
-    // Standard HTPLA
+    // Standard Opaque HTPLA (colors like Red, Blue, Black, White)
+    if (/opaque/i.test(t)) {
+      return { productLineId: 'protopasta__htpla__opaque', settingsKey: 'htpla-standard' };
+    }
+    // Standard HTPLA fallback
     return { productLineId: 'protopasta__htpla__standard', settingsKey: 'htpla-standard' };
   }
 
@@ -656,10 +733,44 @@ const PROTOPASTA_TITLE_NOISE: RegExp[] = [
 export function cleanProtoPastaTitle(title: string): string {
   if (!title) return '';
   let cleaned = title;
+  
+  // Remove " - / " pattern first (variant explosion artifact from "Color - / 500g Spool")
+  cleaned = cleaned.replace(/\s*-\s*\/\s*/g, ' ');
+  
+  // Remove weight/spool patterns at end of title
+  cleaned = cleaned.replace(/\s*-?\s*(?:50g|100g|500g|1kg|2kg|3kg)?\s*(?:Coil|Spool)\s*$/gi, '');
+  
+  // Apply standard noise patterns
   for (const pattern of PROTOPASTA_TITLE_NOISE) {
     cleaned = cleaned.replace(pattern, ' ');
   }
+  
   return cleaned.trim();
+}
+
+/**
+ * Extract color from the PRODUCT TITLE (not variant title)
+ * Proto-Pasta product titles contain the color name directly
+ * e.g., "Aqua Ice Translucent HTPLA" -> "Aqua Ice"
+ */
+export function extractColorFromProductTitle(title: string): string | null {
+  if (!title) return null;
+  
+  // Remove product line descriptors to isolate color
+  let colorPart = title
+    .replace(/HTPLA|PLA|PETG|TPU|TPE|Composite|Metal|Carbon\s*Fiber|CF|Conductive|Glass\s*Fiber/gi, '')
+    .replace(/\s*-\s*\/\s*.*/g, '') // Remove variant suffix
+    .replace(/\s*-?\s*(?:Spool|Coil)\s*$/gi, '')
+    .replace(/\s*(?:50g|100g|500g|1kg|2kg|3kg)\s*/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Try to find color in mapping
+  const hex = getProtoPastaColorHex(colorPart);
+  if (hex) return hex;
+  
+  // Try with lowercase
+  return getProtoPastaColorHex(colorPart.toLowerCase());
 }
 
 // ============= PRODUCT FILTERING =============
