@@ -607,6 +607,37 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
       materialSlug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
   
+  // OVERTURE: Handle product line names from CSV seed
+  // Format: overture__pla__basic → "Basic PLA"
+  //         overture__pla__matte → "Matte PLA"
+  //         overture__pla__rock → "Rock PLA"
+  //         overture__tpu__high-speed → "High Speed TPU"
+  if (parts[0] === 'overture' && parts.length >= 3) {
+    const materialSlug = parts[1]; // e.g., "pla", "petg", "tpu"
+    const lineSlug = parts[2];     // e.g., "basic", "matte", "rock", "high-speed"
+    
+    // Map line slugs to clean display names
+    const OVERTURE_LINE_DISPLAY: Record<string, string> = {
+      'basic': 'Basic',
+      'matte': 'Matte',
+      'silk': 'Silk',
+      'easy': 'Easy',
+      'glow': 'Glow',
+      'rock': 'Rock',
+      'super': 'Super',
+      'professional': 'Professional',
+      'high-speed': 'High Speed',
+      'translucent': 'Translucent',
+      'refill': 'Refill',
+    };
+    
+    const material = materialSlug.toUpperCase();
+    const line = OVERTURE_LINE_DISPLAY[lineSlug] || 
+      lineSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    
+    return `${line} ${material}`.trim();
+  }
+  
   // GEEETECH: Handle underscore-based slugs in product_line_id
   // Examples: geeetech__pla__silk_tri → "PLA Silk Tri-Color"
   //           geeetech__pla__hs_pla → "PLA High Speed"
