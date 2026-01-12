@@ -23,6 +23,7 @@ import {
   extractProtoPastaWeight,
   extractProtoPastaDiameter,
   getProtoPastaColorHex,
+  extractColorFromProductTitle,
 } from '../_shared/protopasta-defaults.ts';
 import {
   shouldIncludeVariant,
@@ -265,9 +266,15 @@ async function upsertVariants(
       // Clean title
       const cleanedTitle = cleanProtoPastaTitle(variant.fullTitle);
 
-      // Try to extract color hex from variant title
+      // Extract color hex: prioritize product title over variant title
+      // Proto-Pasta color names are in the PRODUCT title, not the variant title
       let colorHex = enrichment.colorHex;
+      if (!colorHex) {
+        // First try: Extract color from the full product title
+        colorHex = extractColorFromProductTitle(variant.fullTitle);
+      }
       if (!colorHex && variant.variantTitle) {
+        // Fallback: Try variant title (may contain color after weight)
         colorHex = getProtoPastaColorHex(variant.variantTitle);
       }
 
@@ -453,6 +460,14 @@ Deno.serve(async (req) => {
       // Use defaults
     }
 
+    // Get existing product count for safe delete logic
+    const { count: existingCount } = await supabase
+      .from('filaments')
+      .select('id', { count: 'exact', head: true })
+      .ilike('vendor', 'proto-pasta');
+    
+    console.log(`[Proto-Pasta] Existing products in DB: ${existingCount || 0}`);
+
     // Step 1: Fetch Products
     if (!options.skipFetch) {
       const step1Start = Date.now();
@@ -475,9 +490,30 @@ Deno.serve(async (req) => {
           duration: Date.now() - step2Start,
         });
 
-        // Step 3: Upsert with Enrichments
+        // Step 3: Safe Delete + Upsert with Enrichments
         if (!options.skipEnrich) {
           const step3Start = Date.now();
+          
+          // Safe Delete: Only delete if we found enough products (threshold: 50)
+          const SAFE_DELETE_THRESHOLD = 50;
+          if (variants.length >= SAFE_DELETE_THRESHOLD) {
+            console.log(`[Proto-Pasta] Safe Delete: ${variants.length} variants found >= ${SAFE_DELETE_THRESHOLD} threshold`);
+            console.log(`[Proto-Pasta] Clearing ${existingCount || 0} existing products for clean slate sync`);
+            
+            const { error: deleteError } = await supabase
+              .from('filaments')
+              .delete()
+              .ilike('vendor', 'proto-pasta');
+            
+            if (deleteError) {
+              console.error('[Proto-Pasta] Error deleting existing products:', deleteError);
+            } else {
+              console.log('[Proto-Pasta] Existing products deleted successfully');
+            }
+          } else {
+            console.log(`[Proto-Pasta] SKIPPING DELETE: Only ${variants.length} variants found (threshold: ${SAFE_DELETE_THRESHOLD})`);
+          }
+          
           const { upserted, errors } = await upsertVariants(supabase, variants, brandId);
           results.push({
             step: 'upsert_enriched',
