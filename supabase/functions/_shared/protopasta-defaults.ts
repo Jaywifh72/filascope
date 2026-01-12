@@ -14,9 +14,9 @@
  * - Electrically Conductive PLA
  */
 
-import { getColorHex as getSharedColorHex, getColorFamily } from './color-mapping.ts';
+import { getColorHex as getSharedColorHex, getColorFamily, getColorFamilyFromHex } from './color-mapping.ts';
 
-export { getColorFamily };
+export { getColorFamily, getColorFamilyFromHex };
 
 // ============= PRINT SETTINGS =============
 
