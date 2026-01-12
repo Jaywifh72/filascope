@@ -574,6 +574,39 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
       productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
   
+  // NUMAKERS: Handle underscore-based material slugs
+  // Format: numakers__pla_silk__pla-silk → "PLA Silk"
+  //         numakers__petg_hs__petg-hs-filament → "PETG-HS"
+  //         numakers__pla_starlight__pla-starlight → "PLA Starlight"
+  if (parts[0] === 'numakers' && parts.length >= 3) {
+    const materialSlug = parts[1]; // e.g., "pla_silk", "petg_hs", "pla+"
+    const lineSlug = parts[2];     // e.g., "pla-silk", "petg-hs-filament"
+    
+    // Map material slugs to clean display names
+    const NUMAKERS_MATERIAL_DISPLAY: Record<string, string> = {
+      'pla+': 'PLA+',
+      'pla_silk': 'PLA Silk',
+      'pla_matte': 'PLA Matte',
+      'pla_starlight': 'PLA Starlight',
+      'pla_glow': 'PLA Glow in the Dark',
+      'pla_marble': 'PLA Marble',
+      'pla_wood': 'PLA Wood',
+      'pla_cf': 'PLA-CF',
+      'petg_hs': 'PETG-HS',
+      'petg_translucent': 'PETG Translucent',
+      'asa': 'ASA',
+      'abs': 'ABS',
+    };
+    
+    // Check for special line slug patterns
+    if (lineSlug === 'tri-color-silk-pla') {
+      return 'Tri-Color Silk PLA';
+    }
+    
+    return NUMAKERS_MATERIAL_DISPLAY[materialSlug] || 
+      materialSlug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+  
   // GEEETECH: Handle underscore-based slugs in product_line_id
   // Examples: geeetech__pla__silk_tri → "PLA Silk Tri-Color"
   //           geeetech__pla__hs_pla → "PLA High Speed"

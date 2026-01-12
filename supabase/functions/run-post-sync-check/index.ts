@@ -46,7 +46,7 @@ const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryon
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
-const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks'];
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
 const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
@@ -6310,6 +6310,39 @@ Deno.serve(async (req) => {
           productSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       }
       
+      // NUMAKERS: Handle underscore-based material slugs
+      // Format: numakers__pla_silk__pla-silk → "PLA Silk"
+      //         numakers__petg_hs__petg-hs-filament → "PETG-HS"
+      //         numakers__pla_starlight__pla-starlight → "PLA Starlight"
+      if (parts[0] === 'numakers' && parts.length >= 3) {
+        const materialSlug = parts[1]; // e.g., "pla_silk", "petg_hs", "pla+"
+        const lineSlug = parts[2];     // e.g., "pla-silk", "petg-hs-filament"
+        
+        // Map material slugs to clean display names
+        const NUMAKERS_MATERIAL_DISPLAY: Record<string, string> = {
+          'pla+': 'PLA+',
+          'pla_silk': 'PLA Silk',
+          'pla_matte': 'PLA Matte',
+          'pla_starlight': 'PLA Starlight',
+          'pla_glow': 'PLA Glow in the Dark',
+          'pla_marble': 'PLA Marble',
+          'pla_wood': 'PLA Wood',
+          'pla_cf': 'PLA-CF',
+          'petg_hs': 'PETG-HS',
+          'petg_translucent': 'PETG Translucent',
+          'asa': 'ASA',
+          'abs': 'ABS',
+        };
+        
+        // Check for special line slug patterns
+        if (lineSlug === 'tri-color-silk-pla') {
+          return 'Tri-Color Silk PLA';
+        }
+        
+        return NUMAKERS_MATERIAL_DISPLAY[materialSlug] || 
+          materialSlug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+      
       // GEEETECH: Handle underscore-based slugs in product_line_id
       // Examples: geeetech__pla__silk_tri → "PLA Silk Tri-Color"
       //           geeetech__pla__hs_pla → "PLA High Speed"
@@ -7472,7 +7505,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -7673,7 +7706,10 @@ Deno.serve(async (req) => {
                                       lineId.includes('kingroon__pa-cf__') ||                 // PA-CF only in black
                                       lineId.includes('kingroon__pla-cf__') ||                // PLA-CF only in black
                                       lineId.includes('kingroon__petg-cf__') ||               // PETG-CF only in black
-                                      lineId.includes('kingroon__abs-cf__')                   // ABS-CF only in black
+                                      lineId.includes('kingroon__abs-cf__') ||                // ABS-CF only in black
+                                      // Numakers single-color specialty products (CSV-seeded)
+                                      lineId.includes('numakers__pla_marble__pla-marble') ||  // Marble only 1 color (White Marble)
+                                      lineId.includes('numakers__pla_wood__pla-wood')         // Wood only 1 color
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
