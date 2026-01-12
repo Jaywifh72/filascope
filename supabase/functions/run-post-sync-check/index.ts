@@ -42,14 +42,14 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d', 'prusament'];
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
-const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta'];
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -729,6 +729,39 @@ const AI_ROLES = {
       'c-Matte PLA is high-flow PLA (HFPLA) with matte finish',
       'Recycled lines (Still Colorful, Black Recycled) are rPLA/rPETG material',
       'Smoothie line names food items (Blueberry, Dragonfruit, Pineapple Banana)'
+    ]
+  },
+  prusamentSpecialist: {
+    title: 'Prusament Integration Specialist',
+    triggers: ['prusament', 'prusa', 'nfc', 'mystic', 'galaxy', 'opal', 'blend', 'rpla', 'woodfill', 'pvb', 'pc blend', 'pa11-cf', 'pp-cf', 'pp-gf', 'pei'],
+    capabilities: [
+      'Custom WordPress/WooCommerce platform analysis (prusa3d.com)',
+      'CSV-seeded sync pipeline architecture (~130 products)',
+      'Premium Czech filament material classification',
+      'NFC vs non-NFC variant detection and grouping',
+      'Refill variant handling (900g cardboard spools)',
+      'Galaxy/Blend/Mystic/Premium/Opal/Noctua product line detection',
+      'rPLA pigmented recycled line (Algae, Corn, Wine, Risotto)',
+      'Specialty materials (PC Blend, PC Space Grade, PA11-CF, PP-CF, PP-GF, PVB, Woodfill, PEI)',
+      'Prusa signature colors (Prusa Orange, Prusa Galaxy Black, Prusa Pro Green)',
+      'TDS URL generation from prusament.com/media/datasheet/'
+    ],
+    lessons: [
+      'Prusament uses custom WordPress/WooCommerce (NOT Shopify)',
+      'ALWAYS use CSV seed (prusament-seed.ts) as primary source',
+      'NFC and non-NFC are SEPARATE products with different URLs',
+      'Refill spools (900g) are eco-friendly cardboard - valid products',
+      '25g/30g/100g samples MUST be excluded (< 300g filter)',
+      'Bundles with print sheets are NOT standard filament products',
+      'Galaxy colors have glitter finish - Glitter finishType',
+      'Blend colors have metallic finish - Metallic finishType',
+      'Mystic colors have shimmer finish - Shimmer finishType',
+      'rPLA pigmented colors use bio-based dyes',
+      'Woodfill is PLA-Wood composite - 30% wood content',
+      'PA11-CF, PP-CF, PP-GF, PC-CF require hardened nozzles (is_nozzle_abrasive=true)',
+      'Expected ~18 product lines for comprehensive Prusament catalog',
+      'Cross-product swatch architecture - URL consistency check is SKIPPED',
+      'Noctua partnership colors (Beige, Brown) match Noctua fan colors'
     ]
   },
   architect: {
