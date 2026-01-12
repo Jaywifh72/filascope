@@ -633,73 +633,142 @@ type ProductLine =
   | 'metallic'
   | 'galaxy';
 
-function extractProductLine(title: string): ProductLine | null {
+function extractProductLine(title: string): string | null {
   const lower = title.toLowerCase();
   
-  // Panchroma line (new branding)
+  // Panchroma line (new branding) - 25+ sub-variants
   if (lower.includes('panchroma')) {
-    if (lower.includes('silk')) return 'panchroma-silk';
+    // Gradients (check first - more specific)
+    if (lower.includes('gradient')) {
+      if (lower.includes('luminous rainbow')) return 'panchroma-gradient-luminous-rainbow';
+      if (lower.includes('luminous')) return 'panchroma-gradient-luminous';
+      if (lower.includes('neon')) return 'panchroma-gradient-neon';
+      if (lower.includes('starlight')) return 'panchroma-gradient-starlight';
+      if (lower.includes('crystal')) return 'panchroma-gradient-crystal';
+      if (lower.includes('celestial')) return 'panchroma-gradient-celestial';
+      if (lower.includes('galaxy')) return 'panchroma-gradient-galaxy';
+      if (lower.includes('translucent')) return 'panchroma-gradient-translucent';
+      if (lower.includes('satin')) return 'panchroma-gradient-satin';
+      if (lower.includes('silk')) return 'panchroma-gradient-silk';
+      if (lower.includes('matte') || lower.includes('polyterra')) return 'panchroma-gradient-matte';
+      return 'panchroma-gradient';
+    }
+    // Dual colors
+    if (lower.includes('dual')) {
+      if (lower.includes('special')) return 'panchroma-dual-special';
+      if (lower.includes('silk')) return 'panchroma-dual-silk';
+      if (lower.includes('matte')) return 'panchroma-dual-matte';
+      return 'panchroma-dual';
+    }
+    // Special finishes
+    if (lower.includes('luminous')) return 'panchroma-luminous';
+    if (lower.includes('starlight')) return 'panchroma-starlight';
+    if (lower.includes('celestial')) return 'panchroma-celestial';
+    if (lower.includes('galaxy')) return 'panchroma-galaxy';
+    if (lower.includes('glow')) return 'panchroma-glow';
+    if (lower.includes('neon')) return 'panchroma-neon';
+    if (lower.includes('metallic')) return 'panchroma-metallic';
     if (lower.includes('marble')) return 'panchroma-marble';
-    if (lower.includes('glitter')) return 'panchroma-glitter';
-    if (lower.includes('gradient') || lower.includes('dual')) return 'panchroma-gradient';
+    if (lower.includes('translucent')) return 'panchroma-translucent';
+    if (lower.includes('satin') || (lower.includes('polyterra') && lower.includes('+'))) return 'panchroma-satin';
+    if (lower.includes('silk')) return 'panchroma-silk';
+    if (lower.includes('uv shift') || lower.includes('uv changing')) return 'panchroma-uv-shift';
+    if (lower.includes('cope')) return 'panchroma-cope';
+    if (lower.includes('refill')) return 'panchroma-refill';
+    // Standard matte (PolyTerra replacement)
     return 'panchroma-matte';
   }
   
   // PolyTerra (old branding -> maps to panchroma)
   if (lower.includes('polyterra')) {
-    return 'polyterra-matte';
+    if (lower.includes('gradient')) return 'panchroma-gradient-matte';
+    if (lower.includes('dual')) return 'panchroma-dual-matte';
+    if (lower.includes('marble')) return 'panchroma-marble';
+    if (lower.includes('+') || lower.includes('plus')) return 'panchroma-satin';
+    return 'panchroma-matte';
   }
   
-  // PolySonic
+  // Fiberon / Engineering line (priority over PolyLite)
+  if (lower.includes('fiberon') || lower.includes('polymide')) {
+    if (lower.includes('pps-cf') || lower.includes('pps cf')) return 'fiberon-pps-cf';
+    if (lower.includes('pps-gf') || lower.includes('pps gf')) return 'fiberon-pps-gf';
+    if (lower.includes('asa-cf') || lower.includes('asa cf')) return 'fiberon-asa-cf';
+    if (lower.includes('pet-cf') || lower.includes('pet cf')) return 'fiberon-pet-cf';
+    if (lower.includes('pet-gf') || lower.includes('pet gf')) return 'fiberon-pet-gf';
+    if (lower.includes('petg-esd')) return 'fiberon-petg-esd';
+    if (lower.includes('petg-rcf') || lower.includes('rcf')) return 'fiberon-petg-rcf';
+    if (lower.includes('pa612-esd')) return 'fiberon-pa612-esd';
+    if (lower.includes('pa612-cf') || lower.includes('pa612 cf')) return 'fiberon-pa612-cf';
+    if (lower.includes('pa12-cf') || lower.includes('pa12 cf')) return 'fiberon-pa12-cf';
+    if (lower.includes('pa6-cf') || lower.includes('pa6 cf')) return 'fiberon-pa6-cf';
+    if (lower.includes('pa6-gf') || lower.includes('pa6 gf')) return 'fiberon-pa6-gf';
+    if (lower.includes('copa')) return 'fiberon-copa';
+    return 'fiberon';
+  }
+  
+  // PolySonic (high-speed)
   if (lower.includes('polysonic')) {
     if (lower.includes('pro')) return 'polysonic-pro';
     return 'polysonic';
   }
   
-  // PolyMax
+  // PolyMax (tough/reinforced)
   if (lower.includes('polymax')) {
+    if (lower.includes('pc-fr')) return 'polymax-pc-fr';
+    if (lower.includes('pc')) return 'polymax-pc';
+    if (lower.includes('petg')) return 'polymax-petg';
+    if (lower.includes('pla')) return 'polymax-pla';
     return 'polymax';
   }
   
-  // PolyFlex
+  // PolyFlex (TPU)
   if (lower.includes('polyflex')) {
-    if (lower.includes('hf') || lower.includes('high flow')) return 'polyflex-hf';
+    if (lower.includes('hf') || lower.includes('high flow')) return 'polyflex-tpu95-hf';
+    if (lower.includes('90')) return 'polyflex-tpu90';
+    if (lower.includes('95')) return 'polyflex-tpu95';
     return 'polyflex';
   }
   
-  // Fiberon / PolyMide
-  if (lower.includes('fiberon') || lower.includes('polymide')) {
-    return 'fiberon';
-  }
-  
-  // Specialty
+  // Specialty products
   if (lower.includes('polycast')) return 'polycast';
   if (lower.includes('polysmooth')) return 'polysmooth';
   if (lower.includes('polydissolve')) return 'polydissolve';
-  if (lower.includes('polysupport')) return 'polysupport';
+  if (lower.includes('polysupport')) {
+    if (lower.includes('pa12')) return 'polysupport-pa12';
+    return 'polysupport-pla';
+  }
+  if (lower.includes('ht-pla-gf') || lower.includes('ht pla gf')) return 'ht-pla-gf';
   if (lower.includes('ht-pla') || lower.includes('ht pla')) return 'ht-pla';
   if (lower.includes('cospla')) return 'cospla';
-  if (lower.includes('draft')) return 'draft';
+  if (lower.includes('draft')) return 'draft-pla';
+  if (lower.includes('wood pla')) return 'wood-pla';
+  if (lower.includes('matte pla for production')) return 'matte-pla-production';
+  if (lower.includes('pc-pbt') || lower.includes('pc pbt')) return 'pc-pbt';
+  if (lower.includes('pc-abs') || lower.includes('pc abs')) return 'pc-abs';
   
-  // PolyLite special variants
+  // PolyLite variants (large category)
   if (lower.includes('polylite')) {
-    if (lower.includes('silk')) return 'polylite-silk';
-    if (lower.includes('glow')) return 'polylite-glow';
-    if (lower.includes('galaxy')) return 'polylite-galaxy';
-    if (lower.includes('starlight')) return 'polylite-starlight';
-    if (lower.includes('neon')) return 'neon';
-    if (lower.includes('metallic')) return 'metallic';
+    if (lower.includes('pla-cf') || lower.includes('pla cf')) return 'polylite-pla-cf';
+    if (lower.includes('lw-pla') || lower.includes('lw pla')) return 'polylite-lw-pla';
+    if (lower.includes('pla pro')) return 'polylite-pla-pro';
+    if (lower.includes('metallic') && lower.includes('pla')) return 'polylite-metallic-pla-pro';
+    if (lower.includes('cospla')) return 'cospla';
+    if (lower.includes('translucent') && lower.includes('petg')) return 'polylite-petg-translucent';
+    if (lower.includes('petg')) return 'polylite-petg';
+    if (lower.includes('galaxy') && lower.includes('abs')) return 'polylite-galaxy-abs';
+    if (lower.includes('neon') && lower.includes('abs')) return 'polylite-neon-abs';
+    if (lower.includes('metallic') && lower.includes('abs')) return 'polylite-metallic-abs';
+    if (lower.includes('abs')) return 'polylite-abs';
+    if (lower.includes('asa')) return 'polylite-asa';
+    if (lower.includes('pc')) return 'polylite-pc';
+    if (lower.includes('pla')) return 'polylite-pla';
     return 'polylite';
   }
   
-  // Galaxy ASA
-  if (lower.includes('galaxy') && lower.includes('asa')) return 'galaxy';
-  
-  // Neon ABS
-  if (lower.includes('neon') && lower.includes('abs')) return 'neon';
-  
-  // Metallic ABS
-  if (lower.includes('metallic') && lower.includes('abs')) return 'metallic';
+  // Polymaker ASA/PETG (standalone lines)
+  if (lower.includes('galaxy') && lower.includes('asa')) return 'galaxy-asa';
+  if ((lower.includes('polymaker') || lower.includes('polymaker™')) && lower.includes('asa')) return 'polymaker-asa';
+  if ((lower.includes('polymaker') || lower.includes('polymaker™')) && lower.includes('petg')) return 'polymaker-petg';
   
   return null;
 }
@@ -896,16 +965,35 @@ export function isFilamentProduct(product: {
   const handle = (product.handle || '').toLowerCase();
   const tags = (product.tags || []).map(t => t.toLowerCase());
   
-  // Exclude non-filament products
+  // Exclude by product type first (fastest)
+  const excludeProductTypes = [
+    'bundle packs', 'bundle', 'hardware', 'virtual', 'gift card',
+  ];
+  
+  if (excludeProductTypes.some(pt => productType.includes(pt))) {
+    return false;
+  }
+  
+  // Exclude non-filament products by title/handle pattern
   const excludePatterns = [
-    'dry box', 'drybox', 'dryer', 
+    // Hardware
+    'dry box', 'drybox', 'dryer', 'polydryer',
+    'polybox', 'polisher', 'polishing kit',
+    'nebulizer', 'tank', 'alcohol',
     'nozzle', 'hotend', 'extruder',
     'plate', 'sheet', 'bed',
-    'polisher', 'tank', 'alcohol',
     'accessory', 'accessories',
     'spool holder', 'stand',
-    'bundle', 'sample pack',
-    'gift card',
+    // Bundles
+    'bundle', 'sample pack', 'sample box', 
+    'hueforge pack', 'holiday', 'christmas', 'santa',
+    'gingerbread', 'snowman', 'grinch', 'starter',
+    'quadruple rainbow', 'cmyk',
+    // Non-filament
+    'gift card', 'shipping insurance',
+    '3d pen filament', '3d pen', 'pen filament',
+    // Creator editions that are bundles
+    'creator special edition',
   ];
   
   for (const pattern of excludePatterns) {
@@ -914,18 +1002,21 @@ export function isFilamentProduct(product: {
     }
   }
   
-  // Include if product type or tags indicate filament
-  if (productType.includes('filament') || productType.includes('pla') || productType.includes('petg')) {
+  // Exclude by tags (bundles, hidden, virtual)
+  const excludeTags = ['bundle', 'holidaybundle', 'hidden', 'virtual'];
+  if (tags.some(tag => excludeTags.some(et => tag.includes(et)))) {
+    return false;
+  }
+  
+  // Include if product type is filament-related
+  const filamentProductTypes = ['filament', 'pla', 'petg', 'panchroma', 'fiberon', 'polymaker'];
+  if (filamentProductTypes.some(pt => productType.includes(pt))) {
     return true;
   }
   
-  if (tags.some(t => t.includes('filament') || t.includes('pla') || t.includes('petg'))) {
-    return true;
-  }
-  
-  // Include if title contains filament material keywords
+  // Include if title contains filament brand keywords
   const filamentKeywords = [
-    'pla', 'petg', 'abs', 'asa', 'tpu', 'pc', 'nylon', 'pa',
+    'pla', 'petg', 'abs', 'asa', 'tpu', 'pc', 'nylon', 'pa', 'pva', 'pvb',
     'panchroma', 'polyterra', 'polylite', 'polymax', 'polysonic',
     'polyflex', 'fiberon', 'polymide', 'polycast', 'polysmooth',
     'polydissolve', 'polysupport', 'ht-pla', 'cospla', 'draft',
