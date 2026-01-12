@@ -1128,6 +1128,12 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   '3d print general flat dark earth': '#A67C52',
   'flat dark earth': '#A67C52',
   'dark earth': '#A67C52',
+  
+  // === N/A / DEFAULT (for single-color specialty products) ===
+  'n/a': '#808080',
+  'na': '#808080',
+  'not available': '#808080',
+  'default': '#808080',
 };
 
 // Marketing/invalid text patterns to exclude from color extraction
