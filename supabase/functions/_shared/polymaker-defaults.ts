@@ -636,9 +636,10 @@ type ProductLine =
 function extractProductLine(title: string): string | null {
   const lower = title.toLowerCase();
   
-  // Panchroma line (new branding) - 25+ sub-variants
+  // Panchroma line (new branding) - 30+ sub-variants
+  // CRITICAL: Check most specific patterns FIRST to avoid over-grouping
   if (lower.includes('panchroma')) {
-    // Gradients (check first - more specific)
+    // Gradients (check first - most specific)
     if (lower.includes('gradient')) {
       if (lower.includes('luminous rainbow')) return 'panchroma-gradient-luminous-rainbow';
       if (lower.includes('luminous')) return 'panchroma-gradient-luminous';
@@ -653,14 +654,20 @@ function extractProductLine(title: string): string | null {
       if (lower.includes('matte') || lower.includes('polyterra')) return 'panchroma-gradient-matte';
       return 'panchroma-gradient';
     }
-    // Dual colors
+    
+    // Dual colors (check before single-word finishes)
     if (lower.includes('dual')) {
       if (lower.includes('special')) return 'panchroma-dual-special';
       if (lower.includes('silk')) return 'panchroma-dual-silk';
       if (lower.includes('matte')) return 'panchroma-dual-matte';
       return 'panchroma-dual';
     }
-    // Special finishes
+    
+    // CRITICAL: Refill is a SEPARATE product line (cardboard spool)
+    if (lower.includes('refill')) return 'panchroma-refill';
+    
+    // Special finishes - MUST be checked BEFORE matte fallback
+    if (lower.includes('luminous rainbow')) return 'panchroma-luminous-rainbow';
     if (lower.includes('luminous')) return 'panchroma-luminous';
     if (lower.includes('starlight')) return 'panchroma-starlight';
     if (lower.includes('celestial')) return 'panchroma-celestial';
@@ -674,9 +681,13 @@ function extractProductLine(title: string): string | null {
     if (lower.includes('silk')) return 'panchroma-silk';
     if (lower.includes('uv shift') || lower.includes('uv changing')) return 'panchroma-uv-shift';
     if (lower.includes('cope')) return 'panchroma-cope';
-    if (lower.includes('refill')) return 'panchroma-refill';
-    // Standard matte (PolyTerra replacement)
-    return 'panchroma-matte';
+    
+    // EXPLICIT Matte check (must have "matte" in title, not default fallback)
+    if (lower.includes('matte')) return 'panchroma-matte';
+    
+    // Base Panchroma PLA (standard colors without special finish)
+    // This is the NEW standard line - NOT matte
+    return 'panchroma-standard';
   }
   
   // PolyTerra (old branding -> maps to panchroma)
@@ -685,7 +696,8 @@ function extractProductLine(title: string): string | null {
     if (lower.includes('dual')) return 'panchroma-dual-matte';
     if (lower.includes('marble')) return 'panchroma-marble';
     if (lower.includes('+') || lower.includes('plus')) return 'panchroma-satin';
-    return 'panchroma-matte';
+    if (lower.includes('matte')) return 'panchroma-matte';
+    return 'panchroma-matte';  // PolyTerra was specifically matte
   }
   
   // Fiberon / Engineering line (priority over PolyLite)
@@ -697,6 +709,7 @@ function extractProductLine(title: string): string | null {
     if (lower.includes('pet-gf') || lower.includes('pet gf')) return 'fiberon-pet-gf';
     if (lower.includes('petg-esd')) return 'fiberon-petg-esd';
     if (lower.includes('petg-rcf') || lower.includes('rcf')) return 'fiberon-petg-rcf';
+    if (lower.includes('petg')) return 'fiberon-petg';
     if (lower.includes('pa612-esd')) return 'fiberon-pa612-esd';
     if (lower.includes('pa612-cf') || lower.includes('pa612 cf')) return 'fiberon-pa612-cf';
     if (lower.includes('pa12-cf') || lower.includes('pa12 cf')) return 'fiberon-pa12-cf';
@@ -828,12 +841,17 @@ export function generateLegacyTdsUrl(title: string): string | null {
 // ============================================================================
 
 export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
-  // Matte/Army colors
+  // === MATTE/ARMY COLORS (Panchroma Matte / PolyTerra replacement) ===
   'matte charcoal black': '#2F2E30',
   'matte black': '#1A1A1A',
   'matte white': '#F5F5F5',
   'matte munsell green': '#00A877',
   'matte cotton white': '#FAFAFA',
+  'matte fossil grey': '#787276',
+  'matte army dark green': '#2D4A3E',
+  'matte army blue': '#4B5D67',
+  'matte lava red': '#CF1020',
+  'matte savannah yellow': '#F4C430',
   'charcoal black': '#2F2E30',
   'cotton white': '#FAFAFA',
   'army beige': '#C2B280',
@@ -846,14 +864,14 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'army red': '#7C1C1C',
   'army yellow': '#C4A747',
   
-  // Muted colors
+  // === MUTED COLORS ===
   'muted white': '#E8E8E8',
   'muted green': '#7BA17C',
   'muted blue': '#6B8E9F',
   'muted pink': '#E5B4B4',
   'muted purple': '#9B7BB3',
   
-  // Pastel colors
+  // === PASTEL COLORS ===
   'pastel peach': '#FFCBA4',
   'pastel banana': '#FFF9AE',
   'pastel mint': '#98FF98',
@@ -861,35 +879,206 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'pastel lavender': '#E6E6FA',
   'pastel pink': '#FFD1DC',
   
-  // Standard colors
-  'lava red': '#CF1020',
+  // === PANCHROMA BASE COLORS (CRITICAL) ===
+  'marble white': '#FCFCFC',
+  'ice': '#D0E8F2',
+  'ice blue': '#99FFFF',
+  'sky blue': '#87CEEB',
+  'sapphire blue': '#0F52BA',
+  'lavender purple': '#B57EDC',
   'sakura pink': '#FFB7C5',
+  'peach': '#FFCBA4',
+  'banana': '#FFFACD',
+  'mint': '#98FF98',
+  'earth brown': '#5C4033',
+  'terracotta': '#E2725B',
+  'forest green': '#228B22',
+  'polymaker teal': '#008080',
+  'wine red': '#722F37',
+  'lemon yellow': '#FFF44F',
+  'coral red': '#FF6F61',
+  'lava red': '#CF1020',
   'savannah yellow': '#F4C430',
   'fossil grey': '#787276',
-  'marble white': '#FCFCFC',
-  'ice blue': '#99FFFF',
-  'slate grey': '#708090',
-  'jet black': '#0A0A0A',
-  'true black': '#000000',
-  'true white': '#FFFFFF',
-  'natural': '#D4C4A8',
-  'transparent': '#FFFFFF',
-  'clear': '#FFFFFF',
+  'beige': '#F5F5DC',
   
-  // Engineering materials (typically neutral)
+  // === GRADIENT COLORS (use primary/dominant color) ===
+  'gradient galaxy black-blue': '#1a1a1a',
+  'gradient galaxy black-grey': '#1a1a1a',
+  'gradient matte fall': '#8B4513',
+  'gradient matte summer': '#FFD700',
+  'gradient starlight purple': '#9370DB',
+  'gradient starlight blue-green': '#20B2AA',
+  'gradient crystal aquamarine': '#7FFFD4',
+  'gradient crystal tourmaline': '#E0115F',
+  'gradient luminous rainbow': '#FF6B6B',
+  'gradient neon': '#39FF14',
+  
+  // === DUAL MATTE COLORS (primary color shown) ===
+  'dual matte shadow red': '#1E1C18',
+  'dual matte shadow orange': '#201D17',
+  'dual matte shadow black': '#241F15',
+  'dual matte foggy orange': '#82817F',
+  'dual matte foggy purple': '#808080',
+  'matte foggy orange': '#808080',
+  'matte foggy purple': '#9B7BB3',
+  'matte shadow red': '#221E16',
+  'matte shadow orange': '#282113',
+  
+  // === SILK COLORS ===
+  'silk lime': '#32CD32',
+  'silk bronze': '#CD7F32',
+  'silk gold': '#FFD700',
+  'silk silver': '#C0C0C0',
+  'silk coral': '#FF6B6B',
+  'silk teal': '#008B8B',
+  'silk copper': '#B87333',
+  'silk rose gold': '#E0BFB8',
+  
+  // === STARLIGHT/CELESTIAL COLORS ===
+  'starlight black': '#1A1A1A',
+  'starlight purple': '#9370DB',
+  'starlight blue': '#4169E1',
+  'celestial blue': '#5F9EA0',
+  'celestial purple': '#8A2BE2',
+  
+  // === GALAXY/METALLIC COLORS ===
+  'galaxy black': '#1A1A1A',
+  'galaxy blue': '#191970',
+  'metallic bronze': '#CD7F32',
+  'metallic copper': '#B87333',
+  'metallic gold': '#FFD700',
+  'metallic silver': '#C0C0C0',
+  'metallic champagne': '#F7E7CE',
+  
+  // === NEON COLORS ===
+  'neon green': '#39FF14',
+  'neon orange': '#FF6600',
+  'neon pink': '#FF6EC7',
+  'neon yellow': '#FFFF33',
+  
+  // === ENGINEERING/FIBERON COLORS ===
+  'dark grey': '#4A4A4A',
+  'navy blue': '#000080',
+  'natural white': '#F5F5DC',
+  
+  // === STANDARD BASE COLORS ===
   'black': '#1A1A1A',
   'white': '#FFFFFF',
   'grey': '#808080',
   'gray': '#808080',
-  'natural white': '#F5F5DC',
+  'red': '#FF0000',
+  'blue': '#0000FF',
+  'green': '#00FF00',
+  'yellow': '#FFFF00',
+  'orange': '#FFA500',
+  'purple': '#800080',
+  'pink': '#FFC0CB',
+  'brown': '#8B4513',
+  'cream': '#FFFDD0',
+  'teal': '#008080',
+  'natural': '#D4C4A8',
+  'transparent': '#FFFFFF',
+  'clear': '#FFFFFF',
+  'slate grey': '#708090',
+  'jet black': '#0A0A0A',
+  'true black': '#000000',
+  'true white': '#FFFFFF',
+  
+  // === TRANSLUCENT COLORS ===
+  'translucent green': '#90EE90',
+  'translucent blue': '#ADD8E6',
+  'translucent red': '#FF6B6B',
+  'translucent orange': '#FFA07A',
+  'translucent purple': '#DDA0DD',
+  'translucent yellow': '#FFFACD',
+  
+  // === GLOW/LUMINOUS COLORS ===
+  'glow green': '#32CD32',
+  'glow blue': '#00BFFF',
+  'luminous green': '#39FF14',
+  'luminous blue': '#1E90FF',
 };
+
+// Marketing/invalid text patterns to exclude from color extraction
+const POLYMAKER_COLOR_EXCLUSION_PATTERNS = [
+  'you will love it',
+  'coming soon',
+  'new',
+  'best seller',
+  'limited edition',
+  'formerly',
+  'old packaging',
+  'new packaging',
+  'buy',
+  'add to cart',
+  'select',
+];
 
 export function getPolymakerColorHex(colorName: string): string | null {
   const normalized = colorName.toLowerCase().trim();
-  return POLYMAKER_COLOR_MAPPING[normalized] || null;
+  
+  // Check for excluded patterns
+  if (POLYMAKER_COLOR_EXCLUSION_PATTERNS.some(p => normalized.includes(p))) {
+    return null;
+  }
+  
+  // Direct match
+  if (POLYMAKER_COLOR_MAPPING[normalized]) {
+    return POLYMAKER_COLOR_MAPPING[normalized];
+  }
+  
+  // Fuzzy match: check if color name is contained
+  for (const [name, hex] of Object.entries(POLYMAKER_COLOR_MAPPING)) {
+    if (normalized.includes(name) || name.includes(normalized)) {
+      return hex;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract color name from Polymaker product title
+ * Handles format: "Panchroma™ PLA - Beige" or "PolyLite™ PETG - Translucent Green"
+ */
+export function extractPolymakerColorFromTitle(title: string): { colorName: string; hex: string | null } | null {
+  const lower = title.toLowerCase();
+  
+  // Skip marketing text
+  if (POLYMAKER_COLOR_EXCLUSION_PATTERNS.some(p => lower.includes(p))) {
+    return null;
+  }
+  
+  // Extract color after " - " separator (most common format)
+  const dashMatch = title.match(/\s-\s([^-]+)$/);
+  if (dashMatch) {
+    const colorPart = dashMatch[1].trim();
+    const colorLower = colorPart.toLowerCase();
+    
+    // Skip if it looks like marketing text
+    if (POLYMAKER_COLOR_EXCLUSION_PATTERNS.some(p => colorLower.includes(p))) {
+      return null;
+    }
+    
+    // Validate: color name should be 1-4 words, max 40 characters
+    if (colorPart.length <= 40 && colorPart.split(/\s+/).length <= 4) {
+      const hex = getPolymakerColorHex(colorLower);
+      return { colorName: colorPart, hex };
+    }
+  }
+  
+  return null;
 }
 
 export function extractColorFromTitle(title: string): string | null {
+  // Try the new extraction method first
+  const extracted = extractPolymakerColorFromTitle(title);
+  if (extracted) {
+    return extracted.colorName.toLowerCase();
+  }
+  
+  // Fallback: search for known color names in title
   const lowerTitle = title.toLowerCase();
   
   for (const colorName of Object.keys(POLYMAKER_COLOR_MAPPING)) {
