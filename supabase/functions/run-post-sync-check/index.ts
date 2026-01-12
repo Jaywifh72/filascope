@@ -7455,7 +7455,7 @@ Deno.serve(async (req) => {
     // that occur due to mismatches between product_line_id format and display logic.
     
     // Skip brands that use verbose seed titles but have clean UI display names (by design)
-    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta'];
+    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta', 'prusament'];
     const uiDisplayIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Simulate formatProductLineIdForDisplay logic (from src/lib/productNameUtils.ts)

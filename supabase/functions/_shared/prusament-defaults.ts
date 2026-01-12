@@ -480,13 +480,14 @@ export const PRUSAMENT_COLOR_MAPPING: Record<string, string> = {
   'pristine white': '#FFFFFF',
   'vanilla white': '#F3E5AB',
   'pearl white': '#FAEBD7',
+  'clear': '#F0F0F0',
   'white': '#FFFFFF',
   
   // Greys
   'anthracite grey': '#293133',
   'urban grey': '#5A5A5A',
   'gravity grey': '#808080',
-  "gentleman's grey": '#808080',
+  "gentleman's grey": '#696969',
   'marble grey': '#808080',
   'magnetite 40% grey': '#808080',
   'grey': '#808080',
@@ -495,7 +496,7 @@ export const PRUSAMENT_COLOR_MAPPING: Record<string, string> = {
   // Blues
   'azure blue': '#007FFF',
   'chalky blue': '#0066CC',
-  'sky blue': '#0066CC',
+  'sky blue': '#87CEEB',
   'ultramarine blue': '#4166F5',
   'sapphire blue': '#0066CC',
   'royal blue': '#4169E1',
@@ -503,7 +504,7 @@ export const PRUSAMENT_COLOR_MAPPING: Record<string, string> = {
   
   // Greens
   'neon green': '#39FF14',
-  'jungle green': '#228B22',
+  'jungle green': '#2E8B57',
   'pistachio green': '#93C572',
   'army green': '#4B5320',
   'simply green': '#4CBB17',
@@ -563,8 +564,7 @@ export const PRUSAMENT_COLOR_MAPPING: Record<string, string> = {
   'silver': '#C0C0C0',
   
   // Specialty
-  'clear': '#FFFFFF',
-  'transparent': '#FFFFFF',
+  'transparent': '#F0F0F0',
   'recycled': '#808080',
 };
 
