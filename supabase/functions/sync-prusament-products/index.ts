@@ -18,7 +18,7 @@ import {
   getPrusamentTdsUrl,
   getPrusamentColorHex,
 } from '../_shared/prusament-defaults.ts';
-import { getColorFamily } from '../_shared/color-mapping.ts';
+import { getColorFamily, getColorFamilyFromHex } from '../_shared/color-mapping.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,6 +108,9 @@ Deno.serve(async (req) => {
             colorHex = getPrusamentColorHex(cleanColor);
           }
           
+          // Get color family - prefer name-based lookup, fallback to hex analysis
+          const colorFamily = getColorFamily(cleanColor) || getColorFamilyFromHex(colorHex);
+          
           // Generate product ID from URL
           const urlSlug = product.productUrl.split('/').filter(Boolean).pop() || '';
           const productId = `prusament-${urlSlug}`;
@@ -121,7 +124,7 @@ Deno.serve(async (req) => {
             finish_type: enrichment.finishType,
             product_line_id: enrichment.productLineId,
             color_hex: colorHex,
-            color_family: colorHex ? getColorFamily(colorHex) : null,
+            color_family: colorFamily,
             product_url: product.productUrl,
             net_weight_g: product.weightGrams,
             diameter_nominal_mm: 1.75,
