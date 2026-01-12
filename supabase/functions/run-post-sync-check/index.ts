@@ -606,6 +606,38 @@ const AI_ROLES = {
       'Expected 13 product lines: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS'
     ]
   },
+  overtureSpecialist: {
+    title: 'Overture Integration Specialist',
+    triggers: ['overture', 'overture3d', 'rock pla', 'basic pla', 'matte pla', 'silk pla', 'easy pla', 'super pla', 'high speed tpu', 'pla professional', 'glow pla'],
+    capabilities: [
+      'Shopify platform analysis (overture3d.ca - Canadian store)',
+      'CSV-seeded sync pipeline architecture (~170 products, 15 product lines)',
+      'Major Chinese manufacturer with extensive consumer catalog',
+      'Rock PLA specialty line (mineral-filled, abrasive to brass nozzles)',
+      'Multi-pack/bulk exclusion logic (2-pack, 4-pack, 6-pack, 2kg)',
+      'High Speed TPU variant handling (300mm/s capable)',
+      'Creative color names (Glacier Blue, Mars Red, Barrier Reef, Alpine Forest)',
+      'Canadian pricing in CAD',
+      'Shopify CDN image URLs with consistent product-line level images'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (OVERTURE_SEED_DATA) as primary source - curated 1-pack products only',
+      'Exclude multi-pack products (2-pack, 4-pack, 6-pack) - causes swatch duplication',
+      'Exclude bulk products (2kg variants) - consumer focus on standard 1kg spools',
+      'Rock PLA is abrasive (mineral particles) - mark isNozzleAbrasive: true',
+      'Store URL is overture3d.ca (Canadian) NOT overture3d.com (US)',
+      'All prices in CAD, not USD',
+      'Eco PLA and Refill products may be single-variant - not sync errors',
+      'Skip hex validation - curated color mappings in overture-seed.ts',
+      'Skip price validation - CSV seed contains curated CAD prices',
+      'Product-line level images (not color-specific) are expected architecture',
+      'Expected 15 product lines for consumer-focused 1-pack products',
+      'PLA Professional is a separate premium line from Basic PLA',
+      'High Speed TPU and standard TPU are separate product lines',
+      'Safe delete threshold is 50 products for clean slate sync',
+      'Use delete-then-insert pattern for consistent data state'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -1349,6 +1381,72 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'petg-translucent': 'PETG Translucent (9 colors)',
       'asa': 'ASA Filament (8 colors)',
       'abs': 'ABS Filament (8 colors)'
+    },
+    lastUpdated: '2026-01-12'
+  },
+  'overture': {
+    platform: 'Shopify (overture3d.ca) - Canadian store with JSON API, but CSV-seeded for reliability',
+    knownLimitations: [
+      '❌ Multi-pack products (2-pack, 4-pack, 6-pack) create duplicate swatches in UI',
+      '❌ Bulk 2kg variants should be excluded for consumer-focused catalog',
+      '❌ Store has both .com (US) and .ca (Canada) - CSV seed uses .ca store',
+      '❌ Rock PLA has mineral particles - abrasive to brass nozzles (requires hardened nozzle)',
+      '❌ Some products (Eco PLA, Refill) only have 1 variant - not useful for color swatches',
+      '❌ Shopify JSON API does not include curated hex codes for creative color names'
+    ],
+    workingSolutions: [
+      '✅ CSV seed (OVERTURE_SEED_DATA) contains curated ~170 1-pack products only',
+      '✅ OVERTURE_EXTENDED_COLOR_MAP provides hex codes for all creative color names',
+      '✅ shouldExcludeOvertureProduct() filters multi-packs and bulk products',
+      '✅ Safe delete pattern with threshold (50+ products) for clean slate sync',
+      '✅ generateOvertureProductLineId() creates consistent product_line_id values',
+      '✅ getOvertureDefaultPrice() provides CAD prices by material and line'
+    ],
+    failedApproaches: [
+      '⚠️ Using overture3d.com URL - CSV seed uses .ca (Canadian store)',
+      '⚠️ Including multi-pack products - causes swatch duplication in UI',
+      '⚠️ Relying on Shopify JSON alone - misses curated hex codes for creative colors',
+      '⚠️ Price validation against live API - CAD prices differ from USD expectations'
+    ],
+    currentStatus: {
+      'expectedProductLines': '15 (Basic PLA, Matte PLA, Silk PLA, Easy PLA, Glow PLA, Rock PLA, Super PLA+, PLA Professional, Basic PETG, TPU, High Speed TPU, ABS, ASA, Easy Nylon)',
+      'expectedVariants': '~170 individual color variants (1-pack products only)',
+      'priceRange': '$17-$40 CAD'
+    },
+    keyFiles: [
+      'supabase/functions/sync-overture-products/index.ts - Main sync function (CSV-seeded)',
+      'supabase/functions/_shared/overture-seed.ts - OVERTURE_SEED_DATA, color mappings, exclusion logic',
+      'supabase/functions/_shared/overture-defaults.ts - Product line definitions, enrichment'
+    ],
+    extractionPriority: [
+      '1. Verify all CSV products are processed (check for skipped entries)',
+      '2. Ensure 15 unique product lines are created',
+      '3. Validate color hex codes are properly assigned from OVERTURE_EXTENDED_COLOR_MAP',
+      '4. Confirm Rock PLA is marked as abrasive (isNozzleAbrasive: true)',
+      '5. Verify excluded products are not synced (2-pack, 4-pack, 6-pack, 2kg)'
+    ],
+    manualExtractionProcess: [
+      '1. Products come from embedded OVERTURE_SEED_DATA - DO NOT scrape Shopify',
+      '2. To add new products: Update OVERTURE_SEED_DATA in overture-seed.ts',
+      '3. To add new colors: Update OVERTURE_EXTENDED_COLOR_MAP in overture-seed.ts',
+      '4. To add new product lines: Update OVERTURE_PRODUCT_LINES in overture-defaults.ts',
+      '5. Run clean slate sync to refresh all data from updated seed'
+    ],
+    productSlugReference: {
+      'basic-pla-1-75-mm-1-pack': 'Basic PLA (28 colors)',
+      'matte-pla-1-75mm-1-pack': 'Matte PLA (28 colors)',
+      'silk-pla1-75mm-1-pack': 'Silk PLA (23 colors)',
+      'easy-pla-1-75mm-1-pack': 'Easy PLA (4 colors)',
+      'glow-pla-1-75mm-1pack': 'Glow PLA (4 colors)',
+      'overture-rock-pla-filament-1-75mm': 'Rock PLA (20 colors)',
+      'super-pla-1-75mm-1-pack': 'Super PLA+ (5 colors)',
+      'pla-plus-1-75mm-1-pack': 'PLA Professional (16 colors)',
+      'basic-petg-1-75mm-1-pack': 'Basic PETG (24 colors)',
+      'tpu-1-75mm-1-pack': 'TPU (12 colors)',
+      'high-speed-tpu-1-75mm-1-pack-1': 'High Speed TPU (10 colors)',
+      'overture-abs-filament-1-75mm': 'ABS (1 color)',
+      'overture-asa-filament-1-75mm-white': 'ASA (1 color)',
+      'nylon-1-75mm-1-pack': 'Easy Nylon (1 color)'
     },
     lastUpdated: '2026-01-12'
   }
@@ -4122,6 +4220,329 @@ ${lessons.failedApproaches.map(f => `${f}`).join('\n')}
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Overture-specific AI Fix Prompt with comprehensive context
+ */
+function generateOvertureFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['overture'];
+  const role = AI_ROLES.overtureSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+**Extraction Pattern**: ${aiAnalysis.extractionPattern}
+**Missing Reason**: ${aiAnalysis.missingReason}
+
+### Missing Color Hex Mappings
+Add these to OVERTURE_EXTENDED_COLOR_MAP in \`_shared/overture-seed.ts\`:
+\`\`\`typescript
+${Object.entries(aiAnalysis.colorMappings || {}).map(([c, h]) => `'${c}': '${h}',`).join('\n')}
+\`\`\`
+`;
+  }
+
+  return `# Overture Integration Specialist - Post Sync Check Fixes
+
+You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database and comparison platform.
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+## CRITICAL LESSONS LEARNED
+
+${(role.lessons || []).map(l => `- ${l}`).join('\n')}
+
+---
+
+## OVERTURE PLATFORM OVERVIEW
+
+**Website**: overture3d.ca (Canadian Shopify store)
+**Sync Architecture**: CSV-seeded (OVERTURE_SEED_DATA)
+**Spool Weight**: 1kg standard (no multi-packs synced)
+**Diameter**: 1.75mm only
+**Currency**: CAD (Canadian Dollars)
+
+### Product Line Architecture (15 lines)
+
+| Product Line | Material | Colors | URL |
+|--------------|----------|--------|-----|
+| Basic PLA | PLA | 28 | /products/basic-pla-1-75-mm-1-pack |
+| Matte PLA | PLA | 28 | /products/matte-pla-1-75mm-1-pack |
+| Silk PLA | PLA | 23 | /products/silk-pla1-75mm-1-pack |
+| Easy PLA | PLA | 4 | /products/easy-pla-1-75mm-1-pack |
+| Glow PLA | PLA | 4 | /products/glow-pla-1-75mm-1pack |
+| Rock PLA | PLA | 20 | /products/overture-rock-pla-filament-1-75mm |
+| Super PLA+ | PLA+ | 5 | /products/super-pla-1-75mm-1-pack |
+| PLA Professional | PLA-PRO | 16 | /products/pla-plus-1-75mm-1-pack |
+| Basic PETG | PETG | 24 | /products/basic-petg-1-75mm-1-pack |
+| TPU | TPU | 12 | /products/tpu-1-75mm-1-pack |
+| High Speed TPU | TPU | 10 | /products/high-speed-tpu-1-75mm-1-pack-1 |
+| ABS | ABS | 1 | /products/overture-abs-filament-1-75mm |
+| ASA | ASA | 1 | /products/overture-asa-filament-1-75mm-white |
+| Easy Nylon | Nylon | 1 | /products/nylon-1-75mm-1-pack |
+
+### Excluded Products (NOT synced)
+- **2-Pack, 4-Pack, 6-Pack** bundles (swatch duplication)
+- **2KG bulk** variants (non-consumer)
+- **Eco PLA** (single variant only)
+- **PLA Refill** (cardboard spool only)
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+When diagnosing Overture sync issues, check in this order:
+
+### RC1: CSV Seed Data Issues
+- Is the product missing from OVERTURE_SEED_DATA?
+- Is the entry format correct (material, filamentLine, productUrl, color, imageUrl, colorHex)?
+- Are excluded products (multi-packs, bulk) incorrectly included?
+- Is shouldExcludeOvertureProduct() catching the right patterns?
+
+### RC2: Color Extraction Issues
+- Is the color correctly spelled in the seed data?
+- Is there a hex code in OVERTURE_EXTENDED_COLOR_MAP for this color?
+- Is the color name normalized correctly for lookup?
+- Are creative color names (Glacier Blue, Mars Red) properly mapped?
+
+### RC3: Product Line ID Issues
+- Is generateOvertureProductLineId() producing correct IDs?
+- Are Rock PLA products in the correct abrasive product line?
+- Is PLA Professional separated from Basic PLA?
+- Is High Speed TPU separated from standard TPU?
+
+### RC4: Multi-pack Filtering Issues
+- Are 2-pack, 4-pack, 6-pack products being excluded?
+- Are 2kg bulk variants being excluded?
+- Is the filamentLine field being checked correctly?
+
+### RC5: Image URL Issues
+- Does the image URL follow Shopify CDN pattern?
+- Are product-line level images being used (not color-specific)?
+- Are there broken image links in the seed data?
+
+---
+
+## FIX IMPLEMENTATION ORDER
+
+### Step 1: Check CSV Seed Data
+**File:** \`supabase/functions/_shared/overture-seed.ts\`
+
+Verify OVERTURE_SEED_DATA contains the product:
+\`\`\`typescript
+{ 
+  material: 'PLA', 
+  filamentLine: 'Basic PLA 1.75MM 1-PACK', 
+  productUrl: 'https://www.overture3d.ca/products/basic-pla-1-75-mm-1-pack', 
+  color: 'White', 
+  imageUrl: 'https://cdn.shopify.com/...', 
+  colorHex: '#FFFFFF' 
+}
+\`\`\`
+
+### Step 2: Fix Color Mapping (if colorHex missing in seed)
+**File:** \`supabase/functions/_shared/overture-seed.ts\`
+
+Add to OVERTURE_EXTENDED_COLOR_MAP:
+\`\`\`typescript
+export const OVERTURE_EXTENDED_COLOR_MAP: Record<string, string> = {
+  'glacier blue': '#A5C8E1',
+  'mars red': '#B22222',
+  'alpine forest': '#228B22',
+  'barrier reef': '#1E90FF',
+  // ... add missing colors
+};
+\`\`\`
+
+### Step 3: Fix Product Line ID Generation
+**File:** \`supabase/functions/_shared/overture-seed.ts\`
+
+Check generateOvertureProductLineId() logic ensures:
+- Basic PLA → overture__pla__basic
+- Matte PLA → overture__pla__matte
+- Rock PLA → overture__pla__rock (with isNozzleAbrasive: true)
+- High Speed TPU → overture__tpu__high-speed
+- PLA Professional → overture__pla__professional
+
+### Step 4: Fix Exclusion Logic
+**File:** \`supabase/functions/_shared/overture-seed.ts\`
+
+Verify shouldExcludeOvertureProduct() catches:
+\`\`\`typescript
+export function shouldExcludeOvertureProduct(filamentLine: string, color: string): boolean {
+  const line = filamentLine.toLowerCase();
+  return /\\d+[\\s-]*(pack|kg)/.test(line) && !/1[\\s-]*(pack|kg)/.test(line) ||
+         line.includes('eco pla') ||
+         line.includes('refill');
+}
+\`\`\`
+
+---
+
+## VERIFICATION QUERIES
+
+### Product Line Count (should be 15)
+\`\`\`sql
+SELECT COUNT(DISTINCT product_line_id) as product_lines
+FROM filaments WHERE vendor ILIKE '%overture%';
+\`\`\`
+
+### Product Breakdown by Line
+\`\`\`sql
+SELECT product_line_id, COUNT(*) as variants
+FROM filaments WHERE vendor ILIKE '%overture%'
+GROUP BY product_line_id ORDER BY product_line_id;
+\`\`\`
+
+### Hex Coverage (should be 100%)
+\`\`\`sql
+SELECT 
+  COUNT(*) as total,
+  COUNT(color_hex) as with_hex,
+  ROUND(100.0 * COUNT(color_hex) / COUNT(*), 1) as percent
+FROM filaments WHERE vendor ILIKE '%overture%';
+\`\`\`
+
+### Image Coverage (should be 100%)
+\`\`\`sql
+SELECT 
+  COUNT(*) as total,
+  COUNT(featured_image) as with_image,
+  ROUND(100.0 * COUNT(featured_image) / COUNT(*), 1) as percent
+FROM filaments WHERE vendor ILIKE '%overture%';
+\`\`\`
+
+### No Multi-pack Products (should return 0)
+\`\`\`sql
+SELECT * FROM filaments 
+WHERE vendor ILIKE '%overture%' 
+AND (product_title ILIKE '%2-pack%' OR product_title ILIKE '%4-pack%' OR product_title ILIKE '%6-pack%');
+\`\`\`
+
+### Rock PLA Abrasive Check (should have is_nozzle_abrasive = true)
+\`\`\`sql
+SELECT product_title, is_nozzle_abrasive 
+FROM filaments 
+WHERE vendor ILIKE '%overture%' AND product_line_id ILIKE '%rock%';
+\`\`\`
+
+---
+
+## Fix Post Sync Check Issues for Overture
+
+### Summary
+- **Brand**: ${brand} (slug: overture)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary || 'None - all checks passing!'}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## KEY FILES FOR OVERTURE
+
+- \`supabase/functions/sync-overture-products/index.ts\` - Main sync function with CSV seed
+- \`supabase/functions/_shared/overture-seed.ts\` - OVERTURE_SEED_DATA, color mappings, exclusion logic
+- \`supabase/functions/_shared/overture-defaults.ts\` - Product line definitions, enrichment
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+
+## SYNC EXECUTION STEPS
+
+1. **Deploy** updated edge functions (\`sync-overture-products\` and \`run-post-sync-check\`)
+2. **Run Clean Slate** sync for Overture from Brand Sync Manager
+3. **Check edge function logs** for:
+   - Skipped entries logged (multi-packs, bulk)
+   - Product count around ~170 variants
+   - 15 unique product_line_ids
+4. **Run Post Sync Check** again - should show 0 errors
+5. **Spot-check** a few product cards to confirm:
+   - Correct card count (15 product lines)
+   - Rock PLA marked as abrasive
+   - Creative color names displayed correctly
+   - Prices in CAD
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -4179,6 +4600,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Numakers
   if (brandSlug === 'numakers') {
     return generateNumakersFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Overture
+  if (brandSlug === 'overture') {
+    return generateOvertureFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -6343,6 +6769,37 @@ Deno.serve(async (req) => {
           materialSlug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       }
       
+      // OVERTURE: Handle product line names from CSV seed
+      // Format: overture__pla__basic → "Basic PLA"
+      //         overture__pla__matte → "Matte PLA"
+      //         overture__pla__rock → "Rock PLA"
+      //         overture__tpu__high-speed → "High Speed TPU"
+      if (parts[0] === 'overture' && parts.length >= 3) {
+        const materialSlug = parts[1]; // e.g., "pla", "petg", "tpu"
+        const lineSlug = parts[2];     // e.g., "basic", "matte", "rock", "high-speed"
+        
+        // Map line slugs to clean display names
+        const OVERTURE_LINE_DISPLAY: Record<string, string> = {
+          'basic': 'Basic',
+          'matte': 'Matte',
+          'silk': 'Silk',
+          'easy': 'Easy',
+          'glow': 'Glow',
+          'rock': 'Rock',
+          'super': 'Super',
+          'professional': 'Professional',
+          'high-speed': 'High Speed',
+          'translucent': 'Translucent',
+          'refill': 'Refill',
+        };
+        
+        const material = materialSlug.toUpperCase();
+        const line = OVERTURE_LINE_DISPLAY[lineSlug] || 
+          lineSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        
+        return `${line} ${material}`.trim();
+      }
+      
       // GEEETECH: Handle underscore-based slugs in product_line_id
       // Examples: geeetech__pla__silk_tri → "PLA Silk Tri-Color"
       //           geeetech__pla__hs_pla → "PLA High Speed"
@@ -6925,7 +7382,7 @@ Deno.serve(async (req) => {
     
     // Only run for brands that should have accurate live pricing
     // Skip CSV-seeded brands that don't rely on live pricing
-    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
+    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture'];
     const shouldRunLivePriceCheck = !livePriceSkipBrands.includes(brandSlug);
     
     if (shouldRunLivePriceCheck) {
@@ -7393,7 +7850,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
