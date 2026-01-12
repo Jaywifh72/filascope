@@ -359,6 +359,18 @@ export function getProtoPastaTdsUrl(_productLineId: string): string {
 // ============= COLOR MAPPING =============
 
 export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
+  // Reflective HTPLA
+  'yellow reflective': '#FFD700',
+  'white reflective': '#F5F5F5',
+  'red reflective': '#DC143C',
+  'nebula reflective': '#7B68EE',
+  'gray reflective': '#808080',
+  'green reflective': '#228B22',
+  'fluorescent yellow reflective': '#CCFF00',
+  'denim blue reflective': '#1560BD',
+  'bronze reflective': '#CD7F32',
+  'blue reflective': '#1E90FF',
+  
   // Metallic HTPLA
   'empire strikes black': '#1A1A1A',
   'empire black': '#1A1A1A',
@@ -366,10 +378,35 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'high five blue': '#1E88E5',
   'galactic empire purple': '#8E24AA',
   'galactic purple': '#8E24AA',
+  'sun gold metallic yellow': '#FFD700',
+  'second to none silver': '#C0C0C0',
+  'stefs rose gold': '#B76E79',
+  'what karat smooth gold': '#FFD700',
+  'heartthrob metallic red': '#E53935',
+  'lukes proton purple': '#9C27B0',
+  'out of darts orange': '#FF8C00',
+  'moonstruck white satin': '#FAFAFA',
+  'glitters mane teal': '#008B8B',
 
   // Glitter HTPLA
   'candy apple red': '#E53935',
   'stardust silver': '#C0C0C0',
+  'glitter n gourd orange': '#FF8C00',
+  'lapis lazuli glitter': '#1E3A8A',
+  'night before blue': '#1A237E',
+  'candle light white': '#FFF8DC',
+  'texas tea black': '#1A1A1A',
+  'wonder black rainbow glitter': '#1A1A1A',
+  'fleck n forest green glitter': '#228B22',
+  'fleck n fire red glitter': '#DC143C',
+  'atomic age gray glitter': '#708090',
+  'unicorn tears white glitter': '#FFFFFF',
+  'filafetti confetti frosting': '#FFFFFF',
+  'dusty smoke': '#696969',
+  'good as gold': '#FFD700',
+  'pretty in pink pearl': '#FFB6C1',
+  'obsidian': '#1A1A1A',
+  'sparkling spruce': '#228B22',
 
   // Translucent HTPLA
   'iridescent ice': '#A5F2F3',
@@ -380,17 +417,74 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'translucent purple': '#AB47BC',
   'translucent orange': '#FFA726',
   'crystal clear': '#FFFFFF',
+  'purple ice translucent': '#9932CC',
+  'aqua ice translucent': '#00CED1',
+  'blue ice translucent': '#87CEEB',
+  'nerfed translucent orange': '#FF6347',
+  'totally translucent yellow': '#FFFF00',
+  'bottle brown translucent': '#8B4513',
+  'cobalt blue translucent': '#0047AB',
+  'soda green translucent': '#7CFC00',
 
-  // Nebula Multicolor
+  // Nebula/Multicolor
   'nebula multicolor': '#7B68EE',
   'nebula': '#7B68EE',
   'galaxy': '#483D8B',
+  'gradient gray multicolor': '#808080',
+  'black to the fuchsia': '#FF00FF',
+  'fading rainbow': '#FF69B4',
+  'candy rainbow': '#FF69B4',
+  'tidal turquoise': '#40E0D0',
+  'kermie green': '#32CD32',
+  'erratic indigo': '#4B0082',
+  'seafoam green': '#20B2AA',
+  'partly sunny yellow': '#FFD700',
+  'partly cloudy blue': '#87CEEB',
+  'amethyst aria': '#9966CC',
+  'mango medley': '#FF8C00',
+  'scarlet symphony': '#DC143C',
+  'stratocumulus': '#87CEEB',
+  'midnight multicolor': '#191970',
+  'forest fantasy green': '#228B22',
+  'citrus sunrise orange': '#FF4500',
+  'marine dream blue': '#006994',
+  'the original nebula': '#7B68EE',
+  'nebula cotton candy': '#FFB6C1',
+  'nebula night glow': '#7B68EE',
+  'nebula silver silk': '#C0C0C0',
+  'nebula rainbow': '#FF69B4',
+  'nebula gold dust': '#FFD700',
+  'nebula stardust': '#C0C0C0',
 
-  // Matte Fiber
+  // Smoothie HTPLA
+  'super green smoothie': '#32CD32',
+  'blueberry smoothie': '#4169E1',
+  'dragonfruit smoothie': '#FF1493',
+  'orange papaya smoothie': '#FF8C00',
+  'pineapple banana smoothie': '#FFD700',
+
+  // Thermochromic
+  'galactic duel thermochromic': '#1A1A1A',
+  'chlorophylled thermochromic': '#32CD32',
+  'autumn orange thermochromic': '#FF8C00',
+  'just peachy thermochromic': '#FFCBA4',
+  'sour apple thermochromic': '#7CFC00',
+
+  // Glow-in-the-Dark
+  'green glow-in-the-dark': '#ADFF2F',
+
+  // Marble
+  'stone gray marble': '#708090',
+  'white marble': '#F5F5F5',
+
+  // Matte Fiber (Wood)
   'matte fiber black': '#2D2D2D',
   'matte fiber gray': '#6B6B6B',
   'matte fiber grey': '#6B6B6B',
   'matte fiber white': '#E0E0E0',
+  'daffodil wood': '#DAA520',
+  'mahogany wood': '#C04000',
+  'walnut wood': '#5D432C',
 
   // Metal Composites
   'brass': '#B5A642',
@@ -400,14 +494,61 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'steel': '#71797E',
   'stainless steel': '#8B8D8E',
   'magnetic iron': '#48494B',
+  'smooth bronze': '#CD7F32',
+  'copper-filled': '#B87333',
+  'high density stainless steel': '#8B8D8E',
+  'high density iron': '#48494B',
 
   // Carbon Fiber
   'carbon fiber': '#1C1C1C',
   'carbon fiber black': '#1C1C1C',
 
-  // Conductive
+  // Conductive/ESD
   'conductive black': '#1A1A1A',
   'conductive': '#1A1A1A',
+  'static dissipative': '#1A1A1A',
+
+  // Community Inspired
+  'chocolate eruption brown': '#3D2314',
+  'red hot cinnamon': '#D2691E',
+  'international orange': '#FF4F00',
+  'bluish opaque purple': '#5D3FD3',
+  'sophys aqua phresh': '#00CED1',
+  'beach bum beige': '#F5DEB3',
+  'tropical palm green': '#228B22',
+  'watermelon crush red': '#FF3B58',
+  'gloop purple': '#8E44AD',
+  'ecto ooze green': '#7FFF00',
+  'amber alchemy': '#FF7E00',
+  'nice n navy blue': '#000080',
+  'lab coat white': '#FFFFFF',
+  'caution opaque yellow': '#FFFF00',
+  'dereks olive drab': '#6B8E23',
+  'juliettes raspberry jam': '#872657',
+  'dereks good old gray': '#808080',
+  'bobbis purple iris': '#5D3FD3',
+  'atikam teal': '#008080',
+  'lootsef green': '#228B22',
+  'fluorescent yellow': '#CCFF00',
+
+  // c-Matte PLA
+  'jurassic jungle green': '#228B22',
+  'brick red': '#CB4154',
+  'terracotta': '#E2725B',
+  'granite gray': '#676767',
+
+  // PETG
+  'simply clear': '#FFFFFF',
+  'joels highfive blue': '#1E88E5',
+  'simply white': '#FFFFFF',
+  'simply black': '#000000',
+  'amies blood of my enemies': '#8B0000',
+  'toms tangerine orange': '#FF9966',
+
+  // Glass Fiber
+  'blue glass fiber': '#4169E1',
+  'red glass fiber': '#DC143C',
+  'white glass fiber': '#F5F5F5',
 
   // Standard colors
   'black': '#000000',
@@ -421,6 +562,12 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'pink': '#FFC0CB',
   'gray': '#808080',
   'grey': '#808080',
+  'natural': '#F5F5DC',
+  'clear': '#FFFFFF',
+  'teal': '#008080',
+  'gold': '#FFD700',
+  'silver': '#C0C0C0',
+  'brown': '#8B4513',
 };
 
 /**
