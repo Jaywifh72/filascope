@@ -9094,7 +9094,13 @@ Deno.serve(async (req) => {
                                    lineId.includes('eryone__pa-cf') ||
                                    lineId.includes('eryone__pp-cf') ||
                                    lineId.includes('eryone__abs__fiberglass') ||
-                                   lineId.includes('eryone__pla__antibacterial');
+                                   lineId.includes('eryone__pla__antibacterial') ||
+                                   // Proto-Pasta specialty products that share images
+                                   lineId.includes('protopasta__pla-esd__dissipative') ||
+                                   lineId.includes('protopasta__petg-esd__dissipative') ||
+                                   lineId.includes('protopasta__tpu__flexible') ||
+                                   lineId.includes('protopasta__tpu__rigid') ||
+                                   lineId.includes('protopasta__pla__calcium-carbonate');
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
