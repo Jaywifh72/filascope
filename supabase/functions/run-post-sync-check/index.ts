@@ -6422,7 +6422,7 @@ Deno.serve(async (req) => {
     // Verify that products have featured_image populated for detail page display
     
     // Skip image coverage check for CSV-seeded brands with no image data (known limitation)
-    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy', 'gizmo-dorks', 'paramount-3d'];
+    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy', 'gizmo-dorks', 'paramount-3d', 'prusament'];
     const isNoImageBrand = NO_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
@@ -6992,12 +6992,16 @@ Deno.serve(async (req) => {
     // Different weights of the same color (e.g., "Snow White 1kg" and "Snow White 4kg") should share the same hex
     let swatchIssues: Array<{ id: string; title: string; issue: string }> = [];
     
-    // Helper to extract color name from product title (removes weight/diameter)
+    // Helper to extract color name from product title (removes weight/diameter/NFC/Refill suffixes)
     const extractColorFromTitle = (title: string): string => {
-      // Remove common suffixes: "1.75mm", "2.85mm", "1kg", "4kg", "500g", etc.
+      // Remove common suffixes: "1.75mm", "2.85mm", "1kg", "4kg", "500g", NFC, Refill, etc.
       return title
-        .replace(/,?\s*\d+(\.\d+)?\s*(kg|g|mm)\b/gi, '')
-        .replace(/,?\s*\d+\s*spool\b/gi, '')
+        .replace(/,?\s*\d+(\.\d+)?\s*(kg|g|mm)\b/gi, '')  // Weight/diameter
+        .replace(/,?\s*\d+\s*spool\b/gi, '')              // Spool count
+        .replace(/\s*\(nfc\s*compatible\)\s*/gi, '')      // NFC Compatible suffix
+        .replace(/\s*\(nfc\)\s*/gi, '')                   // NFC suffix
+        .replace(/\s*refill\s*/gi, ' ')                   // Refill keyword
+        .replace(/\s+/g, ' ')                             // Normalize spaces
         .trim()
         .toLowerCase();
     };
@@ -7034,7 +7038,7 @@ Deno.serve(async (req) => {
 
       // Brands where Refill + Standard spool variants share the same color hex (by design)
       // For these brands, duplicates like "PETG Black" and "Refill PETG Black" are EXPECTED
-      const refillDuplicateExpectedBrands = ['azurefilm'];
+      const refillDuplicateExpectedBrands = ['azurefilm', 'prusament'];
       const isRefillBrand = refillDuplicateExpectedBrands.includes(brandSlug);
       
       // Only flag as duplicate if DIFFERENT color names share the same hex
@@ -8752,7 +8756,7 @@ Deno.serve(async (req) => {
     
     // Issue 2: Check if too many products are missing images entirely
     // Skip this check for CSV-seeded brands that intentionally have no images
-    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'paramount-3d'];
+    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'paramount-3d', 'prusament'];
     const isNoImageBrandForQuality = NO_IMAGE_BRANDS_FOR_QUALITY.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
