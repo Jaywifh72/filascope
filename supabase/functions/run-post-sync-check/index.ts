@@ -4958,6 +4958,7 @@ GROUP BY product_line_id, material;
 ---
 
 *Last Updated: ${lessons.lastUpdated}*`;
+}
 
 function generateAIFixPrompt(
   brand: string, 
