@@ -878,6 +878,10 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'pastel sky': '#87CEEB',
   'pastel lavender': '#E6E6FA',
   'pastel pink': '#FFD1DC',
+  'pastel peanut': '#D2B48C',
+  'matte pastel peanut': '#D2B48C',
+  'pastel lemon': '#FFFACD',
+  'matte pastel lemon': '#FFFACD',
   
   // === PANCHROMA BASE COLORS (CRITICAL) ===
   'marble white': '#FCFCFC',
@@ -907,12 +911,28 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'gradient galaxy black-grey': '#1a1a1a',
   'gradient matte fall': '#8B4513',
   'gradient matte summer': '#FFD700',
+  'gradient matte spring': '#98FB98',
+  'gradient matte winter': '#B0E0E6',
   'gradient starlight purple': '#9370DB',
   'gradient starlight blue-green': '#20B2AA',
   'gradient crystal aquamarine': '#7FFFD4',
   'gradient crystal tourmaline': '#E0115F',
+  'gradient crystal amethyst': '#9966CC',
+  'gradient crystal citrine': '#FFD700',
+  'gradient crystal sapphire': '#0F52BA',
+  'gradient celestial nebula': '#9B59B6',
+  'gradient celestial aurora': '#00FF7F',
+  'gradient celestial cosmos': '#191970',
   'gradient luminous rainbow': '#FF6B6B',
   'gradient neon': '#39FF14',
+  'gradient translucent': '#FFFFFF',
+  'gradient satin': '#F5F5DC',
+  // === GRADIENT SILK (Element Themed) ===
+  'gradient silk water': '#00CED1',
+  'gradient silk air': '#E0FFFF',
+  'gradient silk fire': '#FF4500',
+  'gradient silk earth': '#8B4513',
+  'gradient silk rainbow': '#FF00FF',
   
   // === DUAL MATTE COLORS (primary color shown) ===
   'dual matte shadow red': '#1E1C18',
@@ -939,8 +959,17 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'starlight black': '#1A1A1A',
   'starlight purple': '#9370DB',
   'starlight blue': '#4169E1',
+  'starlight twilight': '#1C1C3C',
+  'starlight nebula': '#9B59B6',
+  'starlight comet': '#E6E6FA',
+  'starlight neptune': '#4169E1',
+  'starlight aurora': '#00FF7F',
+  'starlight cosmos': '#191970',
   'celestial blue': '#5F9EA0',
   'celestial purple': '#8A2BE2',
+  'celestial nebula': '#9B59B6',
+  'celestial aurora': '#00FF7F',
+  'celestial cosmos': '#191970',
   
   // === GALAXY/METALLIC COLORS ===
   'galaxy black': '#1A1A1A',
@@ -1004,6 +1033,9 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
 const POLYMAKER_COLOR_EXCLUSION_PATTERNS = [
   'you will love it',
   'coming soon',
+  'out of stock',
+  'pre-order',
+  'new arrival',
   'new',
   'best seller',
   'limited edition',
@@ -1013,6 +1045,14 @@ const POLYMAKER_COLOR_EXCLUSION_PATTERNS = [
   'buy',
   'add to cart',
   'select',
+  'save',
+  'discount',
+  'sale',
+  'free shipping',
+  'bundle',
+  'pack',
+  'n/a',
+  'default',
 ];
 
 export function getPolymakerColorHex(colorName: string): string | null {
