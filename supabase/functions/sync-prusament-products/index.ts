@@ -18,7 +18,7 @@ import {
   getPrusamentTdsUrl,
   getPrusamentColorHex,
 } from '../_shared/prusament-defaults.ts';
-import { getColorFamily } from '../_shared/color-utils.ts';
+import { getColorFamily } from '../_shared/color-mapping.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -82,13 +82,14 @@ Deno.serve(async (req) => {
     // Safe Delete
     if (cleanSlate && validProducts.length >= SAFE_DELETE_THRESHOLD) {
       console.log('[Prusament] Safe delete: removing existing products...');
-      const { count } = await supabase
+      const { data: deletedRows } = await supabase
         .from('filaments')
         .delete()
         .ilike('vendor', 'Prusament')
-        .select('*', { count: 'exact', head: true });
-      stats.deleted = count || 0;
-      console.log(`[Prusament] Deleted ${stats.deleted} existing products`);
+        .select('id');
+      const count = deletedRows?.length || 0;
+      stats.deleted = count;
+      console.log(`[Prusament] Deleted ${count} existing products`);
     }
 
     // Batch insert
