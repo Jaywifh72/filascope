@@ -575,6 +575,37 @@ const AI_ROLES = {
       'Skip color-specific image check - product-line level images are expected'
     ]
   },
+  numakersSpecialist: {
+    title: 'Numakers Integration Specialist',
+    triggers: ['numakers', 'pla+', 'petg-hs', 'pla silk', 'pla matte', 'pla starlight', 'tri-color', 'cheat sheet', 'printzy', 'nubox', 'hueforge'],
+    capabilities: [
+      'Shopify platform analysis (numakers.com) - standard JSON API available',
+      'CSV-seeded sync pipeline architecture (~130 products, 13 product lines)',
+      'US-based filament brand with vibrant creative color naming',
+      'High-Speed PETG (PETG-HS) variant handling - designed for 300mm/s printing',
+      'PLA Specialty lines (Silk, Matte, Starlight, Glow, Marble, Wood, CF)',
+      'Tri-Color Silk PLA gradient products with representative hex generation',
+      'Blog-based Cheat Sheets (Cura, PrusaSlicer, Bambu Studio) instead of PDF TDS',
+      'Creative color name mapping (Thanos Purple, Ryobix Green, Dragon\'s Hide)',
+      'Shopify CDN image URL pattern: Numakers_{Material}_{Color}_Spool_Printzy.png'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (NUMAKERS_SEED_DATA) as primary source - Shopify JSON lacks curated color-to-hex mappings',
+      'Exclude NuBox Surplus products - subscription mystery items with unpredictable colors',
+      'Exclude Hueforge Packs - multi-spool bundles, not individual filaments',
+      'Exclude Warehouse Clearance - older formula mystery items, not reliable catalog',
+      'Tri-color Silk products use first color as representative hex (e.g., "Copper-Silver-Gold" → copper hex #B87333)',
+      'PETG-HS and PETG Translucent are SEPARATE product lines (different formulas)',
+      'PLA Starlight has glitter/sparkle finish - abrasive, may wear brass nozzles',
+      'All prices are USD, no regional variants (US-only shipping)',
+      'Cheat Sheets at numakers.com/pages/cheat-sheets used as TDS equivalent',
+      'Creative color names require explicit NUMAKERS_COLOR_MAPPING (e.g., "Dragon\'s Hide" → #2F4F4F)',
+      'Skip hex validation - curated color mappings in numakers-defaults.ts',
+      'Skip price validation - CSV seed contains curated prices',
+      'Image URLs follow pattern: {Color}_Spool_Printzy.png on Shopify CDN',
+      'Expected 13 product lines: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -1253,6 +1284,73 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'colorfabb-specials': 'colorFabb Specials (Fills)'
     },
     lastUpdated: '2026-01-11'
+  },
+  'numakers': {
+    platform: 'Shopify (numakers.com) - JSON API available but CSV-seeded for color accuracy',
+    knownLimitations: [
+      '❌ Shopify JSON API lacks curated hex codes - colors like "Thanos Purple" need manual mapping',
+      '❌ NuBox Surplus items are subscription mystery products - cannot reliably catalog',
+      '❌ Hueforge Packs are multi-spool bundles - not individual filament products',
+      '❌ Warehouse Clearance items are older formula mystery colors - not reliable',
+      '❌ No PDF TDS files - uses blog-based "Cheat Sheets" for slicer profiles',
+      '❌ Tri-color Silk products cannot have single accurate hex - use first color as representative'
+    ],
+    workingSolutions: [
+      '✅ CSV seed (NUMAKERS_SEED_DATA) contains all ~130 curated product variants',
+      '✅ NUMAKERS_COLOR_MAPPING provides hex codes for creative color names (70+ colors)',
+      '✅ NUMAKERS_CHEAT_SHEETS constant maps materials to blog URLs (Cura, PrusaSlicer, Bambu Studio)',
+      '✅ Safe delete pattern with threshold (50+ products) for clean slate sync',
+      '✅ Image URLs follow predictable Shopify CDN pattern with "Printzy" suffix',
+      '✅ shouldExcludeNumakersProduct() filters NuBox, Hueforge, and Clearance items',
+      '✅ Tri-color products use first component color as representative hex'
+    ],
+    failedApproaches: [
+      '⚠️ Relying on Shopify JSON API alone - lacks curated color-to-hex mappings',
+      '⚠️ Including NuBox/Hueforge/Clearance products - not standard catalog items',
+      '⚠️ Using generic color name lookup - creative names like "Molten Sol" need explicit mapping',
+      '⚠️ Attempting to scrape TDS PDFs - Numakers uses blog-based Cheat Sheets instead',
+      '⚠️ Treating PETG-HS and PETG Translucent as one product - they are separate formulas'
+    ],
+    currentStatus: {
+      'expectedProductLines': '13 (PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS)',
+      'expectedVariants': '~130 individual color variants',
+      'cheatSheetCoverage': '6 materials (PLA+, PLA-CF, PETG, ASA, Silk PLA, ABS)',
+      'priceRange': '$17.99 - $32.99 USD'
+    },
+    keyFiles: [
+      'supabase/functions/sync-numakers-products/index.ts - Main sync function with CSV seed',
+      'supabase/functions/_shared/numakers-defaults.ts - NUMAKERS_SEED_DATA, color mappings, cheat sheet URLs'
+    ],
+    extractionPriority: [
+      '1. Verify all CSV products are processed (check for skipped entries)',
+      '2. Ensure 13 unique product lines are created',
+      '3. Validate color hex codes are properly assigned',
+      '4. Confirm Cheat Sheet URLs are populated for each material',
+      '5. Verify excluded products are not synced (NuBox, Hueforge, Clearance)'
+    ],
+    manualExtractionProcess: [
+      '1. Products come from embedded CSV in sync function - DO NOT scrape Shopify',
+      '2. To add new products: Update NUMAKERS_SEED_DATA in numakers-defaults.ts',
+      '3. To add new colors: Update NUMAKERS_COLOR_MAPPING in numakers-defaults.ts',
+      '4. To add new Cheat Sheet URLs: Update NUMAKERS_CHEAT_SHEETS in numakers-defaults.ts',
+      '5. Run clean slate sync to refresh all data from updated seed'
+    ],
+    productSlugReference: {
+      'pla-plus': 'PLA+ Filament (35 colors)',
+      'pla-silk': 'PLA Silk (11 colors)',
+      'tri-color-silk': 'Tri-Color Silk PLA (9 colors)',
+      'pla-matte': 'PLA Matte (13 colors)',
+      'pla-starlight': 'PLA Starlight (5 colors)',
+      'pla-glow': 'PLA Glow in the Dark (5 colors)',
+      'pla-marble': 'PLA Marble (1 color)',
+      'pla-wood': 'PLA Wood (1 color)',
+      'pla-cf': 'PLA-CF (4 colors)',
+      'petg-hs': 'PETG-HS Filament (16 colors)',
+      'petg-translucent': 'PETG Translucent (9 colors)',
+      'asa': 'ASA Filament (8 colors)',
+      'abs': 'ABS Filament (8 colors)'
+    },
+    lastUpdated: '2026-01-12'
   }
 };
 
@@ -3696,6 +3794,334 @@ ${lessons.failedApproaches.map(f => `${f}`).join('\n')}
 *Last Updated: ${lessons.lastUpdated}*`;
 }
 
+/**
+ * Generate Numakers-specific AI Fix Prompt with comprehensive context
+ */
+function generateNumakersFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['numakers'];
+  const role = AI_ROLES.numakersSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  // AI insights section
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    aiInsightsSection = `
+---
+
+## AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis
+${aiAnalysis.rootCause}
+` : ''}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected
+${aiAnalysis.correctBehavior}
+` : ''}
+
+**Extraction Pattern**: ${aiAnalysis.extractionPattern}
+**Missing Reason**: ${aiAnalysis.missingReason}
+
+### Missing Color Hex Mappings
+Add these to NUMAKERS_COLOR_MAPPING in \`_shared/numakers-defaults.ts\`:
+\`\`\`typescript
+${Object.entries(aiAnalysis.colorMappings || {}).map(([c, h]) => `'${c}': '${h}',`).join('\n')}
+\`\`\`
+`;
+  }
+
+  return `# Numakers Integration Specialist - Post Sync Check Fixes
+
+You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database and comparison platform.
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+## CRITICAL LESSONS LEARNED
+
+${(role.lessons || []).map(l => `- ${l}`).join('\n')}
+
+---
+
+## NUMAKERS PLATFORM OVERVIEW
+
+**Website**: numakers.com (Shopify)
+**Sync Architecture**: CSV-seeded (NUMAKERS_SEED_DATA)
+**Spool Weight**: 1kg standard (no bulk options sold individually)
+**Diameter**: 1.75mm only (no 2.85mm products)
+**Currency**: USD only
+
+### Product Line Architecture (13 lines)
+
+| Product Line | Material | Colors | URL |
+|--------------|----------|--------|-----|
+| PLA+ Filament | PLA+ | 35 | /products/pla-filament |
+| PLA Silk | PLA-SILK | 11 | /products/pla-silk |
+| Tri-Color Silk PLA | PLA-SILK | 9 | /products/tri-color-silk-pla |
+| PLA Matte | PLA-MATTE | 13 | /products/pla-matte |
+| PLA Starlight | PLA-STARLIGHT | 5 | /products/pla-starlight |
+| PLA Glow in the Dark | PLA-GLOW | 5 | /products/pla-glow-in-the-dark |
+| PLA Marble | PLA-MARBLE | 1 | /products/pla-marble |
+| PLA Wood | PLA-WOOD | 1 | /products/pla-wood |
+| PLA-CF | PLA-CF | 4 | /products/pla-cf |
+| PETG-HS Filament | PETG-HS | 16 | /products/petg-hs-filament |
+| PETG Translucent | PETG-TRANSLUCENT | 9 | /products/petg-translucent |
+| ASA Filament | ASA | 8 | /products/asa-filament |
+| ABS Filament | ABS | 8 | /products/abs-filament |
+
+### Excluded Products (NOT synced)
+- **NuBox Surplus** (Printzy's Laboratory) - Subscription mystery items
+- **Hueforge Packs** - Multi-spool bundles
+- **Warehouse Clearance** - Older formula mystery colors
+
+### Cheat Sheet URLs (TDS Equivalent)
+- PLA+: numakers.com/blogs/news/pla-plus-{slicer}-settings
+- PETG: numakers.com/blogs/news/petg-{slicer}
+- ASA: numakers.com/blogs/news/asa-{slicer}
+- ABS: numakers.com/blogs/news/abs-filament-{slicer}
+- PLA Silk: numakers.com/blogs/news/pla-silk-{slicer}
+- PLA-CF: numakers.com/blogs/news/pla-cf-{slicer}
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+When diagnosing Numakers sync issues, check in this order:
+
+### RC1: CSV Seed Data Issues
+- Is the product missing from NUMAKERS_SEED_DATA?
+- Is the entry format correct (material, filamentLine, productUrl, color, imageUrl, colorHex)?
+- Are excluded products (NuBox, Hueforge, Clearance) incorrectly included?
+
+### RC2: Color Extraction Issues
+- Is the color correctly spelled in the seed data?
+- Is there a hex code in colorHex field, or is it falling back to NUMAKERS_COLOR_MAPPING?
+- Is the color name normalized correctly for lookup?
+
+### RC3: Product Line ID Issues
+- Is generateNumakersProductLineId() producing correct IDs?
+- Are Tri-Color Silk products separated from regular Silk?
+- Is PETG-HS separated from PETG Translucent?
+
+### RC4: Material Classification Issues
+- Is the material field correct (PLA+, PLA-SILK, PETG-HS, etc.)?
+- Are specialty lines (Starlight, Glow, Marble, Wood) correctly identified?
+- Are finish types (Silk, Matte, etc.) being detected?
+
+### RC5: Image URL Issues
+- Does the image URL follow Shopify CDN pattern?
+- Is the color name correctly formatted for URL (underscores, no spaces)?
+- Are there broken image links in the seed data?
+
+---
+
+## FIX IMPLEMENTATION ORDER
+
+### Step 1: Check CSV Seed Data
+**File:** \`supabase/functions/_shared/numakers-defaults.ts\`
+
+Verify NUMAKERS_SEED_DATA contains the product:
+\`\`\`typescript
+{ 
+  material: 'PLA+', 
+  filamentLine: 'PLA+ Filament', 
+  productUrl: 'https://numakers.com/products/pla-filament', 
+  color: 'Thanos Purple', 
+  imageUrl: 'https://cdn.shopify.com/...', 
+  colorHex: '#663399' 
+}
+\`\`\`
+
+### Step 2: Fix Color Mapping (if colorHex missing in seed)
+**File:** \`supabase/functions/_shared/numakers-defaults.ts\`
+
+Add to NUMAKERS_COLOR_MAPPING:
+\`\`\`typescript
+export const NUMAKERS_COLOR_MAPPING: Record<string, string> = {
+  'thanos purple': '#663399',
+  'dragon\\'s hide': '#2F4F4F',
+  'ryobix green': '#9ACD32',
+  'molten sol': '#FF4500',
+  // ... add missing colors
+};
+\`\`\`
+
+### Step 3: Fix Product Line ID Generation
+**File:** \`supabase/functions/_shared/numakers-defaults.ts\`
+
+Check generateNumakersProductLineId() logic ensures:
+- PLA+ → numakers__pla-plus__pla-plus-filament
+- PLA Silk → numakers__pla-silk__pla-silk
+- Tri-Color Silk → numakers__pla-silk__tri-color-silk-pla
+- PETG-HS → numakers__petg-hs__petg-hs-filament
+- PETG Translucent → numakers__petg-translucent__petg-translucent
+
+### Step 4: Fix Exclusion Logic
+**File:** \`supabase/functions/_shared/numakers-defaults.ts\`
+
+Verify shouldExcludeNumakersProduct() catches:
+\`\`\`typescript
+export function shouldExcludeNumakersProduct(title: string): boolean {
+  const t = title.toLowerCase();
+  return t.includes('nubox') ||
+         t.includes('laboratory') ||
+         t.includes('hueforge') ||
+         t.includes('clearance') ||
+         t.includes('surplus') ||
+         t.includes('mystery');
+}
+\`\`\`
+
+---
+
+## VERIFICATION QUERIES
+
+### Product Line Count (should be 13)
+\`\`\`sql
+SELECT COUNT(DISTINCT product_line_id) as product_lines
+FROM filaments WHERE vendor ILIKE '%numakers%';
+\`\`\`
+
+### Product Breakdown by Line
+\`\`\`sql
+SELECT product_line_id, COUNT(*) as variants
+FROM filaments WHERE vendor ILIKE '%numakers%'
+GROUP BY product_line_id ORDER BY product_line_id;
+\`\`\`
+
+### Hex Coverage (should be 100%)
+\`\`\`sql
+SELECT 
+  COUNT(*) as total,
+  COUNT(color_hex) as with_hex,
+  ROUND(100.0 * COUNT(color_hex) / COUNT(*), 1) as percent
+FROM filaments WHERE vendor ILIKE '%numakers%';
+\`\`\`
+
+### Image Coverage (should be 100%)
+\`\`\`sql
+SELECT 
+  COUNT(*) as total,
+  COUNT(featured_image) as with_image,
+  ROUND(100.0 * COUNT(featured_image) / COUNT(*), 1) as percent
+FROM filaments WHERE vendor ILIKE '%numakers%';
+\`\`\`
+
+### No Excluded Products (should return 0)
+\`\`\`sql
+SELECT * FROM filaments 
+WHERE vendor ILIKE '%numakers%' 
+AND (product_title ILIKE '%nubox%' OR product_title ILIKE '%hueforge%' OR product_title ILIKE '%clearance%');
+\`\`\`
+
+### Price Range Validation
+\`\`\`sql
+SELECT MIN(variant_price) as min_price, MAX(variant_price) as max_price
+FROM filaments WHERE vendor ILIKE '%numakers%';
+-- Expected: $17.99 - $32.99
+\`\`\`
+
+---
+
+## Fix Post Sync Check Issues for Numakers
+
+### Summary
+- **Brand**: ${brand} (slug: numakers)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary || 'None - all checks passing!'}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+${aiInsightsSection}
+
+---
+
+## KEY FILES FOR NUMAKERS
+
+- \`supabase/functions/sync-numakers-products/index.ts\` - Main sync function with CSV seed
+- \`supabase/functions/_shared/numakers-defaults.ts\` - NUMAKERS_SEED_DATA, color mappings, cheat sheets
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+
+## SYNC EXECUTION STEPS
+
+1. **Deploy** updated edge functions (\`sync-numakers-products\` and \`run-post-sync-check\`)
+2. **Run Clean Slate** sync for Numakers from Brand Sync Manager
+3. **Check edge function logs** for:
+   - Skipped entries logged (NuBox, Hueforge, Clearance)
+   - Product count around ~130 variants
+   - 13 unique product_line_ids
+4. **Run Post Sync Check** again - should show 0 errors
+5. **Spot-check** a few product cards to confirm:
+   - Correct card count (13 product lines)
+   - Creative color names displayed correctly
+   - Cheat Sheet links work
+   - Tri-color products show representative hex
+
+---
+
+*Last Updated: ${lessons.lastUpdated}*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -3748,6 +4174,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for NinjaTek
   if (brandSlug === 'ninjatek') {
     return generateNinjatekFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Numakers
+  if (brandSlug === 'numakers') {
+    return generateNumakersFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -6089,7 +6520,7 @@ Deno.serve(async (req) => {
       'fusion-filaments': 8,    // CSV-seeded: HTPLA+, HT-PET, ASA, EasyASA, ABS Gloss, ABS Matte, HT-ABS Matte, PCTG
       'spectrum-filaments': 30, // Large catalog with ReFill options
       'ultimaker': 10,          // S-Series materials
-      'numakers': 8,            // PLA, PETG, TPU lines
+      'numakers': 13,           // CSV-seeded: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS
       'recreus': 6,             // FilaFlex series
       'treed-filaments': 15,    // Ecogenius, Shogun, Carbonio, etc.
       'voxelpla': 5,            // Basic PLA lines
@@ -6461,7 +6892,7 @@ Deno.serve(async (req) => {
     
     // Only run for brands that should have accurate live pricing
     // Skip CSV-seeded brands that don't rely on live pricing
-    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek'];
+    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
     const shouldRunLivePriceCheck = !livePriceSkipBrands.includes(brandSlug);
     
     if (shouldRunLivePriceCheck) {
@@ -6929,7 +7360,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
