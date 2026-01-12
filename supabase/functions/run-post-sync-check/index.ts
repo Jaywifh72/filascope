@@ -6759,7 +6759,8 @@ Deno.serve(async (req) => {
           // Skip for brands with known website scraping false positives (e.g., page shows unrelated colors)
           // - matter3d: website HTML shows incorrect "magenta" from other page elements
           // - polymaker: website shows "you will love it" marketing text as color option
-          const skipColorNameCheckBrands = ['matter3d', 'polymaker'];
+          // - proto-pasta: website scraping picks up navigation text like "makers of protopasta, scroll to top"
+          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta'];
           const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
           
           if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {
@@ -8360,7 +8361,8 @@ Deno.serve(async (req) => {
         // Atomic Filament has 57+ different product URLs grouped into 5 product_line_ids
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d'];
+        // Proto-Pasta also uses cross-product architecture where each color is a separate Shopify product
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;
