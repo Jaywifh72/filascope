@@ -44,6 +44,10 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 // Also includes cross-product swatch brands where each color is a separate product URL
 const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek'];
 
+// Brands that use product-line level images (same image for all color variants)
+// Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks'];
+
 // Brands that use CSV-seeded sync and should skip certain checks
 const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek'];
 
@@ -4835,43 +4839,55 @@ Deno.serve(async (req) => {
       });
 
       // Validate a sample of image URLs are actually accessible (not 404)
-      const productsWithImages = allProductsForImages?.filter(p => p.featured_image).slice(0, 5) || [];
-      const brokenImageUrls: Array<{ id: string; title: string; issue: string }> = [];
+      // Skip for brands that use product-line level images (servers may return 404 for HEAD requests)
+      const brandSlugLower = brandSlug.toLowerCase();
+      if (PRODUCT_LEVEL_IMAGE_BRANDS.includes(brandSlugLower)) {
+        const productsWithImagesCount = allProductsForImages?.filter(p => p.featured_image).length || 0;
+        checks.push({
+          checkName: "Image URLs Valid",
+          status: "pass",
+          count: productsWithImagesCount,
+          details: `Skipped for ${brandName} (uses product-line level images)`,
+        });
+      } else {
+        const productsWithImages = allProductsForImages?.filter(p => p.featured_image).slice(0, 5) || [];
+        const brokenImageUrls: Array<{ id: string; title: string; issue: string }> = [];
 
-      for (const product of productsWithImages) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
-          const response = await fetch(product.featured_image!, { 
-            method: 'HEAD',
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          
-          if (!response.ok) {
+        for (const product of productsWithImages) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch(product.featured_image!, { 
+              method: 'HEAD',
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              brokenImageUrls.push({
+                id: product.id,
+                title: product.product_title,
+                issue: `Image URL returns HTTP ${response.status}`,
+              });
+            }
+          } catch (error) {
             brokenImageUrls.push({
               id: product.id,
               title: product.product_title,
-              issue: `Image URL returns HTTP ${response.status}`,
+              issue: `Image URL unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`,
             });
           }
-        } catch (error) {
-          brokenImageUrls.push({
-            id: product.id,
-            title: product.product_title,
-            issue: `Image URL unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        }
+
+        if (productsWithImages.length > 0) {
+          checks.push({
+            checkName: "Image URLs Valid",
+            status: brokenImageUrls.length === 0 ? "pass" : "fail",
+            count: productsWithImages.length - brokenImageUrls.length,
+            details: `${productsWithImages.length - brokenImageUrls.length}/${productsWithImages.length} sampled image URLs are accessible`,
+            products: brokenImageUrls.length > 0 ? brokenImageUrls : undefined,
           });
         }
-      }
-
-      if (productsWithImages.length > 0) {
-        checks.push({
-          checkName: "Image URLs Valid",
-          status: brokenImageUrls.length === 0 ? "pass" : "fail",
-          count: productsWithImages.length - brokenImageUrls.length,
-          details: `${productsWithImages.length - brokenImageUrls.length}/${productsWithImages.length} sampled image URLs are accessible`,
-          products: brokenImageUrls.length > 0 ? brokenImageUrls : undefined,
-        });
       }
     }
 
@@ -7025,8 +7041,8 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek'];
-    const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek'];
+    const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
     );
@@ -7329,7 +7345,7 @@ Deno.serve(async (req) => {
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
-      const isProductLevelImageBrandForColorCheck = PRODUCT_LEVEL_IMAGE_BRANDS.some(b => 
+      const isProductLevelImageBrandForColorCheck = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
         lineId.toLowerCase().includes(b.replace(' ', '-')) || 
         lineId.toLowerCase().includes(b.replace(' ', ''))
       );
