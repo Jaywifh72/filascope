@@ -42,14 +42,14 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d'];
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
-const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture'];
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -440,6 +440,32 @@ const AI_ROLES = {
   },
   formFuturaSpecialist: {
     title: 'FormFutura Integration Specialist',
+  paramountSpecialist: {
+    title: 'Paramount 3D Integration Specialist',
+    triggers: ['paramount', 'paramount 3d', 'paramount-3d', 'geode', 'flexpla', 'stone gray', 'military green', 'master spool', 'wix', 'aztec gold', 'colossus copper'],
+    capabilities: [
+      'Wix platform analysis (paramount-3d.com - US store)',
+      'CSV-seeded sync pipeline architecture (~113 products, 8+ material lines)',
+      'US industrial filament supplier (est. 1994)',
+      'Themed/creative color names (Military, Automotive, Stone textures, Skin tones)',
+      'FlexPLA specialty line (semi-flexible PLA)',
+      'Master Spool refill variants',
+      'Cross-product swatch architecture (same URL for material, different color variants)',
+      'USD pricing with free ground shipping'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (PARAMOUNT_SEED_DATA) as primary source',
+      'Wix platform uses static.wixstatic.com for images',
+      'Cross-product swatch architecture - all PLA colors share /pla URL',
+      'Stone textures (Geode, Medusa, Karnak) have special finish_type',
+      'Master Spool products are refills without spool',
+      'FlexPLA is semi-flexible PLA, not TPU',
+      'Skip URL consistency check - cross-product swatch brand',
+      'Expected 11+ product lines for consumer filaments',
+      'PVA and Nylon are single-color products (Natural only)',
+      'Curated hex codes in paramount-seed.ts - hex validation is SKIPPED'
+    ]
+  },
     triggers: ['formfutura', 'odoo', 'hdglass', 'apollox', 'volcano', 'epla', 'easyfil', 'reform', 'luvocom', 'athenax', 'pythonflex', 'styx'],
     capabilities: [
       'Odoo 16 e-commerce platform analysis (NOT Shopify)',
@@ -5916,7 +5942,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -7015,7 +7041,7 @@ Deno.serve(async (req) => {
       'treed-filaments': 15,    // Ecogenius, Shogun, Carbonio, etc.
       'voxelpla': 5,            // Basic PLA lines
       'ziro': 10,               // PLA, PETG, Silk, etc.
-      'paramount-3d': 8,        // FlexPLA, Stone, Shimmer lines
+      'paramount-3d': 11,       // CSV-seeded: PLA (standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon
       'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
       'kingroon': 17,           // CSV-seeded: PLA Basic, Matte PLA, Silk Gold, Silk Tricolor, Silk Rainbow (Candy/Macaroon/Universer), PETG Standard, HS-PETG, TPU Standard, ABS Standard, Marble PLA, Glow PLA, PLA-CF, PETG-CF, ABS-CF, PA-CF
       'ic3d-printers': 10,      // 10 product lines: ABS, PETG, PETG-CF, PLA, PLA+, Matte PLA+, UV-PETG, rPETG, Matte rPETG, PolyHex
@@ -7850,7 +7876,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d']; // CSV-seeded brands have curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
@@ -7962,7 +7988,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -8171,7 +8197,10 @@ Deno.serve(async (req) => {
                                       lineId.includes('overture__pla-refill__refill') ||      // PLA Refill only 1 variant
                                       lineId.includes('overture__nylon__easy-nylon') ||       // Easy Nylon only 1 color
                                       lineId.includes('overture__abs__standard') ||           // ABS only 1 color
-                                      lineId.includes('overture__asa__standard')              // ASA only 1 color
+                                      lineId.includes('overture__asa__standard') ||           // ASA only 1 color
+                                      // Paramount 3D single-color specialty products (CSV-seeded)
+                                      lineId.includes('paramount__pva__') ||                  // PVA only 1 color (Natural)
+                                      lineId.includes('paramount__nylon__')                   // Nylon only 1 color (Natural)
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
