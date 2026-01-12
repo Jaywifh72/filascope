@@ -584,6 +584,20 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'conductive black': '#1A1A1A',
   'conductive': '#1A1A1A',
   'static dissipative': '#1A1A1A',
+  'electrically conductive': '#1A1A1A',
+  'electrically conductive composite': '#1A1A1A',
+  'electrically conductive pla': '#1A1A1A',
+  
+  // Carbon Fiber PETG and Polyketone (specialty single-color products)
+  'carbon fiber petg': '#1C1C1C',
+  'carbon fiber polyketone': '#1C1C1C',
+  'cf petg': '#1C1C1C',
+  'cf polyketone': '#1C1C1C',
+  
+  // Glass Fiber (all variants)
+  'glass fiber polyketone': '#F5F5DC',
+  'glass fiber htpla': '#F5F5DC',
+  'glass fiber': '#F5F5DC',
 
   // Community Inspired
   'chocolate eruption brown': '#3D2314',
@@ -602,6 +616,8 @@ export const PROTOPASTA_COLOR_MAPPING: Record<string, string> = {
   'caution opaque yellow': '#FFFF00',
   'dereks olive drab': '#6B8E23',
   'juliettes raspberry jam': '#872657',
+  "juliette's raspberry jam": '#872657',
+  'juliettes raspberry jam htpla': '#872657',
   'dereks good old gray': '#808080',
   'bobbis purple iris': '#5D3FD3',
   'atikam teal': '#008080',
@@ -756,12 +772,24 @@ export function cleanProtoPastaTitle(title: string): string {
 export function extractColorFromProductTitle(title: string): string | null {
   if (!title) return null;
   
+  const titleLower = title.toLowerCase();
+  
+  // Handle single-color specialty products where the product IS the color
+  if (/carbon\s*fiber.*petg|cf.*petg/i.test(titleLower)) return '#1C1C1C';
+  if (/carbon\s*fiber.*polyketone|cf.*polyketone/i.test(titleLower)) return '#1C1C1C';
+  if (/carbon\s*fiber.*htpla|cf.*htpla/i.test(titleLower)) return '#1C1C1C';
+  if (/carbon\s*fiber.*pla|cf.*pla/i.test(titleLower)) return '#1C1C1C';
+  if (/glass\s*fiber/i.test(titleLower)) return '#F5F5DC';
+  if (/electrically\s*conductive/i.test(titleLower)) return '#1A1A1A';
+  if (/static\s*dissipative/i.test(titleLower)) return '#1A1A1A';
+  
   // Remove product line descriptors to isolate color
   let colorPart = title
-    .replace(/HTPLA|PLA|PETG|TPU|TPE|Composite|Metal|Carbon\s*Fiber|CF|Conductive|Glass\s*Fiber/gi, '')
+    .replace(/HTPLA|PLA|PETG|TPU|TPE|Composite|Metal|Carbon\s*Fiber|CF|Conductive|Glass\s*Fiber|Static\s*Dissipative|Electrically/gi, '')
     .replace(/\s*-\s*\/\s*.*/g, '') // Remove variant suffix
     .replace(/\s*-?\s*(?:Spool|Coil)\s*$/gi, '')
     .replace(/\s*(?:50g|100g|500g|1kg|2kg|3kg)\s*/gi, '')
+    .replace(/[']/g, "'") // Normalize apostrophes
     .replace(/\s+/g, ' ')
     .trim();
   

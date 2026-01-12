@@ -171,11 +171,19 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       const price = parseFloat(variant.price);
       if (isNaN(price) || price <= 0) continue;
 
-      // Build full title
+      // Build full title - avoid adding empty/weight-only variants that cause "- /" artifacts
       const variantTitle = variant.title !== 'Default Title' ? variant.title : '';
-      const fullTitle = variantTitle
-        ? `${product.title} - ${variantTitle}`
-        : product.title;
+      let fullTitle = product.title;
+      if (variantTitle) {
+        // Only add variant title if it contains meaningful color info (not just weight/spool info)
+        const isWeightOnly = /^\s*(?:\d+\s*(?:g|kg)?\s*(?:Spool|Coil)?|Default\s*Title|\/\s*\d+\s*g?)\s*$/i.test(variantTitle);
+        const hasSlashWeight = variantTitle.includes('/') && /\/\s*\d+\s*g/i.test(variantTitle);
+        if (!isWeightOnly && !hasSlashWeight) {
+          fullTitle = `${product.title} - ${variantTitle}`;
+        }
+      }
+      // Clean title IMMEDIATELY to prevent "- /" artifacts from persisting
+      fullTitle = cleanProtoPastaTitle(fullTitle);
 
       // Extract weight and diameter from variant title
       const weightGrams = extractProtoPastaWeight(variantTitle || product.title);

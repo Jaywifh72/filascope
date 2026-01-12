@@ -7417,7 +7417,7 @@ Deno.serve(async (req) => {
     // that occur due to mismatches between product_line_id format and display logic.
     
     // Skip brands that use verbose seed titles but have clean UI display names (by design)
-    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker'];
+    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta'];
     const uiDisplayIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Simulate formatProductLineIdForDisplay logic (from src/lib/productNameUtils.ts)
@@ -7736,7 +7736,7 @@ Deno.serve(async (req) => {
       'elegoo': 13,             // PLA Standard, Silk, Matte, Sparkle, Galaxy, Marble, Metal, Wood, PLA-CF, PETG Pro, PETG-CF, PETG-GF, Rapid PETG
       'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
       'push-plastic': 15,       // PLA, PETG, ABS, ASA, Nylon, PC, PEI, etc.
-      'proto-pasta': 15,        // PLA, HTPLA, PLA Composites, CFPLA, etc.
+      'proto-pasta': 31,        // 31 distinct product lines: HTPLA (standard, opaque, translucent, glitter, metallic, nebula, reflective, thermochromic, smoothie, glow, marble, matte-fiber, wood, brass, bronze, copper), PLA (iron, steel, cf, conductive, esd, calcium-carbonate), PETG (standard, cf, esd), HFPLA (c-matte), POK (cf), TPU (flexible, rigid), HTPLA-CF, HTPLA-GF
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
       'eryone': 54,             // 54 distinct filament lines from 318-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, PA, PP + all variants)
@@ -8966,8 +8966,12 @@ Deno.serve(async (req) => {
                                       lineId.includes('protopasta__htpla__glow') ||           // Glow limited colors
                                       lineId.includes('protopasta__htpla__thermochromic') ||  // Thermochromic limited colors
                                       lineId.includes('protopasta__petg-cf__') ||             // PETG-CF only in black
-                                      lineId.includes('protopasta__pla-dissipative__') ||     // ESD materials limited colors
-                                      lineId.includes('protopasta__petg-dissipative__') ||    // ESD PETG limited colors
+                                      lineId.includes('protopasta__pla-esd__') ||             // ESD materials limited colors
+                                      lineId.includes('protopasta__petg-esd__') ||            // ESD PETG limited colors
+                                      lineId.includes('protopasta__htpla-gf__') ||            // Glass Fiber HTPLA limited colors
+                                      lineId.includes('protopasta__pok-cf__') ||              // Polyketone CF only in black
+                                      lineId.includes('protopasta__pla__calcium-carbonate') || // Calcium Carbonate limited colors
+                                      lineId.includes('protopasta__tpu__') ||                 // TPU limited colors
                                       // Polymaker single-color specialty products
                                       lineId.includes('polymaker__') && (
                                         lineId.includes('fiberon-') ||              // All Fiberon engineering materials (CF/GF/ESD)
