@@ -322,18 +322,19 @@ export const NINJATEK_TDS_URLS: Record<string, string> = {
 // ============================================================================
 
 export const NINJATEK_PRODUCT_IMAGES: Record<string, string> = {
-  // NinjaTek TPU product images (from ninjatek.com product pages)
-  'ninjaflex': 'https://ninjatek.com/wp-content/uploads/2016/11/NinjaFlex.png',
-  'edge': 'https://ninjatek.com/wp-content/uploads/2018/09/Edge.png',
-  'chinchilla': 'https://ninjatek.com/wp-content/uploads/2019/01/Chinchilla.png',
-  'cheetah': 'https://ninjatek.com/wp-content/uploads/2016/11/Cheetah.png',
-  'armadillo': 'https://ninjatek.com/wp-content/uploads/2016/11/Armadillo.png',
-  'eel': 'https://ninjatek.com/wp-content/uploads/2018/04/Eel.png',
-  // ColorFabb products (use NinjaTek-hosted images when available)
-  'colorfabb-asa': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-ASA.png',
-  'colorfabb-pla': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-PLA.png',
-  'colorfabb-co-polyesters': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-nGen.png',
-  'colorfabb-specials': 'https://ninjatek.com/wp-content/uploads/2018/04/colorFabb-Specials.png',
+  // NinjaTek TPU product images - using new spool-ninjahead-{color}-1600x1600.jpg pattern
+  // Each product line uses a representative color image
+  'ninjaflex': 'https://ninjatek.com/wp-content/uploads/spool-ninjahead-snow-white-1600x1600.jpg',
+  'edge': 'https://ninjatek.com/wp-content/uploads/spool-ninjahead-midnight-black-1600x1600.jpg',
+  'chinchilla': 'https://ninjatek.com/wp-content/uploads/spool-ninjahead-sky-blue-1600x1600.jpg',
+  'cheetah': 'https://ninjatek.com/wp-content/uploads/spool-ninjahead-lava-orange-1600x1600.jpg',
+  'armadillo': 'https://ninjatek.com/wp-content/uploads/spool-ninjahead-sapphire-blue-1600x1600.jpg',
+  'eel': 'https://ninjatek.com/wp-content/uploads/spool-ninjahead-midnight-black-1600x1600.jpg',
+  // ColorFabb products - use ColorFabb's own product images
+  'colorfabb-asa': 'https://colorfabb.com/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/a/s/asa-traffic-white.jpg',
+  'colorfabb-pla': 'https://colorfabb.com/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/p/l/pla-economy-white.jpg',
+  'colorfabb-co-polyesters': 'https://colorfabb.com/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/n/g/ngen-white.jpg',
+  'colorfabb-specials': 'https://colorfabb.com/media/catalog/product/cache/1/image/9df78eab33525d08d6e5fb8d27136e95/w/o/woodfill-fine.jpg',
 };
 
 export function getNinjatekProductImage(productLine: NinjatekProductLine | null): string | null {
