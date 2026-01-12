@@ -7041,7 +7041,7 @@ Deno.serve(async (req) => {
       'treed-filaments': 15,    // Ecogenius, Shogun, Carbonio, etc.
       'voxelpla': 5,            // Basic PLA lines
       'ziro': 10,               // PLA, PETG, Silk, etc.
-      'paramount-3d': 11,       // CSV-seeded: PLA (standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon
+      'paramount-3d': 14,       // CSV-seeded: PLA (7 sub-lines: standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon = 14 total product lines
       'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
       'kingroon': 17,           // CSV-seeded: PLA Basic, Matte PLA, Silk Gold, Silk Tricolor, Silk Rainbow (Candy/Macaroon/Universer), PETG Standard, HS-PETG, TPU Standard, ABS Standard, Marble PLA, Glow PLA, PLA-CF, PETG-CF, ABS-CF, PA-CF
       'ic3d-printers': 10,      // 10 product lines: ABS, PETG, PETG-CF, PLA, PLA+, Matte PLA+, UV-PETG, rPETG, Matte rPETG, PolyHex
@@ -7967,7 +7967,7 @@ Deno.serve(async (req) => {
     
     // Issue 2: Check if too many products are missing images entirely
     // Skip this check for CSV-seeded brands that intentionally have no images
-    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon'];
+    const NO_IMAGE_BRANDS_FOR_QUALITY = ['extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'paramount-3d'];
     const isNoImageBrandForQuality = NO_IMAGE_BRANDS_FOR_QUALITY.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
@@ -8200,7 +8200,9 @@ Deno.serve(async (req) => {
                                       lineId.includes('overture__asa__standard') ||           // ASA only 1 color
                                       // Paramount 3D single-color specialty products (CSV-seeded)
                                       lineId.includes('paramount__pva__') ||                  // PVA only 1 color (Natural)
-                                      lineId.includes('paramount__nylon__')                   // Nylon only 1 color (Natural)
+                                      lineId.includes('paramount__nylon__') ||                // Nylon only 1 color (Natural)
+                                      lineId.includes('paramount__pla__masterspool') ||       // Master Spool refill only 1 variant
+                                      lineId.includes('paramount__pla__matte')                // Matte Black only 1 color
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
