@@ -6443,7 +6443,9 @@ Deno.serve(async (req) => {
 
           // ========== CHECK C: COLOR NAME MATCHING ==========
           // Skip for brands with known website scraping false positives (e.g., page shows unrelated colors)
-          const skipColorNameCheckBrands = ['matter3d']; // Matter3D's website HTML shows incorrect "magenta" from other page elements
+          // - matter3d: website HTML shows incorrect "magenta" from other page elements
+          // - polymaker: website shows "you will love it" marketing text as color option
+          const skipColorNameCheckBrands = ['matter3d', 'polymaker'];
           const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
           
           if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {

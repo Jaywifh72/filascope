@@ -481,7 +481,7 @@ async function fixDuplicateHexCodes(
 async function cleanupStaleParentProducts(supabase: any): Promise<number> {
   console.log('[Polymaker] Cleaning up stale parent products...');
   
-  // Find products with NULL product_line_id that don't have color suffix
+  // Find products with NULL product_line_id
   const { data: staleProducts, error: findError } = await supabase
     .from('filaments')
     .select('id, product_title, product_handle')
@@ -498,37 +498,80 @@ async function cleanupStaleParentProducts(supabase: any): Promise<number> {
     return 0;
   }
   
+  console.log(`[Polymaker] Found ${staleProducts.length} products with NULL product_line_id`);
+  
   let deleted = 0;
+  let assigned = 0;
   
   for (const product of staleProducts) {
-    // Check if title lacks color suffix (no " - ")
-    if (product.product_title && !product.product_title.includes(' - ')) {
-      // Check if this product has color-suffixed siblings
-      const { data: siblings } = await supabase
+    const title = product.product_title || '';
+    const hasColorSuffix = title.includes(' - ');
+    
+    // Check if this product has any siblings (products with same handle that DO have product_line_id)
+    const { data: siblings } = await supabase
+      .from('filaments')
+      .select('id, product_line_id')
+      .ilike('vendor', 'Polymaker')
+      .eq('product_handle', product.product_handle)
+      .not('product_line_id', 'is', null)
+      .limit(1);
+    
+    // Also check for siblings by similar title (handles may differ)
+    const baseTitleLower = title.toLowerCase().replace(/\s+-\s+.*$/, '').trim();
+    const { data: titleSiblings } = await supabase
+      .from('filaments')
+      .select('id, product_line_id')
+      .ilike('vendor', 'Polymaker')
+      .ilike('product_title', `${baseTitleLower}%`)
+      .not('product_line_id', 'is', null)
+      .limit(1);
+    
+    const hasSiblings = (siblings && siblings.length > 0) || (titleSiblings && titleSiblings.length > 0);
+    const siblingProductLineId = siblings?.[0]?.product_line_id || titleSiblings?.[0]?.product_line_id;
+    
+    if (hasSiblings && !hasColorSuffix) {
+      // This is a stale parent product - delete it
+      const { error: deleteError } = await supabase
         .from('filaments')
-        .select('id')
-        .ilike('vendor', 'Polymaker')
-        .eq('product_handle', product.product_handle)
-        .not('product_line_id', 'is', null)
-        .limit(1);
+        .delete()
+        .eq('id', product.id);
       
-      if (siblings && siblings.length > 0) {
-        // This is a stale parent - delete it
-        const { error: deleteError } = await supabase
+      if (!deleteError) {
+        deleted++;
+        console.log(`[Polymaker] Deleted stale parent: ${title}`);
+      }
+    } else if (!hasColorSuffix) {
+      // This is a legitimate single-color product - assign a product_line_id
+      if (siblingProductLineId) {
+        const { error: updateError } = await supabase
           .from('filaments')
-          .delete()
+          .update({ product_line_id: siblingProductLineId })
           .eq('id', product.id);
         
-        if (!deleteError) {
-          deleted++;
-          console.log(`[Polymaker] Deleted stale parent: ${product.product_title}`);
+        if (!updateError) {
+          assigned++;
+          console.log(`[Polymaker] Assigned product_line_id to single-color product: ${title} -> ${siblingProductLineId}`);
+        }
+      } else {
+        // Generate a product_line_id for this orphan single-color product
+        const enrichment = enrichPolymakerProduct(title, null);
+        if (enrichment.product_line_id) {
+          const { error: updateError } = await supabase
+            .from('filaments')
+            .update({ product_line_id: enrichment.product_line_id })
+            .eq('id', product.id);
+          
+          if (!updateError) {
+            assigned++;
+            console.log(`[Polymaker] Generated product_line_id for orphan: ${title} -> ${enrichment.product_line_id}`);
+          }
         }
       }
     }
   }
   
-  console.log(`[Polymaker] Deleted ${deleted} stale parent products`);
-  return deleted;
+  console.log(`[Polymaker] Cleanup complete: ${deleted} deleted, ${assigned} assigned product_line_id`);
+  return deleted + assigned;
 }
 
 // ============================================================================
