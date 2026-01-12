@@ -2025,6 +2025,60 @@ export function getColorFamily(colorName: string | null | undefined): string | n
 }
 
 /**
+ * Derive color family from hex code using RGB analysis
+ * This is a fallback when color name lookup fails
+ */
+export function getColorFamilyFromHex(hex: string | null | undefined): string | null {
+  if (!hex) return null;
+  
+  // Remove # prefix if present
+  const cleanHex = hex.replace('#', '');
+  if (cleanHex.length !== 6) return null;
+  
+  // Parse RGB values
+  const r = parseInt(cleanHex.substring(0, 2), 16);
+  const g = parseInt(cleanHex.substring(2, 4), 16);
+  const b = parseInt(cleanHex.substring(4, 6), 16);
+  
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2 / 255;
+  const saturation = max === min ? 0 : (max - min) / (1 - Math.abs(2 * lightness - 1)) / 255;
+  
+  // Check for neutrals first
+  if (saturation < 0.15) {
+    if (lightness > 0.85) return 'White';
+    if (lightness < 0.2) return 'Black';
+    return 'Gray';
+  }
+  
+  // Calculate hue
+  let hue = 0;
+  const d = max - min;
+  if (d !== 0) {
+    if (max === r) {
+      hue = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+    } else if (max === g) {
+      hue = ((b - r) / d + 2) * 60;
+    } else {
+      hue = ((r - g) / d + 4) * 60;
+    }
+  }
+  
+  // Map hue to color family
+  if (hue < 15 || hue >= 345) return 'Red';
+  if (hue < 45) return 'Orange';
+  if (hue < 75) return 'Yellow';
+  if (hue < 150) return 'Green';
+  if (hue < 210) return 'Cyan';
+  if (hue < 270) return 'Blue';
+  if (hue < 330) return 'Purple';
+  return 'Pink';
+}
+
+/**
  * Extract color name and hex from a product title
  * Looks for color patterns in the title and returns both the extracted name and hex
  */

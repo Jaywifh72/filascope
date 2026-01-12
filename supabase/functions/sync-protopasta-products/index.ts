@@ -26,6 +26,7 @@ import {
   extractColorFromProductTitle,
   extractColorNameFromTitle,
   getColorFamily,
+  getColorFamilyFromHex,
 } from '../_shared/protopasta-defaults.ts';
 import {
   shouldIncludeVariant,
@@ -288,9 +289,14 @@ async function upsertVariants(
         colorHex = getProtoPastaColorHex(variant.variantTitle);
       }
 
-      // Extract color name and derive color_family
+      // Extract color name and derive color_family with hex fallback
       const colorName = extractColorNameFromTitle(variant.fullTitle);
-      const colorFamily = colorName ? getColorFamily(colorName) : null;
+      let colorFamily = colorName ? getColorFamily(colorName) : null;
+      
+      // FALLBACK: Use hex-based detection if name lookup failed
+      if (!colorFamily && colorHex) {
+        colorFamily = getColorFamilyFromHex(colorHex);
+      }
 
       const record = {
         product_id: variant.productId,
