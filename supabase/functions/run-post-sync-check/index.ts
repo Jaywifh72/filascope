@@ -471,19 +471,21 @@ const AI_ROLES = {
     lessons: [
       'Polymaker uses regional Shopify stores: us.polymaker.com (USD), ca.polymaker.com (CAD)',
       'Variant format: option1=Diameter, option2=Weight, option3=Color',
-      'SKU contains HEX code and TD value - parse with extractHexFromSku() in polymaker-defaults.ts',
-      'Panchroma is the new umbrella brand for consumer PLA (Matte=PolyTerra, Silk=PolyLite Silk)',
+      'SKU may contain HEX code and TD value - extractHexFromSku() in polymaker-defaults.ts',
+      'CRITICAL: Most SKUs do NOT have HEX data - use extractPolymakerColorFromTitle() as fallback',
+      'POLYMAKER_COLOR_MAPPING has 100+ color-to-hex mappings for title-based extraction',
+      'Panchroma is the new umbrella brand - "panchroma-standard" is SEPARATE from "panchroma-matte"',
+      'EXPLICIT matte check required - do NOT use panchroma-matte as default fallback',
+      'panchroma-refill is a SEPARATE product line (cardboard spool)',
       'Fiberon is the engineering brand (formerly PolyMide) - CF/GF/ESD materials',
       'Bundle products MUST be excluded (holiday bundles, sample packs, Hueforge packs)',
       '3D Pen Filaments and Creator Special Editions are NOT standard spools - exclude them',
       'Refill variants (Panchroma PLA Refill) are spools without packaging - valid products',
       'PolySonic and PolySonic Pro are high-speed capable lines (300mm/s)',
-      'PolyMax PC-FR is flame retardant variant - separate from standard PolyMax PC',
-      'Product type "Bundle Packs", "Hardware", "Virtual" should be excluded',
-      'Tags containing "bundle", "holidaybundle", "hidden", "virtual" indicate non-filament',
-      'Use isFilamentProduct() in polymaker-defaults.ts for proper filtering',
-      'Expected 50+ product lines for comprehensive consumer + engineering catalog',
-      'Cross-product swatch architecture - URL consistency check is SKIPPED'
+      'Dual/Gradient colors show mixed colors - skip hex-color accuracy check for these',
+      'Expected 67 product lines for comprehensive consumer + engineering catalog',
+      'Cross-product swatch architecture - URL consistency check is SKIPPED',
+      'POLYMAKER_COLOR_EXCLUSION_PATTERNS filters marketing text like "you will love it"'
     ]
   },
   paramountSpecialist: {
@@ -1517,50 +1519,62 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       '❌ Virtual products (Gift Card, Shipping Insurance) must be excluded',
       '❌ 3D Pen Filaments and Creator Special Editions are not standard spools',
       '❌ Regional stores have different prices (USD vs CAD) - sync from US, add CA prices separately',
-      '❌ Product types "Bundle Packs", "Hardware", "Virtual" indicate non-filament'
+      '❌ Product types "Bundle Packs", "Hardware", "Virtual" indicate non-filament',
+      '❌ Most SKUs do NOT contain HEX codes - only format "CA04015 | HEX Code:#2F2E30" has HEX data',
+      '❌ Dual/Gradient colors show mixed colors - hex cannot match single color family'
     ],
     workingSolutions: [
       '✅ isFilamentProduct() in polymaker-defaults.ts handles all bundle/hardware exclusions',
-      '✅ extractProductLine() detects 50+ unique product lines (Panchroma 25+, PolyLite 12+, Fiberon 13+)',
-      '✅ SKU contains HEX and TD values - extractHexFromSku() and extractTdFromSku() parse these',
+      '✅ extractProductLine() detects 67+ unique product lines with EXPLICIT matte check',
+      '✅ SKU contains HEX and TD values for SOME products - extractHexFromSku() as primary source',
+      '✅ extractPolymakerColorFromTitle() as fallback - extracts color after " - " separator',
+      '✅ POLYMAKER_COLOR_MAPPING has 100+ color names with hex codes',
+      '✅ POLYMAKER_COLOR_EXCLUSION_PATTERNS filters marketing text like "you will love it"',
       '✅ enrichPolymakerProduct() returns complete print settings from POLYMAKER_PRINT_SETTINGS',
       '✅ Cross-product swatch architecture supported (each color = separate Shopify product)',
-      '✅ generatePolymakerProductLineId() handles Panchroma rebranding (PolyTerra → Panchroma Matte)',
-      '✅ normalizePolymakerMaterial() covers 50+ material name patterns',
+      '✅ Panchroma "standard" is SEPARATE from Panchroma "matte" (no fallback to matte)',
+      '✅ panchroma-refill is SEPARATE product line (cardboard spool)',
       '✅ Regional CA prices synced via fetchRegionalPrices() from ca.polymaker.com'
     ],
     failedApproaches: [
       '⚠️ Including Bundle Packs product type - must be filtered',
       '⚠️ Not excluding "holidaybundle" tag - creates holiday pack contamination',
       '⚠️ Treating Creator Special Editions as regular filament',
-      '⚠️ Using simple product line patterns - Panchroma has 25+ sub-variants requiring specific detection'
+      '⚠️ Using Panchroma-matte as default fallback - causes 186-variant mega-groups',
+      '⚠️ Relying solely on SKU HEX extraction - most SKUs lack HEX data',
+      '⚠️ Extracting marketing text "you will love it" as color name'
     ],
     currentStatus: {
-      'totalProducts': '~500 color variants across 50+ product lines',
-      'productLines': '50+ (Panchroma 25, PolyLite 12, Fiberon 13, PolyMax 4, PolyFlex 3, PolySonic 2, Specialty 8)',
+      'totalProducts': '~600 color variants across 67+ product lines',
+      'productLines': '67 (Panchroma 28, PolyLite 12, Fiberon 14, PolyMax 4, PolyFlex 3, PolySonic 2, Specialty 8)',
       'materialsSupported': 'PLA, PETG, ABS, ASA, PC, PC-ABS, PC-PBT, TPU-90A, TPU-95A, PA12-CF, PA6-CF, PA6-GF, PA612-CF, PA612-ESD, PET-CF, PET-GF, PPS-CF, PPS-GF, ASA-CF, PETG-ESD, PETG-rCF, LW-PLA, HT-PLA, HT-PLA-GF, PVB, PVA',
-      'hexCoverage': '99% - extracted from SKU (most reliable source)',
+      'hexCoverage': '~70% - SKU extraction + title fallback + 100-color mapping',
       'regionalPricing': 'US (USD) primary, CA (CAD) secondary'
     },
     keyFiles: [
       'supabase/functions/sync-polymaker-products/index.ts - Main sync with Shopify product fetch',
       'supabase/functions/_shared/polymaker-defaults.ts - Product line detection, material normalization, print settings',
       'isFilamentProduct() - Excludes bundles, hardware, virtual, 3D pen, creator editions',
-      'extractProductLine() - 50+ specific product line patterns including all Panchroma sub-variants',
+      'extractProductLine() - 67+ specific product line patterns with EXPLICIT matte check',
+      'extractPolymakerColorFromTitle() - Fallback color extraction from product title',
+      'POLYMAKER_COLOR_MAPPING - 100+ color-to-hex mappings',
       'enrichPolymakerProduct() - Complete print settings from POLYMAKER_PRINT_SETTINGS (45+ entries)',
       'extractHexFromSku() / extractTdFromSku() - Parse "CA04015 | HEX Code:#2F2E30 | TD:0.1" format'
     ],
     productSlugReference: {
-      'panchroma-matte': 'Panchroma Matte PLA (formerly PolyTerra)',
+      'panchroma-standard': 'Panchroma PLA Standard (base Panchroma line)',
+      'panchroma-matte': 'Panchroma Matte PLA (formerly PolyTerra) - EXPLICIT matte only',
       'panchroma-silk': 'Panchroma Silk PLA (formerly PolyLite Silk)',
       'panchroma-dual-silk': 'Panchroma Dual Silk PLA',
       'panchroma-dual-matte': 'Panchroma Dual Matte PLA (formerly PolyTerra Dual)',
       'panchroma-gradient-matte': 'Panchroma Gradient Matte (formerly PolyTerra Gradient)',
       'panchroma-gradient-silk': 'Panchroma Gradient Silk',
+      'panchroma-gradient': 'Panchroma Gradient (base gradient line)',
       'panchroma-marble': 'Panchroma Marble PLA',
       'panchroma-galaxy': 'Panchroma Galaxy PLA (formerly PolyLite Galaxy)',
       'panchroma-starlight': 'Panchroma Starlight PLA (formerly PolyLite Starlight)',
       'panchroma-luminous': 'Panchroma Luminous PLA (formerly PolyLite Luminous)',
+      'panchroma-luminous-rainbow': 'Panchroma Luminous Rainbow PLA',
       'panchroma-glow': 'Panchroma Glow PLA (formerly PolyLite Glow)',
       'panchroma-neon': 'Panchroma Neon PLA',
       'panchroma-metallic': 'Panchroma Metallic PLA',
@@ -1568,7 +1582,8 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'panchroma-satin': 'Panchroma Satin PLA (formerly PolyTerra PLA+)',
       'panchroma-uv-shift': 'Panchroma UV Shift PLA (formerly PolyLite UV Changing)',
       'panchroma-cope': 'Panchroma CoPE',
-      'panchroma-refill': 'Panchroma PLA Refill',
+      'panchroma-refill': 'Panchroma PLA Refill (cardboard spool)',
+      'panchroma-celestial': 'Panchroma Celestial PLA',
       'polylite-pla': 'PolyLite PLA Standard',
       'polylite-pla-pro': 'PolyLite PLA Pro',
       'polylite-pla-cf': 'PolyLite PLA-CF',
@@ -1592,6 +1607,7 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'fiberon-pa6-gf': 'Fiberon PA6-GF (formerly PolyMide PA6-GF)',
       'fiberon-pa612-cf': 'Fiberon PA612-CF',
       'fiberon-pa612-esd': 'Fiberon PA612-ESD',
+      'fiberon-petg': 'Fiberon PETG',
       'fiberon-pet-cf': 'Fiberon PET-CF',
       'fiberon-pet-gf': 'Fiberon PET-GF',
       'fiberon-petg-esd': 'Fiberon PETG-ESD (formerly PolyMax PETG-ESD)',
@@ -1599,6 +1615,7 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'fiberon-asa-cf': 'Fiberon ASA-CF',
       'fiberon-pps-cf': 'Fiberon PPS-CF',
       'fiberon-pps-gf': 'Fiberon PPS-GF',
+      'fiberon-copa': 'Fiberon CoPA',
       'polycast': 'PolyCast (Investment Casting PLA)',
       'polysmooth': 'PolySmooth (Polishable PVB)',
       'polydissolve': 'PolyDissolve S1 (PVA Support)',
@@ -1609,7 +1626,10 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'cospla': 'CosPLA (Cosplay-optimized)',
       'wood-pla': 'Wood PLA',
       'pc-abs': 'PC-ABS Alloy',
-      'pc-pbt': 'PC-PBT Alloy'
+      'pc-pbt': 'PC-PBT Alloy',
+      'galaxy-asa': 'Galaxy ASA',
+      'polymaker-asa': 'Polymaker ASA',
+      'polymaker-petg': 'Polymaker PETG'
     },
     lastUpdated: '2026-01-12'
   }
@@ -7417,7 +7437,7 @@ Deno.serve(async (req) => {
       'fillamentum': 22,        // PLA Extrafill, Crystal Clear, ASA, ABS, PETG, CPE HG100, CPE-CF, Flexfill TPU 98A/92A, TPE-90A/96A, Nylon FX256, Nylon CF15, Nylon AF80, Timberfill, HIPS, Vinyl, PP, NonOilen, 0rCA, Porthcurno
       'azurefilm': 19,          // ABS (Plus, Prime), ASA (Standard, Prime), Carbon Fiber (PAHT-CF, PET-CF), PC-ABS, PCTG (Standard, Translucent), PETG (Hyper Speed, Translucent), PLA (Original, Standard, Matte HS, Silk, Translucent, Strongman), LumberLay, PVA
       'ninjatek': 9,            // NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D + colorFabb ASA, PLA, Co-Polyesters, Specials (Eel/PA excluded - diameter-only variants)
-      'polymaker': 50,          // Panchroma (25+ sub-variants), PolyLite (12), PolyMax (4), PolyFlex (3), Fiberon (13), PolySonic (2), Specialty (8)
+      'polymaker': 67,          // Panchroma (18 sub-lines: standard, matte, silk, marble, refill, dual x3, gradient x10, luminous, starlight, celestial, galaxy, glow, neon, metallic, translucent, satin, uv-shift, cope) + PolyLite (10) + PolyMax (4) + PolyFlex (3) + Fiberon (14) + PolySonic (2) + Specialty (8) + Polymaker ASA/PETG (2)
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
       'prusament': 12,          // PLA, PETG, ASA, PC Blend, PA11-CF, PVB, etc.
       'matter3d': 18,           // Consolidated lines: pla__basics, pla__basics-matte, pla__basics-silk, pla__basics-cf, pla__basics-recycled, pla__performance, pla__performance-matte, pla__essentials, pla_plus__performance, petg__performance, petg__performance-matte, petg__performance-hf, petg__performance-cf-hf, petg__standard, asa__performance, abs__performance-cf, pa__performance, tpu_95a__standard
@@ -8006,7 +8026,7 @@ Deno.serve(async (req) => {
         // Atomic Filament has 57+ different product URLs grouped into 5 product_line_ids
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox'];
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;
@@ -8272,7 +8292,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d']; // CSV-seeded brands have curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker']; // CSV-seeded brands and brands with curated hex codes (Polymaker: dual/gradient colors show mixed colors)
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
