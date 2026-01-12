@@ -785,8 +785,8 @@ export function BrandSyncManager() {
           </div>
         )}
 
-        {/* Post Sync Check - shown after sync completes or times out */}
-        {(result?.success || result?.timedOut) && selectedBrand && (
+        {/* Post Sync Check - always visible when brand is selected */}
+        {selectedBrand && (
           <PostSyncCheckPanel 
             brandSlug={selectedBrand.brand_slug}
             brandName={selectedBrand.brand_name}
