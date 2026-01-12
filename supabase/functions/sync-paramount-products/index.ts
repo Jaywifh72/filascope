@@ -1,22 +1,35 @@
 /**
- * Paramount 3D Enrichment Sync Pipeline
+ * Paramount 3D CSV-Seeded Sync Pipeline
  * 
- * This is an ENRICHMENT sync - products already exist in the database.
- * We update finish_type, product_line_id, and fix TDS URLs.
+ * US-based industrial filament supplier (est. 1994)
+ * Platform: Wix (custom website)
+ * Currency: USD
+ * 
+ * This is a CSV-SEEDED sync - products come from PARAMOUNT_SEED_DATA.
+ * We use delete-then-insert pattern with safe threshold for clean data.
  * 
  * 5-Step Pipeline:
- * 1. Fetch existing Paramount 3D products from database
- * 2. Apply brand-specific enrichments (finish_type, product_line_id)
- * 3. Fix TDS URLs with material-specific PDFs
- * 4. Update automated_brands to correct platform (wix)
- * 5. Fix duplicate hex codes
+ * 1. Load CSV seed data and filter exclusions
+ * 2. Apply brand-specific enrichments (colors, product_line_id)
+ * 3. Safe delete existing products (if threshold met)
+ * 4. Batch insert new products
+ * 5. Update brand statistics and fix duplicates
  */
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
-  enrichParamountProduct,
+  PARAMOUNT_SEED_DATA,
+  shouldExcludeParamountProduct,
+  generateParamountProductLineIdFromSeed,
+  getParamountColorHexFromSeed,
+  getParamountDefaultPrice,
+} from '../_shared/paramount-seed.ts';
+import {
+  normalizeParamountMaterial,
+  getParamountPrintSettings,
+  getParamountTdsUrl,
+  extractParamountFinishType,
   PARAMOUNT_STORE_INFO,
-  PARAMOUNT_TDS_URLS,
 } from '../_shared/paramount-defaults.ts';
 
 const corsHeaders = {
@@ -24,288 +37,328 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface SyncResult {
-  step: string;
-  success: boolean;
-  message: string;
-  count?: number;
-  details?: Record<string, unknown>;
-}
-
-interface FilamentRecord {
-  id: string;
-  product_title: string;
-  material: string | null;
-  finish_type: string | null;
-  product_line_id: string | null;
-  tds_url: string | null;
-  color_hex: string | null;
-  color_family: string | null;
-}
-
-interface DuplicateHexRecord {
-  id: string;
-  product_line_id: string;
-  product_title: string;
-  color_hex: string;
-  duplicate_count: number;
+interface SyncStats {
+  discovered: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  deleted: number;
 }
 
 // ============================================================================
-// STEP 1: FETCH EXISTING PRODUCTS
+// MAIN HANDLER
 // ============================================================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchExistingProducts(supabase: SupabaseClient<any>): Promise<SyncResult & { products?: FilamentRecord[] }> {
-  console.log('Step 1: Fetching existing Paramount 3D products...');
-  
-  try {
-    const { data: products, error } = await supabase
-      .from('filaments')
-      .select('id, product_title, material, finish_type, product_line_id, tds_url, color_hex, color_family')
-      .ilike('vendor', 'Paramount 3D');
-    
-    if (error) {
-      console.error('Error fetching products:', error);
-      return { step: 'fetch', success: false, message: error.message };
-    }
-    
-    const withFinish = products?.filter(p => p.finish_type).length || 0;
-    const withLineId = products?.filter(p => p.product_line_id).length || 0;
-    const withTds = products?.filter(p => p.tds_url).length || 0;
-    
-    console.log(`Found ${products?.length || 0} products`);
-    console.log(`- With finish_type: ${withFinish}`);
-    console.log(`- With product_line_id: ${withLineId}`);
-    console.log(`- With tds_url: ${withTds}`);
-    
-    return {
-      step: 'fetch',
-      success: true,
-      message: `Found ${products?.length || 0} existing Paramount 3D products`,
-      count: products?.length || 0,
-      products: products as FilamentRecord[],
-      details: {
-        withFinish,
-        withLineId,
-        withTds,
-        needsEnrichment: (products?.length || 0) - withFinish,
-      },
-    };
-  } catch (error) {
-    console.error('Fetch error:', error);
-    return { step: 'fetch', success: false, message: String(error) };
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
-}
 
-// ============================================================================
-// STEP 2: APPLY BRAND-SPECIFIC ENRICHMENTS
-// ============================================================================
+  console.log('='.repeat(60));
+  console.log('PARAMOUNT 3D CSV-SEEDED SYNC');
+  console.log('='.repeat(60));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function applyEnrichments(
-  supabase: SupabaseClient<any>,
-  products: FilamentRecord[]
-): Promise<SyncResult> {
-  console.log('Step 2: Applying brand-specific enrichments...');
-  
-  let updated = 0;
-  let skipped = 0;
-  let errors = 0;
-  
-  for (const product of products) {
+  const startTime = Date.now();
+  const stats: SyncStats = {
+    discovered: 0,
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: 0,
+    deleted: 0,
+  };
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Parse request options
+    let cleanSlate = false;
     try {
-      // Skip if already fully enriched
-      if (product.finish_type && product.product_line_id) {
-        skipped++;
-        continue;
+      const body = await req.json();
+      cleanSlate = body?.cleanSlate === true;
+    } catch {
+      // No body or invalid JSON, use defaults
+    }
+
+    console.log(`[Paramount] Clean slate mode: ${cleanSlate}`);
+
+    // ========================================================================
+    // STEP 1: LOAD AND FILTER SEED DATA
+    // ========================================================================
+    console.log('[Paramount] Step 1: Loading and filtering seed data...');
+
+    // Get brand info
+    const { data: brandData } = await supabase
+      .from('automated_brands')
+      .select('id, brand_name')
+      .eq('brand_slug', 'paramount-3d')
+      .single();
+
+    if (!brandData) {
+      throw new Error('Paramount 3D brand not found in automated_brands');
+    }
+
+    const brandId = brandData.id;
+    const vendorName = 'Paramount 3D';
+
+    // Mark brand as syncing
+    await supabase
+      .from('automated_brands')
+      .update({ scraping_active: true })
+      .eq('id', brandId);
+
+    // Filter seed data
+    const filteredProducts = PARAMOUNT_SEED_DATA.filter(entry => {
+      if (shouldExcludeParamountProduct(entry.filamentLine, entry.color)) {
+        console.log(`[Paramount] Excluded: ${entry.filamentLine} - ${entry.color}`);
+        stats.skipped++;
+        return false;
       }
-      
-      // Extract color name from title for hex lookup
-      const colorName = extractColorFromTitle(product.product_title);
-      
-      // Apply enrichments
-      const enrichment = enrichParamountProduct(
-        product.product_title,
-        product.material,
-        colorName
-      );
-      
-      // Build update object - only update missing fields
-      const updateData: Record<string, unknown> = {};
-      
-      if (!product.finish_type) {
-        updateData.finish_type = enrichment.finish_type;
-      }
-      
-      if (!product.product_line_id) {
-        updateData.product_line_id = enrichment.product_line_id;
-      }
-      
-      // Update color_hex if we found a better match
-      if (enrichment.color_hex && !product.color_hex) {
-        updateData.color_hex = enrichment.color_hex;
-      }
-      
-      // Update material if normalized differently
-      if (enrichment.material && enrichment.material !== product.material) {
-        updateData.material = enrichment.material;
-      }
-      
-      // Set abrasive/enclosure flags
-      if (enrichment.is_nozzle_abrasive) {
-        updateData.is_nozzle_abrasive = true;
-      }
-      
-      if (Object.keys(updateData).length === 0) {
-        skipped++;
-        continue;
-      }
-      
-      updateData.updated_at = new Date().toISOString();
-      
-      const { error } = await supabase
+      return true;
+    });
+
+    stats.discovered = filteredProducts.length;
+    console.log(`[Paramount] Filtered: ${filteredProducts.length} products from ${PARAMOUNT_SEED_DATA.length} total`);
+
+    // ========================================================================
+    // STEP 2: SAFE DELETE (if threshold met)
+    // ========================================================================
+    const SAFE_DELETE_THRESHOLD = 50;
+
+    if (filteredProducts.length >= SAFE_DELETE_THRESHOLD) {
+      console.log(`[Paramount] Step 2: Safe delete (${filteredProducts.length} >= ${SAFE_DELETE_THRESHOLD} threshold)...`);
+
+      const { data: existingProducts, error: countError } = await supabase
         .from('filaments')
-        .update(updateData)
-        .eq('id', product.id);
+        .select('id')
+        .ilike('vendor', vendorName);
+
+      if (!countError && existingProducts) {
+        const existingCount = existingProducts.length;
+        console.log(`[Paramount] Deleting ${existingCount} existing products...`);
+
+        const { error: deleteError } = await supabase
+          .from('filaments')
+          .delete()
+          .ilike('vendor', vendorName);
+
+        if (deleteError) {
+          console.error('[Paramount] Delete error:', deleteError.message);
+        } else {
+          stats.deleted = existingCount;
+          console.log(`[Paramount] Deleted ${existingCount} products successfully`);
+        }
+      }
+    } else {
+      console.log(`[Paramount] Step 2: Skipping delete (${filteredProducts.length} < ${SAFE_DELETE_THRESHOLD} threshold)`);
+    }
+
+    // ========================================================================
+    // STEP 3: TRANSFORM AND PREPARE PRODUCTS
+    // ========================================================================
+    console.log('[Paramount] Step 3: Transforming products...');
+
+    const productsToInsert = [];
+
+    for (const entry of filteredProducts) {
+      try {
+        // Normalize material
+        const { material, isAbrasive, requiresEnclosure } = normalizeParamountMaterial(entry.filamentLine);
+        const finalMaterial = entry.material || material;
+
+        // Get print settings
+        const printSettings = getParamountPrintSettings(finalMaterial);
+
+        // Get TDS URL
+        const tdsUrl = getParamountTdsUrl(finalMaterial);
+
+        // Get finish type
+        const finishType = extractParamountFinishType(entry.filamentLine);
+
+        // Generate product line ID
+        const productLineId = generateParamountProductLineIdFromSeed(finalMaterial, entry.color);
+
+        // Get color hex
+        const colorHex = entry.colorHex && entry.colorHex !== 'N/A' 
+          ? entry.colorHex 
+          : getParamountColorHexFromSeed(entry.color);
+
+        // Generate unique product ID
+        const productId = `paramount-${finalMaterial.toLowerCase()}-${entry.color.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+
+        // Build product title
+        const productTitle = `${finalMaterial} - ${entry.color}`;
+
+        // Get default price
+        const price = getParamountDefaultPrice(finalMaterial);
+
+        const product = {
+          product_id: productId,
+          product_title: productTitle,
+          vendor: vendorName,
+          brand_id: brandId,
+          material: finalMaterial,
+          product_line_id: productLineId,
+          finish_type: finishType,
+          color_family: entry.color,
+          color_hex: colorHex,
+          product_url: entry.productUrl,
+          featured_image: entry.imageUrl || null,
+          tds_url: tdsUrl,
+          variant_price: price,
+          variant_available: true,
+          diameter_nominal_mm: PARAMOUNT_STORE_INFO.default_diameter,
+          net_weight_g: PARAMOUNT_STORE_INFO.default_weight,
+          nozzle_temp_min_c: printSettings?.nozzle_temp_min_c || null,
+          nozzle_temp_max_c: printSettings?.nozzle_temp_max_c || null,
+          bed_temp_min_c: printSettings?.bed_temp_min_c || null,
+          bed_temp_max_c: printSettings?.bed_temp_max_c || null,
+          is_nozzle_abrasive: isAbrasive,
+          auto_created: true,
+          auto_updated: true,
+          last_scraped_at: new Date().toISOString(),
+          sync_status: 'synced',
+        };
+
+        productsToInsert.push(product);
+      } catch (error) {
+        console.error(`[Paramount] Error transforming ${entry.color}:`, error);
+        stats.errors++;
+      }
+    }
+
+    console.log(`[Paramount] Prepared ${productsToInsert.length} products for insert`);
+
+    // ========================================================================
+    // STEP 4: BATCH INSERT
+    // ========================================================================
+    console.log('[Paramount] Step 4: Batch inserting products...');
+
+    const BATCH_SIZE = 50;
+    for (let i = 0; i < productsToInsert.length; i += BATCH_SIZE) {
+      const batch = productsToInsert.slice(i, i + BATCH_SIZE);
       
-      if (error) {
-        console.error(`Error updating ${product.id}:`, error.message);
-        errors++;
+      const { error: insertError } = await supabase
+        .from('filaments')
+        .insert(batch);
+
+      if (insertError) {
+        console.error(`[Paramount] Batch ${Math.floor(i / BATCH_SIZE) + 1} insert error:`, insertError.message);
+        stats.errors += batch.length;
       } else {
-        updated++;
+        stats.created += batch.length;
+        console.log(`[Paramount] Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.length} products`);
+      }
+    }
+
+    // ========================================================================
+    // STEP 5: FIX DUPLICATE HEX CODES
+    // ========================================================================
+    console.log('[Paramount] Step 5: Checking for duplicate hex codes...');
+
+    try {
+      const { data: duplicates } = await supabase.rpc('find_duplicate_hexes', {
+        p_vendor: vendorName,
+      });
+
+      if (duplicates && duplicates.length > 0) {
+        console.log(`[Paramount] Found ${duplicates.length} products with duplicate hex codes`);
+        
+        // Group by product_line_id and color_hex
+        const groups = new Map<string, typeof duplicates>();
+        for (const dup of duplicates) {
+          const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
+          if (!groups.has(key)) {
+            groups.set(key, []);
+          }
+          groups.get(key)!.push(dup);
+        }
+
+        let fixed = 0;
+        for (const [, group] of groups) {
+          if (group.length <= 1) continue;
+          
+          // Keep first one as-is, adjust others
+          for (let j = 1; j < group.length; j++) {
+            const product = group[j];
+            if (!product.color_hex) continue;
+            
+            // Adjust brightness slightly
+            const originalHex = product.color_hex.replace('#', '');
+            let r = parseInt(originalHex.substring(0, 2), 16);
+            let g = parseInt(originalHex.substring(2, 4), 16);
+            let b = parseInt(originalHex.substring(4, 6), 16);
+            
+            const adjustment = j * 2;
+            r = Math.min(255, Math.max(0, r + (j % 2 === 0 ? adjustment : -adjustment)));
+            g = Math.min(255, Math.max(0, g + (j % 2 === 0 ? adjustment : -adjustment)));
+            b = Math.min(255, Math.max(0, b + (j % 2 === 0 ? adjustment : -adjustment)));
+            
+            const adjustedHex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+            
+            await supabase
+              .from('filaments')
+              .update({ color_hex: adjustedHex })
+              .eq('id', product.id);
+            
+            fixed++;
+          }
+        }
+        
+        console.log(`[Paramount] Fixed ${fixed} duplicate hex codes`);
+      } else {
+        console.log('[Paramount] No duplicate hex codes found');
       }
     } catch (error) {
-      console.error(`Error enriching ${product.id}:`, error);
-      errors++;
+      console.error('[Paramount] Error fixing duplicates:', error);
     }
-  }
-  
-  console.log(`Enrichment complete: ${updated} updated, ${skipped} skipped, ${errors} errors`);
-  
-  return {
-    step: 'enrich',
-    success: errors === 0,
-    message: `Enriched ${updated} products, skipped ${skipped}, ${errors} errors`,
-    count: updated,
-    details: { updated, skipped, errors },
-  };
-}
 
-function extractColorFromTitle(title: string): string | null {
-  // Remove common prefixes/suffixes
-  let cleaned = title
-    .replace(/paramount\s*3d/gi, '')
-    .replace(/\bpla\b|\bpetg\b|\babs\b|\btpu\b|\bpva\b|\basa\b|\bflexpla\b/gi, '')
-    .replace(/1\.75\s*mm|2\.85\s*mm/gi, '')
-    .replace(/1\s*kg|500\s*g|750\s*g/gi, '')
-    .replace(/filament/gi, '')
-    .replace(/3d\s*printer/gi, '')
-    .replace(/master\s*spool/gi, '')
-    .trim();
-  
-  // Remove leading/trailing dashes, commas
-  cleaned = cleaned.replace(/^[-,\s]+|[-,\s]+$/g, '').trim();
-  
-  return cleaned || null;
-}
+    // ========================================================================
+    // STEP 6: UPDATE BRAND STATISTICS
+    // ========================================================================
+    console.log('[Paramount] Step 6: Updating brand statistics...');
 
-// ============================================================================
-// STEP 3: FIX TDS URLS
-// ============================================================================
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fixTdsUrls(
-  supabase: SupabaseClient<any>,
-  products: FilamentRecord[]
-): Promise<SyncResult> {
-  console.log('Step 3: Fixing TDS URLs...');
-  
-  let updated = 0;
-  let alreadyCorrect = 0;
-  let noTdsAvailable = 0;
-  
-  for (const product of products) {
-    const material = product.material || 'PLA';
-    const correctTdsUrl = PARAMOUNT_TDS_URLS[material];
-    
-    if (!correctTdsUrl) {
-      noTdsAvailable++;
-      continue;
-    }
-    
-    // Check if already correct
-    if (product.tds_url === correctTdsUrl) {
-      alreadyCorrect++;
-      continue;
-    }
-    
-    // Update to correct TDS URL
-    const { error } = await supabase
-      .from('filaments')
-      .update({ 
-        tds_url: correctTdsUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', product.id);
-    
-    if (!error) {
-      updated++;
-    }
-  }
-  
-  console.log(`TDS URLs: ${updated} updated, ${alreadyCorrect} already correct, ${noTdsAvailable} no TDS available`);
-  
-  return {
-    step: 'tds',
-    success: true,
-    message: `Updated ${updated} TDS URLs, ${alreadyCorrect} already correct`,
-    count: updated,
-    details: { updated, alreadyCorrect, noTdsAvailable },
-  };
-}
-
-// ============================================================================
-// STEP 4: UPDATE BRAND RECORD
-// ============================================================================
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function updateBrandRecord(supabase: SupabaseClient<any>): Promise<SyncResult> {
-  console.log('Step 4: Updating automated_brands record...');
-  
-  try {
-    // Get current product counts
+    // Get counts
     const { count: totalCount } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .ilike('vendor', 'Paramount 3D');
-    
+      .ilike('vendor', vendorName);
+
     const { count: withPrices } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .ilike('vendor', 'Paramount 3D')
+      .ilike('vendor', vendorName)
       .not('variant_price', 'is', null);
-    
+
     const { count: withImages } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .ilike('vendor', 'Paramount 3D')
+      .ilike('vendor', vendorName)
       .not('featured_image', 'is', null);
-    
+
     const { count: withTds } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .ilike('vendor', 'Paramount 3D')
+      .ilike('vendor', vendorName)
       .not('tds_url', 'is', null);
-    
+
     const { count: withColorHex } = await supabase
       .from('filaments')
       .select('*', { count: 'exact', head: true })
-      .ilike('vendor', 'Paramount 3D')
+      .ilike('vendor', vendorName)
       .not('color_hex', 'is', null);
-    
-    // Update brand record
-    const { error } = await supabase
+
+    const { count: withProductLineId } = await supabase
+      .from('filaments')
+      .select('*', { count: 'exact', head: true })
+      .ilike('vendor', vendorName)
+      .not('product_line_id', 'is', null);
+
+    // Update brand
+    await supabase
       .from('automated_brands')
       .update({
         platform_type: PARAMOUNT_STORE_INFO.platform_type,
@@ -317,228 +370,67 @@ async function updateBrandRecord(supabase: SupabaseClient<any>): Promise<SyncRes
         products_with_images: withImages || 0,
         products_with_tds: withTds || 0,
         products_with_color_hex: withColorHex || 0,
+        scraping_active: false,
         last_scrape_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .ilike('brand_name', 'Paramount 3D');
-    
-    if (error) {
-      console.error('Error updating brand:', error);
-      return { step: 'brand', success: false, message: error.message };
-    }
-    
-    console.log(`Brand updated: ${totalCount} products, platform: wix`);
-    
-    return {
-      step: 'brand',
-      success: true,
-      message: `Updated brand to wix platform with ${totalCount} products`,
-      count: totalCount || 0,
-      details: {
-        totalCount,
-        withPrices,
-        withImages,
-        withTds,
-        withColorHex,
-      },
-    };
-  } catch (error) {
-    console.error('Brand update error:', error);
-    return { step: 'brand', success: false, message: String(error) };
-  }
-}
+      .eq('id', brandId);
 
-// ============================================================================
-// STEP 5: FIX DUPLICATE HEX CODES
-// ============================================================================
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fixDuplicateHexCodes(supabase: SupabaseClient<any>): Promise<SyncResult> {
-  console.log('Step 5: Fixing duplicate hex codes...');
-  
-  try {
-    // Find duplicates using RPC
-    const { data, error } = await supabase.rpc('find_duplicate_hexes', {
-      p_vendor: 'Paramount 3D',
-    });
-    
-    if (error) {
-      console.error('Error finding duplicates:', error);
-      return { step: 'hex', success: false, message: error.message };
-    }
-    
-    const duplicates = data as DuplicateHexRecord[] | null;
-    
-    if (!duplicates || duplicates.length === 0) {
-      console.log('No duplicate hex codes found');
-      return {
-        step: 'hex',
-        success: true,
-        message: 'No duplicate hex codes found',
-        count: 0,
-      };
-    }
-    
-    console.log(`Found ${duplicates.length} products with duplicate hex codes`);
-    
-    // Group by product_line_id and color_hex
-    const groups = new Map<string, DuplicateHexRecord[]>();
-    for (const dup of duplicates) {
-      const key = `${dup.product_line_id}:${dup.color_hex?.toLowerCase()}`;
-      if (!groups.has(key)) {
-        groups.set(key, []);
-      }
-      groups.get(key)!.push(dup);
-    }
-    
-    let fixed = 0;
-    
-    // Fix each group by slightly adjusting hex values
-    for (const [key, group] of groups) {
-      if (group.length <= 1) continue;
-      
-      // Keep first one as-is, adjust others
-      for (let i = 1; i < group.length; i++) {
-        const product = group[i];
-        const originalHex = product.color_hex;
-        
-        if (!originalHex) continue;
-        
-        // Generate unique hex by adjusting brightness
-        const adjustedHex = adjustHexBrightness(originalHex, i * 2);
-        
-        const { error: updateError } = await supabase
-          .from('filaments')
-          .update({ color_hex: adjustedHex })
-          .eq('id', product.id);
-        
-        if (!updateError) {
-          fixed++;
-        }
-      }
-    }
-    
-    console.log(`Fixed ${fixed} duplicate hex codes`);
-    
-    return {
-      step: 'hex',
-      success: true,
-      message: `Fixed ${fixed} duplicate hex codes across ${groups.size} groups`,
-      count: fixed,
-      details: { groups: groups.size, fixed },
-    };
-  } catch (error) {
-    console.error('Hex fix error:', error);
-    return { step: 'hex', success: false, message: String(error) };
-  }
-}
-
-function adjustHexBrightness(hex: string, amount: number): string {
-  // Remove # if present
-  const cleanHex = hex.replace('#', '');
-  
-  // Parse RGB
-  let r = parseInt(cleanHex.substring(0, 2), 16);
-  let g = parseInt(cleanHex.substring(2, 4), 16);
-  let b = parseInt(cleanHex.substring(4, 6), 16);
-  
-  // Adjust brightness (alternate between lighter and darker)
-  const adjustment = amount % 2 === 0 ? amount : -amount;
-  r = Math.min(255, Math.max(0, r + adjustment));
-  g = Math.min(255, Math.max(0, g + adjustment));
-  b = Math.min(255, Math.max(0, b + adjustment));
-  
-  // Return hex
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
-}
-
-// ============================================================================
-// MAIN HANDLER
-// ============================================================================
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  
-  console.log('='.repeat(60));
-  console.log('PARAMOUNT 3D ENRICHMENT SYNC');
-  console.log('='.repeat(60));
-  
-  const startTime = Date.now();
-  const results: SyncResult[] = [];
-  
-  try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Step 1: Fetch existing products
-    const fetchResult = await fetchExistingProducts(supabase);
-    results.push(fetchResult);
-    
-    if (!fetchResult.success || !fetchResult.products?.length) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'No Paramount 3D products found in database',
-          results,
-          duration_seconds: (Date.now() - startTime) / 1000,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    const products = fetchResult.products;
-    
-    // Step 2: Apply enrichments
-    const enrichResult = await applyEnrichments(supabase, products);
-    results.push(enrichResult);
-    
-    // Step 3: Fix TDS URLs
-    const tdsResult = await fixTdsUrls(supabase, products);
-    results.push(tdsResult);
-    
-    // Step 4: Update brand record
-    const brandResult = await updateBrandRecord(supabase);
-    results.push(brandResult);
-    
-    // Step 5: Fix duplicate hex codes
-    const hexResult = await fixDuplicateHexCodes(supabase);
-    results.push(hexResult);
-    
     const duration = (Date.now() - startTime) / 1000;
-    const allSuccess = results.every(r => r.success);
-    
+
     console.log('='.repeat(60));
-    console.log(`SYNC COMPLETE: ${allSuccess ? 'SUCCESS' : 'PARTIAL'} in ${duration.toFixed(1)}s`);
+    console.log('PARAMOUNT 3D SYNC COMPLETE');
+    console.log(`Duration: ${duration.toFixed(1)}s`);
+    console.log(`Discovered: ${stats.discovered}`);
+    console.log(`Created: ${stats.created}`);
+    console.log(`Deleted: ${stats.deleted}`);
+    console.log(`Skipped: ${stats.skipped}`);
+    console.log(`Errors: ${stats.errors}`);
+    console.log(`Product Lines: ${withProductLineId || 0}`);
     console.log('='.repeat(60));
-    
+
     return new Response(
       JSON.stringify({
-        success: allSuccess,
-        message: `Paramount 3D enrichment sync completed in ${duration.toFixed(1)}s`,
-        results,
-        summary: {
-          products_enriched: enrichResult.count || 0,
-          tds_urls_fixed: tdsResult.count || 0,
-          hex_codes_fixed: hexResult.count || 0,
-          duration_seconds: duration,
+        success: stats.errors === 0,
+        message: `Paramount 3D sync complete: ${stats.created} products created`,
+        stats,
+        counts: {
+          total: totalCount,
+          withPrices,
+          withImages,
+          withTds,
+          withColorHex,
+          withProductLineId,
         },
+        duration_seconds: duration,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
-    console.error('Fatal error:', error);
-    
+    console.error('[Paramount] Fatal error:', error);
+
+    // Try to clear scraping flag
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      await supabase
+        .from('automated_brands')
+        .update({ scraping_active: false })
+        .eq('brand_slug', 'paramount-3d');
+    } catch {
+      // Ignore cleanup errors
+    }
+
     return new Response(
       JSON.stringify({
         success: false,
-        message: `Sync failed: ${error}`,
-        results,
-        duration_seconds: (Date.now() - startTime) / 1000,
+        message: String(error),
+        stats,
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
