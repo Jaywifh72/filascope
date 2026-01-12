@@ -938,12 +938,15 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'dual matte shadow red': '#1E1C18',
   'dual matte shadow orange': '#201D17',
   'dual matte shadow black': '#241F15',
-  'dual matte foggy orange': '#82817F',
-  'dual matte foggy purple': '#808080',
-  'matte foggy orange': '#808080',
+  'dual matte foggy orange': '#9A9388',
+  'dual matte foggy purple': '#8B7B8E',
+  'matte foggy orange': '#9A9388',
   'matte foggy purple': '#9B7BB3',
   'matte shadow red': '#221E16',
   'matte shadow orange': '#282113',
+  'dual matte chameleon': '#008080',
+  'matte chameleon': '#009999',
+  'chameleon': '#008080',
   
   // === SILK COLORS ===
   'silk lime': '#32CD32',
@@ -1013,6 +1016,26 @@ export const POLYMAKER_COLOR_MAPPING: Record<string, string> = {
   'jet black': '#0A0A0A',
   'true black': '#000000',
   'true white': '#FFFFFF',
+  
+  // === LIGHT COLOR VARIANTS (distinguish from base colors) ===
+  'light yellow': '#FFFFE0',
+  'light blue': '#ADD8E6',
+  'light green': '#90EE90',
+  'light pink': '#FFB6C1',
+  'light grey': '#D3D3D3',
+  'light gray': '#D3D3D3',
+  'light red': '#FF6B6B',
+  'light orange': '#FFB347',
+  'light purple': '#DDA0DD',
+  
+  // === CELESTIAL COLOR VARIANTS ===
+  'celestial yellow': '#FFD700',
+  'celestial light yellow': '#FFFACD',
+  'celestial green': '#98FB98',
+  'celestial pink': '#FFB7C5',
+  'celestial white': '#F0F0FF',
+  'celestial red': '#FF6B6B',
+  'celestial orange': '#FFA07A',
   
   // === TRANSLUCENT COLORS ===
   'translucent green': '#90EE90',
