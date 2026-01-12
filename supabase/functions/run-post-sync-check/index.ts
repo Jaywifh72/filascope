@@ -8111,7 +8111,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -8918,6 +8918,20 @@ Deno.serve(async (req) => {
                                       lineId.includes('fillamentum__asa-cf__asa-cf10') ||  // ASA CF10 only in black
                                       lineId.includes('fillamentum__asa-cf__0rca') ||      // 0rCA Nylon only in black
                                       lineId.includes('fillamentum__pa__porthcurno') ||    // Porthcurno only in ocean blue
+                                      // Prusament single-color specialty products (CSV-seeded)
+                                      lineId.includes('prusament__tpu-95a__standard') ||    // TPU only comes in Natural
+                                      lineId.includes('prusament__petg__matte') ||          // Matte Black only
+                                      lineId.includes('prusament__petg__shimmer') ||        // Shimmering Violet only
+                                      lineId.includes('prusament__petg__tungsten') ||       // Tungsten 75% only
+                                      lineId.includes('prusament__petg__magnetite') ||      // Magnetite 40% Grey only
+                                      lineId.includes('prusament__pc__carbon') ||           // Carbon fiber variants
+                                      lineId.includes('prusament__pc__space-grade') ||      // Space Grade Black only
+                                      lineId.includes('prusament__pvb__smoothable') ||      // Clear/Natural only
+                                      lineId.includes('prusament__pei__ultem') ||           // ULTEM only
+                                      lineId.includes('prusament__pa11-cf__carbon') ||      // Carbon fiber
+                                      lineId.includes('prusament__pp-cf__carbon') ||        // Carbon fiber
+                                      lineId.includes('prusament__pp-gf__glass') ||         // Glass fiber
+                                      lineId.includes('prusament__woodfill__woodfill') ||
                                       lineId.includes('fillamentum__pp__pp-2320') ||
                                       // FormFutura single-color specialty products (CSV-seeded)
                                       lineId.includes('formfutura__pa__styx') ||           // Styx PA6 only in natural
@@ -9133,7 +9147,21 @@ Deno.serve(async (req) => {
                                    lineId.includes('protopasta__petg-esd__dissipative') ||
                                    lineId.includes('protopasta__tpu__flexible') ||
                                    lineId.includes('protopasta__tpu__rigid') ||
-                                   lineId.includes('protopasta__pla__calcium-carbonate');
+                                   lineId.includes('protopasta__pla__calcium-carbonate') ||
+                                   // Prusament single-color specialty products
+                                   lineId.includes('prusament__tpu-95a__standard') ||
+                                   lineId.includes('prusament__petg__matte') ||
+                                   lineId.includes('prusament__petg__shimmer') ||
+                                   lineId.includes('prusament__petg__tungsten') ||
+                                   lineId.includes('prusament__petg__magnetite') ||
+                                   lineId.includes('prusament__pc__carbon') ||
+                                   lineId.includes('prusament__pc__space-grade') ||
+                                   lineId.includes('prusament__pvb__smoothable') ||
+                                   lineId.includes('prusament__pei__ultem') ||
+                                   lineId.includes('prusament__pa11-cf__carbon') ||
+                                   lineId.includes('prusament__pp-cf__carbon') ||
+                                   lineId.includes('prusament__pp-gf__glass') ||
+                                   lineId.includes('prusament__woodfill__woodfill');
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
