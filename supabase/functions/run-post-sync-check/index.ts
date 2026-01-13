@@ -8755,7 +8755,7 @@ Deno.serve(async (req) => {
     // Include Anycubic since they group products across promotional and regular URLs
     // Include Atomic Filament since each color variant IS a different product with its own URL
     // Include Proto-Pasta since each color variant IS a different Shopify product with its own URL
-    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments', 'proto-pasta'];
+    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments', 'proto-pasta', 'spectrum-filaments'];
     const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {
