@@ -258,20 +258,30 @@ function extractColor(product: ShopifyProduct): string {
   
   // Remove material name prefixes (longest patterns first)
   const materialPrefixes = [
+    // ===== "THE FILAMENT" SUB-BRAND (MUST BE FIRST!) =====
+    'The Filament ReFill PETG CF', 'The Filament PETG CF',
+    'The Filament ReFill PETG HS', 'The Filament PETG HS',
+    'The Filament ReFill PETG', 'The Filament PETG',
+    'The Filament ReFill PLA CF', 'The Filament PLA CF',
+    'The Filament ReFill PLA HS', 'The Filament PLA HS',
+    'The Filament ReFill PLA', 'The Filament PLA',
+    // ===== SPECIALTY MATERIALS =====
     'FlameGuard ASA 275', 'FlameGuard PLA', 'SafeGuard PLA', 'AquaPrint PLA',
     'PLA Magic SILK', 'PLA SILK Rainbow', 'PLA SILK', 'Pastello PLA',
     'Premium PLA High Speed', 'PLA High Speed', 'PLA Premium',
     'PLA Glitter', 'PLA Crystal', 'PLA Matte', 'PLA Matt',
     'PLA Glow in the Dark', 'PLA Glow', 'PLA Carbon', 'PLA Stone Age',
+    'PLA Metal', 'PLA Pro', 'PLA Thermoactive',
     'PET-G Premium High Speed', 'PETG Premium High Speed',
     'PET-G Premium', 'PETG Premium', 'PET-G Glow', 'PETG Glow',
-    'PCTG Premium', 'PCTG CF10', 'PCTG GF10',
+    'PCTG Premium', 'PCTG CF10', 'PCTG GF10', 'PCTG CF', 'PCTG GF',
     'ASA 275', 'ASA-X CF10', 'ASA-X GF10', 'ASA Kevlar',
     'Smart ABS', 'ABS',
     'Nylon PA6 Low Warp GF15S', 'Nylon PA6 GF30 Low Warp', 'Nylon PA6 Low Warp',
     'PA12 CF15', 'PA6 CF15', 'PA6 CS20 FR V0', 'PA6 GK10', 'PA6 Neat',
-    'PC-275', 'PC 275', 'PC ABS', 'PC PTFE',
-    'S-Flex 90A', 'S-Flex 85A',
+    'PC-275', 'PC 275', 'PC ABS', 'PC PTFE', 'PC/PTFE',
+    'S-Flex 98A', 'S-Flex 90A', 'S-Flex 85A', 'S-Flex Carbon',
+    'r-PLA', 'rPETG', 'r-PETG', 'HIPS-X',
     'Wood',
     'PLA', 'PETG', 'PET-G', 'ASA', 'PC', 'PA6', 'PA12', 'PCTG',
   ];
@@ -938,6 +948,8 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'ivory beige': 'FFFFF0',
     'latte beige': 'C8AD7F',
     'natural': 'F5F5DC',
+    'nat': 'F5F5DC',             // NAT = Natural abbreviation
+    '/ptfe nat': 'F5F5DC',       // PC/PTFE NAT variant
     'beige': 'F5F5DC',
     'walnut brown': '5C4033',
     'chocolate brown': '3D2B1F',
@@ -945,6 +957,16 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'ancient': 'C4A484',
     'oak': 'B8860B',
     'ebony black': '1B1B1B',
+    'wood ash': '8B8682',        // Grey-brown ash color (Wood filament)
+    'bison brown': '8B5A2B',     // Brown bison color
+    
+    // ========== STONE AGE COLORS ==========
+    'stone age dark': '4A4A4A',  // Dark grey stone
+    'stone age light': 'BEBEBE', // Light grey stone
+    'stone dark': '4A4A4A',      // Alias
+    'stone light': 'BEBEBE',     // Alias
+    'dark stone': '4A4A4A',      // Alias
+    'light stone': 'BEBEBE',     // Alias
     
     // ========== SPECIALTY COLORS ==========
     'sterling silver': 'C0C0C0',

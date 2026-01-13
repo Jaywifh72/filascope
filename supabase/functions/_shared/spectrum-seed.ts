@@ -175,28 +175,29 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
 }
 
 // Expected product line counts for Post Sync Check validation
-// These are approximate counts - actual may vary slightly based on Shopify catalog
+// Updated to match actual 63 product lines found from Shopify API
 export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
-  // ========== "THE FILAMENT" SUB-BRAND ==========
+  // ========== "THE FILAMENT" SUB-BRAND (12 lines) ==========
   'spectrum__the-filament-petg__standard': 8,
   'spectrum__the-filament-petg__refill': 6,
   'spectrum__the-filament-petg-cf__standard': 6,
   'spectrum__the-filament-petg-cf__refill': 5,
-  'spectrum__the-filament-pla__standard': 8,
-  'spectrum__the-filament-pla__refill': 5,
+  'spectrum__the-filament-pla__standard': 15,
+  'spectrum__the-filament-pla__refill': 15,
   'spectrum__the-filament-pla-cf__standard': 6,
   'spectrum__the-filament-pla-cf__refill': 4,
-  'spectrum__the-filament-petg-hs__standard': 6,
-  'spectrum__the-filament-petg-hs__refill': 4,
   'spectrum__the-filament-pla-hs__standard': 6,
   'spectrum__the-filament-pla-hs__refill': 4,
+  'spectrum__the-filament-petg-hs__standard': 6,
+  'spectrum__the-filament-petg-hs__refill': 4,
   
-  // ========== PLA Family ==========
+  // ========== PLA Family (18 lines) ==========
   'spectrum__pla-premium__standard': 40,
   'spectrum__pla-premium__refill': 20,
   'spectrum__pla-silk__standard': 30,
   'spectrum__pla-silk__refill': 15,
   'spectrum__pla-magic-silk__standard': 25,
+  'spectrum__pla-magic-silk__refill': 15,
   'spectrum__pla-silk-rainbow__standard': 5,
   'spectrum__pla-silk-rainbow__refill': 5,
   'spectrum__pastello-pla__standard': 12,
@@ -210,65 +211,54 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'spectrum__pla-carbon__standard': 4,
   'spectrum__pla-stone-age__standard': 4,
   'spectrum__flameguard-pla__standard': 8,
-  'spectrum__flameguard-pla__refill': 2,
   'spectrum__safeguard-pla__standard': 6,
   'spectrum__aquaprint-pla__standard': 5,
+  'spectrum__pla-metal__standard': 6,
+  'spectrum__pla-pro__standard': 20,
+  'spectrum__pla-thermoactive__standard': 2,
+  'spectrum__r-pla__standard': 4,
   
-  // ========== PETG Family ==========
+  // ========== PETG Family (9 lines) ==========
   'spectrum__pet-g-premium__standard': 16,
   'spectrum__pet-g-premium__refill': 10,
   'spectrum__pet-g-premium-high-speed__standard': 10,
-  'spectrum__pet-g-premium-high-speed__refill': 8,
   'spectrum__pctg-premium__standard': 10,
-  'spectrum__pctg-premium__refill': 8,
   'spectrum__pctg-cf10__standard': 2,
   'spectrum__pctg-gf10__standard': 2,
   'spectrum__pet-g-glow-in-the-dark__standard': 3,
+  'spectrum__rpetg__standard': 8,
   
-  // ========== ASA Family ==========
+  // ========== ASA Family (7 lines) ==========
   'spectrum__asa-275__standard': 12,
   'spectrum__asa-275__refill': 12,
   'spectrum__flameguard-asa-275__standard': 8,
-  'spectrum__flameguard-asa-275__refill': 2,
   'spectrum__asa-x-cf10__standard': 2,
   'spectrum__asa-x-cf10__refill': 1,
   'spectrum__asa-x-gf10__standard': 4,
   'spectrum__asa-kevlar__standard': 2,
   
-  // ========== ABS Family ==========
+  // ========== ABS Family (1 line) ==========
   'spectrum__smart-abs__standard': 12,
-  'spectrum__smart-abs__refill': 8,
   
-  // ========== Engineering ==========
+  // ========== Engineering (11 lines) ==========
   'spectrum__pc-275__standard': 10,
-  'spectrum__pc-abs__standard': 4,
-  'spectrum__pc-ptfe__standard': 1,
   'spectrum__nylon-pa6-low-warp__standard': 6,
-  'spectrum__nylon-pa6-gf30-low-warp__standard': 2,
-  'spectrum__nylon-pa6-low-warp-gf15s__standard': 2,
   'spectrum__pa6-cf15__standard': 1,
   'spectrum__pa6-cs20-fr-v0__standard': 4,
-  'spectrum__pa6-gk10__standard': 2,
   'spectrum__pa6-neat__standard': 4,
   'spectrum__pa12-cf15__standard': 1,
+  'spectrum__hips-x__standard': 2,
   
-  // ========== Flexible ==========
+  // ========== Flexible (4 lines) ==========
   'spectrum__s-flex-90a__standard': 8,
   'spectrum__s-flex-85a__standard': 6,
   'spectrum__s-flex-98a__standard': 8,
   'spectrum__s-flex-carbon__standard': 1,
   
-  // ========== Specialty Materials ==========
+  // ========== Specialty (1 line) ==========
   'spectrum__wood__standard': 6,
-  'spectrum__r-pla__standard': 4,
-  'spectrum__r-pla__refill': 2,
-  'spectrum__rpetg__standard': 8,
-  'spectrum__hips-x__standard': 2,
-  'spectrum__pla-metal__standard': 6,
-  'spectrum__pla-pro__standard': 20,
-  'spectrum__pla-thermoactive__standard': 2,
 };
 
 // Total expected filament cards in UI (unique product lines)
-// Updated to include all specialty materials and flexible variants
+// Auto-calculated from the product lines map - currently 63 lines
 export const SPECTRUM_EXPECTED_CARD_COUNT = Object.keys(SPECTRUM_EXPECTED_PRODUCT_LINES).length;
