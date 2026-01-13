@@ -42,14 +42,14 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d', 'prusament', 'push-plastic', 'recreus'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech'];
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
-const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic'];
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'siraya-tech'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -786,6 +786,38 @@ const AI_ROLES = {
       'Balena is bio-based TPU - separate from petroleum-based FilaFlex',
       'Expected 14 product lines for consumer-focused products',
       'Currency is EUR for primary store but USD/CAD available via region selector',
+    ],
+  },
+  sirayaTechSpecialist: {
+    title: 'Siraya Tech Integration Specialist',
+    triggers: ['siraya', 'sirayatech', 'siraya-tech', 'fibreheart', 'flex tpu', 'rebound peba', 'tpu-64d', 'tpu-85a', 'tpu-95a', 'tpu-foam', 'peba-85a', 'peba-95a', 'peba-foam', 'tpu-gf', 'ppa-cf', 'abs-cf', 'abs-gf', 'asa-gf', 'pet-cf', 'pet-gf', 'petg-cf'],
+    capabilities: [
+      'Siraya Tech Shopify platform analysis (siraya.tech - USD primary)',
+      'CSV-seeded sync pipeline architecture (~35 products, 21 product lines)',
+      'Engineering filament specialist (Fibreheart line: CF, GF composites)',
+      'Flexible filament specialist (Flex TPU, Rebound PEBA)',
+      'Shore hardness material classification (64D, 85A, 95A)',
+      'Foaming filament detection (TPU Air, PEBA Air)',
+      'Multi-region shipping variant deduplication (US, EU, AU, CA)',
+      'TDS management via Google Drive links',
+      'Fiber-reinforced material expertise (carbon/glass fiber)'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (sirayatech-seed.ts) as primary source - Shopify API for enrichment only',
+      'Exclude Silicone products (Defiant 15/25) - casting material, not filament',
+      'Exclude Peopoly products (Lancer, Magneto) - different brand sold on site',
+      'TPU Air is foaming TPU (65A-82A) - SEPARATE from TPU-85A',
+      'PEBA Air is foaming PEBA (70A-95A) - SEPARATE from PEBA-95A',
+      'Shore hardness determines material category: 64D (hardest TPU), 85A, 95A',
+      'Most products are Black-only engineering materials',
+      'Clear vs White need unique hex codes (#F5F5F5 vs #FFFFFF)',
+      'Flat Dark Earth is military tan color (#B5A08E)',
+      'Olive Green is tactical green (#556B2F)',
+      'Expected 21 product lines for filament collection',
+      'All Siraya Tech filaments are 1.75mm diameter, 800g spools',
+      'Fibreheart = engineering materials (ABS, ASA, PET, PETG, PPA with CF/GF)',
+      'Flex = TPU line (64D, 85A, 95A, Air foam)',
+      'Rebound = PEBA line (85A, 95A, Air foam)'
     ],
   },
   prusamentSpecialist: {
@@ -7118,7 +7150,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -7206,7 +7238,7 @@ Deno.serve(async (req) => {
           // - matter3d: website HTML shows incorrect "magenta" from other page elements
           // - polymaker: website shows "you will love it" marketing text as color option
           // - proto-pasta: website scraping picks up navigation text like "makers of protopasta, scroll to top"
-          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus'];
+          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus', 'siraya-tech'];
           const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
           
           if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {
@@ -9160,7 +9192,7 @@ Deno.serve(async (req) => {
     );
     
     // Skip logo image check for product-level image brands (they intentionally share images)
-    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament', 'recreus'];
+    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament', 'recreus', 'siraya-tech'];
     const skipLogoImageCheck = SKIP_LOGO_IMAGE_CHECK_BRANDS.some(b => 
       brandSlug?.toLowerCase() === b || brandSlug?.toLowerCase().includes(b)
     );
@@ -9196,7 +9228,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
