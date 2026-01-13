@@ -30,6 +30,7 @@ export interface SyncProgress {
   created?: number;
   updated?: number;
   errors?: number;
+  isRealProgress?: boolean; // True when progress comes from actual sync data, not placeholder
 }
 
 export interface SyncProductResult {
@@ -122,16 +123,21 @@ export function useBrandSyncManager() {
         const progressData = data.products_processed as unknown as SyncProgress | null;
         
         if (progressData && typeof progressData === 'object') {
+          // Only mark as real progress if we have actual product counts
+          const hasRealData = progressData.productsProcessed !== undefined || 
+                              progressData.created !== undefined ||
+                              progressData.updated !== undefined;
           setProgress({
             stage: progressData.stage || 'Processing',
             current: progressData.current || 0,
-            total: progressData.total || 100,
+            total: progressData.total || 0,
             message: progressData.message,
             productsProcessed: progressData.productsProcessed,
             variantsFound: progressData.variantsFound,
             created: progressData.created,
             updated: progressData.updated,
             errors: progressData.errors,
+            isRealProgress: hasRealData,
           });
         }
 
@@ -162,7 +168,7 @@ export function useBrandSyncManager() {
           };
 
           setResult(syncResult);
-          setProgress({ stage: 'Complete', current: 100, total: 100 });
+          setProgress({ stage: 'Complete', current: 100, total: 100, isRealProgress: true });
 
           // Invalidate queries
           queryClient.invalidateQueries({ queryKey: ['brand-data-quality', brandSlug] });
@@ -238,13 +244,13 @@ export function useBrandSyncManager() {
     setIsLoading(true);
     setError(null);
     setResult(null);
-    setProgress({ stage: 'Starting sync...', current: 0, total: 100 });
+    setProgress({ stage: 'Starting sync...', current: 0, total: 0, isRealProgress: false });
 
     try {
       // Clean slate is handled by the edge function now, don't delete here
       // This prevents the double-delete race condition
       
-      setProgress({ stage: 'Invoking sync function', current: 5, total: 100 });
+      setProgress({ stage: 'Invoking sync function...', current: 0, total: 0, isRealProgress: false });
 
       const syncType = localDetectSyncFunction(options.brandSlug);
       let data: any;
@@ -259,7 +265,7 @@ export function useBrandSyncManager() {
         // Brand-specific high-fidelity sync function
         const functionSlug = normalizeSlugForFunction(options.brandSlug);
         const functionName = `sync-${functionSlug}-products`;
-        setProgress({ stage: `Calling ${functionName}`, current: 10, total: 100 });
+        setProgress({ stage: `Calling ${functionName}...`, current: 0, total: 0, isRealProgress: false });
         
         const response = await supabase.functions.invoke(functionName, {
           body: {
@@ -274,7 +280,7 @@ export function useBrandSyncManager() {
         fnError = response.error;
       } else {
         // Generic fallback
-        setProgress({ stage: 'Calling sync-brand-products', current: 10, total: 100 });
+        setProgress({ stage: 'Calling sync-brand-products...', current: 0, total: 0, isRealProgress: false });
         
         const response = await supabase.functions.invoke('sync-brand-products', {
           body: {
@@ -295,7 +301,7 @@ export function useBrandSyncManager() {
       // For background sync functions, start polling for progress
       if (data?.syncLogId) {
         setActiveSyncLogId(data.syncLogId);
-        setProgress({ stage: 'Sync started - monitoring progress...', current: 15, total: 100 });
+        setProgress({ stage: 'Sync started - monitoring progress...', current: 0, total: 0, isRealProgress: false });
         startPolling(data.syncLogId, options.brandSlug);
         
         // Return immediately - the polling will update state
@@ -307,7 +313,7 @@ export function useBrandSyncManager() {
       }
 
       // For synchronous syncs (like dry run or generic), handle normally
-      setProgress({ stage: 'Complete', current: 100, total: 100 });
+      setProgress({ stage: 'Complete', current: 100, total: 100, isRealProgress: true });
 
       const syncResult: SyncResult = {
         success: data?.success ?? true,

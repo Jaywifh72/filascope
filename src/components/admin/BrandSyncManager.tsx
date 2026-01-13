@@ -557,36 +557,44 @@ export function BrandSyncManager() {
         {/* Progress */}
         {progress && (
           <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
-            {/* Header with stage and percentage */}
+            {/* Header with stage */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 <span className="font-medium">{progress.stage}</span>
               </div>
-              <Badge variant="secondary" className="tabular-nums">
-                {progress.total > 0 
-                  ? `${Math.round((progress.current / progress.total) * 100)}%`
-                  : `${progress.current}%`
-                }
-              </Badge>
+              {/* Only show percentage when we have real progress data */}
+              {progress.isRealProgress && progress.total > 0 && (
+                <Badge variant="secondary" className="tabular-nums">
+                  {Math.round((progress.current / progress.total) * 100)}%
+                </Badge>
+              )}
             </div>
             
-            {/* Progress bar with gradient */}
+            {/* Progress bar - indeterminate when no real data */}
             <div className="space-y-1">
-              <Progress 
-                value={progress.total > 0 
-                  ? Math.round((progress.current / progress.total) * 100)
-                  : progress.current
-                } 
-                className="h-3" 
-              />
-              {progress.total > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{progress.current} of {progress.total} items</span>
-                  <span>
-                    {progress.total - progress.current} remaining
-                  </span>
-                </div>
+              {progress.isRealProgress && progress.total > 0 ? (
+                <>
+                  <Progress 
+                    value={Math.round((progress.current / progress.total) * 100)} 
+                    className="h-3" 
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{progress.current} of {progress.total} products</span>
+                    <span>{progress.total - progress.current} remaining</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Indeterminate progress - animated sliding effect */}
+                  <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
+                    <div className="h-full w-1/3 bg-primary rounded-full animate-indeterminate" />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Processing products...</span>
+                    <span className="animate-pulse">Please wait</span>
+                  </div>
+                </>
               )}
             </div>
             
@@ -597,8 +605,8 @@ export function BrandSyncManager() {
               </div>
             )}
             
-            {/* Live stats grid */}
-            {(progress.productsProcessed !== undefined || progress.variantsFound !== undefined || 
+            {/* Live stats grid - only when we have real data */}
+            {progress.isRealProgress && (progress.productsProcessed !== undefined || progress.variantsFound !== undefined || 
               progress.created !== undefined || progress.updated !== undefined || progress.errors !== undefined) && (
               <div className="grid grid-cols-5 gap-2 pt-2 border-t">
                 {progress.productsProcessed !== undefined && (
