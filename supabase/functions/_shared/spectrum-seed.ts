@@ -101,6 +101,11 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
     return `spectrum__pet-g-premium-high-speed${suffix}`;
   }
   
+  // ========== SPECIALTY MATERIALS (separate from PLA Premium) ==========
+  if (/r-pla/i.test(t)) return `spectrum__r-pla${suffix}`;
+  if (/hips-x|hips\s*x/i.test(t)) return `spectrum__hips-x${suffix}`;
+  if (/pla\s*metal/i.test(t)) return `spectrum__pla-metal${suffix}`;
+  
   // ========== SPECIALTY PLA LINES ==========
   if (/pla\s*magic\s*silk/i.test(t)) return `spectrum__pla-magic-silk${suffix}`;
   if (/pla\s*silk\s*rainbow/i.test(t)) return `spectrum__pla-silk-rainbow${suffix}`;
@@ -244,11 +249,16 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   
   // ========== Flexible ==========
   'spectrum__s-flex-90a__standard': 8,
+  'spectrum__s-flex-85a__standard': 6,
   
-  // ========== Specialty ==========
+  // ========== Specialty Materials ==========
   'spectrum__wood__standard': 6,
+  'spectrum__r-pla__standard': 4,
+  'spectrum__r-pla__refill': 2,
+  'spectrum__hips-x__standard': 2,
+  'spectrum__pla-metal__standard': 6,
 };
 
 // Total expected filament cards in UI (unique product lines)
-// Updated to include "The Filament" sub-brand lines
+// Updated to include "The Filament" sub-brand lines and specialty materials
 export const SPECTRUM_EXPECTED_CARD_COUNT = Object.keys(SPECTRUM_EXPECTED_PRODUCT_LINES).length;
