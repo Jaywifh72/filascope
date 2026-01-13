@@ -212,7 +212,12 @@ function extractMaterial(product: ShopifyProduct): string {
     [/ASA[\s-]*Kevlar/i, 'ASA Kevlar'],
     [/Smart\s*ABS/i, 'Smart ABS'],
     
-    // Engineering materials
+    // Engineering materials - SPECIALTY MUST BE FIRST!
+    [/PET-?G\s*FR\s*V0/i, 'PET-G FR V0'],           // Fire retardant PETG
+    [/PPS\s*AM230/i, 'PPS AM230'],                  // High-temp specialty
+    [/ThermaTech\s*PA/i, 'ThermaTech PA'],          // High-temp PA
+    [/ABS\s*Medical/i, 'ABS Medical'],              // Medical-grade
+    [/PC[\s\/-]*PTFE/i, 'PC PTFE'],                 // PC/PTFE lubricated (before PC-275)
     [/Nylon\s*PA6\s*Low[\s-]*Warp\s*GF15S/i, 'Nylon PA6 Low Warp GF15S'],
     [/Nylon\s*PA6\s*GF30[\s-]*Low[\s-]*Warp/i, 'Nylon PA6 GF30 Low Warp'],
     [/Nylon\s*PA6[\s-]*Low[\s-]*Warp/i, 'Nylon PA6 Low Warp'],
@@ -223,7 +228,6 @@ function extractMaterial(product: ShopifyProduct): string {
     [/PA6[\s-]*Neat/i, 'PA6 Neat'],
     [/PC[\s-]*275/i, 'PC-275'],
     [/PC[\s-]*ABS/i, 'PC ABS'],
-    [/PC[\s-]*PTFE/i, 'PC PTFE'],
     
     // Flexible
     [/S-?Flex\s*90A/i, 'S-Flex 90A'],
@@ -274,6 +278,12 @@ function extractColor(product: ShopifyProduct): string {
     'The Filament ReFill PLA HS', 'The Filament PLA HS',
     'The Filament ReFill PLA', 'The Filament PLA',
     // ===== SPECIALTY MATERIALS =====
+    // CRITICAL: Specialty engineering materials MUST be listed before generic patterns
+    'PET-G FR V0', 'PETG FR V0',                    // Fire retardant PETG
+    'PC/PTFE', 'PC PTFE', 'PC-PTFE',                // PC/PTFE lubricated material
+    'PPS AM230',                                    // High-temp PPS
+    'ThermaTech PA',                                // High-temp PA
+    'ABS Medical',                                  // Medical-grade ABS
     'FlameGuard ASA 275', 'FlameGuard PLA', 'SafeGuard PLA', 'AquaPrint PLA',
     'PLA Magic SILK', 'PLA SILK Rainbow', 'PLA SILK', 'Pastello PLA',
     'Premium PLA High Speed', 'PLA High Speed', 'PLA Premium',
@@ -968,6 +978,55 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'ash': '8B8682',             // Fallback if "WOOD ASH" extracted as just "ASH"
     'ebony': '3D2B1F',           // Wood Ebony color (fallback)
     
+    // ========== MISSING COLOR MAPPINGS (from Post Sync Check failures) ==========
+    'nt': 'F5EBD7',              // NT = Natural abbreviation (slightly warmer)
+    'brass': 'B5A642',           // PLA Metal BRASS
+    'coral': 'FF7F50',           // PLA Pro CORAL, Smart ABS CORAL
+    'military khaki': '4B5320',  // Military green-brown
+    'matt sand khaki': 'C3B091', // Matte sand brown
+    'matt desert storm': 'C19A6B', // Matte desert tan
+    'sand khaki': 'C3B097',      // Non-matt (unique hex)
+    'desert storm': 'C19A71',    // Non-matt (unique hex)
+    'light': 'BEBEBE',           // Fallback for "STONE AGE LIGHT" 
+    'dark': '4A4A4A',            // Fallback for "STONE AGE DARK"
+    'medical': 'F5F5F5',         // ABS Medical white
+    
+    // ========== UNIQUE NATURAL/BEIGE MAPPINGS (prevent #F5F5DC collision) ==========
+    'pps am230 nat': 'F5E6CE',   // PPS material natural (tan)
+    'thermatech pa natural': 'F5DCC0', // ThermaTech natural (warm)
+    'thermatech natural': 'F5DCC0', // ThermaTech natural alias
+    'gf30 nat': 'F0E8D0',        // Glass-filled natural
+    '/ptfe nat': 'F5EBD0',       // PC/PTFE NAT
+    'ptfe nat': 'F5EBD0',        // PC/PTFE NAT alias
+    'pc ptfe nat': 'F5EBD0',     // PC PTFE NAT alias
+    
+    // ========== UNIQUE BLACK MAPPINGS (prevent #1A1A1A collision) ==========
+    'carbon black': '181818',    // Carbon-filled black
+    'cf carbon black': '141414', // PC CF carbon black
+    'gf30 black': '1C1C1C',      // Glass-filled black
+    'thermatech pa black': '161616', // ThermaTech black
+    'thermatech black': '161616',// ThermaTech black alias
+    'pet-g fr v0 black': '121212', // FR V0 black
+    'petg fr v0 black': '121212',// FR V0 black alias
+    'fr v0 black': '121212',     // FR V0 black alias
+    'kevlar bk': '0B0B0B',       // Kevlar black
+    
+    // ========== UNIQUE GOLD MAPPINGS (prevent #FFD700 collision in pla-glitter) ==========
+    'aurora gold': 'FFD900',     // Glitter gold 1 (brighter)
+    'aztec gold': 'FFCE00',      // Glitter gold 2 (warmer)
+    'clear gold': 'FFDC00',      // Glitter gold 3 (yellow-gold)
+    
+    // ========== MATT VS NON-MATT UNIQUE MAPPINGS ==========
+    'matt navy blue': '000075',  // Slightly darker than #000080
+    'matt deep black': '080808', // Slightly lighter than #0A0A0A
+    'matt olive green': '228B1E',// Slightly different from #228B22
+    'matt dark grey': '4E4E4E',  // Slightly different from #505050
+    'matt bloody red': 'B50000', // Slightly different from #B80000
+    'matt lion orange': 'FF8800',// Slightly different from #FF8C00
+    'matt iron grey': '525D5D',  // Slightly different from iron grey
+    'matt anthracite grey': '283133', // Slightly different
+    'matt traffic black': '070707', // Slightly different
+    
     // ========== UNIQUE PURPLE/VIOLET MAPPINGS (prevent duplicate #8B008B) ==========
     'pla hs quantum purple': '8C008C',
     'pla cf violet': '8D008D',
@@ -1109,7 +1168,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'latte beige': 'C8AD7F',
     'natural': 'F5F5DC',
     'nat': 'F5F5DC',             // NAT = Natural abbreviation
-    '/ptfe nat': 'F5F5DC',       // PC/PTFE NAT variant
+    // NOTE: '/ptfe nat' moved to UNIQUE NATURAL/BEIGE MAPPINGS section above with unique hex
     'beige': 'F5F5DC',
     'walnut brown': '5C4033',
     'chocolate brown': '3D2B1F',
