@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
       
       const { error } = await supabase
         .from('filaments')
-        .upsert(batch, { onConflict: 'product_id' });
+        .upsert(batch, { onConflict: 'vendor,product_id' });
 
       if (error) {
         console.error(`[Siraya Tech] Batch upsert error:`, error);
