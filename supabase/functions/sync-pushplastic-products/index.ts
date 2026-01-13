@@ -31,7 +31,7 @@ import {
 
 const VENDOR_NAME = 'Push Plastic';
 const BRAND_SLUG = 'push-plastic';
-const SAFE_DELETE_THRESHOLD = 50;
+const SAFE_DELETE_THRESHOLD = 30; // Lower threshold for curated CSV seed (~155 products)
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -165,6 +165,9 @@ Deno.serve(async (req) => {
     }
 
     console.log('='.repeat(60));
+    console.log('=== PUSH PLASTIC CSV-SEEDED SYNC - NOT SHOPIFY LIVE ===');
+    console.log('This sync uses curated CSV seed data, not Shopify API');
+    console.log('='.repeat(60));
     console.log('PUSH PLASTIC CSV-SEEDED SYNC PIPELINE');
     console.log('Options:', JSON.stringify(options));
     console.log('='.repeat(60));
@@ -282,12 +285,16 @@ Deno.serve(async (req) => {
       const batch = validProducts.slice(i, i + batchSize);
       
       const records = batch.map(entry => {
+        // Extract material from title using enhanced extraction logic
         const material = extractMaterialFromTitle(entry.filamentName);
-        const productLineId = generatePushPlasticProductLineId(entry.filamentName);
+        // Generate product line ID with proper material categorization
+        const productLineId = generatePushPlasticProductLineId(material, entry.filamentName);
         const finishType = extractFinishType(material, entry.color);
         const isAbrasive = isAbrasiveMaterial(material);
         const weight = extractWeightFromTitle(entry.filamentName);
         const tdsUrl = getTdsUrl(material);
+        
+        console.log(`[Process] ${entry.filamentName} - ${entry.color} → Material: ${material}, Line: ${productLineId}`);
         
         // Get hex from CSV or fallback to mapping
         const colorHex = entry.colorHex || getPushPlasticSeedHex(entry.colorHex, entry.color);

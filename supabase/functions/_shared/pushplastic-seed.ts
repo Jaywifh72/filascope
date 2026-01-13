@@ -80,15 +80,17 @@ export const PUSHPLASTIC_EXTENDED_HEX_MAP: Record<string, string> = {
   'desert tan': '#EAD1AF',
   'flat dark earth': '#A67B5B',
   
-  // Greens
+  // Greens - UNIQUE hex codes to prevent swatch duplication
   'green': '#228B22',
   'army green': '#4B5320',
   'fatigue green': '#5B6B4F',
-  'forest green': '#228B22',
+  'forest green': '#1E7B1E',     // Differentiated from 'green'
   'lime green': '#32CD32',
-  'pusch green': '#228B22',
+  'pusch green': '#2E8B2E',      // PUSCH brand green - unique from standard green
+  'spy green': '#3A9A3C',        // Stealth variant - unique
+  'stealth green': '#2D7D2D',    // Stealth variant - unique  
   'fluorescent green': '#39FF14',
-  'translucent green': '#228B22',
+  'translucent green': '#26A026', // Differentiated from solid green
   'mint': '#98FF98',
   'seafoam': '#71EEB8',
   
@@ -109,15 +111,19 @@ export const PUSHPLASTIC_EXTENDED_HEX_MAP: Record<string, string> = {
   'lavender': '#E6E6FA',
   
   // Metallics
-  'gold metallic': '#957C67',
+  'gold metallic': '#D4AF37',    // Distinct gold - not yellow
   'silver metallic': '#97979B',
   'bronze metallic': '#CD7F32',
   
-  // Translucents
-  'translucent amber': '#E0E0E0',
+  // Translucents (excluding already-defined translucent colors above)
+  'translucent amber': '#FFBF00',
   'translucent grey': '#828082',
   'translucent gray': '#828082',
   'clear': '#F0F8FF',
+  
+  // PMMA specialty colors
+  'pmma clear': '#F0F8FF',
+  'pmma natural': '#F5F5DC',
 };
 
 /**
@@ -198,31 +204,38 @@ export function deduplicatePushPlasticEntries(entries: PushPlasticSeedEntry[]): 
 
 /**
  * Parse material from filament name
+ * IMPORTANT: Order matters - most specific patterns first!
  */
 export function extractMaterialFromTitle(title: string): string {
   const titleLower = title.toLowerCase();
   
   // Carbon Fiber variants (most specific first)
-  if (titleLower.includes('carbon fiber nylon') || titleLower.includes('cf nylon')) return 'PA-CF';
-  if (titleLower.includes('carbon fiber pc') || titleLower.includes('cf pc')) return 'PC-CF';
-  if (titleLower.includes('carbon fiber petg') || titleLower.includes('cf petg')) return 'PETG-CF';
-  if (titleLower.includes('carbon fiber abs') || titleLower.includes('cf abs')) return 'ABS-CF';
+  if (titleLower.includes('carbon fiber nylon') || titleLower.includes('cf nylon') || titleLower.includes('nylon cf')) return 'PA-CF';
+  if (titleLower.includes('carbon fiber pc') || titleLower.includes('cf pc') || titleLower.includes('pc cf')) return 'PC-CF';
+  if (titleLower.includes('carbon fiber petg') || titleLower.includes('cf petg') || titleLower.includes('petg cf')) return 'PETG-CF';
+  if (titleLower.includes('carbon fiber abs') || titleLower.includes('cf abs') || titleLower.includes('abs cf')) return 'ABS-CF';
   
-  // Specialty materials
-  if (titleLower.includes('ultem') || titleLower.includes('pei')) return 'PEI';
+  // Specialty materials (check before generic ones)
+  if (titleLower.includes('ultem') || titleLower.includes('pei 9085') || titleLower.includes('pei 1010')) return 'PEI';
   if (titleLower.includes('aquasys') || titleLower.includes('bvoh')) return 'BVOH';
   if (titleLower.includes('pmma') || titleLower.includes('acrylic')) return 'PMMA';
   
-  // High-heat PLA variants
+  // Matte ABS - check before regular ABS
+  if (titleLower.includes('matte abs')) return 'ABS-Matte';
+  
+  // High-heat PLA variants - CRITICAL: check before regular PLA
   if (titleLower.includes('high heat+tough') || titleLower.includes('hh tough') || 
       titleLower.includes('hh+tough') || titleLower.includes('3d870')) return 'PLA-HT';
   if (titleLower.includes('hh pla') || titleLower.includes('high heat pla') || 
       titleLower.includes('3d850')) return 'PLA-HH';
   
+  // Nylon - check before generic patterns
+  if (titleLower.includes('nylon') && !titleLower.includes('carbon')) return 'PA';
+  
   // PC+PBT
   if (titleLower.includes('pc+pbt') || titleLower.includes('pc-pbt')) return 'PC+PBT';
   
-  // Standard materials
+  // Standard materials (order: specific before generic)
   if (titleLower.includes('tpu')) return 'TPU-98A';
   if (titleLower.includes('pctg')) return 'PCTG';
   if (titleLower.includes('petg')) return 'PETG';
@@ -236,9 +249,17 @@ export function extractMaterialFromTitle(title: string): string {
 
 /**
  * Generate product_line_id from material
+ * Maps materials to their proper product line structure
  */
-export function generatePushPlasticProductLineId(material: string): string {
+export function generatePushPlasticProductLineId(material: string, title?: string): string {
   const materialKey = material.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  
+  // Special handling for finish-type variants
+  if (material === 'ABS-Matte') {
+    return 'push-plastic__abs__matte';
+  }
+  
+  // Standard product line format
   return `push-plastic__${materialKey}__standard`;
 }
 
