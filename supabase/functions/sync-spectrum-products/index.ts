@@ -8,16 +8,27 @@
  * - Fetches 600+ products directly from Shopify API
  * - 40+ material types with ReFill eco-spool variants
  * - Color-specific images per variant
+ * - Early job ID return pattern to prevent client timeouts
  * 
  * Filtering:
  * - No samples (<250g)
  * - No bulk (>5500g)
  * - No 2.85mm/3mm diameter
  * - No gift cards, bundles, or non-filament products
+ * 
+ * Uses EdgeRuntime.waitUntil() for background processing.
  */
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createSyncLog,
+  updateSyncProgress,
+  completeSyncLog,
+  createImmediateResponse,
+  runInBackground,
+  corsHeaders,
+  SyncProgress,
+} from "../_shared/background-sync.ts";
 import { 
   generateSpectrumProductLineIdFromSeed,
   SPECTRUM_EXPECTED_CARD_COUNT,
@@ -34,10 +45,7 @@ import {
   logFilterStats,
 } from "../_shared/variant-filters.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Remove local corsHeaders - using imported one from background-sync.ts
 
 interface ShopifyProduct {
   id: number;
@@ -349,12 +357,10 @@ function transformProducts(shopifyProducts: ShopifyProduct[]): SpectrumProduct[]
   return products;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-  
-  const startTime = Date.now();
   
   try {
     const { cleanSlate = false, dryRun = false, limit } = await req.json().catch(() => ({}));
@@ -374,56 +380,135 @@ serve(async (req) => {
       throw new Error(`${BRAND_NAME} brand not found in automated_brands`);
     }
     
-    console.log(`Starting ${BRAND_NAME} sync (Live Shopify API)`);
-    console.log(`Options: cleanSlate=${cleanSlate}, dryRun=${dryRun}, limit=${limit || 'all'}`);
-    
-    // Mark as scraping
-    if (!dryRun) {
-      await supabase
-        .from('automated_brands')
-        .update({ scraping_active: true, last_error: null })
-        .eq('id', brand.id);
+    // For dry runs, execute synchronously
+    if (dryRun) {
+      return await runSyncSynchronously(supabase, { cleanSlate, dryRun, limit }, brand);
     }
     
-    const stats: SyncStats = {
-      discovered: 0,
-      created: 0,
-      updated: 0,
-      skipped: 0,
-      errors: 0,
-      duplicatesFixed: 0,
-    };
+    // Create sync log entry IMMEDIATELY for tracking
+    const { syncLogId, error: syncLogError } = await createSyncLog(
+      supabase,
+      BRAND_SLUG,
+      cleanSlate ? 'clean_slate' : 'incremental'
+    );
     
-    const productResults: ProductResult[] = [];
-    const filterStats = createFilterStats();
+    if (syncLogError) {
+      console.error(`[${BRAND_NAME}] Failed to create sync log:`, syncLogError);
+    }
+    
+    console.log(`[${BRAND_NAME}] Starting background sync, job ID: ${syncLogId}`);
+    
+    // Return immediate response with job ID
+    const immediateResponse = createImmediateResponse(BRAND_NAME, syncLogId, { dryRun, cleanSlate });
+    
+    // Run actual sync in background
+    const syncPromise = runBackgroundSync(supabase, { cleanSlate, dryRun, limit }, brand, syncLogId);
+    runInBackground(syncPromise, BRAND_SLUG);
+    
+    return immediateResponse;
+    
+  } catch (error) {
+    console.error('Sync error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+
+// =============================================================================
+// BACKGROUND SYNC FUNCTION
+// =============================================================================
+
+interface SyncOptions {
+  cleanSlate: boolean;
+  dryRun: boolean;
+  limit?: number;
+}
+
+interface BrandInfo {
+  id: string;
+  brand_name: string;
+}
+
+async function runBackgroundSync(
+  supabase: any,
+  options: SyncOptions,
+  brand: BrandInfo,
+  syncLogId: string | null
+): Promise<void> {
+  const startTime = Date.now();
+  const { cleanSlate, dryRun, limit } = options;
+  
+  // Stats tracking
+  let discovered = 0;
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  let errors = 0;
+  let duplicatesFixed = 0;
+  
+  const productResults: ProductResult[] = [];
+  const filterStats = createFilterStats();
+  
+  // Helper to update progress
+  const updateProgress = async (stage: string, current: number, total: number, message?: string) => {
+    if (!syncLogId) return;
+    await updateSyncProgress(supabase, syncLogId, {
+      stage,
+      current,
+      total,
+      message,
+      productsProcessed: discovered,
+      created,
+      updated,
+      errors,
+    });
+  };
+  
+  try {
+    console.log(`[${BRAND_NAME}] Starting sync (Live Shopify API)`);
+    console.log(`[${BRAND_NAME}] Options: cleanSlate=${cleanSlate}, limit=${limit || 'all'}`);
+    
+    // Mark as scraping
+    await supabase
+      .from('automated_brands')
+      .update({ scraping_active: true, last_error: null })
+      .eq('id', brand.id);
     
     // ========================================================================
     // STEP 1: FETCH PRODUCTS FROM SHOPIFY API
     // ========================================================================
-    console.log('Step 1: Fetching products from Shopify API...');
+    await updateProgress('Fetching from Shopify API', 0, 100, 'Fetching product catalog...');
+    console.log('[SPECTRUM] Step 1: Fetching products from Shopify API...');
     
     const shopifyProducts = await fetchAllShopifyProducts();
     const seedProducts = transformProducts(shopifyProducts);
-    stats.discovered = seedProducts.length;
+    discovered = seedProducts.length;
     
     if (seedProducts.length === 0) {
       throw new Error('No products fetched from Shopify API');
     }
     
-    console.log(`Discovered ${seedProducts.length} filament products`);
+    console.log(`[SPECTRUM] Discovered ${seedProducts.length} filament products`);
+    await updateProgress('Fetched products', seedProducts.length, seedProducts.length, `Found ${seedProducts.length} products`);
     
     // ========================================================================
     // STEP 2: SAFE DELETE CHECK (if clean slate)
     // ========================================================================
-    if (cleanSlate && !dryRun) {
-      console.log('Step 2: Clean slate - checking safe delete threshold...');
+    if (cleanSlate) {
+      await updateProgress('Clean slate', 0, 100, 'Checking safe delete threshold...');
+      console.log('[SPECTRUM] Step 2: Clean slate - checking safe delete threshold...');
       
       const { count: existingCount } = await supabase
         .from('filaments')
         .select('*', { count: 'exact', head: true })
         .eq('vendor', BRAND_NAME);
       
-      console.log(`Existing products: ${existingCount}, New discovered: ${seedProducts.length}`);
+      console.log(`[SPECTRUM] Existing products: ${existingCount}, New discovered: ${seedProducts.length}`);
       
       if (seedProducts.length < SAFE_DELETE_THRESHOLD) {
         throw new Error(`Safe delete threshold not met: ${seedProducts.length} < ${SAFE_DELETE_THRESHOLD}`);
@@ -436,23 +521,30 @@ serve(async (req) => {
         .eq('vendor', BRAND_NAME);
       
       if (deleteError) {
-        console.error('Error deleting existing products:', deleteError);
+        console.error('[SPECTRUM] Error deleting existing products:', deleteError);
         throw deleteError;
       }
       
-      console.log(`Deleted ${existingCount} existing products`);
+      console.log(`[SPECTRUM] Deleted ${existingCount} existing products`);
     }
     
     // ========================================================================
     // STEP 3: PROCESS EACH PRODUCT
     // ========================================================================
-    console.log('Step 3: Processing products...');
+    console.log('[SPECTRUM] Step 3: Processing products...');
     
-    // For clean slate syncs, process ALL products regardless of limit
     const productsToProcess = (cleanSlate || !limit) ? seedProducts : seedProducts.slice(0, limit);
     const processedIds = new Set<string>();
+    const totalToProcess = productsToProcess.length;
     
-    for (const seedProduct of productsToProcess) {
+    for (let i = 0; i < productsToProcess.length; i++) {
+      const seedProduct = productsToProcess[i];
+      
+      // Update progress every 10 products
+      if (i % 10 === 0) {
+        await updateProgress('Processing products', i, totalToProcess, `Processing ${i + 1} of ${totalToProcess}`);
+      }
+      
       try {
         // Extract weight from title
         const weightMatch = seedProduct.title.match(/(\d+(?:\.\d+)?)\s*(kg|g)/i);
@@ -463,12 +555,12 @@ serve(async (req) => {
           weightGrams = unit === 'kg' ? value * 1000 : value;
         }
         
-        // Check variant filters (Spectrum allows 250g+ via isExcludedProduct filtering above)
+        // Check variant filters
         const filterResult = shouldIncludeVariant(weightGrams, 1.75, seedProduct.title);
         updateFilterStats(filterStats, filterResult);
         
         if (!filterResult.include) {
-          stats.skipped++;
+          skipped++;
           productResults.push({
             productId: '',
             title: seedProduct.title,
@@ -494,7 +586,7 @@ serve(async (req) => {
         
         // Check for duplicates
         if (processedIds.has(productId)) {
-          stats.skipped++;
+          skipped++;
           productResults.push({
             productId,
             title: seedProduct.title,
@@ -514,7 +606,7 @@ serve(async (req) => {
           seedProduct.material
         );
         
-        // Get color hex (prioritize extended mappings for unique colors, then general)
+        // Get color hex
         let colorHex = seedProduct.colorHex;
         if (!colorHex) {
           colorHex = mapSpectrumColorToHex(seedProduct.color);
@@ -536,7 +628,7 @@ serve(async (req) => {
           color_family: seedProduct.color,
           featured_image: seedProduct.imageUrl || null,
           product_url: seedProduct.productUrl,
-          variant_price: null, // Will be fetched via live price check
+          variant_price: null,
           tds_url: seedProduct.tdsUrl || enrichment.tdsUrl,
           nozzle_temp_min_c: enrichment.nozzleTempMin,
           nozzle_temp_max_c: enrichment.nozzleTempMax,
@@ -552,18 +644,6 @@ serve(async (req) => {
           last_scraped_at: new Date().toISOString(),
         };
         
-        if (dryRun) {
-          stats.created++;
-          productResults.push({
-            productId,
-            title: seedProduct.title,
-            status: 'created',
-            productLineId,
-            color: seedProduct.color,
-          });
-          continue;
-        }
-        
         // Upsert to database
         const { data: existing } = await supabase
           .from('filaments')
@@ -578,8 +658,8 @@ serve(async (req) => {
             .eq('id', existing.id);
           
           if (updateError) {
-            console.error(`Error updating ${productId}:`, updateError);
-            stats.errors++;
+            console.error(`[SPECTRUM] Error updating ${productId}:`, updateError);
+            errors++;
             productResults.push({
               productId,
               title: seedProduct.title,
@@ -589,7 +669,7 @@ serve(async (req) => {
               reason: updateError.message,
             });
           } else {
-            stats.updated++;
+            updated++;
             productResults.push({
               productId,
               title: seedProduct.title,
@@ -604,8 +684,8 @@ serve(async (req) => {
             .insert(filamentData);
           
           if (insertError) {
-            console.error(`Error inserting ${productId}:`, insertError);
-            stats.errors++;
+            console.error(`[SPECTRUM] Error inserting ${productId}:`, insertError);
+            errors++;
             productResults.push({
               productId,
               title: seedProduct.title,
@@ -615,7 +695,7 @@ serve(async (req) => {
               reason: insertError.message,
             });
           } else {
-            stats.created++;
+            created++;
             productResults.push({
               productId,
               title: seedProduct.title,
@@ -627,8 +707,8 @@ serve(async (req) => {
         }
         
       } catch (e) {
-        console.error(`Error processing ${seedProduct.title}:`, e);
-        stats.errors++;
+        console.error(`[SPECTRUM] Error processing ${seedProduct.title}:`, e);
+        errors++;
         productResults.push({
           productId: '',
           title: seedProduct.title,
@@ -641,136 +721,211 @@ serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 4: FIX DUPLICATE HEX CODES WITHIN PRODUCT LINES
+    // STEP 4: FIX DUPLICATE HEX CODES
     // ========================================================================
-    console.log('Step 4: Checking for duplicate hex codes...');
+    await updateProgress('Fixing duplicates', 90, 100, 'Checking for duplicate hex codes...');
+    console.log('[SPECTRUM] Step 4: Checking for duplicate hex codes...');
     
-    if (!dryRun) {
-      const { data: allProducts } = await supabase
-        .from('filaments')
-        .select('id, product_line_id, color_hex, color_family')
-        .eq('vendor', BRAND_NAME)
-        .not('color_hex', 'is', null);
+    const { data: allProducts } = await supabase
+      .from('filaments')
+      .select('id, product_line_id, color_hex, color_family')
+      .eq('vendor', BRAND_NAME)
+      .not('color_hex', 'is', null);
+    
+    if (allProducts) {
+      const lineGroups = new Map<string, typeof allProducts>();
       
-      if (allProducts) {
-        const lineGroups = new Map<string, typeof allProducts>();
+      for (const p of allProducts) {
+        if (!p.product_line_id) continue;
+        if (!lineGroups.has(p.product_line_id)) {
+          lineGroups.set(p.product_line_id, []);
+        }
+        lineGroups.get(p.product_line_id)!.push(p);
+      }
+      
+      for (const [lineId, products] of lineGroups) {
+        const hexCounts = new Map<string, number>();
         
-        for (const p of allProducts) {
-          if (!p.product_line_id) continue;
-          if (!lineGroups.has(p.product_line_id)) {
-            lineGroups.set(p.product_line_id, []);
-          }
-          lineGroups.get(p.product_line_id)!.push(p);
+        for (const p of products) {
+          if (!p.color_hex) continue;
+          const hex = p.color_hex.toLowerCase();
+          hexCounts.set(hex, (hexCounts.get(hex) || 0) + 1);
         }
         
-        for (const [lineId, products] of lineGroups) {
-          const hexCounts = new Map<string, number>();
-          
-          for (const p of products) {
-            if (!p.color_hex) continue;
-            const hex = p.color_hex.toLowerCase();
-            hexCounts.set(hex, (hexCounts.get(hex) || 0) + 1);
-          }
-          
-          for (const [hex, count] of hexCounts) {
-            if (count > 1) {
-              console.log(`Duplicate hex ${hex} found ${count} times in ${lineId}`);
-              stats.duplicatesFixed += count - 1;
-            }
+        for (const [hex, count] of hexCounts) {
+          if (count > 1) {
+            console.log(`[SPECTRUM] Duplicate hex ${hex} found ${count} times in ${lineId}`);
+            duplicatesFixed += count - 1;
           }
         }
       }
     }
     
     // ========================================================================
-    // STEP 5: FINALIZE AND UPDATE BRAND STATS
+    // STEP 5: FINALIZE
     // ========================================================================
-    console.log('Step 5: Finalizing sync...');
+    await updateProgress('Finalizing', 95, 100, 'Updating brand stats...');
+    console.log('[SPECTRUM] Step 5: Finalizing sync...');
     
-    if (!dryRun) {
-      const { count: productCount } = await supabase
-        .from('filaments')
-        .select('*', { count: 'exact', head: true })
-        .eq('vendor', BRAND_NAME);
-      
-      const { data: productLines } = await supabase
-        .from('filaments')
-        .select('product_line_id')
-        .eq('vendor', BRAND_NAME);
-      
-      const uniqueLines = new Set(productLines?.map(p => p.product_line_id) || []);
-      
-      await supabase
-        .from('automated_brands')
-        .update({
-          scraping_active: false,
-          last_scrape_at: new Date().toISOString(),
-          product_count: productCount || 0,
-          products_created: stats.created,
-          products_updated: stats.updated,
-        })
-        .eq('id', brand.id);
-      
-      console.log(`Final product count: ${productCount}`);
-      console.log(`Unique product lines: ${uniqueLines.size}`);
-      console.log(`Expected card count: ${SPECTRUM_EXPECTED_CARD_COUNT}`);
-    }
+    const { count: productCount } = await supabase
+      .from('filaments')
+      .select('*', { count: 'exact', head: true })
+      .eq('vendor', BRAND_NAME);
+    
+    const { data: productLines } = await supabase
+      .from('filaments')
+      .select('product_line_id')
+      .eq('vendor', BRAND_NAME);
+    
+    const uniqueLines = new Set(productLines?.map((p: { product_line_id: string }) => p.product_line_id) || []);
+    
+    await supabase
+      .from('automated_brands')
+      .update({
+        scraping_active: false,
+        last_scrape_at: new Date().toISOString(),
+        product_count: productCount || 0,
+        products_created: created,
+        products_updated: updated,
+      })
+      .eq('id', brand.id);
+    
+    console.log(`[SPECTRUM] Final product count: ${productCount}`);
+    console.log(`[SPECTRUM] Unique product lines: ${uniqueLines.size}`);
+    console.log(`[SPECTRUM] Expected card count: ${SPECTRUM_EXPECTED_CARD_COUNT}`);
     
     logFilterStats(BRAND_NAME, filterStats);
     
     const duration = Math.round((Date.now() - startTime) / 1000);
+    console.log(`[SPECTRUM] Sync complete in ${duration}s: created=${created}, updated=${updated}, errors=${errors}`);
     
-    console.log(`Sync complete in ${duration}s:`, stats);
-    
-    const fieldCoverage = {
-      images: productResults.filter(p => p.status === 'created' || p.status === 'updated').length,
-      colors: productResults.filter(p => p.color).length,
-      productLines: new Set(productResults.map(p => p.productLineId)).size,
-    };
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        stats,
-        products: productResults.slice(0, 100),
-        fieldCoverage,
-        duration_seconds: duration,
-        message: dryRun 
-          ? `[DRY RUN] Would sync ${stats.created + stats.updated} ${BRAND_NAME} products`
-          : `Synced ${stats.created + stats.updated} ${BRAND_NAME} products`,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    console.error('Sync error:', error);
-    
-    try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
-      await supabase
-        .from('automated_brands')
-        .update({
-          scraping_active: false,
-          last_error: error instanceof Error ? error.message : 'Unknown error',
-          last_error_at: new Date().toISOString(),
-        })
-        .eq('brand_slug', BRAND_SLUG);
-    } catch (e) {
-      console.error('Error resetting scraping status:', e);
+    // Complete the sync log
+    if (syncLogId) {
+      await completeSyncLog(supabase, syncLogId, {
+        status: errors > 0 ? 'partial' : 'completed',
+        created,
+        updated,
+        discovered,
+        failed: errors,
+        durationSeconds: duration,
+        successDetails: {
+          productCount,
+          uniqueProductLines: uniqueLines.size,
+          duplicatesFixed,
+        },
+      });
     }
     
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+  } catch (error) {
+    console.error('[SPECTRUM] Background sync error:', error);
+    
+    // Update brand with error status
+    await supabase
+      .from('automated_brands')
+      .update({
+        scraping_active: false,
+        last_error: error instanceof Error ? error.message : 'Unknown error',
+        last_error_at: new Date().toISOString(),
+      })
+      .eq('brand_slug', BRAND_SLUG);
+    
+    // Complete sync log with error
+    if (syncLogId) {
+      const duration = Math.round((Date.now() - startTime) / 1000);
+      await completeSyncLog(supabase, syncLogId, {
+        status: 'failed',
+        created,
+        updated,
+        discovered,
+        failed: errors + 1,
+        durationSeconds: duration,
+        errorDetails: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+    }
   }
-});
+}
+
+// =============================================================================
+// SYNCHRONOUS SYNC FOR DRY RUNS
+// =============================================================================
+
+async function runSyncSynchronously(
+  supabase: any,
+  options: SyncOptions,
+  brand: BrandInfo
+): Promise<Response> {
+  const startTime = Date.now();
+  const { cleanSlate, limit } = options;
+  
+  const stats: SyncStats = {
+    discovered: 0,
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: 0,
+    duplicatesFixed: 0,
+  };
+  
+  const productResults: ProductResult[] = [];
+  const filterStats = createFilterStats();
+  
+  console.log(`[${BRAND_NAME}] Starting DRY RUN sync`);
+  
+  const shopifyProducts = await fetchAllShopifyProducts();
+  const seedProducts = transformProducts(shopifyProducts);
+  stats.discovered = seedProducts.length;
+  
+  if (seedProducts.length === 0) {
+    throw new Error('No products fetched from Shopify API');
+  }
+  
+  const productsToProcess = (cleanSlate || !limit) ? seedProducts : seedProducts.slice(0, limit);
+  
+  for (const seedProduct of productsToProcess) {
+    const weightMatch = seedProduct.title.match(/(\d+(?:\.\d+)?)\s*(kg|g)/i);
+    let weightGrams = 1000;
+    if (weightMatch) {
+      const value = parseFloat(weightMatch[1]);
+      const unit = weightMatch[2].toLowerCase();
+      weightGrams = unit === 'kg' ? value * 1000 : value;
+    }
+    
+    const filterResult = shouldIncludeVariant(weightGrams, 1.75, seedProduct.title);
+    updateFilterStats(filterStats, filterResult);
+    
+    if (!filterResult.include) {
+      stats.skipped++;
+      continue;
+    }
+    
+    const productLineId = generateSpectrumProductLineIdFromSeed(seedProduct);
+    stats.created++;
+    productResults.push({
+      productId: `spectrum-${productLineId}-dry-run`,
+      title: seedProduct.title,
+      status: 'created',
+      productLineId,
+      color: seedProduct.color,
+    });
+  }
+  
+  logFilterStats(BRAND_NAME, filterStats);
+  
+  const duration = Math.round((Date.now() - startTime) / 1000);
+  
+  return new Response(
+    JSON.stringify({
+      success: true,
+      stats,
+      products: productResults.slice(0, 100),
+      duration_seconds: duration,
+      message: `[DRY RUN] Would sync ${stats.created} ${BRAND_NAME} products`,
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
 
 /**
  * Map Spectrum color names to hex codes
