@@ -257,8 +257,15 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   
   // ========== Specialty (1 line) ==========
   'spectrum__wood__standard': 6,
+  
+  // ========== NEW SPECIALTY ENGINEERING MATERIALS (4 lines) ==========
+  'spectrum__pc-ptfe__standard': 2,        // PC/PTFE lubricated material
+  'spectrum__pps-am230__standard': 2,      // High-temp PPS
+  'spectrum__thermatech-pa__standard': 2,  // High-temp PA
+  'spectrum__pet-g-fr-v0__standard': 2,    // Fire retardant PETG
+  'spectrum__abs-medical__standard': 1,    // Medical-grade ABS
 };
 
 // Total expected filament cards in UI (unique product lines)
-// Auto-calculated from the product lines map - currently 63 lines
+// Auto-calculated from the product lines map - currently 67 lines
 export const SPECTRUM_EXPECTED_CARD_COUNT = Object.keys(SPECTRUM_EXPECTED_PRODUCT_LINES).length;
