@@ -47,11 +47,11 @@ const SIRAYATECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /asa[- ]?gf/i, material: 'ASA-GF', isAbrasive: true, requiresEnclosure: true },
   { pattern: /\basa\b/i, material: 'ASA', isAbrasive: false, requiresEnclosure: true },
   
-  // TPU variants (Flex line)
-  { pattern: /tpu[- ]?64[- ]?d/i, material: 'TPU-64D', isAbrasive: false, requiresEnclosure: false },
-  { pattern: /tpu[- ]?85[- ]?a/i, material: 'TPU-85A', isAbrasive: false, requiresEnclosure: false },
-  { pattern: /tpu[- ]?95[- ]?a/i, material: 'TPU-95A', isAbrasive: false, requiresEnclosure: false },
-  { pattern: /tpu[- ]?air|foaming[- ]?tpu/i, material: 'TPU-FOAM', isAbrasive: false, requiresEnclosure: false },
+  // TPU variants (Flex line) - must handle "Flex TPU - XXX" format with space-hyphen-space
+  { pattern: /tpu[\s\-]*64[\s\-]*d/i, material: 'TPU-64D', isAbrasive: false, requiresEnclosure: false },
+  { pattern: /tpu[\s\-]*85[\s\-]*a/i, material: 'TPU-85A', isAbrasive: false, requiresEnclosure: false },
+  { pattern: /tpu[\s\-]*95[\s\-]*a/i, material: 'TPU-95A', isAbrasive: false, requiresEnclosure: false },
+  { pattern: /tpu[\s\-]*air|foaming[\s\-]*tpu/i, material: 'TPU-FOAM', isAbrasive: false, requiresEnclosure: false },
   
   // PEBA variants (Rebound line)
   { pattern: /peba[- ]?air|peba[- ]?foam/i, material: 'PEBA-FOAM', isAbrasive: false, requiresEnclosure: false },
@@ -59,8 +59,8 @@ const SIRAYATECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   { pattern: /peba[- ]?95[- ]?a|rebound[- ]?peba/i, material: 'PEBA-95A', isAbrasive: false, requiresEnclosure: false },
   { pattern: /\bpeba\b/i, material: 'PEBA', isAbrasive: false, requiresEnclosure: false },
   
-  // TPU-GF (Glass Fiber TPU)
-  { pattern: /tpu[- ]?gf/i, material: 'TPU-GF', isAbrasive: true, requiresEnclosure: false },
+  // TPU-GF (Glass Fiber TPU) - must handle trademark symbol "TPU-GF™"
+  { pattern: /tpu[\s\-]*gf/i, material: 'TPU-GF', isAbrasive: true, requiresEnclosure: false },
 ];
 
 export function normalizeSirayaTechMaterial(title: string): { 

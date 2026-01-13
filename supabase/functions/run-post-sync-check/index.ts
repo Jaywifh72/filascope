@@ -8225,7 +8225,7 @@ Deno.serve(async (req) => {
       'eryone': 54,             // 54 distinct filament lines from 318-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, PA, PP + all variants)
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
-      'siraya-tech': 17,        // Resin types - Fast, Blu, Build, Sculpt, Tenacious, etc.
+      'siraya-tech': 21,        // CSV-seeded filaments: 15 Fibreheart (engineering) + 4 Flex (TPU) + 2 Rebound (PEBA) = 21 product lines
       'sovol': 6,               // PLA, PETG, TPU, ABS, Silk, Carbon
       'flashforge': 8,          // PLA, ABS, PETG, TPU, Adventurer series
       'duramic-3d': 3,          // PLA, PETG, TPU
