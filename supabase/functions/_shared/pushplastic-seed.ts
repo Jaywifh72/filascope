@@ -40,7 +40,7 @@ export const PUSHPLASTIC_PRODUCT_LINE_IMAGES: Record<string, string> = {
   'push-plastic__abs__matte': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   'push-plastic__asa__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   'push-plastic__pc-pbt__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
-  'push-plastic__pla-ht__tough': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pla-ht__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   'push-plastic__tpu-98a__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   'push-plastic__hips__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   // Carbon fiber variants
