@@ -1,447 +1,134 @@
 /**
- * Push Plastic Sync Pipeline
+ * Push Plastic CSV-Seeded Sync Pipeline
  * 
- * 5-step sync process:
- * 1. Fetch products from Shopify JSON API
- * 2. Explode color variants into individual rows
- * 3. Upsert with brand-specific enrichments
- * 4. Fix duplicate hex codes
- * 5. Validate TDS URLs
+ * High-fidelity 5-step sync process:
+ * 1. Load curated products from CSV seed (consumer-focused 1.75mm, 1kg only)
+ * 2. Apply brand-specific enrichments (material, finish, hex, TDS)
+ * 3. Safe delete existing products (with threshold)
+ * 4. Batch insert enriched products
+ * 5. Fix duplicate hex codes within product lines
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  PUSHPLASTIC_PRODUCT_SEED,
+  shouldExcludePushPlasticProduct,
+  deduplicatePushPlasticEntries,
+  extractMaterialFromTitle,
+  generatePushPlasticProductLineId,
+  getPushPlasticSeedHex,
+  getPushPlasticDefaultPrice,
+  type PushPlasticSeedEntry
+} from '../_shared/pushplastic-seed.ts';
+import {
   enrichPushPlasticProduct,
-  isPushPlasticFilamentProduct,
-  extractPushPlasticWeight,
-  extractPushPlasticDiameter,
   PUSHPLASTIC_PRINT_SETTINGS,
 } from '../_shared/pushplastic-defaults.ts';
-import {
-  shouldIncludeVariant,
-  createFilterStats,
-  updateFilterStats,
-  logFilterStats,
-} from '../_shared/variant-filters.ts';
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-interface ShopifyProduct {
-  id: number;
-  title: string;
-  handle: string;
-  body_html: string;
-  vendor: string;
-  product_type: string;
-  created_at: string;
-  updated_at: string;
-  published_at: string;
-  tags: string[];
-  variants: ShopifyVariant[];
-  images: ShopifyImage[];
-}
-
-interface ShopifyVariant {
-  id: number;
-  product_id: number;
-  title: string;
-  price: string;
-  sku: string;
-  position: number;
-  compare_at_price: string | null;
-  option1: string | null;
-  option2: string | null;
-  option3: string | null;
-  available: boolean;
-  grams: number;
-  weight: number;
-  weight_unit: string;
-}
-
-interface ShopifyImage {
-  id: number;
-  product_id: number;
-  position: number;
-  src: string;
-  alt: string | null;
-}
-
-interface ProductVariant {
-  productId: string;
-  variantId: string;
-  title: string;
-  color: string;
-  material: string | null;
-  price: number;
-  compareAtPrice: number | null;
-  sku: string | null;
-  available: boolean;
-  weight: number | null;
-  diameter: number;
-  imageUrl: string | null;
-  productUrl: string;
-  spoolType: string | null;
-}
-
-interface SyncResult {
-  step: string;
-  success: boolean;
-  count?: number;
-  error?: string;
-  details?: Record<string, unknown>;
-}
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const SHOPIFY_BASE_URL = 'https://www.pushplastic.com';
 const VENDOR_NAME = 'Push Plastic';
+const BRAND_SLUG = 'push-plastic';
+const SAFE_DELETE_THRESHOLD = 50;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// ============================================================================
-// STEP 1: FETCH PRODUCTS FROM SHOPIFY
-// ============================================================================
+interface SyncStats {
+  discovered: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  deleted: number;
+}
 
-async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
-  const allProducts: ShopifyProduct[] = [];
-  let page = 1;
-  const limit = 250;
-  
-  console.log('Starting Shopify product fetch...');
-  
-  while (true) {
-    const url = `${SHOPIFY_BASE_URL}/products.json?limit=${limit}&page=${page}`;
-    console.log(`Fetching page ${page}: ${url}`);
-    
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'FilamentFinder/1.0',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      const products = data.products || [];
-      
-      if (products.length === 0) {
-        console.log(`No more products on page ${page}, stopping.`);
-        break;
-      }
-      
-      // Filter to filament products only
-      const filamentProducts = products.filter((p: ShopifyProduct) => 
-        isPushPlasticFilamentProduct(p.title, p.product_type)
-      );
-      
-      console.log(`Page ${page}: ${products.length} total, ${filamentProducts.length} filament products`);
-      allProducts.push(...filamentProducts);
-      
-      if (products.length < limit) {
-        break;
-      }
-      
-      page++;
-      
-      // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } catch (error) {
-      console.error(`Error fetching page ${page}:`, error);
-      break;
-    }
-  }
-  
-  console.log(`Total filament products fetched: ${allProducts.length}`);
-  return allProducts;
+interface StepResult {
+  step: string;
+  success: boolean;
+  count?: number;
+  message?: string;
+  details?: Record<string, unknown>;
 }
 
 // ============================================================================
-// STEP 2: EXPLODE VARIANTS
+// HELPER FUNCTIONS
 // ============================================================================
 
-function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
-  const variants: ProductVariant[] = [];
-  const filterStats = createFilterStats();
+function extractFinishType(material: string, color: string): string | null {
+  const materialLower = material.toLowerCase();
+  const colorLower = color.toLowerCase();
   
-  for (const product of products) {
-    const productUrl = `${SHOPIFY_BASE_URL}/products/${product.handle}`;
-    const defaultImage = product.images[0]?.src || null;
-    
-    for (const variant of product.variants) {
-      // Parse variant options - typically Color / Size / Spool Type
-      const color = variant.option1 || 'Default';
-      const sizeOption = variant.option2 || '';
-      const spoolType = variant.option3 || null;
-      
-      // Extract weight from size option or variant weight
-      let weight = extractPushPlasticWeight(sizeOption) || 
-                   extractPushPlasticWeight(variant.title);
-      
-      // Fallback to variant grams
-      if (!weight && variant.grams > 0) {
-        weight = variant.grams;
-      }
-      
-      // Extract diameter
-      const diameter = extractPushPlasticDiameter(sizeOption) || 
-                       extractPushPlasticDiameter(variant.title) || 
-                       1.75;
-      
-      // Apply standard filters (exclude bulk >1.4kg, samples <300g, 2.85mm, excluded keywords)
-      const filterResult = shouldIncludeVariant(weight, diameter, product.title);
-      if (!filterResult.include) {
-        updateFilterStats(filterStats, filterResult);
-        console.log(`[Push Plastic] Skipping: ${product.title} - ${color} - ${filterResult.reason}`);
-        continue;
-      }
-      
-      // Create unique product ID
-      const productId = `pushplastic-${product.id}-${variant.id}`;
-      
-      variants.push({
-        productId,
-        variantId: String(variant.id),
-        title: product.title,
-        color,
-        material: null, // Will be enriched
-        price: parseFloat(variant.price) || 0,
-        compareAtPrice: variant.compare_at_price ? parseFloat(variant.compare_at_price) : null,
-        sku: variant.sku || null,
-        available: variant.available,
-        weight,
-        diameter,
-        imageUrl: defaultImage,
-        productUrl,
-        spoolType,
-      });
-    }
-  }
+  // Check material name for finish indicators
+  if (materialLower.includes('metallic')) return 'Metallic';
+  if (materialLower.includes('translucent')) return 'Translucent';
+  if (materialLower.includes('fluorescent')) return 'Fluorescent';
   
-  logFilterStats('Push Plastic', filterStats);
-  console.log(`Exploded into ${variants.length} individual variants`);
-  return variants;
+  // Check color name for finish indicators
+  if (colorLower.includes('metallic')) return 'Metallic';
+  if (colorLower.includes('translucent')) return 'Translucent';
+  if (colorLower.includes('fluorescent')) return 'Fluorescent';
+  if (colorLower.includes('clear')) return 'Translucent';
+  if (colorLower.includes('natural')) return 'Standard';
+  
+  return 'Standard';
 }
 
-// ============================================================================
-// STEP 3: UPSERT WITH ENRICHMENTS
-// ============================================================================
+function isAbrasiveMaterial(material: string): boolean {
+  const materialLower = material.toLowerCase();
+  return materialLower.includes('-cf') || 
+         materialLower.includes('carbon') ||
+         materialLower.includes('glass') ||
+         materialLower.includes('-gf');
+}
 
-async function upsertVariants(
-  supabase: any,
-  variants: ProductVariant[],
-  brandId: string | null
-): Promise<SyncResult> {
-  let upserted = 0;
-  let errors = 0;
+function extractWeightFromTitle(title: string): number {
+  // Extract weight from title patterns like "1kg", "750g", "500g"
+  const kgMatch = title.match(/(\d+(?:\.\d+)?)\s*kg/i);
+  if (kgMatch) return parseFloat(kgMatch[1]) * 1000;
   
-  console.log(`Upserting ${variants.length} variants with enrichments...`);
+  const gMatch = title.match(/(\d+)\s*g(?:ram)?s?/i);
+  if (gMatch) return parseInt(gMatch[1], 10);
   
-  // Process in batches
-  const batchSize = 50;
-  for (let i = 0; i < variants.length; i += batchSize) {
-    const batch = variants.slice(i, i + batchSize);
-    
-    const records = batch.map(variant => {
-      // Apply brand-specific enrichments - CRITICAL: pass variant.color for color_hex mapping
-      const enriched = enrichPushPlasticProduct(
-        variant.title,
-        variant.material,
-        variant.color  // Pass color name for proper hex lookup
-      );
-      
-      const settings = enriched.printSettings;
-      
-      // Build full title with color
-      const fullTitle = `${enriched.cleanedTitle} - ${variant.color}`;
-      
-      return {
-        product_id: variant.productId,
-        product_title: fullTitle,
-        vendor: VENDOR_NAME,
-        brand_id: brandId,
-        material: enriched.material,
-        finish_type: enriched.finishType,
-        product_line_id: enriched.productLineId,
-        color_hex: enriched.colorHex,
-        tds_url: enriched.tdsUrl,
-        product_url: variant.productUrl,
-        featured_image: variant.imageUrl,
-        variant_price: variant.price,
-        variant_compare_at_price: variant.compareAtPrice,
-        variant_sku: variant.sku,
-        variant_available: variant.available,
-        net_weight_g: variant.weight,
-        diameter_nominal_mm: variant.diameter,
-        nozzle_temp_min_c: settings?.nozzle_temp_min_c || null,
-        nozzle_temp_max_c: settings?.nozzle_temp_max_c || null,
-        bed_temp_min_c: settings?.bed_temp_min_c || null,
-        bed_temp_max_c: settings?.bed_temp_max_c || null,
-        fan_min_percent: settings?.fan_min_percent || null,
-        fan_max_percent: settings?.fan_max_percent || null,
-        drying_temp_c: settings?.drying_temp_c || null,
-        drying_time_hours: settings?.drying_time_hours || null,
-        is_nozzle_abrasive: enriched.isAbrasive,
-        auto_created: true,
-        auto_updated: true,
-        last_scraped_at: new Date().toISOString(),
-      };
-    });
-    
-    const { error } = await supabase
-      .from('filaments')
-      .insert(records);
-    
-    if (error) {
-      console.error(`Batch insert error:`, error);
-      errors += batch.length;
-    } else {
-      upserted += batch.length;
-    }
-    
-    // Rate limit
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  // Default to 1kg for standard filament
+  return 1000;
+}
+
+function getTdsUrl(material: string): string | null {
+  const materialNormalized = material.toLowerCase().replace(/[^a-z0-9]/g, '-');
   
-  console.log(`Upsert complete: ${upserted} succeeded, ${errors} failed`);
-  
-  return {
-    step: 'upsert',
-    success: errors === 0,
-    count: upserted,
-    details: { errors },
+  // Push Plastic TDS URLs follow this pattern
+  const tdsPatterns: Record<string, string> = {
+    'pla': 'https://www.pushplastic.com/pages/pla-technical-data-sheet',
+    'petg': 'https://www.pushplastic.com/pages/petg-technical-data-sheet',
+    'pctg': 'https://www.pushplastic.com/pages/pctg-technical-data-sheet',
+    'abs': 'https://www.pushplastic.com/pages/abs-technical-data-sheet',
+    'asa': 'https://www.pushplastic.com/pages/asa-technical-data-sheet',
+    'pc-pbt': 'https://www.pushplastic.com/pages/pc-pbt-technical-data-sheet',
+    'tpu': 'https://www.pushplastic.com/pages/tpu-technical-data-sheet',
+    'tpu-98a': 'https://www.pushplastic.com/pages/tpu-technical-data-sheet',
+    'hips': 'https://www.pushplastic.com/pages/hips-technical-data-sheet',
+    'pei': 'https://www.pushplastic.com/pages/pei-technical-data-sheet',
+    'pmma': 'https://www.pushplastic.com/pages/pmma-technical-data-sheet',
+    'abs-cf': 'https://www.pushplastic.com/pages/abs-cf-technical-data-sheet',
+    'petg-cf': 'https://www.pushplastic.com/pages/petg-cf-technical-data-sheet',
+    'pa-cf': 'https://www.pushplastic.com/pages/pa-cf-technical-data-sheet',
+    'pc-cf': 'https://www.pushplastic.com/pages/pc-cf-technical-data-sheet',
+    'nylon': 'https://www.pushplastic.com/pages/nylon-technical-data-sheet',
   };
-}
-
-// ============================================================================
-// STEP 4: FIX DUPLICATE HEX CODES
-// ============================================================================
-
-async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
-  console.log('Checking for duplicate hex codes within product lines...');
   
-  try {
-    const { data, error } = await supabase.rpc('find_duplicate_hexes', {
-      p_vendor: VENDOR_NAME
-    });
-    
-    if (error) {
-      console.error('RPC error:', error);
-      return {
-        step: 'fix_duplicates',
-        success: false,
-        error: error.message,
-      };
+  // Try to match material
+  for (const [key, url] of Object.entries(tdsPatterns)) {
+    if (materialNormalized.includes(key)) {
+      return url;
     }
-    
-    const duplicates = data || [];
-    console.log(`Found ${duplicates.length} duplicate hex code groups`);
-    
-    // Fix duplicates by slightly adjusting hex values
-    let fixed = 0;
-    for (const dup of duplicates) {
-      const { product_line_id, color_hex, ids } = dup;
-      
-      if (!ids || ids.length < 2) continue;
-      
-      // Skip the first one, adjust the rest
-      for (let i = 1; i < ids.length; i++) {
-        // Slightly modify the hex to make it unique
-        const originalHex = color_hex || '#808080';
-        const adjustment = i * 2;
-        const r = Math.min(255, parseInt(originalHex.slice(1, 3), 16) + adjustment);
-        const newHex = `#${r.toString(16).padStart(2, '0')}${originalHex.slice(3)}`;
-        
-        const { error: updateError } = await supabase
-          .from('filaments')
-          .update({ color_hex: newHex })
-          .eq('id', ids[i]);
-        
-        if (!updateError) {
-          fixed++;
-        }
-      }
-    }
-    
-    console.log(`Fixed ${fixed} duplicate hex codes`);
-    
-    return {
-      step: 'fix_duplicates',
-      success: true,
-      count: fixed,
-    };
-  } catch (error) {
-    console.error('Error fixing duplicates:', error);
-    return {
-      step: 'fix_duplicates',
-      success: false,
-      error: String(error),
-    };
-  }
-}
-
-// ============================================================================
-// STEP 5: VALIDATE TDS URLs
-// ============================================================================
-
-async function validateTdsUrls(supabase: any): Promise<SyncResult> {
-  console.log('Validating TDS URLs...');
-  
-  const { data: filaments, error } = await supabase
-    .from('filaments')
-    .select('id, tds_url')
-    .eq('vendor', VENDOR_NAME)
-    .not('tds_url', 'is', null);
-  
-  if (error) {
-    return {
-      step: 'validate_tds',
-      success: false,
-      error: error.message,
-    };
   }
   
-  let valid = 0;
-  let invalid = 0;
-  
-  // Sample validation (check a few URLs)
-  const sample = (filaments || []).slice(0, 5);
-  
-  for (const filament of sample) {
-    try {
-      const response = await fetch(filament.tds_url, { method: 'HEAD' });
-      if (response.ok) {
-        valid++;
-      } else {
-        console.warn(`TDS URL returned ${response.status}: ${filament.tds_url}`);
-        invalid++;
-      }
-    } catch (error) {
-      console.warn(`TDS URL fetch error: ${filament.tds_url}`);
-      invalid++;
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-  
-  console.log(`TDS validation sample: ${valid} valid, ${invalid} invalid`);
-  
-  return {
-    step: 'validate_tds',
-    success: true,
-    count: filaments?.length || 0,
-    details: { sampled: sample.length, valid, invalid },
-  };
+  return null;
 }
 
 // ============================================================================
@@ -452,122 +139,400 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   const startTime = Date.now();
-  
+  const stepResults: StepResult[] = [];
+  const stats: SyncStats = {
+    discovered: 0,
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    errors: 0,
+    deleted: 0,
+  };
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Parse options
-    let options: { cleanSlate?: boolean; skipFetch?: boolean; skipEnrich?: boolean } = {};
+
+    // Parse options - ignore limit for CSV-seeded brands
+    let options: { cleanSlate?: boolean; limit?: number } = {};
     try {
       options = await req.json();
     } catch {
       options = {};
     }
-    
+
     console.log('='.repeat(60));
-    console.log('PUSH PLASTIC SYNC PIPELINE');
+    console.log('PUSH PLASTIC CSV-SEEDED SYNC PIPELINE');
     console.log('Options:', JSON.stringify(options));
     console.log('='.repeat(60));
+
+    // =========================================================================
+    // STEP 1: Get brand ID and mark as actively syncing
+    // =========================================================================
     
-    // Get brand ID
-    const { data: brand } = await supabase
+    const { data: brand, error: brandError } = await supabase
       .from('automated_brands')
-      .select('id')
-      .eq('brand_slug', 'push-plastic')
+      .select('id, brand_name')
+      .eq('brand_slug', BRAND_SLUG)
       .single();
+
+    if (brandError || !brand) {
+      throw new Error(`Brand not found: ${BRAND_SLUG}`);
+    }
+
+    const brandId = brand.id;
+    console.log(`Brand ID: ${brandId} (${brand.brand_name})`);
+
+    // Mark brand as actively syncing
+    await supabase
+      .from('automated_brands')
+      .update({ 
+        scraping_active: true,
+        last_scrape_at: new Date().toISOString()
+      })
+      .eq('id', brandId);
+
+    stepResults.push({
+      step: 'Brand Setup',
+      success: true,
+      message: `Found brand: ${brand.brand_name}`,
+    });
+
+    // =========================================================================
+    // STEP 2: Load and filter CSV seed data
+    // =========================================================================
     
-    const brandId = brand?.id || null;
-    console.log(`Brand ID: ${brandId || 'not found'}`);
+    console.log(`Loading CSV seed data: ${PUSHPLASTIC_PRODUCT_SEED.length} total entries`);
     
-    // Clean slate if requested
-    if (options.cleanSlate) {
-      console.log('Clean slate: Deleting existing Push Plastic products...');
-      const { data: deleted } = await supabase
+    // Filter out excluded products (bulk, 2.85mm, samples, etc.)
+    const filteredProducts = PUSHPLASTIC_PRODUCT_SEED.filter(entry => {
+      const shouldExclude = shouldExcludePushPlasticProduct(entry);
+      if (shouldExclude) {
+        console.log(`[Filter] Excluding: ${entry.filamentName} - ${entry.color}`);
+        stats.skipped++;
+      }
+      return !shouldExclude;
+    });
+    
+    // Deduplicate entries (remove AMS vs Standard duplicates)
+    const validProducts = deduplicatePushPlasticEntries(filteredProducts);
+    
+    stats.discovered = validProducts.length;
+    console.log(`Filtered to ${validProducts.length} consumer-focused products`);
+
+    stepResults.push({
+      step: 'Load CSV Seed',
+      success: true,
+      count: validProducts.length,
+      message: `Loaded ${validProducts.length} products from CSV seed (${stats.skipped} excluded)`,
+    });
+
+    // =========================================================================
+    // STEP 3: Safe Delete (if cleanSlate and threshold met)
+    // =========================================================================
+    
+    if (options.cleanSlate && validProducts.length >= SAFE_DELETE_THRESHOLD) {
+      console.log(`Clean slate mode: deleting existing ${VENDOR_NAME} products...`);
+      
+      const { data: deleted, error: deleteError } = await supabase
         .from('filaments')
         .delete()
         .eq('vendor', VENDOR_NAME)
         .select('id');
-      console.log(`Deleted ${deleted?.length || 0} existing products`);
+      
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        stepResults.push({
+          step: 'Safe Delete',
+          success: false,
+          message: `Delete failed: ${deleteError.message}`,
+        });
+      } else {
+        stats.deleted = deleted?.length || 0;
+        console.log(`Deleted ${stats.deleted} existing products`);
+        stepResults.push({
+          step: 'Safe Delete',
+          success: true,
+          count: stats.deleted,
+          message: `Deleted ${stats.deleted} existing products`,
+        });
+      }
+    } else if (options.cleanSlate) {
+      console.log(`Clean slate BLOCKED: only ${validProducts.length} products, threshold is ${SAFE_DELETE_THRESHOLD}`);
+      stepResults.push({
+        step: 'Safe Delete',
+        success: false,
+        message: `Blocked: ${validProducts.length} products below threshold of ${SAFE_DELETE_THRESHOLD}`,
+      });
     }
+
+    // =========================================================================
+    // STEP 4: Batch insert enriched products
+    // =========================================================================
     
-    const results: SyncResult[] = [];
+    console.log(`Processing ${validProducts.length} products for insert...`);
     
-    // Step 1: Fetch products
-    if (!options.skipFetch) {
-      console.log('\n--- STEP 1: FETCH PRODUCTS ---');
-      const products = await fetchShopifyProducts();
-      results.push({
-        step: 'fetch',
-        success: products.length > 0,
-        count: products.length,
+    const batchSize = 50;
+    const productResults: Array<{ title: string; color: string; status: string }> = [];
+    
+    for (let i = 0; i < validProducts.length; i += batchSize) {
+      const batch = validProducts.slice(i, i + batchSize);
+      
+      const records = batch.map(entry => {
+        const material = extractMaterialFromTitle(entry.filamentName);
+        const productLineId = generatePushPlasticProductLineId(entry.filamentName);
+        const finishType = extractFinishType(material, entry.color);
+        const isAbrasive = isAbrasiveMaterial(material);
+        const weight = extractWeightFromTitle(entry.filamentName);
+        const tdsUrl = getTdsUrl(material);
+        
+        // Get hex from CSV or fallback to mapping
+        const colorHex = entry.colorHex || getPushPlasticSeedHex(entry.colorHex, entry.color);
+        
+        // Get enriched data from defaults module
+        const enriched = enrichPushPlasticProduct(entry.filamentName, material, entry.color);
+        const settings = enriched.printSettings;
+        
+        // Generate product ID
+        const productId = `pushplastic-${productLineId}-${entry.color.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+        
+        // Clean title - use filament name without color (color is separate)
+        const cleanTitle = `${entry.filamentName.replace(/1\.75mm/gi, '').replace(/1kg/gi, '').trim()} - ${entry.color}`;
+        
+        return {
+          product_id: productId,
+          product_title: cleanTitle,
+          vendor: VENDOR_NAME,
+          brand_id: brandId,
+          material: enriched.material || material,
+          finish_type: finishType,
+          product_line_id: productLineId,
+          color_hex: enriched.colorHex || colorHex,
+          color_family: null, // Will be derived from hex
+          tds_url: enriched.tdsUrl || tdsUrl,
+          product_url: entry.colorLink || entry.productLink,
+          featured_image: null, // Push Plastic images need to be extracted separately
+          variant_price: getPushPlasticDefaultPrice(material),
+          variant_compare_at_price: null,
+          variant_sku: null,
+          variant_available: true,
+          net_weight_g: weight,
+          diameter_nominal_mm: 1.75,
+          nozzle_temp_min_c: settings?.nozzle_temp_min_c || null,
+          nozzle_temp_max_c: settings?.nozzle_temp_max_c || null,
+          bed_temp_min_c: settings?.bed_temp_min_c || null,
+          bed_temp_max_c: settings?.bed_temp_max_c || null,
+          fan_min_percent: settings?.fan_min_percent || null,
+          fan_max_percent: settings?.fan_max_percent || null,
+          drying_temp_c: settings?.drying_temp_c || null,
+          drying_time_hours: settings?.drying_time_hours || null,
+          is_nozzle_abrasive: isAbrasive,
+          high_speed_capable: false,
+          auto_created: true,
+          auto_updated: true,
+          last_scraped_at: new Date().toISOString(),
+        };
       });
       
-      if (products.length > 0) {
-        // Step 2: Explode variants
-        console.log('\n--- STEP 2: EXPLODE VARIANTS ---');
-        const variants = explodeVariants(products);
-        results.push({
-          step: 'explode',
-          success: variants.length > 0,
-          count: variants.length,
+      // Use upsert on product_id
+      const { error: insertError } = await supabase
+        .from('filaments')
+        .upsert(records, { 
+          onConflict: 'product_id',
+          ignoreDuplicates: false 
         });
-        
-        // Step 3: Upsert with enrichments
-        if (!options.skipEnrich && variants.length > 0) {
-          console.log('\n--- STEP 3: UPSERT WITH ENRICHMENTS ---');
-          const upsertResult = await upsertVariants(supabase, variants, brandId);
-          results.push(upsertResult);
-        }
+      
+      if (insertError) {
+        console.error(`Batch ${Math.floor(i / batchSize) + 1} insert error:`, insertError);
+        stats.errors += batch.length;
+        batch.forEach(entry => {
+          productResults.push({ 
+            title: entry.filamentName, 
+            color: entry.color, 
+            status: 'error' 
+          });
+        });
+      } else {
+        stats.created += batch.length;
+        batch.forEach(entry => {
+          productResults.push({ 
+            title: entry.filamentName, 
+            color: entry.color, 
+            status: 'created' 
+          });
+        });
+      }
+      
+      // Rate limit between batches
+      if (i + batchSize < validProducts.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
     
-    // Step 4: Fix duplicate hex codes
-    console.log('\n--- STEP 4: FIX DUPLICATE HEX CODES ---');
-    const dupResult = await fixDuplicateHexCodes(supabase);
-    results.push(dupResult);
+    console.log(`Insert complete: ${stats.created} created, ${stats.errors} errors`);
     
-    // Step 5: Validate TDS URLs
-    console.log('\n--- STEP 5: VALIDATE TDS URLs ---');
-    const tdsResult = await validateTdsUrls(supabase);
-    results.push(tdsResult);
+    stepResults.push({
+      step: 'Batch Insert',
+      success: stats.errors === 0,
+      count: stats.created,
+      message: `Inserted ${stats.created} products (${stats.errors} errors)`,
+    });
+
+    // =========================================================================
+    // STEP 5: Fix duplicate hex codes within product lines
+    // =========================================================================
     
-    const duration = Date.now() - startTime;
+    console.log('Fixing duplicate hex codes...');
     
-    console.log('\n' + '='.repeat(60));
-    console.log('SYNC COMPLETE');
-    console.log(`Duration: ${duration}ms`);
-    console.log('='.repeat(60));
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        vendor: VENDOR_NAME,
-        results,
-        duration_ms: duration,
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+    try {
+      const { data: duplicates, error: rpcError } = await supabase.rpc('find_duplicate_hexes', {
+        p_vendor: VENDOR_NAME
+      });
+      
+      if (rpcError) {
+        console.error('RPC error:', rpcError);
+        stepResults.push({
+          step: 'Fix Duplicate Hex',
+          success: false,
+          message: `RPC error: ${rpcError.message}`,
+        });
+      } else {
+        const dupeCount = duplicates?.length || 0;
+        let fixed = 0;
+        
+        for (const dup of (duplicates || [])) {
+          const { color_hex, ids } = dup;
+          if (!ids || ids.length < 2) continue;
+          
+          // Adjust hex for duplicates (skip first)
+          for (let j = 1; j < ids.length; j++) {
+            const originalHex = color_hex || '#808080';
+            const adjustment = j * 2;
+            const r = Math.min(255, parseInt(originalHex.slice(1, 3), 16) + adjustment);
+            const newHex = `#${r.toString(16).padStart(2, '0')}${originalHex.slice(3)}`;
+            
+            await supabase
+              .from('filaments')
+              .update({ color_hex: newHex })
+              .eq('id', ids[j]);
+            
+            fixed++;
+          }
+        }
+        
+        console.log(`Fixed ${fixed} duplicate hex codes`);
+        stepResults.push({
+          step: 'Fix Duplicate Hex',
+          success: true,
+          count: fixed,
+          message: `Fixed ${fixed} duplicate hex codes in ${dupeCount} groups`,
+        });
       }
-    );
-    
-  } catch (error) {
-    console.error('Fatal error:', error);
-    
-    return new Response(
-      JSON.stringify({
+    } catch (error) {
+      console.error('Duplicate hex fix error:', error);
+      stepResults.push({
+        step: 'Fix Duplicate Hex',
         success: false,
-        error: String(error),
-        duration_ms: Date.now() - startTime,
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+        message: `Error: ${String(error)}`,
+      });
+    }
+
+    // =========================================================================
+    // STEP 6: Update brand statistics
+    // =========================================================================
+    
+    // Get final product count
+    const { count: productCount } = await supabase
+      .from('filaments')
+      .select('id', { count: 'exact', head: true })
+      .eq('vendor', VENDOR_NAME);
+    
+    // Update brand stats
+    await supabase
+      .from('automated_brands')
+      .update({
+        scraping_active: false,
+        product_count: productCount || 0,
+        products_created: stats.created,
+        products_updated: stats.updated,
+        last_scrape_at: new Date().toISOString(),
+        last_error: null,
+        last_error_at: null,
+      })
+      .eq('id', brandId);
+    
+    stepResults.push({
+      step: 'Update Brand Stats',
+      success: true,
+      count: productCount || 0,
+      message: `Brand stats updated: ${productCount} total products`,
+    });
+
+    // =========================================================================
+    // FINAL RESPONSE
+    // =========================================================================
+    
+    const duration = Math.round((Date.now() - startTime) / 1000);
+    
+    const response = {
+      success: true,
+      brand: VENDOR_NAME,
+      brandSlug: BRAND_SLUG,
+      duration: `${duration}s`,
+      stats: {
+        discovered: stats.discovered,
+        created: stats.created,
+        updated: stats.updated,
+        skipped: stats.skipped,
+        errors: stats.errors,
+        deleted: stats.deleted,
+        total: productCount || 0,
+      },
+      stepResults,
+      productResults: productResults.slice(0, 20), // First 20 for debugging
+    };
+
+    console.log('='.repeat(60));
+    console.log('SYNC COMPLETE');
+    console.log(JSON.stringify(response.stats, null, 2));
+    console.log('='.repeat(60));
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Sync error:', error);
+    
+    // Try to reset scraping_active flag
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      await supabase
+        .from('automated_brands')
+        .update({ 
+          scraping_active: false,
+          last_error: String(error),
+          last_error_at: new Date().toISOString(),
+        })
+        .eq('brand_slug', BRAND_SLUG);
+    } catch (resetError) {
+      console.error('Failed to reset scraping_active:', resetError);
+    }
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: String(error),
+      stats,
+      stepResults,
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
