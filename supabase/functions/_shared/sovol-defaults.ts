@@ -308,7 +308,10 @@ const SOVOL_SILK_COLORS: Record<string, string> = {
 export function getSovolColorHex(colorName: string, finishType?: FinishType): string | null {
   if (!colorName) return null;
   
-  const normalizedColor = colorName.toLowerCase().trim();
+  // Strip multi-pack identifiers: "White*10" → "White"
+  let cleanedColor = colorName.replace(/\*\d+$/, '').trim();
+  
+  const normalizedColor = cleanedColor.toLowerCase().trim();
   
   // Check silk colors first for silk finish types
   if (finishType === 'Silk') {
@@ -428,9 +431,10 @@ export function parseSovolVariant(variantTitle: string): ParsedVariant {
       continue;
     }
     
-    // Assume remaining is color
+    // Assume remaining is color - normalize multi-pack format
     if (!color && part.length > 0) {
-      color = part;
+      // Remove quantity multipliers: "White*10" → "White"
+      color = part.replace(/\*\d+$/, '').trim();
     }
   }
   
