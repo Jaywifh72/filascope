@@ -408,7 +408,9 @@ export function normalizePrusamentMaterial(title: string, existingMaterial?: str
   if (titleLower.includes('pc blend') || titleLower.includes('polycarbonate')) {
     return 'PC';
   }
-  if (titleLower.includes('rpla') || titleLower.includes('r-pla') || titleLower.includes('recycled')) {
+  // Only match actual rPLA products, not "PETG Recycled" or "PLA Recycled"
+  if ((titleLower.includes('rpla') || titleLower.includes('r-pla')) || 
+      (titleLower.includes('recycled') && !titleLower.includes('petg') && !titleLower.includes('pla '))) {
     return 'rPLA';
   }
   if (titleLower.includes('tpu')) {
