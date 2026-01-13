@@ -290,7 +290,8 @@ function extractColor(product: ShopifyProduct): string {
     'PC-275', 'PC 275', 'PC ABS', 'PC PTFE', 'PC/PTFE',
     'S-Flex 98A', 'S-Flex 90A', 'S-Flex 85A', 'S-Flex Carbon',
     'r-PLA', 'rPETG', 'r-PETG', 'HIPS-X',
-    'Wood',
+    // NOTE: 'Wood' intentionally excluded - would incorrectly strip "WOOD" from "WOOD ASH"
+    // Wood material detection is handled by extractMaterial() with protected patterns
     'PLA', 'PETG', 'PET-G', 'ASA', 'PC', 'PA6', 'PA12', 'PCTG',
   ];
   
@@ -962,6 +963,10 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'traffic black': '080808',
     'nightfire': '1A0A0A',
     'bk': '0A0A0A',
+    
+    // ========== WOOD COLOR FALLBACKS ==========
+    'ash': '8B8682',             // Fallback if "WOOD ASH" extracted as just "ASH"
+    'ebony': '3D2B1F',           // Wood Ebony color (fallback)
     
     // ========== UNIQUE PURPLE/VIOLET MAPPINGS (prevent duplicate #8B008B) ==========
     'pla hs quantum purple': '8C008C',
