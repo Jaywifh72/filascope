@@ -40,6 +40,7 @@ export const RECREUS_EXCLUSION_PATTERNS = [
   /footwearology/i,       // Limited specialty editions
   /pp3d\s*primer/i,       // Not a filament
   /default\s*title/i,     // Placeholder variants
+  /\bindustry\b/i,        // Industrial variant, not a color
 ];
 
 // Check if a product should be excluded
@@ -53,7 +54,7 @@ export const RECREUS_COLOR_MAPPING: Record<string, string> = {
   'black': '#1C1C1C',
   'white': '#FFFFFF',
   'natural': '#F5F5DC',
-  'transparent': '#FFFFFF',
+  'transparent': '#F8F8FF',  // Ghost white - distinct from pure white
   'nude': '#E3BC9A',
   'red': '#C41E3A',
   'blue': '#0066CC',
@@ -63,16 +64,17 @@ export const RECREUS_COLOR_MAPPING: Record<string, string> = {
   'denim': '#1560BD',
   'grey': '#808080',
   'gray': '#808080',
-  'gold': '#FFD700',
+  'gold': '#D4AF37',         // Metallic gold - distinct from yellow
   'magenta': '#D946EF',
   'aqua': '#00CED1',
   'brown': '#8B4513',
-  'navy blue': '#0066CC',
+  'navy blue': '#000080',    // True navy - distinct from blue
   'navy': '#000080',
-  'metallic green': '#228B22',
-  'damantium blue': '#0066CC',
+  'metallic green': '#2E8B57',  // Sea green - distinct from forest green
+  'damantium blue': '#0047AB',  // Cobalt blue - distinct from other blues
+  'blue food grade': '#2563EB', // Bright blue - distinct from other blues
   'copper gum': '#B87333',
-  'blue food grade': '#0066CC',
+  
   'fluoride': '#39FF14',
   'mineral': '#8B8680',
   
@@ -84,8 +86,8 @@ export const RECREUS_COLOR_MAPPING: Record<string, string> = {
   'verde': '#228B22',
   'amarillo': '#FFD700',
   'naranja': '#FF6B35',
-  'transparente': '#FFFFFF',
-  'azul marino': '#0066CC',
+  'transparente': '#F8F8FF',
+  'azul marino': '#000080',
   'verde metalico': '#228B22',
   
   // Footwearology colors (mapped for completeness even though excluded)
@@ -237,9 +239,9 @@ export const RECREUS_PRODUCT_SEED: RecreusProductSeed[] = [
   // ============================================================================
   { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Black', colorHex: '#1C1C1C', shoreHardness: '70A' },
   { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'White', colorHex: '#FFFFFF', shoreHardness: '70A' },
-  { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Transparent', colorHex: '#FFFFFF', shoreHardness: '70A' },
+  { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Transparent', colorHex: '#F8F8FF', shoreHardness: '70A' },
   { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Red', colorHex: '#C41E3A', shoreHardness: '70A' },
-  { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Navy Blue', colorHex: '#0066CC', shoreHardness: '70A' },
+  { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Navy Blue', colorHex: '#000080', shoreHardness: '70A' },
   { filamentName: 'Filaflex 70A', material: 'TPU-70A', productLineId: 'recreus__tpu-70a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-70a', color: 'Nude', colorHex: '#E3BC9A', shoreHardness: '70A' },
 
   // ============================================================================
@@ -247,7 +249,7 @@ export const RECREUS_PRODUCT_SEED: RecreusProductSeed[] = [
   // ============================================================================
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Black', colorHex: '#1C1C1C', shoreHardness: '82A' },
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'White', colorHex: '#FFFFFF', shoreHardness: '82A' },
-  { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Transparent', colorHex: '#FFFFFF', shoreHardness: '82A' },
+  { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Transparent', colorHex: '#F8F8FF', shoreHardness: '82A' },
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Nude', colorHex: '#E3BC9A', shoreHardness: '82A' },
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Red', colorHex: '#C41E3A', shoreHardness: '82A' },
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Orange', colorHex: '#FF6B35', shoreHardness: '82A' },
@@ -259,18 +261,18 @@ export const RECREUS_PRODUCT_SEED: RecreusProductSeed[] = [
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Magenta', colorHex: '#D946EF', shoreHardness: '82A' },
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Brown', colorHex: '#8B4513', shoreHardness: '82A' },
   { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Grey', colorHex: '#808080', shoreHardness: '82A' },
-  { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Gold', colorHex: '#FFD700', shoreHardness: '82A' },
+  { filamentName: 'Filaflex 82A', material: 'TPU-82A', productLineId: 'recreus__tpu-82a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-82a', color: 'Gold', colorHex: '#D4AF37', shoreHardness: '82A' },
 
   // ============================================================================
   // TPU-95A (FilaFlex 95A) - 11 colors
   // ============================================================================
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Black', colorHex: '#1C1C1C', shoreHardness: '95A' },
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'White', colorHex: '#FFFFFF', shoreHardness: '95A' },
-  { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Transparent', colorHex: '#FFFFFF', shoreHardness: '95A' },
+  { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Transparent', colorHex: '#F8F8FF', shoreHardness: '95A' },
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Nude', colorHex: '#E3BC9A', shoreHardness: '95A' },
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Red', colorHex: '#C41E3A', shoreHardness: '95A' },
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Blue', colorHex: '#0066CC', shoreHardness: '95A' },
-  { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Blue Food Grade', colorHex: '#0066CC', shoreHardness: '95A' },
+  { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Blue Food Grade', colorHex: '#2563EB', shoreHardness: '95A' },
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Green', colorHex: '#228B22', shoreHardness: '95A' },
   { filamentName: 'Filaflex 95A', material: 'TPU-95A', productLineId: 'recreus__tpu-95a__standard', productUrl: 'https://recreus.com/en-en/products/filaflex-95a', color: 'Fluoride', colorHex: '#39FF14', shoreHardness: '95A' },
 
@@ -279,14 +281,14 @@ export const RECREUS_PRODUCT_SEED: RecreusProductSeed[] = [
   // ============================================================================
   { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Black', colorHex: '#1C1C1C' },
   { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'White', colorHex: '#FFFFFF' },
-  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Transparent', colorHex: '#FFFFFF' },
+  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Transparent', colorHex: '#F8F8FF' },
   { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Nude', colorHex: '#E3BC9A' },
   { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Red', colorHex: '#C41E3A' },
-  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Navy Blue', colorHex: '#0066CC' },
-  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Metallic Green', colorHex: '#228B22' },
-  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Damantium Blue', colorHex: '#0066CC' },
+  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Navy Blue', colorHex: '#000080' },
+  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Metallic Green', colorHex: '#2E8B57' },
+  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Damantium Blue', colorHex: '#0047AB' },
   { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Copper Gum', colorHex: '#B87333' },
-  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Blue Food Grade', colorHex: '#0066CC' },
+  { filamentName: 'PET-G HF', material: 'PETG', productLineId: 'recreus__petg__standard', productUrl: 'https://recreus.com/en-en/products/pet-g', color: 'Blue Food Grade', colorHex: '#2563EB' },
 ];
 
 // Count of unique product lines
@@ -313,23 +315,46 @@ export const RECREUS_PRODUCT_LINES = {
   'recreus__petg__standard': { name: 'PET-G HF', material: 'PETG', colors: 10 },
 };
 
-// Default prices by material (EUR, converted to USD at 1.08 rate)
+// Default prices by material (USD, updated from website 2026-01)
 export const RECREUS_DEFAULT_PRICES: Record<string, number> = {
-  'TPU-60A': 35.00,
-  'TPU-70A': 35.00,
-  'TPU-82A': 35.00,
-  'TPU-95A': 32.00,
-  'TPU-FOAM': 40.00,
-  'TPU-95A-FOAM': 40.00,
-  'TPU-SEBS': 45.00,
-  'TPU-Conductive': 65.00,
-  'TPU-Purifier': 45.00,
-  'TPU-Bio': 50.00,
-  'rTPU': 35.00,
-  'PETG': 28.00,
-  'PLA': 25.00,
-  'PP': 35.00,
+  'TPU-60A': 45.00,
+  'TPU-70A': 45.00,
+  'TPU-82A': 45.00,
+  'TPU-95A': 42.00,
+  'TPU-FOAM': 78.00,      // Foamy products are premium priced
+  'TPU-95A-FOAM': 78.00,  // Foamy products are premium priced
+  'TPU-SEBS': 55.00,
+  'TPU-Conductive': 75.00,
+  'TPU-Purifier': 55.00,
+  'TPU-Bio': 60.00,
+  'rTPU': 42.00,
+  'PETG': 32.00,
+  'PLA': 28.00,
+  'PP': 42.00,
 };
+
+// Product line images (representative images from Recreus CDN)
+export const RECREUS_PRODUCT_LINE_IMAGES: Record<string, string> = {
+  'recreus__tpu-foam__standard': 'https://recreus.com/cdn/shop/files/058e11ce82abc530a2cfe24d9102473e_2e7a4a88-cca5-4483-8c44-25f57f06a103_medium.jpg',
+  'recreus__tpu-95a-foam__standard': 'https://recreus.com/cdn/shop/files/filaflex-95-foamy_medium.jpg',
+  'recreus__pp__standard': 'https://recreus.com/cdn/shop/files/pp3d_medium.jpg',
+  'recreus__tpu-bio__standard': 'https://recreus.com/cdn/shop/files/balena-filaflex_medium.jpg',
+  'recreus__tpu-sebs__standard': 'https://recreus.com/cdn/shop/files/filaflex-sebs_medium.jpg',
+  'recreus__tpu-purifier__standard': 'https://recreus.com/cdn/shop/files/filaflex-purifier_medium.jpg',
+  'recreus__tpu-conductive__standard': 'https://recreus.com/cdn/shop/files/filaflex-conductivo_medium.jpg',
+  'recreus__rtpu__standard': 'https://recreus.com/cdn/shop/files/reciflex_medium.jpg',
+  'recreus__pla__standard': 'https://recreus.com/cdn/shop/files/pla_medium.jpg',
+  'recreus__tpu-60a__standard': 'https://recreus.com/cdn/shop/files/filaflex-60a_medium.jpg',
+  'recreus__tpu-70a__standard': 'https://recreus.com/cdn/shop/files/filaflex-70a_medium.jpg',
+  'recreus__tpu-82a__standard': 'https://recreus.com/cdn/shop/files/filaflex-82a_medium.jpg',
+  'recreus__tpu-95a__standard': 'https://recreus.com/cdn/shop/files/filaflex-95a_medium.jpg',
+  'recreus__petg__standard': 'https://recreus.com/cdn/shop/files/pet-g-hf_medium.jpg',
+};
+
+// Get product line image
+export function getRecreusProductLineImage(productLineId: string): string | null {
+  return RECREUS_PRODUCT_LINE_IMAGES[productLineId] || null;
+}
 
 // Get default price for material
 export function getRecreusDefaultPrice(material: string): number {
