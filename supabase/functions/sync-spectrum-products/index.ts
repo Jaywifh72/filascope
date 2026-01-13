@@ -227,13 +227,15 @@ serve(async (req) => {
           seedProduct.material
         );
         
-        // Get color hex (prioritize CSV, fallback to mapping)
+        // Get color hex (prioritize extended mappings for unique colors, then general)
         let colorHex = seedProduct.colorHex;
         if (!colorHex) {
-          colorHex = getSpectrumColorHex(seedProduct.color, seedProduct.title);
+          // Check extended mappings FIRST (has unique hex codes for similar color names)
+          colorHex = mapSpectrumColorToHex(seedProduct.color);
         }
         if (!colorHex) {
-          colorHex = mapSpectrumColorToHex(seedProduct.color);
+          // Fall back to general Spectrum color mapping (RAL codes, basic colors)
+          colorHex = getSpectrumColorHex(seedProduct.color, seedProduct.title);
         }
         
         // Prepare filament data
@@ -502,12 +504,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
   
   const name = colorName.toLowerCase().trim();
   
-  // Check main mapping first
-  if (SPECTRUM_COLOR_MAPPING[name]) {
-    return SPECTRUM_COLOR_MAPPING[name];
-  }
-  
-  // Extended Spectrum color mappings
+  // Extended Spectrum color mappings (check FIRST for unique hex codes)
   const extendedMappings: Record<string, string> = {
     // PLA Magic SILK colors
     'magenta dream': 'DA70D6', // Orchid-like magenta (unique from magenta blossom)
@@ -579,7 +576,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'old gold': 'CFB53B',
     'lavender violett': 'B57EDC',
     'lavender violet': 'B57EDC',
-    'golden line': 'FFD700',
+    'golden line': 'EEC900',  // Darker gold (unique from old gold/pearl gold)
     'fox orange': 'FF6A00',
     'fluo yellow': 'DFFF00',
     'fluo orange': 'FF5E00',
@@ -651,15 +648,22 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'beige': 'F5F5DC',
   };
   
+  // Check extended mappings first (exact match - most specific)
   if (extendedMappings[name]) {
     return extendedMappings[name];
   }
   
-  // Try partial matching for compound color names
-  for (const [key, hex] of Object.entries(extendedMappings)) {
-    if (name.includes(key) || key.includes(name)) {
-      return hex;
+  // Try partial matching for compound color names (prioritize longer keys)
+  const sortedKeys = Object.keys(extendedMappings).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (name.includes(key)) {
+      return extendedMappings[key];
     }
+  }
+  
+  // THEN check main SPECTRUM_COLOR_MAPPING (generic colors)
+  if (SPECTRUM_COLOR_MAPPING[name]) {
+    return SPECTRUM_COLOR_MAPPING[name];
   }
   
   // Fallback color family detection
