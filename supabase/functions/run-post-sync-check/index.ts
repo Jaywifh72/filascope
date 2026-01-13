@@ -8249,7 +8249,7 @@ Deno.serve(async (req) => {
       'extrudr': 18,            // BioFusion, DuraPro (ABS/ASA/PA12/PC-PBT + CF variants), FLAX, FLEX (3), GreenTEC (3), PCTG, PETG, xPETG (2), PLA NX2 Matt
       'geeetech': 18,           // CSV-seeded: 18 product lines (PLA, Silk, Silk Dual/Tri/Rainbow, Sparkly, CF, Marble, Wood, Matte, Luminous, HS-PLA, PETG, PETG Metallic, ABS+, ASA, TPU)
       'fusion-filaments': 8,    // CSV-seeded: HTPLA+, HT-PET, ASA, EasyASA, ABS Gloss, ABS Matte, HT-ABS Matte, PCTG
-      'spectrum-filaments': 30, // Large catalog with ReFill options
+      'spectrum-filaments': 55, // CSV-seeded: 55 product lines (PLA Premium, PLA Silk, PLA Magic SILK, Pastello PLA, PETG Premium, ASA 275, PC 275, FlameGuard, S-Flex, Wood, etc. + ReFill variants)
       'ultimaker': 10,          // S-Series materials
       'numakers': 13,           // CSV-seeded: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS
       'recreus': 14,            // CSV-seeded: TPU-60A, TPU-70A, TPU-82A, TPU-95A, TPU-FOAM, TPU-95A-FOAM, TPU-SEBS, TPU-Conductive, TPU-Purifier, TPU-Bio, rTPU, PETG, PLA, PP
