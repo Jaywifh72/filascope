@@ -55,8 +55,12 @@ const SIRAYATECH_MATERIAL_PATTERNS: MaterialPattern[] = [
   
   // PEBA variants (Rebound line)
   { pattern: /peba[- ]?air|peba[- ]?foam/i, material: 'PEBA-FOAM', isAbrasive: false, requiresEnclosure: false },
+  { pattern: /peba[- ]?85[- ]?a/i, material: 'PEBA-85A', isAbrasive: false, requiresEnclosure: false },
   { pattern: /peba[- ]?95[- ]?a|rebound[- ]?peba/i, material: 'PEBA-95A', isAbrasive: false, requiresEnclosure: false },
   { pattern: /\bpeba\b/i, material: 'PEBA', isAbrasive: false, requiresEnclosure: false },
+  
+  // TPU-GF (Glass Fiber TPU)
+  { pattern: /tpu[- ]?gf/i, material: 'TPU-GF', isAbrasive: true, requiresEnclosure: false },
 ];
 
 export function normalizeSirayaTechMaterial(title: string): { 
@@ -114,8 +118,10 @@ const SIRAYATECH_PRINT_SETTINGS: Record<string, PrintSettings> = {
   'TPU-85A': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 30, bedTempMax: 50, printSpeedMax: 30 },
   'TPU-95A': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 30, bedTempMax: 50, printSpeedMax: 35 },
   'TPU-FOAM': { nozzleTempMin: 220, nozzleTempMax: 240, bedTempMin: 30, bedTempMax: 50, printSpeedMax: 25 },
+  'TPU-GF': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 30 },
   
   // PEBA variants (Rebound line)
+  'PEBA-85A': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 35 },
   'PEBA-95A': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 35 },
   'PEBA-FOAM': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 25 },
   'PEBA': { nozzleTempMin: 230, nozzleTempMax: 250, bedTempMin: 40, bedTempMax: 60, printSpeedMax: 35 },
@@ -259,15 +265,23 @@ export function matchSirayaTechTds(handle: string): string | null {
 
 const SIRAYATECH_COLOR_MAPPING: Record<string, string> = {
   // Standard colors
-  'black': '#1A1A1A',
+  'black': '#1C1C1C',
+  'high flow black': '#0A0A0A',
   'white': '#FFFFFF',
   'grey': '#808080',
   'gray': '#808080',
   
-  // Translucent/clear
+  // Translucent/clear - unique hex to distinguish from white
   'clear': '#F5F5F5',
-  'transparent': '#F5F5F5',
-  'translucent': '#F5F5F5',
+  'transparent': '#E8E8E8',
+  'translucent': '#EBEBEB',
+  
+  // Nature colors
+  'green': '#228B22',
+  'olive green': '#556B2F',
+  
+  // Military/tactical colors
+  'flat dark earth': '#B5A08E',
   
   // Natural colors
   'natural': '#F5E6D3',
