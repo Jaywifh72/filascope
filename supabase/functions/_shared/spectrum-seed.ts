@@ -27,7 +27,7 @@ export function loadSpectrumSeed(): SpectrumSeedProduct[] {
 function isExcludedProduct(title: string, material: string): boolean {
   const t = (title + ' ' + material).toLowerCase();
   
-  // Exclude sample packs and bundles
+  // Exclude sample packs and bundles (5PACK, bundle, combo, gift, starter kit, variety)
   if (/5pack|bundle|combo|gift|starter\s*kit|variety/i.test(t)) return true;
   
   // Exclude non-standard weights (filter out <250g samples, >5500g bulk)
@@ -37,6 +37,7 @@ function isExcludedProduct(title: string, material: string): boolean {
     const unit = weightMatch[2].toLowerCase();
     const grams = unit === 'kg' ? value * 1000 : value;
     
+    // Keep 0.25kg (250g) and above, exclude <250g and >5500g
     if (grams < 250 || grams > 5500) return true;
   }
   
@@ -44,7 +45,7 @@ function isExcludedProduct(title: string, material: string): boolean {
   if (/2\.85\s*mm|3\.0?\s*mm/i.test(title)) return true;
   
   // Exclude non-filament products
-  if (/accessory|swatch|card/i.test(t)) return true;
+  if (/accessory|swatch|card|gift\s*card|3d\s*pen/i.test(t)) return true;
   
   return false;
 }
