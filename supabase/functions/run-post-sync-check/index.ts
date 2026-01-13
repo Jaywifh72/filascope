@@ -761,6 +761,33 @@ const AI_ROLES = {
       'Smoothie line names food items (Blueberry, Dragonfruit, Pineapple Banana)'
     ]
   },
+  recreusSpecialist: {
+    title: 'Recreus Integration Specialist',
+    triggers: ['recreus', 'filaflex', 'tpu-60a', 'tpu-70a', 'tpu-82a', 'tpu-95a', 'foamy', 'sebs', 'balena', 'reciflex', 'shore hardness', 'flexible', 'spanish'],
+    capabilities: [
+      'Recreus Shopify platform analysis (recreus.com - EUR primary, USD/CAD available)',
+      'CSV-seeded sync pipeline architecture (~70 products, 14 product lines)',
+      'Spanish TPU specialist with Shore hardness-based material classification',
+      'FilaFlex series expertise (60A-95A Shore hardness variants)',
+      'Specialty TPU types: Foamy (expanded foam), SEBS, Conductive, Purifier, Bio (Balena)',
+      'Multi-region store handling (en-en, es-es, de-de)',
+      'TDS management via Google Drive folder links',
+      '25+ color variants with comprehensive hex mapping including Spanish names',
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (recreus-seed.ts) as primary source - Shopify API is fallback only',
+      'Exclude pellet products - industrial, not consumer filament spools',
+      'Exclude Footwearology editions - specialty limited run products',
+      'FilaFlex 95A Foamy is SEPARATE product line from FilaFlex 95A (different material properties)',
+      'Shore hardness determines material category: 60A (softest) to 95A (firmest)',
+      'Spanish color names must be mapped: Negro=Black, Blanco=White, Rojo=Red, etc.',
+      'PET-G HF is standard PETG (HF = High Flow), not a separate material',
+      'Reciflex is recycled TPU (rTPU) - different product line from virgin FilaFlex',
+      'Balena is bio-based TPU - separate from petroleum-based FilaFlex',
+      'Expected 14 product lines for consumer-focused products',
+      'Currency is EUR for primary store but USD/CAD available via region selector',
+    ],
+  },
   prusamentSpecialist: {
     title: 'Prusament Integration Specialist',
     triggers: ['prusament', 'prusa', 'nfc', 'mystic', 'galaxy', 'opal', 'blend', 'rpla', 'woodfill', 'pvb', 'pc blend', 'pa11-cf', 'pp-cf', 'pp-gf', 'pei'],
@@ -1854,6 +1881,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'push-plastic') {
     return AI_ROLES.pushPlasticSpecialist;
+  }
+  if (brandSlug === 'recreus') {
+    return AI_ROLES.recreusSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -5502,6 +5532,199 @@ ${detailedIssues}
 *Last Updated: 2026-01-13*`;
 }
 
+/**
+ * Generate Recreus-specific AI Fix Prompt with CSV-seeded context
+ */
+function generateRecreusFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const role = AI_ROLES.recreusSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      check.products.slice(0, 10).forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    return section;
+  }).join('\n\n');
+
+  // AI insights section if available
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    const wrongDecisionsText = aiAnalysis.wrongDecisions?.length 
+      ? `### Wrong Decisions Identified\n${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}\n`
+      : '';
+    
+    aiInsightsSection = `
+---
+
+## 🤖 AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis\n${aiAnalysis.rootCause}\n` : ''}
+
+${wrongDecisionsText}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected\n${aiAnalysis.correctBehavior}\n` : ''}
+
+---`;
+  }
+
+  const capabilitiesText = role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n');
+  const lessonsText = role.lessons?.map(l => `- ${l}`).join('\n') || 'See recreusSpecialist role for lessons';
+
+  return `You are the **${role.title}** for Filascope.
+
+## PLATFORM CONTEXT
+
+**Platform**: Shopify (recreus.com - EUR primary, USD/CAD available)
+**Currency**: EUR (primary), USD, CAD
+**Architecture**: CSV-seeded sync pipeline (~70 products, 14 product lines)
+
+---
+
+## CORE CAPABILITIES
+
+${capabilitiesText}
+
+---
+
+## CSV-SEEDED SYNC ARCHITECTURE
+
+Recreus sync uses a **hardcoded CSV seed** as the primary data source:
+
+1. **RECREUS_PRODUCT_SEED** (~70 products) in \`recreus-seed.ts\` contains:
+   - Product names, colors, hex codes, product URLs
+   - Only 1.75mm, consumer-focused spool sizes (500g-1kg)
+   
+2. **Filtering Rules Applied:**
+   - EXCLUDE: Pellet products (industrial, not consumer)
+   - EXCLUDE: Footwearology editions (specialty limited run)
+   - EXCLUDE: PP3D Primer (not filament)
+   - EXCLUDE: 2.85mm/3.0mm diameter, samples (<300g), bulk (>5.5kg)
+   - DEDUPLICATE: Same color with multiple weight variants
+   
+3. **RECREUS_COLOR_MAPPING** provides hex codes for 40+ colors including Spanish names
+
+---
+
+## KNOWN LESSONS
+
+${lessonsText}
+
+---
+
+## PRODUCT LINE ARCHITECTURE (14 Lines)
+
+| Material | Product Line ID | Notes |
+|----------|-----------------|-------|
+| TPU-60A | recreus__tpu-60a__standard | Softest, ~3 colors |
+| TPU-70A | recreus__tpu-70a__standard | ~6 colors |
+| TPU-82A | recreus__tpu-82a__standard | Most popular, 15+ colors |
+| TPU-95A | recreus__tpu-95a__standard | Firmest, 10+ colors |
+| TPU-FOAM | recreus__tpu-foam__standard | Expanded foam, 7 colors |
+| TPU-SEBS | recreus__tpu-sebs__standard | 2 colors |
+| TPU-Conductive | recreus__tpu-conductive__standard | Black only |
+| TPU-Purifier | recreus__tpu-purifier__standard | Mineral only |
+| TPU-Bio | recreus__tpu-bio__standard | Balena series, 2 colors |
+| rTPU | recreus__rtpu__standard | Reciflex recycled, Black only |
+| PLA | recreus__pla__standard | Basic PLA, 4 colors |
+| PLA-LW | recreus__pla-lw__standard | Lightweight, 2 colors |
+| PETG | recreus__petg__standard | PET-G HF, 10+ colors |
+| PETG-CF | recreus__petg-cf__standard | Carbon fiber, 1 color |
+| PP | recreus__pp__standard | Polypropylene, 2 colors |
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+- **RC1**: CSV seed missing products/colors
+- **RC2**: Color-to-hex mapping gaps (including Spanish names like Negro, Blanco, Rojo)
+- **RC3**: Material normalization bugs (Shore hardness detection: 60A, 70A, 82A, 95A)
+- **RC4**: Product line ID grouping issues (Foamy vs non-Foamy confusion)
+- **RC5**: Pellet/non-filament products not excluded
+
+---
+
+## SPANISH COLOR NAME MAPPINGS
+
+| Spanish | English | Hex |
+|---------|---------|-----|
+| Negro | Black | #1C1C1C |
+| Blanco | White | #FFFFFF |
+| Rojo | Red | #C41E3A |
+| Azul | Blue | #0066CC |
+| Verde | Green | #228B22 |
+| Amarillo | Yellow | #FFD700 |
+| Naranja | Orange | #FF6B35 |
+| Transparente | Transparent | #FFFFFF |
+| Azul Marino | Navy Blue | #000080 |
+
+---
+
+## KEY FILES
+
+- \`supabase/functions/_shared/recreus-seed.ts\` - CSV seed data
+- \`supabase/functions/_shared/recreus-defaults.ts\` - Enrichment, hex mapping
+- \`supabase/functions/sync-recreus-products/index.ts\` - Sync function
+
+---
+${aiInsightsSection}
+
+## Fix Post Sync Check Issues for ${brand}
+
+### Summary
+- **Brand**: ${brand} (slug: recreus)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+
+---
+
+## Verification Steps
+
+1. Run **Clean Slate** sync for Recreus
+2. Run **Post Sync Check** to verify 0 failures
+3. Confirm 14 product lines and ~70 products
+4. Verify Spanish color names are mapped correctly
+5. Check that FilaFlex 95A Foamy is separate from FilaFlex 95A
+
+---
+
+*Last Updated: 2026-01-13*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -5579,6 +5802,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Push Plastic
   if (brandSlug === 'push-plastic') {
     return generatePushPlasticFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Recreus
+  if (brandSlug === 'recreus') {
+    return generateRecreusFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -9252,7 +9480,16 @@ Deno.serve(async (req) => {
                                       lineId.includes('push-plastic__pla-ht__') ||       // High Heat+Tough PLA limited colors
                                       lineId.includes('push-plastic__pei__9085') ||      // PEI 9085 single color
                                       lineId.includes('push-plastic__pei__1010') ||      // PEI 1010 single color
-                                      lineId.includes('push-plastic__abs__matte')        // Matte ABS limited colors
+                                      lineId.includes('push-plastic__abs__matte') ||     // Matte ABS limited colors
+                                      // Recreus single-color specialty products (CSV-seeded)
+                                      lineId.includes('recreus__tpu-conductive__') ||    // Conductive TPU only in Black
+                                      lineId.includes('recreus__tpu-purifier__') ||      // Purifier TPU only in Mineral
+                                      lineId.includes('recreus__rtpu__') ||              // Reciflex rTPU only in Black
+                                      lineId.includes('recreus__petg-cf__') ||           // PETG-CF only in Carbon
+                                      lineId.includes('recreus__pp__') ||                // PP limited colors (2)
+                                      lineId.includes('recreus__pla-lw__') ||            // Lightweight PLA limited colors (2)
+                                      lineId.includes('recreus__tpu-bio__') ||           // Balena Bio-TPU limited colors (2)
+                                      lineId.includes('recreus__tpu-sebs__')             // SEBS limited colors (2)
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
