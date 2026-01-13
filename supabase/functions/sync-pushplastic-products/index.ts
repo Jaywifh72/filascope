@@ -317,7 +317,7 @@ Deno.serve(async (req) => {
           material: enriched.material || material,
           finish_type: finishType,
           product_line_id: productLineId,
-          color_hex: enriched.colorHex || colorHex,
+          color_hex: colorHex || enriched.colorHex,  // Seed hex takes PRIORITY over enrichment
           color_family: null, // Will be derived from hex
           tds_url: enriched.tdsUrl || tdsUrl,
           product_url: entry.colorLink || entry.productLink,
