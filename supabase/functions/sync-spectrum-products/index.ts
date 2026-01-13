@@ -506,6 +506,9 @@ function mapSpectrumColorToHex(colorName: string): string | null {
   
   // Extended Spectrum color mappings (check FIRST for unique hex codes)
   const extendedMappings: Record<string, string> = {
+    // Unique mappings for colors that would otherwise conflict
+    'ivory beige': 'FFFFF0',  // Ivory color (unique from natural #F5F5DC)
+    
     // PLA Magic SILK colors
     'magenta dream': 'DA70D6', // Orchid-like magenta (unique from magenta blossom)
     'vivid lavender': 'B57EDC',
