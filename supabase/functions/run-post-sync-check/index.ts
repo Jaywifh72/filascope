@@ -8226,7 +8226,7 @@ Deno.serve(async (req) => {
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
       'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
       'siraya-tech': 21,        // CSV-seeded filaments: 15 Fibreheart (engineering) + 4 Flex (TPU) + 2 Rebound (PEBA) = 21 product lines
-      'sovol': 6,               // PLA, PETG, TPU, ABS, Silk, Carbon
+      'sovol': 5,               // PLA, PETG, Silk PLA, Glow PLA, PETG-Gradient (after bulk filtering)
       'flashforge': 8,          // PLA, ABS, PETG, TPU, Adventurer series
       'duramic-3d': 3,          // PLA, PETG, TPU
       
@@ -8844,7 +8844,7 @@ Deno.serve(async (req) => {
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
         // Proto-Pasta also uses cross-product architecture where each color is a separate Shopify product
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta'];
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;

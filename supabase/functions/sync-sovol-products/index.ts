@@ -16,6 +16,7 @@ import {
   isSovolFilament,
   getSovolColorHex,
 } from '../_shared/sovol-defaults.ts';
+import { shouldIncludeVariant } from '../_shared/variant-filters.ts';
 
 // ============================================================================
 // INTERFACES
@@ -158,6 +159,8 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   
   const variants: ProductVariant[] = [];
   const seenColorVariants = new Set<string>();
+  let skippedBulk = 0;
+  let skippedMultiPack = 0;
   
   for (const product of products) {
     const primaryImage = product.images?.[0]?.src || null;
@@ -166,8 +169,15 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
       // Parse variant title (Color / Ship From)
       const parsed = parseSovolVariant(variant.title);
       
-      // Use option1 as color if parsing failed
-      const color = parsed.color || variant.option1 || 'Default';
+      // Use option1 as color if parsing failed - strip multi-pack multipliers
+      let color = parsed.color || variant.option1 || 'Default';
+      
+      // Normalize multi-pack colors: "White*10" → "White"
+      if (/\*\d+$/.test(color)) {
+        console.log(`[Filter] Multi-pack variant detected: ${color} - skipping`);
+        skippedMultiPack++;
+        continue;
+      }
       
       // Create unique key per product+color (consolidate ship regions)
       const uniqueKey = `${product.id}-${color.toLowerCase()}`;
@@ -191,6 +201,14 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
         }
       }
       
+      // Filter out bulk/sample products using shared utility
+      const filterResult = shouldIncludeVariant(weight, 1.75, product.title);
+      if (!filterResult.include) {
+        console.log(`[Filter] Skipping: ${product.title} (${color}) - ${filterResult.reason}`);
+        skippedBulk++;
+        continue;
+      }
+      
       variants.push({
         productId: `sovol-${product.id}-${variant.id}`,
         variantId: String(variant.id),
@@ -210,7 +228,7 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
     }
   }
   
-  console.log(`[Step 2] Complete: ${variants.length} unique color variants from ${products.length} products`);
+  console.log(`[Step 2] Complete: ${variants.length} unique variants (${skippedBulk} bulk filtered, ${skippedMultiPack} multi-packs skipped)`);
   return variants;
 }
 
