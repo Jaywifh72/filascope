@@ -572,10 +572,12 @@ export const PUSHPLASTIC_COLOR_MAPPING: Record<string, string> = {
   
   // Yellows
   'yellow': '#FFEB3B',
+  'safety yellow': '#FFCC00',      // Safety Yellow - MUST be distinct from regular yellow
   'fluorescent yellow': '#FFFF00',
   
   // Greens
   'green': '#388E3C',
+  'pusch green': '#2E8B2E',        // PUSCH brand green - MUST be distinct from standard green
   'army green': '#4B5320',
   'fatigue green': '#5B6B4F',
   'forest green': '#228B22',
