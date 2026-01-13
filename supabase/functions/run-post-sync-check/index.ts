@@ -7206,7 +7206,7 @@ Deno.serve(async (req) => {
           // - matter3d: website HTML shows incorrect "magenta" from other page elements
           // - polymaker: website shows "you will love it" marketing text as color option
           // - proto-pasta: website scraping picks up navigation text like "makers of protopasta, scroll to top"
-          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta'];
+          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus'];
           const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
           
           if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {
@@ -9196,7 +9196,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
