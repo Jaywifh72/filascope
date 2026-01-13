@@ -9,6 +9,7 @@ import {
   getRecreusDefaultPrice,
   shouldExcludeRecreusProduct,
   RECREUS_PRODUCT_LINE_COUNT,
+  getRecreusProductLineImage,
 } from '../_shared/recreus-seed.ts';
 import {
   enrichRecreousProduct,
@@ -101,6 +102,7 @@ Deno.serve(async (req) => {
         const price = getRecreusDefaultPrice(seed.material);
         const colorFamily = getColorFamily(seed.color);
         const productId = `recreus-${seed.material.toLowerCase()}-${seed.color.toLowerCase().replace(/\s+/g, '-')}`;
+        const featuredImage = getRecreusProductLineImage(seed.productLineId);
 
         filamentRows.push({
           vendor: 'Recreus',
@@ -123,6 +125,7 @@ Deno.serve(async (req) => {
           print_speed_max_mms: enrichment.printSpeedMax,
           is_nozzle_abrasive: enrichment.isAbrasive,
           finish_type: enrichment.finishType,
+          featured_image: featuredImage,
           auto_created: true,
           auto_updated: true,
           sync_status: 'synced',
