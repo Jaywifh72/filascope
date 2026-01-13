@@ -147,8 +147,23 @@ async function fetchAllShopifyProducts(): Promise<ShopifyProduct[]> {
 function extractMaterial(product: ShopifyProduct): string {
   const title = product.title;
   
-  // Material patterns (ordered by specificity)
+  // Material patterns (ordered by specificity - MOST SPECIFIC FIRST!)
   const materialPatterns: [RegExp, string][] = [
+    // ========== "THE FILAMENT" SUB-BRAND (MUST BE FIRST!) ==========
+    // Prevents "PLASMA" in color name matching PLA
+    [/^The\s+Filament.*PETG\s*CF/i, 'The Filament PETG CF'],
+    [/^The\s+Filament.*PETG\s*HS/i, 'The Filament PETG HS'],
+    [/^The\s+Filament.*PETG/i, 'The Filament PETG'],
+    [/^The\s+Filament.*PLA\s*CF/i, 'The Filament PLA CF'],
+    [/^The\s+Filament.*PLA\s*HS/i, 'The Filament PLA HS'],
+    [/^The\s+Filament.*PLA/i, 'The Filament PLA'],
+    
+    // ========== SPECIALTY MATERIALS (before fallbacks) ==========
+    [/r-PLA/i, 'r-PLA'],
+    [/HIPS-X|HIPS\s*X/i, 'HIPS-X'],
+    [/PLA\s*Metal/i, 'PLA Metal'],
+    [/PLA\s*Stone\s*Age/i, 'PLA Stone Age'],
+    
     // High-fidelity specialty materials
     [/FlameGuard\s*ASA\s*275/i, 'FlameGuard ASA 275'],
     [/FlameGuard\s*PLA/i, 'FlameGuard PLA'],
@@ -167,7 +182,6 @@ function extractMaterial(product: ShopifyProduct): string {
     [/PLA\s*Matt/i, 'PLA Matte'],
     [/PLA\s*Glow/i, 'PLA Glow in the Dark'],
     [/PLA\s*Carbon/i, 'PLA Carbon'],
-    [/PLA\s*Stone\s*Age/i, 'PLA Stone Age'],
     
     // PETG variants
     [/PET-?G\s*Premium\s*High\s*Speed/i, 'PET-G Premium High Speed'],
@@ -201,14 +215,15 @@ function extractMaterial(product: ShopifyProduct): string {
     [/S-?Flex\s*90A/i, 'S-Flex 90A'],
     [/S-?Flex\s*85A/i, 'S-Flex 85A'],
     
-    // Wood
-    [/Wood/i, 'Wood'],
+    // Wood - ONLY match "Wood" as material, NOT as color name (Wood Ash, Oak, Ebony)
+    [/\bWood\b(?!\s*(?:ASH|OAK|EBONY))/i, 'Wood'],
     
-    // Fallbacks
-    [/PLA/i, 'PLA Premium'],
-    [/PET-?G/i, 'PET-G Premium'],
-    [/ASA/i, 'ASA 275'],
-    [/ABS/i, 'Smart ABS'],
+    // ========== FALLBACKS (MUST BE LAST!) ==========
+    // Use word boundaries to avoid matching color names like "PLASMA"
+    [/\bPLA\b/i, 'PLA Premium'],
+    [/\bPET-?G\b/i, 'PET-G Premium'],
+    [/\bASA\b/i, 'ASA 275'],
+    [/\bABS\b/i, 'Smart ABS'],
   ];
   
   for (const [pattern, material] of materialPatterns) {
@@ -990,6 +1005,10 @@ function mapSpectrumColorToHex(colorName: string): string | null {
   if (/white|polar|arctic|signal|snow/i.test(name)) return 'F5F5F5';
   if (/silver/i.test(name)) return 'C0C0C0';
   if (/aluminium|aluminum/i.test(name)) return 'A9ACB6';
+  // UNIQUE grey hex codes to prevent swatch collisions
+  if (/basalt\s*grey/i.test(name)) return '8E8E8E';
+  if (/cloud\s*grey/i.test(name)) return 'B8B8B8';
+  if (/volcano\s*grey/i.test(name)) return '9A9A9A';
   if (/grey|gray/i.test(name)) return 'A0A0A0';
   if (/gold|golden/i.test(name)) return 'FFD700';
   if (/red|crimson|bloody|ruby|dragon|cherry|raspberry/i.test(name)) return 'CC0000';
