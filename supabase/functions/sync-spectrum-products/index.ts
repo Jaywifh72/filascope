@@ -159,10 +159,16 @@ function extractMaterial(product: ShopifyProduct): string {
     [/^The\s+Filament.*PLA/i, 'The Filament PLA'],
     
     // ========== SPECIALTY MATERIALS (before fallbacks) ==========
-    [/r-PLA/i, 'r-PLA'],
+    [/r-?PLA\b/i, 'r-PLA'],
+    [/r-?PETG\b/i, 'rPETG'],
     [/HIPS-X|HIPS\s*X/i, 'HIPS-X'],
     [/PLA\s*Metal/i, 'PLA Metal'],
-    [/PLA\s*Stone\s*Age/i, 'PLA Stone Age'],
+    [/PLA\s*Stone\s*Age|Stone\s*Age/i, 'PLA Stone Age'],
+    [/PLA\s*Pro\b/i, 'PLA Pro'],
+    [/Thermoactive/i, 'PLA Thermoactive'],
+    [/AquaPrint\b/i, 'AquaPrint PLA'],
+    [/S-?Flex\s*98A/i, 'S-Flex 98A'],
+    [/S-?Flex\s*Carbon/i, 'S-Flex Carbon'],
     
     // High-fidelity specialty materials
     [/FlameGuard\s*ASA\s*275/i, 'FlameGuard ASA 275'],
@@ -1000,9 +1006,14 @@ function mapSpectrumColorToHex(colorName: string): string | null {
   
   // Fallback color family detection - use DISTINCT hex per family to reduce conflicts
   if (/midnight/i.test(name)) return '0C0C0C';
+  if (/deep\s*black/i.test(name)) return '050505';
   if (/black|ebony|charcoal|anthracite/i.test(name)) return '1A1A1A';
   if (/dark/i.test(name)) return '2A2A2A';
-  if (/white|polar|arctic|signal|snow/i.test(name)) return 'F5F5F5';
+  // UNIQUE white hex codes to prevent swatch collisions
+  if (/polar\s*white/i.test(name)) return 'FAFAFA';
+  if (/arctic\s*white/i.test(name)) return 'F8F8FF';
+  if (/signal\s*white/i.test(name)) return 'FFFAFA';
+  if (/white|snow/i.test(name)) return 'F5F5F5';
   if (/silver/i.test(name)) return 'C0C0C0';
   if (/aluminium|aluminum/i.test(name)) return 'A9ACB6';
   // UNIQUE grey hex codes to prevent swatch collisions

@@ -102,9 +102,16 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
   }
   
   // ========== SPECIALTY MATERIALS (separate from PLA Premium) ==========
-  if (/r-pla/i.test(t)) return `spectrum__r-pla${suffix}`;
+  if (/r-pla|rpla/i.test(t)) return `spectrum__r-pla${suffix}`;
   if (/hips-x|hips\s*x/i.test(t)) return `spectrum__hips-x${suffix}`;
   if (/pla\s*metal/i.test(t)) return `spectrum__pla-metal${suffix}`;
+  if (/pla\s*pro\b/i.test(t)) return `spectrum__pla-pro${suffix}`;
+  if (/rpetg|r-petg/i.test(t)) return `spectrum__rpetg${suffix}`;
+  if (/s-?flex\s*98a/i.test(t)) return `spectrum__s-flex-98a${suffix}`;
+  if (/s-?flex\s*carbon/i.test(t)) return `spectrum__s-flex-carbon${suffix}`;
+  if (/thermoactive/i.test(t)) return `spectrum__pla-thermoactive${suffix}`;
+  if (/stone\s*age/i.test(t)) return `spectrum__pla-stone-age${suffix}`;
+  if (/aquaprint/i.test(t)) return `spectrum__aquaprint-pla${suffix}`;
   
   // ========== SPECIALTY PLA LINES ==========
   if (/pla\s*magic\s*silk/i.test(t)) return `spectrum__pla-magic-silk${suffix}`;
@@ -113,13 +120,11 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
   if (/pastello\s*pla/i.test(t)) return `spectrum__pastello-pla${suffix}`;
   if (/flameguard\s*pla/i.test(t)) return `spectrum__flameguard-pla${suffix}`;
   if (/safeguard\s*pla/i.test(t)) return `spectrum__safeguard-pla${suffix}`;
-  if (/aquaprint\s*pla/i.test(t)) return `spectrum__aquaprint-pla${suffix}`;
   if (/pla\s*glitter/i.test(t)) return `spectrum__pla-glitter${suffix}`;
   if (/pla\s*crystal/i.test(t)) return `spectrum__pla-crystal${suffix}`;
   if (/pla\s*matt|pla\s*matte/i.test(t)) return `spectrum__pla-matte${suffix}`;
   if (/pla\s*glow/i.test(t)) return `spectrum__pla-glow-in-the-dark${suffix}`;
   if (/pla\s*carbon/i.test(t)) return `spectrum__pla-carbon${suffix}`;
-  if (/pla\s*stone\s*age/i.test(t)) return `spectrum__pla-stone-age${suffix}`;
   if (/pla\s*premium/i.test(t)) return `spectrum__pla-premium${suffix}`;
   
   // ========== ASA VARIANTS ==========
@@ -152,7 +157,7 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
   // ========== ABS/SMART ==========
   if (/smart\s*abs/i.test(t)) return `spectrum__smart-abs${suffix}`;
   
-  // ========== FLEXIBLE ==========
+  // ========== FLEXIBLE (98A, Carbon patterns matched earlier in specialty) ==========
   if (/s-?flex\s*90a/i.test(t)) return `spectrum__s-flex-90a${suffix}`;
   if (/s-?flex\s*85a/i.test(t)) return `spectrum__s-flex-85a${suffix}`;
   
@@ -250,15 +255,20 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   // ========== Flexible ==========
   'spectrum__s-flex-90a__standard': 8,
   'spectrum__s-flex-85a__standard': 6,
+  'spectrum__s-flex-98a__standard': 8,
+  'spectrum__s-flex-carbon__standard': 1,
   
   // ========== Specialty Materials ==========
   'spectrum__wood__standard': 6,
   'spectrum__r-pla__standard': 4,
   'spectrum__r-pla__refill': 2,
+  'spectrum__rpetg__standard': 8,
   'spectrum__hips-x__standard': 2,
   'spectrum__pla-metal__standard': 6,
+  'spectrum__pla-pro__standard': 20,
+  'spectrum__pla-thermoactive__standard': 2,
 };
 
 // Total expected filament cards in UI (unique product lines)
-// Updated to include "The Filament" sub-brand lines and specialty materials
+// Updated to include all specialty materials and flexible variants
 export const SPECTRUM_EXPECTED_CARD_COUNT = Object.keys(SPECTRUM_EXPECTED_PRODUCT_LINES).length;
