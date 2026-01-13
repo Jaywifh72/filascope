@@ -280,40 +280,59 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
 
         <CardContent className="space-y-4">
           {/* Progress Bar (when syncing) */}
-          {isActive && activeProgress && (
+          {isActive && (
             <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
-              {/* Header with stage and percentage */}
+              {/* Header with stage info */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   <span className="font-medium text-sm">
-                    {activeProgress.stage}
-                    {activeProgress.currentRegion && ` • ${activeProgress.currentRegion}`}
+                    {activeProgress?.stage || 'Syncing products...'}
+                    {activeProgress?.currentRegion && ` • ${activeProgress.currentRegion}`}
                   </span>
                 </div>
-                <Badge variant="secondary" className="tabular-nums">
-                  {activeProgressPercent}%
-                </Badge>
+                {/* Only show percentage when we have real progress data */}
+                {activeProgress && activeProgress.totalProducts > 0 && (
+                  <Badge variant="secondary" className="tabular-nums">
+                    {activeProgressPercent}%
+                  </Badge>
+                )}
               </div>
               
-              {/* Progress bar */}
+              {/* Progress bar - show indeterminate when no real data */}
               <div className="space-y-1">
-                <Progress value={activeProgressPercent} className="h-3" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{activeProgress.productsProcessed} of {activeProgress.totalProducts} products</span>
-                  <span>{activeProgress.totalProducts - activeProgress.productsProcessed} remaining</span>
-                </div>
+                {activeProgress && activeProgress.totalProducts > 0 ? (
+                  <>
+                    <Progress value={activeProgressPercent} className="h-3" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{activeProgress.productsProcessed} of {activeProgress.totalProducts} products</span>
+                      <span>{activeProgress.totalProducts - activeProgress.productsProcessed} remaining</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Indeterminate progress - animated sliding effect */}
+                    <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full w-1/3 bg-primary rounded-full animate-indeterminate" />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Processing products...</span>
+                      <span className="animate-pulse">Please wait</span>
+                    </div>
+                  </>
+                )}
+
               </div>
               
               {/* Current product being processed */}
-              {activeProgress.currentProduct && (
+              {activeProgress?.currentProduct && (
                 <div className="text-xs text-muted-foreground bg-background/50 rounded px-3 py-2 truncate">
                   Processing: {activeProgress.currentProduct}
                 </div>
               )}
               
               {/* Region progress */}
-              {activeProgress.totalRegions && activeProgress.totalRegions > 1 && (
+              {activeProgress?.totalRegions && activeProgress.totalRegions > 1 && (
                 <div className="flex items-center gap-2 pt-2 border-t text-xs text-muted-foreground">
                   <Globe className="w-3 h-3" />
                   <span>Region {(activeProgress.regionsProcessed || 0) + 1} of {activeProgress.totalRegions}</span>

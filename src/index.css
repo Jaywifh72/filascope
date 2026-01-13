@@ -587,6 +587,17 @@ All colors MUST be HSL.
     100% { left: 100%; }
   }
 
+  /* Indeterminate progress bar animation */
+  @keyframes indeterminate-progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+
+  .animate-indeterminate {
+    animation: indeterminate-progress 1.5s ease-in-out infinite;
+  }
+
+
   /* Min/max point pulse */
 @keyframes pointPulse {
   0%, 100% { transform: scale(1); }
