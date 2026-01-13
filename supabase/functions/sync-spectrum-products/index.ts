@@ -1,28 +1,25 @@
 /**
  * SPECTRUM FILAMENTS SYNC FUNCTION
  * 
- * CSV-seeded sync for Spectrum Filaments Shopify CA store.
+ * Live Shopify API sync for Spectrum Filaments CA store.
  * Architecture: Cross-product swatch (each color variant is a separate Shopify product)
  * 
  * Features:
- * - 662+ products across 40+ material types
- * - ReFill eco-spool variants
- * - Shopify-based product URLs
+ * - Fetches 600+ products directly from Shopify API
+ * - 40+ material types with ReFill eco-spool variants
  * - Color-specific images per variant
  * 
  * Filtering:
- * - No samples (<300g)
+ * - No samples (<250g)
  * - No bulk (>5500g)
  * - No 2.85mm/3mm diameter
- * - No gift cards or non-filament products
+ * - No gift cards, bundles, or non-filament products
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { 
-  loadSpectrumSeed, 
   generateSpectrumProductLineIdFromSeed,
-  SpectrumSeedProduct,
   SPECTRUM_EXPECTED_CARD_COUNT,
 } from "../_shared/spectrum-seed.ts";
 import { 
@@ -41,6 +38,34 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface ShopifyProduct {
+  id: number;
+  title: string;
+  handle: string;
+  product_type: string;
+  vendor: string;
+  tags: string[];
+  images: { src: string }[];
+  variants: {
+    id: number;
+    title: string;
+    price: string;
+    option1: string | null;
+    option2: string | null;
+    option3: string | null;
+  }[];
+}
+
+interface SpectrumProduct {
+  title: string;
+  material: string;
+  productUrl: string;
+  color: string;
+  imageUrl: string;
+  colorHex: string | null;
+  tdsUrl: string | null;
+}
 
 interface SyncStats {
   discovered: number;
@@ -62,7 +87,236 @@ interface ProductResult {
 
 const BRAND_NAME = 'Spectrum Filaments';
 const BRAND_SLUG = 'spectrum-filaments';
-const SAFE_DELETE_THRESHOLD = 50; // Minimum products to keep
+const SAFE_DELETE_THRESHOLD = 50;
+const SHOPIFY_BASE_URL = 'https://ca.spectrumfilaments.com';
+
+/**
+ * Fetch all products from Shopify API (paginated)
+ */
+async function fetchAllShopifyProducts(): Promise<ShopifyProduct[]> {
+  const allProducts: ShopifyProduct[] = [];
+  let page = 1;
+  const limit = 250;
+  
+  console.log('Fetching products from Shopify API...');
+  
+  while (true) {
+    const url = `${SHOPIFY_BASE_URL}/products.json?limit=${limit}&page=${page}`;
+    console.log(`Fetching page ${page}...`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Filascope-Sync/1.0',
+      },
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch page ${page}: ${response.status}`);
+      break;
+    }
+    
+    const data = await response.json();
+    const products = data.products || [];
+    
+    if (products.length === 0) {
+      console.log(`No more products on page ${page}`);
+      break;
+    }
+    
+    allProducts.push(...products);
+    console.log(`Fetched ${products.length} products from page ${page} (total: ${allProducts.length})`);
+    
+    if (products.length < limit) {
+      break;
+    }
+    
+    page++;
+    
+    // Rate limiting
+    await new Promise(r => setTimeout(r, 100));
+  }
+  
+  console.log(`Total products fetched from Shopify: ${allProducts.length}`);
+  return allProducts;
+}
+
+/**
+ * Extract material from Shopify product
+ */
+function extractMaterial(product: ShopifyProduct): string {
+  const title = product.title;
+  
+  // Material patterns (ordered by specificity)
+  const materialPatterns: [RegExp, string][] = [
+    // High-fidelity specialty materials
+    [/FlameGuard\s*ASA\s*275/i, 'FlameGuard ASA 275'],
+    [/FlameGuard\s*PLA/i, 'FlameGuard PLA'],
+    [/SafeGuard\s*PLA/i, 'SafeGuard PLA'],
+    [/AquaPrint\s*PLA/i, 'AquaPrint PLA'],
+    [/PLA\s*Magic\s*SILK/i, 'PLA Magic SILK'],
+    [/PLA\s*SILK\s*Rainbow/i, 'PLA SILK Rainbow'],
+    [/PLA\s*SILK/i, 'PLA SILK'],
+    [/Pastello\s*PLA/i, 'Pastello PLA'],
+    [/Premium\s*PLA\s*High\s*Speed/i, 'Premium PLA High Speed'],
+    [/PLA\s*High\s*Speed/i, 'Premium PLA High Speed'],
+    [/PLA\s*Premium/i, 'PLA Premium'],
+    [/PLA\s*Glitter/i, 'PLA Glitter'],
+    [/PLA\s*Crystal/i, 'PLA Crystal'],
+    [/PLA\s*Matte/i, 'PLA Matte'],
+    [/PLA\s*Matt/i, 'PLA Matte'],
+    [/PLA\s*Glow/i, 'PLA Glow in the Dark'],
+    [/PLA\s*Carbon/i, 'PLA Carbon'],
+    [/PLA\s*Stone\s*Age/i, 'PLA Stone Age'],
+    
+    // PETG variants
+    [/PET-?G\s*Premium\s*High\s*Speed/i, 'PET-G Premium High Speed'],
+    [/PET-?G\s*Premium/i, 'PET-G Premium'],
+    [/PET-?G\s*Glow/i, 'PET-G Glow in the Dark'],
+    [/PCTG\s*Premium/i, 'PCTG Premium'],
+    [/PCTG\s*CF/i, 'PCTG CF10'],
+    [/PCTG\s*GF/i, 'PCTG GF10'],
+    
+    // ASA/ABS variants
+    [/ASA\s*275/i, 'ASA 275'],
+    [/ASA[\s-]*X[\s-]*CF/i, 'ASA-X CF10'],
+    [/ASA[\s-]*X[\s-]*GF/i, 'ASA-X GF10'],
+    [/ASA[\s-]*Kevlar/i, 'ASA Kevlar'],
+    [/Smart\s*ABS/i, 'Smart ABS'],
+    
+    // Engineering materials
+    [/Nylon\s*PA6\s*Low[\s-]*Warp\s*GF15S/i, 'Nylon PA6 Low Warp GF15S'],
+    [/Nylon\s*PA6\s*GF30[\s-]*Low[\s-]*Warp/i, 'Nylon PA6 GF30 Low Warp'],
+    [/Nylon\s*PA6[\s-]*Low[\s-]*Warp/i, 'Nylon PA6 Low Warp'],
+    [/PA12[\s-]*CF/i, 'PA12 CF15'],
+    [/PA6[\s-]*CF/i, 'PA6 CF15'],
+    [/PA6[\s-]*CS20[\s-]*FR/i, 'PA6 CS20 FR V0'],
+    [/PA6[\s-]*GK/i, 'PA6 GK10'],
+    [/PA6[\s-]*Neat/i, 'PA6 Neat'],
+    [/PC[\s-]*275/i, 'PC-275'],
+    [/PC[\s-]*ABS/i, 'PC ABS'],
+    [/PC[\s-]*PTFE/i, 'PC PTFE'],
+    
+    // Flexible
+    [/S-?Flex\s*90A/i, 'S-Flex 90A'],
+    [/S-?Flex\s*85A/i, 'S-Flex 85A'],
+    
+    // Wood
+    [/Wood/i, 'Wood'],
+    
+    // Fallbacks
+    [/PLA/i, 'PLA Premium'],
+    [/PET-?G/i, 'PET-G Premium'],
+    [/ASA/i, 'ASA 275'],
+    [/ABS/i, 'Smart ABS'],
+  ];
+  
+  for (const [pattern, material] of materialPatterns) {
+    if (pattern.test(title)) {
+      return material;
+    }
+  }
+  
+  return product.product_type || 'PLA Premium';
+}
+
+/**
+ * Extract color from Shopify product title
+ */
+function extractColor(product: ShopifyProduct): string {
+  const title = product.title;
+  
+  // Remove material, weight, and diameter prefixes
+  let colorPart = title
+    .replace(/Filament\s*Spectrum\s*/i, '')
+    .replace(/ReFill\s*/i, '')
+    .replace(/\d+(?:\.\d+)?\s*(?:kg|g)\s*/gi, '')
+    .replace(/1\.75\s*mm\s*/gi, '')
+    .replace(/2\.85\s*mm\s*/gi, '')
+    .trim();
+  
+  // Remove material name prefixes (longest patterns first)
+  const materialPrefixes = [
+    'FlameGuard ASA 275', 'FlameGuard PLA', 'SafeGuard PLA', 'AquaPrint PLA',
+    'PLA Magic SILK', 'PLA SILK Rainbow', 'PLA SILK', 'Pastello PLA',
+    'Premium PLA High Speed', 'PLA High Speed', 'PLA Premium',
+    'PLA Glitter', 'PLA Crystal', 'PLA Matte', 'PLA Matt',
+    'PLA Glow in the Dark', 'PLA Glow', 'PLA Carbon', 'PLA Stone Age',
+    'PET-G Premium High Speed', 'PETG Premium High Speed',
+    'PET-G Premium', 'PETG Premium', 'PET-G Glow', 'PETG Glow',
+    'PCTG Premium', 'PCTG CF10', 'PCTG GF10',
+    'ASA 275', 'ASA-X CF10', 'ASA-X GF10', 'ASA Kevlar',
+    'Smart ABS', 'ABS',
+    'Nylon PA6 Low Warp GF15S', 'Nylon PA6 GF30 Low Warp', 'Nylon PA6 Low Warp',
+    'PA12 CF15', 'PA6 CF15', 'PA6 CS20 FR V0', 'PA6 GK10', 'PA6 Neat',
+    'PC-275', 'PC 275', 'PC ABS', 'PC PTFE',
+    'S-Flex 90A', 'S-Flex 85A',
+    'Wood',
+    'PLA', 'PETG', 'PET-G', 'ASA', 'PC', 'PA6', 'PA12', 'PCTG',
+  ];
+  
+  for (const prefix of materialPrefixes) {
+    const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i');
+    colorPart = colorPart.replace(pattern, '');
+  }
+  
+  // Clean up remaining artifacts
+  colorPart = colorPart
+    .replace(/^\s*[-–]\s*/, '')
+    .replace(/\s*[-–]\s*$/, '')
+    .trim();
+  
+  return colorPart || 'NATURAL';
+}
+
+/**
+ * Check if product should be excluded
+ */
+function isExcludedProduct(title: string, material: string): boolean {
+  const t = (title + ' ' + material).toLowerCase();
+  
+  // Exclude sample packs and bundles
+  if (/5pack|bundle|combo|gift|starter\s*kit|variety|sample\s*pack/i.test(t)) return true;
+  
+  // Exclude 2.85mm/3mm diameter
+  if (/2\.85\s*mm|3\.0?\s*mm/i.test(title)) return true;
+  
+  // Exclude non-filament products
+  if (/accessory|swatch|card|gift\s*card|3d\s*pen|hardened\s*nozzle/i.test(t)) return true;
+  
+  return false;
+}
+
+/**
+ * Convert Shopify products to our format
+ */
+function transformProducts(shopifyProducts: ShopifyProduct[]): SpectrumProduct[] {
+  const products: SpectrumProduct[] = [];
+  
+  for (const sp of shopifyProducts) {
+    // Skip excluded products
+    const material = extractMaterial(sp);
+    if (isExcludedProduct(sp.title, material)) {
+      continue;
+    }
+    
+    const color = extractColor(sp);
+    const productUrl = `${SHOPIFY_BASE_URL}/products/${sp.handle}`;
+    const imageUrl = sp.images?.[0]?.src || '';
+    
+    products.push({
+      title: sp.title,
+      material,
+      productUrl,
+      color,
+      imageUrl,
+      colorHex: null, // Will be resolved by mapSpectrumColorToHex
+      tdsUrl: null, // Will be resolved by enrichSpectrumProduct
+    });
+  }
+  
+  return products;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -89,7 +343,7 @@ serve(async (req) => {
       throw new Error(`${BRAND_NAME} brand not found in automated_brands`);
     }
     
-    console.log(`Starting ${BRAND_NAME} sync (CSV-seeded, Shopify CA)`);
+    console.log(`Starting ${BRAND_NAME} sync (Live Shopify API)`);
     console.log(`Options: cleanSlate=${cleanSlate}, dryRun=${dryRun}, limit=${limit || 'all'}`);
     
     // Mark as scraping
@@ -113,18 +367,19 @@ serve(async (req) => {
     const filterStats = createFilterStats();
     
     // ========================================================================
-    // STEP 1: LOAD CSV SEED DATA
+    // STEP 1: FETCH PRODUCTS FROM SHOPIFY API
     // ========================================================================
-    console.log('Step 1: Loading CSV seed data...');
+    console.log('Step 1: Fetching products from Shopify API...');
     
-    const seedProducts = await loadSpectrumSeed();
+    const shopifyProducts = await fetchAllShopifyProducts();
+    const seedProducts = transformProducts(shopifyProducts);
     stats.discovered = seedProducts.length;
     
     if (seedProducts.length === 0) {
-      throw new Error('No products loaded from CSV seed');
+      throw new Error('No products fetched from Shopify API');
     }
     
-    console.log(`Loaded ${seedProducts.length} products from CSV`);
+    console.log(`Discovered ${seedProducts.length} filament products`);
     
     // ========================================================================
     // STEP 2: SAFE DELETE CHECK (if clean slate)
@@ -137,7 +392,7 @@ serve(async (req) => {
         .select('*', { count: 'exact', head: true })
         .eq('vendor', BRAND_NAME);
       
-      console.log(`Existing products: ${existingCount}, New seed: ${seedProducts.length}`);
+      console.log(`Existing products: ${existingCount}, New discovered: ${seedProducts.length}`);
       
       if (seedProducts.length < SAFE_DELETE_THRESHOLD) {
         throw new Error(`Safe delete threshold not met: ${seedProducts.length} < ${SAFE_DELETE_THRESHOLD}`);
@@ -158,9 +413,9 @@ serve(async (req) => {
     }
     
     // ========================================================================
-    // STEP 3: PROCESS EACH PRODUCT FROM CSV
+    // STEP 3: PROCESS EACH PRODUCT
     // ========================================================================
-    console.log('Step 3: Processing products from CSV...');
+    console.log('Step 3: Processing products...');
     
     const productsToProcess = limit ? seedProducts.slice(0, limit) : seedProducts;
     const processedIds = new Set<string>();
@@ -176,7 +431,7 @@ serve(async (req) => {
           weightGrams = unit === 'kg' ? value * 1000 : value;
         }
         
-        // Check variant filters
+        // Check variant filters (Spectrum allows 250g+ via isExcludedProduct filtering above)
         const filterResult = shouldIncludeVariant(weightGrams, 1.75, seedProduct.title);
         updateFilterStats(filterStats, filterResult);
         
@@ -230,11 +485,9 @@ serve(async (req) => {
         // Get color hex (prioritize extended mappings for unique colors, then general)
         let colorHex = seedProduct.colorHex;
         if (!colorHex) {
-          // Check extended mappings FIRST (has unique hex codes for similar color names)
           colorHex = mapSpectrumColorToHex(seedProduct.color);
         }
         if (!colorHex) {
-          // Fall back to general Spectrum color mapping (RAL codes, basic colors)
           colorHex = getSpectrumColorHex(seedProduct.color, seedProduct.title);
         }
         
@@ -361,7 +614,6 @@ serve(async (req) => {
     console.log('Step 4: Checking for duplicate hex codes...');
     
     if (!dryRun) {
-      // Get all products grouped by product_line_id
       const { data: allProducts } = await supabase
         .from('filaments')
         .select('id, product_line_id, color_hex, color_family')
@@ -379,7 +631,6 @@ serve(async (req) => {
           lineGroups.get(p.product_line_id)!.push(p);
         }
         
-        // Check each group for duplicates
         for (const [lineId, products] of lineGroups) {
           const hexCounts = new Map<string, number>();
           
@@ -389,7 +640,6 @@ serve(async (req) => {
             hexCounts.set(hex, (hexCounts.get(hex) || 0) + 1);
           }
           
-          // Find duplicates
           for (const [hex, count] of hexCounts) {
             if (count > 1) {
               console.log(`Duplicate hex ${hex} found ${count} times in ${lineId}`);
@@ -406,13 +656,11 @@ serve(async (req) => {
     console.log('Step 5: Finalizing sync...');
     
     if (!dryRun) {
-      // Update brand product counts
       const { count: productCount } = await supabase
         .from('filaments')
         .select('*', { count: 'exact', head: true })
         .eq('vendor', BRAND_NAME);
       
-      // Count unique product lines
       const { data: productLines } = await supabase
         .from('filaments')
         .select('product_line_id')
@@ -436,14 +684,12 @@ serve(async (req) => {
       console.log(`Expected card count: ${SPECTRUM_EXPECTED_CARD_COUNT}`);
     }
     
-    // Log filter stats
     logFilterStats(BRAND_NAME, filterStats);
     
     const duration = Math.round((Date.now() - startTime) / 1000);
     
     console.log(`Sync complete in ${duration}s:`, stats);
     
-    // Calculate field coverage
     const fieldCoverage = {
       images: productResults.filter(p => p.status === 'created' || p.status === 'updated').length,
       colors: productResults.filter(p => p.color).length,
@@ -454,7 +700,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         stats,
-        products: productResults.slice(0, 100), // Limit response size
+        products: productResults.slice(0, 100),
         fieldCoverage,
         duration_seconds: duration,
         message: dryRun 
@@ -467,7 +713,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Sync error:', error);
     
-    // Reset scraping status
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -504,13 +749,13 @@ function mapSpectrumColorToHex(colorName: string): string | null {
   
   const name = colorName.toLowerCase().trim();
   
-  // Extended Spectrum color mappings (check FIRST for unique hex codes)
+  // Extended Spectrum color mappings
   const extendedMappings: Record<string, string> = {
     // Unique mappings for colors that would otherwise conflict
-    'ivory beige': 'FFFFF0',  // Ivory color (unique from natural #F5F5DC)
+    'ivory beige': 'FFFFF0',
     
     // PLA Magic SILK colors
-    'magenta dream': 'DA70D6', // Orchid-like magenta (unique from magenta blossom)
+    'magenta dream': 'DA70D6',
     'vivid lavender': 'B57EDC',
     'mystic orchid': '9370DB',
     'lagoon breeze': '48D1CC',
@@ -522,7 +767,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'amber leaf': 'FFBF00',
     'magenta blossom': 'FF77FF',
     'raspberry blush': 'E30B5C',
-    'forest flame': '355E3B',  // Dark green (unique from wizard green)
+    'forest flame': '355E3B',
     'royal amethyst': '9966CC',
     'nightfire': '1A0A0A',
     'solar eclipse': '3D3D3D',
@@ -569,17 +814,17 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     // Premium PLA colors
     'wizard indigo': '4B0082',
     'wizard charcoal': '36454F',
-    'wizard green': '2E8B57',  // Sea green (unique)
-    'true red': 'E63333',     // Slightly brighter red (unique from bloody red)
+    'wizard green': '2E8B57',
+    'true red': 'E63333',
     'translucent': 'F0F0F0',
     'pigeon blue': '7285A5',
     'pearl grey': 'E8E4D9',
-    'pearl gold': 'F0E68C',   // Khaki-gold (unique from old gold)
+    'pearl gold': 'F0E68C',
     'oregano green': '5C8A4D',
     'old gold': 'CFB53B',
     'lavender violett': 'B57EDC',
     'lavender violet': 'B57EDC',
-    'golden line': 'EEC900',  // Darker gold (unique from old gold/pearl gold)
+    'golden line': 'EEC900',
     'fox orange': 'FF6A00',
     'fluo yellow': 'DFFF00',
     'fluo orange': 'FF5E00',
@@ -590,21 +835,42 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'chrysocolla green': '56A0D3',
     'carribean blue': '1AC6FF',
     'caribbean blue': '1AC6FF',
-    'blue lagoon': '20B2AA',  // Light sea green (unique from pastel turquoise)
+    'blue lagoon': '20B2AA',
     'bahama yellow': 'F8E300',
     'baby blue': '89CFF0',
-    'arctic white': 'F0F8FF',  // Alice blue tint (unique from polar white)
+    'arctic white': 'F0F8FF',
     'anthracite grey': '293133',
     
     // Engineering colors
     'traffic black': '0A0A0A',
     'traffic red': 'CC0000',
     'traffic white': 'F6F6F6',
+    'traffic yellow': 'FFD800',
     'transparent red': 'FF000080',
     'transparent blue': '0000FF80',
-    'bk': '0A0A0A', // Black abbreviation
+    'transparent orange': 'FF660080',
+    'transparent yellow': 'FFFF0080',
+    'transparent black': '00000080',
+    'bk': '0A0A0A',
     'natural': 'F5F5DC',
     'iron grey': '52595D',
+    
+    // ASA/FlameGuard colors
+    'technical red': 'CC0000',
+    'performance blue': '0066CC',
+    'navy blue': '000080',
+    'bloody red': 'B80000',
+    'silver star': 'C0C0C0',
+    'dark grey': '505050',
+    'polar white': 'FAFAFA',
+    'deep black': '0A0A0A',
+    'midnight black': '0A0A0A',
+    'industrial grey': '6C6C6C',
+    'light grey': 'D3D3D3',
+    
+    // SafeGuard colors
+    'true yellow': 'FFFF00',
+    'dark blue': '00008B',
     
     // Wood colors
     'oak': 'B8860B',
@@ -619,6 +885,12 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'neon transparent': 'E0FFE0',
     'neon orange uv': 'FF6600',
     'neon green uv': '39FF14',
+    'iceland blue': 'B0E0E6',
+    'grass green': '7CFC00',
+    'lime green': '32CD32',
+    'lion orange': 'FF8C00',
+    'pacific blue': '1CA9C9',
+    'gold': 'FFD700',
     
     // Crystal colors
     'raspberry red': 'E30B5C',
@@ -637,26 +909,22 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'glow green': '39FF14',
     
     // Other specialty colors
-    'performance blue': '0066CC',
-    'industrial grey': '6C6C6C',
-    'midnight black': '0A0A0A',
-    'true yellow': 'FFFF00',
-    'bloody red': 'B80000',   // Darker blood red (unique)
-    'cherry red': 'DE3163',   // Cerise red (unique from true red/bloody red)
-    'forest green': '0B6623', // Dark forest green (unique from wizard green)
-    'pastel turquoise': '7FFFD4', // Aquamarine (unique from blue lagoon)
+    'forest green': '0B6623',
+    'pastel turquoise': '7FFFD4',
     'bottle green': '006A4E',
     'chocolate brown': '3D2B1F',
     'glassy': 'E0E0E0',
     'beige': 'F5F5DC',
+    'turquoise blue': '00CED1',
+    'cherry red': 'DE3163',
   };
   
-  // Check extended mappings first (exact match - most specific)
+  // Check extended mappings first (exact match)
   if (extendedMappings[name]) {
     return extendedMappings[name];
   }
   
-  // Try partial matching for compound color names (prioritize longer keys)
+  // Try partial matching for compound color names
   const sortedKeys = Object.keys(extendedMappings).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
     if (name.includes(key)) {
@@ -664,7 +932,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     }
   }
   
-  // THEN check main SPECTRUM_COLOR_MAPPING (generic colors)
+  // Check main SPECTRUM_COLOR_MAPPING
   if (SPECTRUM_COLOR_MAPPING[name]) {
     return SPECTRUM_COLOR_MAPPING[name];
   }
