@@ -42,14 +42,14 @@ const PRODUCT_LINE_SYNONYMS: Record<string, string[]> = {
 
 // Brands known to use image-based swatches (product photos) rather than CSS color swatches
 // Also includes cross-product swatch brands where each color is a separate product URL
-const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d', 'prusament'];
+const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryone', 'esun', 'overture', 'anycubic', 'azurefilm', 'bambu-lab', 'colorfabb', 'extrudr', 'fillamentum', 'geeetech', 'gizmo-dorks', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'paramount-3d', 'prusament', 'push-plastic'];
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
-const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament'];
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -697,6 +697,36 @@ const AI_ROLES = {
       'High Speed TPU and standard TPU are separate product lines',
       'Safe delete threshold is 50 products for clean slate sync',
       'Use delete-then-insert pattern for consistent data state'
+    ]
+  },
+  pushPlasticSpecialist: {
+    title: 'Push Plastic Integration Specialist',
+    triggers: ['push-plastic', 'pushplastic', 'pc+pbt', 'pctg', 'hh tough', 'hh pla', 'high heat'],
+    capabilities: [
+      'Shopify platform analysis (pushplastic.com - US)',
+      'CSV-seeded sync pipeline architecture (~200 products, 16 product lines)',
+      'Industrial/prosumer filament manufacturer with engineering focus',
+      'PC+PBT specialty alloy material expertise',
+      'HH Tough PLA (3D870) and HH PLA (3D850) high-heat variants',
+      'Carbon fiber composite variants (ABS-CF, PETG-CF, PA-CF, PC-CF)',
+      'Multi-spool type handling (AMS vs Standard)',
+      'Professional-grade engineering plastics (PEI, PMMA)',
+      '45+ color variants with comprehensive hex mapping'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (pushplastic-seed.ts) as primary source',
+      'Exclude bulk products (3kg, 5kg, 10kg, 25kg) - consumer focus on 1kg',
+      'Exclude 2.85mm diameter - 1.75mm only',
+      'Exclude Factory Seconds, Cases, Pallet Pricing, SiPC products',
+      'Exclude subscription products - not standard retail',
+      'AMS vs Standard spool types should be deduplicated (prefer standard)',
+      'PC+PBT is a specialty alloy - separate product line from PC',
+      'HH Tough PLA and HH PLA are distinct high-heat lines',
+      'Carbon fiber variants (ABS-CF, PETG-CF, PA-CF, PC-CF) are single-color black',
+      'PEI 9085 and PEI 1010 are single-color specialty lines',
+      'PMMA is single-color (Natural/Clear)',
+      'Prices are USD from pushplastic.com',
+      'Expected 16 product lines for consumer-focused products'
     ]
   },
   protoPastaSpecialist: {
@@ -1821,6 +1851,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'proto-pasta') {
     return AI_ROLES.protoPastaSpecialist;
+  }
+  if (brandSlug === 'push-plastic') {
+    return AI_ROLES.pushPlasticSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -5322,6 +5355,153 @@ AND (product_title ILIKE '%brass%' OR product_title ILIKE '%bronze%'
 *Last Updated: ${lessons?.lastUpdated || '2026-01-12'}*`;
 }
 
+/**
+ * Generate Push Plastic-specific AI Fix Prompt with CSV-seeded context
+ */
+function generatePushPlasticFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const role = AI_ROLES.pushPlasticSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      check.products.slice(0, 10).forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    return section;
+  }).join('\n\n');
+
+  return `You are the **${role.title}** for Filascope.
+
+## PLATFORM CONTEXT
+
+**Platform**: Shopify (pushplastic.com - US)
+**Currency**: USD
+**Architecture**: CSV-seeded sync pipeline (~200 products, 16 product lines)
+
+---
+
+## CORE CAPABILITIES
+
+${role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n')}
+
+---
+
+## CSV-SEEDED SYNC ARCHITECTURE
+
+Push Plastic sync uses a **hardcoded CSV seed** as the primary data source:
+
+1. **PUSHPLASTIC_PRODUCT_SEED** (~200 products) in \`pushplastic-seed.ts\` contains:
+   - Product names, colors, hex codes, product URLs
+   - Only 1.75mm, 1kg consumer-focused products
+   
+2. **Filtering Rules Applied:**
+   - EXCLUDE: 2.85mm diameter, 3kg/5kg/10kg/25kg bulk, Factory Seconds
+   - EXCLUDE: Cases, Pallet Pricing, SiPC, Subscriptions
+   - DEDUPLICATE: AMS vs Standard spool types (prefer standard)
+   
+3. **PUSHPLASTIC_EXTENDED_HEX_MAP** provides hex codes for 45+ colors
+
+---
+
+## KNOWN LESSONS
+
+${role.lessons?.map(l => `- ${l}`).join('\n') || 'See pushPlasticSpecialist role for lessons'}
+
+---
+
+## PRODUCT LINE ARCHITECTURE (16 Lines)
+
+| Material | Product Line ID | Notes |
+|----------|-----------------|-------|
+| PLA | push-plastic__pla__standard | ~42 colors |
+| PETG | push-plastic__petg__standard | ~24 colors |
+| PCTG | push-plastic__pctg__standard | ~28 colors |
+| ABS | push-plastic__abs__standard | ~28 colors |
+| ASA | push-plastic__asa__standard | ~7 colors |
+| PC+PBT | push-plastic__pc-pbt__standard | ~8 colors |
+| HH Tough PLA | push-plastic__pla-ht__tough | High-heat 3D870 |
+| TPU 98A | push-plastic__tpu-98a__standard | ~8 colors |
+| HIPS | push-plastic__hips__standard | ~5 colors |
+| ABS-CF | push-plastic__abs-cf__carbon | Black only |
+| PETG-CF | push-plastic__petg-cf__carbon | Black only |
+| PA-CF | push-plastic__pa-cf__carbon | Black only |
+| PC-CF | push-plastic__pc-cf__carbon | Black only |
+| PEI 9085 | push-plastic__pei__9085 | 1 color |
+| PEI 1010 | push-plastic__pei__1010 | 1 color |
+| PMMA | push-plastic__pmma__standard | Natural/Clear |
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+- **RC1**: CSV seed missing products/colors
+- **RC2**: Color-to-hex mapping gaps in PUSHPLASTIC_EXTENDED_HEX_MAP
+- **RC3**: Material normalization bugs (extractMaterialFromTitle)
+- **RC4**: Product line ID grouping issues (generatePushPlasticProductLineId)
+- **RC5**: Weight/diameter filter not excluding bulk products
+
+---
+
+## KEY FILES
+
+- \`supabase/functions/_shared/pushplastic-seed.ts\` - CSV seed data
+- \`supabase/functions/_shared/pushplastic-defaults.ts\` - Enrichment, hex mapping
+- \`supabase/functions/sync-pushplastic-products/index.ts\` - Sync function
+
+---
+
+## Fix Post Sync Check Issues for ${brand}
+
+### Summary
+- **Brand**: ${brand} (slug: push-plastic)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary}
+
+---
+
+## Detailed Issues
+
+${detailedIssues}
+
+---
+
+## Verification Steps
+
+1. Run **Clean Slate** sync for Push Plastic
+2. Run **Post Sync Check** to verify 0 failures
+3. Confirm 16 product lines and ~200 products
+
+---
+
+*Last Updated: 2026-01-13*`;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -5394,6 +5574,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Proto-Pasta
   if (brandSlug === 'proto-pasta') {
     return generateProtoPastaFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Push Plastic
+  if (brandSlug === 'push-plastic') {
+    return generatePushPlasticFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -7773,7 +7958,7 @@ Deno.serve(async (req) => {
       'atomic-filament': 6,     // PLA, PETG, ABS, ASA, PLA Silk, Hi-Flow Pro PLA
       'elegoo': 13,             // PLA Standard, Silk, Matte, Sparkle, Galaxy, Marble, Metal, Wood, PLA-CF, PETG Pro, PETG-CF, PETG-GF, Rapid PETG
       'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
-      'push-plastic': 15,       // PLA, PETG, ABS, ASA, Nylon, PC, PEI, etc.
+      'push-plastic': 16,       // CSV-seeded: PLA, PETG, PCTG, ABS, ASA, PC+PBT, PLA-HT, TPU-98A, HIPS, ABS-CF, PETG-CF, PA-CF, PC-CF, PEI-9085, PEI-1010, PMMA
       'proto-pasta': 31,        // 31 distinct product lines: HTPLA (standard, opaque, translucent, glitter, metallic, nebula, reflective, thermochromic, smoothie, glow, marble, matte-fiber, wood, brass, bronze, copper), PLA (iron, steel, cf, conductive, esd, calcium-carbonate), PETG (standard, cf, esd), HFPLA (c-matte), POK (cf), TPU (flexible, rigid), HTPLA-CF, HTPLA-GF
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
@@ -8115,7 +8300,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -8188,7 +8373,7 @@ Deno.serve(async (req) => {
     
     // Only run for brands that should have accurate live pricing
     // Skip CSV-seeded brands that don't rely on live pricing
-    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'polymaker', 'proto-pasta'];
+    const livePriceSkipBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'polymaker', 'proto-pasta', 'push-plastic'];
     const shouldRunLivePriceCheck = !livePriceSkipBrands.includes(brandSlug);
     
     if (shouldRunLivePriceCheck) {
@@ -9048,7 +9233,15 @@ Deno.serve(async (req) => {
                                         lineId.includes('polylite-petg') ||         // PolyLite PETG (stale parent, whitelist for now)
                                         lineId.includes('polylite-pla-cf') ||       // PolyLite PLA-CF (carbon fiber, black only)
                                         lineId.includes('__support__')              // Support materials category
-                                      )
+                                      ) ||
+                                      // Push Plastic single-color specialty products (CSV-seeded)
+                                      lineId.includes('push-plastic__abs-cf__') ||       // ABS-CF only in Black
+                                      lineId.includes('push-plastic__petg-cf__') ||      // PETG-CF only in Black
+                                      lineId.includes('push-plastic__pa-cf__') ||        // PA-CF only in Black
+                                      lineId.includes('push-plastic__pc-cf__') ||        // PC-CF only in Black
+                                      lineId.includes('push-plastic__pei__') ||          // PEI 9085/1010 limited colors
+                                      lineId.includes('push-plastic__pmma__') ||         // PMMA only in Natural/Clear
+                                      lineId.includes('push-plastic__hips__')            // HIPS limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
