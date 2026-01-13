@@ -575,12 +575,12 @@ export const PUSHPLASTIC_COLOR_MAPPING: Record<string, string> = {
   'safety yellow': '#FFCC00',      // Safety Yellow - MUST be distinct from regular yellow
   'fluorescent yellow': '#FFFF00',
   
-  // Greens
-  'green': '#388E3C',
+  // Greens - UNIQUE hex codes to prevent swatch duplication
+  'green': '#228B22',
   'pusch green': '#2E8B2E',        // PUSCH brand green - MUST be distinct from standard green
   'army green': '#4B5320',
   'fatigue green': '#5B6B4F',
-  'forest green': '#228B22',
+  'forest green': '#1B5E20',       // Darker forest green - MUST be distinct from green
   'lime green': '#76FF03',
   'mint': '#98FF98',
   'seafoam': '#71EEB8',
@@ -604,20 +604,20 @@ export const PUSHPLASTIC_COLOR_MAPPING: Record<string, string> = {
   'gold metallic': '#FFD700',
   'silver metallic': '#C0C0C0',
   
-  // Translucents
+  // Translucents - UNIQUE hex codes to prevent swatch duplication
   'translucent amber': '#FFB347',
-  'translucent blue': '#87CEEB',
-  'translucent green': '#90EE90',
+  'translucent blue': '#64B5F6',   // Light translucent - MUST be distinct from electric blue
+  'translucent green': '#81C784',  // Light translucent - MUST be distinct from solid green
   'translucent grey': '#D3D3D3',
   'translucent gray': '#D3D3D3',
   'translucent pink': '#FFB6C1',
-  'translucent red': '#FF6B6B',
+  'translucent red': '#E57373',    // Light translucent - MUST be distinct from solid red
   'trans amber': '#FFB347',
-  'trans blue': '#87CEEB',
-  'trans green': '#90EE90',
+  'trans blue': '#64B5F6',
+  'trans green': '#81C784',
   'trans grey': '#D3D3D3',
   'trans pink': '#FFB6C1',
-  'trans red': '#FF6B6B',
+  'trans red': '#E57373',
   'clear': '#F0F8FF',
   
   // Special Colors
