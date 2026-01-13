@@ -7793,7 +7793,7 @@ Deno.serve(async (req) => {
       'ninjatek': 9,            // NinjaFlex 85A, Edge 83A, Chinchilla 75A, Cheetah 95A, Armadillo 75D + colorFabb ASA, PLA, Co-Polyesters, Specials (Eel/PA excluded - diameter-only variants)
       'polymaker': 78,          // Panchroma (28 sub-lines) + PolyLite (12) + PolyMax (4) + PolyFlex (3) + Fiberon (14) + PolySonic (2) + Specialty (9) + Polymaker ASA/PETG (2) + New lines (4)
       'colorfabb': 25,          // varioShore TPU (foaming + prosthetic), LW-PLA, LW-PLA-HT, LW-ASA, PLA High Speed Pro, PLA-HP, PLA Silk, nGen, nGen Flex, nGen CF, XT, XT-CF, HT, ASA, PETG Economy, PLA Economy, PA, bronzeFill, copperFill, steelFill, corkFill, woodFill, bambooFill, stoneFill, allPHA
-      'prusament': 24,          // CSV-seeded: PLA, PLA Galaxy, PLA Blend, PLA Premium, PLA Marble, PLA Noctua, PLA Opal, PETG, PETG Matte, PETG Shimmer, PETG Tungsten, PETG Magnetite, ASA, PC Blend, PC Carbon, PC Space-Grade, PA11-CF, PP-CF, PP-GF, PVB, PEI ULTEM, TPU-95A, rPLA, Woodfill
+      'prusament': 26,          // CSV-seeded: PLA, PLA Galaxy, PLA Blend, PLA Premium, PLA Marble, PLA Noctua, PLA Opal, PLA Recycled, PETG, PETG Matte, PETG Shimmer, PETG Tungsten, PETG Magnetite, PETG Recycled, ASA, PC Blend, PC Carbon, PC Space-Grade, PA11-CF, PP-CF, PP-GF, PVB, PEI ULTEM, TPU-95A, rPLA, Woodfill
       'matter3d': 18,           // Consolidated lines: pla__basics, pla__basics-matte, pla__basics-silk, pla__basics-cf, pla__basics-recycled, pla__performance, pla__performance-matte, pla__essentials, pla_plus__performance, petg__performance, petg__performance-matte, petg__performance-hf, petg__performance-cf-hf, petg__standard, asa__performance, abs__performance-cf, pa__performance, tpu_95a__standard
       'esun': 39,               // CSV-seeded: 39 distinct product lines from 360+ products (PLA-Basic, PLA-Matte, PLA-Silk, PLA+HS, PETG, ABS+, TPU-95A, etc.)
       'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
@@ -8936,6 +8936,8 @@ Deno.serve(async (req) => {
                                       lineId.includes('prusament__pp-cf__carbon') ||        // Carbon fiber
                                       lineId.includes('prusament__pp-gf__glass') ||         // Glass fiber
                                       lineId.includes('prusament__woodfill__woodfill') ||
+                                      lineId.includes('prusament__pla__recycled') ||       // PLA Recycled only one color
+                                      lineId.includes('prusament__petg__recycled') ||      // PETG Recycled only 3 variants (2kg + NFC)
                                       lineId.includes('fillamentum__pp__pp-2320') ||
                                       // FormFutura single-color specialty products (CSV-seeded)
                                       lineId.includes('formfutura__pa__styx') ||           // Styx PA6 only in natural
