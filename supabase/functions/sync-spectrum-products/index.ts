@@ -417,7 +417,8 @@ serve(async (req) => {
     // ========================================================================
     console.log('Step 3: Processing products...');
     
-    const productsToProcess = limit ? seedProducts.slice(0, limit) : seedProducts;
+    // For clean slate syncs, process ALL products regardless of limit
+    const productsToProcess = (cleanSlate || !limit) ? seedProducts : seedProducts.slice(0, limit);
     const processedIds = new Set<string>();
     
     for (const seedProduct of productsToProcess) {
@@ -936,9 +937,19 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     // ========== SILK COLORS ==========
     'amber leaf': 'FFBF00',
     
+    // ========== TRANSPARENT COLORS (with UNIQUE hex codes) ==========
+    'transparent blue': '4169E1',      // Royal Blue (not #E0E0E0)
+    'transparent red': 'FF6347',       // Tomato Red (not #E0E0E0)
+    'transparent green': '3CB371',     // Medium Sea Green
+    'transparent yellow': 'FFD700',    // Gold Yellow
+    'transparent orange': 'FF7F50',    // Coral Orange
+    'transparent purple': '9370DB',    // Medium Purple
+    'transparent pink': 'FF69B4',      // Hot Pink
+    'transparent natural': 'F5F5F5',   // Slightly off-white
+    'transparent': 'E8E8E8',           // Generic transparent (slightly different)
+    
     // ========== SPECIALTY/EFFECTS ==========
     'translucent': 'F0F0F0',
-    'transparent': 'E0E0E0',
     'glassy': 'E0E0E0',
     'crystal': 'E0E0E0',
     'solar eclipse': '3D3D3D',

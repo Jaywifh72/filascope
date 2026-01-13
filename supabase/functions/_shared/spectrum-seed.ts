@@ -74,6 +74,25 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
   const isRefill = /refill/i.test(t);
   const suffix = isRefill ? '__refill' : '__standard';
   
+  // ========== "THE FILAMENT" SUB-BRAND (MUST BE FIRST!) ==========
+  // These products have titles like "The Filament PETG CF 1.75mm TRANSPARENT BLUE 1kg"
+  if (/^the\s+filament/i.test(t)) {
+    // Carbon Fiber variants
+    if (/petg\s*cf/i.test(t)) return `spectrum__the-filament-petg-cf${suffix}`;
+    if (/pla\s*cf/i.test(t)) return `spectrum__the-filament-pla-cf${suffix}`;
+    
+    // High Speed variants
+    if (/petg\s*hs/i.test(t)) return `spectrum__the-filament-petg-hs${suffix}`;
+    if (/pla\s*hs/i.test(t)) return `spectrum__the-filament-pla-hs${suffix}`;
+    
+    // Standard PETG/PLA
+    if (/petg/i.test(t)) return `spectrum__the-filament-petg${suffix}`;
+    if (/pla/i.test(t)) return `spectrum__the-filament-pla${suffix}`;
+    
+    // Fallback for unknown "The Filament" products
+    return `spectrum__the-filament${suffix}`;
+  }
+  
   // ========== HIGH-SPEED VARIANTS ==========
   if (/premium\s*pla\s*high\s*speed|pla\s*high\s*speed/i.test(t)) {
     return `spectrum__premium-pla-high-speed${suffix}`;
@@ -148,7 +167,21 @@ export function generateSpectrumProductLineIdFromSeed(product: SpectrumSeedProdu
 // Expected product line counts for Post Sync Check validation
 // These are approximate counts - actual may vary slightly based on Shopify catalog
 export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
-  // PLA Family
+  // ========== "THE FILAMENT" SUB-BRAND ==========
+  'spectrum__the-filament-petg__standard': 8,
+  'spectrum__the-filament-petg__refill': 6,
+  'spectrum__the-filament-petg-cf__standard': 6,
+  'spectrum__the-filament-petg-cf__refill': 5,
+  'spectrum__the-filament-pla__standard': 8,
+  'spectrum__the-filament-pla__refill': 5,
+  'spectrum__the-filament-pla-cf__standard': 6,
+  'spectrum__the-filament-pla-cf__refill': 4,
+  'spectrum__the-filament-petg-hs__standard': 6,
+  'spectrum__the-filament-petg-hs__refill': 4,
+  'spectrum__the-filament-pla-hs__standard': 6,
+  'spectrum__the-filament-pla-hs__refill': 4,
+  
+  // ========== PLA Family ==========
   'spectrum__pla-premium__standard': 40,
   'spectrum__pla-premium__refill': 20,
   'spectrum__pla-silk__standard': 30,
@@ -171,7 +204,7 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'spectrum__safeguard-pla__standard': 6,
   'spectrum__aquaprint-pla__standard': 5,
   
-  // PETG Family
+  // ========== PETG Family ==========
   'spectrum__pet-g-premium__standard': 16,
   'spectrum__pet-g-premium__refill': 10,
   'spectrum__pet-g-premium-high-speed__standard': 10,
@@ -182,7 +215,7 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'spectrum__pctg-gf10__standard': 2,
   'spectrum__pet-g-glow-in-the-dark__standard': 3,
   
-  // ASA Family
+  // ========== ASA Family ==========
   'spectrum__asa-275__standard': 12,
   'spectrum__asa-275__refill': 12,
   'spectrum__flameguard-asa-275__standard': 8,
@@ -192,11 +225,11 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'spectrum__asa-x-gf10__standard': 4,
   'spectrum__asa-kevlar__standard': 2,
   
-  // ABS Family
+  // ========== ABS Family ==========
   'spectrum__smart-abs__standard': 12,
   'spectrum__smart-abs__refill': 8,
   
-  // Engineering
+  // ========== Engineering ==========
   'spectrum__pc-275__standard': 10,
   'spectrum__pc-abs__standard': 4,
   'spectrum__pc-ptfe__standard': 1,
@@ -209,12 +242,13 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'spectrum__pa6-neat__standard': 4,
   'spectrum__pa12-cf15__standard': 1,
   
-  // Flexible
+  // ========== Flexible ==========
   'spectrum__s-flex-90a__standard': 8,
   
-  // Specialty
+  // ========== Specialty ==========
   'spectrum__wood__standard': 6,
 };
 
 // Total expected filament cards in UI (unique product lines)
+// Updated to include "The Filament" sub-brand lines
 export const SPECTRUM_EXPECTED_CARD_COUNT = Object.keys(SPECTRUM_EXPECTED_PRODUCT_LINES).length;
