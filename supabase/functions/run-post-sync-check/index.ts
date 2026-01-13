@@ -9244,6 +9244,8 @@ Deno.serve(async (req) => {
                                       lineId.includes('push-plastic__hips__') ||         // HIPS limited colors
                                       lineId.includes('push-plastic__pa__') ||           // Nylon limited colors (3)
                                       lineId.includes('push-plastic__pla-ht__') ||       // High Heat+Tough PLA limited colors
+                                      lineId.includes('push-plastic__pei__9085') ||      // PEI 9085 single color
+                                      lineId.includes('push-plastic__pei__1010') ||      // PEI 1010 single color
                                       lineId.includes('push-plastic__abs__matte')        // Matte ABS limited colors
         
         if (!isSingleColorProduct) {
@@ -9363,7 +9365,16 @@ Deno.serve(async (req) => {
                                    lineId.includes('prusament__pa11-cf__carbon') ||
                                    lineId.includes('prusament__pp-cf__carbon') ||
                                    lineId.includes('prusament__pp-gf__glass') ||
-                                   lineId.includes('prusament__woodfill__woodfill');
+                                   lineId.includes('prusament__woodfill__woodfill') ||
+                                   // Push Plastic single-color specialty products
+                                   lineId.includes('push-plastic__pei__9085') ||       // PEI 9085 single color
+                                   lineId.includes('push-plastic__pei__1010') ||       // PEI 1010 single color
+                                   lineId.includes('push-plastic__abs-cf__') ||        // ABS-CF only in Black
+                                   lineId.includes('push-plastic__petg-cf__') ||       // PETG-CF only in Black
+                                   lineId.includes('push-plastic__pa-cf__') ||         // PA-CF only in Black
+                                   lineId.includes('push-plastic__pc-cf__') ||         // PC-CF only in Black
+                                   lineId.includes('push-plastic__pmma__') ||          // PMMA only in Clear
+                                   lineId.includes('push-plastic__pla-ht__');          // High Heat+Tough PLA limited colors
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
