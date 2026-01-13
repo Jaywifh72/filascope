@@ -9,24 +9,50 @@
  * - No SiPC industrial products
  * - Standard spool type preferred (AMS variants deduplicated)
  * 
- * Product Lines (16):
+ * Product Lines (17):
  * 1. PLA (standard)
  * 2. PETG (standard)  
  * 3. PCTG
  * 4. ABS (standard)
- * 5. ASA
- * 6. PC+PBT
- * 7. High Heat+Tough PLA (PLA-HT)
- * 8. TPU 98A
- * 9. HIPS
- * 10. ABS-CF (Carbon Fiber)
- * 11. PETG-CF (Carbon Fiber)
- * 12. PA-CF (Carbon Fiber Nylon)
- * 13. PC-CF (Carbon Fiber PC+PBT)
- * 14. PEI 9085 (Ultem)
- * 15. PEI 1010
- * 16. PMMA (Acrylic)
+ * 5. ABS Matte
+ * 6. ASA
+ * 7. PC+PBT
+ * 8. High Heat+Tough PLA (PLA-HT)
+ * 9. TPU 98A
+ * 10. HIPS
+ * 11. ABS-CF (Carbon Fiber)
+ * 12. PETG-CF (Carbon Fiber)
+ * 13. PA-CF (Carbon Fiber Nylon)
+ * 14. PC-CF (Carbon Fiber PC+PBT)
+ * 15. PEI 9085 (Ultem)
+ * 16. PEI 1010
+ * 17. PMMA (Acrylic)
  */
+
+// Product-line level representative images (same image for all color variants in a line)
+// Push Plastic uses product-line level images, not variant-specific color photos
+export const PUSHPLASTIC_PRODUCT_LINE_IMAGES: Record<string, string> = {
+  // Standard materials - generic spool photos
+  'push-plastic__pla__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__petg__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pctg__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__abs__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__abs__matte': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__asa__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pc-pbt__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pla-ht__tough': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__tpu-98a__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__hips__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  // Carbon fiber variants
+  'push-plastic__abs-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__petg-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pa-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pc-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  // Engineering plastics
+  'push-plastic__pei__9085': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pei__1010': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  'push-plastic__pmma__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+};
 
 export interface PushPlasticSeedEntry {
   filamentName: string;
