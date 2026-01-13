@@ -53,9 +53,9 @@ export const PUSHPLASTIC_EXTENDED_HEX_MAP: Record<string, string> = {
   'gray': '#808080',
   'granite': '#676767',
   
-  // Reds
+  // Reds - UNIQUE hex codes to prevent swatch duplication
   'red': '#C41E3A',
-  'translucent red': '#C41E3A',
+  'translucent red': '#E57373',   // Light translucent - MUST be distinct from red
   
   // Pinks/Magenta
   'pink': '#FF69B4',
@@ -68,10 +68,10 @@ export const PUSHPLASTIC_EXTENDED_HEX_MAP: Record<string, string> = {
   'terra cotta': '#B85C38',
   'rust': '#B7410E',
   
-  // Yellows
+  // Yellows - UNIQUE hex codes to prevent swatch duplication
   'yellow': '#FFD700',
-  'pwalt yellow': '#FFD700',
-  'safety yellow': '#FFD700',
+  'pwalt yellow': '#FFB300',      // Amber/warm tone - MUST be distinct from yellow
+  'safety yellow': '#FFCC00',     // Safety/fluorescent - MUST be distinct
   'fluorescent yellow': '#FFFF00',
   
   // Browns/Tans
@@ -84,22 +84,22 @@ export const PUSHPLASTIC_EXTENDED_HEX_MAP: Record<string, string> = {
   'green': '#228B22',
   'army green': '#4B5320',
   'fatigue green': '#5B6B4F',
-  'forest green': '#1E7B1E',     // Differentiated from 'green'
+  'forest green': '#1B5E20',      // Darker forest green - MUST be distinct from green
   'lime green': '#32CD32',
-  'pusch green': '#2E8B2E',      // PUSCH brand green - unique from standard green
-  'spy green': '#3A9A3C',        // Stealth variant - unique
-  'stealth green': '#2D7D2D',    // Stealth variant - unique  
+  'pusch green': '#2E8B2E',       // PUSCH brand green - unique from standard green
+  'spy green': '#3A9A3C',         // Stealth variant - unique
+  'stealth green': '#2D7D2D',     // Stealth variant - unique  
   'fluorescent green': '#39FF14',
-  'translucent green': '#26A026', // Differentiated from solid green
+  'translucent green': '#81C784', // Light translucent - MUST be distinct from solid
   'mint': '#98FF98',
   'seafoam': '#71EEB8',
   
-  // Blues
+  // Blues - UNIQUE hex codes to prevent swatch duplication
   'navy blue': '#0D2C54',
   'ocean blue': '#006994',
   'ultra blue': '#0047AB',
   'electric blue': '#0066CC',
-  'translucent blue': '#0066CC',
+  'translucent blue': '#64B5F6',  // Light translucent - MUST be distinct from electric
   'blue pearl': '#4169E1',
   
   // Teals
@@ -334,15 +334,15 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'PUSCH Green', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291519137', colorHex: '#2E8B2E' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Pink', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291551905', colorHex: '#FF69B4' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Purple', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291584673', colorHex: '#800080' },
-  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291617441', colorHex: '#FFD700' },
+  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291617441', colorHex: '#FFB300' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Red', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291650209', colorHex: '#C41E3A' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Rust', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291682977', colorHex: '#B7410E' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Silver Metallic', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291715745', colorHex: '#97979B' },
-  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Safety Yellow', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291748513', colorHex: '#FFD700' },
+  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Safety Yellow', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291748513', colorHex: '#FFCC00' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Amber', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291781281', colorHex: '#E0E0E0' },
-  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Blue', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291814049', colorHex: '#0066CC' },
-  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Green', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291846817', colorHex: '#228B22' },
-  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Red', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291879585', colorHex: '#C41E3A' },
+  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Blue', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291814049', colorHex: '#64B5F6' },
+  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Green', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291846817', colorHex: '#81C784' },
+  { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Translucent Red', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291879585', colorHex: '#E57373' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'Ultra Blue', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291912353', colorHex: '#0047AB' },
   { filamentName: 'PCTG Filament 1.75mm 1kg', material: 'PCTG', productLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg', color: 'White', colorLink: 'https://www.pushplastic.com/products/pctg-filament-1-75mm-1kg?variant=45287291945121', colorHex: '#EFEBE9' },
 
@@ -362,7 +362,7 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Fluorescent Green', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848338081', colorHex: '#39FF14' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Fluorescent Pink', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848370849', colorHex: '#FF1493' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Fluorescent Yellow', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848403617', colorHex: '#FFFF00' },
-  { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Forest Green', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848436385', colorHex: '#228B22' },
+  { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Forest Green', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848436385', colorHex: '#1B5E20' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Gold Metallic', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848502945', colorHex: '#957C67' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Granite', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848535713', colorHex: '#676767' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Green', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848568481', colorHex: '#228B22' },
@@ -378,7 +378,7 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Orange', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848929929', colorHex: '#FF6B35' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Pink', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848962697', colorHex: '#FF69B4' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Purple', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074848995465', colorHex: '#800080' },
-  { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074849028233', colorHex: '#FFD700' },
+  { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074849028233', colorHex: '#FFB300' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Red', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074849061001', colorHex: '#C41E3A' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Seafoam', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074849093769', colorHex: '#71EEB8' },
   { filamentName: 'PLA Filament 1.75mm 1kg', material: 'PLA', productLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg', color: 'Silver Metallic', colorLink: 'https://www.pushplastic.com/products/pla-filament-1-75mm-1kg?variant=46074849126537', colorHex: '#97979B' },
@@ -403,7 +403,7 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'Ocean Blue', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074843914401', colorHex: '#006994' },
   { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'Orange', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074843947169', colorHex: '#FF6B35' },
   { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'PUSCH Green', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074843979937', colorHex: '#2E8B2E' },
-  { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074844012705', colorHex: '#FFD700' },
+  { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074844012705', colorHex: '#FFB300' },
   { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'Red', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074844045473', colorHex: '#C41E3A' },
   { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'Rust', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074844078241', colorHex: '#B7410E' },
   { filamentName: 'PETG Filament 1.75mm 1kg', material: 'PETG', productLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg', color: 'Safety Yellow', colorLink: 'https://www.pushplastic.com/products/petg-filament-1-75mm-1kg?variant=46074844111009', colorHex: '#FFCC00' },
@@ -428,7 +428,7 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Electric Blue', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074838835361', colorHex: '#0066CC' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Fatigue Green', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074838868129', colorHex: '#5B6B4F' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Flat Dark Earth', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074838900897', colorHex: '#A67B5B' },
-  { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Forest Green', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074838933665', colorHex: '#228B22' },
+  { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Forest Green', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074838933665', colorHex: '#1B5E20' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Gold Metallic', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074838999201', colorHex: '#957C67' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Green', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839031969', colorHex: '#228B22' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Light Grey', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839064737', colorHex: '#B6B4B2' },
@@ -438,7 +438,7 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Orange', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839195809', colorHex: '#FF6B35' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Pink', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839228577', colorHex: '#FF69B4' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Purple', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839261345', colorHex: '#800080' },
-  { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839294113', colorHex: '#FFD700' },
+  { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'PWalt Yellow', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839294113', colorHex: '#FFB300' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Red', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839326881', colorHex: '#C41E3A' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Silver Metallic', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839359649', colorHex: '#97979B' },
   { filamentName: 'ABS Filament 1.75mm 1kg', material: 'ABS', productLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg', color: 'Ultra Blue', colorLink: 'https://www.pushplastic.com/products/abs-filament-1-75mm-1kg?variant=46074839392417', colorHex: '#0047AB' },
