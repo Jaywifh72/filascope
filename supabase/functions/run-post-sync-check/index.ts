@@ -7958,7 +7958,7 @@ Deno.serve(async (req) => {
       'atomic-filament': 6,     // PLA, PETG, ABS, ASA, PLA Silk, Hi-Flow Pro PLA
       'elegoo': 13,             // PLA Standard, Silk, Matte, Sparkle, Galaxy, Marble, Metal, Wood, PLA-CF, PETG Pro, PETG-CF, PETG-GF, Rapid PETG
       'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
-      'push-plastic': 16,       // CSV-seeded: PLA, PETG, PCTG, ABS, ASA, PC+PBT, PLA-HT, TPU-98A, HIPS, ABS-CF, PETG-CF, PA-CF, PC-CF, PEI-9085, PEI-1010, PMMA
+      'push-plastic': 17,       // CSV-seeded: PLA, PETG, PCTG, ABS, ABS-Matte, ASA, PC+PBT, PLA-HT, PA, TPU-98A, HIPS, ABS-CF, PETG-CF, PA-CF, PC-CF, PEI, PMMA
       'proto-pasta': 31,        // 31 distinct product lines: HTPLA (standard, opaque, translucent, glitter, metallic, nebula, reflective, thermochromic, smoothie, glow, marble, matte-fiber, wood, brass, bronze, copper), PLA (iron, steel, cf, conductive, esd, calcium-carbonate), PETG (standard, cf, esd), HFPLA (c-matte), POK (cf), TPU (flexible, rigid), HTPLA-CF, HTPLA-GF
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
@@ -9241,7 +9241,10 @@ Deno.serve(async (req) => {
                                       lineId.includes('push-plastic__pc-cf__') ||        // PC-CF only in Black
                                       lineId.includes('push-plastic__pei__') ||          // PEI 9085/1010 limited colors
                                       lineId.includes('push-plastic__pmma__') ||         // PMMA only in Natural/Clear
-                                      lineId.includes('push-plastic__hips__')            // HIPS limited colors
+                                      lineId.includes('push-plastic__hips__') ||         // HIPS limited colors
+                                      lineId.includes('push-plastic__pa__') ||           // Nylon limited colors (3)
+                                      lineId.includes('push-plastic__pla-ht__') ||       // High Heat+Tough PLA limited colors
+                                      lineId.includes('push-plastic__abs__matte')        // Matte ABS limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
