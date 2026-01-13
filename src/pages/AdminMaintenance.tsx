@@ -6,7 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3, Wand2, Brain } from "lucide-react";
+import { Loader2, Palette, Archive, Layers, ShoppingBag, Info, CheckCircle2, RefreshCw, XCircle, Store, Sparkles, ClipboardCheck, BarChart3, Wand2, Brain, Download } from "lucide-react";
+import { exportFilamentDatabaseCSV } from "@/lib/adminExportUtils";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -49,6 +50,7 @@ const AdminMaintenance = () => {
   const [bambuColorsDryRun, setBambuColorsDryRun] = useState(true);
   const [bambuMaterials, setBambuMaterials] = useState<string[]>(['PLA']);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
   
   // Elegoo state
   const [elegooDryRun, setElegooDryRun] = useState(true);
@@ -308,6 +310,34 @@ const AdminMaintenance = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              setIsExportingCSV(true);
+              const result = await exportFilamentDatabaseCSV();
+              setIsExportingCSV(false);
+              if (result.success) {
+                toast({
+                  title: "Export Complete",
+                  description: `Downloaded ${result.count.toLocaleString()} filaments to CSV`,
+                });
+              } else {
+                toast({
+                  title: "Export Failed",
+                  description: result.error || "Unknown error",
+                  variant: "destructive",
+                });
+              }
+            }}
+            disabled={isExportingCSV}
+          >
+            {isExportingCSV ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Export CSV
+          </Button>
           <Link to="/admin/field-coverage">
             <Button variant="outline">
               <BarChart3 className="w-4 h-4 mr-2" />
