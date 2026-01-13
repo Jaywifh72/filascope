@@ -48,10 +48,8 @@ export const PUSHPLASTIC_PRODUCT_LINE_IMAGES: Record<string, string> = {
   'push-plastic__petg-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   'push-plastic__pa-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
   'push-plastic__pc-cf__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
-  // Engineering plastics
-  'push-plastic__pei__9085': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
-  'push-plastic__pei__1010': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
-  'push-plastic__pmma__standard': 'https://www.pushplastic.com/cdn/shop/files/3_long_new_9d6e4be7-635b-4962-a969-3bbb3c07004c.png',
+  // Engineering plastics - DISCONTINUED for consumer sizes (only bulk available)
+  // PEI 9085, PEI 1010, PMMA removed - now only available in 3kg+ bulk sizes
 };
 
 export interface PushPlasticSeedEntry {
@@ -508,14 +506,8 @@ export const PUSHPLASTIC_PRODUCT_SEED: PushPlasticSeedEntry[] = [
   { filamentName: 'High Heat+Tough PLA Filament 1.75mm 1kg', material: 'PLA-HT', productLink: 'https://www.pushplastic.com/products/hh-tough-pla-filament-1-75mm-1kg', color: 'Natural', colorLink: 'https://www.pushplastic.com/products/hh-tough-pla-filament-1-75mm-1kg?variant=44429690372257', colorHex: '#F5F5DC' },
   { filamentName: 'High Heat+Tough PLA Filament 1.75mm 1kg', material: 'PLA-HT', productLink: 'https://www.pushplastic.com/products/hh-tough-pla-filament-1-75mm-1kg', color: 'White', colorLink: 'https://www.pushplastic.com/products/hh-tough-pla-filament-1-75mm-1kg?variant=44429690405025', colorHex: '#EFEBE9' },
 
-  // PEI/ULTEM 9085 1.75mm 250g (premium, single color)
-  { filamentName: 'PEI/ULTEM 9085 Filament 1.75mm 250g', material: 'PEI-9085', productLink: 'https://www.pushplastic.com/products/ultem-9085-pei-filament-1-75mm-250g', color: 'Natural', colorLink: 'https://www.pushplastic.com/products/ultem-9085-pei-filament-1-75mm-250g?variant=44447131189409', colorHex: '#C19A6B' },
-
-  // PEI/ULTEM 1010 1.75mm 500g (premium, single color)
-  { filamentName: 'PEI 1010 Filament 1.75mm 500g', material: 'PEI-1010', productLink: 'https://www.pushplastic.com/products/pei-1010-filament-1-75mm-500g', color: 'Natural', colorLink: 'https://www.pushplastic.com/products/pei-1010-filament-1-75mm-500g?variant=44437788393633', colorHex: '#D4A574' },
-
-  // PMMA/Acrylic 1.75mm 750g
-  { filamentName: 'PMMA Filament 1.75mm 750g', material: 'PMMA', productLink: 'https://www.pushplastic.com/products/pmma-filament-1-75mm-750g', color: 'Clear', colorLink: 'https://www.pushplastic.com/products/pmma-filament-1-75mm-750g?variant=44429691486369', colorHex: '#F0F8FF' },
+  // DISCONTINUED: PEI/ULTEM 9085, PEI 1010, PMMA - now only available in bulk sizes (3kg+)
+  // Removed from consumer catalog as they return 404
 
   // Matte ABS 1.75mm 1kg (5 colors)
   { filamentName: 'Matte ABS Filament 1.75mm 1kg', material: 'ABS-Matte', productLink: 'https://www.pushplastic.com/products/matte-abs-filament-1-75mm-1kg', color: 'Black', colorLink: 'https://www.pushplastic.com/products/matte-abs-filament-1-75mm-1kg?variant=45108449738913', colorHex: '#1C1C1C' },

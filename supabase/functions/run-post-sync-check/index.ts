@@ -6890,7 +6890,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -7958,7 +7958,7 @@ Deno.serve(async (req) => {
       'atomic-filament': 6,     // PLA, PETG, ABS, ASA, PLA Silk, Hi-Flow Pro PLA
       'elegoo': 13,             // PLA Standard, Silk, Matte, Sparkle, Galaxy, Marble, Metal, Wood, PLA-CF, PETG Pro, PETG-CF, PETG-GF, Rapid PETG
       'anycubic': 19,           // PLA+, PLA Silk, PLA Galaxy, PLA High Speed, PETG, ABS, ASA, TPU, etc.
-      'push-plastic': 17,       // CSV-seeded: PLA, PETG, PCTG, ABS, ABS-Matte, ASA, PC+PBT, PLA-HT, PA, TPU-98A, HIPS, ABS-CF, PETG-CF, PA-CF, PC-CF, PEI, PMMA
+      'push-plastic': 14,       // CSV-seeded: PLA, PETG, PCTG, ABS, ABS-Matte, ASA, PC+PBT, PLA-HT, TPU-98A, HIPS, ABS-CF, PETG-CF, PA-CF, PC-CF (PEI/PMMA discontinued for consumer sizes)
       'proto-pasta': 31,        // 31 distinct product lines: HTPLA (standard, opaque, translucent, glitter, metallic, nebula, reflective, thermochromic, smoothie, glow, marble, matte-fiber, wood, brass, bronze, copper), PLA (iron, steel, cf, conductive, esd, calcium-carbonate), PETG (standard, cf, esd), HFPLA (c-matte), POK (cf), TPU (flexible, rigid), HTPLA-CF, HTPLA-GF
       '3d-fuel': 8,             // Standard PLA, Pro PLA, PETG, ABS, Biome3D, Buzzed, Entwined, Landfillament
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
@@ -8931,7 +8931,13 @@ Deno.serve(async (req) => {
       mostCommonImage[1] > totalProductsCount * 0.5
     );
     
-    if (isLogoImage) {
+    // Skip logo image check for product-level image brands (they intentionally share images)
+    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament'];
+    const skipLogoImageCheck = SKIP_LOGO_IMAGE_CHECK_BRANDS.some(b => 
+      brandSlug?.toLowerCase() === b || brandSlug?.toLowerCase().includes(b)
+    );
+    
+    if (isLogoImage && !skipLogoImageCheck) {
       logoImageIssues.push({
         id: 'shared-logo-image',
         title: 'Shared Logo Image Detected',
@@ -9367,14 +9373,12 @@ Deno.serve(async (req) => {
                                    lineId.includes('prusament__pp-gf__glass') ||
                                    lineId.includes('prusament__woodfill__woodfill') ||
                                    // Push Plastic single-color specialty products
-                                   lineId.includes('push-plastic__pei__9085') ||       // PEI 9085 single color
-                                   lineId.includes('push-plastic__pei__1010') ||       // PEI 1010 single color
+                                   // Push Plastic single-color specialty products (Carbon Fiber + High Heat PLA)
                                    lineId.includes('push-plastic__abs-cf__') ||        // ABS-CF only in Black
                                    lineId.includes('push-plastic__petg-cf__') ||       // PETG-CF only in Black
                                    lineId.includes('push-plastic__pa-cf__') ||         // PA-CF only in Black
                                    lineId.includes('push-plastic__pc-cf__') ||         // PC-CF only in Black
-                                   lineId.includes('push-plastic__pmma__') ||          // PMMA only in Clear
-                                   lineId.includes('push-plastic__pla-ht__');          // High Heat+Tough PLA limited colors
+                                   lineId.includes('push-plastic__pla-ht__');          // High Heat+Tough PLA limited colors (3)
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
