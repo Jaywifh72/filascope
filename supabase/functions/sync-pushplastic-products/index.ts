@@ -12,6 +12,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   PUSHPLASTIC_PRODUCT_SEED,
+  PUSHPLASTIC_PRODUCT_LINE_IMAGES,
   shouldExcludePushPlasticProduct,
   deduplicatePushPlasticEntries,
   extractMaterialFromTitle,
@@ -321,7 +322,7 @@ Deno.serve(async (req) => {
           color_family: null, // Will be derived from hex
           tds_url: enriched.tdsUrl || tdsUrl,
           product_url: entry.colorLink || entry.productLink,
-          featured_image: null, // Push Plastic images need to be extracted separately
+          featured_image: PUSHPLASTIC_PRODUCT_LINE_IMAGES[productLineId] || null,
           variant_price: getPushPlasticDefaultPrice(material),
           variant_compare_at_price: null,
           variant_sku: null,
