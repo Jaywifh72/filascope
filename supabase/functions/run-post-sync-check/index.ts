@@ -7900,7 +7900,7 @@ Deno.serve(async (req) => {
     // that occur due to mismatches between product_line_id format and display logic.
     
     // Skip brands that use verbose seed titles but have clean UI display names (by design)
-    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta', 'prusament'];
+    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta', 'prusament', 'sovol'];
     const uiDisplayIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Simulate formatProductLineIdForDisplay logic (from src/lib/productNameUtils.ts)
@@ -9192,7 +9192,7 @@ Deno.serve(async (req) => {
     );
     
     // Skip logo image check for product-level image brands (they intentionally share images)
-    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament', 'recreus', 'siraya-tech'];
+    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament', 'recreus', 'siraya-tech', 'sovol'];
     const skipLogoImageCheck = SKIP_LOGO_IMAGE_CHECK_BRANDS.some(b => 
       brandSlug?.toLowerCase() === b || brandSlug?.toLowerCase().includes(b)
     );
@@ -9228,7 +9228,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
