@@ -344,11 +344,11 @@ Deno.serve(async (req) => {
         };
       });
       
-      // Use upsert on product_id
+      // Use upsert on composite key (vendor, product_id)
       const { error: insertError } = await supabase
         .from('filaments')
         .upsert(records, { 
-          onConflict: 'product_id',
+          onConflict: 'vendor,product_id',
           ignoreDuplicates: false 
         });
       
