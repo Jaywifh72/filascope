@@ -7900,7 +7900,7 @@ Deno.serve(async (req) => {
     // that occur due to mismatches between product_line_id format and display logic.
     
     // Skip brands that use verbose seed titles but have clean UI display names (by design)
-    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta', 'prusament', 'sovol'];
+    const skipUIDisplayNameBrands = ['gizmo-dorks', 'polymaker', 'proto-pasta', 'prusament', 'sovol', 'spectrum-filaments'];
     const uiDisplayIssues: Array<{ id: string; title: string; issue: string }> = [];
     
     // Simulate formatProductLineIdForDisplay logic (from src/lib/productNameUtils.ts)
@@ -8560,7 +8560,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments']; // CSV-seeded brands with EUR prices or no prices
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -8844,7 +8844,7 @@ Deno.serve(async (req) => {
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
         // Proto-Pasta also uses cross-product architecture where each color is a separate Shopify product
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol'];
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol', 'spectrum-filaments'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;
@@ -9110,7 +9110,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus']; // CSV-seeded brands and brands with curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments']; // CSV-seeded brands and brands with curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];

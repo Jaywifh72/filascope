@@ -510,7 +510,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
   // Extended Spectrum color mappings
   const extendedMappings: Record<string, string> = {
     // PLA Magic SILK colors
-    'magenta dream': 'FF00FF',
+    'magenta dream': 'DA70D6', // Orchid-like magenta (unique from magenta blossom)
     'vivid lavender': 'B57EDC',
     'mystic orchid': '9370DB',
     'lagoon breeze': '48D1CC',
@@ -522,7 +522,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'amber leaf': 'FFBF00',
     'magenta blossom': 'FF77FF',
     'raspberry blush': 'E30B5C',
-    'forest flame': '228B22',
+    'forest flame': '355E3B',  // Dark green (unique from wizard green)
     'royal amethyst': '9966CC',
     'nightfire': '1A0A0A',
     'solar eclipse': '3D3D3D',
@@ -569,12 +569,12 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     // Premium PLA colors
     'wizard indigo': '4B0082',
     'wizard charcoal': '36454F',
-    'wizard green': '228B22',
-    'true red': 'CC0000',
+    'wizard green': '2E8B57',  // Sea green (unique)
+    'true red': 'E63333',     // Slightly brighter red (unique from bloody red)
     'translucent': 'F0F0F0',
     'pigeon blue': '7285A5',
     'pearl grey': 'E8E4D9',
-    'pearl gold': 'EEE8AA',
+    'pearl gold': 'F0E68C',   // Khaki-gold (unique from old gold)
     'oregano green': '5C8A4D',
     'old gold': 'CFB53B',
     'lavender violett': 'B57EDC',
@@ -590,10 +590,10 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'chrysocolla green': '56A0D3',
     'carribean blue': '1AC6FF',
     'caribbean blue': '1AC6FF',
-    'blue lagoon': '00CED1',
+    'blue lagoon': '20B2AA',  // Light sea green (unique from pastel turquoise)
     'bahama yellow': 'F8E300',
     'baby blue': '89CFF0',
-    'arctic white': 'F4F4F4',
+    'arctic white': 'F0F8FF',  // Alice blue tint (unique from polar white)
     'anthracite grey': '293133',
     
     // Engineering colors
@@ -641,7 +641,10 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'industrial grey': '6C6C6C',
     'midnight black': '0A0A0A',
     'true yellow': 'FFFF00',
-    'bloody red': 'CC0000',
+    'bloody red': 'B80000',   // Darker blood red (unique)
+    'cherry red': 'DE3163',   // Cerise red (unique from true red/bloody red)
+    'forest green': '0B6623', // Dark forest green (unique from wizard green)
+    'pastel turquoise': '7FFFD4', // Aquamarine (unique from blue lagoon)
     'bottle green': '006A4E',
     'chocolate brown': '3D2B1F',
     'glassy': 'E0E0E0',
