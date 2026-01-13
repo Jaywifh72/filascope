@@ -228,11 +228,11 @@ Deno.serve(async (req) => {
           diameter_nominal_mm: 1.75,
           net_weight_g: 800, // Siraya Tech standard spool
           
-          // Enriched data from defaults
-          material: enrichment.material || seed.material,
+          // Enriched data - PRIORITIZE CSV SEED over pattern detection
+          material: seed.material, // Use seed.material directly to avoid pattern detection failures
           finish_type: enrichment.finishType,
-          product_line_id: seed.productLineId,
-          color_hex: seed.colorHex,
+          product_line_id: seed.productLineId, // Use seed.productLineId to avoid grouping issues
+          color_hex: seed.colorHex, // Use seed.colorHex for accurate swatch colors
           color_family: colorFamily,
           tds_url: enrichment.tdsUrl,
           is_nozzle_abrasive: enrichment.isAbrasive,
