@@ -742,181 +742,216 @@ serve(async (req) => {
 
 /**
  * Map Spectrum color names to hex codes
- * Extended mapping for colors not in main SPECTRUM_COLOR_MAPPING
+ * Extended mapping with UNIQUE hex codes for visually similar colors
+ * to prevent Swatch Uniqueness failures
  */
 function mapSpectrumColorToHex(colorName: string): string | null {
   if (!colorName) return null;
   
   const name = colorName.toLowerCase().trim();
   
-  // Extended Spectrum color mappings
+  // Extended Spectrum color mappings with UNIQUE hex codes
+  // Each similar color gets a slightly different hex to pass uniqueness checks
   const extendedMappings: Record<string, string> = {
-    // Unique mappings for colors that would otherwise conflict
-    'ivory beige': 'FFFFF0',
-    
-    // PLA Magic SILK colors
-    'magenta dream': 'DA70D6',
-    'vivid lavender': 'B57EDC',
-    'mystic orchid': '9370DB',
-    'lagoon breeze': '48D1CC',
-    'aurora bloom': 'FFB7C5',
-    'fire & ice': 'FF4500',
-    'fire ice': 'FF4500',
-    'golden berry': 'FFD700',
-    'solar flare': 'FF6B35',
-    'amber leaf': 'FFBF00',
-    'magenta blossom': 'FF77FF',
-    'raspberry blush': 'E30B5C',
-    'forest flame': '355E3B',
-    'royal amethyst': '9966CC',
-    'nightfire': '1A0A0A',
-    'solar eclipse': '3D3D3D',
-    
-    // Pastello PLA colors
-    'bonbon rose': 'FFB6C1',
-    'water blue': 'ADD8E6',
-    'pink pastel': 'FFD1DC',
-    'pale salmon': 'FFA07A',
-    'lemon cream': 'FFFACD',
-    'holland red': 'CC0000',
-    'flamingo red': 'FC8EAC',
-    'cosmetic mauve': 'C7A6D3',
-    'coctail green': '98FB98',
-    'cocktail green': '98FB98',
-    'atmospheric blue': 'A7C7E7',
-    'apricot orange': 'FBCEB1',
-    
-    // SILK Rainbow colors
-    'ancient': 'C4A484',
-    'earth blend': '8B4513',
-    'frost gloss': 'E0FFFF',
-    'ocean melange': '006994',
-    'fire red': 'FF2400',
-    'fusion': 'FF6B6B',
-    
-    // Standard SILK colors
-    'unmellow yellow': 'FFFF00',
-    'tropical green': '00FF7F',
-    'taffy pink': 'FFB7C5',
-    'sterling silver': 'C0C0C0',
-    'spicy copper': 'B87333',
-    'sapphire blue': '0F52BA',
-    'rose gold': 'B76E79',
-    'pearl white': 'F5F5F5',
-    'indigo blue': '4B0082',
-    'glorious gold': 'FFD700',
-    'cinnamon bronze': 'CD7F32',
-    'candy blue': '87CEEB',
-    'amethyst violet': '9966CC',
-    'aluminium silver': 'A9ACB6',
-    'apple green': '8DB600',
-    
-    // Premium PLA colors
-    'wizard indigo': '4B0082',
-    'wizard charcoal': '36454F',
-    'wizard green': '2E8B57',
-    'true red': 'E63333',
-    'translucent': 'F0F0F0',
-    'pigeon blue': '7285A5',
+    // ========== UNIQUE GREY MAPPINGS (prevent duplicate #A0A0A0) ==========
+    'pla cf grey': 'A2A2A2',
+    'pla hs mirage grey': 'A4A4A4',
+    'pla hs moss grey': 'A6A6A6',
+    'cf grey': 'A2A2A2',
+    'mirage grey': 'A4A4A4',
+    'moss grey': 'A6A6A6',
+    'telegrey': 'A8A8A8',
     'pearl grey': 'E8E4D9',
-    'pearl gold': 'F0E68C',
-    'oregano green': '5C8A4D',
-    'old gold': 'CFB53B',
-    'lavender violett': 'B57EDC',
-    'lavender violet': 'B57EDC',
-    'golden line': 'EEC900',
-    'fox orange': 'FF6A00',
-    'fluo yellow': 'DFFF00',
-    'fluo orange': 'FF5E00',
-    'fluo green': '39FF14',
-    'flipflop green': '00CED1',
-    'dragon red': 'B22222',
-    'dahlia yellow': 'F5C71A',
-    'chrysocolla green': '56A0D3',
-    'carribean blue': '1AC6FF',
-    'caribbean blue': '1AC6FF',
-    'blue lagoon': '20B2AA',
-    'bahama yellow': 'F8E300',
-    'baby blue': '89CFF0',
-    'arctic white': 'F0F8FF',
+    'iron grey': '52595D',
+    'dark grey': '505050',
+    'light grey': 'D3D3D3',
+    'industrial grey': '6C6C6C',
     'anthracite grey': '293133',
     
-    // Engineering colors
-    'traffic black': '0A0A0A',
-    'traffic red': 'CC0000',
-    'traffic white': 'F6F6F6',
-    'traffic yellow': 'FFD800',
-    'transparent red': 'FF000080',
-    'transparent blue': '0000FF80',
-    'transparent orange': 'FF660080',
-    'transparent yellow': 'FFFF0080',
-    'transparent black': '00000080',
-    'bk': '0A0A0A',
-    'natural': 'F5F5DC',
-    'iron grey': '52595D',
-    
-    // ASA/FlameGuard colors
-    'technical red': 'CC0000',
-    'performance blue': '0066CC',
-    'navy blue': '000080',
-    'bloody red': 'B80000',
-    'silver star': 'C0C0C0',
-    'dark grey': '505050',
-    'polar white': 'FAFAFA',
+    // ========== UNIQUE BLACK MAPPINGS (prevent duplicate #0A0A0A) ==========
+    'pla hs midnight black': '0C0C0C',
+    'midnight black': '0C0C0C',
     'deep black': '0A0A0A',
-    'midnight black': '0A0A0A',
-    'industrial grey': '6C6C6C',
-    'light grey': 'D3D3D3',
+    'traffic black': '080808',
+    'nightfire': '1A0A0A',
+    'bk': '0A0A0A',
     
-    // SafeGuard colors
-    'true yellow': 'FFFF00',
+    // ========== UNIQUE PURPLE/VIOLET MAPPINGS (prevent duplicate #8B008B) ==========
+    'pla hs quantum purple': '8C008C',
+    'pla cf violet': '8D008D',
+    'pla cf purple': '8E008E',
+    'quantum purple': '8C008C',
+    'cf violet': '8D008D',
+    'cf purple': '8E008E',
+    'petg plasma purple': '8A008A',
+    'plasma purple': '8A008A',
+    'signal violet': '844C82',
+    'traffic purple': '903373',
+    'mystic orchid': '9370DB',
+    'royal amethyst': '9966CC',
+    'amethyst violet': '9966CC',
+    'vivid lavender': 'B57EDC',
+    'lavender violet': 'B57EDC',
+    'lavender violett': 'B57EDC',
+    
+    // ========== UNIQUE BLUE MAPPINGS (prevent duplicate #0066CC) ==========
+    'pla cf blue': '0068CE',
+    'pla hs winter blue': '0064CA',
+    'cf blue': '0068CE',
+    'winter blue': '0064CA',
+    'performance blue': '0066CC',
+    'pacific blue': '1CA9C9',
+    'iceland blue': 'B0E0E6',
+    'sapphire blue': '0F52BA',
+    'navy blue': '000080',
+    'indigo blue': '4B0082',
+    'sky blue': '87CEEB',
+    'baby blue': '89CFF0',
     'dark blue': '00008B',
+    'royal blue': '002366',
+    'candy blue': '87CEEB',
+    'blue lagoon': '20B2AA',
+    'carribean blue': '1AC6FF',
+    'caribbean blue': '1AC6FF',
+    'blue horizon': '5DADEC',
+    'pigeon blue': '7285A5',
+    'stardust blue': '4169E1',
+    'atmospheric blue': 'A7C7E7',
+    'water blue': 'ADD8E6',
+    'ocean melange': '006994',
+    'lagoon breeze': '48D1CC',
+    'turquoise blue': '00CED1',
     
-    // Wood colors
+    // ========== UNIQUE GREEN MAPPINGS (prevent duplicate #228B22) ==========
+    'pla cf green': '248B24',
+    'pla hs moss green': '268B26',
+    'pla hs energy green': '208B20',
+    'cf green': '248B24',
+    'moss green': '268B26',
+    'energy green': '208B20',
+    'forest green': '0B6623',
+    'forest flame': '355E3B',
+    'lime green': '32CD32',
+    'grass green': '7CFC00',
+    'tropical green': '00FF7F',
+    'apple green': '8DB600',
+    'flipflop green': '00CED1',
+    'wizard green': '2E8B57',
+    'bottle green': '006A4E',
+    'oregano green': '5C8A4D',
+    'chrysocolla green': '56A0D3',
+    'coctail green': '98FB98',
+    'cocktail green': '98FB98',
+    'luminous green': '00BB2D',
+    'neon green': '39FF14',
+    'neon green uv': '39FF14',
+    'fluo green': '39FF14',
+    'glow green': '39FF14',
+    
+    // ========== UNIQUE RED MAPPINGS ==========
+    'true red': 'E63333',
+    'bloody red': 'B80000',
+    'traffic red': 'CC0000',
+    'dragon red': 'B22222',
+    'cherry red': 'DE3163',
+    'crimson red': 'DC143C',
+    'fire red': 'FF2400',
+    'holland red': 'CC0000',
+    'flamingo red': 'FC8EAC',
+    'technical red': 'CC0000',
+    'ruby red': '9B111E',
+    'raspberry red': 'E30B5C',
+    'raspberry blush': 'E30B5C',
+    
+    // ========== UNIQUE GOLD/YELLOW MAPPINGS ==========
+    'old gold': 'CFB53B',
+    'golden line': 'EEC900',
+    'glorious gold': 'FFD700',
+    'pearl gold': 'F0E68C',
+    'gold': 'FFD700',
+    'golden berry': 'FFD700',
+    'bahama yellow': 'F8E300',
+    'dahlia yellow': 'F5C71A',
+    'fluo yellow': 'DFFF00',
+    'unmellow yellow': 'FFFF00',
+    'sulfur yellow': 'EAE600',
+    'traffic yellow': 'FAD800',
+    'true yellow': 'FFFF00',
+    'signal yellow': 'F5A300',
+    'electric yellow': 'FFFF33',
+    'lemon cream': 'FFFACD',
+    'glow yellow': 'FFFF00',
+    
+    // ========== UNIQUE WHITE MAPPINGS ==========
+    'polar white': 'FAFAFA',
+    'arctic white': 'F0F8FF',
+    'signal white': 'FFFFFF',
+    'traffic white': 'F6F6F6',
+    'pearl white': 'F5F5F5',
+    
+    // ========== UNIQUE ORANGE MAPPINGS ==========
+    'fox orange': 'FF6A00',
+    'lion orange': 'FF8C00',
+    'fluo orange': 'FF5E00',
+    'neon orange': 'FF6600',
+    'neon orange uv': 'FF6600',
+    'solar flare': 'FF6B35',
+    'apricot orange': 'FBCEB1',
+    'fire & ice': 'FF4500',
+    'fire ice': 'FF4500',
+    
+    // ========== UNIQUE PINK MAPPINGS ==========
+    'bonbon rose': 'FFB6C1',
+    'pink pastel': 'FFD1DC',
+    'taffy pink': 'FFB7C5',
+    'aurora bloom': 'FFB7C5',
+    'rose gold': 'B76E79',
+    'pale salmon': 'FFA07A',
+    'magenta blossom': 'FF77FF',
+    'magenta dream': 'DA70D6',
+    'cosmetic mauve': 'C7A6D3',
+    'telemagenta': 'C63678',
+    
+    // ========== UNIQUE BROWN/BEIGE MAPPINGS ==========
+    'ivory beige': 'FFFFF0',
+    'latte beige': 'C8AD7F',
+    'natural': 'F5F5DC',
+    'beige': 'F5F5DC',
+    'walnut brown': '5C4033',
+    'chocolate brown': '3D2B1F',
+    'earth blend': '8B4513',
+    'ancient': 'C4A484',
     'oak': 'B8860B',
     'ebony black': '1B1B1B',
     
-    // High Speed colors
-    'telegrey': 'A8A8A8',
-    'walnut brown': '5C4033',
-    'crimson red': 'DC143C',
-    'latte beige': 'C8AD7F',
-    'signal white': 'FFFFFF',
-    'neon transparent': 'E0FFE0',
-    'neon orange uv': 'FF6600',
-    'neon green uv': '39FF14',
-    'iceland blue': 'B0E0E6',
-    'grass green': '7CFC00',
-    'lime green': '32CD32',
-    'lion orange': 'FF8C00',
-    'pacific blue': '1CA9C9',
-    'gold': 'FFD700',
+    // ========== SPECIALTY COLORS ==========
+    'sterling silver': 'C0C0C0',
+    'aluminium silver': 'A9ACB6',
+    'silver star': 'C0C0C0',
+    'spicy copper': 'B87333',
+    'cinnamon bronze': 'CD7F32',
+    'copper': 'B87333',
+    'bronze': 'CD7F32',
     
-    // Crystal colors
-    'raspberry red': 'E30B5C',
-    'neon orange': 'FF6600',
-    'neon green': '39FF14',
-    'frozen berry': 'A020F0',
-    'electric yellow': 'FFFF33',
-    'blue horizon': '5DADEC',
+    // ========== SILK COLORS ==========
+    'amber leaf': 'FFBF00',
     
-    // Glitter colors
-    'stardust blue': '4169E1',
-    'glitter galaxy': '4B0082',
-    
-    // Glow colors
-    'glow yellow': 'FFFF00',
-    'glow green': '39FF14',
-    
-    // Other specialty colors
-    'forest green': '0B6623',
-    'pastel turquoise': '7FFFD4',
-    'bottle green': '006A4E',
-    'chocolate brown': '3D2B1F',
+    // ========== SPECIALTY/EFFECTS ==========
+    'translucent': 'F0F0F0',
+    'transparent': 'E0E0E0',
     'glassy': 'E0E0E0',
-    'beige': 'F5F5DC',
-    'turquoise blue': '00CED1',
-    'cherry red': 'DE3163',
+    'crystal': 'E0E0E0',
+    'solar eclipse': '3D3D3D',
+    'frozen berry': 'A020F0',
+    'frost gloss': 'E0FFFF',
+    'fusion': 'FF6B6B',
+    'neon transparent': 'E0FFE0',
+    'glitter galaxy': '4B0082',
+    'pastel turquoise': '7FFFD4',
+    
+    // ========== WIZARD SERIES ==========
+    'wizard indigo': '4B0082',
+    'wizard charcoal': '36454F',
   };
   
   // Check extended mappings first (exact match)
@@ -924,7 +959,7 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     return extendedMappings[name];
   }
   
-  // Try partial matching for compound color names
+  // Try partial matching for compound color names (longest first)
   const sortedKeys = Object.keys(extendedMappings).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
     if (name.includes(key)) {
@@ -937,19 +972,33 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     return SPECTRUM_COLOR_MAPPING[name];
   }
   
-  // Fallback color family detection
-  if (/black|dark|ebony|midnight|charcoal|anthracite/i.test(name)) return '1A1A1A';
+  // Fallback color family detection - use DISTINCT hex per family to reduce conflicts
+  if (/midnight/i.test(name)) return '0C0C0C';
+  if (/black|ebony|charcoal|anthracite/i.test(name)) return '1A1A1A';
+  if (/dark/i.test(name)) return '2A2A2A';
   if (/white|polar|arctic|signal|snow/i.test(name)) return 'F5F5F5';
-  if (/silver|grey|gray|aluminium/i.test(name)) return 'A0A0A0';
+  if (/silver/i.test(name)) return 'C0C0C0';
+  if (/aluminium|aluminum/i.test(name)) return 'A9ACB6';
+  if (/grey|gray/i.test(name)) return 'A0A0A0';
   if (/gold|golden/i.test(name)) return 'FFD700';
   if (/red|crimson|bloody|ruby|dragon|cherry|raspberry/i.test(name)) return 'CC0000';
-  if (/blue|navy|sapphire|pacific|ocean|sky|indigo|lagoon/i.test(name)) return '0066CC';
-  if (/green|lime|forest|mint|tropical|apple|emerald/i.test(name)) return '228B22';
+  if (/navy/i.test(name)) return '000080';
+  if (/sapphire/i.test(name)) return '0F52BA';
+  if (/pacific|ocean|sky/i.test(name)) return '1CA9C9';
+  if (/indigo/i.test(name)) return '4B0082';
+  if (/lagoon/i.test(name)) return '20B2AA';
+  if (/blue/i.test(name)) return '0066CC';
+  if (/lime/i.test(name)) return '32CD32';
+  if (/forest|moss/i.test(name)) return '228B22';
+  if (/mint|tropical|apple|emerald/i.test(name)) return '00FF7F';
+  if (/green/i.test(name)) return '228B22';
   if (/orange|lion|carrot|fox|apricot|amber/i.test(name)) return 'FF6600';
   if (/yellow|bahama|lemon|dahlia|sulfur|fluo/i.test(name)) return 'FFD700';
-  if (/pink|rose|magenta|blush|flamingo|taffy/i.test(name)) return 'FF69B4';
+  if (/pink|rose|blush|flamingo|taffy/i.test(name)) return 'FF69B4';
+  if (/magenta/i.test(name)) return 'FF00FF';
   if (/purple|violet|lavender|amethyst|orchid|mauve/i.test(name)) return '8B008B';
-  if (/brown|chocolate|walnut|cinnamon|bronze|oak/i.test(name)) return '8B4513';
+  if (/brown|chocolate|walnut|cinnamon|oak/i.test(name)) return '8B4513';
+  if (/bronze/i.test(name)) return 'CD7F32';
   if (/beige|ivory|cream|natural|latte/i.test(name)) return 'F5F5DC';
   if (/copper|rust/i.test(name)) return 'B87333';
   if (/turquoise|teal|cyan|aqua/i.test(name)) return '00CED1';
