@@ -731,8 +731,11 @@ const Finder = () => {
     const title = filament.product_title?.toLowerCase() || '';
     const hasGFContent = filament.glass_fiber_percentage !== null && filament.glass_fiber_percentage !== undefined && filament.glass_fiber_percentage > 0;
     const finishType = filament.finish_type?.toLowerCase() || '';
-    if (finishType === 'glass fiber') return true;
-    return hasGFContent || /glass\s*fiber|glass-fiber|-gf\b|\+gf\b|gf\s*\d|fiberglass/i.test(title) || /glass\s*fiber|-gf\b|\+gf\b|nylong/i.test(material);
+    
+    // Check finish_type variations
+    if (finishType.includes('glass') || finishType.includes('gf')) return true;
+    
+    return hasGFContent || /glass\s*fiber|glass-fiber|-gf\b|\+gf\b|gf\s*\d|fiberglass/i.test(title) || /glass\s*fiber|-gf\b|\+gf\b/i.test(material);
   };
 
   // Get glass fiber percentage for display
@@ -746,9 +749,15 @@ const Finder = () => {
     const title = filament.product_title?.toLowerCase() || '';
     const hasCFContent = filament.carbon_fiber_percentage !== null && filament.carbon_fiber_percentage !== undefined && filament.carbon_fiber_percentage > 0;
     const finishType = filament.finish_type?.toLowerCase() || '';
-    if (finishType === 'carbon') return true;
-    const hasPolycarbonate = /polycarbonate/i.test(title);
-    return hasCFContent || (!hasPolycarbonate && /carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d/i.test(title + ' ' + material));
+    
+    // Check finish_type variations: carbon, carbon fiber, composite-cf, cf-*
+    if (finishType.includes('carbon') || finishType.includes('cf') || finishType.includes('composite')) return true;
+    
+    // Check title/material patterns - avoid false positives from "Polycarbonate" (PC)
+    const hasPolycarbonate = /polycarbonate/i.test(title) && !/carbon\s*fiber/i.test(title);
+    const hasCFPattern = /carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d|\bcf\b/i.test(title + ' ' + material);
+    
+    return hasCFContent || (!hasPolycarbonate && hasCFPattern);
   };
 
   // Get carbon fiber percentage for display
