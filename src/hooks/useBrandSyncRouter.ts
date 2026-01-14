@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useBrandSync, SyncOptions, SyncResult } from './useBrandSync';
 import { useStartBambuScrapeJob, useBambuScrapeJob } from './useBambuScrapeJob';
@@ -29,6 +29,10 @@ export interface UnifiedSyncProgress {
   totalProducts: number;
   regionsProcessed?: number;
   totalRegions?: number;
+  created?: number;
+  updated?: number;
+  errors?: number;
+  isRealProgress?: boolean;
 }
 
 export interface SyncProductResultData {
@@ -88,6 +92,12 @@ export function useBrandSyncRouter(brandSlug: string) {
   const [brandType, setBrandType] = useState<BrandType>(() => getBrandType(brandSlug));
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Generic brand progress state (from polling brand_sync_logs)
+  const [genericProgress, setGenericProgress] = useState<UnifiedSyncProgress | null>(null);
+  const [genericIsLoading, setGenericIsLoading] = useState(false);
+  const [genericSyncCompleted, setGenericSyncCompleted] = useState(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generic brand sync
   const genericSync = useBrandSync();
@@ -100,12 +110,113 @@ export function useBrandSyncRouter(brandSlug: string) {
   const elegooSync = useElegooSync();
   const { activeJob: elegooJob } = useActiveElegooSyncJob();
 
+  // Stop polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, []);
+
+  // Poll for generic brand sync progress from brand_sync_logs
+  const startPolling = useCallback((syncLogId: string) => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    setGenericIsLoading(true);
+    setGenericSyncCompleted(false);
+
+    const pollProgress = async () => {
+      try {
+        const { data, error: pollError } = await supabase
+          .from('brand_sync_logs')
+          .select('*')
+          .eq('id', syncLogId)
+          .single();
+
+        if (pollError) {
+          console.error('[useBrandSyncRouter] Poll error:', pollError);
+          return;
+        }
+
+        if (!data) return;
+
+        // Parse progress from products_processed JSON field
+        const progressData = data.products_processed as unknown as {
+          stage?: string;
+          current?: number;
+          total?: number;
+          message?: string;
+          productsProcessed?: number;
+          variantsFound?: number;
+          created?: number;
+          updated?: number;
+          errors?: number;
+        } | null;
+        
+        if (progressData && typeof progressData === 'object') {
+          // Only mark as real progress if we have actual product counts
+          const hasRealData = progressData.productsProcessed !== undefined || 
+                              progressData.created !== undefined ||
+                              progressData.updated !== undefined ||
+                              (progressData.current !== undefined && progressData.current > 0);
+          
+          setGenericProgress({
+            stage: progressData.stage || 'Processing',
+            productsProcessed: progressData.productsProcessed ?? progressData.current ?? 0,
+            totalProducts: progressData.variantsFound ?? progressData.total ?? 0,
+            created: progressData.created,
+            updated: progressData.updated,
+            errors: progressData.errors,
+            isRealProgress: hasRealData,
+          });
+        }
+
+        // Check if sync completed
+        if (data.status === 'completed' || data.status === 'failed' || data.status === 'partial') {
+          // Stop polling
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          
+          setGenericIsLoading(false);
+          setGenericSyncCompleted(true);
+          
+          // Set final progress
+          setGenericProgress({
+            stage: data.status === 'completed' ? 'Complete' : 'Failed',
+            productsProcessed: data.products_created + data.products_updated || 0,
+            totalProducts: data.products_discovered || 0,
+            created: data.products_created || 0,
+            updated: data.products_updated || 0,
+            errors: data.products_failed || 0,
+            isRealProgress: true,
+          });
+        }
+      } catch (err) {
+        console.error('[useBrandSyncRouter] Poll error:', err);
+      }
+    };
+
+    // Poll every 1.5 seconds
+    pollingRef.current = setInterval(pollProgress, 1500);
+    
+    // Also poll immediately
+    pollProgress();
+  }, []);
+
   // Unified sync function
   const sync = useCallback(async (options: UnifiedSyncOptions): Promise<UnifiedSyncResult> => {
     const type = getBrandType(options.brandSlug);
     setBrandType(type);
     setError(null);
     setIsStarting(true);
+    setGenericProgress(null);
+    setGenericSyncCompleted(false);
 
     try {
       switch (type) {
@@ -153,7 +264,33 @@ export function useBrandSyncRouter(brandSlug: string) {
             
             if (fnError) throw fnError;
             
+            // If this is a background sync, start polling
+            if (data?.syncLogId) {
+              setCurrentJobId(data.syncLogId);
+              startPolling(data.syncLogId);
+              return {
+                success: true,
+                jobId: data.syncLogId,
+                brandType: 'generic',
+                message: 'Sync started in background',
+              };
+            }
+            
             const total = data?.summary?.total ?? data?.summary?.totalDiscovered ?? 0;
+            
+            // Set final progress for synchronous syncs
+            if (data?.summary) {
+              setGenericProgress({
+                stage: 'Complete',
+                productsProcessed: (data.summary.created ?? 0) + (data.summary.updated ?? 0),
+                totalProducts: total,
+                created: data.summary.created ?? 0,
+                updated: data.summary.updated ?? 0,
+                errors: data.summary.errors ?? 0,
+                isRealProgress: true,
+              });
+            }
+            
             return {
               success: data?.success ?? true,
               jobId: data?.jobId || null,
@@ -215,7 +352,7 @@ export function useBrandSyncRouter(brandSlug: string) {
     } finally {
       setIsStarting(false);
     }
-  }, [bambuSync, elegooSync, genericSync]);
+  }, [bambuSync, elegooSync, genericSync, startPolling]);
 
   // Derive loading/progress state based on brand type
   const getLoadingState = useCallback(() => {
@@ -227,9 +364,9 @@ export function useBrandSyncRouter(brandSlug: string) {
       case 'elegoo':
         return elegooSync.isLoading || (elegooJob?.status === 'running');
       default:
-        return genericSync.isLoading;
+        return genericIsLoading || genericSync.isLoading;
     }
-  }, [brandType, isStarting, bambuJob, elegooJob, elegooSync.isLoading, genericSync.isLoading]);
+  }, [brandType, isStarting, bambuJob, elegooJob, elegooSync.isLoading, genericSync.isLoading, genericIsLoading]);
 
   // Get progress info
   const getProgress = useCallback((): UnifiedSyncProgress | null => {
@@ -241,6 +378,7 @@ export function useBrandSyncRouter(brandSlug: string) {
           currentProduct: bambuJob.job.progress.currentProduct,
           productsProcessed: bambuJob.job.progress.productsProcessed || 0,
           totalProducts: bambuJob.job.progress.totalProducts || 0,
+          isRealProgress: true,
         };
 
       case 'elegoo':
@@ -252,12 +390,14 @@ export function useBrandSyncRouter(brandSlug: string) {
           totalProducts: elegooJob.progress.total || 0,
           regionsProcessed: elegooJob.progress.regionsProcessed || 0,
           totalRegions: elegooJob.progress.totalRegions || 0,
+          isRealProgress: true,
         };
 
       default:
-        return null; // Generic sync doesn't have detailed progress
+        // Return generic progress from polling
+        return genericProgress;
     }
-  }, [brandType, bambuJob.job, elegooJob]);
+  }, [brandType, bambuJob.job, elegooJob, genericProgress]);
 
   // Get progress percentage
   const getProgressPercent = useCallback(() => {
@@ -270,14 +410,23 @@ export function useBrandSyncRouter(brandSlug: string) {
         const processed = elegooJob.progress.regionsProcessed || 0;
         return Math.round((processed / totalRegions) * 100);
       default:
-        return 0;
+        // Calculate from generic progress
+        if (!genericProgress || !genericProgress.totalProducts) return 0;
+        return Math.round((genericProgress.productsProcessed / genericProgress.totalProducts) * 100);
     }
-  }, [brandType, bambuJob.progressPercent, elegooJob]);
+  }, [brandType, bambuJob.progressPercent, elegooJob, genericProgress]);
 
   const reset = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
     setCurrentJobId(null);
     setError(null);
     setIsStarting(false);
+    setGenericProgress(null);
+    setGenericIsLoading(false);
+    setGenericSyncCompleted(false);
     genericSync.reset();
     elegooSync.reset();
   }, [genericSync, elegooSync]);

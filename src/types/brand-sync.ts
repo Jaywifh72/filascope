@@ -39,14 +39,17 @@ export interface FieldCoverageResult {
 }
 
 export interface BrandSyncProgress {
-  stage: 'initializing' | 'fetching' | 'processing' | 'saving' | 'complete' | 'error';
+  stage: 'initializing' | 'fetching' | 'processing' | 'saving' | 'complete' | 'error' | string;
   currentRegion?: string;
   currentProduct?: string;
   productsProcessed: number;
   totalProducts: number;
-  regionsProcessed: number;
-  totalRegions: number;
-  errors: string[];
+  regionsProcessed?: number;
+  totalRegions?: number;
+  errors?: string[] | number;
+  created?: number;
+  updated?: number;
+  isRealProgress?: boolean;
 }
 
 export interface BrandSyncResult {

@@ -292,7 +292,7 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
                   </span>
                 </div>
                 {/* Only show percentage when we have real progress data */}
-                {activeProgress && activeProgress.totalProducts > 0 && (
+                {activeProgress && (activeProgress as any)?.isRealProgress && activeProgress.totalProducts > 0 && (
                   <Badge variant="secondary" className="tabular-nums">
                     {activeProgressPercent}%
                   </Badge>
@@ -301,7 +301,7 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
               
               {/* Progress bar - show indeterminate when no real data */}
               <div className="space-y-1">
-                {activeProgress && activeProgress.totalProducts > 0 ? (
+                {activeProgress && (activeProgress as any)?.isRealProgress && activeProgress.totalProducts > 0 ? (
                   <>
                     <Progress value={activeProgressPercent} className="h-3" />
                     <div className="flex justify-between text-xs text-muted-foreground">
@@ -321,8 +321,29 @@ export function BrandSyncPanel({ brand, onSyncComplete }: BrandSyncPanelProps) {
                     </div>
                   </>
                 )}
-
               </div>
+
+              {/* Live stats grid - show when we have real progress data */}
+              {activeProgress && (activeProgress as any)?.isRealProgress && (
+                <div className="grid grid-cols-4 gap-2 pt-2 border-t">
+                  <div className="text-center p-2 bg-background/50 rounded">
+                    <div className="text-lg font-semibold tabular-nums">{activeProgress.productsProcessed || 0}</div>
+                    <div className="text-xs text-muted-foreground">Processed</div>
+                  </div>
+                  <div className="text-center p-2 bg-background/50 rounded">
+                    <div className="text-lg font-semibold tabular-nums text-green-600">{(activeProgress as any)?.created || 0}</div>
+                    <div className="text-xs text-muted-foreground">Created</div>
+                  </div>
+                  <div className="text-center p-2 bg-background/50 rounded">
+                    <div className="text-lg font-semibold tabular-nums text-blue-600">{(activeProgress as any)?.updated || 0}</div>
+                    <div className="text-xs text-muted-foreground">Updated</div>
+                  </div>
+                  <div className="text-center p-2 bg-background/50 rounded">
+                    <div className="text-lg font-semibold tabular-nums text-red-600">{typeof (activeProgress as any)?.errors === 'number' ? (activeProgress as any).errors : 0}</div>
+                    <div className="text-xs text-muted-foreground">Errors</div>
+                  </div>
+                </div>
+              )}
               
               {/* Current product being processed */}
               {activeProgress?.currentProduct && (
