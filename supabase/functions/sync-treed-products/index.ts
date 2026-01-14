@@ -44,7 +44,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const VENDOR_NAME = 'TreeD';
+const VENDOR_NAME = 'TreeD Filaments';
 const BRAND_SLUG = 'treed-filaments';
 const SAFE_DELETE_THRESHOLD = 50;
 
@@ -175,7 +175,7 @@ async function safeDeleteAndInsert(
   const { error: deleteError, count: deleteCount } = await supabase
     .from('filaments')
     .delete()
-    .ilike('vendor', '%treed%')
+    .eq('vendor', 'TreeD Filaments')
     .select('id', { count: 'exact' });
   
   if (deleteError) {
@@ -283,24 +283,24 @@ async function updateBrandStats(supabase: any, brandId: string | null): Promise<
   const { count: productCount } = await supabase
     .from('filaments')
     .select('*', { count: 'exact', head: true })
-    .ilike('vendor', 'treed');
+    .eq('vendor', 'TreeD Filaments');
   
   const { count: withPrices } = await supabase
     .from('filaments')
     .select('*', { count: 'exact', head: true })
-    .ilike('vendor', 'treed')
+    .eq('vendor', 'TreeD Filaments')
     .not('variant_price', 'is', null);
   
   const { count: withImages } = await supabase
     .from('filaments')
     .select('*', { count: 'exact', head: true })
-    .ilike('vendor', 'treed')
+    .eq('vendor', 'TreeD Filaments')
     .not('featured_image', 'is', null);
   
   const { count: withHex } = await supabase
     .from('filaments')
     .select('*', { count: 'exact', head: true })
-    .ilike('vendor', 'treed')
+    .eq('vendor', 'TreeD Filaments')
     .not('color_hex', 'is', null);
   
   // Update brand
