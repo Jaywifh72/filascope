@@ -28,11 +28,15 @@ export function extractFinishType(title: string, material: string): FinishType {
   
   // Order matters - check more specific patterns first
   
-  // Carbon fiber (check before other patterns)
-  if (/carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d/i.test(t)) return 'Carbon';
+  // Carbon fiber (check before other patterns) - include material suffixes like PLA-CF, PETG-CF
+  // Also match standalone "CF" in material field and "Carbon" in titles
+  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|cf\s*\d|\bpla-cf\b|\bpetg-cf\b|\babs-cf\b|\bpa-cf\b|\bpc-cf\b|\bpet-cf\b|\bnylon.*cf\b|\bcf\b/i;
+  // Avoid matching "Polycarbonate" without actual carbon fiber
+  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre/i.test(t);
+  if (!hasPolycarbonate && cfPattern.test(t)) return 'Carbon';
   
-  // Glass fiber
-  if (/glass\s*fiber|glass-fiber|-gf\b|\+gf\b|gf\s*\d|fiberglass/i.test(t)) return 'Glass Fiber';
+  // Glass fiber - include material suffixes like PA-GF, PETG-GF
+  if (/glass\s*fiber|glass-fiber|glass\s*fibre|-gf\b|\+gf\b|gf\s*\d|fiberglass|\bpa-gf\b|\bpetg-gf\b|\bpla-gf\b/i.test(t)) return 'Glass Fiber';
   
   // Wood filled
   if (/\bwood\b|timber|bamboo/i.test(t) && !/hollywood|rosewood|driftwood/i.test(t)) return 'Wood';
@@ -82,11 +86,13 @@ export function isHighSpeedCapable(title: string, material: string): boolean {
 export function isAbrasive(title: string, material: string): boolean {
   const t = ((title || '') + ' ' + (material || '')).toLowerCase();
   
-  // Carbon fiber
-  if (/carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b/i.test(t)) return true;
+  // Carbon fiber - include material suffixes
+  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|\bpla-cf\b|\bpetg-cf\b|\babs-cf\b|\bpa-cf\b|\bpc-cf\b|\bpet-cf\b|\bnylon.*cf\b/i;
+  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre/i.test(t);
+  if (!hasPolycarbonate && cfPattern.test(t)) return true;
   
-  // Glass fiber
-  if (/glass\s*fiber|glass-fiber|-gf\b|\+gf\b|fiberglass/i.test(t)) return true;
+  // Glass fiber - include material suffixes
+  if (/glass\s*fiber|glass-fiber|glass\s*fibre|-gf\b|\+gf\b|fiberglass|\bpa-gf\b|\bpetg-gf\b|\bpla-gf\b/i.test(t)) return true;
   
   // Metal filled (not metallic finish)
   if (/metal[\s-]?fill|copper[\s-]?fill|bronze[\s-]?fill|iron[\s-]?fill|steel[\s-]?fill/i.test(t)) return true;
@@ -105,7 +111,9 @@ export function isAbrasive(title: string, material: string): boolean {
  */
 export function hasCarbonFiber(title: string, material: string): boolean {
   const t = ((title || '') + ' ' + (material || '')).toLowerCase();
-  return /carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d/i.test(t);
+  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|cf\s*\d|\bpla-cf\b|\bpetg-cf\b|\babs-cf\b|\bpa-cf\b|\bpc-cf\b|\bpet-cf\b|\bnylon.*cf\b|\bcf\b/i;
+  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre/i.test(t);
+  return !hasPolycarbonate && cfPattern.test(t);
 }
 
 /**
