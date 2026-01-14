@@ -202,9 +202,27 @@ export const SUNLU_EXTENDED_HEX_MAP: Record<string, string> = {
   'mahogany': 'C04000',
   
   // ===== MARBLE COLORS =====
+  'marble': 'A8A8A8',
   'marble white': 'F0F0F0',
   'marble black': '3A3A3A',
   'marble grey': '909090',
+  'marble gray': '909090',
+  
+  // ===== RAINBOW / MULTI-COLOR =====
+  'rainbow': 'FF6B6B',
+  'pla rainbow': 'FF6B6B',
+  'petg rainbow': 'FF6B6B',
+  'silk rainbow multi': 'FF69B4',
+  
+  // ===== GALAXY / COLOR-SHIFTING =====
+  'galaxy': '9B59B6',
+  'galaxy blue': '4169E1',
+  'galaxy purple': '9B59B6',
+  'galaxy pink': 'FF69B4',
+  'galaxy black': '2C2C54',
+  'color-shifting': '9B59B6',
+  'color shifting': '9B59B6',
+  'pearlescent': 'D4AF37',
   
   // ===== META (MACARON) COLORS =====
   'meta black': '1A1A1A',
@@ -396,6 +414,14 @@ export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
   
   // === OVER-6KG BUNDLE SALES ===
   /over\s*\d+kg\s*bundle/i,
+  
+  // === NON-FILAMENT PRODUCTS (printers, cleaners, bundles) ===
+  /ultrasonic\s*cleaner/i,
+  /multi[\-\s]*speed\s*options/i,
+  /special\s*filament.*pla[\-\s]*glow.*pla[\-\s]*cf.*asa.*eabs.*pvb/i,
+  /pla[\-\s]*glow.*pla[\-\s]*cf.*asa.*eabs/i,
+  /water[\-\s]*washable\s*resin/i,
+  /lcd\s*uv\s*resin/i,
 ];
 
 // ============================================================================
