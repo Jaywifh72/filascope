@@ -121,6 +121,100 @@ export const VOXELPLA_COLOR_HEX_MAP: Record<string, string> = {
 };
 
 // ============================================================================
+// COLOR FAMILY RESOLUTION (from hex codes and color names)
+// ============================================================================
+
+const COLOR_FAMILY_HUE_RANGES: Array<{ family: string; hueMin: number; hueMax: number }> = [
+  { family: 'Red', hueMin: 0, hueMax: 15 },
+  { family: 'Red', hueMin: 345, hueMax: 360 },
+  { family: 'Orange', hueMin: 15, hueMax: 45 },
+  { family: 'Yellow', hueMin: 45, hueMax: 65 },
+  { family: 'Green', hueMin: 65, hueMax: 170 },
+  { family: 'Blue', hueMin: 170, hueMax: 260 },
+  { family: 'Purple', hueMin: 260, hueMax: 290 },
+  { family: 'Pink', hueMin: 290, hueMax: 345 },
+];
+
+// Helper: hex to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+// Helper: RGB to HSL
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+/**
+ * Resolve color_family from hex codes using HSL/name-based analysis
+ */
+export function getVoxelPLAColorFamily(hexCode: string | null, colorName: string): string {
+  const lowerColor = colorName.toLowerCase();
+  
+  // Direct name matching for special cases
+  if (lowerColor.includes('black') || lowerColor.includes('gunmetal')) return 'Black';
+  if (lowerColor.includes('white') || lowerColor.includes('cool white')) return 'White';
+  if (lowerColor.includes('grey') || lowerColor.includes('gray')) return 'Gray';
+  if (lowerColor.includes('silver') || lowerColor.includes('champagne')) return 'Silver';
+  if (lowerColor.includes('gold')) return 'Gold';
+  if (lowerColor.includes('wood') || lowerColor.includes('brown') || lowerColor.includes('beige')) return 'Brown';
+  if (lowerColor.includes('clear') || lowerColor.includes('ice') || lowerColor.includes('crystal')) return 'Clear';
+  
+  // Color name matching
+  if (lowerColor.includes('red') || lowerColor.includes('fire engine')) return 'Red';
+  if (lowerColor.includes('orange') || lowerColor.includes('fire orange')) return 'Orange';
+  if (lowerColor.includes('yellow')) return 'Yellow';
+  if (lowerColor.includes('green') || lowerColor.includes('forest') || lowerColor.includes('witch') || lowerColor.includes('army') || lowerColor.includes('aurora') || lowerColor.includes('emerald')) return 'Green';
+  if (lowerColor.includes('blue') || lowerColor.includes('phantom') || lowerColor.includes('royal') || lowerColor.includes('sky') || lowerColor.includes('midnight')) return 'Blue';
+  if (lowerColor.includes('purple') || lowerColor.includes('lavender') || lowerColor.includes('gioiello')) return 'Purple';
+  if (lowerColor.includes('pink') || lowerColor.includes('magenta')) return 'Pink';
+  
+  // Fallback to hex-based analysis if hex is available
+  if (hexCode) {
+    const rgb = hexToRgb(hexCode);
+    if (rgb) {
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+      
+      // Check for achromatic colors (low saturation)
+      if (hsl.s < 15) {
+        if (hsl.l < 20) return 'Black';
+        if (hsl.l > 85) return 'White';
+        return 'Gray';
+      }
+      
+      // Find matching hue range
+      for (const range of COLOR_FAMILY_HUE_RANGES) {
+        if (hsl.h >= range.hueMin && hsl.h < range.hueMax) {
+          return range.family;
+        }
+      }
+    }
+  }
+  
+  return 'Other';
+}
+
+// ============================================================================
 // PRODUCT LINE ID GENERATION
 // ============================================================================
 
