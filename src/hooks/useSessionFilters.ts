@@ -7,22 +7,26 @@ export interface FilamentFiltersState {
   selectedMaterials: string[];
   selectedVariants: Record<string, string[]>;
   brassOnly: boolean;
-  foodContact: boolean;
   amsOnly: boolean;
   selectedBrands: string[];
   maxPrice: string;
   sortBy: string;
-  highSpeed: boolean;
+  // Surface Finish
   matte: boolean;
+  silk: boolean;
+  metallic: boolean;
+  sparkle: boolean;
+  translucent: boolean;
+  glow: boolean;
+  // Reinforced Materials
   carbonFiber: boolean;
   glassFiber: boolean;
   woodFilled: boolean;
-  glow: boolean;
-  plasticSpool: boolean;
-  cardboardSpool: boolean;
-  singleSpool: boolean;
-  multiPack: boolean;
+  // Performance
+  highSpeed: boolean;
+  // Spool Size
   largeSpools: boolean;
+  // Color
   priceRange: [number, number];
   selectedColorFamilies: string[];
   hexSearch: string;
@@ -34,22 +38,26 @@ const defaultFilters: FilamentFiltersState = {
   selectedMaterials: ["All"],
   selectedVariants: {},
   brassOnly: false,
-  foodContact: false,
   amsOnly: false,
   selectedBrands: [],
   maxPrice: "",
   sortBy: "truecost-asc",
-  highSpeed: false,
+  // Surface Finish
   matte: false,
+  silk: false,
+  metallic: false,
+  sparkle: false,
+  translucent: false,
+  glow: false,
+  // Reinforced Materials
   carbonFiber: false,
   glassFiber: false,
   woodFilled: false,
-  glow: false,
-  plasticSpool: false,
-  cardboardSpool: false,
-  singleSpool: false,
-  multiPack: false,
+  // Performance
+  highSpeed: false,
+  // Spool Size
   largeSpools: false,
+  // Color
   priceRange: [0, 100],
   selectedColorFamilies: [],
   hexSearch: "",
@@ -114,21 +122,25 @@ export function useSessionFilters(urlHexSearch?: string | null, urlColorToleranc
     !(filters.selectedMaterials.length === 1 && filters.selectedMaterials[0] === "All") ||
     Object.keys(filters.selectedVariants).length > 0 ||
     filters.brassOnly ||
-    filters.foodContact ||
     filters.amsOnly ||
     filters.selectedBrands.length > 0 ||
     filters.maxPrice !== "" ||
-    filters.highSpeed ||
+    // Surface Finish
     filters.matte ||
+    filters.silk ||
+    filters.metallic ||
+    filters.sparkle ||
+    filters.translucent ||
+    filters.glow ||
+    // Reinforced Materials
     filters.carbonFiber ||
     filters.glassFiber ||
     filters.woodFilled ||
-    filters.glow ||
-    filters.plasticSpool ||
-    filters.cardboardSpool ||
-    filters.singleSpool ||
-    filters.multiPack ||
+    // Performance
+    filters.highSpeed ||
+    // Spool Size
     filters.largeSpools ||
+    // Color
     filters.priceRange[0] !== 0 ||
     filters.priceRange[1] !== 100 ||
     filters.selectedColorFamilies.length > 0 ||

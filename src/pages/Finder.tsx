@@ -136,22 +136,26 @@ const Finder = () => {
     selectedMaterials,
     selectedVariants,
     brassOnly,
-    foodContact,
     amsOnly,
     selectedBrands,
     maxPrice,
     sortBy,
-    highSpeed,
+    // Surface Finish
     matte,
+    silk,
+    metallic,
+    sparkle,
+    translucent,
+    glow,
+    // Reinforced Materials
     carbonFiber,
     glassFiber,
     woodFilled,
-    glow,
-    plasticSpool,
-    cardboardSpool,
-    singleSpool,
-    multiPack,
+    // Performance
+    highSpeed,
+    // Spool Size
     largeSpools,
+    // Color
     priceRange,
     selectedColorFamilies,
     hexSearch,
@@ -163,22 +167,26 @@ const Finder = () => {
   const setSelectedMaterials = (v: string[]) => updateFilter("selectedMaterials", v);
   const setSelectedVariants = (v: Record<string, string[]>) => updateFilter("selectedVariants", v);
   const setBrassOnly = (v: boolean) => updateFilter("brassOnly", v);
-  const setFoodContact = (v: boolean) => updateFilter("foodContact", v);
   const setAmsOnly = (v: boolean) => updateFilter("amsOnly", v);
   const setSelectedBrands = (v: string[]) => updateFilter("selectedBrands", v);
   const setMaxPrice = (v: string) => updateFilter("maxPrice", v);
   const setSortBy = (v: string) => updateFilter("sortBy", v);
-  const setHighSpeed = (v: boolean) => updateFilter("highSpeed", v);
+  // Surface Finish setters
   const setMatte = (v: boolean) => updateFilter("matte", v);
+  const setSilk = (v: boolean) => updateFilter("silk", v);
+  const setMetallic = (v: boolean) => updateFilter("metallic", v);
+  const setSparkle = (v: boolean) => updateFilter("sparkle", v);
+  const setTranslucent = (v: boolean) => updateFilter("translucent", v);
+  const setGlow = (v: boolean) => updateFilter("glow", v);
+  // Reinforced Materials setters
   const setCarbonFiber = (v: boolean) => updateFilter("carbonFiber", v);
   const setGlassFiber = (v: boolean) => updateFilter("glassFiber", v);
   const setWoodFilled = (v: boolean) => updateFilter("woodFilled", v);
-  const setGlow = (v: boolean) => updateFilter("glow", v);
-  const setPlasticSpool = (v: boolean) => updateFilter("plasticSpool", v);
-  const setCardboardSpool = (v: boolean) => updateFilter("cardboardSpool", v);
-  const setSingleSpool = (v: boolean) => updateFilter("singleSpool", v);
-  const setMultiPack = (v: boolean) => updateFilter("multiPack", v);
+  // Performance setters
+  const setHighSpeed = (v: boolean) => updateFilter("highSpeed", v);
+  // Spool Size setters
   const setLargeSpools = (v: boolean) => updateFilter("largeSpools", v);
+  // Color setters
   const setPriceRange = (v: [number, number]) => updateFilter("priceRange", v);
   const setSelectedColorFamilies = (v: string[]) => updateFilter("selectedColorFamilies", v);
   const setHexSearch = (v: string) => updateFilter("hexSearch", v);
@@ -252,7 +260,7 @@ const Finder = () => {
   // Reset display count when filters change
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
-  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, brassOnly, foodContact, amsOnly]);
+  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly]);
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();
@@ -576,7 +584,7 @@ const Finder = () => {
   });
 
   const { data: filaments, isLoading } = useQuery({
-    queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials, brandNameMap],
+    queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials, brandNameMap],
     enabled: !!materials && !!brandsData, // Wait for materials and brands to load first
     queryFn: async () => {
       let query = supabase.from("filaments").select("*");
@@ -621,10 +629,6 @@ const Finder = () => {
 
       if (brassOnly) {
         query = query.eq("is_nozzle_abrasive", false);
-      }
-
-      if (foodContact) {
-        query = query.not("food_contact_rating", "is", null);
       }
 
       // AMS filtering is done client-side using isAMSCompatible function
@@ -841,7 +845,6 @@ const Finder = () => {
       
       // Apply compatibility filters
       if (brassOnly && f.is_nozzle_abrasive !== false) return false;
-      if (foodContact && !f.food_contact_rating) return false;
       if (amsOnly && !isAMSCompatible(f)) return false;
       
       return true;
@@ -886,16 +889,13 @@ const Finder = () => {
       if (f.is_nozzle_abrasive === false) {
         counts['brass_safe'] = (counts['brass_safe'] || 0) + 1;
       }
-      if (f.food_contact_rating) {
-        counts['food_contact'] = (counts['food_contact'] || 0) + 1;
-      }
       if (isAMSCompatible(f)) {
         counts['ams_fit'] = (counts['ams_fit'] || 0) + 1;
       }
     });
 
     return counts;
-  }, [regionalFilaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials]);
+  }, [regionalFilaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials]);
 
   // Helper function to get count for a material (checks both base and variants)
   const getMaterialCount = (baseMaterial: string) => {
@@ -959,14 +959,21 @@ const Finder = () => {
     // Apply glow filter
     if (glow && !f.material?.toLowerCase().includes('glow') && !f.product_title?.toLowerCase().includes('glow')) return false;
     
-    // Apply spool type filters
-    if (plasticSpool && !cardboardSpool && f.spool_material?.toLowerCase() !== 'plastic') return false;
-    if (cardboardSpool && !plasticSpool && f.spool_material?.toLowerCase() !== 'cardboard') return false;
+    // Apply new surface finish filters
+    const finishType = f.finish_type?.toLowerCase() || '';
+    const titleLower = f.product_title?.toLowerCase() || '';
     
-    // Apply pack quantity filters
-    const packQty = f.pack_quantity || 1;
-    if (singleSpool && !multiPack && packQty !== 1) return false;
-    if (multiPack && !singleSpool && packQty <= 1) return false;
+    // Apply silk filter (silk, shimmer)
+    if (silk && !finishType.includes('silk') && !finishType.includes('shimmer') && !titleLower.includes('silk') && !titleLower.includes('shimmer')) return false;
+    
+    // Apply metallic filter
+    if (metallic && !finishType.includes('metallic') && !finishType.includes('metal') && !titleLower.includes('metallic')) return false;
+    
+    // Apply sparkle filter (sparkle, glitter, galaxy)
+    if (sparkle && !finishType.includes('sparkle') && !finishType.includes('glitter') && !finishType.includes('galaxy') && !titleLower.includes('sparkle') && !titleLower.includes('glitter') && !titleLower.includes('galaxy')) return false;
+    
+    // Apply translucent filter (translucent, transparent, clear)
+    if (translucent && !finishType.includes('translucent') && !finishType.includes('transparent') && !finishType.includes('clear') && !titleLower.includes('translucent') && !titleLower.includes('transparent')) return false;
     
     // Apply spool weight filter (default: hide very large spools > 2kg unless largeSpools is enabled)
     // Standard spools are 0.5kg-1.5kg, large multi-packs are 2kg+
@@ -1062,14 +1069,14 @@ const Finder = () => {
       selectedBrands.length > 0 ||
       priceRange[0] > 0 ||
       priceRange[1] < MAX_PRICE_LIMIT ||
-      highSpeed || matte || carbonFiber || glassFiber ||
-      woodFilled || glow || brassOnly || foodContact || amsOnly ||
+      highSpeed || matte || silk || metallic || sparkle || translucent ||
+      carbonFiber || glassFiber || woodFilled || glow || 
+      brassOnly || amsOnly ||
       selectedColorFamilies.length > 0 ||
       hexSearch !== "" ||
-      plasticSpool || cardboardSpool || singleSpool || multiPack ||
       hasColorSearch
     );
-  }, [selectedMaterials, selectedBrands, priceRange, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, brassOnly, foodContact, amsOnly, selectedColorFamilies, hexSearch, plasticSpool, cardboardSpool, singleSpool, multiPack, searchTerm]);
+  }, [selectedMaterials, selectedBrands, priceRange, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, selectedColorFamilies, hexSearch, searchTerm]);
 
   // Clear all filters function
   const handleClearAllFilters = () => {
@@ -1134,20 +1141,23 @@ const Finder = () => {
         onPriceRangeChange={setPriceRange}
         onOpenMoreFilters={() => setMoreFiltersOpen(true)}
         moreFiltersCount={
-          (highSpeed ? 1 : 0) +
+          // Surface Finish
           (matte ? 1 : 0) +
+          (silk ? 1 : 0) +
+          (metallic ? 1 : 0) +
+          (sparkle ? 1 : 0) +
+          (translucent ? 1 : 0) +
+          (glow ? 1 : 0) +
+          // Reinforced
           (carbonFiber ? 1 : 0) +
           (glassFiber ? 1 : 0) +
           (woodFilled ? 1 : 0) +
-          (glow ? 1 : 0) +
-          (plasticSpool ? 1 : 0) +
-          (cardboardSpool ? 1 : 0) +
-          (singleSpool ? 1 : 0) +
-          (multiPack ? 1 : 0) +
-          (largeSpools ? 1 : 0) +
+          // Performance
+          (highSpeed ? 1 : 0) +
           (brassOnly ? 1 : 0) +
-          (foodContact ? 1 : 0) +
-          (amsOnly ? 1 : 0)
+          (amsOnly ? 1 : 0) +
+          // Spool Size
+          (largeSpools ? 1 : 0)
         }
         sortBy={sortBy}
         onSortChange={setSortBy}
@@ -1169,14 +1179,17 @@ const Finder = () => {
               ...selectedBrands.map(b => ({ id: b, label: b, type: 'brand' as const })),
               ...(priceRange[0] > 0 || priceRange[1] < MAX_PRICE_LIMIT ? [{ id: 'price', label: `$${priceRange[0]}-$${priceRange[1]}/kg`, type: 'price' as const }] : []),
               ...(highSpeed ? [{ id: 'highSpeed', label: 'High Speed', type: 'property' as const }] : []),
-              ...(matte ? [{ id: 'matte', label: 'Matte Finish', type: 'property' as const }] : []),
+              ...(matte ? [{ id: 'matte', label: 'Matte', type: 'property' as const }] : []),
+              ...(silk ? [{ id: 'silk', label: 'Silk/Shimmer', type: 'property' as const }] : []),
+              ...(metallic ? [{ id: 'metallic', label: 'Metallic', type: 'property' as const }] : []),
+              ...(sparkle ? [{ id: 'sparkle', label: 'Sparkle', type: 'property' as const }] : []),
+              ...(translucent ? [{ id: 'translucent', label: 'Translucent', type: 'property' as const }] : []),
               ...(carbonFiber ? [{ id: 'carbonFiber', label: 'Carbon Fiber', type: 'property' as const }] : []),
               ...(glassFiber ? [{ id: 'glassFiber', label: 'Glass Fiber', type: 'property' as const }] : []),
               ...(woodFilled ? [{ id: 'woodFilled', label: 'Wood Filled', type: 'property' as const }] : []),
               ...(glow ? [{ id: 'glow', label: 'Glow', type: 'property' as const }] : []),
               ...(largeSpools ? [{ id: 'largeSpools', label: 'Large Spools', type: 'property' as const }] : []),
               ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
-              ...(foodContact ? [{ id: 'foodContact', label: 'Food Safe', type: 'property' as const }] : []),
               ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
               ...selectedColorFamilies.map(c => ({ id: c, label: c, type: 'color' as const })),
             ]}
@@ -1196,13 +1209,16 @@ const Finder = () => {
                 switch (id) {
                   case 'highSpeed': setHighSpeed(false); break;
                   case 'matte': setMatte(false); break;
+                  case 'silk': setSilk(false); break;
+                  case 'metallic': setMetallic(false); break;
+                  case 'sparkle': setSparkle(false); break;
+                  case 'translucent': setTranslucent(false); break;
                   case 'carbonFiber': setCarbonFiber(false); break;
                   case 'glassFiber': setGlassFiber(false); break;
                   case 'woodFilled': setWoodFilled(false); break;
                   case 'glow': setGlow(false); break;
                   case 'largeSpools': setLargeSpools(false); break;
                   case 'brassOnly': setBrassOnly(false); break;
-                  case 'foodContact': setFoodContact(false); break;
                   case 'amsOnly': setAmsOnly(false); break;
                 }
               }
@@ -1213,13 +1229,16 @@ const Finder = () => {
               setPriceRange([0, MAX_PRICE_LIMIT]);
               setHighSpeed(false);
               setMatte(false);
+              setSilk(false);
+              setMetallic(false);
+              setSparkle(false);
+              setTranslucent(false);
               setCarbonFiber(false);
               setGlassFiber(false);
               setWoodFilled(false);
               setGlow(false);
               setLargeSpools(false);
               setBrassOnly(false);
-              setFoodContact(false);
               setAmsOnly(false);
               setSelectedColorFamilies([]);
               setHexSearch("");
@@ -1246,34 +1265,37 @@ const Finder = () => {
       <MoreFiltersModal
         open={moreFiltersOpen}
         onOpenChange={setMoreFiltersOpen}
-        highSpeed={highSpeed}
-        onHighSpeedChange={setHighSpeed}
+        // Surface Finish
         matte={matte}
         onMatteChange={setMatte}
+        silk={silk}
+        onSilkChange={setSilk}
+        metallic={metallic}
+        onMetallicChange={setMetallic}
+        sparkle={sparkle}
+        onSparkleChange={setSparkle}
+        translucent={translucent}
+        onTranslucentChange={setTranslucent}
         glow={glow}
         onGlowChange={setGlow}
+        // Reinforced Materials
         carbonFiber={carbonFiber}
         onCarbonFiberChange={setCarbonFiber}
         glassFiber={glassFiber}
         onGlassFiberChange={setGlassFiber}
         woodFilled={woodFilled}
         onWoodFilledChange={setWoodFilled}
-        plasticSpool={plasticSpool}
-        onPlasticSpoolChange={setPlasticSpool}
-        cardboardSpool={cardboardSpool}
-        onCardboardSpoolChange={setCardboardSpool}
-        singleSpool={singleSpool}
-        onSingleSpoolChange={setSingleSpool}
-        multiPack={multiPack}
-        onMultiPackChange={setMultiPack}
-        largeSpools={largeSpools}
-        onLargeSpoolsChange={setLargeSpools}
+        // Performance
+        highSpeed={highSpeed}
+        onHighSpeedChange={setHighSpeed}
         brassOnly={brassOnly}
         onBrassOnlyChange={setBrassOnly}
-        foodContact={foodContact}
-        onFoodContactChange={setFoodContact}
         amsOnly={amsOnly}
         onAmsOnlyChange={setAmsOnly}
+        // Spool Size
+        largeSpools={largeSpools}
+        onLargeSpoolsChange={setLargeSpools}
+        // Color
         selectedColorFamilies={selectedColorFamilies}
         onColorFamiliesChange={setSelectedColorFamilies}
       />

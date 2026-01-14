@@ -43,15 +43,21 @@ interface MoreFiltersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   
-  // Special Properties
-  highSpeed: boolean;
-  onHighSpeedChange: (value: boolean) => void;
+  // Surface Finish
   matte: boolean;
   onMatteChange: (value: boolean) => void;
+  silk: boolean;
+  onSilkChange: (value: boolean) => void;
+  metallic: boolean;
+  onMetallicChange: (value: boolean) => void;
+  sparkle: boolean;
+  onSparkleChange: (value: boolean) => void;
+  translucent: boolean;
+  onTranslucentChange: (value: boolean) => void;
   glow: boolean;
   onGlowChange: (value: boolean) => void;
   
-  // Physical Properties (Composites)
+  // Reinforced Materials
   carbonFiber: boolean;
   onCarbonFiberChange: (value: boolean) => void;
   glassFiber: boolean;
@@ -59,25 +65,17 @@ interface MoreFiltersModalProps {
   woodFilled: boolean;
   onWoodFilledChange: (value: boolean) => void;
   
-  // Spool & Packaging
-  plasticSpool: boolean;
-  onPlasticSpoolChange: (value: boolean) => void;
-  cardboardSpool: boolean;
-  onCardboardSpoolChange: (value: boolean) => void;
-  singleSpool: boolean;
-  onSingleSpoolChange: (value: boolean) => void;
-  multiPack: boolean;
-  onMultiPackChange: (value: boolean) => void;
-  largeSpools: boolean;
-  onLargeSpoolsChange: (value: boolean) => void;
-  
-  // Compatibility
+  // Performance & Compatibility
+  highSpeed: boolean;
+  onHighSpeedChange: (value: boolean) => void;
   brassOnly: boolean;
   onBrassOnlyChange: (value: boolean) => void;
-  foodContact: boolean;
-  onFoodContactChange: (value: boolean) => void;
   amsOnly: boolean;
   onAmsOnlyChange: (value: boolean) => void;
+  
+  // Spool Size
+  largeSpools: boolean;
+  onLargeSpoolsChange: (value: boolean) => void;
   
   // Color
   selectedColorFamilies: string[];
@@ -118,53 +116,60 @@ const SectionIcon = ({
 export function MoreFiltersModal({
   open,
   onOpenChange,
-  highSpeed,
-  onHighSpeedChange,
+  // Surface Finish
   matte,
   onMatteChange,
+  silk,
+  onSilkChange,
+  metallic,
+  onMetallicChange,
+  sparkle,
+  onSparkleChange,
+  translucent,
+  onTranslucentChange,
   glow,
   onGlowChange,
+  // Reinforced Materials
   carbonFiber,
   onCarbonFiberChange,
   glassFiber,
   onGlassFiberChange,
   woodFilled,
   onWoodFilledChange,
-  plasticSpool,
-  onPlasticSpoolChange,
-  cardboardSpool,
-  onCardboardSpoolChange,
-  singleSpool,
-  onSingleSpoolChange,
-  multiPack,
-  onMultiPackChange,
-  largeSpools,
-  onLargeSpoolsChange,
+  // Performance & Compatibility
+  highSpeed,
+  onHighSpeedChange,
   brassOnly,
   onBrassOnlyChange,
-  foodContact,
-  onFoodContactChange,
   amsOnly,
   onAmsOnlyChange,
+  // Spool Size
+  largeSpools,
+  onLargeSpoolsChange,
+  // Color
   selectedColorFamilies,
   onColorFamiliesChange,
 }: MoreFiltersModalProps) {
   
   const handleResetAll = () => {
-    onHighSpeedChange(false);
+    // Surface Finish
     onMatteChange(false);
+    onSilkChange(false);
+    onMetallicChange(false);
+    onSparkleChange(false);
+    onTranslucentChange(false);
     onGlowChange(false);
+    // Reinforced Materials
     onCarbonFiberChange(false);
     onGlassFiberChange(false);
     onWoodFilledChange(false);
-    onPlasticSpoolChange(false);
-    onCardboardSpoolChange(false);
-    onSingleSpoolChange(false);
-    onMultiPackChange(false);
-    onLargeSpoolsChange(false);
+    // Performance & Compatibility
+    onHighSpeedChange(false);
     onBrassOnlyChange(false);
-    onFoodContactChange(false);
     onAmsOnlyChange(false);
+    // Spool Size
+    onLargeSpoolsChange(false);
+    // Color
     onColorFamiliesChange([]);
   };
 
@@ -178,10 +183,15 @@ export function MoreFiltersModal({
 
   // Count active filters
   const activeCount = [
-    highSpeed, matte, glow,
+    // Surface Finish
+    matte, silk, metallic, sparkle, translucent, glow,
+    // Reinforced Materials
     carbonFiber, glassFiber, woodFilled,
-    plasticSpool, cardboardSpool, singleSpool, multiPack, largeSpools,
-    brassOnly, foodContact, amsOnly,
+    // Performance & Compatibility
+    highSpeed, brassOnly, amsOnly,
+    // Spool Size
+    largeSpools,
+    // Color
     selectedColorFamilies.length > 0
   ].filter(Boolean).length;
 
@@ -216,28 +226,43 @@ export function MoreFiltersModal({
         <div className="flex-1 overflow-y-auto">
           <Accordion 
             type="multiple" 
-            defaultValue={["special", "physical", "spool", "compatibility", "color"]}
+            defaultValue={["surface", "reinforced", "performance", "spool", "color"]}
             className="w-full"
           >
-            {/* Special Properties */}
-            <AccordionItem value="special" className="border-b border-border/50">
+            {/* Surface Finish */}
+            <AccordionItem value="surface" className="border-b border-border/50">
               <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <SectionIcon icon={Settings} color="bg-cyan-500/10 text-cyan-500" />
-                  <span className="font-medium text-foreground">Special Properties</span>
+                  <SectionIcon icon={Palette} color="bg-pink-500/10 text-pink-500" />
+                  <span className="font-medium text-foreground">Surface Finish</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-4">
                 <div className="grid grid-cols-2 gap-1">
                   <FilterCheckbox 
-                    checked={highSpeed} 
-                    onChange={onHighSpeedChange} 
-                    label="High Speed" 
-                  />
-                  <FilterCheckbox 
                     checked={matte} 
                     onChange={onMatteChange} 
-                    label="Matte Finish" 
+                    label="Matte" 
+                  />
+                  <FilterCheckbox 
+                    checked={silk} 
+                    onChange={onSilkChange} 
+                    label="Silk / Shimmer" 
+                  />
+                  <FilterCheckbox 
+                    checked={metallic} 
+                    onChange={onMetallicChange} 
+                    label="Metallic" 
+                  />
+                  <FilterCheckbox 
+                    checked={sparkle} 
+                    onChange={onSparkleChange} 
+                    label="Sparkle / Glitter" 
+                  />
+                  <FilterCheckbox 
+                    checked={translucent} 
+                    onChange={onTranslucentChange} 
+                    label="Translucent" 
                   />
                   <FilterCheckbox 
                     checked={glow} 
@@ -248,12 +273,12 @@ export function MoreFiltersModal({
               </AccordionContent>
             </AccordionItem>
 
-            {/* Physical Properties */}
-            <AccordionItem value="physical" className="border-b border-border/50">
+            {/* Reinforced Materials */}
+            <AccordionItem value="reinforced" className="border-b border-border/50">
               <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
                 <div className="flex items-center gap-3">
                   <SectionIcon icon={Wrench} color="bg-orange-500/10 text-orange-500" />
-                  <span className="font-medium text-foreground">Physical Properties</span>
+                  <span className="font-medium text-foreground">Reinforced Materials</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-4">
@@ -277,86 +302,51 @@ export function MoreFiltersModal({
               </AccordionContent>
             </AccordionItem>
 
-            {/* Spool & Packaging */}
-            <AccordionItem value="spool" className="border-b border-border/50">
+            {/* Performance & Compatibility */}
+            <AccordionItem value="performance" className="border-b border-border/50">
               <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
                 <div className="flex items-center gap-3">
-                  <SectionIcon icon={Package} color="bg-green-500/10 text-green-500" />
-                  <span className="font-medium text-foreground">Spool & Packaging</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-2">Spool Type</p>
-                    <div className="grid grid-cols-2 gap-1">
-                      <FilterCheckbox 
-                        checked={plasticSpool} 
-                        onChange={onPlasticSpoolChange} 
-                        label="Plastic Spool" 
-                      />
-                      <FilterCheckbox 
-                        checked={cardboardSpool} 
-                        onChange={onCardboardSpoolChange} 
-                        label="Cardboard Spool" 
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-2">Pack Size</p>
-                    <div className="grid grid-cols-2 gap-1">
-                      <FilterCheckbox 
-                        checked={singleSpool} 
-                        onChange={onSingleSpoolChange} 
-                        label="Single Spool" 
-                      />
-                      <FilterCheckbox 
-                        checked={multiPack} 
-                        onChange={onMultiPackChange} 
-                        label="Multi-Pack" 
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-2">Spool Weight</p>
-                    <div className="grid grid-cols-1 gap-1">
-                      <FilterCheckbox 
-                        checked={largeSpools} 
-                        onChange={onLargeSpoolsChange} 
-                        label="Include Large Spools (>1kg)" 
-                      />
-                      <p className="text-[10px] text-muted-foreground px-2">By default only 1kg and smaller are shown</p>
-                    </div>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Compatibility */}
-            <AccordionItem value="compatibility" className="border-b border-border/50">
-              <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-3">
-                  <SectionIcon icon={CheckCircle2} color="bg-blue-500/10 text-blue-500" />
-                  <span className="font-medium text-foreground">Compatibility</span>
+                  <SectionIcon icon={Settings} color="bg-cyan-500/10 text-cyan-500" />
+                  <span className="font-medium text-foreground">Performance & Compatibility</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-4">
                 <div className="grid grid-cols-1 gap-1">
+                  <FilterCheckbox 
+                    checked={highSpeed} 
+                    onChange={onHighSpeedChange} 
+                    label="High Speed (300mm/s+)" 
+                  />
                   <FilterCheckbox 
                     checked={brassOnly} 
                     onChange={onBrassOnlyChange} 
                     label="Brass Safe (Non-Abrasive)" 
                   />
                   <FilterCheckbox 
-                    checked={foodContact} 
-                    onChange={onFoodContactChange} 
-                    label="Food Contact Safe" 
-                  />
-                  <FilterCheckbox 
                     checked={amsOnly} 
                     onChange={onAmsOnlyChange} 
                     label="AMS/MMU Compatible" 
                   />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Spool Size */}
+            <AccordionItem value="spool" className="border-b border-border/50">
+              <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <SectionIcon icon={Package} color="bg-green-500/10 text-green-500" />
+                  <span className="font-medium text-foreground">Spool Size</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-4">
+                <div className="grid grid-cols-1 gap-1">
+                  <FilterCheckbox 
+                    checked={largeSpools} 
+                    onChange={onLargeSpoolsChange} 
+                    label="Include Large Spools (>1kg)" 
+                  />
+                  <p className="text-[10px] text-muted-foreground px-2">By default only 1kg and smaller are shown</p>
                 </div>
               </AccordionContent>
             </AccordionItem>
