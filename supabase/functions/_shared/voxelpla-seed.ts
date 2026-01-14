@@ -171,20 +171,25 @@ function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: n
 export function getVoxelPLAColorFamily(hexCode: string | null, colorName: string): string {
   const lowerColor = colorName.toLowerCase();
   
+  // Specialty colors - handle compound names first (order matters!)
+  if (lowerColor.includes('gunmetal')) return 'Gray';  // Gunmetal Blue is dark gray, not black
+  if (lowerColor.includes('champagne') || lowerColor.includes('beige')) return 'Brown';  // Champagne Beige is brown family
+  if (lowerColor.includes('emerald')) return 'Green';  // Emerald Gold is green with gold shimmer
+  
   // Direct name matching for special cases
-  if (lowerColor.includes('black') || lowerColor.includes('gunmetal')) return 'Black';
+  if (lowerColor.includes('black')) return 'Black';
   if (lowerColor.includes('white') || lowerColor.includes('cool white')) return 'White';
   if (lowerColor.includes('grey') || lowerColor.includes('gray')) return 'Gray';
-  if (lowerColor.includes('silver') || lowerColor.includes('champagne')) return 'Silver';
+  if (lowerColor.includes('silver')) return 'Silver';
   if (lowerColor.includes('gold')) return 'Gold';
-  if (lowerColor.includes('wood') || lowerColor.includes('brown') || lowerColor.includes('beige')) return 'Brown';
+  if (lowerColor.includes('wood') || lowerColor.includes('brown')) return 'Brown';
   if (lowerColor.includes('clear') || lowerColor.includes('ice') || lowerColor.includes('crystal')) return 'Clear';
   
   // Color name matching
   if (lowerColor.includes('red') || lowerColor.includes('fire engine')) return 'Red';
   if (lowerColor.includes('orange') || lowerColor.includes('fire orange')) return 'Orange';
   if (lowerColor.includes('yellow')) return 'Yellow';
-  if (lowerColor.includes('green') || lowerColor.includes('forest') || lowerColor.includes('witch') || lowerColor.includes('army') || lowerColor.includes('aurora') || lowerColor.includes('emerald')) return 'Green';
+  if (lowerColor.includes('green') || lowerColor.includes('forest') || lowerColor.includes('witch') || lowerColor.includes('army') || lowerColor.includes('aurora')) return 'Green';
   if (lowerColor.includes('blue') || lowerColor.includes('phantom') || lowerColor.includes('royal') || lowerColor.includes('sky') || lowerColor.includes('midnight')) return 'Blue';
   if (lowerColor.includes('purple') || lowerColor.includes('lavender') || lowerColor.includes('gioiello')) return 'Purple';
   if (lowerColor.includes('pink') || lowerColor.includes('magenta')) return 'Pink';
