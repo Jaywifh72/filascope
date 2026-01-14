@@ -66,18 +66,16 @@ Deno.serve(async (req) => {
     // STEP 2: Delete existing Ultimaker products (clean slate)
     // =========================================================================
     console.log('[Ultimaker Sync] Step 2: Deleting existing Ultimaker products...');
-    const { error: deleteError, count: deleteCount } = await supabase
+    const { error: deleteError } = await supabase
       .from('filaments')
       .delete()
-      .ilike('vendor', 'ultimaker')
-      .select('id', { count: 'exact', head: true });
+      .ilike('vendor', 'ultimaker');
 
     if (deleteError) {
       console.error('[Ultimaker Sync] Delete error:', deleteError);
       result.errors.push(`Delete failed: ${deleteError.message}`);
     } else {
-      console.log(`[Ultimaker Sync] Deleted ${deleteCount || 0} existing products`);
-      result.details.deletedCount = deleteCount || 0;
+      console.log('[Ultimaker Sync] Deleted existing Ultimaker products');
     }
 
     // =========================================================================

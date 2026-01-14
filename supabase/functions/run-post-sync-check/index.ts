@@ -4536,6 +4536,201 @@ ${lessons.failedApproaches.map(f => `${f}`).join('\n')}
 }
 
 /**
+ * Generate Ultimaker-specific AI Fix Prompt with comprehensive context
+ * Ultimaker is a 2.85mm-only ecosystem with S-Series, Method, and Factor printer lines
+ */
+function generateUltimakerFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      const examples = check.products.slice(0, 10);
+      examples.forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    
+    return section;
+  }).join('\n\n');
+
+  return `# Ultimaker Integration Specialist
+
+You are the **Ultimaker Integration Specialist** for Filascope.
+
+## PLATFORM KNOWLEDGE
+
+**Manufacturer**: Ultimaker (ultimaker.com)
+**Store Platform**: Magento (store.ultimaker.com)
+**Architecture**: CSV-seeded sync from \`ultimaker-seed.ts\` (92 variants, 30 product lines)
+**Currency**: USD (US store)
+**CRITICAL**: ALL Ultimaker filaments are **2.85mm diameter** - this is the Ultimaker ecosystem standard, NOT a filter failure!
+
+## PRINTER SERIES ARCHITECTURE
+
+| Series | Target Printers | Materials | Products |
+|--------|----------------|-----------|----------|
+| **S-Series** | S3, S5, S7 | PLA, Tough PLA, ABS, PETG, CPE, CPE+, PC, PP, TPU 95A, Nylon, PVA, Breakaway, PET CF, Nylon CF Slide | 53 variants |
+| **Method** | Method, Method X, Method XL | PLA, Tough PLA, ABS, ABS-R, ASA, PETG, Nylon, PC-ABS, PC-ABS FR, Nylon CF, ABS CF, N12 CF, PVA, RapidRinse, SR-30 | 38 variants |
+| **Factor** | Factor 4 | PPS CF | 1 variant |
+
+## KEY FILES
+
+- \`supabase/functions/_shared/ultimaker-seed.ts\` - Curated seed data (92 variants)
+- \`supabase/functions/_shared/ultimaker-defaults.ts\` - Material normalization, series detection, color mapping
+- \`supabase/functions/sync-ultimaker-products/index.ts\` - CSV-seeded sync function
+- \`supabase/functions/run-post-sync-check/index.ts\` - Validation with Ultimaker whitelists
+
+## CURRENT ISSUES SUMMARY
+
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+${issuesSummary}
+
+---
+
+## DETAILED ISSUES
+
+${detailedIssues}
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+### RC0: Product Count Mismatch
+${totalProducts < 85 ? `**SEVERITY:** CRITICAL - Expected 92 products, found ${totalProducts}. Check if sync function is deployed and using ULTIMAKER_PRODUCT_SEED.` : totalProducts > 100 ? `**SEVERITY:** WARNING - Found ${totalProducts} products, expected 92. Check for duplicate entries.` : '**STATUS:** OK - Product count acceptable'}
+
+### RC1: CSV Seed Integrity
+Check \`ultimaker-seed.ts\` matches expected counts:
+- S-Series: 53 variants (14 product lines)
+- Method: 38 variants (15 product lines)  
+- Factor: 1 variant (1 product line)
+
+If counts don't match, update seed file with correct product data.
+
+### RC2: Color Hex Mapping
+\`ULTIMAKER_COLOR_HEX_MAP\` in \`ultimaker-seed.ts\` must include ALL colors.
+If hex warnings appear, add missing colors to the map.
+
+### RC3: Series Detection
+\`detectUltimakerSeries()\` in \`ultimaker-defaults.ts\` must correctly identify series from product data.
+Product line IDs should follow pattern: \`ultimaker__{series}__{material}\`
+
+### RC4: Pricing
+Prices come from \`getUltimakerMaterialPrice()\` in \`ultimaker-seed.ts\`.
+If prices are NULL, add the material to ULTIMAKER_MATERIAL_PRICES map.
+
+### RC5: Images
+Ultimaker uses product-level images (not color-specific).
+Brand is whitelisted in PRODUCT_LEVEL_IMAGE_BRANDS.
+
+---
+
+## IMPORTANT WHITELISTS
+
+Ultimaker must be in these skip lists in \`run-post-sync-check/index.ts\`:
+
+1. **skip285mmDiameterBrands** - ALL Ultimaker products are 2.85mm
+2. **PRODUCT_LEVEL_IMAGE_BRANDS** - Product-level images, not color-specific
+3. **CSV_SEEDED_BRANDS** - Uses curated seed data
+4. **skipHexColorCheckBrands** - Hex codes curated in seed
+5. **skipPriceCheckBrands** - Prices from seed, not live scraped
+
+---
+
+## VERIFICATION SQL QUERIES
+
+\`\`\`sql
+-- 1. Product count by series (target: S-Series 53, Method 38, Factor 1)
+SELECT 
+  CASE 
+    WHEN product_line_id LIKE '%s-series%' THEN 'S-Series'
+    WHEN product_line_id LIKE '%method%' THEN 'Method'
+    WHEN product_line_id LIKE '%factor%' THEN 'Factor'
+    ELSE 'Unknown'
+  END as series,
+  COUNT(*) as count
+FROM filaments WHERE vendor = 'Ultimaker'
+GROUP BY 1 ORDER BY count DESC;
+
+-- 2. Product line count (target: 30)
+SELECT COUNT(DISTINCT product_line_id) as product_lines
+FROM filaments WHERE vendor = 'Ultimaker';
+
+-- 3. Hex coverage (target: 100%)
+SELECT 
+  COUNT(*) as total,
+  COUNT(*) FILTER (WHERE color_hex IS NOT NULL) as with_hex,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE color_hex IS NOT NULL) / COUNT(*), 1) as pct
+FROM filaments WHERE vendor = 'Ultimaker';
+
+-- 4. Price coverage (target: 100%)
+SELECT 
+  COUNT(*) as total,
+  COUNT(*) FILTER (WHERE variant_price IS NOT NULL) as with_price,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE variant_price IS NOT NULL) / COUNT(*), 1) as pct
+FROM filaments WHERE vendor = 'Ultimaker';
+
+-- 5. Material distribution
+SELECT material, COUNT(*) FROM filaments WHERE vendor = 'Ultimaker'
+GROUP BY material ORDER BY COUNT(*) DESC;
+\`\`\`
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT)
+
+- ❌ Filtering out 2.85mm products - ALL Ultimaker products are 2.85mm
+- ❌ Scraping live prices from Magento - complex authentication
+- ❌ Expecting color-specific images - Ultimaker uses product-level photos
+- ❌ Including Metal Expansion Kit - not filament material
+
+## WORKING SOLUTIONS (USE THESE)
+
+- ✅ CSV-seeded architecture with delete-then-insert pattern
+- ✅ Series detection from product data (S-Series, Method, Factor)
+- ✅ Curated hex codes in ULTIMAKER_COLOR_HEX_MAP
+- ✅ Material-based pricing from getUltimakerMaterialPrice()
+- ✅ Skip 2.85mm diameter check (Ultimaker ecosystem standard)
+- ✅ Single-color product line whitelist for specialty materials
+
+---
+
+## IMPLEMENTATION STEPS
+
+1. **Fix seed data** in \`ultimaker-seed.ts\` if product count is wrong
+2. **Add missing hex codes** to ULTIMAKER_COLOR_HEX_MAP
+3. **Add missing prices** to getUltimakerMaterialPrice()
+4. **Ensure whitelists** include 'ultimaker' in run-post-sync-check
+5. **Deploy** sync-ultimaker-products edge function
+6. **Run Clean Slate** sync from Brand Sync Manager
+7. **Run Post Sync Check** - should show 0 failures
+
+*Last Updated: 2026-01-14*`;
+}
+
+/**
  * Generate Numakers-specific AI Fix Prompt with comprehensive context
  */
 function generateNumakersFixPrompt(
@@ -8395,28 +8590,40 @@ Deno.serve(async (req) => {
     });
 
     // Check 2: 2.85mm Products
-    const { data: largeDiameterProducts, error: diameterError } = await supabase
-      .from("filaments")
-      .select("id, product_title, diameter_nominal_mm")
-      .ilike("vendor", brandName)
-      .or("diameter_nominal_mm.eq.2.85,diameter_nominal_mm.eq.3.0")
-      .limit(20);
+    // Skip for brands that ONLY sell 2.85mm (Ultimaker ecosystem)
+    const skip285mmDiameterBrands = ['ultimaker'];
+    
+    if (skip285mmDiameterBrands.includes(brandSlug)) {
+      checks.push({
+        checkName: "No 2.85mm/3.0mm Products",
+        status: "pass",
+        count: 0,
+        details: `Skipped - ${brandName} is a 2.85mm-only ecosystem (Ultimaker printers require 2.85mm filament)`,
+      });
+    } else {
+      const { data: largeDiameterProducts, error: diameterError } = await supabase
+        .from("filaments")
+        .select("id, product_title, diameter_nominal_mm")
+        .ilike("vendor", brandName)
+        .or("diameter_nominal_mm.eq.2.85,diameter_nominal_mm.eq.3.0")
+        .limit(20);
 
-    if (diameterError) {
-      console.error("[PostSyncCheck] Diameter check error:", diameterError);
+      if (diameterError) {
+        console.error("[PostSyncCheck] Diameter check error:", diameterError);
+      }
+
+      checks.push({
+        checkName: "No 2.85mm/3.0mm Products",
+        status: (largeDiameterProducts?.length || 0) === 0 ? "pass" : "fail",
+        count: largeDiameterProducts?.length || 0,
+        details: largeDiameterProducts?.length ? `Found ${largeDiameterProducts.length} non-1.75mm products` : undefined,
+        products: largeDiameterProducts?.map((p) => ({
+          id: p.id,
+          title: p.product_title,
+          issue: `Diameter: ${p.diameter_nominal_mm}mm`,
+        })),
+      });
     }
-
-    checks.push({
-      checkName: "No 2.85mm/3.0mm Products",
-      status: (largeDiameterProducts?.length || 0) === 0 ? "pass" : "fail",
-      count: largeDiameterProducts?.length || 0,
-      details: largeDiameterProducts?.length ? `Found ${largeDiameterProducts.length} non-1.75mm products` : undefined,
-      products: largeDiameterProducts?.map((p) => ({
-        id: p.id,
-        title: p.product_title,
-        issue: `Diameter: ${p.diameter_nominal_mm}mm`,
-      })),
-    });
 
     // Check 3: Sample Products (<300g) - exclude premium materials that legitimately come in small spools
     const { data: sampleProductsRaw, error: sampleError } = await supabase
@@ -10223,7 +10430,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -11268,6 +11475,20 @@ Deno.serve(async (req) => {
                                       lineId.includes('treed__pc-abs__v0') ||               // PC-ABS V0
                                       lineId.includes('treed__pc-pbt__b-mat') ||            // PC-PBT B-Mat
                                       lineId.includes('treed__pc-pbt-gf__standard') ||      // PC-PBT-GF
+                                      // Ultimaker single-color specialty materials (CSV-seeded 2.85mm ecosystem)
+                                      lineId.includes('ultimaker__s-series__pet-cf') ||     // PET-CF black only
+                                      lineId.includes('ultimaker__s-series__pa-cf') ||      // Nylon CF Slide black only
+                                      lineId.includes('ultimaker__s-series__pp') ||         // PP natural only
+                                      lineId.includes('ultimaker__s-series__pva') ||        // PVA natural only (support)
+                                      lineId.includes('ultimaker__s-series__breakaway') ||  // Breakaway white only (support)
+                                      lineId.includes('ultimaker__method__pc-abs-fr') ||    // PC-ABS FR single color
+                                      lineId.includes('ultimaker__method__pa12-cf') ||      // Nylon 12 CF black only
+                                      lineId.includes('ultimaker__method__abs-cf') ||       // ABS CF black only
+                                      lineId.includes('ultimaker__method__pa-cf') ||        // Nylon CF black only
+                                      lineId.includes('ultimaker__method__pva') ||          // Method PVA natural only
+                                      lineId.includes('ultimaker__method__rapidrinse') ||   // RapidRinse natural only
+                                      lineId.includes('ultimaker__method__sr-30') ||        // SR-30 support natural only
+                                      lineId.includes('ultimaker__factor__pps-cf') ||       // PPS CF black only (industrial)
                                       lineId.includes('treed__peek-cf__cf15') ||            // PEEK-CF CF15
                                       lineId.includes('treed__pet-cf__cf15') ||             // PET-CF CF15
                                       lineId.includes('treed__pmma__hirma') ||              // PMMA Hirma
