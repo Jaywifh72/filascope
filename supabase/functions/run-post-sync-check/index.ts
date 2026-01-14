@@ -49,7 +49,7 @@ const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryon
 const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'siraya-tech', 'sovol'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -787,6 +787,38 @@ const AI_ROLES = {
       'Expected 14 product lines for consumer-focused products',
       'Currency is EUR for primary store but USD/CAD available via region selector',
     ],
+  },
+  sunluSpecialist: {
+    title: 'Sunlu Integration Specialist',
+    triggers: ['sunlu', 'store.sunlu.com', 'pla+', 'pla-meta', 'matte dual-color', 'hspla', 'filadryer'],
+    capabilities: [
+      'Shopify platform analysis (store.sunlu.com) with multi-region fulfillment',
+      'CSV-seeded sync pipeline architecture (~400 products, 38 product lines)',
+      'Major Chinese manufacturer with extensive consumer catalog',
+      'Multi-region variant handling (Ship to USA/Europe/Canada/Australia)',
+      'Complex variant format parsing: "Ship to Region / Material | Color Weight"',
+      'High-Speed PLA+ 2.0 and PLA Meta specialty line handling',
+      'Matte Dual-Color PLA gradient products',
+      'Engineering materials (PEEK, PC, PP, PA-CF, ABS-GF, ABS-FR)',
+      'Non-filament product filtering (FilaDryer, 3D pens, resins, build plates)',
+      'MOQ product exclusion (10KG bundles not consumer products)'
+    ],
+    lessons: [
+      'ALWAYS use CSV seed (sunlu-seed.ts) as primary source - live Shopify has too many duplicates',
+      'Filter out FilaDryer, S4, SP2, FC01, 3D Pens - these are accessories not filaments',
+      'Filter out MOQ products ([MOQ: 6KG], 10KG bundles) - industrial, not consumer',
+      'Ship to region variants create 4x duplicates - consolidate to US region only',
+      'Variant format is complex: "Ship to USA / HSPLA+ 2.0 | Black" - parse with regex',
+      'Material must be extracted from variant color, not just product title',
+      'Oliver Green is a typo for Olive Green - map to same hex',
+      'Dual-color Matte products use "Color1+Color2" format (Red+Yellow, Black+Blue)',
+      'Engineering materials (PEEK, PC, PP, PA-CF) have very limited color options (1-3 colors)',
+      'Refill products are compatible with Bambu and Sunlu reusable spools',
+      'Expected 38 product lines covering all material categories',
+      'Skip hex validation - curated color mappings in sunlu-seed.ts',
+      'Skip price check - multi-region pricing complexity',
+      'Product-line level images (not color-specific) are expected architecture'
+    ]
   },
   sirayaTechSpecialist: {
     title: 'Siraya Tech Integration Specialist',
@@ -1877,6 +1909,93 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'polymaker-petg': 'Polymaker PETG'
     },
     lastUpdated: '2026-01-12'
+  },
+  'sunlu': {
+    platform: 'Shopify store (store.sunlu.com) - CSV-seeded sync architecture',
+    knownLimitations: [
+      '❌ Multi-region variants create 4x duplication (Ship to USA/Europe/Canada/Australia)',
+      '❌ Many non-filament products in catalog (FilaDryer, 3D pens, resins, build plates)',
+      '❌ MOQ bundle products (10KG) mixed with consumer products',
+      '❌ Complex variant format: "Ship to Region / Material | Color Weight"',
+      '❌ Some color names have typos (Oliver Green vs Olive Green)',
+      '❌ Engineering materials (PEEK, PC, PP) have very limited color options',
+      '❌ Refill products create separate product lines (not variants of main product)'
+    ],
+    workingSolutions: [
+      '✅ CSV seed (sunlu-seed.ts) with pre-filtered consumer products only',
+      '✅ Parse variant format with regex: /Ship to\\s*(\\w+)\\s*\\/\\s*(.+)/i',
+      '✅ Material prefix array for clean color extraction',
+      '✅ Extended hex mapping with 150+ colors including Silk variants',
+      '✅ Region consolidation - prefer US variants, dedupe regions',
+      '✅ MOQ pattern exclusion: /\\[moq.*\\]/i for bundles',
+      '✅ Non-filament exclusion: filadryer, 3d pen, resin, build plate, connector',
+      '✅ Safe delete pattern with threshold (150+ products) for clean slate'
+    ],
+    failedApproaches: [
+      '⚠️ Using live Shopify API without filtering - includes non-filaments and 4x region duplicates',
+      '⚠️ Including all regions - creates duplicate products per region',
+      '⚠️ Not stripping material prefix from color - "PLA+ Black" vs "Black"',
+      '⚠️ Using same hex for Oliver/Olive Green typo variants'
+    ],
+    currentStatus: {
+      'totalProducts': '~400 color variants (after filtering from 2010 raw variants)',
+      'expectedProductLines': '38 (PLA, PLA+, PLA Meta, Silk, Matte, PETG, ABS, ASA, TPU, Engineering)',
+      'architecture': 'CSV-seeded sync with Safe Delete pattern',
+      'regions': 'US, EU, CA, AU (consolidate to US only)',
+      'hexMappings': '150+ unique color-to-hex mappings in SUNLU_EXTENDED_HEX_MAP'
+    },
+    keyFiles: [
+      'supabase/functions/sync-sunlu-products/index.ts - Main sync function (CSV-seeded)',
+      'supabase/functions/_shared/sunlu-seed.ts - CSV seed data, hex mappings, product line ID generation',
+      'supabase/functions/_shared/sunlu-defaults.ts - Material normalization, print settings, enrichment',
+      'SUNLU_EXTENDED_HEX_MAP - 150+ color-to-hex mappings',
+      'SUNLU_EXPECTED_PRODUCT_LINES - Expected variant counts per product line'
+    ],
+    extractionPriority: [
+      '1. Filter non-filament products (filadryer, pens, resins)',
+      '2. Filter MOQ/bulk products (10KG bundles)',
+      '3. Consolidate region duplicates (US only)',
+      '4. Parse complex variant format for color extraction',
+      '5. Map colors to hex codes using SUNLU_EXTENDED_HEX_MAP'
+    ],
+    manualExtractionProcess: [
+      '1. Export Sunlu catalog via Shopify API or CSV export',
+      '2. Filter to filament products only (isSunluFilament check)',
+      '3. Remove non-consumer products (MOQ, bulk, accessories)',
+      '4. Consolidate to US region variants only',
+      '5. Update SUNLU_EXTENDED_HEX_MAP for new colors',
+      '6. Run clean slate sync to refresh all data'
+    ],
+    productSlugReference: {
+      'pla-standard': 'PLA Standard',
+      'pla-plus-standard': 'PLA+ (PLA Plus)',
+      'pla-plus-2-high-speed': 'PLA+ 2.0 High Speed (HSPLA+)',
+      'pla-meta-standard': 'PLA Meta (Macaron colors)',
+      'pla-matte-standard': 'PLA Matte',
+      'pla-silk-standard': 'PLA Silk',
+      'pla-matte-dual-standard': 'Matte Dual-Color PLA',
+      'pla-glow-standard': 'PLA Glow in Dark',
+      'pla-marble-standard': 'PLA Marble',
+      'pla-wood-standard': 'PLA Wood',
+      'pla-rainbow-standard': 'PLA Rainbow',
+      'pla-refill-standard': 'PLA Refill (for reusable spool)',
+      'petg-standard': 'PETG Standard',
+      'petg-matte-standard': 'PETG Matte',
+      'petg-cf-standard': 'PETG Carbon Fiber',
+      'abs-standard': 'ABS Standard',
+      'abs-easy-standard': 'Easy ABS',
+      'abs-gf-standard': 'ABS Glass Fiber',
+      'abs-fr-standard': 'ABS Flame Retardant',
+      'asa-standard': 'ASA',
+      'tpu-standard': 'TPU',
+      'tpu-90a-standard': 'TPU 90A',
+      'pa-cf-standard': 'PA Carbon Fiber',
+      'pc-standard': 'PC (Polycarbonate)',
+      'pc-abs-standard': 'PC-ABS Alloy',
+      'pp-standard': 'PP (Polypropylene)',
+      'peek-standard': 'PEEK (High Performance)'
+    },
+    lastUpdated: '2026-01-14'
   },
   'spectrum-filaments': {
     platform: 'Live Shopify API (ca.spectrumfilaments.com) - NOT CSV-seeded',
@@ -5668,6 +5787,105 @@ ${detailedIssues}
 }
 
 /**
+ * Generate Sunlu-specific AI Fix Prompt with CSV-seeded context
+ */
+function generateSunluFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['sunlu'];
+  const role = AI_ROLES.sunluSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    if (check.products && check.products.length > 0) {
+      check.products.slice(0, 10).forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+    }
+    return section;
+  }).join('\n\n');
+
+  const capabilitiesText = role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n');
+  const lessonsText = role.lessons?.map(l => `- ${l}`).join('\n') || '';
+
+  return `You are the **${role.title}** for Filascope.
+
+## PLATFORM CONTEXT
+**Platform**: ${lessons.platform}
+**Store URL**: https://store.sunlu.com/
+**Architecture**: CSV-seeded sync with curated consumer products
+
+## CORE CAPABILITIES
+${capabilitiesText}
+
+## LESSONS LEARNED (CRITICAL)
+${lessonsText}
+
+## CURRENT STATUS
+| Metric | Value |
+|--------|-------|
+| **Total Products** | ${lessons.currentStatus.totalProducts} |
+| **Expected Product Lines** | ${lessons.currentStatus.expectedProductLines} |
+| **Architecture** | ${lessons.currentStatus.architecture} |
+| **Hex Mappings** | ${lessons.currentStatus.hexMappings} |
+
+## KEY FILES
+${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+- **RC1**: Color extraction failures (extractRegionFromVariant parsing issues)
+- **RC2**: Missing hex mappings (SUNLU_EXTENDED_HEX_MAP gaps)
+- **RC3**: Non-filament product inclusion (isSunluExcludedProduct patterns)
+- **RC4**: Product line grouping issues (generateSunluProductLineId bugs)
+- **RC5**: Region duplicate handling (consolidate to US only)
+
+## Fix Post Sync Check Issues for ${brand}
+
+### Summary
+- **Brand**: ${brand} (slug: sunlu)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary || 'All checks passing!'}
+
+## Detailed Issues
+${detailedIssues || 'No issues to display.'}
+
+## VERIFICATION QUERIES
+\`\`\`sql
+-- Check product line count (should be 38)
+SELECT COUNT(DISTINCT product_line_id) as product_line_count
+FROM filaments WHERE vendor = 'Sunlu';
+
+-- Check for missing hex codes
+SELECT product_title, color_family FROM filaments 
+WHERE vendor = 'Sunlu' AND color_hex IS NULL;
+
+-- Check variant count per product line
+SELECT product_line_id, COUNT(*) as variant_count
+FROM filaments WHERE vendor = 'Sunlu'
+GROUP BY product_line_id ORDER BY product_line_id;
+\`\`\`
+
+*Last Updated: 2026-01-14*`;
+}
+
+/**
  * Generate Recreus-specific AI Fix Prompt with CSV-seeded context
  */
 /**
@@ -6419,6 +6637,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Recreus
   if (brandSlug === 'recreus') {
     return generateRecreusFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Sunlu
+  if (brandSlug === 'sunlu') {
+    return generateSunluFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Use brand-specific prompt generator for Spectrum Filaments
@@ -8809,7 +9032,7 @@ Deno.serve(async (req) => {
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
       'eryone': 54,             // 54 distinct filament lines from 318-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, PA, PP + all variants)
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
-      'sunlu': 9,               // PLA, PLA+, PETG, TPU, Silk, ABS, ASA, etc.
+      'sunlu': 38,              // CSV-seeded: PLA, PLA+, PLA+ 2.0 HS, PLA Meta, PLA Matte, PLA Silk, Matte Dual-Color, PETG, PETG Matte, ABS, Easy ABS, ABS-GF, ABS-FR, ASA, TPU, TPU-90A, PA-CF, PC, PC-ABS, PP, PEEK, etc.
       'siraya-tech': 21,        // CSV-seeded filaments: 15 Fibreheart (engineering) + 4 Flex (TPU) + 2 Rebound (PEBA) = 21 product lines
       'sovol': 4,               // PLA, PETG, Silk PLA, Glow PLA (after bulk filtering)
       'flashforge': 8,          // PLA, ABS, PETG, TPU, Adventurer series
@@ -9695,7 +9918,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments']; // CSV-seeded brands and brands with curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu']; // CSV-seeded brands and brands with curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
