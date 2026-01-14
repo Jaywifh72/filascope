@@ -4,12 +4,16 @@ import { CheckResult } from '../types.ts';
 import { generateZiroFixPrompt } from './ziro-prompt.ts';
 import { generateRecreusFixPrompt } from './recreus-prompt.ts';
 import { generateVoxelPLAFixPrompt } from './voxelpla-prompt.ts';
+import { generateSunluFixPrompt } from './sunlu-prompt.ts';
+import { generateSpectrumFilamentsFixPrompt } from './spectrum-prompt.ts';
 import { generateGenericFixPrompt, determineAIRole } from './generic-prompt.ts';
 
 // Re-export individual generators for direct import if needed
 export { generateZiroFixPrompt } from './ziro-prompt.ts';
 export { generateRecreusFixPrompt } from './recreus-prompt.ts';
 export { generateVoxelPLAFixPrompt } from './voxelpla-prompt.ts';
+export { generateSunluFixPrompt } from './sunlu-prompt.ts';
+export { generateSpectrumFilamentsFixPrompt } from './spectrum-prompt.ts';
 export { generateGenericFixPrompt, determineAIRole } from './generic-prompt.ts';
 
 /**
@@ -97,14 +101,31 @@ export function getBrandFixPrompt(
         } : null
       );
     
-    // Future brand prompts will be added here as they're extracted:
-    // case 'bambu-lab':
-    //   return generateBambuLabFixPrompt(brandName, checks, totalProducts, context);
-    // case 'sunlu':
-    //   return generateSunluFixPrompt(brandName, checks, totalProducts, context);
-    // case 'ultimaker':
-    //   return generateUltimakerFixPrompt(brandName, checks, totalProducts, context);
-    // etc.
+    case 'sunlu':
+      return generateSunluFixPrompt(
+        brandName,
+        checks,
+        totalProducts,
+        context?.aiAnalysis ? {
+          swatchType: context.aiAnalysis.swatchType,
+          rootCause: context.aiAnalysis.rootCause,
+          wrongDecisions: context.aiAnalysis.wrongDecisions,
+          correctBehavior: context.aiAnalysis.correctBehavior
+        } : null
+      );
+    
+    case 'spectrum-filaments':
+      return generateSpectrumFilamentsFixPrompt(
+        brandName,
+        checks,
+        totalProducts,
+        context?.aiAnalysis ? {
+          swatchType: context.aiAnalysis.swatchType,
+          rootCause: context.aiAnalysis.rootCause,
+          wrongDecisions: context.aiAnalysis.wrongDecisions,
+          correctBehavior: context.aiAnalysis.correctBehavior
+        } : null
+      );
     
     default:
       // Fall back to generic prompt for brands without specific generators
@@ -122,13 +143,7 @@ export function getBrandFixPrompt(
  * Check if a brand has a custom prompt generator (vs using generic)
  */
 export function hasBrandPromptGenerator(brandSlug: string): boolean {
-  const brandsWithPrompts = [
-    'ziro',
-    'recreus',
-    'voxelpla',
-    // Add more brands as they're extracted from the main file
-  ];
-  return brandsWithPrompts.includes(brandSlug);
+  return MODULARIZED_BRANDS.includes(brandSlug as typeof MODULARIZED_BRANDS[number]);
 }
 
 /**
@@ -138,5 +153,7 @@ export function hasBrandPromptGenerator(brandSlug: string): boolean {
 export const MODULARIZED_BRANDS = [
   'ziro',
   'recreus', 
-  'voxelpla'
+  'voxelpla',
+  'sunlu',
+  'spectrum-filaments'
 ] as const;
