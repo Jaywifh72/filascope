@@ -3,7 +3,7 @@
 
 // Brands with dedicated high-fidelity sync functions (use exact database slugs)
 export const BRAND_SPECIFIC_FUNCTIONS = [
-  '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'bambu-lab', 'cc3d',
+  '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'bambu-lab',
   'colorfabb', 'creality', 'duramic-3d', 'elegoo', 'eryone', 'esun', 'extrudr',
   'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments',
   'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',

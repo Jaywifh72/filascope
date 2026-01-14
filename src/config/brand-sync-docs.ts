@@ -215,17 +215,6 @@ export const BRAND_SYNC_DOCS: Record<string, BrandSyncDoc> = {
     ],
   },
   
-  'cc3d': {
-    specialBehaviors: [
-      { name: 'WooCommerce Multi-Category Scrape', description: 'Scrapes 18 category pages from cc3dglobal.com.' },
-      { name: 'Material Normalization', description: 'Normalizes PLA MAX→PLA+, PA→Nylon.' },
-      { name: 'Specialty Detection', description: 'Detects Ceramic, Metal, Marble, ColorChange finishes.' },
-    ],
-    notes: [
-      'USD pricing only',
-      'No TDS documents available',
-    ],
-  },
   
   'colorfabb': {
     specialBehaviors: [

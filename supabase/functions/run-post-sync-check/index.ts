@@ -4287,7 +4287,6 @@ Deno.serve(async (req) => {
       'voxelpla': 3,            // CSV-seeded: PLA+ HS (Pro), PETG+ HS (Pro), Galaxy PETG+ HS (Pro) = 3 product lines
       'ziro': 30,               // CSV-seeded: 30 distinct product lines (PLA Basic, Silk, Matte, Twinkling, Diamond, Tricolor, Gradient, HS, TPU, etc.)
       'paramount-3d': 14,       // CSV-seeded: PLA (7 sub-lines: standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon = 14 total product lines
-      'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
       'kingroon': 17,           // CSV-seeded: PLA Basic, Matte PLA, Silk Gold, Silk Tricolor, Silk Rainbow (Candy/Macaroon/Universer), PETG Standard, HS-PETG, TPU Standard, ABS Standard, Marble PLA, Glow PLA, PLA-CF, PETG-CF, ABS-CF, PA-CF
       'ic3d-printers': 10,      // 10 product lines: ABS, PETG, PETG-CF, PLA, PLA+, Matte PLA+, UV-PETG, rPETG, Matte rPETG, PolyHex
       'yousu': 8,               // PLA, PETG, Silk lines
