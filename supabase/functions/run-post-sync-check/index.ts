@@ -8984,7 +8984,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -10120,7 +10120,7 @@ Deno.serve(async (req) => {
       'geeetech': 18,           // CSV-seeded: 18 product lines (PLA, Silk, Silk Dual/Tri/Rainbow, Sparkly, CF, Marble, Wood, Matte, Luminous, HS-PLA, PETG, PETG Metallic, ABS+, ASA, TPU)
       'fusion-filaments': 8,    // CSV-seeded: HTPLA+, HT-PET, ASA, EasyASA, ABS Gloss, ABS Matte, HT-ABS Matte, PCTG
       'spectrum-filaments': 68, // Updated: 68 product lines (includes ASA-X CF10 ReFill variant)
-      'ultimaker': 10,          // S-Series materials
+      'ultimaker': 30,          // S-Series (14) + Method (15) + Factor (1) = 30 product lines
       'numakers': 13,           // CSV-seeded: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS
       'recreus': 14,            // CSV-seeded: TPU-60A, TPU-70A, TPU-82A, TPU-95A, TPU-FOAM, TPU-95A-FOAM, TPU-SEBS, TPU-Conductive, TPU-Purifier, TPU-Bio, rTPU, PETG, PLA, PP
       'treed-filaments': 70,    // CSV-seeded: 70 unique product lines from 209 consumer variants
@@ -11107,7 +11107,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol', 'sunlu', 'treed-filaments', 'treed filaments'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol', 'sunlu', 'treed-filaments', 'treed filaments', 'ultimaker'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -11476,11 +11476,13 @@ Deno.serve(async (req) => {
                                       lineId.includes('treed__pc-pbt__b-mat') ||            // PC-PBT B-Mat
                                       lineId.includes('treed__pc-pbt-gf__standard') ||      // PC-PBT-GF
                                       // Ultimaker single-color specialty materials (CSV-seeded 2.85mm ecosystem)
-                                      lineId.includes('ultimaker__s-series__pet-cf') ||     // PET-CF black only
-                                      lineId.includes('ultimaker__s-series__pa-cf') ||      // Nylon CF Slide black only
-                                      lineId.includes('ultimaker__s-series__pp') ||         // PP natural only
-                                      lineId.includes('ultimaker__s-series__pva') ||        // PVA natural only (support)
-                                      lineId.includes('ultimaker__s-series__breakaway') ||  // Breakaway white only (support)
+                                      // Note: product_line_id uses "sseries" not "s-series" (no hyphen)
+                                      lineId.includes('ultimaker__sseries__pet-cf') ||      // PET-CF black only
+                                      lineId.includes('ultimaker__sseries__pa-cf') ||       // Nylon CF Slide black only
+                                      lineId.includes('ultimaker__sseries__pp') ||          // PP natural only
+                                      lineId.includes('ultimaker__sseries__pva') ||         // PVA natural only (support)
+                                      lineId.includes('ultimaker__sseries__breakaway') ||   // Breakaway white only (support)
+                                      lineId.includes('ultimaker__sseries__pc') ||          // PC limited colors
                                       lineId.includes('ultimaker__method__pc-abs-fr') ||    // PC-ABS FR single color
                                       lineId.includes('ultimaker__method__pa12-cf') ||      // Nylon 12 CF black only
                                       lineId.includes('ultimaker__method__abs-cf') ||       // ABS CF black only
@@ -11489,6 +11491,14 @@ Deno.serve(async (req) => {
                                       lineId.includes('ultimaker__method__rapidrinse') ||   // RapidRinse natural only
                                       lineId.includes('ultimaker__method__sr-30') ||        // SR-30 support natural only
                                       lineId.includes('ultimaker__factor__pps-cf') ||       // PPS CF black only (industrial)
+                                      // Ultimaker limited-color product lines (2-3 variants only)
+                                      lineId.includes('ultimaker__sseries__pa') ||          // Nylon 2 colors
+                                      lineId.includes('ultimaker__sseries__petg') ||        // PETG 2 colors
+                                      lineId.includes('ultimaker__sseries__cpe-plus') ||    // CPE+ 3 colors
+                                      lineId.includes('ultimaker__method__petg') ||         // Method PETG 2 colors
+                                      lineId.includes('ultimaker__method__pa') ||           // Method Nylon 2 colors
+                                      lineId.includes('ultimaker__method__pc-abs') ||       // Method PC-ABS 2 colors
+                                      lineId.includes('ultimaker__method__pla-plus') ||     // Method Tough PLA limited
                                       lineId.includes('treed__peek-cf__cf15') ||            // PEEK-CF CF15
                                       lineId.includes('treed__pet-cf__cf15') ||             // PET-CF CF15
                                       lineId.includes('treed__pmma__hirma') ||              // PMMA Hirma

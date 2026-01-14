@@ -424,3 +424,50 @@ export const ULTIMAKER_SINGLE_COLOR_MATERIALS = [
   'PET-CF', 'PA-CF', 'PA12-CF', 'ABS-CF', 'PP', 'PPS-CF', 
   'Breakaway', 'PVA', 'RapidRinse', 'SR-30', 'PC-ABS-FR'
 ];
+
+// ============================================================================
+// PRODUCT IMAGES (material-based default images)
+// ============================================================================
+
+// Ultimaker uses product-level images (same image for all color variants)
+// These are CDN URLs from ultimaker.com
+export const ULTIMAKER_MATERIAL_IMAGES: Record<string, string> = {
+  // S-Series materials
+  'PLA': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pla-spool.png',
+  'PLA+': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-tough-pla-spool.png',
+  'PETG': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-petg-spool.png',
+  'ABS': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-abs-spool.png',
+  'PET-CF': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pet-cf-spool.png',
+  'PA': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-nylon-spool.png',
+  'PA-CF': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-nylon-cf-slide-spool.png',
+  'CPE': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-cpe-spool.png',
+  'CPE+': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-cpe-plus-spool.png',
+  'PC': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pc-spool.png',
+  'PP': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pp-spool.png',
+  'TPU-95A': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-tpu-95a-spool.png',
+  'PPS-CF': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pps-cf-spool.png',
+  'Breakaway': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-breakaway-spool.png',
+  'PVA': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pva-spool.png',
+  
+  // Method Series materials (fallback to generic spool image if specific not available)
+  'ABS-R': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-abs-r-spool.png',
+  'ASA': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-asa-spool.png',
+  'PC-ABS': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-pc-abs-spool.png',
+  'PC-ABS-FR': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-pc-abs-fr-spool.png',
+  'PA12-CF': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-nylon-12-cf-spool.png',
+  'ABS-CF': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-abs-cf-spool.png',
+  'RapidRinse': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-rapidrinse-spool.png',
+  'SR-30': 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/method-sr-30-spool.png',
+};
+
+// Default fallback image for materials not in the map
+const ULTIMAKER_DEFAULT_IMAGE = 'https://ultimaker.com/cdn-cgi/image/width=1024,format=auto/https://ultimaker.com/learn/s-series-pla-spool.png';
+
+/**
+ * Get product image URL for a material
+ * Returns material-specific image or fallback to PLA image
+ */
+export function getUltimakerDefaultImage(material: string | null): string {
+  if (!material) return ULTIMAKER_DEFAULT_IMAGE;
+  return ULTIMAKER_MATERIAL_IMAGES[material] || ULTIMAKER_DEFAULT_IMAGE;
+}

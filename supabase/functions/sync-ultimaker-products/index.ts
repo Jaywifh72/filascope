@@ -12,6 +12,7 @@ import {
   getUltimakerTdsUrl,
   getUltimakerPrintSettings,
   extractUltimakerFinishType,
+  getUltimakerDefaultImage,
 } from '../_shared/ultimaker-defaults.ts';
 
 const corsHeaders = {
@@ -93,6 +94,7 @@ Deno.serve(async (req) => {
       const settings = getUltimakerPrintSettings(normalizedMaterial);
       const price = getUltimakerMaterialPrice(normalizedMaterial);
       const finishType = extractUltimakerFinishType(product.color);
+      const imageUrl = getUltimakerDefaultImage(normalizedMaterial);
       
       const fullTitle = `UltiMaker ${product.series} ${product.material} - ${product.color}`;
 
@@ -105,6 +107,7 @@ Deno.serve(async (req) => {
         product_line_id: productLineId,
         product_url: product.productUrl,
         tds_url: tdsUrl,
+        featured_image: imageUrl,
         color_hex: colorHex,
         color_family: colorFamily,
         variant_price: price,
