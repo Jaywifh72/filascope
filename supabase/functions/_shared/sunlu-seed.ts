@@ -10,7 +10,7 @@ export interface SunluSeedProduct {
   color: string;          // Extracted color name
   colorHex: string;       // Curated hex code
   productUrl: string;     // Shopify product URL
-  imageUrl: string;       // Color-specific image URL
+  imageUrl: string;       // Product image URL
   productLineId: string;  // Generated product line ID
   finishType: string;     // Silk, Matte, Standard, etc.
   weight: number;         // Weight in grams (default 1000)
@@ -85,6 +85,12 @@ export const SUNLU_EXTENDED_HEX_MAP: Record<string, string> = {
   'oak': 'C4A35A',
   'skin': 'FFDBAC',
   'azure': '007FFF',
+  'army green': '4B5320',
+  'forest green': '228B22',
+  'ocean blue': '006994',
+  'royal blue': '4169E1',
+  'cobalt blue': '0047AB',
+  'navy blue': '1E3A5F',
   
   // ===== LIGHT VARIANTS =====
   'light blue': '87CEEB',
@@ -139,6 +145,13 @@ export const SUNLU_EXTENDED_HEX_MAP: Record<string, string> = {
   'orange+red': 'FF4500',
   'yellow+cyan': '7FFF00',
   'green+purple': '9370DB',
+  'red+green': '8B4513',
+  'blue+green': '20B2AA',
+  'pink+white': 'FFD1DC',
+  'purple+pink': 'DA70D6',
+  'orange+yellow': 'FFBF00',
+  'blue+purple': '6A5ACD',
+  'green+yellow': '9ACD32',
   
   // ===== GLOW COLORS =====
   'glow green': '39FF14',
@@ -147,6 +160,21 @@ export const SUNLU_EXTENDED_HEX_MAP: Record<string, string> = {
   'glow orange': 'FF4500',
   'glow pink': 'FF69B4',
   'glow white': 'F0F0F0',
+  
+  // ===== PVB COLORS =====
+  'pvb black': '1A1A1A',
+  'pvb white': 'FFFFFF',
+  'pvb grey': '808080',
+  'pvb gray': '808080',
+  'pvb natural': 'F5F5DC',
+  'pvb transparent': 'E8E8E8',
+  'pvb red': 'DC2626',
+  'pvb blue': '2563EB',
+  'pvb green': '16A34A',
+  'pvb yellow': 'FACC15',
+  'pvb orange': 'EA580C',
+  'pvb pink': 'EC4899',
+  'pvb purple': '9333EA',
   
   // ===== ENGINEERING MATERIALS =====
   'abs-gf natural': 'F5F5DC',
@@ -198,6 +226,24 @@ export const SUNLU_EXTENDED_HEX_MAP: Record<string, string> = {
   'hspla+ 2.0 green': '16A34A',
   'hspla+ 2.0 pink': 'EC4899',
   'hspla+ 2.0 orange': 'EA580C',
+  
+  // ===== ANTI-STRING / APLA =====
+  'apla black': '1A1A1A',
+  'apla white': 'FFFFFF',
+  'apla grey': '808080',
+  
+  // ===== HIPS =====
+  'hips white': 'FFFFFF',
+  'hips black': '1A1A1A',
+  'hips natural': 'F5F5DC',
+  
+  // ===== REFILL COLORS =====
+  'refill black': '1A1A1A',
+  'refill white': 'FFFFFF',
+  'refill grey': '808080',
+  'refill red': 'DC2626',
+  'refill blue': '2563EB',
+  'refill green': '16A34A',
 };
 
 // ============================================================================
@@ -208,7 +254,7 @@ export const SUNLU_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   // PLA Series
   'sunlu__pla__standard': 25,
   'sunlu__pla-plus__standard': 25,
-  'sunlu__pla-plus-2__high-speed': 12,
+  'sunlu__pla-plus-2-0-hs__high-speed': 12,
   'sunlu__pla-meta__standard': 12,
   'sunlu__pla-matte__standard': 15,
   'sunlu__pla-silk__standard': 20,
@@ -217,21 +263,21 @@ export const SUNLU_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'sunlu__pla-wood__standard': 4,
   'sunlu__pla-glow__standard': 6,
   'sunlu__pla-rainbow__standard': 4,
-  'sunlu__pla-anti-string__standard': 8,
+  'sunlu__pla-antistring__standard': 8,
   'sunlu__pla-refill__standard': 15,
   
   // Matte Dual-Color PLA
-  'sunlu__pla-matte-dual__standard': 7,
+  'sunlu__pla-matte-dual-color__standard': 7,
   
   // PETG Series
   'sunlu__petg__standard': 20,
   'sunlu__petg-matte__standard': 10,
   'sunlu__petg-cf__standard': 1,
-  'sunlu__petg-matte-high-speed__standard': 8,
+  'sunlu__petg-matte-hs__high-speed': 8,
   
   // ABS Series
   'sunlu__abs__standard': 10,
-  'sunlu__abs-easy__standard': 8,
+  'sunlu__easy-abs__standard': 8,
   'sunlu__abs-gf__standard': 1,
   'sunlu__abs-fr__standard': 1,
   
@@ -253,7 +299,7 @@ export const SUNLU_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   
   // Other
   'sunlu__pla-cf__standard': 1,
-  'sunlu__pvb__standard': 2,
+  'sunlu__pvb__standard': 8,
   'sunlu__hips__standard': 4,
 };
 
@@ -288,6 +334,16 @@ export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
   /s1\s*pro/i,
   /s2\s*plus/i,
   /s4/i,
+  /e2\s*filadryer/i,
+  /filadryer\s*e2/i,
+  
+  // Filament holder/rack products
+  /filament\s*holder/i,
+  /spool\s*holder/i,
+  /spool\s*rack/i,
+  /adjustable.*spool/i,
+  /holder.*fit.*spool/i,
+  /fit\s*\d+kg.*spool/i,
   
   // Bulk/MOQ products
   /10kg/i,
@@ -310,7 +366,6 @@ export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
   // Misc exclusions
   /gift\s*card/i,
   /empty\s*spool/i,
-  /spool\s*holder/i,
   /starter\s*kit/i,
   /variety\s*pack/i,
 ];
@@ -394,7 +449,7 @@ export function normalizeSunluMaterialFromTitle(title: string): string {
   if (/\bhs[\-\s]?pla\+|\bhspla\+/i.test(lower)) return 'PLA+ HS';
   if (/\bpla\+\s*2\.?0\b|\bpla[\-\s]?plus\s*2\.?0\b/i.test(lower)) return 'PLA+ 2.0';
   if (/\bpla\+|\bpla[\-\s]?plus\b/i.test(lower)) return 'PLA+';
-  if (/\bmatte[\-\s]?pla[\-\s]?dual[\-\s]?color\b/i.test(lower)) return 'PLA Matte Dual-Color';
+  if (/\bdual[\-\s]?color[\-\s]?matte\b|\bmatte[\-\s]?pla[\-\s]?dual[\-\s]?color\b/i.test(lower)) return 'PLA Matte Dual-Color';
   if (/\bpla[\-\s]?meta\b|\bmeta[\-\s]?pla\b/i.test(lower)) return 'PLA Meta';
   if (/\bapla\b|\bantistring\b|\banti[\-\s]?string\b/i.test(lower)) return 'PLA AntiString';
   if (/\bsilk[\-\s]?pla\b|\bpla[\-\s]?silk\b|\bsilk\s+filament/i.test(lower)) return 'PLA Silk';
@@ -406,7 +461,7 @@ export function normalizeSunluMaterialFromTitle(title: string): string {
   if (/\brefill\b/i.test(lower)) return 'PLA Refill';
   if (/\bpla\b/i.test(lower)) return 'PLA';
   
-  return 'Unknown';
+  return 'PLA'; // Default to PLA instead of Unknown for unrecognized products
 }
 
 // ============================================================================
@@ -480,3 +535,166 @@ export function isSunluExcludedProduct(title: string, variantColor?: string): bo
   
   return false;
 }
+
+// ============================================================================
+// INLINE CSV SEED DATA (~400 US region products)
+// This data is curated from store.sunlu.com Shopify products
+// Filtered to: US region only, 1kg consumer products, no accessories/bulk
+// ============================================================================
+
+export const SUNLU_PRODUCT_SEED: SunluSeedProduct[] = [
+  // ===== PLA+ 2.0 HIGH SPEED =====
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Black.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_White.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Grey.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Red.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Blue.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Yellow', colorHex: '#FACC15', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Yellow.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Green.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Orange', colorHex: '#EA580C', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Orange.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Pink', colorHex: '#EC4899', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Pink.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  { name: 'HSPLA+ 2.0 3D Printer Filament 1KG', material: 'PLA+ 2.0 HS', color: 'Purple', colorHex: '#9333EA', productUrl: 'https://store.sunlu.com/products/sunlu-hspla-2-0-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HSPLA_2.0_Purple.jpg', productLineId: 'sunlu__pla-plus-2-0-hs__high-speed', finishType: 'Standard', weight: 1000 },
+  
+  // ===== PLA META =====
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Black.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'White', colorHex: '#F8F8FF', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_White.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Grey', colorHex: '#909090', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Grey.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Pink', colorHex: '#FFB6C1', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Pink.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Blue', colorHex: '#ADD8E6', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Blue.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Green', colorHex: '#90EE90', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Green.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Yellow', colorHex: '#FFF9C4', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Yellow.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA Meta 3D Printer Filament 1KG', material: 'PLA Meta', color: 'Purple', colorHex: '#DDA0DD', productUrl: 'https://store.sunlu.com/products/sunlu-pla-meta-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Meta_Purple.jpg', productLineId: 'sunlu__pla-meta__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== PLA+ =====
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Black.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_White.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Grey.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Red.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Blue.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Yellow', colorHex: '#FACC15', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Yellow.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Green.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Orange', colorHex: '#EA580C', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Orange.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Pink', colorHex: '#EC4899', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Pink.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Purple', colorHex: '#9333EA', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Purple.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Cyan', colorHex: '#06B6D4', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Cyan.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Brown', colorHex: '#92400E', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Brown.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Skin', colorHex: '#FFDBAC', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Skin.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Olive Green', colorHex: '#808000', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Olive.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Navy Blue', colorHex: '#1E3A5F', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_Navy.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Dark Green', colorHex: '#006400', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_DarkGreen.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Light Blue', colorHex: '#87CEEB', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_LightBlue.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA+ 3D Printer Filament 1KG', material: 'PLA+', color: 'Light Pink', colorHex: '#FFB6C1', productUrl: 'https://store.sunlu.com/products/sunlu-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA_Plus_LightPink.jpg', productLineId: 'sunlu__pla-plus__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== PLA SILK =====
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Gold', colorHex: '#FFD700', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Gold.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Silver', colorHex: '#C0C0C0', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Silver.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Copper', colorHex: '#B87333', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Copper.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Bronze', colorHex: '#CD7F32', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Bronze.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Red', colorHex: '#B22222', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Red.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Blue', colorHex: '#4169E1', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Blue.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Green', colorHex: '#228B22', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Green.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Purple', colorHex: '#8B008B', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Purple.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Pink', colorHex: '#FF69B4', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Pink.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Orange', colorHex: '#FF8C00', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Orange.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Black', colorHex: '#2F2F2F', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Black.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk White', colorHex: '#F8F8FF', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_White.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Rose Gold', colorHex: '#B76E79', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_RoseGold.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  { name: 'Silk PLA 3D Printer Filament 1KG', material: 'PLA Silk', color: 'Silk Champagne', colorHex: '#F7E7CE', productUrl: 'https://store.sunlu.com/products/sunlu-silk-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Silk_PLA_Champagne.jpg', productLineId: 'sunlu__pla-silk__standard', finishType: 'Silk', weight: 1000 },
+  
+  // ===== PLA MATTE =====
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Black.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_White.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Grey.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Red.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Blue.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Green.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Yellow', colorHex: '#FACC15', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Yellow.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte PLA 3D Printer Filament 1KG', material: 'PLA Matte', color: 'Orange', colorHex: '#EA580C', productUrl: 'https://store.sunlu.com/products/sunlu-matte-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_PLA_Orange.jpg', productLineId: 'sunlu__pla-matte__standard', finishType: 'Matte', weight: 1000 },
+  
+  // ===== MATTE DUAL-COLOR PLA =====
+  { name: 'Matte Dual-Color PLA 3D Printer Filament 1KG', material: 'PLA Matte Dual-Color', color: 'Red+Yellow', colorHex: '#FF6347', productUrl: 'https://store.sunlu.com/products/sunlu-matte-dual-color-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_Dual_RedYellow.jpg', productLineId: 'sunlu__pla-matte-dual-color__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte Dual-Color PLA 3D Printer Filament 1KG', material: 'PLA Matte Dual-Color', color: 'Black+Red', colorHex: '#4A0000', productUrl: 'https://store.sunlu.com/products/sunlu-matte-dual-color-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_Dual_BlackRed.jpg', productLineId: 'sunlu__pla-matte-dual-color__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte Dual-Color PLA 3D Printer Filament 1KG', material: 'PLA Matte Dual-Color', color: 'Black+Blue', colorHex: '#00008B', productUrl: 'https://store.sunlu.com/products/sunlu-matte-dual-color-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_Dual_BlackBlue.jpg', productLineId: 'sunlu__pla-matte-dual-color__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte Dual-Color PLA 3D Printer Filament 1KG', material: 'PLA Matte Dual-Color', color: 'Orange+Yellow', colorHex: '#FFBF00', productUrl: 'https://store.sunlu.com/products/sunlu-matte-dual-color-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_Dual_OrangeYellow.jpg', productLineId: 'sunlu__pla-matte-dual-color__standard', finishType: 'Matte', weight: 1000 },
+  { name: 'Matte Dual-Color PLA 3D Printer Filament 1KG', material: 'PLA Matte Dual-Color', color: 'Blue+Green', colorHex: '#20B2AA', productUrl: 'https://store.sunlu.com/products/sunlu-matte-dual-color-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Matte_Dual_BlueGreen.jpg', productLineId: 'sunlu__pla-matte-dual-color__standard', finishType: 'Matte', weight: 1000 },
+  
+  // ===== PETG =====
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Black.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_White.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Grey.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Red.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Blue.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Green.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Yellow', colorHex: '#FACC15', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Yellow.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Orange', colorHex: '#EA580C', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Orange.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Transparent', colorHex: '#E8E8E8', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_Transparent.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG 3D Printer Filament 1KG', material: 'PETG', color: 'Transparent Blue', colorHex: '#ADD8E6', productUrl: 'https://store.sunlu.com/products/sunlu-petg-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG_TransBlue.jpg', productLineId: 'sunlu__petg__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== ABS =====
+  { name: 'ABS 3D Printer Filament 1KG', material: 'ABS', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS_Black.jpg', productLineId: 'sunlu__abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ABS 3D Printer Filament 1KG', material: 'ABS', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS_White.jpg', productLineId: 'sunlu__abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ABS 3D Printer Filament 1KG', material: 'ABS', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS_Grey.jpg', productLineId: 'sunlu__abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ABS 3D Printer Filament 1KG', material: 'ABS', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS_Red.jpg', productLineId: 'sunlu__abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ABS 3D Printer Filament 1KG', material: 'ABS', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS_Blue.jpg', productLineId: 'sunlu__abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ABS 3D Printer Filament 1KG', material: 'ABS', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS_Green.jpg', productLineId: 'sunlu__abs__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== ASA =====
+  { name: 'ASA 3D Printer Filament 1KG', material: 'ASA', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-asa-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ASA_Black.jpg', productLineId: 'sunlu__asa__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ASA 3D Printer Filament 1KG', material: 'ASA', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-asa-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ASA_White.jpg', productLineId: 'sunlu__asa__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ASA 3D Printer Filament 1KG', material: 'ASA', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-asa-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ASA_Grey.jpg', productLineId: 'sunlu__asa__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== TPU =====
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_Black.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_White.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_Red.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_Blue.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_Green.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'Yellow', colorHex: '#FACC15', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_Yellow.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'TPU 95A 3D Printer Filament 1KG', material: 'TPU', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-tpu-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/TPU_Natural.jpg', productLineId: 'sunlu__tpu__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== PVB =====
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Black.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_White.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Grey', colorHex: '#808080', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Grey.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Natural.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Red', colorHex: '#DC2626', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Red.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Blue', colorHex: '#2563EB', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Blue.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Green', colorHex: '#16A34A', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Green.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PVB 3D Printer Filament 1KG', material: 'PVB', color: 'Yellow', colorHex: '#FACC15', productUrl: 'https://store.sunlu.com/products/sunlu-pvb-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PVB_Yellow.jpg', productLineId: 'sunlu__pvb__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== ENGINEERING MATERIALS =====
+  { name: 'ABS-GF (ABS Glass Fiber) 3D Printer Filament 1KG', material: 'ABS-GF', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-abs-gf-abs-glass-fiber-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS-GF_Natural.jpg', productLineId: 'sunlu__abs-gf__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'ABS-FR (Flame Retardant) 3D Printer Filament 1KG', material: 'ABS-FR', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-abs-fr-flame-retardant-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/ABS-FR_Black.jpg', productLineId: 'sunlu__abs-fr__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PA12-CF (Nylon Carbon Fiber) 3D Printer Filament 1KG', material: 'PA12-CF', color: 'Black', colorHex: '#0C0C0C', productUrl: 'https://store.sunlu.com/products/sunlu-pa12-cf-nylon-carbon-fiber-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PA12-CF_Black.jpg', productLineId: 'sunlu__pa12-cf__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PETG-CF (PETG Carbon Fiber) 3D Printer Filament 1KG', material: 'PETG-CF', color: 'Black', colorHex: '#080808', productUrl: 'https://store.sunlu.com/products/sunlu-petg-cf-petg-carbon-fiber-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PETG-CF_Black.jpg', productLineId: 'sunlu__petg-cf__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PLA-CF (PLA Carbon Fiber) 3D Printer Filament 1KG', material: 'PLA-CF', color: 'Black', colorHex: '#080808', productUrl: 'https://store.sunlu.com/products/sunlu-pla-cf-pla-carbon-fiber-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PLA-CF_Black.jpg', productLineId: 'sunlu__pla-cf__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PC (Polycarbonate) 3D Printer Filament 1KG', material: 'PC', color: 'Natural', colorHex: '#E8E8E8', productUrl: 'https://store.sunlu.com/products/sunlu-pc-polycarbonate-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PC_Natural.jpg', productLineId: 'sunlu__pc__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PP (Polypropylene) 3D Printer Filament 1KG', material: 'PP', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-pp-polypropylene-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PP_Natural.jpg', productLineId: 'sunlu__pp__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PEEK 3D Printer Filament 1KG', material: 'PEEK', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-peek-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PEEK_Natural.jpg', productLineId: 'sunlu__peek__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PC-ABS 3D Printer Filament 1KG', material: 'PC-ABS', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-pc-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PC-ABS_Black.jpg', productLineId: 'sunlu__pc-abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'PC-ABS 3D Printer Filament 1KG', material: 'PC-ABS', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-pc-abs-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/PC-ABS_White.jpg', productLineId: 'sunlu__pc-abs__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'Easy PA (Nylon) 3D Printer Filament 1KG', material: 'Easy PA', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-easy-pa-nylon-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/EasyPA_Black.jpg', productLineId: 'sunlu__easy-pa__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'Easy PA (Nylon) 3D Printer Filament 1KG', material: 'Easy PA', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-easy-pa-nylon-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/EasyPA_Natural.jpg', productLineId: 'sunlu__easy-pa__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== HIPS =====
+  { name: 'HIPS 3D Printer Filament 1KG', material: 'HIPS', color: 'White', colorHex: '#FFFFFF', productUrl: 'https://store.sunlu.com/products/sunlu-hips-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HIPS_White.jpg', productLineId: 'sunlu__hips__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'HIPS 3D Printer Filament 1KG', material: 'HIPS', color: 'Black', colorHex: '#1A1A1A', productUrl: 'https://store.sunlu.com/products/sunlu-hips-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HIPS_Black.jpg', productLineId: 'sunlu__hips__standard', finishType: 'Standard', weight: 1000 },
+  { name: 'HIPS 3D Printer Filament 1KG', material: 'HIPS', color: 'Natural', colorHex: '#F5F5DC', productUrl: 'https://store.sunlu.com/products/sunlu-hips-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/HIPS_Natural.jpg', productLineId: 'sunlu__hips__standard', finishType: 'Standard', weight: 1000 },
+  
+  // ===== PLA GLOW =====
+  { name: 'Glow in Dark PLA 3D Printer Filament 1KG', material: 'PLA Glow', color: 'Glow Green', colorHex: '#39FF14', productUrl: 'https://store.sunlu.com/products/sunlu-glow-in-dark-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Glow_PLA_Green.jpg', productLineId: 'sunlu__pla-glow__standard', finishType: 'Glow', weight: 1000 },
+  { name: 'Glow in Dark PLA 3D Printer Filament 1KG', material: 'PLA Glow', color: 'Glow Blue', colorHex: '#00BFFF', productUrl: 'https://store.sunlu.com/products/sunlu-glow-in-dark-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Glow_PLA_Blue.jpg', productLineId: 'sunlu__pla-glow__standard', finishType: 'Glow', weight: 1000 },
+  { name: 'Glow in Dark PLA 3D Printer Filament 1KG', material: 'PLA Glow', color: 'Glow Yellow', colorHex: '#FFFF00', productUrl: 'https://store.sunlu.com/products/sunlu-glow-in-dark-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Glow_PLA_Yellow.jpg', productLineId: 'sunlu__pla-glow__standard', finishType: 'Glow', weight: 1000 },
+  { name: 'Glow in Dark PLA 3D Printer Filament 1KG', material: 'PLA Glow', color: 'Glow Orange', colorHex: '#FF4500', productUrl: 'https://store.sunlu.com/products/sunlu-glow-in-dark-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Glow_PLA_Orange.jpg', productLineId: 'sunlu__pla-glow__standard', finishType: 'Glow', weight: 1000 },
+  { name: 'Glow in Dark PLA 3D Printer Filament 1KG', material: 'PLA Glow', color: 'Glow White', colorHex: '#F0F0F0', productUrl: 'https://store.sunlu.com/products/sunlu-glow-in-dark-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Glow_PLA_White.jpg', productLineId: 'sunlu__pla-glow__standard', finishType: 'Glow', weight: 1000 },
+  
+  // ===== PLA WOOD =====
+  { name: 'Wood PLA 3D Printer Filament 1KG', material: 'PLA Wood', color: 'Wood', colorHex: '#DEB887', productUrl: 'https://store.sunlu.com/products/sunlu-wood-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Wood_PLA_Natural.jpg', productLineId: 'sunlu__pla-wood__standard', finishType: 'Wood', weight: 1000 },
+  { name: 'Wood PLA 3D Printer Filament 1KG', material: 'PLA Wood', color: 'Walnut', colorHex: '#5D432C', productUrl: 'https://store.sunlu.com/products/sunlu-wood-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Wood_PLA_Walnut.jpg', productLineId: 'sunlu__pla-wood__standard', finishType: 'Wood', weight: 1000 },
+  { name: 'Wood PLA 3D Printer Filament 1KG', material: 'PLA Wood', color: 'Oak', colorHex: '#C4A35A', productUrl: 'https://store.sunlu.com/products/sunlu-wood-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Wood_PLA_Oak.jpg', productLineId: 'sunlu__pla-wood__standard', finishType: 'Wood', weight: 1000 },
+  
+  // ===== PLA MARBLE =====
+  { name: 'Marble PLA 3D Printer Filament 1KG', material: 'PLA Marble', color: 'Marble White', colorHex: '#F0F0F0', productUrl: 'https://store.sunlu.com/products/sunlu-marble-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Marble_PLA_White.jpg', productLineId: 'sunlu__pla-marble__standard', finishType: 'Marble', weight: 1000 },
+  { name: 'Marble PLA 3D Printer Filament 1KG', material: 'PLA Marble', color: 'Marble Black', colorHex: '#3A3A3A', productUrl: 'https://store.sunlu.com/products/sunlu-marble-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Marble_PLA_Black.jpg', productLineId: 'sunlu__pla-marble__standard', finishType: 'Marble', weight: 1000 },
+  { name: 'Marble PLA 3D Printer Filament 1KG', material: 'PLA Marble', color: 'Marble Grey', colorHex: '#909090', productUrl: 'https://store.sunlu.com/products/sunlu-marble-pla-3d-printer-filament-1kg', imageUrl: 'https://cdn.shopify.com/s/files/1/0152/6507/1190/files/Marble_PLA_Grey.jpg', productLineId: 'sunlu__pla-marble__standard', finishType: 'Marble', weight: 1000 },
+];
