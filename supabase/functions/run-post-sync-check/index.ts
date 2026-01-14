@@ -4366,6 +4366,12 @@ Deno.serve(async (req) => {
       'amolen': [/^(PLA|PETG|TPU|Silk|Matte|Dual Color|Galaxy|Rainbow|Glow|Wood|Marble|Metal)/i],
       'siraya-tech': [/^(Fast|Blu|Build|Sculpt|Tenacious|Smoky|Brilliant|Infinite)/i],
       'extrudr': [/^(BioFusion|DuraPro|FLAX|FLEX|GreenTEC|PCTG|PETG|xPETG|PLA NX2)/i],
+      'ziro': [
+        /^(PLA|PETG|TPU|ABS|ASA|PLA-CF|PLA-HS|TPU-95A)/i,  // Base materials
+        /^(PLA|TPU)\s+(Basic|Silk|Matte|Twinkling|Diamond|Chameleon|Firefly|Fluorescent|Glow|Gradient|Iridescent|Marble|Metal|Mystical|Rainbow|Stone|Straw|Stripes|Translucent|Tricolor)/i,  // PLA/TPU variants
+        /^PLA\s+(Stone Blue White|Straw Fiber|Glow Dark|Rainbow Glow)/i,  // Multi-word product lines
+        /^PLA\s+(Gradient|Stripes|Tricolor)\s+(Matte|Silk|Translucent)/i,  // Compound effect lines
+      ],
     };
     
     const cardTitleIssues: Array<{ id: string; title: string; issue: string }> = [];
