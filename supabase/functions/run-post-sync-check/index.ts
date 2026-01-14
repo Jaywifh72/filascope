@@ -5800,89 +5800,616 @@ function generateSunluFixPrompt(
   
   const failedChecks = checks.filter(c => c.status === 'fail');
   const warningChecks = checks.filter(c => c.status === 'warning');
+  const allIssues = [...failedChecks, ...warningChecks];
   
+  // === CATEGORIZE ISSUES BY ROOT CAUSE TYPE ===
+  const missingHexChecks = allIssues.filter(c => 
+    c.checkName.includes('Swatch Uniqueness') || 
+    c.checkName.includes('Hex') ||
+    c.products?.some(p => p.issue?.toLowerCase().includes('missing color_hex') || p.issue?.toLowerCase().includes('null hex'))
+  );
+  
+  const invalidUrlChecks = allIssues.filter(c => 
+    (c.checkName.includes('URL') && (c.checkName.includes('Valid') || c.checkName.includes('404'))) ||
+    c.products?.some(p => p.issue?.toLowerCase().includes('404') || p.issue?.toLowerCase().includes('invalid url'))
+  );
+  
+  const priceChecks = allIssues.filter(c => 
+    c.checkName.toLowerCase().includes('price') ||
+    c.products?.some(p => p.issue?.toLowerCase().includes('null price') || p.issue?.toLowerCase().includes('missing price'))
+  );
+  
+  const cardCountChecks = allIssues.filter(c => 
+    c.checkName.includes('Card Count') || c.checkName.includes('Product Line Count')
+  );
+  
+  const colorVariantChecks = allIssues.filter(c =>
+    c.checkName.includes('Variant Count') || c.checkName.includes('Color Variant')
+  );
+  
+  const uiDisplayChecks = allIssues.filter(c =>
+    c.checkName.includes('UI Display') || c.checkName.includes('Card Title')
+  );
+
+  const imageChecks = allIssues.filter(c =>
+    c.checkName.toLowerCase().includes('image') || 
+    c.products?.some(p => p.issue?.toLowerCase().includes('image'))
+  );
+
+  // === BUILD DYNAMIC ROOT CAUSE SECTIONS ===
+  let rootCauseSections = '';
+  const priorityFixes: string[] = [];
+
+  // RC1: Invalid URLs (404s)
+  if (invalidUrlChecks.length > 0) {
+    const affectedProducts = invalidUrlChecks.flatMap(c => c.products || []).slice(0, 8);
+    rootCauseSections += `
+### RC1: Invalid Product/Image URLs (404 Errors)
+
+**SEVERITY:** 🔴 CRITICAL - Broken links affect user experience
+
+**Affected Products (${invalidUrlChecks.reduce((sum, c) => sum + (c.count || 0), 0)} total):**
+${affectedProducts.map(p => `- \`${p.title}\`: ${p.issue}${p.url ? `\n  URL: ${p.url}` : ''}`).join('\n')}
+
+**ROOT CAUSE:** Product URLs or image URLs from Shopify API are returning 404s, possibly due to:
+1. Products removed from store.sunlu.com but not from our database
+2. URL format changes on the Sunlu website
+3. Stale product handles
+
+**FIX LOCATION:** \`supabase/functions/sync-sunlu-products/index.ts\`
+
+**EXACT CODE CHANGES:**
+
+1. **Add URL validation before upserting** (~line 280):
+\`\`\`typescript
+// In upsertVariants() before database insert
+async function validateUrl(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Filter out variants with invalid URLs
+const validVariants = [];
+for (const variant of variants) {
+  if (variant.product_url) {
+    const isValid = await validateUrl(variant.product_url);
+    if (!isValid) {
+      console.log(\`[SKIP] Invalid URL for \${variant.product_title}: \${variant.product_url}\`);
+      continue;
+    }
+  }
+  validVariants.push(variant);
+}
+\`\`\`
+
+2. **Or run a cleanup for existing 404s:**
+\`\`\`sql
+-- Identify products with likely stale URLs
+SELECT id, product_title, product_url 
+FROM filaments 
+WHERE vendor = 'Sunlu' 
+  AND product_url IS NOT NULL
+  AND updated_at < NOW() - INTERVAL '30 days';
+\`\`\`
+
+**VERIFICATION:**
+\`\`\`sql
+-- After fix, manually check a few URLs:
+SELECT product_url FROM filaments 
+WHERE vendor = 'Sunlu' 
+ORDER BY updated_at DESC LIMIT 5;
+-- Then curl these URLs to verify they return 200
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 1:** Fix Invalid URLs (RC1) - Add URL validation or clean up stale entries');
+  }
+
+  // RC2: Missing Hex Codes
+  if (missingHexChecks.length > 0) {
+    const missingColors = missingHexChecks.flatMap(c => c.products || []).slice(0, 15);
+    const colorNamesToAdd = missingColors.map(p => {
+      // Try to extract color name from issue or title
+      const colorMatch = p.issue?.match(/color[:\s]+["']?([^"',]+)/i) ||
+                         p.issue?.match(/["']([^"']+)["']/i) ||
+                         p.title?.match(/[-–]\s*([A-Za-z\s]+)$/);
+      return colorMatch?.[1]?.toLowerCase().trim() || 'unknown';
+    }).filter((c, i, arr) => c !== 'unknown' && arr.indexOf(c) === i);
+
+    rootCauseSections += `
+### RC2: Missing Color Hex Mappings
+
+**SEVERITY:** 🟡 HIGH - Affects color swatch display in UI
+
+**Affected Colors (${missingHexChecks.reduce((sum, c) => sum + (c.count || 0), 0)} total):**
+${missingColors.slice(0, 10).map(p => `- \`${p.title}\`: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE:** These color names are not in \`SUNLU_EXTENDED_HEX_MAP\`
+
+**FIX LOCATION:** \`supabase/functions/_shared/sunlu-seed.ts\` → \`SUNLU_EXTENDED_HEX_MAP\` (lines 23-245)
+
+**EXACT CODE TO ADD:**
+\`\`\`typescript
+// Add these to SUNLU_EXTENDED_HEX_MAP object:
+export const SUNLU_EXTENDED_HEX_MAP: Record<string, string> = {
+  // ... existing mappings ...
+  
+  // NEW MAPPINGS TO ADD:
+${colorNamesToAdd.slice(0, 12).map(colorName => {
+  // Suggest a hex based on common color patterns
+  const suggestedHex = getSuggestedHexForColor(colorName);
+  return `  '${colorName}': '${suggestedHex}', // TODO: Verify from product swatch`;
+}).join('\n')}
+};
+\`\`\`
+
+**HOW TO FIND CORRECT HEX:**
+1. Visit product page on store.sunlu.com
+2. Use browser dev tools to inspect color swatch
+3. Extract hex from background-color CSS or image
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- Count missing hex codes (should be 0 after fix)
+SELECT COUNT(*) as missing_hex FROM filaments 
+WHERE vendor = 'Sunlu' AND color_hex IS NULL;
+
+-- List remaining missing
+SELECT product_title, color_family FROM filaments 
+WHERE vendor = 'Sunlu' AND color_hex IS NULL
+ORDER BY product_title;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 2:** Fix Missing Hex Codes (RC2) - Add mappings to SUNLU_EXTENDED_HEX_MAP');
+  }
+
+  // RC3: NULL Prices
+  if (priceChecks.length > 0) {
+    const priceProducts = priceChecks.flatMap(c => c.products || []).slice(0, 8);
+    rootCauseSections += `
+### RC3: Missing Prices (NULL variant_price)
+
+**SEVERITY:** 🟡 HIGH - Products without prices can't be compared
+
+**Affected Products (${priceChecks.reduce((sum, c) => sum + (c.count || 0), 0)} total):**
+${priceProducts.map(p => `- \`${p.title}\`: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE OPTIONS:**
+1. Shopify API variant.price is empty or "0.00"
+2. Price extraction failing for specific variant formats
+3. \`getSunluDefaultPrice()\` fallback not covering the material
+
+**FIX LOCATION 1:** \`supabase/functions/sync-sunlu-products/index.ts\` → \`explodeVariants()\` (~line 203)
+
+**EXACT CODE TO VERIFY:**
+\`\`\`typescript
+// Ensure price extraction with fallback (around line 203-210)
+const rawPrice = parseFloat(variant.price || '0');
+const price = rawPrice > 0 ? rawPrice : getSunluDefaultPrice(material);
+
+// Log when falling back to default
+if (rawPrice <= 0) {
+  console.log(\`[PRICE] Using default for \${title}: \${material} → $\${price}\`);
+}
+\`\`\`
+
+**FIX LOCATION 2:** \`supabase/functions/_shared/sunlu-defaults.ts\` → \`SUNLU_DEFAULT_PRICES\`
+
+**ADD MISSING MATERIAL FALLBACKS:**
+\`\`\`typescript
+export const SUNLU_DEFAULT_PRICES: Record<string, number> = {
+  'PLA': 15.99,
+  'PLA+': 17.99,
+  'PETG': 18.99,
+  'ABS': 17.99,
+  'TPU': 24.99,
+  'ASA': 22.99,
+  'PLA Silk': 19.99,
+  'PLA Matte': 18.99,
+  // ADD ANY MISSING:
+  'PLA Meta': 21.99,
+  'PLA+ 2.0 HS': 19.99,
+  'PLA AntiString': 18.99,
+};
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- Count NULL prices (should be 0)
+SELECT COUNT(*) as null_prices FROM filaments 
+WHERE vendor = 'Sunlu' AND variant_price IS NULL;
+
+-- Check price distribution
+SELECT material, AVG(variant_price) as avg_price, COUNT(*) as count
+FROM filaments WHERE vendor = 'Sunlu' AND variant_price IS NOT NULL
+GROUP BY material ORDER BY material;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 3:** Fix NULL Prices (RC3) - Ensure price extraction and fallbacks');
+  }
+
+  // RC4: Card Count Mismatch
+  if (cardCountChecks.length > 0) {
+    const cardInfo = cardCountChecks[0]?.products?.[0];
+    const foundMatch = cardInfo?.issue?.match(/Found[:\s]+(\d+)/i);
+    const expectedMatch = cardInfo?.issue?.match(/Expected[:\s]+(\d+)/i);
+    const foundCards = foundMatch?.[1] || 'unknown';
+    const expectedCards = expectedMatch?.[1] || '38';
+
+    rootCauseSections += `
+### RC4: Product Line Count Mismatch
+
+**SEVERITY:** 🟠 MEDIUM - Affects product grouping and UI card count
+
+**Current:** ${foundCards} product lines
+**Expected:** ${expectedCards} product lines
+**Details:** ${cardInfo?.issue || 'Card count does not match expected'}
+
+**ROOT CAUSE OPTIONS:**
+1. \`normalizeSunluMaterialFromTitle()\` not detecting all specialty materials
+2. \`generateSunluProductLineId()\` creating too broad/narrow groupings
+3. New products added by Sunlu not covered by patterns
+
+**FIX LOCATION 1:** \`supabase/functions/_shared/sunlu-seed.ts\` → \`normalizeSunluMaterialFromTitle()\` (lines 413-465)
+
+**PATTERNS TO CHECK/ADD:**
+\`\`\`typescript
+export function normalizeSunluMaterialFromTitle(title: string): string {
+  const lower = title.toLowerCase();
+  
+  // HIGH-SPEED VARIANTS (check FIRST - order matters!)
+  if (/\\bhspla\\+?\\s*2\\.?0\\b|\\bpla\\+?\\s*2\\.?0\\s*hs\\b/i.test(lower)) return 'PLA+ 2.0 HS';
+  if (/\\bhigh[\\-\\s]?speed\\s*pla/i.test(lower)) return 'HS-PLA';
+  
+  // SPECIALTY PLA VARIANTS
+  if (/\\bpla[\\-\\s]?meta\\b/i.test(lower)) return 'PLA Meta';
+  if (/\\bantistring\\b|\\banti[\\-\\s]?string\\b/i.test(lower)) return 'PLA AntiString';
+  if (/\\bdual[\\-\\s]?color[\\-\\s]?matte\\b/i.test(lower)) return 'PLA Matte Dual-Color';
+  if (/\\bmatte[\\-\\s]?dual[\\-\\s]?color\\b/i.test(lower)) return 'PLA Matte Dual-Color';
+  if (/\\bpla\\s*silk/i.test(lower)) return 'PLA Silk';
+  if (/\\bpla\\s*matte/i.test(lower)) return 'PLA Matte';
+  if (/\\bpla\\s*marble/i.test(lower)) return 'PLA Marble';
+  if (/\\bpla\\s*rainbow/i.test(lower)) return 'PLA Rainbow';
+  if (/\\bpla\\s*glow/i.test(lower)) return 'PLA Glow';
+  if (/\\bpla\\s*wood/i.test(lower)) return 'PLA Wood';
+  
+  // ENGINEERING MATERIALS
+  if (/\\bpetg[\\-\\s]?cf\\b/i.test(lower)) return 'PETG-CF';
+  if (/\\bpla[\\-\\s]?cf\\b/i.test(lower)) return 'PLA-CF';
+  if (/\\babs[\\-\\s]?gf\\b/i.test(lower)) return 'ABS-GF';
+  if (/\\btpu\\b/i.test(lower)) return 'TPU';
+  if (/\\basa\\b/i.test(lower)) return 'ASA';
+  if (/\\bpetg\\b/i.test(lower)) return 'PETG';
+  if (/\\babs\\b/i.test(lower)) return 'ABS';
+  if (/\\bpla\\+/i.test(lower)) return 'PLA+';
+  if (/\\bpla\\b/i.test(lower)) return 'PLA';
+  
+  return 'Unknown';
+}
+\`\`\`
+
+**FIX LOCATION 2:** Update expected count in \`run-post-sync-check/index.ts\` → \`EXPECTED_CARD_COUNTS\`
+
+\`\`\`typescript
+const EXPECTED_CARD_COUNTS: Record<string, number> = {
+  // ... other brands ...
+  'sunlu': ${foundCards !== 'unknown' ? foundCards : 38}, // Update if current grouping is correct
+};
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- List all product lines with counts
+SELECT product_line_id, COUNT(*) as variant_count
+FROM filaments WHERE vendor = 'Sunlu'
+GROUP BY product_line_id
+ORDER BY product_line_id;
+
+-- Count distinct product lines
+SELECT COUNT(DISTINCT product_line_id) as total_lines
+FROM filaments WHERE vendor = 'Sunlu';
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 4:** Fix Product Line Detection (RC4) - Update normalizeSunluMaterialFromTitle()');
+  }
+
+  // RC5: Low Variant Counts
+  if (colorVariantChecks.length > 0) {
+    const lowVariantLines = colorVariantChecks.flatMap(c => c.products || []).slice(0, 12);
+    const engineeringMaterials = lowVariantLines
+      .filter(p => /cf|gf|carbon|glass|peek|pa12|pc__|pp__|abs-|hips/i.test(p.title || ''))
+      .map(p => p.title);
+
+    rootCauseSections += `
+### RC5: Low Color Variant Counts (Single-Variant Lines)
+
+**SEVERITY:** 🟢 LOW - May be expected for engineering materials
+
+**Affected Product Lines (${colorVariantChecks.reduce((sum, c) => sum + (c.count || 0), 0)} total):**
+${lowVariantLines.map(p => `- \`${p.title}\`: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE ANALYSIS:**
+${engineeringMaterials.length > 0 ? `
+✅ **EXPECTED (Engineering Materials):** These legitimately have 1-3 colors:
+${engineeringMaterials.slice(0, 5).map(m => `   - ${m}`).join('\n')}
+
+→ Whitelist these in \`isSingleColorProduct()\`
+` : ''}
+❓ **UNEXPECTED:** If consumer materials (PLA, PETG) show low variants, check:
+   1. Color extraction failing for specific products
+   2. Products incorrectly excluded by \`SUNLU_EXCLUDED_PATTERNS\`
+   3. Region filtering too aggressive
+
+**FIX LOCATION:** \`supabase/functions/run-post-sync-check/index.ts\` → \`isSingleColorProduct()\`
+
+**EXACT CODE TO ADD:**
+\`\`\`typescript
+function isSingleColorProduct(lineId: string): boolean {
+  // ... existing logic ...
+  
+  // Sunlu engineering materials with limited colors
+  if (lineId.includes('sunlu__')) {
+    const sunluEngineering = [
+      'petg-cf', 'pla-cf', 'abs-gf', 'abs-fr',
+      'peek', 'pa12-cf', 'pc__', 'pp__', 'hips',
+      'tpu-95a', // Often limited colors
+    ];
+    if (sunluEngineering.some(mat => lineId.toLowerCase().includes(mat))) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- Check variant counts by product line
+SELECT product_line_id, COUNT(*) as variants, 
+       array_agg(DISTINCT color_family) as color_families
+FROM filaments WHERE vendor = 'Sunlu'
+GROUP BY product_line_id
+HAVING COUNT(*) < 3
+ORDER BY variants, product_line_id;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 5:** Fix Variant Counts (RC5) - Whitelist engineering materials in isSingleColorProduct()');
+  }
+
+  // RC6: UI Display Issues
+  if (uiDisplayChecks.length > 0) {
+    const uiProducts = uiDisplayChecks.flatMap(c => c.products || []).slice(0, 8);
+    rootCauseSections += `
+### RC6: UI Display Name Issues
+
+**SEVERITY:** 🟢 LOW - Affects card title formatting
+
+**Affected Products:**
+${uiProducts.map(p => `- \`${p.title}\`: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE:** \`formatProductLineIdForDisplay()\` not handling Sunlu-specific patterns
+
+**FIX LOCATION:** \`src/utils/productNameUtils.ts\` → \`formatProductLineIdForDisplay()\`
+
+**CHECK/ADD SUNLU PATTERNS:**
+\`\`\`typescript
+export function formatProductLineIdForDisplay(lineId: string): string {
+  if (lineId.startsWith('sunlu__')) {
+    const suffix = lineId.replace('sunlu__', '');
+    // Handle underscore-separated materials
+    return suffix
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+      .replace(/Pla/g, 'PLA')
+      .replace(/Petg/g, 'PETG')
+      .replace(/Abs/g, 'ABS')
+      .replace(/Tpu/g, 'TPU')
+      .replace(/Hs/g, 'HS');
+  }
+  // ... rest of function
+}
+\`\`\`
+
+**VERIFICATION:** Check card titles in UI at /brands/sunlu
+`;
+    priorityFixes.push('**PRIORITY 6:** Fix UI Display Names (RC6) - Update formatProductLineIdForDisplay()');
+  }
+
+  // RC7: Image Issues
+  if (imageChecks.length > 0) {
+    const imageProducts = imageChecks.flatMap(c => c.products || []).slice(0, 8);
+    rootCauseSections += `
+### RC7: Missing or Invalid Product Images
+
+**SEVERITY:** 🟡 HIGH - Affects visual browsing experience
+
+**Affected Products:**
+${imageProducts.map(p => `- \`${p.title}\`: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE:** Shopify API image URLs not being extracted or stored correctly
+
+**FIX LOCATION:** \`supabase/functions/sync-sunlu-products/index.ts\` → \`explodeVariants()\`
+
+**VERIFY IMAGE EXTRACTION (~line 195-200):**
+\`\`\`typescript
+// Ensure image is extracted from Shopify product
+const featuredImage = product.images?.[0]?.src || 
+                      variant.featured_image?.src || 
+                      null;
+
+if (!featuredImage) {
+  console.log(\`[WARN] No image for \${title}\`);
+}
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- Count products without images
+SELECT COUNT(*) as missing_images FROM filaments 
+WHERE vendor = 'Sunlu' AND featured_image IS NULL;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 7:** Fix Missing Images (RC7) - Verify image extraction in explodeVariants()');
+  }
+
+  // === BUILD PRIORITY ORDER ===
+  const prioritySection = priorityFixes.length > 0 ? `
+## 📋 STEP-BY-STEP FIX IMPLEMENTATION ORDER
+
+${priorityFixes.join('\n')}
+
+**NOTE:** Fix issues in priority order. Each fix may resolve multiple check failures.
+` : '';
+
+  // === COMPREHENSIVE VERIFICATION SECTION ===
+  const verificationSection = `
+## ✅ COMPREHENSIVE VERIFICATION
+
+After implementing fixes, run these queries to verify ALL issues are resolved:
+
+\`\`\`sql
+-- 1. Total product count (target: 200-500 consumer products)
+SELECT COUNT(*) as total_products FROM filaments WHERE vendor = 'Sunlu';
+
+-- 2. Product line count (target: ~38)
+SELECT COUNT(DISTINCT product_line_id) as product_lines FROM filaments WHERE vendor = 'Sunlu';
+
+-- 3. Missing hex codes (target: 0)
+SELECT COUNT(*) as missing_hex FROM filaments WHERE vendor = 'Sunlu' AND color_hex IS NULL;
+
+-- 4. NULL prices (target: 0)
+SELECT COUNT(*) as null_prices FROM filaments WHERE vendor = 'Sunlu' AND variant_price IS NULL;
+
+-- 5. Missing images (target: 0)
+SELECT COUNT(*) as missing_images FROM filaments WHERE vendor = 'Sunlu' AND featured_image IS NULL;
+
+-- 6. Product line distribution (verify no unexpected single-variant consumer lines)
+SELECT product_line_id, COUNT(*) as variants, 
+       ROUND(AVG(variant_price)::numeric, 2) as avg_price
+FROM filaments WHERE vendor = 'Sunlu'
+GROUP BY product_line_id
+ORDER BY variants DESC;
+
+-- 7. Sample data quality check
+SELECT product_title, material, color_family, color_hex, 
+       variant_price, featured_image IS NOT NULL as has_image
+FROM filaments WHERE vendor = 'Sunlu'
+ORDER BY RANDOM() LIMIT 10;
+\`\`\`
+
+**THEN:** Re-run Post Sync Check for Sunlu to verify 0 errors, 0 warnings.
+`;
+
+  // === KEY FILES REFERENCE ===
+  const keyFilesSection = `
+## 📁 KEY FILE LOCATIONS
+
+| Function | File | Purpose |
+|----------|------|---------|
+| \`fetchShopifyProducts()\` | sync-sunlu-products/index.ts | Fetches live data from Shopify API |
+| \`explodeVariants()\` | sync-sunlu-products/index.ts | Processes variants, extracts data |
+| \`upsertVariants()\` | sync-sunlu-products/index.ts | Writes to database |
+| \`SUNLU_EXTENDED_HEX_MAP\` | sunlu-seed.ts | 150+ color-to-hex mappings |
+| \`SUNLU_EXCLUDED_PATTERNS\` | sunlu-seed.ts | Non-filament product filters |
+| \`normalizeSunluMaterialFromTitle()\` | sunlu-seed.ts | Material extraction from title |
+| \`generateSunluProductLineId()\` | sunlu-seed.ts | Product line ID generation |
+| \`getSunluDefaultPrice()\` | sunlu-defaults.ts | Price fallback by material |
+| \`isSingleColorProduct()\` | run-post-sync-check/index.ts | Engineering material whitelist |
+`;
+
+  // === BUILD SUMMARY ===
   const issuesSummary = [
     ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
     ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
   ].join('\n');
-  
-  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
-    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
-    section += `${check.count} products affected:\n\n`;
-    if (check.products && check.products.length > 0) {
-      check.products.slice(0, 10).forEach(p => {
-        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
-        if (p.url) section += `  - URL: ${p.url}\n`;
-      });
-    }
-    return section;
-  }).join('\n\n');
 
   const capabilitiesText = role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n');
-  const lessonsText = role.lessons?.map(l => `- ${l}`).join('\n') || '';
 
   return `You are the **${role.title}** for Filascope.
 
+## 🎯 MISSION
+Fix ALL Post Sync Check issues for Sunlu in a SINGLE implementation pass.
+
 ## PLATFORM CONTEXT
-**Platform**: ${lessons.platform}
-**Store URL**: https://store.sunlu.com/
-**Architecture**: CSV-seeded sync with curated consumer products
+- **Platform**: ${lessons.platform}
+- **Store URL**: https://store.sunlu.com/
+- **API**: Shopify JSON API (products.json)
+- **Architecture**: Live API sync with curated enrichment
 
 ## CORE CAPABILITIES
 ${capabilitiesText}
 
-## LESSONS LEARNED (CRITICAL)
-${lessonsText}
-
-## CURRENT STATUS
+## CURRENT SYNC STATUS
 | Metric | Value |
 |--------|-------|
-| **Total Products** | ${lessons.currentStatus.totalProducts} |
-| **Expected Product Lines** | ${lessons.currentStatus.expectedProductLines} |
-| **Architecture** | ${lessons.currentStatus.architecture} |
-| **Hex Mappings** | ${lessons.currentStatus.hexMappings} |
+| **Brand** | ${brand} (slug: sunlu) |
+| **Total Products in DB** | ${totalProducts} |
+| **Failed Checks** | ${failedChecks.length} |
+| **Warning Checks** | ${warningChecks.length} |
 
-## KEY FILES
-${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+## ISSUES SUMMARY
+${issuesSummary || '✅ All checks passing!'}
 
-## ROOT CAUSE ANALYSIS FRAMEWORK
-- **RC1**: Color extraction failures (extractRegionFromVariant parsing issues)
-- **RC2**: Missing hex mappings (SUNLU_EXTENDED_HEX_MAP gaps)
-- **RC3**: Non-filament product inclusion (isSunluExcludedProduct patterns)
-- **RC4**: Product line grouping issues (generateSunluProductLineId bugs)
-- **RC5**: Region duplicate handling (consolidate to US only)
+---
 
-## Fix Post Sync Check Issues for ${brand}
+## 🔍 ROOT CAUSE ANALYSIS & FIXES
 
-### Summary
-- **Brand**: ${brand} (slug: sunlu)
-- **Total Products**: ${totalProducts}
-- **Failed Checks**: ${failedChecks.length}
-- **Warning Checks**: ${warningChecks.length}
+${rootCauseSections || 'No specific issues detected. All checks are passing!'}
 
-### Issues Found
-${issuesSummary || 'All checks passing!'}
+${prioritySection}
 
-## Detailed Issues
-${detailedIssues || 'No issues to display.'}
+${keyFilesSection}
 
-## VERIFICATION QUERIES
-\`\`\`sql
--- Check product line count (should be 38)
-SELECT COUNT(DISTINCT product_line_id) as product_line_count
-FROM filaments WHERE vendor = 'Sunlu';
+${verificationSection}
 
--- Check for missing hex codes
-SELECT product_title, color_family FROM filaments 
-WHERE vendor = 'Sunlu' AND color_hex IS NULL;
+---
 
--- Check variant count per product line
-SELECT product_line_id, COUNT(*) as variant_count
-FROM filaments WHERE vendor = 'Sunlu'
-GROUP BY product_line_id ORDER BY product_line_id;
-\`\`\`
+*Generated: ${new Date().toISOString().split('T')[0]} | Sync Check Version: Enhanced Self-Evolving v2*`;
+}
 
-*Last Updated: 2026-01-14*`;
+// Helper function to suggest hex codes based on common color names
+function getSuggestedHexForColor(colorName: string): string {
+  const lower = colorName.toLowerCase().trim();
+  
+  // Common color mappings
+  const suggestions: Record<string, string> = {
+    'black': '1A1A1A',
+    'white': 'FAFAFA',
+    'red': 'DC2626',
+    'blue': '2563EB',
+    'green': '16A34A',
+    'yellow': 'FACC15',
+    'orange': 'EA580C',
+    'purple': '9333EA',
+    'pink': 'EC4899',
+    'gray': '6B7280',
+    'grey': '6B7280',
+    'brown': '92400E',
+    'gold': 'D4AF37',
+    'silver': 'C0C0C0',
+    'clear': 'E5E7EB',
+    'natural': 'F5F5DC',
+    'beige': 'F5F5DC',
+    'cyan': '06B6D4',
+    'teal': '14B8A6',
+    'navy': '1E3A5F',
+  };
+  
+  // Check for exact match
+  if (suggestions[lower]) return suggestions[lower];
+  
+  // Check for partial matches
+  for (const [key, hex] of Object.entries(suggestions)) {
+    if (lower.includes(key)) return hex;
+  }
+  
+  // Default placeholder
+  return 'XXXXXX';
 }
 
 /**
