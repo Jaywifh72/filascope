@@ -10880,7 +10880,15 @@ Deno.serve(async (req) => {
                                       lineId.includes('sunlu__pp__') ||                   // PP only in Natural
                                       lineId.includes('sunlu__hips__') ||                 // HIPS limited colors
                                       lineId.includes('sunlu__easy-pa__') ||              // Easy PA limited colors
-                                      lineId.includes('sunlu__pvb__')                     // PVB limited colors
+                                      lineId.includes('sunlu__pvb__') ||                  // PVB limited colors
+                                      // Sunlu effect-based products where effect IS the product (shared images expected)
+                                      lineId.includes('sunlu__pla-marble__') ||           // Marble is the effect, not a color
+                                      lineId.includes('sunlu__pla-galaxy__') ||           // Galaxy is the effect type
+                                      lineId.includes('sunlu__pla-glow__') ||             // Glow products are single color variants
+                                      lineId.includes('sunlu__pla-matte-dual-color__') || // Dual-color IS the effect
+                                      lineId.includes('sunlu__easy-abs__') ||             // Easy ABS limited colors
+                                      lineId.includes('sunlu__asa__') ||                  // ASA limited colors
+                                      lineId.includes('sunlu__tpu__')                     // TPU limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
@@ -11030,7 +11038,15 @@ Deno.serve(async (req) => {
                                    lineId.includes('sunlu__pp__') ||                   // PP only in Natural
                                    lineId.includes('sunlu__hips__') ||                 // HIPS limited colors
                                    lineId.includes('sunlu__easy-pa__') ||              // Easy PA limited colors
-                                   lineId.includes('sunlu__pvb__');                    // PVB limited colors
+                                   lineId.includes('sunlu__pvb__') ||                  // PVB limited colors
+                                   // Sunlu effect-based products where effect IS the product (shared images expected)
+                                   lineId.includes('sunlu__pla-marble__') ||           // Marble is the effect
+                                   lineId.includes('sunlu__pla-galaxy__') ||           // Galaxy is the effect type
+                                   lineId.includes('sunlu__pla-glow__') ||             // Glow products single color
+                                   lineId.includes('sunlu__pla-matte-dual-color__') || // Dual-color IS the effect
+                                   lineId.includes('sunlu__easy-abs__') ||             // Easy ABS limited colors
+                                   lineId.includes('sunlu__asa__') ||                  // ASA limited colors
+                                   lineId.includes('sunlu__tpu__');                    // TPU limited colors
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
