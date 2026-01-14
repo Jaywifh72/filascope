@@ -853,6 +853,34 @@ const AI_ROLES = {
       'Noctua partnership colors (Beige, Brown) match Noctua fan colors'
     ]
   },
+  spectrumFilamentsSpecialist: {
+    title: 'Spectrum Filaments Integration Specialist',
+    triggers: ['spectrum', 'spectrum-filaments', 'spectrumfilaments', 'the-filament', 'refill', 's-flex', 'pla-silk', 'flameguard', 'safeguard', 'aquaprint', 'stone-age', 'pastello', 'pet-g-fr-v0', 'pc-ptfe', 'pps-am230', 'thermatech'],
+    capabilities: [
+      'Live Shopify API sync architecture (ca.spectrumfilaments.com)',
+      '662 products across 67 product lines (40+ material types)',
+      '"The Filament" sub-brand detection (PLA/PETG/CF/HS variants)',
+      'ReFill vs Standard product line suffix handling (__refill vs __standard)',
+      'Cross-product swatch architecture analysis',
+      '200+ color-to-hex mappings with unique codes for similar colors',
+      'Material prefix stripping logic in extractColor()',
+      'Specialty material handling (PC/PTFE, PPS AM230, ThermaTech PA, PET-G FR V0)',
+      'Product line ID generation with material priority ordering'
+    ],
+    lessons: [
+      'extractColor() uses materialPrefixes array - "Wood" must NOT be included (strips "WOOD" from "WOOD ASH")',
+      '"The Filament" products MUST be detected first in generateProductLineId()',
+      'Specialty materials (PC/PTFE, PPS AM230, ThermaTech PA, PET-G FR V0) need their own product lines',
+      'MATT vs non-MATT colors need UNIQUE hex codes to pass Swatch Uniqueness (e.g., #000075 vs #000080)',
+      'Similar NAT/NATURAL variants need unique hex codes (e.g., PPS AM230 NAT #F5E6CE vs ThermaTech PA Natural #F5DCC0)',
+      'Gold glitter colors (Aurora, Aztec, Clear) need unique hex codes (#FFD900, #FFCE00, #FFDC00)',
+      'ReFill products use __refill suffix, Standard use __standard suffix',
+      'Expected 67 product lines (12 The Filament + 18 PLA + 9 PETG + 7 ASA + 11 Engineering + more)',
+      'Cross-product swatch brand - URL consistency check is SKIPPED',
+      'Stone Age colors (LIGHT, DARK) require fallback hex mappings after material prefix stripping',
+      'Metal colors (BRASS, Bronze) require explicit hex mappings in extendedMappings'
+    ]
+  },
   architect: {
     title: 'Chief Technical Architect',
     triggers: [], // Fallback for mixed issues
@@ -1849,6 +1877,78 @@ const BRAND_LESSONS_LEARNED: Record<string, {
       'polymaker-petg': 'Polymaker PETG'
     },
     lastUpdated: '2026-01-12'
+  },
+  'spectrum-filaments': {
+    platform: 'Live Shopify API (ca.spectrumfilaments.com) - NOT CSV-seeded',
+    knownLimitations: [
+      '❌ "Wood" in materialPrefixes strips "WOOD" from "WOOD ASH" → color becomes just "ASH"',
+      '❌ Similar colors (NAT, NATURAL, NT) collide with same #F5F5DC hex → Swatch Uniqueness fails',
+      '❌ MATT vs non-MATT colors share same hex → duplicate swatches within product_line_id',
+      '❌ Specialty materials (PC/PTFE, PPS AM230, ThermaTech PA, PET-G FR V0) incorrectly grouped into pla-premium',
+      '❌ Gold glitter colors (Aurora, Aztec, Clear) share same #FFD700 hex',
+      '❌ Stone Age colors (LIGHT, DARK) extracted incorrectly when PLA Stone Age not in materialPrefixes',
+      '❌ Metal colors (BRASS, Bronze) require explicit hex mappings'
+    ],
+    workingSolutions: [
+      '✅ Remove "Wood" from materialPrefixes in extractColor() - Wood material detection uses protected pattern in extractMaterial()',
+      '✅ Add unique hex codes in extendedMappings for similar colors (e.g., NAT:#F5F0DC, NATURAL:#F5F5DC)',
+      '✅ Add specialty material patterns to extractMaterial() BEFORE generic fallbacks',
+      '✅ Use suffix variations for visually similar colors (e.g., #A4A4A4 vs #A5A5A5)',
+      '✅ MATT colors get slightly darker hex than non-MATT equivalents',
+      '✅ Stone Age needs "PLA Stone Age" in materialPrefixes to correctly extract LIGHT/DARK',
+      '✅ extendedMappings supports full color names (e.g., "pps am230 nat": "F5E6CE")'
+    ],
+    failedApproaches: [
+      '⚠️ Adding "Wood" to materialPrefixes - breaks WOOD ASH color extraction',
+      '⚠️ Using same hex for similar colors - fails Swatch Uniqueness check',
+      '⚠️ Putting specialty materials after generic fallbacks in extractMaterial() - incorrect grouping',
+      '⚠️ Not updating EXPECTED_CARD_COUNTS after adding specialty material product lines'
+    ],
+    currentStatus: {
+      'totalProducts': '662 color variants from Shopify API',
+      'expectedProductLines': '67 (12 The Filament + 18 PLA + 9 PETG + 7 ASA + 11 Engineering + 10 Specialty)',
+      'architecture': 'Live Shopify API sync with background 5-step processing',
+      'subBrands': '"The Filament" (12 lines), ReFill eco-spools',
+      'hexMappings': '200+ unique color-to-hex mappings in extendedMappings'
+    },
+    keyFiles: [
+      'supabase/functions/sync-spectrum-products/index.ts - Main sync function with extractColor(), extractMaterial(), mapSpectrumColorToHex()',
+      'supabase/functions/_shared/spectrum-seed.ts - Product line ID generation with generateSpectrumProductLineIdFromSeed(), SPECTRUM_EXPECTED_PRODUCT_LINES',
+      'supabase/functions/_shared/spectrum-defaults.ts - Enrichment and shared color mappings'
+    ],
+    extractionPriority: [
+      '1. Fix extractMaterial() to recognize specialty materials BEFORE generic fallbacks',
+      '2. Add missing color hex mappings to extendedMappings in mapSpectrumColorToHex()',
+      '3. Add unique hex codes for similar colors (MATT vs non-MATT, NAT variants)',
+      '4. Update materialPrefixes in extractColor() for new specialty materials',
+      '5. Update EXPECTED_CARD_COUNTS in run-post-sync-check after adding product lines'
+    ],
+    manualExtractionProcess: [
+      '1. Run sync to identify missing colors from logs',
+      '2. Add missing colors to extendedMappings in mapSpectrumColorToHex()',
+      '3. Add unique hex variations for similar colors within same product_line_id',
+      '4. Run Clean Slate sync to refresh all data',
+      '5. Run Post Sync Check to verify 0 failures'
+    ],
+    productSlugReference: {
+      'the-filament-pla': 'The Filament PLA (12 sub-lines)',
+      'pla-premium': 'PLA Premium',
+      'pla-silk': 'PLA Silk',
+      'pla-pastel': 'PLA Pastello',
+      'pla-stone-age': 'PLA Stone Age',
+      'pla-metal': 'PLA Metal',
+      'pla-glitter': 'PLA Glitter',
+      'pet-g-premium': 'PET-G Premium',
+      'pet-g-matt': 'PET-G Matt',
+      'asa': 'ASA Premium',
+      'abs-medical': 'ABS Medical',
+      'pc-ptfe': 'PC/PTFE (specialty)',
+      'pps-am230': 'PPS AM230 (specialty)',
+      'thermatech-pa': 'ThermaTech PA (specialty)',
+      'pet-g-fr-v0': 'PET-G FR V0 (fire retardant)',
+      's-flex': 'S-Flex TPU series'
+    },
+    lastUpdated: '2026-01-14'
   }
 };
 
@@ -1916,6 +2016,9 @@ function determineAIRole(checks: CheckResult[], brandSlug?: string): { title: st
   }
   if (brandSlug === 'recreus') {
     return AI_ROLES.recreusSpecialist;
+  }
+  if (brandSlug === 'spectrum-filaments') {
+    return AI_ROLES.spectrumFilamentsSpecialist;
   }
   
   const failingChecks = checks.filter(c => c.status === 'fail' || c.status === 'warning');
@@ -5567,6 +5670,483 @@ ${detailedIssues}
 /**
  * Generate Recreus-specific AI Fix Prompt with CSV-seeded context
  */
+/**
+ * Generate Spectrum Filaments-specific AI Fix Prompt with comprehensive context
+ * This is the most detailed fix prompt for high-fidelity zero-issue data quality
+ */
+function generateSpectrumFilamentsFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const lessons = BRAND_LESSONS_LEARNED['spectrum-filaments'];
+  const role = AI_ROLES.spectrumFilamentsSpecialist;
+  
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      check.products.slice(0, 15).forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 15) {
+        section += `\n... and ${check.products.length - 15} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    return section;
+  }).join('\n\n');
+
+  // Categorize issues by root cause
+  const missingHexChecks = [...failedChecks, ...warningChecks].filter(c => 
+    c.checkName.includes('Color Hex') || c.products?.some(p => p.issue?.includes('hex'))
+  );
+  const duplicateHexChecks = [...failedChecks, ...warningChecks].filter(c => 
+    c.checkName.includes('Swatch Uniqueness') || c.checkName.includes('duplicate')
+  );
+  const cardCountChecks = [...failedChecks, ...warningChecks].filter(c => 
+    c.checkName.includes('Card Count') || c.checkName.includes('product line')
+  );
+  const colorExtractionChecks = [...failedChecks, ...warningChecks].filter(c =>
+    c.checkName.includes('Color') && !c.checkName.includes('Hex')
+  );
+
+  // Build root cause sections based on detected issues
+  let rootCauseSection = '';
+  
+  if (missingHexChecks.length > 0) {
+    const missingColors = missingHexChecks.flatMap(c => c.products || []).slice(0, 10);
+    rootCauseSection += `
+### RC2: Missing Color Hex Mappings (mapSpectrumColorToHex())
+
+**Affected Products:**
+${missingColors.map(p => `- ${p.title}: ${p.issue}`).join('\n')}
+
+**FIX LOCATION:** \`supabase/functions/sync-spectrum-products/index.ts\` → \`mapSpectrumColorToHex()\` → \`extendedMappings\`
+
+**EXACT CODE TO ADD:**
+\`\`\`typescript
+// Add to extendedMappings object (around line 953-1200)
+// Missing color mappings based on above products:
+${missingColors.slice(0, 8).map(p => {
+  const colorMatch = p.issue?.match(/color[:\s]+["']?([^"',]+)/i);
+  const colorName = colorMatch?.[1]?.toLowerCase().trim() || p.title?.split(' - ')[1]?.toLowerCase() || 'unknown';
+  return `'${colorName}': 'XXXXXX', // TODO: Extract hex from product page`;
+}).join('\n')}
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+SELECT product_title, color_family, color_hex 
+FROM filaments 
+WHERE vendor = 'Spectrum Filaments' AND color_hex IS NULL
+ORDER BY product_title;
+\`\`\`
+`;
+  }
+
+  if (duplicateHexChecks.length > 0) {
+    const duplicateColors = duplicateHexChecks.flatMap(c => c.products || []).slice(0, 10);
+    rootCauseSection += `
+### RC3: Duplicate Hex Codes (Swatch Uniqueness failures)
+
+**Affected Products:**
+${duplicateColors.map(p => `- ${p.title}: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE:** Similar colors within the same product_line_id share identical hex codes. This causes duplicate swatches in the UI.
+
+**FIX LOCATION:** \`supabase/functions/sync-spectrum-products/index.ts\` → \`mapSpectrumColorToHex()\` → \`extendedMappings\`
+
+**FIX STRATEGY:**
+1. Identify all colors sharing the same hex within a product_line_id
+2. Assign UNIQUE hex codes with slight variations (e.g., #A4A4A4 vs #A5A5A5)
+3. MATT variants should be slightly darker than non-MATT equivalents
+
+**EXACT CODE TO ADD:**
+\`\`\`typescript
+// Add to extendedMappings object - UNIQUE hex codes for similar colors
+
+// === NATURAL/BEIGE VARIANTS (prevent #F5F5DC collision) ===
+'nat': 'F5F0DC',                    // NAT abbreviation (cream)
+'natural': 'F5F5DC',                // Standard natural (keep)
+'pps am230 nat': 'F5E6CE',          // PPS material natural (tan)
+'thermatech pa natural': 'F5DCC0', // ThermaTech natural (warm)
+'gf30 nat': 'F0E8D0',               // Glass-filled natural
+'/ptfe nat': 'F5EBD0',              // PC/PTFE NAT
+
+// === BLACK VARIANTS (prevent #1A1A1A collision) ===
+'carbon black': '181818',           // Carbon-filled black
+'cf carbon black': '141414',        // PC CF carbon black
+'gf30 black': '1C1C1C',             // Glass-filled black
+'thermatech pa black': '161616',   // ThermaTech black
+'pet-g fr v0 black': '121212',      // FR V0 black
+
+// === GOLD GLITTER VARIANTS (prevent #FFD700 collision) ===
+'aurora gold': 'FFD900',            // Glitter gold 1 (brighter)
+'aztec gold': 'FFCE00',             // Glitter gold 2 (warmer)
+'clear gold': 'FFDC00',             // Glitter gold 3 (yellow-gold)
+
+// === MATT VS NON-MATT VARIANTS ===
+'matt navy blue': '000075',         // Slightly darker than #000080
+'matt deep black': '080808',        // Slightly different from deep black
+'matt olive green': '228B1E',       // Slightly different from #228B22
+'matt dark grey': '4E4E4E',         // Slightly different from #505050
+'matt bloody red': 'B50000',        // Slightly different from #B80000
+'matt lion orange': 'FF8800',       // Slightly different from #FF8C00
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- Find duplicate hex codes within same product_line_id
+SELECT product_line_id, color_hex, 
+       array_agg(DISTINCT color_family) as colors, 
+       COUNT(DISTINCT color_family) as color_count
+FROM filaments 
+WHERE vendor = 'Spectrum Filaments'
+GROUP BY product_line_id, color_hex
+HAVING COUNT(DISTINCT color_family) > 1
+ORDER BY color_count DESC;
+\`\`\`
+`;
+  }
+
+  if (cardCountChecks.length > 0 || colorExtractionChecks.length > 0) {
+    rootCauseSection += `
+### RC4: Product Line Grouping Issues (extractMaterial() / generateProductLineId())
+
+**ROOT CAUSE:** Specialty materials are not detected and incorrectly grouped into generic lines (pla-premium, pet-g-premium).
+
+**SPECIALTY MATERIALS THAT NEED OWN PRODUCT LINES:**
+- PC/PTFE → \`spectrum__pc-ptfe__standard\`
+- PPS AM230 → \`spectrum__pps-am230__standard\`
+- ThermaTech PA → \`spectrum__thermatech-pa__standard\`
+- PET-G FR V0 → \`spectrum__pet-g-fr-v0__standard\`
+- ABS Medical → \`spectrum__abs-medical__standard\`
+
+**FIX LOCATION 1:** \`supabase/functions/sync-spectrum-products/index.ts\` → \`extractMaterial()\` (lines 160-254)
+
+**EXACT CODE TO ADD to extractMaterial() patterns BEFORE generic fallbacks:**
+\`\`\`typescript
+// Add these BEFORE generic PC, PA, PET-G patterns
+[/PC[\\s\\/-]*PTFE/i, 'PC PTFE'],         // Must be before PC-275
+[/PPS\\s*AM230/i, 'PPS AM230'],           // High-temp specialty
+[/ThermaTech\\s*PA/i, 'ThermaTech PA'],   // High-temp PA
+[/PET-?G\\s*FR\\s*V0/i, 'PET-G FR V0'],   // Fire retardant PETG
+[/ABS\\s*Medical/i, 'ABS Medical'],       // Medical-grade ABS
+\`\`\`
+
+**FIX LOCATION 2:** \`supabase/functions/sync-spectrum-products/index.ts\` → \`extractColor()\` → \`materialPrefixes\` (lines 272-306)
+
+**EXACT CODE TO ADD to materialPrefixes array:**
+\`\`\`typescript
+// Add to materialPrefixes array for proper color extraction
+'PC/PTFE', 'PC PTFE', 'PC-PTFE',
+'PPS AM230',
+'ThermaTech PA',
+'PET-G FR V0', 'PETG FR V0',
+'ABS Medical',
+'PLA Stone Age',  // Prevents "LIGHT" from being extracted alone
+\`\`\`
+
+**FIX LOCATION 3:** \`supabase/functions/run-post-sync-check/index.ts\` → \`EXPECTED_CARD_COUNTS\`
+
+**EXACT CODE TO UPDATE:**
+\`\`\`typescript
+// Update spectrum-filaments expected count (should be 67 or higher with specialty lines)
+'spectrum-filaments': 67,  // Was 55, now 67 with specialty lines
+\`\`\`
+
+**FIX LOCATION 4:** \`supabase/functions/_shared/spectrum-seed.ts\` → \`SPECTRUM_EXPECTED_PRODUCT_LINES\`
+
+**EXACT CODE TO ADD:**
+\`\`\`typescript
+// Add new specialty product lines to SPECTRUM_EXPECTED_PRODUCT_LINES
+'spectrum__pc-ptfe__standard': 2,
+'spectrum__pps-am230__standard': 2,
+'spectrum__thermatech-pa__standard': 2,
+'spectrum__pet-g-fr-v0__standard': 2,
+'spectrum__abs-medical__standard': 2,
+\`\`\`
+
+**VERIFICATION QUERY:**
+\`\`\`sql
+-- Check product line distribution
+SELECT product_line_id, COUNT(*) as variant_count
+FROM filaments
+WHERE vendor = 'Spectrum Filaments'
+GROUP BY product_line_id
+ORDER BY product_line_id;
+\`\`\`
+`;
+  }
+
+  // Build AI insights section if available
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    const wrongDecisionsText = aiAnalysis.wrongDecisions?.length 
+      ? `### Wrong Decisions Identified\n${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}\n`
+      : '';
+    
+    aiInsightsSection = `
+---
+
+## 🤖 AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis\n${aiAnalysis.rootCause}\n` : ''}
+
+${wrongDecisionsText}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected\n${aiAnalysis.correctBehavior}\n` : ''}
+
+---`;
+  }
+
+  const capabilitiesText = role.capabilities.map((cap, i) => `${i + 1}. **${cap}**`).join('\n');
+  const lessonsText = role.lessons?.map(l => `- ${l}`).join('\n') || 'See spectrumFilamentsSpecialist role for lessons';
+
+  return `You are the **${role.title}** for Filascope, a comprehensive 3D printing filament database.
+
+## CRITICAL PLATFORM CONTEXT
+
+**Platform**: ${lessons.platform}
+**Store URL**: https://ca.spectrumfilaments.com/
+**Architecture**: Live Shopify API sync with background 5-step processing (NOT CSV-seeded)
+
+---
+
+## CORE CAPABILITIES
+
+${capabilitiesText}
+
+---
+
+## SPECTRUM FILAMENTS SYNC ARCHITECTURE
+
+This brand uses a **LIVE Shopify API** sync with complex processing:
+
+1. **Discovery Phase**: Fetches all products from Shopify API
+2. **Variant Explosion**: Creates individual records for each color variant
+3. **Material Extraction**: Uses \`extractMaterial()\` with priority-ordered pattern matching
+4. **Color Extraction**: Uses \`extractColor()\` with materialPrefixes array
+5. **Hex Mapping**: Uses \`mapSpectrumColorToHex()\` with 200+ extendedMappings
+
+**CRITICAL FUNCTION LOCATIONS:**
+- \`extractMaterial()\` - Lines 160-254 in sync-spectrum-products/index.ts
+- \`extractColor()\` - Lines 259-320 (materialPrefixes at lines 272-306)
+- \`mapSpectrumColorToHex()\` - Lines 946-1200+ (extendedMappings)
+- \`generateProductLineId()\` - Uses spectrum-seed.ts generateSpectrumProductLineIdFromSeed()
+
+---
+
+## LESSONS LEARNED (CRITICAL)
+
+${lessonsText}
+
+---
+
+## PRODUCT LINE ARCHITECTURE (67 Lines)
+
+| Category | Product Lines | Count |
+|----------|--------------|-------|
+| **The Filament** | PLA, PETG, CF, HS variants (NFC-compatible) | 12 |
+| **PLA** | Premium, Silk, Pastel, Stone Age, Metal, Glitter, Wood, Matt, Refill | 18 |
+| **PET-G** | Premium, Matt, HT, FR V0, Refill | 9 |
+| **ASA** | Premium, 275, Matt | 7 |
+| **Engineering** | PC, PA, HIPS, PC-275, ABS, PC/PTFE, PPS AM230, ThermaTech PA | 11 |
+| **Specialty** | S-Flex TPU, AquaPrint, FlameGuard, SafeGuard, ABS Medical | 10 |
+
+---
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+Use this framework to diagnose issues:
+
+- **RC1**: Color extraction failures (extractColor() / materialPrefixes issues)
+- **RC2**: Missing hex mappings (mapSpectrumColorToHex() / extendedMappings gaps)
+- **RC3**: Duplicate hex codes (similar colors sharing same hex → Swatch Uniqueness fails)
+- **RC4**: Product line grouping issues (extractMaterial() / generateProductLineId() bugs)
+- **RC5**: Expected card count mismatch (EXPECTED_CARD_COUNTS needs updating)
+
+---
+
+## CURRENT STATUS
+
+| Metric | Value |
+|--------|-------|
+| **Total Products** | ${lessons.currentStatus.totalProducts} |
+| **Expected Product Lines** | ${lessons.currentStatus.expectedProductLines} |
+| **Architecture** | ${lessons.currentStatus.architecture} |
+| **Sub-Brands** | ${lessons.currentStatus.subBrands} |
+| **Hex Mappings** | ${lessons.currentStatus.hexMappings} |
+
+---
+
+## KEY FILES
+
+${lessons.keyFiles.map(f => `- \`${f}\``).join('\n')}
+
+---
+
+## KNOWN LIMITATIONS (DO NOT ATTEMPT THESE)
+
+${lessons.knownLimitations.map(l => `${l}`).join('\n')}
+
+---
+
+## WORKING SOLUTIONS (USE THESE)
+
+${lessons.workingSolutions.map(s => `${s}`).join('\n')}
+
+---
+
+## FAILED APPROACHES (AVOID)
+
+${lessons.failedApproaches.map(f => `${f}`).join('\n')}
+
+---
+${rootCauseSection}
+${aiInsightsSection}
+
+## Fix Post Sync Check Issues for ${brand}
+
+### Summary
+- **Brand**: ${brand} (slug: spectrum-filaments)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary || 'All checks passing!'}
+
+---
+
+## Detailed Issues
+
+${detailedIssues || 'No issues to display.'}
+
+---
+
+## STEP-BY-STEP FIX IMPLEMENTATION ORDER
+
+**PRIORITY 1: Fix Missing Hex Mappings (RC2)**
+1. Open \`supabase/functions/sync-spectrum-products/index.ts\`
+2. Find \`mapSpectrumColorToHex()\` function (around line 946)
+3. Add missing colors to \`extendedMappings\` object
+4. Use unique hex codes for similar colors
+
+**PRIORITY 2: Fix Duplicate Hex Codes (RC3)**
+1. Identify all colors sharing the same hex within a product_line_id
+2. Assign UNIQUE hex codes with slight variations
+3. MATT variants should be slightly darker than non-MATT equivalents
+
+**PRIORITY 3: Fix Color Extraction (RC1)**
+1. Open \`supabase/functions/sync-spectrum-products/index.ts\`
+2. Find \`extractColor()\` function (around line 259)
+3. Add missing material prefixes to \`materialPrefixes\` array (lines 272-306)
+4. CRITICAL: Do NOT add "Wood" - it breaks "WOOD ASH" extraction
+
+**PRIORITY 4: Fix Product Line Grouping (RC4)**
+1. Update \`extractMaterial()\` patterns for specialty materials
+2. Add specialty patterns BEFORE generic fallbacks
+3. Update \`SPECTRUM_EXPECTED_PRODUCT_LINES\` in spectrum-seed.ts
+
+**PRIORITY 5: Update Expected Card Count (RC5)**
+1. Open \`supabase/functions/run-post-sync-check/index.ts\`
+2. Update \`EXPECTED_CARD_COUNTS['spectrum-filaments']\` to 67
+
+---
+
+## COMPREHENSIVE VERIFICATION QUERIES
+
+\`\`\`sql
+-- 1. Check for missing color_hex (should be 0)
+SELECT COUNT(*) as missing_hex_count
+FROM filaments 
+WHERE vendor = 'Spectrum Filaments' AND color_hex IS NULL;
+
+-- 2. List products with missing hex
+SELECT product_title, color_family, product_line_id
+FROM filaments 
+WHERE vendor = 'Spectrum Filaments' AND color_hex IS NULL
+ORDER BY product_line_id, color_family;
+
+-- 3. Check for duplicate hex codes within product_line_id (should be 0)
+SELECT product_line_id, color_hex, 
+       array_agg(DISTINCT color_family) as colors, 
+       COUNT(DISTINCT color_family) as duplicate_count
+FROM filaments 
+WHERE vendor = 'Spectrum Filaments' AND color_hex IS NOT NULL
+GROUP BY product_line_id, color_hex
+HAVING COUNT(DISTINCT color_family) > 1
+ORDER BY duplicate_count DESC;
+
+-- 4. Check product line count (should be 67)
+SELECT COUNT(DISTINCT product_line_id) as product_line_count
+FROM filaments 
+WHERE vendor = 'Spectrum Filaments';
+
+-- 5. Product line distribution
+SELECT product_line_id, COUNT(*) as variant_count
+FROM filaments
+WHERE vendor = 'Spectrum Filaments'
+GROUP BY product_line_id
+ORDER BY product_line_id;
+
+-- 6. Check specialty materials are correctly grouped
+SELECT product_line_id, product_title
+FROM filaments
+WHERE vendor = 'Spectrum Filaments'
+AND (
+  product_title ILIKE '%PC/PTFE%' OR
+  product_title ILIKE '%PPS AM230%' OR
+  product_title ILIKE '%ThermaTech%' OR
+  product_title ILIKE '%FR V0%' OR
+  product_title ILIKE '%Medical%'
+)
+ORDER BY product_line_id;
+
+-- 7. Verify Stone Age colors extracted correctly
+SELECT product_title, color_family, color_hex
+FROM filaments
+WHERE vendor = 'Spectrum Filaments' 
+AND product_title ILIKE '%Stone Age%';
+\`\`\`
+
+---
+
+## SYNC EXECUTION STEPS
+
+1. **Deploy** updated edge functions (\`sync-spectrum-products\` and \`run-post-sync-check\`)
+2. **Run Clean Slate** sync for Spectrum Filaments from Brand Sync Manager
+3. **Check edge function logs** for:
+   - Total products processed (~662)
+   - Product line count (~67)
+   - Any color extraction warnings
+4. **Run Post Sync Check** again - should show 0 failures
+5. **Spot-check** UI to confirm:
+   - Correct card count (67 product lines)
+   - Unique swatches per product line
+   - Specialty materials have their own cards
+
+---
+
+*Last Updated: 2026-01-14*`;
+}
+
 function generateRecreusFixPrompt(
   brand: string,
   checks: CheckResult[],
@@ -5839,6 +6419,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Recreus
   if (brandSlug === 'recreus') {
     return generateRecreusFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Spectrum Filaments
+  if (brandSlug === 'spectrum-filaments') {
+    return generateSpectrumFilamentsFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
