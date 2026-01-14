@@ -1,64 +1,39 @@
 /**
- * TreeD Filaments Sync Pipeline
+ * TreeD Filaments Sync Pipeline (CSV-Seeded Architecture)
  * 
- * 5-step sync using Firecrawl for HTML scraping:
- * 1. Fetch product list from shop page
- * 2. Scrape individual product details
- * 3. Upsert with brand-specific enrichments
- * 4. Discover TDS URLs
+ * Uses curated seed data from treed-seed.ts as PRIMARY source.
+ * No live scraping - seed data is authoritative.
+ * 
+ * Pipeline:
+ * 1. Load seed data (210 variants, 47 product lines)
+ * 2. Filter consumer products (no bulk, no 2.85mm, no samples)
+ * 3. Apply enrichments (material, print settings, color hex)
+ * 4. Safe delete + batch insert
  * 5. Fix duplicate hex codes
+ * 6. Update brand stats
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
+  TREED_SEED_DATA,
+  TREED_COLOR_HEX_MAP,
+  TreeDSeedProduct,
+  convertEurToUsd,
+  getTreeDProductLines,
+  TREED_STATS,
+} from '../_shared/treed-seed.ts';
+import {
   enrichTreeDProduct,
-  getTreeDColorHex,
-  constructTreeDTdsUrl,
   isTreeDFilament,
-  extractTreeDWeight,
-  extractTreeDDiameter,
 } from '../_shared/treed-defaults.ts';
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-interface ScrapedProduct {
-  sku: string;
-  title: string;
-  polymer: string;
-  price: number | null;
-  imageUrl: string | null;
-  productUrl: string;
-  colors: string[];
-  weights: number[];
-  diameters: number[];
-  description: string | null;
-}
-
-interface ProductVariant {
-  productId: string;
-  title: string;
-  color: string | null;
-  weight: number | null;
-  diameter: number | null;
-  price: number | null;
-  imageUrl: string | null;
-  productUrl: string;
-  sku: string;
-  polymer: string;
-  description: string | null;
-}
-
-interface SyncResult {
-  step: string;
-  success: boolean;
-  count?: number;
-  created?: number;
-  updated?: number;
-  errors?: number;
-  message?: string;
-}
+import {
+  createSyncLog,
+  updateSyncProgress,
+  completeSyncLog,
+  createImmediateResponse,
+  runInBackground,
+  createProgressUpdater,
+} from '../_shared/background-sync.ts';
 
 // ============================================================================
 // CONSTANTS
@@ -70,442 +45,191 @@ const CORS_HEADERS = {
 };
 
 const VENDOR_NAME = 'TreeD';
-const SHOP_URL = 'https://treedfilaments.com/shop';
-const PRODUCT_BASE_URL = 'https://treedfilaments.com/shop/product/?sku=';
+const BRAND_SLUG = 'treed-filaments';
+const SAFE_DELETE_THRESHOLD = 50;
 
 // ============================================================================
-// STEP 1: FETCH PRODUCTS FROM SHOP PAGE
+// TYPES
 // ============================================================================
 
-async function fetchProductList(firecrawlApiKey: string): Promise<ScrapedProduct[]> {
-  console.log('Step 1: Fetching product list from TreeD shop...');
+interface SyncStats {
+  productsProcessed: number;
+  variantsFound: number;
+  created: number;
+  updated: number;
+  errors: number;
+  skipped: number;
+}
+
+// ============================================================================
+// STEP 1: FILTER CONSUMER PRODUCTS
+// ============================================================================
+
+function filterConsumerProducts(products: TreeDSeedProduct[]): TreeDSeedProduct[] {
+  console.log(`Step 1: Filtering ${products.length} seed products for consumer catalog...`);
   
-  const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${firecrawlApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url: SHOP_URL,
-      formats: ['markdown', 'html'],
-      onlyMainContent: false,
-      waitFor: 3000,
-    }),
+  const filtered = products.filter(p => {
+    // No bulk products (>5.5kg)
+    if (p.weight > 5500) {
+      console.log(`  Skipping bulk: ${p.name} (${p.weight}g)`);
+      return false;
+    }
+    
+    // No sample products (<300g) - except standard 500g spools for engineering materials
+    if (p.weight < 300) {
+      console.log(`  Skipping sample: ${p.name} (${p.weight}g)`);
+      return false;
+    }
+    
+    // Use isTreeDFilament to filter non-filament products
+    if (!isTreeDFilament({ title: p.name, sku: p.sku })) {
+      console.log(`  Skipping non-filament: ${p.name}`);
+      return false;
+    }
+    
+    return true;
   });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Firecrawl error:', error);
-    throw new Error(`Failed to scrape shop page: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const html = data.data?.html || data.html || '';
-  const markdown = data.data?.markdown || data.markdown || '';
   
-  console.log('Received shop page, parsing products...');
-  
-  // Parse products from the shop page
-  const products: ScrapedProduct[] = [];
-  
-  // Extract product links and info from HTML
-  // TreeD uses SKU-based URLs like /shop/product/?sku=ECOSIL1.75750N
-  const productMatches = html.matchAll(/href="[^"]*\/shop\/product\/\?sku=([^"&]+)"/gi);
-  const skus = new Set<string>();
-  
-  for (const match of productMatches) {
-    skus.add(match[1]);
-  }
-  
-  console.log(`Found ${skus.size} unique SKUs on shop page`);
-  
-  // For each SKU, create a basic product entry (details will be scraped in step 2)
-  for (const sku of skus) {
-    products.push({
-      sku,
-      title: sku, // Will be updated in step 2
-      polymer: '',
-      price: null,
-      imageUrl: null,
-      productUrl: `${PRODUCT_BASE_URL}${sku}`,
-      colors: [],
-      weights: [],
-      diameters: [],
-      description: null,
-    });
-  }
-  
-  console.log(`Step 1 complete: Found ${products.length} products`);
-  return products;
+  console.log(`Step 1 complete: ${filtered.length} consumer products (filtered ${products.length - filtered.length})`);
+  return filtered;
 }
 
 // ============================================================================
-// STEP 2: SCRAPE INDIVIDUAL PRODUCT DETAILS
+// STEP 2: TRANSFORM SEED TO DATABASE FORMAT
 // ============================================================================
 
-async function scrapeProductDetails(
-  products: ScrapedProduct[],
-  firecrawlApiKey: string,
-  maxProducts: number = 100
-): Promise<ScrapedProduct[]> {
-  console.log(`Step 2: Scraping details for ${Math.min(products.length, maxProducts)} products...`);
-  
-  const enrichedProducts: ScrapedProduct[] = [];
-  const batchSize = 5; // Scrape 5 at a time to avoid rate limits
-  
-  const productsToScrape = products.slice(0, maxProducts);
-  
-  for (let i = 0; i < productsToScrape.length; i += batchSize) {
-    const batch = productsToScrape.slice(i, i + batchSize);
-    
-    const batchPromises = batch.map(async (product) => {
-      try {
-        const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: product.productUrl,
-            formats: ['markdown', 'html'],
-            onlyMainContent: true,
-            waitFor: 2000,
-          }),
-        });
-
-        if (!response.ok) {
-          console.error(`Failed to scrape ${product.sku}: ${response.status}`);
-          return null;
-        }
-
-        const data = await response.json();
-        const html = data.data?.html || data.html || '';
-        const markdown = data.data?.markdown || data.markdown || '';
-        
-        // Parse product details from HTML/markdown
-        const enriched = parseProductDetails(product, html, markdown);
-        return enriched;
-      } catch (error) {
-        console.error(`Error scraping ${product.sku}:`, error);
-        return null;
-      }
-    });
-    
-    const results = await Promise.all(batchPromises);
-    enrichedProducts.push(...results.filter((p): p is ScrapedProduct => p !== null));
-    
-    // Rate limiting delay between batches
-    if (i + batchSize < productsToScrape.length) {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    }
-  }
-  
-  console.log(`Step 2 complete: Scraped ${enrichedProducts.length} products with details`);
-  return enrichedProducts;
-}
-
-function parseProductDetails(product: ScrapedProduct, html: string, markdown: string): ScrapedProduct {
-  const enriched = { ...product };
-  
-  // Extract title from h1 or product-title class
-  const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) ||
-                     html.match(/class="[^"]*product-title[^"]*"[^>]*>([^<]+)</i) ||
-                     markdown.match(/^#\s+(.+)$/m);
-  if (titleMatch) {
-    enriched.title = titleMatch[1].trim();
-  }
-  
-  // Extract polymer/material from product info
-  const polymerMatch = html.match(/polymer[:\s]*([^<]+)/i) ||
-                       markdown.match(/polymer[:\s]*(.+)/i);
-  if (polymerMatch) {
-    enriched.polymer = polymerMatch[1].trim();
-  }
-  
-  // Extract price (EUR)
-  const priceMatch = html.match(/€\s*([\d,.]+)/i) ||
-                     html.match(/(\d+[,.]\d{2})\s*€/i) ||
-                     markdown.match(/€\s*([\d,.]+)/i);
-  if (priceMatch) {
-    enriched.price = parseFloat(priceMatch[1].replace(',', '.'));
-  }
-  
-  // Extract image URL
-  const imgMatch = html.match(/src="([^"]+\.(?:jpg|jpeg|png|webp))[^"]*"/i);
-  if (imgMatch && !imgMatch[1].includes('placeholder')) {
-    enriched.imageUrl = imgMatch[1].startsWith('http') 
-      ? imgMatch[1] 
-      : `https://treedfilaments.com${imgMatch[1]}`;
-  }
-  
-  // Extract colors from variant options
-  const colorMatches = html.matchAll(/(?:colou?r|nero|bianco|naturale|trasparente|black|white|natural|grey)[:\s]*([^<,]+)/gi);
-  for (const match of colorMatches) {
-    const color = match[1].trim();
-    if (color && !enriched.colors.includes(color)) {
-      enriched.colors.push(color);
-    }
-  }
-  
-  // If no colors found, try to extract from SKU or title
-  if (enriched.colors.length === 0) {
-    if (/N$|NAT|NATURAL/i.test(enriched.sku)) {
-      enriched.colors.push('Natural');
-    } else if (/B$|BLACK|NERO/i.test(enriched.sku)) {
-      enriched.colors.push('Black');
-    } else if (/W$|WHITE|BIANCO/i.test(enriched.sku)) {
-      enriched.colors.push('White');
-    }
-  }
-  
-  // Default color if none found
-  if (enriched.colors.length === 0) {
-    enriched.colors.push('Natural');
-  }
-  
-  // Extract weights
-  const weightMatches = html.matchAll(/(\d+(?:\.\d+)?)\s*(?:kg|g)\b/gi);
-  for (const match of weightMatches) {
-    const weight = extractTreeDWeight(match[0]);
-    if (weight && !enriched.weights.includes(weight)) {
-      enriched.weights.push(weight);
-    }
-  }
-  
-  // Default weight if none found
-  if (enriched.weights.length === 0) {
-    enriched.weights.push(1000); // Default 1kg
-  }
-  
-  // Extract diameters
-  if (/2\.85/i.test(html) || /2\.85/i.test(enriched.sku)) {
-    enriched.diameters.push(2.85);
-  }
-  if (/1\.75/i.test(html) || /1\.75/i.test(enriched.sku)) {
-    enriched.diameters.push(1.75);
-  }
-  
-  // Default diameter if none found
-  if (enriched.diameters.length === 0) {
-    enriched.diameters.push(1.75);
-  }
-  
-  // Extract description
-  const descMatch = markdown.match(/(?:description|overview)[:\s]*(.+?)(?=\n\n|\n#|$)/is);
-  if (descMatch) {
-    enriched.description = descMatch[1].trim().slice(0, 500);
-  }
-  
-  return enriched;
-}
-
-// ============================================================================
-// STEP 3: UPSERT WITH ENRICHMENTS
-// ============================================================================
-
-async function upsertVariants(
-  supabase: any,
-  products: ScrapedProduct[],
+function transformSeedToVariants(
+  products: TreeDSeedProduct[],
   brandId: string | null
-): Promise<SyncResult> {
-  console.log('Step 3: Upserting variants with enrichments...');
+): any[] {
+  console.log(`Step 2: Transforming ${products.length} seed products to database format...`);
   
-  let created = 0;
-  let updated = 0;
-  let errors = 0;
+  const variants: any[] = [];
   
   for (const product of products) {
-    // Filter: must be a filament product
-    if (!isTreeDFilament({ title: product.title, sku: product.sku })) {
-      console.log(`Skipping non-filament: ${product.title}`);
-      continue;
-    }
+    // Generate unique product ID
+    const colorSlug = product.color.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const productId = `treed-${product.sku.toLowerCase()}-${colorSlug}`;
     
-    // Create variants for each color (most TreeD products have limited colors)
-    for (const color of product.colors) {
-      // Use primary diameter (1.75mm preferred)
-      const diameter = product.diameters.includes(1.75) ? 1.75 : product.diameters[0] || 1.75;
-      // Use primary weight (1kg preferred)
-      const weight = product.weights.includes(1000) ? 1000 : product.weights[0] || 1000;
-      
-      const productId = `${product.sku}-${color.toLowerCase().replace(/\s+/g, '-')}-${diameter}`;
-      
-      // Enrich with brand-specific defaults
-      const enrichment = enrichTreeDProduct(product.title, color, product.polymer);
-      
-      const variantData = {
-        product_id: productId,
-        product_title: enrichment.cleanedTitle || product.title,
-        vendor: VENDOR_NAME,
-        brand_id: brandId,
-        material: enrichment.material || product.polymer || null,
-        finish_type: enrichment.finishType,
-        product_line_id: enrichment.productLineId,
-        color_hex: enrichment.colorHex || getTreeDColorHex(color),
-        variant_price: product.price,
-        product_url: product.productUrl,
-        featured_image: product.imageUrl,
-        net_weight_g: weight,
-        diameter_nominal_mm: diameter,
-        is_nozzle_abrasive: enrichment.isAbrasive,
-        nozzle_temp_min_c: enrichment.printSettings?.nozzleTempMin || null,
-        nozzle_temp_max_c: enrichment.printSettings?.nozzleTempMax || null,
-        bed_temp_min_c: enrichment.printSettings?.bedTempMin || null,
-        bed_temp_max_c: enrichment.printSettings?.bedTempMax || null,
-        variant_sku: product.sku,
-        auto_created: true,
-        auto_updated: true,
-        last_scraped_at: new Date().toISOString(),
-        sync_status: 'synced',
-      };
-      
-      try {
-        // Check if exists
-        const { data: existing } = await supabase
-          .from('filaments')
-          .select('id')
-          .eq('product_id', productId)
-          .maybeSingle();
-        
-        if (existing) {
-          // Update
-          const { error } = await supabase
-            .from('filaments')
-            .update({
-              ...variantData,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-          
-          if (error) {
-            console.error(`Update error for ${productId}:`, error.message);
-            errors++;
-          } else {
-            updated++;
-          }
-        } else {
-          // Insert
-          const { error } = await supabase
-            .from('filaments')
-            .insert(variantData);
-          
-          if (error) {
-            console.error(`Insert error for ${productId}:`, error.message);
-            errors++;
-          } else {
-            created++;
-          }
-        }
-      } catch (err) {
-        console.error(`Exception for ${productId}:`, err);
-        errors++;
-      }
-    }
+    // Enrich with brand-specific defaults
+    const enrichment = enrichTreeDProduct(product.name, product.color, product.material);
+    
+    // Get color hex from seed or map
+    const colorHex = product.colorHex || 
+                     TREED_COLOR_HEX_MAP[product.color.toLowerCase()] || 
+                     enrichment.colorHex ||
+                     '808080';
+    
+    // Convert EUR to USD
+    const priceUsd = convertEurToUsd(product.basePrice);
+    
+    variants.push({
+      product_id: productId,
+      product_title: enrichment.cleanedTitle || product.name,
+      vendor: VENDOR_NAME,
+      brand_id: brandId,
+      material: enrichment.material || product.material,
+      finish_type: enrichment.finishType || 'Standard',
+      product_line_id: product.productLineId,
+      color_hex: colorHex.startsWith('#') ? colorHex : `#${colorHex}`,
+      variant_price: priceUsd,
+      product_url: product.productUrl,
+      featured_image: product.imageUrl,
+      net_weight_g: product.weight,
+      diameter_nominal_mm: 1.75, // All TreeD consumer products are 1.75mm
+      is_nozzle_abrasive: enrichment.isAbrasive || false,
+      nozzle_temp_min_c: enrichment.printSettings?.nozzleTempMin || null,
+      nozzle_temp_max_c: enrichment.printSettings?.nozzleTempMax || null,
+      bed_temp_min_c: enrichment.printSettings?.bedTempMin || null,
+      bed_temp_max_c: enrichment.printSettings?.bedTempMax || null,
+      variant_sku: product.sku,
+      mpn: product.sku,
+      auto_created: true,
+      auto_updated: true,
+      last_scraped_at: new Date().toISOString(),
+      sync_status: 'synced',
+    });
   }
   
-  console.log(`Step 3 complete: Created ${created}, Updated ${updated}, Errors ${errors}`);
-  
-  return {
-    step: 'upsert',
-    success: errors === 0,
-    created,
-    updated,
-    errors,
-  };
+  console.log(`Step 2 complete: Transformed ${variants.length} variants`);
+  return variants;
 }
 
 // ============================================================================
-// STEP 4: DISCOVER TDS URLs
+// STEP 3: SAFE DELETE + BATCH INSERT
 // ============================================================================
 
-async function discoverTdsUrls(supabase: any): Promise<SyncResult> {
-  console.log('Step 4: Discovering TDS URLs...');
+async function safeDeleteAndInsert(
+  supabase: any,
+  variants: any[],
+  stats: SyncStats
+): Promise<void> {
+  console.log(`Step 3: Safe delete and batch insert (${variants.length} variants)...`);
   
-  // Get TreeD filaments without TDS URLs
-  const { data: filaments, error: fetchError } = await supabase
+  // Validate we have enough products
+  if (variants.length < SAFE_DELETE_THRESHOLD) {
+    console.warn(`Only ${variants.length} variants - below safe delete threshold (${SAFE_DELETE_THRESHOLD})`);
+    console.warn('Aborting to prevent data loss. Check seed data.');
+    stats.errors++;
+    return;
+  }
+  
+  // Delete existing TreeD products
+  const { error: deleteError, count: deleteCount } = await supabase
     .from('filaments')
-    .select('id, variant_sku, product_title')
-    .ilike('vendor', 'treed')
-    .is('tds_url', null);
+    .delete()
+    .or('vendor.ilike.treed,vendor.ilike.treed filaments')
+    .select('id', { count: 'exact' });
   
-  if (fetchError) {
-    console.error('Error fetching filaments:', fetchError);
-    return { step: 'tds_discovery', success: false, message: fetchError.message };
+  if (deleteError) {
+    console.error('Delete error:', deleteError.message);
+    stats.errors++;
+    return;
   }
   
-  if (!filaments || filaments.length === 0) {
-    console.log('No filaments need TDS URLs');
-    return { step: 'tds_discovery', success: true, count: 0 };
-  }
+  console.log(`Deleted ${deleteCount || 0} existing TreeD products`);
   
-  console.log(`Checking TDS URLs for ${filaments.length} filaments...`);
-  
-  let foundCount = 0;
-  const processedSkus = new Set<string>();
-  
-  for (const filament of filaments) {
-    const sku = filament.variant_sku;
-    if (!sku || processedSkus.has(sku)) continue;
-    processedSkus.add(sku);
+  // Batch insert (50 at a time)
+  const batchSize = 50;
+  for (let i = 0; i < variants.length; i += batchSize) {
+    const batch = variants.slice(i, i + batchSize);
     
-    // Try different TDS URL patterns
-    const possibleUrls = constructTreeDTdsUrl(sku);
+    const { error: insertError } = await supabase
+      .from('filaments')
+      .insert(batch);
     
-    for (const tdsUrl of possibleUrls) {
-      try {
-        const response = await fetch(tdsUrl, { method: 'HEAD' });
-        if (response.ok && response.headers.get('content-type')?.includes('pdf')) {
-          // Found valid TDS!
-          const { error: updateError } = await supabase
-            .from('filaments')
-            .update({ tds_url: tdsUrl })
-            .eq('variant_sku', sku)
-            .ilike('vendor', 'treed');
-          
-          if (!updateError) {
-            foundCount++;
-            console.log(`Found TDS for ${sku}: ${tdsUrl}`);
-          }
-          break; // Found, no need to try other patterns
-        }
-      } catch (err) {
-        // URL not valid, try next
-      }
+    if (insertError) {
+      console.error(`Insert batch ${i / batchSize + 1} error:`, insertError.message);
+      stats.errors += batch.length;
+    } else {
+      stats.created += batch.length;
     }
     
-    // Rate limiting
-    await new Promise(resolve => setTimeout(resolve, 200));
+    stats.productsProcessed += batch.length;
   }
   
-  console.log(`Step 4 complete: Found ${foundCount} TDS URLs`);
-  
-  return {
-    step: 'tds_discovery',
-    success: true,
-    count: foundCount,
-  };
+  console.log(`Step 3 complete: Created ${stats.created}, Errors ${stats.errors}`);
 }
 
 // ============================================================================
-// STEP 5: FIX DUPLICATE HEX CODES
+// STEP 4: FIX DUPLICATE HEX CODES
 // ============================================================================
 
-async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
-  console.log('Step 5: Fixing duplicate hex codes...');
+async function fixDuplicateHexCodes(supabase: any): Promise<number> {
+  console.log('Step 4: Checking for duplicate hex codes...');
   
+  // Find duplicates within same product line
   const { data: duplicates, error: rpcError } = await supabase
     .rpc('find_duplicate_hexes', { p_vendor: VENDOR_NAME });
   
   if (rpcError) {
-    console.error('RPC error:', rpcError);
-    return { step: 'fix_duplicates', success: false, message: rpcError.message };
+    console.log('No duplicate hex RPC or no duplicates found');
+    return 0;
   }
   
   if (!duplicates || duplicates.length === 0) {
     console.log('No duplicate hex codes found');
-    return { step: 'fix_duplicates', success: true, count: 0 };
+    return 0;
   }
   
   console.log(`Found ${duplicates.length} duplicates to fix`);
@@ -542,13 +266,159 @@ async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
     }
   }
   
-  console.log(`Step 5 complete: Fixed ${fixedCount} duplicate hex codes`);
+  console.log(`Step 4 complete: Fixed ${fixedCount} duplicate hex codes`);
+  return fixedCount;
+}
+
+// ============================================================================
+// STEP 5: UPDATE BRAND STATS
+// ============================================================================
+
+async function updateBrandStats(supabase: any, brandId: string | null): Promise<void> {
+  console.log('Step 5: Updating brand statistics...');
   
-  return {
-    step: 'fix_duplicates',
-    success: true,
-    count: fixedCount,
+  if (!brandId) {
+    console.log('No brand ID, skipping stats update');
+    return;
+  }
+  
+  // Get counts
+  const { count: productCount } = await supabase
+    .from('filaments')
+    .select('*', { count: 'exact', head: true })
+    .ilike('vendor', 'treed');
+  
+  const { count: withPrices } = await supabase
+    .from('filaments')
+    .select('*', { count: 'exact', head: true })
+    .ilike('vendor', 'treed')
+    .not('variant_price', 'is', null);
+  
+  const { count: withImages } = await supabase
+    .from('filaments')
+    .select('*', { count: 'exact', head: true })
+    .ilike('vendor', 'treed')
+    .not('featured_image', 'is', null);
+  
+  const { count: withHex } = await supabase
+    .from('filaments')
+    .select('*', { count: 'exact', head: true })
+    .ilike('vendor', 'treed')
+    .not('color_hex', 'is', null);
+  
+  // Update brand
+  const { error: updateError } = await supabase
+    .from('automated_brands')
+    .update({
+      product_count: productCount || 0,
+      active_product_count: productCount || 0,
+      products_with_prices: withPrices || 0,
+      products_with_images: withImages || 0,
+      products_with_color_hex: withHex || 0,
+      last_scrape_at: new Date().toISOString(),
+    })
+    .eq('id', brandId);
+  
+  if (updateError) {
+    console.error('Brand stats update error:', updateError.message);
+  } else {
+    console.log(`Step 5 complete: Updated brand stats (${productCount} products)`);
+  }
+}
+
+// ============================================================================
+// MAIN SYNC FUNCTION
+// ============================================================================
+
+async function runTreeDSync(
+  supabase: any,
+  syncLogId: string | null,
+  options: { cleanSlate?: boolean; limit?: number }
+): Promise<SyncStats> {
+  const stats: SyncStats = {
+    productsProcessed: 0,
+    variantsFound: TREED_SEED_DATA.length,
+    created: 0,
+    updated: 0,
+    errors: 0,
+    skipped: 0,
   };
+  
+  const startTime = Date.now();
+  
+  // Create progress updater
+  const updateProgress = createProgressUpdater(supabase, syncLogId || undefined, () => stats);
+  
+  try {
+    // Get brand ID
+    const { data: brand } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .or('brand_slug.ilike.treed,brand_slug.ilike.treed-filaments')
+      .maybeSingle();
+    
+    const brandId = brand?.id || null;
+    console.log('Brand ID:', brandId);
+    
+    // Step 1: Filter consumer products
+    await updateProgress('Filtering products', 0, 5, 'Applying consumer filters...');
+    const filteredProducts = filterConsumerProducts(TREED_SEED_DATA);
+    stats.skipped = TREED_SEED_DATA.length - filteredProducts.length;
+    
+    // Step 2: Transform to database format
+    await updateProgress('Transforming data', 1, 5, `Processing ${filteredProducts.length} products...`);
+    const variants = transformSeedToVariants(filteredProducts, brandId);
+    
+    // Step 3: Safe delete and insert
+    await updateProgress('Syncing database', 2, 5, `Inserting ${variants.length} variants...`);
+    await safeDeleteAndInsert(supabase, variants, stats);
+    
+    // Step 4: Fix duplicate hex codes
+    await updateProgress('Fixing duplicates', 3, 5, 'Resolving hex collisions...');
+    await fixDuplicateHexCodes(supabase);
+    
+    // Step 5: Update brand stats
+    await updateProgress('Updating stats', 4, 5, 'Finalizing...');
+    await updateBrandStats(supabase, brandId);
+    
+    // Complete
+    await updateProgress('Complete', 5, 5, `Synced ${stats.created} products`);
+    
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log('='.repeat(60));
+    console.log(`TreeD Sync Complete in ${duration}s`);
+    console.log(`Stats: ${JSON.stringify(stats)}`);
+    console.log('='.repeat(60));
+    
+    // Complete sync log
+    if (syncLogId) {
+      await completeSyncLog(supabase, syncLogId, {
+        status: 'completed',
+        discovered: TREED_SEED_DATA.length,
+        created: stats.created,
+        updated: stats.updated,
+        failed: stats.errors,
+        durationSeconds: Math.round((Date.now() - startTime) / 1000),
+      });
+    }
+    
+  } catch (error) {
+    console.error('Sync error:', error);
+    stats.errors++;
+    
+    if (syncLogId) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'failed',
+          error_details: { message: error instanceof Error ? error.message : 'Unknown error' },
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', syncLogId);
+    }
+  }
+  
+  return stats;
 }
 
 // ============================================================================
@@ -560,14 +430,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: CORS_HEADERS });
   }
 
-  const startTime = Date.now();
   console.log('='.repeat(60));
-  console.log('TreeD Filaments Sync Started');
+  console.log('TreeD Filaments Sync Started (CSV-Seeded)');
+  console.log(`Seed data: ${TREED_STATS.totalVariants} variants, ${TREED_STATS.productLines} product lines`);
   console.log('='.repeat(60));
 
   try {
     // Parse options
-    let options = { cleanSlate: false, skipTds: false, maxProducts: 100 };
+    let options = { cleanSlate: true, limit: 250 };
     try {
       const body = await req.json();
       options = { ...options, ...body };
@@ -578,78 +448,30 @@ Deno.serve(async (req) => {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
-    
-    if (!firecrawlApiKey) {
-      throw new Error('FIRECRAWL_API_KEY not configured');
-    }
-    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get brand ID
-    const { data: brand } = await supabase
-      .from('automated_brands')
-      .select('id')
-      .ilike('brand_slug', 'treed')
-      .maybeSingle();
-    
-    const brandId = brand?.id || null;
-    console.log('Brand ID:', brandId);
-
-    // Clean slate if requested
-    if (options.cleanSlate) {
-      console.log('Clean slate: Deleting existing TreeD filaments...');
-      const { error: deleteError } = await supabase
-        .from('filaments')
-        .delete()
-        .or('vendor.ilike.treed,vendor.ilike.treed filaments');
-      console.log('Deleted existing products');
-    }
-
-    const results: SyncResult[] = [];
-
-    // Step 1: Fetch products
-    const products = await fetchProductList(firecrawlApiKey);
-    results.push({ step: 'fetch', success: true, count: products.length });
-
-    // Step 2: Scrape details
-    const enrichedProducts = await scrapeProductDetails(products, firecrawlApiKey, options.maxProducts);
-    results.push({ step: 'scrape_details', success: true, count: enrichedProducts.length });
-
-    // Step 3: Upsert variants
-    const upsertResult = await upsertVariants(supabase, enrichedProducts, brandId);
-    results.push(upsertResult);
-
-    // Step 4: TDS Discovery (unless skipped)
-    if (!options.skipTds) {
-      const tdsResult = await discoverTdsUrls(supabase);
-      results.push(tdsResult);
-    }
-
-    // Step 5: Fix duplicates
-    const duplicateResult = await fixDuplicateHexCodes(supabase);
-    results.push(duplicateResult);
-
-    // Update brand counts
-    if (brandId) {
-      await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'treed' });
-    }
-
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log('='.repeat(60));
-    console.log(`TreeD Sync Complete in ${duration}s`);
-    console.log('Results:', JSON.stringify(results, null, 2));
-    console.log('='.repeat(60));
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        duration: `${duration}s`,
-        vendor: VENDOR_NAME,
-        results,
-      }),
-      { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
+    // Create sync log for background tracking
+    const { syncLogId, error: logError } = await createSyncLog(
+      supabase,
+      BRAND_SLUG,
+      'clean_slate'
     );
+    
+    if (logError) {
+      console.error('Failed to create sync log:', logError);
+    }
+    
+    // Return immediate response with job ID
+    const response = createImmediateResponse(VENDOR_NAME, syncLogId, options);
+    
+    // Run sync in background
+    runInBackground(
+      runTreeDSync(supabase, syncLogId, options).then(() => {}),
+      BRAND_SLUG
+    );
+
+    return response;
+    
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Sync failed:', message);
