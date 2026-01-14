@@ -7922,6 +7922,71 @@ WHERE vendor = 'VoxelPLA' AND product_line_id IS NULL;
 *Last Updated: 2026-01-14*`;
 }
 
+// ============================================================================
+// ZIRO AI FIX PROMPT GENERATOR
+// ============================================================================
+
+function generateZiroFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  const hasProductCountIssues = totalProducts !== 268;
+  const hasHexIssues = checks.some(c => c.checkName.includes('Hex') && (c.status === 'fail' || c.status === 'warning'));
+  const hasProductLineIssues = checks.some(c => c.checkName.includes('Product Line') && (c.status === 'fail' || c.status === 'warning'));
+  const hasPriceIssues = checks.some(c => c.checkName.includes('Price') && (c.status === 'fail' || c.status === 'warning'));
+  
+  const rootCauseSections: string[] = [];
+  
+  if (hasProductCountIssues) {
+    rootCauseSections.push(`### RC0: Product Count Mismatch\n**Expected**: 268 products\n**Actual**: ${totalProducts}\n**File**: \`ziro-seed.ts\``);
+  }
+  if (hasHexIssues) {
+    rootCauseSections.push(`### RC1: Color Hex Mapping Issues\n**File**: \`ziro-seed.ts\`\nEnsure all colorHex fields are populated from CSV.`);
+  }
+  if (hasProductLineIssues) {
+    rootCauseSections.push(`### RC2: Product Line ID Issues\n**File**: \`ziro-seed.ts\`\nCheck getZiroProductLineId() mapping.`);
+  }
+  if (hasPriceIssues) {
+    rootCauseSections.push(`### RC3: Price Fetching Issues\n**File**: \`sync-ziro-products/index.ts\`\nVerify Shopify JSON API fetching.`);
+  }
+  
+  const issuesSummary = [...failedChecks.map(c => `❌ ${c.checkName}: ${c.count}`), ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count}`)].join('\n');
+  
+  return `You are the **Ziro Integration Specialist** for Filascope.
+
+## PLATFORM CONTEXT
+**Website**: ziro3d.com (Shopify)
+**Architecture**: CSV-seeded sync from \`ziro-seed.ts\` (268 variants)
+**Specialty**: Multi-color gradient filaments, Twinkling, Diamond, Chameleon PLA, TPU
+
+## ROOT CAUSE ANALYSIS
+${rootCauseSections.length > 0 ? rootCauseSections.join('\n\n') : '**All checks passing!**'}
+
+## KEY FILES
+- \`supabase/functions/_shared/ziro-seed.ts\` - CSV seed data (268 products)
+- \`supabase/functions/_shared/ziro-defaults.ts\` - Material normalization
+- \`supabase/functions/sync-ziro-products/index.ts\` - Sync function
+
+## Summary
+- **Brand**: ${brand} (slug: ziro)
+- **Total Products**: ${totalProducts} (target: 268)
+- **Failed**: ${failedChecks.length}, **Warnings**: ${warningChecks.length}
+
+### Issues
+${issuesSummary || 'All checks passing!'}
+
+## VERIFICATION QUERIES
+\`\`\`sql
+SELECT COUNT(*) FROM filaments WHERE vendor = 'Ziro';
+SELECT COUNT(DISTINCT product_line_id) FROM filaments WHERE vendor = 'Ziro';
+SELECT COUNT(*) FILTER (WHERE color_hex IS NOT NULL) * 100.0 / COUNT(*) as hex_pct FROM filaments WHERE vendor = 'Ziro';
+\`\`\``;
+}
+
 function generateAIFixPrompt(
   brand: string, 
   brandSlug: string, 
@@ -8029,6 +8094,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for VoxelPLA
   if (brandSlug === 'voxelpla') {
     return generateVoxelPLAFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for Ziro
+  if (brandSlug === 'ziro') {
+    return generateZiroFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
