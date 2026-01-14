@@ -12,18 +12,22 @@ import {
   enrichZiroProduct,
   ZIRO_STORE_INFO,
 } from '../_shared/ziro-defaults.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import {
+  createSyncLog,
+  updateSyncProgress,
+  completeSyncLog,
+  createImmediateResponse,
+  runInBackground,
+  corsHeaders,
+} from '../_shared/background-sync.ts';
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 const VENDOR_NAME = 'Ziro';
-const SAFE_DELETE_THRESHOLD = 200; // Only delete if we have at least 200 products in seed
+const BRAND_SLUG = 'ziro';
+const SAFE_DELETE_THRESHOLD = 200;
 
 interface SyncStats {
   created: number;
@@ -34,24 +38,14 @@ interface SyncStats {
   pricesFailed: number;
 }
 
-interface SyncResult {
-  step: string;
-  success: boolean;
-  message: string;
-  count?: number;
-  details?: Record<string, unknown>;
-}
-
 // ============================================================================
 // STEP 1: FETCH LIVE PRICE FROM SHOPIFY
 // ============================================================================
 
 async function fetchShopifyPrice(productUrl: string): Promise<{ price: number | null; available: boolean }> {
   try {
-    // Extract handle from URL: https://ziro3d.com/products/ziro-pla-black -> ziro-pla-black
     const urlParts = productUrl.split('/products/');
     if (urlParts.length < 2) {
-      console.log(`[Price] Invalid URL format: ${productUrl}`);
       return { price: null, available: false };
     }
     
@@ -66,7 +60,6 @@ async function fetchShopifyPrice(productUrl: string): Promise<{ price: number | 
     });
     
     if (!response.ok) {
-      console.log(`[Price] Failed to fetch ${handle}: ${response.status}`);
       return { price: null, available: false };
     }
     
@@ -77,36 +70,53 @@ async function fetchShopifyPrice(productUrl: string): Promise<{ price: number | 
       return { price: null, available: false };
     }
     
-    // Get first variant price
     const variant = product.variants[0];
     const price = parseFloat(variant.price) || null;
     const available = variant.available === true;
     
     return { price, available };
   } catch (error) {
-    console.log(`[Price] Error fetching price for ${productUrl}:`, error);
     return { price: null, available: false };
   }
 }
 
 // ============================================================================
-// STEP 2: PROCESS SEED DATA
+// STEP 2: PROCESS SEED DATA WITH PROGRESS
 // ============================================================================
 
 async function processSeedProducts(
   supabase: any,
   brandId: string | null,
-  stats: SyncStats
+  stats: SyncStats,
+  syncLogId: string | null
 ): Promise<any[]> {
   console.log('[Step 2] Processing CSV seed data...');
   console.log(`[Step 2] Seed contains ${ZIRO_PRODUCT_SEED.length} products`);
   
   const filamentRecords: any[] = [];
-  const batchSize = 10; // Fetch prices in batches to avoid rate limiting
+  const batchSize = 10;
+  const totalProducts = ZIRO_PRODUCT_SEED.length;
   
-  for (let i = 0; i < ZIRO_PRODUCT_SEED.length; i += batchSize) {
+  for (let i = 0; i < totalProducts; i += batchSize) {
     const batch = ZIRO_PRODUCT_SEED.slice(i, i + batchSize);
-    console.log(`[Step 2] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(ZIRO_PRODUCT_SEED.length / batchSize)}`);
+    const batchNum = Math.floor(i / batchSize) + 1;
+    const totalBatches = Math.ceil(totalProducts / batchSize);
+    
+    console.log(`[Step 2] Processing batch ${batchNum}/${totalBatches}`);
+    
+    // Update progress for UI
+    if (syncLogId) {
+      await updateSyncProgress(supabase, syncLogId, {
+        stage: `Fetching prices (batch ${batchNum}/${totalBatches})`,
+        current: i,
+        total: totalProducts,
+        productsProcessed: i,
+        variantsFound: totalProducts,
+        created: stats.created,
+        updated: stats.updated,
+        errors: stats.errors,
+      });
+    }
     
     // Fetch prices in parallel for this batch
     const pricePromises = batch.map(seed => fetchShopifyPrice(seed.productUrl));
@@ -122,18 +132,13 @@ async function processSeedProducts(
         stats.pricesFailed++;
       }
       
-      // Generate unique product ID from URL
       const productId = `ziro_${seed.seedMaterial.toLowerCase().replace(/[^a-z0-9]/g, '-')}_${seed.color.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-      
-      // Get enrichment data
       const productLineId = getZiroProductLineId(seed.seedMaterial);
       const material = getZiroMaterialFromSeed(seed.seedMaterial);
       const finishType = getZiroFinishTypeFromSeed(seed.seedMaterial);
       const colorHex = seed.colorHex || null;
       const colorFamily = getZiroColorFamily(colorHex || '#808080', seed.color);
       const productTitle = generateZiroProductTitle(seed);
-      
-      // Get print settings from defaults
       const enrichment = enrichZiroProduct(seed.title, material, seed.color);
       
       const record = {
@@ -147,7 +152,7 @@ async function processSeedProducts(
         product_line_id: productLineId,
         color_family: colorFamily,
         color_hex: colorHex,
-        variant_price: price || 24.99, // Default price if fetch fails
+        variant_price: price || 24.99,
         variant_compare_at_price: null,
         variant_available: available,
         variant_sku: null,
@@ -161,7 +166,7 @@ async function processSeedProducts(
         bed_temp_max_c: enrichment.bedTempMax,
         is_nozzle_abrasive: enrichment.isAbrasive,
         high_speed_capable: enrichment.highSpeedCapable,
-        tds_url: null, // Ziro doesn't provide TDS documents
+        tds_url: null,
         auto_created: true,
         auto_updated: true,
         last_scraped_at: new Date().toISOString(),
@@ -172,7 +177,7 @@ async function processSeedProducts(
     }
     
     // Rate limiting between batches
-    if (i + batchSize < ZIRO_PRODUCT_SEED.length) {
+    if (i + batchSize < totalProducts) {
       await new Promise(resolve => setTimeout(resolve, 300));
     }
   }
@@ -215,31 +220,49 @@ async function safeDeleteExisting(supabase: any, seedCount: number): Promise<num
 }
 
 // ============================================================================
-// STEP 4: BATCH INSERT PRODUCTS
+// STEP 4: BATCH INSERT PRODUCTS WITH PROGRESS
 // ============================================================================
 
 async function batchInsertProducts(
   supabase: any,
   records: any[],
-  stats: SyncStats
+  stats: SyncStats,
+  syncLogId: string | null
 ): Promise<void> {
   console.log('[Step 4] Batch inserting products...');
   
   const batchSize = 50;
+  const totalProducts = records.length;
   
-  for (let i = 0; i < records.length; i += batchSize) {
+  for (let i = 0; i < totalProducts; i += batchSize) {
     const batch = records.slice(i, i + batchSize);
+    const batchNum = Math.floor(i / batchSize) + 1;
+    const totalBatches = Math.ceil(totalProducts / batchSize);
+    
+    // Update progress for UI
+    if (syncLogId) {
+      await updateSyncProgress(supabase, syncLogId, {
+        stage: `Inserting to database (batch ${batchNum}/${totalBatches})`,
+        current: i + batch.length,
+        total: totalProducts,
+        productsProcessed: i + batch.length,
+        variantsFound: totalProducts,
+        created: stats.created,
+        updated: stats.updated,
+        errors: stats.errors,
+      });
+    }
     
     const { error } = await supabase
       .from('filaments')
       .insert(batch);
     
     if (error) {
-      console.error(`[Step 4] Error inserting batch ${Math.floor(i / batchSize) + 1}:`, error);
+      console.error(`[Step 4] Error inserting batch ${batchNum}:`, error);
       stats.errors += batch.length;
     } else {
       stats.created += batch.length;
-      console.log(`[Step 4] Inserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}`);
+      console.log(`[Step 4] Inserted batch ${batchNum}/${totalBatches}`);
     }
   }
   
@@ -270,7 +293,6 @@ async function fixDuplicateHexCodes(supabase: any): Promise<number> {
     
     console.log(`[Step 5] Found ${duplicates.length} products with duplicate hex codes`);
     
-    // Group by product_line_id and color_hex
     const groups = new Map<string, any[]>();
     for (const dup of duplicates as any[]) {
       const key = `${dup.product_line_id}__${dup.color_hex?.toLowerCase()}`;
@@ -282,12 +304,10 @@ async function fixDuplicateHexCodes(supabase: any): Promise<number> {
     
     let fixed = 0;
     for (const [, group] of groups) {
-      // Skip the first one (keep original), modify the rest
       for (let i = 1; i < group.length; i++) {
         const item = group[i];
         const baseHex = item.color_hex || '#808080';
         
-        // Slightly modify the hex to make it unique
         const r = parseInt(baseHex.slice(1, 3), 16);
         const g = parseInt(baseHex.slice(3, 5), 16);
         const b = parseInt(baseHex.slice(5, 7), 16);
@@ -331,28 +351,27 @@ async function updateBrandStats(supabase: any): Promise<void> {
       base_url: 'https://ziro3d.com',
       products_url: 'https://ziro3d.com/products.json',
       has_api: true,
-      notes: `CSV-seeded sync with ${ZIRO_PRODUCT_SEED.length} products. Shopify platform with live price fetching. Specializes in multi-color gradient filaments, specialty PLA effects (Twinkling, Diamond, Chameleon), and TPU. No TDS documents available.`,
+      notes: `CSV-seeded sync with ${ZIRO_PRODUCT_SEED.length} products. Shopify platform with live price fetching.`,
       last_scrape_at: new Date().toISOString(),
       scraping_active: false,
       product_count: ZIRO_PRODUCT_SEED.length,
       active_product_count: ZIRO_PRODUCT_SEED.length,
     })
-    .eq('brand_slug', 'ziro');
+    .eq('brand_slug', BRAND_SLUG);
   
   if (error) {
     console.error('[Step 6] Error updating brand stats:', error);
     throw error;
   }
   
-  // Update product counts via RPC
   try {
-    await supabase.rpc('update_brand_product_counts', { p_brand_slug: 'ziro' });
+    await supabase.rpc('update_brand_product_counts', { p_brand_slug: BRAND_SLUG });
   } catch (e) {
     console.log('[Step 6] RPC update_brand_product_counts not available');
   }
   
   try {
-    await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: 'ziro' });
+    await supabase.rpc('update_brand_enrichment_counts', { p_brand_slug: BRAND_SLUG });
   } catch (e) {
     console.log('[Step 6] RPC update_brand_enrichment_counts not available');
   }
@@ -361,60 +380,16 @@ async function updateBrandStats(supabase: any): Promise<void> {
 }
 
 // ============================================================================
-// STEP 7: LOG SYNC RESULTS
+// MAIN SYNC LOGIC (runs in background)
 // ============================================================================
 
-async function logSyncResults(
+async function runZiroSync(
   supabase: any,
+  syncLogId: string | null,
   brandId: string | null,
-  stats: SyncStats,
-  duration: number,
-  success: boolean,
-  errorMessage?: string
+  cleanSlate: boolean
 ): Promise<void> {
-  console.log('[Step 7] Logging sync results...');
-  
-  try {
-    await supabase
-      .from('brand_sync_logs')
-      .insert({
-        brand_id: brandId,
-        brand_slug: 'ziro',
-        sync_type: 'csv_seed',
-        status: success ? 'completed' : 'failed',
-        started_at: new Date(Date.now() - duration).toISOString(),
-        completed_at: new Date().toISOString(),
-        duration_seconds: Math.round(duration / 1000),
-        products_discovered: ZIRO_PRODUCT_SEED.length,
-        products_created: stats.created,
-        products_updated: stats.updated,
-        products_failed: stats.errors,
-        triggered_by: 'api',
-        success_details: {
-          pricesFetched: stats.pricesFetched,
-          pricesFailed: stats.pricesFailed,
-          seedCount: ZIRO_PRODUCT_SEED.length,
-        },
-        error_details: errorMessage ? { message: errorMessage } : null,
-      });
-    
-    console.log('[Step 7] Sync log created');
-  } catch (error) {
-    console.error('[Step 7] Error logging sync results:', error);
-  }
-}
-
-// ============================================================================
-// MAIN HANDLER
-// ============================================================================
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  
   const startTime = Date.now();
-  const results: SyncResult[] = [];
   const stats: SyncStats = {
     created: 0,
     updated: 0,
@@ -426,138 +401,190 @@ Deno.serve(async (req) => {
   
   try {
     console.log('='.repeat(60));
-    console.log('ZIRO CSV-SEEDED SYNC PIPELINE STARTED');
+    console.log('ZIRO BACKGROUND SYNC STARTED');
     console.log(`Seed contains ${ZIRO_PRODUCT_SEED.length} products`);
+    console.log(`Sync Log ID: ${syncLogId}`);
     console.log('='.repeat(60));
     
+    // Initial progress update
+    if (syncLogId) {
+      await updateSyncProgress(supabase, syncLogId, {
+        stage: 'Starting sync...',
+        current: 0,
+        total: ZIRO_PRODUCT_SEED.length,
+        productsProcessed: 0,
+        variantsFound: ZIRO_PRODUCT_SEED.length,
+        created: 0,
+        updated: 0,
+        errors: 0,
+      });
+    }
+    
+    // Step 2: Process seed products and fetch live prices
+    const filamentRecords = await processSeedProducts(supabase, brandId, stats, syncLogId);
+    
+    // Step 3: Safe delete existing products
+    if (cleanSlate) {
+      if (syncLogId) {
+        await updateSyncProgress(supabase, syncLogId, {
+          stage: 'Deleting existing products...',
+          current: 0,
+          total: ZIRO_PRODUCT_SEED.length,
+          productsProcessed: ZIRO_PRODUCT_SEED.length,
+          variantsFound: ZIRO_PRODUCT_SEED.length,
+          created: 0,
+          updated: 0,
+          errors: 0,
+        });
+      }
+      await safeDeleteExisting(supabase, ZIRO_PRODUCT_SEED.length);
+    }
+    
+    // Step 4: Batch insert products
+    await batchInsertProducts(supabase, filamentRecords, stats, syncLogId);
+    
+    // Step 5: Fix duplicate hex codes
+    if (syncLogId) {
+      await updateSyncProgress(supabase, syncLogId, {
+        stage: 'Fixing duplicate hex codes...',
+        current: ZIRO_PRODUCT_SEED.length,
+        total: ZIRO_PRODUCT_SEED.length,
+        productsProcessed: ZIRO_PRODUCT_SEED.length,
+        variantsFound: ZIRO_PRODUCT_SEED.length,
+        created: stats.created,
+        updated: stats.updated,
+        errors: stats.errors,
+      });
+    }
+    await fixDuplicateHexCodes(supabase);
+    
+    // Step 6: Update brand stats
+    if (syncLogId) {
+      await updateSyncProgress(supabase, syncLogId, {
+        stage: 'Updating brand statistics...',
+        current: ZIRO_PRODUCT_SEED.length,
+        total: ZIRO_PRODUCT_SEED.length,
+        productsProcessed: ZIRO_PRODUCT_SEED.length,
+        variantsFound: ZIRO_PRODUCT_SEED.length,
+        created: stats.created,
+        updated: stats.updated,
+        errors: stats.errors,
+      });
+    }
+    await updateBrandStats(supabase);
+    
+    // Complete sync log
+    const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+    if (syncLogId) {
+      await completeSyncLog(supabase, syncLogId, {
+        status: stats.errors === 0 ? 'completed' : 'partial',
+        created: stats.created,
+        updated: stats.updated,
+        discovered: ZIRO_PRODUCT_SEED.length,
+        failed: stats.errors,
+        durationSeconds,
+        successDetails: {
+          pricesFetched: stats.pricesFetched,
+          pricesFailed: stats.pricesFailed,
+        },
+      });
+    }
+    
+    console.log('='.repeat(60));
+    console.log('ZIRO SYNC COMPLETED');
+    console.log(`Duration: ${durationSeconds}s`);
+    console.log(`Created: ${stats.created}, Errors: ${stats.errors}`);
+    console.log('='.repeat(60));
+    
+  } catch (error) {
+    const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+    console.error('FATAL ERROR in Ziro sync:', error);
+    
+    if (syncLogId) {
+      await completeSyncLog(supabase, syncLogId, {
+        status: 'failed',
+        created: stats.created,
+        updated: stats.updated,
+        discovered: ZIRO_PRODUCT_SEED.length,
+        failed: stats.errors + 1,
+        durationSeconds,
+        errorDetails: { message: error instanceof Error ? error.message : String(error) },
+      });
+    }
+  }
+}
+
+// ============================================================================
+// MAIN HANDLER - Returns immediately with syncLogId
+// ============================================================================
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
+  try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Parse options
-    let cleanSlate = false;
+    let cleanSlate = true; // Default to clean slate for CSV-seeded sync
     try {
       const body = await req.json();
-      cleanSlate = body.cleanSlate === true;
+      cleanSlate = body.cleanSlate !== false;
     } catch {
-      // No body or invalid JSON - default to clean slate for CSV-seeded sync
-      cleanSlate = true;
+      // No body or invalid JSON
     }
     
     // Get brand ID
     const { data: brand } = await supabase
       .from('automated_brands')
       .select('id')
-      .eq('brand_slug', 'ziro')
+      .eq('brand_slug', BRAND_SLUG)
       .single();
     
     const brandId = brand?.id || null;
     
-    // Step 1: Validate seed data
-    results.push({
-      step: 'Validate Seed Data',
-      success: true,
-      message: `CSV seed contains ${ZIRO_PRODUCT_SEED.length} products`,
-      count: ZIRO_PRODUCT_SEED.length,
-    });
-    
-    // Step 2: Process seed products and fetch live prices
-    const filamentRecords = await processSeedProducts(supabase, brandId, stats);
-    results.push({
-      step: 'Process Seed & Fetch Prices',
-      success: true,
-      message: `Processed ${filamentRecords.length} products, fetched ${stats.pricesFetched} prices`,
-      count: filamentRecords.length,
-      details: {
-        pricesFetched: stats.pricesFetched,
-        pricesFailed: stats.pricesFailed,
-      },
-    });
-    
-    // Step 3: Safe delete existing products (for CSV-seeded sync)
-    if (cleanSlate) {
-      const deleted = await safeDeleteExisting(supabase, ZIRO_PRODUCT_SEED.length);
-      results.push({
-        step: 'Safe Delete Existing',
-        success: true,
-        message: `Deleted ${deleted} existing products`,
-        count: deleted,
-      });
+    // Mark brand as actively syncing
+    if (brandId) {
+      await supabase
+        .from('automated_brands')
+        .update({ scraping_active: true })
+        .eq('id', brandId);
     }
     
-    // Step 4: Batch insert products
-    await batchInsertProducts(supabase, filamentRecords, stats);
-    results.push({
-      step: 'Batch Insert Products',
-      success: stats.errors === 0,
-      message: `Inserted ${stats.created} products, ${stats.errors} errors`,
-      count: stats.created,
-      details: {
-        created: stats.created,
-        errors: stats.errors,
-      },
-    });
-    
-    // Step 5: Fix duplicate hex codes
-    const fixedHexes = await fixDuplicateHexCodes(supabase);
-    results.push({
-      step: 'Fix Duplicate Hex Codes',
-      success: true,
-      message: `Fixed ${fixedHexes} duplicate hex codes`,
-      count: fixedHexes,
-    });
-    
-    // Step 6: Update brand stats
-    await updateBrandStats(supabase);
-    results.push({
-      step: 'Update Brand Stats',
-      success: true,
-      message: 'Brand stats and product counts updated',
-    });
-    
-    // Step 7: Log sync results
-    const duration = Date.now() - startTime;
-    await logSyncResults(supabase, brandId, stats, duration, true);
-    
-    console.log('='.repeat(60));
-    console.log('ZIRO SYNC PIPELINE COMPLETED');
-    console.log(`Duration: ${(duration / 1000).toFixed(1)}s`);
-    console.log(`Created: ${stats.created}, Errors: ${stats.errors}`);
-    console.log('='.repeat(60));
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        vendor: VENDOR_NAME,
-        seedCount: ZIRO_PRODUCT_SEED.length,
-        stats,
-        duration: `${(duration / 1000).toFixed(1)}s`,
-        results,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+    // Create sync log FIRST for progress tracking
+    const { syncLogId, error: logError } = await createSyncLog(
+      supabase,
+      BRAND_SLUG,
+      'clean_slate'
     );
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error('FATAL ERROR in Ziro sync:', error);
     
-    // Log failure
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      await logSyncResults(supabase, null, stats, duration, false, String(error));
+    if (logError) {
+      console.error('Failed to create sync log:', logError);
     }
+    
+    console.log(`[Ziro] Sync log created: ${syncLogId}`);
+    console.log(`[Ziro] Starting background sync for ${ZIRO_PRODUCT_SEED.length} products`);
+    
+    // Run sync in background using EdgeRuntime.waitUntil
+    runInBackground(
+      runZiroSync(supabase, syncLogId, brandId, cleanSlate),
+      BRAND_SLUG
+    );
+    
+    // Return immediately with syncLogId for frontend polling
+    return createImmediateResponse(VENDOR_NAME, syncLogId, { cleanSlate });
+    
+  } catch (error) {
+    console.error('Error starting Ziro sync:', error);
     
     return new Response(
       JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        stats,
-        duration: `${(duration / 1000).toFixed(1)}s`,
-        results,
       }),
       {
         status: 500,
