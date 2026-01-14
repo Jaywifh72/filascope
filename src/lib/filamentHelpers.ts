@@ -3,7 +3,17 @@ export const isWoodFilament = (filament: any): boolean => {
   const material = filament.material?.toLowerCase() || '';
   const title = filament.product_title?.toLowerCase() || '';
   const hasWoodContent = filament.wood_powder_percentage !== null && filament.wood_powder_percentage !== undefined && filament.wood_powder_percentage > 0;
-  return hasWoodContent || material.includes('wood') || title.includes('wood') || title.includes('timber') || material.includes('cork');
+  
+  // Check finish_type from database
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  if (finishType === 'wood') return true;
+  
+  // Exclude color names that contain "wood"
+  if (/hollywood|rosewood|driftwood|deadwood|cherrywood/i.test(title)) return false;
+  
+  return hasWoodContent || 
+    /\bwood\b|timber|bamboo/i.test(title) || 
+    /\bwood\b|cork/i.test(material);
 };
 
 // Get wood percentage for display
@@ -16,12 +26,15 @@ export const isGlassFiberFilament = (filament: any): boolean => {
   const material = filament.material?.toLowerCase() || '';
   const title = filament.product_title?.toLowerCase() || '';
   const hasGFContent = filament.glass_fiber_percentage !== null && filament.glass_fiber_percentage !== undefined && filament.glass_fiber_percentage > 0;
+  
+  // Check finish_type from database
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  if (finishType === 'glass fiber') return true;
+  
   // Match patterns: -GF, +GF, GF+, _GF, " GF", "glass fiber", NylonG, material ending in GF
   return hasGFContent || 
-    material.includes('-gf') || material.includes('+gf') || material.endsWith('gf') ||
-    title.includes('+gf') || title.includes('gf+') || title.includes('-gf') ||
-    title.includes('glass fiber') || title.includes('glass-fiber') ||
-    material.includes('nylong');
+    /glass\s*fiber|glass-fiber|-gf\b|\+gf\b|gf\s*\d|fiberglass/i.test(title) ||
+    /glass\s*fiber|-gf\b|\+gf\b|nylong/i.test(material);
 };
 
 // Get glass fiber percentage for display
@@ -34,18 +47,94 @@ export const isCarbonFiberFilament = (filament: any): boolean => {
   const material = filament.material?.toLowerCase() || '';
   const title = filament.product_title?.toLowerCase() || '';
   const hasCFContent = filament.carbon_fiber_percentage !== null && filament.carbon_fiber_percentage !== undefined && filament.carbon_fiber_percentage > 0;
-  // Match patterns: -CF, +CF, CF+, _CF, material ending in CF, "carbon fiber" - but exclude "Polycarbonate" (PC)
-  const hasPolycarbonate = title.includes('polycarbonate');
+  
+  // Check finish_type from database
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  if (finishType === 'carbon') return true;
+  
+  // Exclude "Polycarbonate" (PC) which might trigger false positives
+  const hasPolycarbonate = /polycarbonate/i.test(title);
+  
+  // Match patterns: -CF, +CF, CF+, "carbon fiber", "carbon-fiber", material containing CF codes
   return hasCFContent || (!hasPolycarbonate && (
-    material.includes('-cf') || material.includes('+cf') || material.endsWith('cf') ||
-    title.includes('+cf') || title.includes('-cf') || title.includes('cf+') ||
-    title.includes('carbon fiber') || title.includes('carbon-fiber')
+    /carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d/i.test(title) ||
+    /carbon\s*fiber|-cf\b|\+cf\b/i.test(material)
   ));
 };
 
 // Get carbon fiber percentage for display
 export const getCarbonFiberPercentage = (filament: any): number | null => {
   return filament.carbon_fiber_percentage ?? null;
+};
+
+// Helper to check if filament is silk/shimmer finish
+export const isSilkFilament = (filament: any): boolean => {
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  const title = filament.product_title?.toLowerCase() || '';
+  
+  if (finishType === 'silk') return true;
+  return /\bsilk\b|shimmer/i.test(title);
+};
+
+// Helper to check if filament is metallic finish
+export const isMetallicFilament = (filament: any): boolean => {
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  const title = filament.product_title?.toLowerCase() || '';
+  
+  if (finishType === 'metallic') return true;
+  return /\bmetallic\b|metal\s*finish/i.test(title);
+};
+
+// Helper to check if filament is sparkle/glitter finish
+export const isSparkleFilament = (filament: any): boolean => {
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  const title = filament.product_title?.toLowerCase() || '';
+  
+  if (finishType === 'sparkle') return true;
+  return /sparkle|glitter|galaxy|starlight|starry|cosmic/i.test(title);
+};
+
+// Helper to check if filament is translucent/transparent
+export const isTranslucentFilament = (filament: any): boolean => {
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  const title = filament.product_title?.toLowerCase() || '';
+  
+  if (finishType === 'translucent') return true;
+  // Exclude "crystal white" which is a color name, not translucent
+  if (/crystal\s*white/i.test(title)) return false;
+  return /translucent|transparent|clear\b|crystal/i.test(title);
+};
+
+// Helper to check if filament is glow in the dark
+export const isGlowFilament = (filament: any): boolean => {
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  const title = filament.product_title?.toLowerCase() || '';
+  const material = filament.material?.toLowerCase() || '';
+  
+  if (finishType === 'glow') return true;
+  return /\bglow\b|luminous|phosphorescent|gid\b|gitd\b/i.test(title) ||
+         /\bglow\b|luminous|phosphorescent/i.test(material);
+};
+
+// Helper to check if filament is matte finish
+export const isMatteFilament = (filament: any): boolean => {
+  const finishType = filament.finish_type?.toLowerCase() || '';
+  const title = filament.product_title?.toLowerCase() || '';
+  
+  if (finishType === 'matte') return true;
+  return /\bmatte\b/i.test(title);
+};
+
+// Helper to check if filament is high speed capable
+export const isHighSpeedFilament = (filament: any): boolean => {
+  // First check database flag
+  if (filament.high_speed_capable === true) return true;
+  
+  const title = filament.product_title?.toLowerCase() || '';
+  const material = filament.material?.toLowerCase() || '';
+  const combined = title + ' ' + material;
+  
+  return /high[\s-]?speed|highspeed|-hs\b|hs-|\bhs\s+|\brapid\b|hyper[\s-]?speed|turbo/i.test(combined);
 };
 
 // Helper to strip vendor name from product title
