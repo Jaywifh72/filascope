@@ -1,24 +1,62 @@
-// Sunlu CSV-Seeded Sync Pipeline
-// Uses inline seed data instead of Shopify API for consistent, high-fidelity product catalog
+// Sunlu Shopify API Sync Pipeline
+// Fetches products from live store.sunlu.com API with enrichment from defaults
 //
-// Architecture: CSV-seeded sync with Safe Delete pattern (~100+ products, 20+ lines)
-// Region: US only (consolidated from multi-region variants)
+// Architecture: Live Shopify API with enrichment and Safe Delete pattern
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   enrichSunluProduct,
   SUNLU_TDS_URL,
+  getSunluDefaultPrice,
 } from '../_shared/sunlu-defaults.ts';
 import {
-  SUNLU_PRODUCT_SEED,
   SUNLU_EXPECTED_CARD_COUNT,
   getSunluColorHexFromSeed,
-  type SunluSeedProduct,
+  isSunluExcludedProduct,
+  extractRegionFromVariant,
+  normalizeSunluMaterialFromTitle,
+  generateSunluProductLineId,
 } from '../_shared/sunlu-seed.ts';
 
 // ============================================================================
 // INTERFACES
 // ============================================================================
+
+interface ShopifyProduct {
+  id: number;
+  title: string;
+  handle: string;
+  vendor: string;
+  product_type: string;
+  images: { src: string }[];
+  variants: ShopifyVariant[];
+}
+
+interface ShopifyVariant {
+  id: number;
+  title: string;
+  price: string;
+  compare_at_price: string | null;
+  available: boolean;
+  sku: string | null;
+}
+
+interface ProcessedVariant {
+  productId: string;
+  title: string;
+  handle: string;
+  color: string;
+  material: string;
+  productLineId: string;
+  finishType: string;
+  price: number | null;
+  compareAtPrice: number | null;
+  available: boolean;
+  imageUrl: string | null;
+  productUrl: string;
+  colorHex: string | null;
+  sku: string | null;
+}
 
 interface SyncResult {
   step: string;
@@ -40,80 +78,206 @@ const CORS_HEADERS = {
 };
 
 const VENDOR_NAME = 'Sunlu';
+const SHOPIFY_BASE_URL = 'https://store.sunlu.com';
 
 // Safe Delete threshold - only delete all if we have enough valid products
 const SUNLU_SAFE_DELETE_THRESHOLD = 50;
 
 // ============================================================================
-// STEP 1: LOAD SEED DATA
+// STEP 1: FETCH FROM SHOPIFY API
 // ============================================================================
 
-function loadSeedProducts(): SunluSeedProduct[] {
-  console.log('[Step 1] Loading Sunlu seed products...');
-  console.log(`[Step 1] Complete: ${SUNLU_PRODUCT_SEED.length} products from CSV seed`);
-  return SUNLU_PRODUCT_SEED;
+async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
+  console.log('[Step 1] Fetching products from Shopify API...');
+  
+  const products: ShopifyProduct[] = [];
+  let page = 1;
+  const limit = 250;
+  
+  while (true) {
+    const url = `${SHOPIFY_BASE_URL}/products.json?limit=${limit}&page=${page}`;
+    console.log(`[Step 1] Fetching page ${page}...`);
+    
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Filascope-Sync/1.0',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error(`[Step 1] HTTP error: ${response.status}`);
+        break;
+      }
+      
+      const data = await response.json();
+      
+      if (!data.products || data.products.length === 0) {
+        console.log(`[Step 1] No more products on page ${page}`);
+        break;
+      }
+      
+      products.push(...data.products);
+      console.log(`[Step 1] Got ${data.products.length} products from page ${page}`);
+      
+      if (data.products.length < limit) {
+        break; // Last page
+      }
+      
+      page++;
+      
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } catch (error) {
+      console.error(`[Step 1] Fetch error on page ${page}:`, error);
+      break;
+    }
+  }
+  
+  console.log(`[Step 1] Complete: ${products.length} total products fetched`);
+  return products;
 }
 
 // ============================================================================
-// STEP 2: UPSERT WITH ENRICHMENTS
+// STEP 2: EXPLODE VARIANTS WITH REGION FILTERING
 // ============================================================================
 
-async function upsertSeedProducts(
+function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
+  console.log('[Step 2] Exploding variants with region filtering...');
+  
+  const variants: ProcessedVariant[] = [];
+  const seenKeys = new Set<string>();
+  let skippedNonFilament = 0;
+  let skippedNonUS = 0;
+  let skippedDuplicates = 0;
+  
+  for (const product of products) {
+    // Skip non-filament products
+    if (isSunluExcludedProduct(product.title)) {
+      skippedNonFilament++;
+      continue;
+    }
+    
+    // Get primary image
+    const imageUrl = product.images?.[0]?.src || null;
+    
+    // Detect material from product title
+    const material = normalizeSunluMaterialFromTitle(product.title);
+    
+    for (const variant of product.variants) {
+      // Parse region from variant title: "Ship to USA / Color"
+      const { region, color } = extractRegionFromVariant(variant.title);
+      
+      // Only include US region to avoid 4x duplicates
+      if (region !== 'US') {
+        skippedNonUS++;
+        continue;
+      }
+      
+      // Check if variant itself should be excluded
+      if (isSunluExcludedProduct(product.title, variant.title)) {
+        skippedNonFilament++;
+        continue;
+      }
+      
+      // Create unique key to prevent duplicates (by handle + color)
+      const normalizedColor = color.toLowerCase().replace(/\s+/g, '-').replace(/\+/g, '-');
+      const key = `${product.handle}-${normalizedColor}`;
+      
+      if (seenKeys.has(key)) {
+        skippedDuplicates++;
+        continue;
+      }
+      seenKeys.add(key);
+      
+      // Generate product line ID
+      const productLineId = generateSunluProductLineId(product.title, material);
+      
+      // Get enrichment data
+      const enrichment = enrichSunluProduct(product.title, color);
+      
+      // Parse price - use live price from API
+      const rawPrice = parseFloat(variant.price);
+      const price = !isNaN(rawPrice) && rawPrice > 0 ? rawPrice : getSunluDefaultPrice(material);
+      
+      const compareAtPrice = variant.compare_at_price 
+        ? parseFloat(variant.compare_at_price) 
+        : null;
+      
+      // Get color hex from our curated mapping
+      const colorHex = getSunluColorHexFromSeed(color) || enrichment.colorHex;
+      
+      variants.push({
+        productId: `sunlu-${product.id}-${variant.id}`,
+        title: product.title,
+        handle: product.handle,
+        color: color,
+        material: material,
+        productLineId: productLineId,
+        finishType: enrichment.finishType,
+        price: price,
+        compareAtPrice: !isNaN(compareAtPrice!) ? compareAtPrice : null,
+        available: variant.available,
+        imageUrl: imageUrl,
+        productUrl: `${SHOPIFY_BASE_URL}/products/${product.handle}`,
+        colorHex: colorHex,
+        sku: variant.sku,
+      });
+    }
+  }
+  
+  console.log(`[Step 2] Complete: ${variants.length} variants processed`);
+  console.log(`[Step 2] Skipped: ${skippedNonFilament} non-filament, ${skippedNonUS} non-US, ${skippedDuplicates} duplicates`);
+  
+  return variants;
+}
+
+// ============================================================================
+// STEP 3: UPSERT WITH ENRICHMENTS
+// ============================================================================
+
+async function upsertVariants(
   supabase: any,
-  seedProducts: SunluSeedProduct[],
+  variants: ProcessedVariant[],
   brandId: string | null
 ): Promise<SyncResult> {
-  console.log('[Step 2] Upserting seed products with enrichments...');
+  console.log('[Step 3] Upserting variants with enrichments...');
   
   let created = 0;
   let updated = 0;
   let errors = 0;
   
-  // Create a unique key for each color variant to avoid duplicates
-  const processedKeys = new Set<string>();
-  
-  for (const seedProduct of seedProducts) {
+  for (const variant of variants) {
     try {
-      // Generate unique product ID based on product line and color
-      const productId = `sunlu-seed-${seedProduct.productLineId}-${seedProduct.color.toLowerCase().replace(/\s+/g, '-').replace(/\+/g, '-')}`;
-      
-      // Skip if we've already processed this exact combo
-      if (processedKeys.has(productId)) {
-        continue;
-      }
-      processedKeys.add(productId);
-      
-      // Enrich with Sunlu-specific data
-      const enrichment = enrichSunluProduct(seedProduct.name, seedProduct.color);
-      
-      // Use seed hex (already formatted with #) or get from extended mapping
-      const colorHex = seedProduct.colorHex || getSunluColorHexFromSeed(seedProduct.color);
+      // Get enrichment data for print settings
+      const enrichment = enrichSunluProduct(variant.title, variant.color);
       
       // Check if exists
       const { data: existing } = await supabase
         .from('filaments')
         .select('id')
-        .eq('product_id', productId)
+        .eq('product_id', variant.productId)
         .maybeSingle();
       
       const filamentData = {
-        product_id: productId,
-        product_title: seedProduct.name,
-        product_handle: seedProduct.productUrl.split('/products/')[1] || seedProduct.name.toLowerCase().replace(/\s+/g, '-'),
+        product_id: variant.productId,
+        product_title: variant.title,
+        product_handle: variant.handle,
         vendor: VENDOR_NAME,
         brand_id: brandId,
-        material: seedProduct.material,
-        finish_type: seedProduct.finishType,
-        product_line_id: seedProduct.productLineId,
-        color_hex: colorHex,
-        color_family: getColorFamily(seedProduct.color),
-        variant_price: null, // CSV seed doesn't have prices - they come from live API if needed
-        variant_compare_at_price: null,
-        variant_available: true,
-        variant_sku: null,
-        featured_image: seedProduct.imageUrl,
-        product_url: seedProduct.productUrl,
-        net_weight_g: seedProduct.weight,
+        material: variant.material,
+        finish_type: variant.finishType,
+        product_line_id: variant.productLineId,
+        color_hex: variant.colorHex,
+        color_family: getColorFamily(variant.color),
+        variant_price: variant.price,
+        variant_compare_at_price: variant.compareAtPrice,
+        variant_available: variant.available,
+        variant_sku: variant.sku,
+        featured_image: variant.imageUrl,
+        product_url: variant.productUrl,
+        net_weight_g: 1000,
         diameter_nominal_mm: 1.75,
         nozzle_temp_min_c: enrichment.printSettings?.nozzleTempMin || null,
         nozzle_temp_max_c: enrichment.printSettings?.nozzleTempMax || null,
@@ -144,12 +308,12 @@ async function upsertSeedProducts(
         created++;
       }
     } catch (err) {
-      console.error(`[Step 2] Error processing ${seedProduct.name} - ${seedProduct.color}:`, err);
+      console.error(`[Step 3] Error processing ${variant.title} - ${variant.color}:`, err);
       errors++;
     }
   }
   
-  console.log(`[Step 2] Complete: ${created} created, ${updated} updated, ${errors} errors`);
+  console.log(`[Step 3] Complete: ${created} created, ${updated} updated, ${errors} errors`);
   
   return {
     step: 'upsert',
@@ -187,11 +351,11 @@ function getColorFamily(colorName: string): string | null {
 }
 
 // ============================================================================
-// STEP 3: TDS URL ASSIGNMENT (verification step)
+// STEP 4: TDS URL ASSIGNMENT (verification step)
 // ============================================================================
 
 async function verifyTdsUrls(supabase: any): Promise<SyncResult> {
-  console.log('[Step 3] Verifying TDS URLs...');
+  console.log('[Step 4] Verifying TDS URLs...');
   
   // Update any Sunlu products missing TDS URL
   const { error } = await supabase
@@ -201,7 +365,7 @@ async function verifyTdsUrls(supabase: any): Promise<SyncResult> {
     .is('tds_url', null);
   
   if (error) {
-    console.error('[Step 3] Error updating TDS URLs:', error);
+    console.error('[Step 4] Error updating TDS URLs:', error);
     return {
       step: 'tds_assignment',
       success: false,
@@ -209,7 +373,7 @@ async function verifyTdsUrls(supabase: any): Promise<SyncResult> {
     };
   }
   
-  console.log('[Step 3] Complete: TDS URLs verified/assigned');
+  console.log('[Step 4] Complete: TDS URLs verified/assigned');
   
   return {
     step: 'tds_assignment',
@@ -219,18 +383,18 @@ async function verifyTdsUrls(supabase: any): Promise<SyncResult> {
 }
 
 // ============================================================================
-// STEP 4: FIX DUPLICATE HEX CODES
+// STEP 5: FIX DUPLICATE HEX CODES
 // ============================================================================
 
 async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
-  console.log('[Step 4] Fixing duplicate hex codes...');
+  console.log('[Step 5] Fixing duplicate hex codes...');
   
   // Find duplicates using RPC
   const { data: duplicates, error } = await supabase
     .rpc('find_duplicate_hexes', { p_vendor: 'Sunlu' });
   
   if (error) {
-    console.error('[Step 4] Error finding duplicates:', error);
+    console.error('[Step 5] Error finding duplicates:', error);
     return {
       step: 'fix_hex_duplicates',
       success: false,
@@ -239,7 +403,7 @@ async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
   }
   
   if (!duplicates || duplicates.length === 0) {
-    console.log('[Step 4] No duplicate hex codes found');
+    console.log('[Step 5] No duplicate hex codes found');
     return {
       step: 'fix_hex_duplicates',
       success: true,
@@ -247,7 +411,7 @@ async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
     };
   }
   
-  console.log(`[Step 4] Found ${duplicates.length} products with duplicate hex codes`);
+  console.log(`[Step 5] Found ${duplicates.length} products with duplicate hex codes`);
   
   // Group by product_line_id and color_hex
   const groups = new Map<string, typeof duplicates>();
@@ -283,7 +447,7 @@ async function fixDuplicateHexCodes(supabase: any): Promise<SyncResult> {
     }
   }
   
-  console.log(`[Step 4] Complete: ${fixed} hex codes adjusted`);
+  console.log(`[Step 5] Complete: ${fixed} hex codes adjusted`);
   
   return {
     step: 'fix_hex_duplicates',
@@ -341,7 +505,7 @@ Deno.serve(async (req) => {
       // No body or invalid JSON, use defaults
     }
     
-    console.log('[Sunlu Sync] Starting CSV-seeded sync with options:', options);
+    console.log('[Sunlu Sync] Starting Shopify API sync with options:', options);
     console.log(`[Sunlu Sync] Expected product lines: ${SUNLU_EXPECTED_CARD_COUNT}`);
     
     // Get brand ID
@@ -356,18 +520,27 @@ Deno.serve(async (req) => {
     
     const results: SyncResult[] = [];
     
-    // Step 1: Load seed products
-    const seedProducts = loadSeedProducts();
+    // Step 1: Fetch from Shopify API
+    const products = await fetchShopifyProducts();
     results.push({
-      step: 'load_seed',
-      success: true,
-      created: seedProducts.length,
-      message: `Loaded ${seedProducts.length} products from CSV seed`,
+      step: 'fetch_shopify',
+      success: products.length > 0,
+      created: products.length,
+      message: `Fetched ${products.length} products from Shopify API`,
+    });
+    
+    // Step 2: Explode variants with region filtering
+    const variants = explodeVariants(products);
+    results.push({
+      step: 'explode_variants',
+      success: variants.length > 0,
+      created: variants.length,
+      message: `Exploded to ${variants.length} US-region variants`,
     });
     
     // Safe Delete Pattern: If clean slate OR we have enough valid variants
-    if (options.cleanSlate || seedProducts.length >= SUNLU_SAFE_DELETE_THRESHOLD) {
-      console.log(`[Sunlu Sync] Performing safe delete (${seedProducts.length} products >= ${SUNLU_SAFE_DELETE_THRESHOLD} threshold)...`);
+    if (options.cleanSlate || variants.length >= SUNLU_SAFE_DELETE_THRESHOLD) {
+      console.log(`[Sunlu Sync] Performing safe delete (${variants.length} variants >= ${SUNLU_SAFE_DELETE_THRESHOLD} threshold)...`);
       const { error: deleteError, count } = await supabase
         .from('filaments')
         .delete()
@@ -380,19 +553,19 @@ Deno.serve(async (req) => {
       }
     }
     
-    // Step 2: Upsert with enrichments
-    if (seedProducts.length > 0) {
-      const upsertResult = await upsertSeedProducts(supabase, seedProducts, brandId);
+    // Step 3: Upsert with enrichments
+    if (variants.length > 0) {
+      const upsertResult = await upsertVariants(supabase, variants, brandId);
       results.push(upsertResult);
     }
     
-    // Step 3: Verify TDS URLs
+    // Step 4: Verify TDS URLs
     if (!options.skipTds) {
       const tdsResult = await verifyTdsUrls(supabase);
       results.push(tdsResult);
     }
     
-    // Step 4: Fix duplicate hex codes
+    // Step 5: Fix duplicate hex codes
     const hexResult = await fixDuplicateHexCodes(supabase);
     results.push(hexResult);
     
@@ -403,7 +576,7 @@ Deno.serve(async (req) => {
     const totalErrors = results.reduce((sum, r) => sum + (r.errors || 0), 0);
     
     // Get product line distribution for logging
-    const productLines = new Set(seedProducts.map(p => p.productLineId));
+    const productLines = new Set(variants.map(v => v.productLineId));
     console.log(`[Sunlu Sync] Product lines: ${productLines.size}`);
     console.log(`[Sunlu Sync] Complete in ${duration}ms`);
     console.log(`[Sunlu Sync] Summary: ${totalCreated} created, ${totalUpdated} updated, ${totalErrors} errors`);
@@ -414,7 +587,8 @@ Deno.serve(async (req) => {
         duration_ms: duration,
         results,
         summary: {
-          products_loaded: seedProducts.length,
+          products_fetched: products.length,
+          variants_processed: variants.length,
           product_lines: productLines.size,
           created: totalCreated,
           updated: totalUpdated,

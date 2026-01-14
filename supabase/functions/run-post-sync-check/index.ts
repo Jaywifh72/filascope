@@ -9368,7 +9368,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments']; // CSV-seeded brands with EUR prices or no prices
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
