@@ -20,6 +20,51 @@ export type FinishType =
   | 'Standard';
 
 /**
+ * Normalize existing finish_type values to standard values
+ * Handles variations like "Carbon Fiber", "CF", "Composite-CF" -> "Carbon"
+ */
+export function normalizeFinishType(existingType: string | null): FinishType {
+  if (!existingType) return 'Standard';
+  const t = existingType.toLowerCase().trim();
+  
+  // Carbon Fiber variations → 'Carbon'
+  if (t.includes('carbon') || t === 'cf' || t.includes('composite-cf')) return 'Carbon';
+  
+  // Glass Fiber variations → 'Glass Fiber'  
+  if (t.includes('glass') || t === 'gf' || t.includes('composite-gf')) return 'Glass Fiber';
+  
+  // Silk variations → 'Silk'
+  if (t === 'silk' || t === 'shimmer' || t.includes('silk')) return 'Silk';
+  
+  // Metallic variations → 'Metallic'
+  if (t === 'metallic' || t === 'metal' || t.includes('metallic')) return 'Metallic';
+  
+  // Sparkle variations → 'Sparkle'
+  if (t === 'sparkle' || t === 'glitter' || t === 'galaxy' || t === 'starlight' || t.includes('sparkle')) return 'Sparkle';
+  
+  // Translucent variations → 'Translucent'
+  if (t === 'translucent' || t === 'transparent' || t === 'clear' || t.includes('translucent')) return 'Translucent';
+  
+  // Glow variations → 'Glow'
+  if (t === 'glow' || t === 'luminous' || t === 'fluorescent' || t === 'uv reactive' || t === 'uv' || t.includes('glow')) return 'Glow';
+  
+  // Matte variations → 'Matte'
+  if (t === 'matte' || t === 'semi-matte' || t.includes('matte')) return 'Matte';
+  
+  // Wood variations → 'Wood'
+  if (t === 'wood' || t.includes('wood')) return 'Wood';
+  
+  // Marble variations → 'Marble'
+  if (t === 'marble' || t === 'stone' || t.includes('marble')) return 'Marble';
+  
+  // Multicolor variations → 'Multicolor'
+  if (t === 'multicolor' || t === 'gradient' || t === 'rainbow' || t === 'multi' || t.includes('multicolor')) return 'Multicolor';
+  
+  // Standard/Unknown → 'Standard'
+  return 'Standard';
+}
+
+/**
  * Extract finish type from product title and material
  * Uses pattern matching to identify special finishes
  */

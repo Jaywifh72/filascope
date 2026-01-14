@@ -80,16 +80,21 @@ interface MoreFiltersModalProps {
   // Color
   selectedColorFamilies: string[];
   onColorFamiliesChange: (families: string[]) => void;
+  
+  // Filter counts
+  filterCounts?: Record<string, number>;
 }
 
 const FilterCheckbox = ({
   checked,
   onChange,
   label,
+  count,
 }: {
   checked: boolean;
   onChange: (value: boolean) => void;
   label: string;
+  count?: number;
 }) => (
   <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
     <Checkbox 
@@ -97,7 +102,10 @@ const FilterCheckbox = ({
       onCheckedChange={(c) => onChange(c as boolean)}
       className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
     />
-    <span className="text-sm text-foreground group-hover:text-foreground/90">{label}</span>
+    <span className="text-sm text-foreground group-hover:text-foreground/90 flex-1">{label}</span>
+    {count !== undefined && count > 0 && (
+      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{count}</span>
+    )}
   </label>
 );
 
@@ -149,6 +157,8 @@ export function MoreFiltersModal({
   // Color
   selectedColorFamilies,
   onColorFamiliesChange,
+  // Filter counts
+  filterCounts = {},
 }: MoreFiltersModalProps) {
   
   const handleResetAll = () => {
@@ -242,32 +252,38 @@ export function MoreFiltersModal({
                   <FilterCheckbox 
                     checked={matte} 
                     onChange={onMatteChange} 
-                    label="Matte" 
+                    label="Matte"
+                    count={filterCounts['matte']}
                   />
                   <FilterCheckbox 
                     checked={silk} 
                     onChange={onSilkChange} 
-                    label="Silk / Shimmer" 
+                    label="Silk / Shimmer"
+                    count={filterCounts['silk']}
                   />
                   <FilterCheckbox 
                     checked={metallic} 
                     onChange={onMetallicChange} 
-                    label="Metallic" 
+                    label="Metallic"
+                    count={filterCounts['metallic']}
                   />
                   <FilterCheckbox 
                     checked={sparkle} 
                     onChange={onSparkleChange} 
-                    label="Sparkle / Glitter" 
+                    label="Sparkle / Glitter"
+                    count={filterCounts['sparkle']}
                   />
                   <FilterCheckbox 
                     checked={translucent} 
                     onChange={onTranslucentChange} 
-                    label="Translucent" 
+                    label="Translucent"
+                    count={filterCounts['translucent']}
                   />
                   <FilterCheckbox 
                     checked={glow} 
                     onChange={onGlowChange} 
-                    label="Glow in Dark" 
+                    label="Glow in Dark"
+                    count={filterCounts['glow']}
                   />
                 </div>
               </AccordionContent>
@@ -286,17 +302,20 @@ export function MoreFiltersModal({
                   <FilterCheckbox 
                     checked={carbonFiber} 
                     onChange={onCarbonFiberChange} 
-                    label="Carbon Fiber" 
+                    label="Carbon Fiber"
+                    count={filterCounts['carbonFiber']}
                   />
                   <FilterCheckbox 
                     checked={glassFiber} 
                     onChange={onGlassFiberChange} 
-                    label="Glass Fiber" 
+                    label="Glass Fiber"
+                    count={filterCounts['glassFiber']}
                   />
                   <FilterCheckbox 
                     checked={woodFilled} 
                     onChange={onWoodFilledChange} 
-                    label="Wood Filled" 
+                    label="Wood Filled"
+                    count={filterCounts['woodFilled']}
                   />
                 </div>
               </AccordionContent>
@@ -315,17 +334,20 @@ export function MoreFiltersModal({
                   <FilterCheckbox 
                     checked={highSpeed} 
                     onChange={onHighSpeedChange} 
-                    label="High Speed (300mm/s+)" 
+                    label="High Speed (300mm/s+)"
+                    count={filterCounts['highSpeed']}
                   />
                   <FilterCheckbox 
                     checked={brassOnly} 
                     onChange={onBrassOnlyChange} 
-                    label="Brass Safe (Non-Abrasive)" 
+                    label="Brass Safe (Non-Abrasive)"
+                    count={filterCounts['brassOnly']}
                   />
                   <FilterCheckbox 
                     checked={amsOnly} 
                     onChange={onAmsOnlyChange} 
-                    label="AMS/MMU Compatible" 
+                    label="AMS/MMU Compatible"
+                    count={filterCounts['amsOnly']}
                   />
                 </div>
               </AccordionContent>
@@ -344,7 +366,8 @@ export function MoreFiltersModal({
                   <FilterCheckbox 
                     checked={largeSpools} 
                     onChange={onLargeSpoolsChange} 
-                    label="Include Large Spools (>1kg)" 
+                    label="Include Large Spools (>1kg)"
+                    count={filterCounts['large_spools']}
                   />
                   <p className="text-[10px] text-muted-foreground px-2">By default only 1kg and smaller are shown</p>
                 </div>
