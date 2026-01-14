@@ -75,17 +75,14 @@ function filterConsumerProducts(products: TreeDSeedProduct[]): TreeDSeedProduct[
       return false;
     }
     
-    // No sample products (<300g) - except standard 500g spools for engineering materials
+    // No sample products (<300g)
     if (p.weight < 300) {
       console.log(`  Skipping sample: ${p.name} (${p.weight}g)`);
       return false;
     }
     
-    // Use isTreeDFilament to filter non-filament products
-    if (!isTreeDFilament({ title: p.name, sku: p.sku })) {
-      console.log(`  Skipping non-filament: ${p.name}`);
-      return false;
-    }
+    // NOTE: All seed data IS filament by definition - no isTreeDFilament check needed
+    // The seed is curated and only contains valid filament products
     
     return true;
   });
@@ -174,11 +171,11 @@ async function safeDeleteAndInsert(
     return;
   }
   
-  // Delete existing TreeD products
+  // Delete existing TreeD products (use ILIKE with wildcards for proper matching)
   const { error: deleteError, count: deleteCount } = await supabase
     .from('filaments')
     .delete()
-    .or('vendor.ilike.treed,vendor.ilike.treed filaments')
+    .ilike('vendor', '%treed%')
     .select('id', { count: 'exact' });
   
   if (deleteError) {
