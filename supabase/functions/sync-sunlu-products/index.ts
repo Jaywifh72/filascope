@@ -2,6 +2,7 @@
 // 5-step process: Fetch -> Explode Variants -> Upsert with Enrichments -> Assign TDS -> Fix Duplicate Hex
 //
 // Sunlu uses Shopify (store.sunlu.com)
+// Enhanced with CSV-seeded architecture for high-fidelity sync
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
@@ -17,6 +18,15 @@ import {
   isSunluFilament,
   SUNLU_TDS_URL,
 } from '../_shared/sunlu-defaults.ts';
+import {
+  SUNLU_EXTENDED_HEX_MAP,
+  SUNLU_EXCLUDED_PATTERNS,
+  extractRegionFromVariant,
+  normalizeSunluMaterialFromTitle,
+  generateSunluProductLineId,
+  getSunluColorHexFromSeed,
+  isSunluExcludedProduct,
+} from '../_shared/sunlu-seed.ts';
 
 // ============================================================================
 // INTERFACES
@@ -68,6 +78,7 @@ interface ProductVariant {
   imageUrl: string | null;
   productUrl: string;
   shipFrom: string | null;
+  region: string;
 }
 
 interface SyncResult {
@@ -91,6 +102,23 @@ const CORS_HEADERS = {
 
 const SHOPIFY_BASE_URL = 'https://store.sunlu.com';
 const VENDOR_NAME = 'Sunlu';
+
+// Safe Delete threshold - only delete all if we have enough valid products
+const SUNLU_SAFE_DELETE_THRESHOLD = 150;
+
+// Material prefixes to strip for color extraction
+const SUNLU_MATERIAL_PREFIXES = [
+  'PLA\\+', 'PLA Plus', 'PLA-Meta', 'PLA Meta', 'High Speed PLA', 'HS_PLA', 'HS-PLA',
+  'Matte PLA', 'Silk PLA', 'SILK', 'Marble PLA', 'Wood PLA', 'Glow PLA', 'Luminous PLA',
+  'Dual-Color Matte', 'Dual Color Matte', 'Dual-Color Silk', 'Dual Color Silk',
+  'PETG', 'High Speed Matte PETG', 'Matte PETG', 'HS Matte PETG',
+  'ABS', 'ABS-FR', 'ABS-GF', 'E-ABS', 'Easy ABS',
+  'TPU 90A', 'TPU 95A', 'TPU',
+  'PA6-CF', 'PA12-CF', 'Easy PA', 'PA-CF',
+  'PETG-CF', 'PLA-CF',
+  'PC-ABS', 'PC', 'PP', 'PEEK',
+  'ASA', 'PVA', 'HIPS'
+];
 
 // ============================================================================
 // STEP 1: FETCH PRODUCTS FROM SHOPIFY
@@ -125,8 +153,17 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
       break;
     }
     
-    // Filter to filament products only
-    const filamentProducts = products.filter(p => isSunluFilament(p));
+    // Filter to filament products only using enhanced exclusion patterns
+    const filamentProducts = products.filter(p => {
+      // First check enhanced exclusion patterns
+      if (isSunluExcludedProduct(p.title)) {
+        console.log(`[Step 1] Excluding non-filament: ${p.title}`);
+        return false;
+      }
+      // Then use the standard check
+      return isSunluFilament(p);
+    });
+    
     allProducts.push(...filamentProducts);
     
     console.log(`[Step 1] Page ${page}: ${products.length} total, ${filamentProducts.length} filaments`);
@@ -146,33 +183,59 @@ async function fetchShopifyProducts(): Promise<ShopifyProduct[]> {
 }
 
 // ============================================================================
-// STEP 2: EXPLODE VARIANTS
+// STEP 2: EXPLODE VARIANTS (Enhanced with region filtering)
 // ============================================================================
 
 function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
-  console.log('[Step 2] Exploding variants...');
+  console.log('[Step 2] Exploding variants with enhanced region/color extraction...');
   
   const variants: ProductVariant[] = [];
   const seenColorWeightCombos = new Map<string, ProductVariant>();
   const filterStats = createFilterStats();
   
+  let skippedNonUS = 0;
+  let skippedExcluded = 0;
+  
   for (const product of products) {
+    // Double-check exclusion at product level
+    if (isSunluExcludedProduct(product.title)) {
+      skippedExcluded++;
+      console.log(`[Step 2] Skipping excluded product: ${product.title}`);
+      continue;
+    }
+    
     // Check for 2.85mm diameter at product level
     const is285 = product.title.includes('2.85') || product.title.includes('3mm');
     
     for (const variant of product.variants) {
-      // Parse variant title (e.g., "Red / US" or "Black / 1KG")
-      const parsed = parseSunluVariant(variant.title);
+      // Check variant-level exclusion (e.g., "Ship to EU / 10KG Bundle")
+      if (isSunluExcludedProduct(product.title, variant.title)) {
+        skippedExcluded++;
+        continue;
+      }
       
-      // Also check option1/option2 for color
-      const color = parsed.color || variant.option1 || null;
+      // Enhanced: Parse region and color from variant title using new function
+      const { region, color: extractedColor } = extractRegionFromVariant(variant.title);
+      
+      // Only include US region to avoid duplicate products across regions
+      if (region !== 'US') {
+        skippedNonUS++;
+        continue;
+      }
+      
+      // Clean color by stripping material prefixes
+      const cleanedColor = extractSunluColor(extractedColor || variant.option1 || '');
+      
+      // Parse variant title for additional data
+      const parsed = parseSunluVariant(variant.title);
+      const color = cleanedColor || parsed.color || null;
       const weight = parsed.weight || extractWeightFromTitle(product.title, variant.title);
       
       // Apply standard filtering (samples, bulk, 2.85mm, excluded keywords)
       const filterResult = shouldIncludeVariant(weight || 1000, is285 ? 2.85 : 1.75, product.title);
       updateFilterStats(filterStats, filterResult);
       if (!filterResult.include) {
-        console.log(`[Sunlu] Skipping: ${product.title} - ${color} (${filterResult.reason})`);
+        console.log(`[Step 2] Filtering: ${product.title} - ${color} (${filterResult.reason})`);
         continue;
       }
       
@@ -202,9 +265,10 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
         imageUrl,
         productUrl: `${SHOPIFY_BASE_URL}/products/${product.handle}`,
         shipFrom: parsed.shipFrom,
+        region,
       };
       
-      // Keep the first occurrence (usually US or primary warehouse)
+      // Keep the first occurrence (US preferred)
       if (!seenColorWeightCombos.has(comboKey)) {
         seenColorWeightCombos.set(comboKey, productVariant);
         variants.push(productVariant);
@@ -213,8 +277,31 @@ function explodeVariants(products: ShopifyProduct[]): ProductVariant[] {
   }
   
   logFilterStats('Sunlu', filterStats);
-  console.log(`[Step 2] Complete: ${variants.length} unique variants extracted`);
+  console.log(`[Step 2] Region filtering: ${skippedNonUS} non-US variants skipped`);
+  console.log(`[Step 2] Exclusion filtering: ${skippedExcluded} excluded products skipped`);
+  console.log(`[Step 2] Complete: ${variants.length} unique US variants extracted`);
   return variants;
+}
+
+/**
+ * Extract clean color by stripping material prefixes
+ */
+function extractSunluColor(variantColor: string): string {
+  let color = variantColor.trim();
+  
+  // Strip material prefixes
+  for (const prefix of SUNLU_MATERIAL_PREFIXES) {
+    const regex = new RegExp(`^${prefix}\\s*[\\|\\-\\/]?\\s*`, 'i');
+    color = color.replace(regex, '');
+  }
+  
+  // Strip weight suffix
+  color = color.replace(/\s*\d+(?:\.\d+)?\s*(?:kg|g)\s*$/i, '');
+  
+  // Strip region prefix if still present (e.g., "US / Black" -> "Black")
+  color = color.replace(/^(?:US|USA|EU|CA|AU)\s*[\/\-]\s*/i, '');
+  
+  return color.trim();
 }
 
 function extractWeightFromTitle(productTitle: string, variantTitle: string): number | null {
@@ -237,7 +324,7 @@ function extractWeightFromTitle(productTitle: string, variantTitle: string): num
 }
 
 // ============================================================================
-// STEP 3: UPSERT WITH ENRICHMENTS
+// STEP 3: UPSERT WITH ENRICHMENTS (Enhanced with seed-based hex mapping)
 // ============================================================================
 
 async function upsertVariants(
@@ -245,7 +332,7 @@ async function upsertVariants(
   variants: ProductVariant[],
   brandId: string | null
 ): Promise<SyncResult> {
-  console.log('[Step 3] Upserting variants with enrichments...');
+  console.log('[Step 3] Upserting variants with enhanced enrichments...');
   
   let created = 0;
   let updated = 0;
@@ -256,8 +343,16 @@ async function upsertVariants(
       // Enrich with Sunlu-specific data
       const enrichment = enrichSunluProduct(variant.title, variant.color || undefined);
       
-      // Get color hex (with fallback)
-      const colorHex = enrichment.colorHex || getSunluColorHex(variant.color || '');
+      // Enhanced: Get color hex with priority: seed mapping > enrichment > default
+      const colorHex = getSunluColorHexFromSeed(variant.color || '') 
+        || enrichment.colorHex 
+        || getSunluColorHex(variant.color || '')
+        || getExtendedHexMapping(variant.color || '');
+      
+      // Enhanced: Generate product line ID with new function
+      const normalizedMaterial = normalizeSunluMaterialFromTitle(variant.title);
+      const productLineId = generateSunluProductLineId(variant.title, normalizedMaterial)
+        || enrichment.productLineId;
       
       // Check if exists
       const { data: existing } = await supabase
@@ -272,9 +367,9 @@ async function upsertVariants(
         product_handle: variant.handle,
         vendor: VENDOR_NAME,
         brand_id: brandId,
-        material: enrichment.material,
+        material: normalizedMaterial || enrichment.material,
         finish_type: enrichment.finishType,
-        product_line_id: enrichment.productLineId,
+        product_line_id: productLineId,
         color_hex: colorHex,
         variant_price: variant.price,
         variant_compare_at_price: variant.compareAtPrice,
@@ -329,8 +424,31 @@ async function upsertVariants(
   };
 }
 
+/**
+ * Fallback hex mapping using SUNLU_EXTENDED_HEX_MAP
+ */
+function getExtendedHexMapping(colorName: string): string | null {
+  if (!colorName) return null;
+  
+  const normalized = colorName.toLowerCase().trim();
+  
+  // Direct lookup
+  if (SUNLU_EXTENDED_HEX_MAP[normalized]) {
+    return '#' + SUNLU_EXTENDED_HEX_MAP[normalized];
+  }
+  
+  // Try partial match
+  for (const [key, hex] of Object.entries(SUNLU_EXTENDED_HEX_MAP)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return '#' + hex;
+    }
+  }
+  
+  return null;
+}
+
 // ============================================================================
-// STEP 4: TDS URL ASSIGNMENT (already done in upsert, this is a verification step)
+// STEP 4: TDS URL ASSIGNMENT (verification step)
 // ============================================================================
 
 async function verifyTdsUrls(supabase: any): Promise<SyncResult> {
@@ -497,20 +615,6 @@ Deno.serve(async (req) => {
     const brandId = brand?.id || null;
     console.log('[Sunlu Sync] Brand ID:', brandId);
     
-    // Clean slate if requested
-    if (options.cleanSlate) {
-      console.log('[Sunlu Sync] Performing clean slate delete...');
-      const { error: deleteError, count } = await supabase
-        .from('filaments')
-        .delete()
-        .ilike('vendor', 'sunlu');
-      
-      if (deleteError) {
-        throw new Error(`Clean slate delete failed: ${deleteError.message}`);
-      }
-      console.log(`[Sunlu Sync] Deleted ${count || 'all'} existing Sunlu products`);
-    }
-    
     const results: SyncResult[] = [];
     
     // Step 1: Fetch products
@@ -533,8 +637,23 @@ Deno.serve(async (req) => {
         step: 'explode_variants',
         success: true,
         created: variants.length,
-        message: `Exploded into ${variants.length} unique variants`,
+        message: `Exploded into ${variants.length} unique US-region variants`,
       });
+    }
+    
+    // Safe Delete Pattern: If clean slate OR we have enough valid variants
+    if (options.cleanSlate || variants.length >= SUNLU_SAFE_DELETE_THRESHOLD) {
+      console.log(`[Sunlu Sync] Performing safe delete (${variants.length} variants >= ${SUNLU_SAFE_DELETE_THRESHOLD} threshold)...`);
+      const { error: deleteError, count } = await supabase
+        .from('filaments')
+        .delete()
+        .ilike('vendor', 'sunlu');
+      
+      if (deleteError) {
+        console.error('[Sunlu Sync] Delete error:', deleteError);
+      } else {
+        console.log(`[Sunlu Sync] Deleted ${count || 'all'} existing Sunlu products`);
+      }
     }
     
     // Step 3: Upsert with enrichments
