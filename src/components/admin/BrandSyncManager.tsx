@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Wand2, ChevronDown, Loader2, CheckCircle2, XCircle, AlertTriangle, Trash2, Zap, Settings2, Info, Ban, Sparkles, Filter, BookOpen, Copy, Check } from "lucide-react";
+import { Wand2, ChevronDown, Loader2, CheckCircle2, XCircle, AlertTriangle, Trash2, Zap, Settings2, Info, Ban, Sparkles, Filter, BookOpen, Copy, Check, Layers } from "lucide-react";
 import { useBrandSyncManager } from "@/hooks/useBrandSyncManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -89,6 +89,7 @@ export function BrandSyncManager() {
   const [syncDocsOpen, setSyncDocsOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+  const [filamentDetailsOpen, setFilamentDetailsOpen] = useState(false);
 
   const {
     executeSync,
@@ -120,6 +121,39 @@ export function BrandSyncManager() {
 
   const selectedBrand = brands.find(b => b.brand_slug === selectedBrandSlug);
   const syncType = selectedBrandSlug ? detectSyncFunction(selectedBrandSlug) : null;
+
+  // Fetch filament counts by material for selected brand
+  const { data: filamentDetails } = useQuery({
+    queryKey: ['filament-details', selectedBrand?.brand_name],
+    queryFn: async () => {
+      if (!selectedBrand?.brand_name) return null;
+      
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('material')
+        .ilike('vendor', selectedBrand.brand_name);
+      
+      if (error) throw error;
+      
+      // Aggregate counts by material
+      const materialCounts: Record<string, number> = {};
+      data?.forEach(f => {
+        const mat = f.material || 'Unknown';
+        materialCounts[mat] = (materialCounts[mat] || 0) + 1;
+      });
+      
+      // Sort by count descending
+      const sorted = Object.entries(materialCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([material, count]) => ({ material, count }));
+      
+      return {
+        byMaterial: sorted,
+        total: data?.length || 0
+      };
+    },
+    enabled: !!selectedBrand?.brand_name,
+  });
 
   const handleSync = async () => {
     if (!selectedBrand) return;
@@ -354,6 +388,43 @@ export function BrandSyncManager() {
               <span className="font-medium">Last Sync:</span> {formatLastSync(selectedBrand.last_scrape_at)}
             </div>
           </div>
+        )}
+
+        {/* Filament Details Section */}
+        {selectedBrand && filamentDetails && (
+          <Collapsible open={filamentDetailsOpen} onOpenChange={setFilamentDetailsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+                <ChevronDown className={`w-4 h-4 transition-transform ${filamentDetailsOpen ? 'rotate-180' : ''}`} />
+                <Layers className="w-4 h-4" />
+                <span>Filament Details</span>
+                <Badge variant="secondary" className="ml-2">
+                  {filamentDetails.total} total
+                </Badge>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3">
+              <div className="bg-muted/30 rounded-lg p-4 space-y-3 text-sm">
+                {/* Grand Total */}
+                <div className="flex items-center justify-between pb-2 border-b">
+                  <span className="font-semibold">Total Filaments</span>
+                  <span className="text-lg font-bold">{filamentDetails.total}</span>
+                </div>
+                
+                {/* Material Breakdown Grid */}
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                  {filamentDetails.byMaterial.map(({ material, count }) => (
+                    <div key={material} className="bg-background rounded p-2 border text-center">
+                      <div className="font-medium text-xs truncate" title={material}>
+                        {material}
+                      </div>
+                      <div className="text-lg font-semibold tabular-nums">{count}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {/* Brand-Specific Sync Logic Documentation */}
