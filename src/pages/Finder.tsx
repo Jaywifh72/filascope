@@ -825,6 +825,55 @@ const Finder = () => {
       if (weightG > 1000) {
         counts['large_spools'] = (counts['large_spools'] || 0) + 1;
       }
+      
+      // Count advanced filters (surface finish, reinforced, performance)
+      const finishType = f.finish_type?.toLowerCase() || '';
+      const titleLower = f.product_title?.toLowerCase() || '';
+      const materialLower = f.material?.toLowerCase() || '';
+      
+      // Surface Finish counts
+      if (finishType === 'matte' || titleLower.includes('matte')) {
+        counts['matte'] = (counts['matte'] || 0) + 1;
+      }
+      if (finishType === 'silk' || finishType.includes('shimmer') || titleLower.includes('silk') || titleLower.includes('shimmer')) {
+        counts['silk'] = (counts['silk'] || 0) + 1;
+      }
+      if (finishType === 'metallic' || finishType.includes('metal') || titleLower.includes('metallic')) {
+        counts['metallic'] = (counts['metallic'] || 0) + 1;
+      }
+      if (finishType === 'sparkle' || finishType.includes('glitter') || finishType.includes('galaxy') || 
+          titleLower.includes('sparkle') || titleLower.includes('glitter') || titleLower.includes('galaxy')) {
+        counts['sparkle'] = (counts['sparkle'] || 0) + 1;
+      }
+      if (finishType === 'translucent' || finishType.includes('transparent') || finishType.includes('clear') ||
+          titleLower.includes('translucent') || titleLower.includes('transparent')) {
+        counts['translucent'] = (counts['translucent'] || 0) + 1;
+      }
+      if (finishType === 'glow' || materialLower.includes('glow') || titleLower.includes('glow')) {
+        counts['glow'] = (counts['glow'] || 0) + 1;
+      }
+      
+      // Reinforced Materials counts
+      if (isCarbonFiberFilament(f)) {
+        counts['carbonFiber'] = (counts['carbonFiber'] || 0) + 1;
+      }
+      if (isGlassFiberFilament(f)) {
+        counts['glassFiber'] = (counts['glassFiber'] || 0) + 1;
+      }
+      if (isWoodFilament(f)) {
+        counts['woodFilled'] = (counts['woodFilled'] || 0) + 1;
+      }
+      
+      // Performance counts
+      if (f.high_speed_capable || /high[\s-]?speed|highspeed|-hs\b|hs-|\brapid\b/i.test(titleLower + ' ' + materialLower)) {
+        counts['highSpeed'] = (counts['highSpeed'] || 0) + 1;
+      }
+      if (f.is_nozzle_abrasive === false) {
+        counts['brassOnly'] = (counts['brassOnly'] || 0) + 1;
+      }
+      if (isAMSCompatible(f)) {
+        counts['amsOnly'] = (counts['amsOnly'] || 0) + 1;
+      }
     });
 
     // Count by brand (apply all filters except brand)
@@ -1305,6 +1354,8 @@ const Finder = () => {
         // Color
         selectedColorFamilies={selectedColorFamilies}
         onColorFamiliesChange={setSelectedColorFamilies}
+        // Filter counts
+        filterCounts={filterCounts}
       />
 
       {/* Main Content Area - Full Width (sidebar removed) */}
@@ -1315,7 +1366,9 @@ const Finder = () => {
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm text-muted-foreground">
-            {filteredAndSortedFilaments?.length || 0} filaments
+            {totalCount} products{filteredAndSortedFilaments && filteredAndSortedFilaments.length !== totalCount 
+              ? ` (${filteredAndSortedFilaments.length} variants)` 
+              : ''}
           </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground hidden sm:inline">🇺🇸 United States</span>
