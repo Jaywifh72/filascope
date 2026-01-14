@@ -228,12 +228,12 @@ export const SPECTRUM_EXPECTED_PRODUCT_LINES: Record<string, number> = {
   'spectrum__pet-g-glow-in-the-dark__standard': 3,
   'spectrum__rpetg__standard': 8,
   
-  // ========== ASA Family (7 lines) ==========
+  // ========== ASA Family (8 lines) ==========
   'spectrum__asa-275__standard': 12,
   'spectrum__asa-275__refill': 12,
   'spectrum__flameguard-asa-275__standard': 8,
   'spectrum__asa-x-cf10__standard': 2,
-  'spectrum__asa-x-cf10__refill': 1,
+  'spectrum__asa-x-cf10__refill': 1,  // New ReFill variant (68th product line)
   'spectrum__asa-x-gf10__standard': 4,
   'spectrum__asa-kevlar__standard': 2,
   

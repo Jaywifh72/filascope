@@ -270,7 +270,12 @@ function extractColor(product: ShopifyProduct): string {
   
   // Remove material name prefixes (longest patterns first)
   const materialPrefixes = [
-    // ===== "THE FILAMENT" SUB-BRAND (MUST BE FIRST!) =====
+    // ===== COMPOSITE MATERIALS WITH SLASHES (MUST BE FIRST!) =====
+    'PET-G/PTFE', 'PETG/PTFE',                        // Must be before PET-G (fixes /PTFE in color)
+    'PC/ABS FR V0', 'PC/ABS',                         // Must be before PC (fixes /ABS FR V0 in color)
+    'Spectrum PET-G FR V0', 'Spectrum PETG FR V0',   // Product with double Spectrum prefix
+    'Spectrum',                                       // Generic Spectrum prefix cleanup
+    // ===== "THE FILAMENT" SUB-BRAND =====
     'The Filament ReFill PETG CF', 'The Filament PETG CF',
     'The Filament ReFill PETG HS', 'The Filament PETG HS',
     'The Filament ReFill PETG', 'The Filament PETG',
@@ -279,11 +284,12 @@ function extractColor(product: ShopifyProduct): string {
     'The Filament ReFill PLA', 'The Filament PLA',
     // ===== SPECIALTY MATERIALS =====
     // CRITICAL: Specialty engineering materials MUST be listed before generic patterns
-    'PET-G FR V0', 'PETG FR V0',                    // Fire retardant PETG
-    'PC/PTFE', 'PC PTFE', 'PC-PTFE',                // PC/PTFE lubricated material
-    'PPS AM230',                                    // High-temp PPS
-    'ThermaTech PA',                                // High-temp PA
-    'ABS Medical',                                  // Medical-grade ABS
+    'PET-G FR V0', 'PETG FR V0',                      // Fire retardant PETG
+    'PC/PTFE', 'PC PTFE', 'PC-PTFE',                  // PC/PTFE lubricated material
+    'PPS AM230',                                      // High-temp PPS
+    'ThermaTech PA',                                  // High-temp PA
+    'ABS Medical',                                    // Medical-grade ABS
+    'AquaPrint',                                      // Standalone AquaPrint (no PLA suffix in some titles)
     'FlameGuard ASA 275', 'FlameGuard PLA', 'SafeGuard PLA', 'AquaPrint PLA',
     'PLA Magic SILK', 'PLA SILK Rainbow', 'PLA SILK', 'Pastello PLA',
     'Premium PLA High Speed', 'PLA High Speed', 'PLA Premium',
@@ -1015,6 +1021,10 @@ function mapSpectrumColorToHex(colorName: string): string | null {
     'aurora gold': 'FFD900',     // Glitter gold 1 (brighter)
     'aztec gold': 'FFCE00',      // Glitter gold 2 (warmer)
     'clear gold': 'FFDC00',      // Glitter gold 3 (yellow-gold)
+    
+    // ========== UNIQUE PINK/MAGENTA MAPPINGS (prevent collision) ==========
+    'magenta': 'FF00FF',         // True magenta
+    'pink panther': 'FF69B4',    // Hot pink
     
     // ========== MATT VS NON-MATT UNIQUE MAPPINGS ==========
     'matt navy blue': '000075',  // Slightly darker than #000080
