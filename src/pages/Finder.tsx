@@ -543,6 +543,31 @@ const Finder = () => {
     },
   });
   
+  // Fetch true filament counts per brand (matching Sync Manager logic)
+  const { data: brandFilamentCounts } = useQuery({
+    queryKey: ["brand-filament-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("filaments")
+        .select("vendor")
+        .not("material", "is", null)
+        .or("net_weight_g.is.null,net_weight_g.gte.300");
+      
+      if (error) throw error;
+      
+      // Aggregate counts by vendor
+      const counts: Record<string, number> = {};
+      data?.forEach(f => {
+        if (f.vendor) {
+          counts[f.vendor] = (counts[f.vendor] || 0) + 1;
+        }
+      });
+      
+      return counts;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+  
   // Extract for convenience
   const brands = brandsData?.displayNames;
   const brandNameMap = brandsData?.brandNameMap || {};
@@ -1098,7 +1123,7 @@ const Finder = () => {
             }
           }
         }}
-        brands={(brands || []).map(b => ({ name: b, count: filterCounts[`brand_${brandNameMap[b] || b}`] || 0 })).sort((a, b) => a.name.localeCompare(b.name))}
+        brands={(brands || []).map(b => ({ name: b, count: brandFilamentCounts?.[brandNameMap[b] || b] || 0 })).sort((a, b) => a.name.localeCompare(b.name))}
         selectedBrands={selectedBrands}
         onBrandsChange={setSelectedBrands}
         priceRange={priceRange}
