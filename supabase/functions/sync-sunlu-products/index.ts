@@ -367,6 +367,12 @@ function getColorFamily(colorName: string): string | null {
   if (/glow/i.test(lower)) return 'Glow';
   if (/rainbow|multicolor/i.test(lower)) return 'Rainbow';
   
+  // Specialty effect patterns (map to appropriate families)
+  if (/marble/i.test(lower)) return 'Grey';           // Marble is grey-toned
+  if (/galaxy/i.test(lower)) return 'Multicolor';     // Galaxy is color-shifting
+  if (/dual[\-\s]?color/i.test(lower)) return 'Multicolor';
+  if (/pearlescent|iridescent/i.test(lower)) return 'Multicolor';
+  
   return null;
 }
 

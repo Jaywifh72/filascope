@@ -10027,12 +10027,21 @@ Deno.serve(async (req) => {
                     url: product.product_url,
                   });
                 } else if (livePrice > 100 && weight <= 1000) {
-                  livePriceIssues.push({
-                    id: product.id,
-                    title: product.product_title,
-                    issue: `Live price unusually high: $${livePrice} for ${weight}g product`,
-                    url: product.product_url,
-                  });
+                  // Exception for high-value engineering materials (PEEK, PA-CF, PEI, etc.)
+                  // These legitimately cost $400-$800/kg
+                  const highValueMaterials = ['PEEK', 'PA-CF', 'PA12-CF', 'PA6-CF', 'PAHT-CF', 'PEI', 'PPSU', 'PPS', 'ULTEM'];
+                  const isHighValueMaterial = highValueMaterials.some(mat => 
+                    product.product_title?.toUpperCase().includes(mat)
+                  );
+                  
+                  if (!isHighValueMaterial) {
+                    livePriceIssues.push({
+                      id: product.id,
+                      title: product.product_title,
+                      issue: `Live price unusually high: $${livePrice} for ${weight}g product`,
+                      url: product.product_url,
+                    });
+                  }
                 } else if (pricePerKg < 6) {
                   livePriceIssues.push({
                     id: product.id,

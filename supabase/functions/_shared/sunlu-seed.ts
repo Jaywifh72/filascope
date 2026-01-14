@@ -429,9 +429,23 @@ export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
 // ============================================================================
 
 export function extractRegionFromVariant(variantColor: string): { region: string; color: string } {
-  // Format: "Ship to USA / PETG | Black 1KG"
-  //         "Ship to Europe / Red+Yellow"
+  // Format 1: "Ship to USA / PETG | Black 1KG" (complex with material prefix)
+  // Format 2: "Ship to Europe / Red+Yellow" (with color)
+  // Format 3: "USA / 1KG" (simple region-only, no "Ship to" prefix)
+  // Format 4: "USA / Black" (simple with color)
   
+  // Helper function to normalize region codes
+  const normalizeRegion = (region: string): string => {
+    if (/usa|united\s*states/i.test(region)) return 'US';
+    if (/europe|eu/i.test(region)) return 'EU';
+    if (/canada/i.test(region)) return 'CA';
+    if (/australia/i.test(region)) return 'AU';
+    if (/germany/i.test(region)) return 'DE';
+    if (/uk|united\s*kingdom/i.test(region)) return 'UK';
+    return 'US';
+  };
+  
+  // Try "Ship to" format first (Format 1 & 2)
   const shipToMatch = variantColor.match(/Ship\s+to\s+([A-Za-z\s]+)\s*\/\s*(.+)/i);
   if (shipToMatch) {
     const region = shipToMatch[1].trim();
@@ -446,15 +460,24 @@ export function extractRegionFromVariant(variantColor: string): { region: string
       color = materialMatch[1].trim();
     }
     
-    // Normalize region
-    let normalizedRegion = 'US';
-    if (/usa|united\s*states/i.test(region)) normalizedRegion = 'US';
-    else if (/europe|eu/i.test(region)) normalizedRegion = 'EU';
-    else if (/canada/i.test(region)) normalizedRegion = 'CA';
-    else if (/australia/i.test(region)) normalizedRegion = 'AU';
-    else if (/germany/i.test(region)) normalizedRegion = 'DE';
+    return { region: normalizeRegion(region), color };
+  }
+  
+  // Try simple "Region / Value" format (Format 3 & 4) - e.g., "USA / 1KG" or "USA / Black"
+  const simpleMatch = variantColor.match(/^(USA|Europe|Canada|Australia|UK|Germany)\s*\/\s*(.+)/i);
+  if (simpleMatch) {
+    const region = simpleMatch[1].trim();
+    let color = simpleMatch[2].trim();
     
-    return { region: normalizedRegion, color };
+    // Remove weight suffix - if only weight remains, return empty color for fallback
+    color = color.replace(/\s*\d+(?:\.\d+)?\s*(?:kg|g)\s*$/i, '').trim();
+    
+    // If nothing left after removing weight, return empty color for fallback handling
+    if (!color || color === '') {
+      return { region: normalizeRegion(region), color: '' };
+    }
+    
+    return { region: normalizeRegion(region), color };
   }
   
   return { region: 'US', color: variantColor.trim() };
