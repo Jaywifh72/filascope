@@ -8552,6 +8552,11 @@ Deno.serve(async (req) => {
           }
 
           // ========== CHECK B: COLOR COUNT VALIDATION ==========
+          // Skip for brands with multi-region variant architectures where shipping options are detected as colors
+          // - sunlu: Uses "Ship to USA / Europe / Canada" variants that scraper picks up as color options
+          const skipColorCountCheckBrands = ['sunlu'];
+          const shouldSkipColorCountCheck = skipColorCountCheckBrands.includes(brandSlug);
+          
           const dbColorCount = variants.length;
           const pageColorCount = pageInfo.colorSwatches.length;
           
@@ -8559,7 +8564,7 @@ Deno.serve(async (req) => {
           
           // Only flag if page has significantly more colors (2+ difference)
           // Some pages may not expose all swatches in HTML
-          if (pageColorCount > 0 && pageColorCount > dbColorCount + 1) {
+          if (!shouldSkipColorCountCheck && pageColorCount > 0 && pageColorCount > dbColorCount + 1) {
             colorCountIssues.push({
               id: representative.id,
               title: lineId,
