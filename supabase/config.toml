@@ -434,3 +434,6 @@ verify_jwt = false
 
 [functions.sync-elegoo-ca-products]
 verify_jwt = false
+
+[functions.populate-filament-tags]
+verify_jwt = true

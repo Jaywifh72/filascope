@@ -713,7 +713,11 @@ const Finder = () => {
     const material = filament.material?.toLowerCase() || '';
     const title = filament.product_title?.toLowerCase() || '';
     const hasWoodContent = filament.wood_powder_percentage !== null && filament.wood_powder_percentage !== undefined && filament.wood_powder_percentage > 0;
-    return hasWoodContent || material.includes('wood') || title.includes('wood') || title.includes('timber') || material.includes('cork');
+    const finishType = filament.finish_type?.toLowerCase() || '';
+    if (finishType === 'wood') return true;
+    // Exclude color names that contain "wood"
+    if (/hollywood|rosewood|driftwood|deadwood|cherrywood/i.test(title)) return false;
+    return hasWoodContent || /\bwood\b|timber|bamboo/i.test(title) || /\bwood\b|cork/i.test(material);
   };
 
   // Get wood percentage for display
@@ -726,12 +730,9 @@ const Finder = () => {
     const material = filament.material?.toLowerCase() || '';
     const title = filament.product_title?.toLowerCase() || '';
     const hasGFContent = filament.glass_fiber_percentage !== null && filament.glass_fiber_percentage !== undefined && filament.glass_fiber_percentage > 0;
-    // Match patterns: -GF, +GF, GF+, _GF, " GF", "glass fiber", NylonG, material ending in GF
-    return hasGFContent || 
-      material.includes('-gf') || material.includes('+gf') || material.endsWith('gf') ||
-      title.includes('+gf') || title.includes('gf+') || title.includes('-gf') ||
-      title.includes('glass fiber') || title.includes('glass-fiber') ||
-      material.includes('nylong');
+    const finishType = filament.finish_type?.toLowerCase() || '';
+    if (finishType === 'glass fiber') return true;
+    return hasGFContent || /glass\s*fiber|glass-fiber|-gf\b|\+gf\b|gf\s*\d|fiberglass/i.test(title) || /glass\s*fiber|-gf\b|\+gf\b|nylong/i.test(material);
   };
 
   // Get glass fiber percentage for display
@@ -744,13 +745,10 @@ const Finder = () => {
     const material = filament.material?.toLowerCase() || '';
     const title = filament.product_title?.toLowerCase() || '';
     const hasCFContent = filament.carbon_fiber_percentage !== null && filament.carbon_fiber_percentage !== undefined && filament.carbon_fiber_percentage > 0;
-    // Match patterns: -CF, +CF, CF+, _CF, material ending in CF, "carbon fiber" - but exclude "Polycarbonate" (PC)
-    const hasPolycarbonate = title.includes('polycarbonate');
-    return hasCFContent || (!hasPolycarbonate && (
-      material.includes('-cf') || material.includes('+cf') || material.endsWith('cf') ||
-      title.includes('+cf') || title.includes('-cf') || title.includes('cf+') ||
-      title.includes('carbon fiber') || title.includes('carbon-fiber')
-    ));
+    const finishType = filament.finish_type?.toLowerCase() || '';
+    if (finishType === 'carbon') return true;
+    const hasPolycarbonate = /polycarbonate/i.test(title);
+    return hasCFContent || (!hasPolycarbonate && /carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d/i.test(title + ' ' + material));
   };
 
   // Get carbon fiber percentage for display
