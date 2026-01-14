@@ -12909,3 +12909,5 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+// Force deploy: 2026-01-14 - Ziro skip logic fixes applied
