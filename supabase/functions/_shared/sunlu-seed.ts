@@ -310,7 +310,7 @@ export const SUNLU_EXPECTED_CARD_COUNT = Object.keys(SUNLU_EXPECTED_PRODUCT_LINE
 // ============================================================================
 
 export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
-  // Non-filament products
+  // === NON-FILAMENT PRODUCTS (3D printers, accessories, dryers) ===
   /filadryer/i,
   /filament\s*dryer/i,
   /dry\s*box/i,
@@ -337,6 +337,16 @@ export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
   /e2\s*filadryer/i,
   /filadryer\s*e2/i,
   
+  // NEW: Non-filament products (3D printers, AMS heaters, accessories)
+  /kidoodle/i,
+  /minibox/i,
+  /3d\s*printer\s*for\s*kids/i,
+  /ams\s*heater/i,
+  /\d+%\s*off\s*flash\s*deal/i,
+  /flash\s*deal/i,
+  /accessories?\s*(&|and)?\s*companions?\s*collection/i,
+  /3d\s*printer\s*accessories/i,
+  
   // Filament holder/rack products
   /filament\s*holder/i,
   /spool\s*holder/i,
@@ -345,29 +355,47 @@ export const SUNLU_EXCLUDED_PATTERNS: RegExp[] = [
   /holder.*fit.*spool/i,
   /fit\s*\d+kg.*spool/i,
   
-  // Bulk/MOQ products
+  // === BULK/MOQ PRODUCTS ===
   /10kg/i,
-  /\[moq[:\s]*\d+\]/i,
-  /moq\s*\d+/i,
+  // FIX: Pattern now matches [MOQ: 6KG] format correctly
+  /\[moq[:\s]*\d+[^\]]*\]/i,
+  /moq[:\s]*\d+\s*kg/i,
   /bundle/i,
   /\d+\s*rolls/i,
   /\*\d+\s*rolls/i,
   
-  // Sample sizes (exclude <300g)
+  // === COLLECTION PAGES (not individual products) ===
+  /\[bigger\s*size.*longer\s*use/i,
+  /large\s*spool.*collection/i,
+  /filament\s*collection$/i,
+  /\d+kg\s*(&|and)?\s*\d+kg\s*large\s*spool/i,
+  /engineering\s*filament\s*collection/i,
+  
+  // === LARGE SPOOL BULK SIZES (only 1KG consumer products) ===
+  /\b3kg\b/i,
+  /\b5kg\b/i,
+  /\b3\s*kg\b/i,
+  /\b5\s*kg\b/i,
+  /large\s*spool\s*3d\s*printer\s*filament\s*3kg/i,
+  
+  // === SAMPLE SIZES (exclude <300g) ===
   /250g/i,
   /0\.25kg/i,
   /sample/i,
   
-  // Diameter exclusions
+  // === DIAMETER EXCLUSIONS ===
   /2\.85mm/i,
   /3mm\s*filament/i,
   /3\.0mm/i,
   
-  // Misc exclusions
+  // === MISC EXCLUSIONS ===
   /gift\s*card/i,
   /empty\s*spool/i,
   /starter\s*kit/i,
   /variety\s*pack/i,
+  
+  // === OVER-6KG BUNDLE SALES ===
+  /over\s*\d+kg\s*bundle/i,
 ];
 
 // ============================================================================
@@ -458,6 +486,11 @@ export function normalizeSunluMaterialFromTitle(title: string): string {
   if (/\bglow\b|\bluminous\b|\bglow[\-\s]?in[\-\s]?dark\b|\bgid\b/i.test(lower)) return 'PLA Glow';
   if (/\bwood[\-\s]?pla\b|\bpla[\-\s]?wood\b|\bwooden\b/i.test(lower)) return 'PLA Wood';
   if (/\brainbow\b|\bmulticolor\b/i.test(lower)) return 'PLA Rainbow';
+  
+  // NEW: Specialty effects that should be separate product lines (before generic PLA)
+  if (/galaxy|color.?shifting|pearlescent/i.test(lower)) return 'PLA Galaxy';
+  if (/twinkling|sparkl/i.test(lower)) return 'PLA Twinkling';
+  
   if (/\brefill\b/i.test(lower)) return 'PLA Refill';
   if (/\bpla\b/i.test(lower)) return 'PLA';
   
