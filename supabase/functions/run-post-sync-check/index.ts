@@ -46,7 +46,7 @@ const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryon
 
 // Brands that use product-line level images (same image for all color variants)
 // Skip Image URLs Valid check for these - some servers return 404 for HEAD requests or don't have color-specific URLs
-const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'siraya-tech', 'sovol'];
+const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'siraya-tech', 'sovol', 'sunlu'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
 const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu'];
@@ -10866,7 +10866,21 @@ Deno.serve(async (req) => {
                                       lineId.includes('spectrum__pc-ptfe__') ||           // PC/PTFE only in Black
                                       lineId.includes('spectrum__pet-g-fr-v0__') ||       // PET-G FR V0 only in Black
                                       lineId.includes('spectrum__pps-am230__') ||         // PPS AM230 only in NAT
-                                      lineId.includes('spectrum__s-flex-carbon__')        // S-Flex Carbon only in Carbon Black
+                                      lineId.includes('spectrum__s-flex-carbon__') ||     // S-Flex Carbon only in Carbon Black
+                                      // Sunlu single-color specialty products (Shopify API sync)
+                                      lineId.includes('sunlu__petg-cf__') ||              // PETG-CF only in Black
+                                      lineId.includes('sunlu__pla-cf__') ||               // PLA-CF only in Black
+                                      lineId.includes('sunlu__abs-gf__') ||               // ABS-GF only in Natural
+                                      lineId.includes('sunlu__abs-fr__') ||               // ABS-FR only in Black
+                                      lineId.includes('sunlu__peek__') ||                 // PEEK only in Natural
+                                      lineId.includes('sunlu__pa12-cf__') ||              // PA12-CF only in Black
+                                      lineId.includes('sunlu__pa-cf__') ||                // PA-CF only in Black
+                                      lineId.includes('sunlu__pc__') ||                   // PC only in Natural/Clear
+                                      lineId.includes('sunlu__pc-abs__') ||               // PC-ABS limited colors
+                                      lineId.includes('sunlu__pp__') ||                   // PP only in Natural
+                                      lineId.includes('sunlu__hips__') ||                 // HIPS limited colors
+                                      lineId.includes('sunlu__easy-pa__') ||              // Easy PA limited colors
+                                      lineId.includes('sunlu__pvb__')                     // PVB limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
@@ -11002,7 +11016,21 @@ Deno.serve(async (req) => {
                                    lineId.includes('spectrum__pc-ptfe__') ||           // PC/PTFE only in Black
                                    lineId.includes('spectrum__pet-g-fr-v0__') ||       // PET-G FR V0 only in Black
                                    lineId.includes('spectrum__pps-am230__') ||         // PPS AM230 only in NAT
-                                   lineId.includes('spectrum__s-flex-carbon__');       // S-Flex Carbon only in Carbon Black
+                                   lineId.includes('spectrum__s-flex-carbon__') ||     // S-Flex Carbon only in Carbon Black
+                                   // Sunlu single-color specialty products (Shopify API sync)
+                                   lineId.includes('sunlu__petg-cf__') ||              // PETG-CF only in Black
+                                   lineId.includes('sunlu__pla-cf__') ||               // PLA-CF only in Black
+                                   lineId.includes('sunlu__abs-gf__') ||               // ABS-GF only in Natural
+                                   lineId.includes('sunlu__abs-fr__') ||               // ABS-FR only in Black
+                                   lineId.includes('sunlu__peek__') ||                 // PEEK only in Natural
+                                   lineId.includes('sunlu__pa12-cf__') ||              // PA12-CF only in Black
+                                   lineId.includes('sunlu__pa-cf__') ||                // PA-CF only in Black
+                                   lineId.includes('sunlu__pc__') ||                   // PC only in Natural/Clear
+                                   lineId.includes('sunlu__pc-abs__') ||               // PC-ABS limited colors
+                                   lineId.includes('sunlu__pp__') ||                   // PP only in Natural
+                                   lineId.includes('sunlu__hips__') ||                 // HIPS limited colors
+                                   lineId.includes('sunlu__easy-pa__') ||              // Easy PA limited colors
+                                   lineId.includes('sunlu__pvb__');                    // PVB limited colors
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
