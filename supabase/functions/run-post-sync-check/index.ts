@@ -9491,7 +9491,8 @@ Deno.serve(async (req) => {
           // ========== CHECK B: COLOR COUNT VALIDATION ==========
           // Skip for brands with multi-region variant architectures where shipping options are detected as colors
           // - sunlu: Uses "Ship to USA / Europe / Canada" variants that scraper picks up as color options
-          const skipColorCountCheckBrands = ['sunlu'];
+          // - ziro: Cross-product swatch architecture where each color has its own URL, scraped counts unreliable
+          const skipColorCountCheckBrands = ['sunlu', 'ziro'];
           const shouldSkipColorCountCheck = skipColorCountCheckBrands.includes(brandSlug);
           
           const dbColorCount = variants.length;
@@ -10563,7 +10564,7 @@ Deno.serve(async (req) => {
       'recreus': 14,            // CSV-seeded: TPU-60A, TPU-70A, TPU-82A, TPU-95A, TPU-FOAM, TPU-95A-FOAM, TPU-SEBS, TPU-Conductive, TPU-Purifier, TPU-Bio, rTPU, PETG, PLA, PP
       'treed-filaments': 70,    // CSV-seeded: 70 unique product lines from 209 consumer variants
       'voxelpla': 3,            // CSV-seeded: PLA+ HS (Pro), PETG+ HS (Pro), Galaxy PETG+ HS (Pro) = 3 product lines
-      'ziro': 10,               // PLA, PETG, Silk, etc.
+      'ziro': 30,               // CSV-seeded: 30 distinct product lines (PLA Basic, Silk, Matte, Twinkling, Diamond, Tricolor, Gradient, HS, TPU, etc.)
       'paramount-3d': 14,       // CSV-seeded: PLA (7 sub-lines: standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon = 14 total product lines
       'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
       'kingroon': 17,           // CSV-seeded: PLA Basic, Matte PLA, Silk Gold, Silk Tricolor, Silk Rainbow (Candy/Macaroon/Universer), PETG Standard, HS-PETG, TPU Standard, ABS Standard, Marble PLA, Glow PLA, PLA-CF, PETG-CF, ABS-CF, PA-CF
@@ -11161,7 +11162,7 @@ Deno.serve(async (req) => {
         // Each color variant IS a completely separate Shopify product with its own URL
         // This is by design - the product_line_id groups them correctly
         // Proto-Pasta also uses cross-product architecture where each color is a separate Shopify product
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol', 'spectrum-filaments'];
+        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol', 'spectrum-filaments', 'ziro'];
         if (skipUrlCheckBrands.includes(brandSlug)) {
           // Skip - expected architecture for this brand
           continue;
@@ -11949,7 +11950,12 @@ Deno.serve(async (req) => {
                                       lineId.includes('treed__pps-gf__gf25') ||             // PPS-GF GF25
                                       lineId.includes('treed__tpa__elasto-a') ||            // TPA Elasto A
                                       lineId.includes('treed__tpu__pure-ft') ||             // TPU Pure FT
-                                      lineId.includes('treed__tpu-foam__pneumatique')       // TPU Foam Pneumatique
+                                      lineId.includes('treed__tpu-foam__pneumatique') ||    // TPU Foam Pneumatique
+                                      // Ziro single-color specialty products (CSV-seeded)
+                                      lineId.includes('ziro__pla__rainbow-glow') ||         // Rainbow Glow is a single multi-color SKU
+                                      lineId.includes('ziro__pla__stone-blue-white') ||     // Stone Blue & White is a single effect SKU
+                                      lineId.includes('ziro__pla__marble') ||               // Marble is a single effect SKU
+                                      lineId.includes('ziro__pla__straw-fiber')             // Straw Fiber is a single natural material SKU
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
