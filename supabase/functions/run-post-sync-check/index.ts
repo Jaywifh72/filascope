@@ -9700,6 +9700,16 @@ Deno.serve(async (req) => {
     const colorNameIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     const urlIssues: Array<{ id: string; title: string; issue: string; url?: string }> = [];
     
+    // === BRAND-LEVEL SKIP FLAGS (determined once, not per-iteration) ===
+    // These brands should have their checks return 'skipped' status instead of running
+    const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla', 'ziro'];
+    const skipColorCountCheckBrands = ['sunlu', 'ziro'];
+    const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'voxelpla', 'ziro'];
+    
+    const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
+    const shouldSkipColorCountCheck = skipColorCountCheckBrands.includes(brandSlug);
+    const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
+    
     // Collect HTML samples for AI analysis
     const htmlSamples: string[] = [];
     const dbColorData: Array<{ productLine: string; colors: string[] }> = [];
@@ -9785,12 +9795,9 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla', 'ziro']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
-          const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
+          // Note: shouldSkipTitleCheck is now defined at brand-level (line ~9703)
           
-          if (shouldSkipTitleCheck) {
-            console.log(`[PostSyncCheck] Skipping title accuracy check for ${brandSlug} - CSV-seeded with intentional color suffixes`);
-          } else if (pageInfo.pageTitle) {
+          if (!shouldSkipTitleCheck && pageInfo.pageTitle) {
             // Check if scraper was blocked (page shows "Shopping Cart", "Access Denied", etc.)
             const pageTitleLower = pageInfo.pageTitle.toLowerCase().trim();
             const isScraperBlocked = SCRAPER_BLOCKED_TITLES.some(t => 
@@ -9853,10 +9860,7 @@ Deno.serve(async (req) => {
 
           // ========== CHECK B: COLOR COUNT VALIDATION ==========
           // Skip for brands with multi-region variant architectures where shipping options are detected as colors
-          // - sunlu: Uses "Ship to USA / Europe / Canada" variants that scraper picks up as color options
-          // - ziro: Cross-product swatch architecture where each color has its own URL, scraped counts unreliable
-          const skipColorCountCheckBrands = ['sunlu', 'ziro'];
-          const shouldSkipColorCountCheck = skipColorCountCheckBrands.includes(brandSlug);
+          // Note: shouldSkipColorCountCheck is now defined at brand-level (line ~9704)
           
           const dbColorCount = variants.length;
           const pageColorCount = pageInfo.colorSwatches.length;
@@ -9876,11 +9880,7 @@ Deno.serve(async (req) => {
 
           // ========== CHECK C: COLOR NAME MATCHING ==========
           // Skip for brands with known website scraping false positives (e.g., page shows unrelated colors)
-          // - matter3d: website HTML shows incorrect "magenta" from other page elements
-          // - polymaker: website shows "you will love it" marketing text as color option
-          // - proto-pasta: website scraping picks up navigation text like "makers of protopasta, scroll to top"
-          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'voxelpla', 'ziro'];
-          const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
+          // Note: shouldSkipColorNameCheck is now defined at brand-level (line ~9705)
           
           if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {
             const dbColorNames = new Set(
@@ -10027,8 +10027,15 @@ Deno.serve(async (req) => {
 
     // ============= ADD SCRAPE-BASED CHECK RESULTS =============
 
-    if (scrapedCount > 0) {
-      // Check A: Title Accuracy
+    // Check A: Title Accuracy - show 'skipped' for CSV-seeded brands
+    if (shouldSkipTitleCheck) {
+      checks.push({
+        checkName: "Title Accuracy (DB matches Page)",
+        status: "skipped",
+        count: 0,
+        details: `Skipped for CSV-seeded brand: ${brandSlug} (titles intentionally include color suffix)`,
+      });
+    } else if (scrapedCount > 0) {
       checks.push({
         checkName: "Title Accuracy (DB matches Page)",
         status: titleIssues.length === 0 ? "pass" : titleIssues.length <= 1 ? "warning" : "fail",
@@ -10036,8 +10043,17 @@ Deno.serve(async (req) => {
         details: `${scrapedCount - titleIssues.length}/${scrapedCount} product titles match their Buy Now pages`,
         products: titleIssues.length > 0 ? titleIssues : undefined,
       });
+    }
 
-      // Check B: Color Count Validation  
+    // Check B: Color Count Validation - show 'skipped' for brands with unreliable scraped counts
+    if (shouldSkipColorCountCheck) {
+      checks.push({
+        checkName: "Color Count Match (DB vs Website)",
+        status: "skipped",
+        count: 0,
+        details: `Skipped for ${brandSlug}: cross-product swatch architecture makes scraped color counts unreliable`,
+      });
+    } else if (scrapedCount > 0) {
       checks.push({
         checkName: "Color Count Match (DB vs Website)",
         status: colorCountIssues.length === 0 ? "pass" : colorCountIssues.length <= 1 ? "warning" : "fail",
@@ -10045,8 +10061,17 @@ Deno.serve(async (req) => {
         details: `${scrapedCount - colorCountIssues.length}/${scrapedCount} product lines have correct color counts`,
         products: colorCountIssues.length > 0 ? colorCountIssues : undefined,
       });
+    }
 
-      // Check C: Color Name Matching
+    // Check C: Color Name Matching - show 'skipped' for brands with scraping false positives
+    if (shouldSkipColorNameCheck) {
+      checks.push({
+        checkName: "Color Names Match (DB has all website colors)",
+        status: "skipped",
+        count: 0,
+        details: `Skipped for ${brandSlug}: website HTML contains false positive color names`,
+      });
+    } else if (scrapedCount > 0) {
       checks.push({
         checkName: "Color Names Match (DB has all website colors)",
         status: colorNameIssues.length === 0 ? "pass" : colorNameIssues.length <= 1 ? "warning" : "fail",
@@ -10054,8 +10079,10 @@ Deno.serve(async (req) => {
         details: `${scrapedCount - colorNameIssues.length}/${scrapedCount} product lines have all colors from website`,
         products: colorNameIssues.length > 0 ? colorNameIssues : undefined,
       });
+    }
 
-      // URL Validity Check
+    // URL Validity Check (no skip logic - always run if we scraped)
+    if (scrapedCount > 0) {
       checks.push({
         checkName: "Buy Now URLs Valid",
         status: urlIssues.length === 0 ? "pass" : urlIssues.length <= 1 ? "warning" : "fail",
@@ -11439,13 +11466,19 @@ Deno.serve(async (req) => {
     const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments', 'proto-pasta', 'spectrum-filaments', 'voxelpla', 'ziro'];
     const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
-    for (const lineId of productLineIds.slice(0, 15)) {
-      const variants = productLineGroups[lineId];
-      if (!variants || variants.length <= 1) continue;
-      
-      const urls = variants.map(v => v.product_url).filter(Boolean);
-      
-      if (isCrossProductSwatchBrand) {
+    // Brands that should completely skip URL consistency check (fully cross-product swatch architecture)
+    const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol', 'spectrum-filaments', 'ziro'];
+    const shouldSkipUrlCheck = skipUrlCheckBrands.includes(brandSlug);
+    
+    // Only run the URL consistency loop if we're not skipping this brand entirely
+    if (!shouldSkipUrlCheck) {
+      for (const lineId of productLineIds.slice(0, 15)) {
+        const variants = productLineGroups[lineId];
+        if (!variants || variants.length <= 1) continue;
+        
+        const urls = variants.map(v => v.product_url).filter(Boolean);
+        
+        if (isCrossProductSwatchBrand) {
         // For cross-product brands: Check if URLs belong to same product LINE (pattern-based)
         // Use known product line prefixes to avoid false positives from color names in URLs
         const knownPatterns = [
@@ -11520,17 +11553,6 @@ Deno.serve(async (req) => {
         
         const uniquePatterns = new Set(handlePatterns);
         
-        // === SKIP URL CONSISTENCY FOR ATOMIC FILAMENT ===
-        // Atomic Filament has 57+ different product URLs grouped into 5 product_line_ids
-        // Each color variant IS a completely separate Shopify product with its own URL
-        // This is by design - the product_line_id groups them correctly
-        // Proto-Pasta also uses cross-product architecture where each color is a separate Shopify product
-        const skipUrlCheckBrands = ['atomic-filament', 'azurefilm', 'hatchbox', 'polymaker', 'fillamentum', 'formfutura', 'paramount-3d', 'proto-pasta', 'sovol', 'spectrum-filaments', 'ziro'];
-        if (skipUrlCheckBrands.includes(brandSlug)) {
-          // Skip - expected architecture for this brand
-          continue;
-        }
-        
         // Only flag if there are DIFFERENT product line patterns (not just different colors)
         if (uniquePatterns.size > 2) {
           urlConsistencyIssues.push({
@@ -11562,18 +11584,29 @@ Deno.serve(async (req) => {
         }
       }
     }
+    } // End of shouldSkipUrlCheck check
 
-    checks.push({
-      checkName: "Product Line URL Consistency",
-      status: urlConsistencyIssues.length === 0 ? "pass" : urlConsistencyIssues.length <= 1 ? "warning" : "fail",
-      count: urlConsistencyIssues.length,
-      details: urlConsistencyIssues.length === 0 
-        ? (isCrossProductSwatchBrand 
-            ? "All product lines have consistent URL patterns (cross-product swatch brand)" 
-            : "All product lines have consistent URLs")
-        : `${urlConsistencyIssues.length} product lines have inconsistent URL patterns`,
-      products: urlConsistencyIssues.length > 0 ? urlConsistencyIssues : undefined,
-    });
+    // URL Consistency check - show 'skipped' for cross-product brands
+    if (shouldSkipUrlCheck) {
+      checks.push({
+        checkName: "Product Line URL Consistency",
+        status: "skipped",
+        count: 0,
+        details: `Skipped for ${brandSlug}: cross-product swatch architecture where each color has its own URL`,
+      });
+    } else {
+      checks.push({
+        checkName: "Product Line URL Consistency",
+        status: urlConsistencyIssues.length === 0 ? "pass" : urlConsistencyIssues.length <= 1 ? "warning" : "fail",
+        count: urlConsistencyIssues.length,
+        details: urlConsistencyIssues.length === 0 
+          ? (isCrossProductSwatchBrand 
+              ? "All product lines have consistent URL patterns (cross-product swatch brand)" 
+              : "All product lines have consistent URLs")
+          : `${urlConsistencyIssues.length} product lines have inconsistent URL patterns`,
+        products: urlConsistencyIssues.length > 0 ? urlConsistencyIssues : undefined,
+      });
+    }
 
     // ============= HEX-COLOR ACCURACY CHECK (NEW) =============
     // Validates that color_hex matches the color name in product_title/color_family
@@ -11828,15 +11861,15 @@ Deno.serve(async (req) => {
       checkName: "Hex-Color Accuracy",
       status: shouldRunHexCheck 
         ? (colorMismatches.length === 0 ? "pass" : colorMismatches.length <= 5 ? "warning" : "fail")
-        : "pass",
+        : "skipped",
       count: shouldRunHexCheck 
         ? (allProductsForColorCheck?.length || 0) - colorMismatches.length 
-        : (totalProducts || 0),
+        : 0,
       details: shouldRunHexCheck 
         ? (colorMismatches.length === 0 
             ? `All ${allProductsForColorCheck?.length || 0} products have hex codes matching their color names` 
             : `${colorMismatches.length} products have hex codes that don't match their stated color`)
-        : `Skipped - ${brandSlug} uses manually curated hex codes`,
+        : `Skipped for ${brandSlug}: uses manually curated hex codes in CSV seed`,
       products: shouldRunHexCheck && colorMismatches.length > 0 ? colorMismatches.slice(0, 15) : undefined,
     });
 
