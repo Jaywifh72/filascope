@@ -10777,7 +10777,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu']; // CSV-seeded brands and brands with curated hex codes
+    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments']; // CSV-seeded brands and brands with curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
@@ -11252,7 +11252,30 @@ Deno.serve(async (req) => {
                                       lineId.includes('treed__abs-esd__') ||                // ABS-ESD limited colors
                                       lineId.includes('treed__pla__levigo') ||              // Levigo specialty
                                       lineId.includes('treed__pla__shogun') ||              // Shogun wood-filled
-                                      lineId.includes('treed__pla__xray')                   // X-Ray specialty
+                                      lineId.includes('treed__pla__xray') ||                // X-Ray specialty
+                                      // TreeD additional engineering single-variant products
+                                      lineId.includes('treed__pa-cf__carbonio-ff') ||       // PA-CF Carbonio FF
+                                      lineId.includes('treed__pa-cf__cf25') ||              // PA-CF CF25
+                                      lineId.includes('treed__pa-cf__hp-cf15') ||           // PA-CF HP CF15
+                                      lineId.includes('treed__pa-gf__hp-gs10') ||           // PA-GF HP GS10
+                                      lineId.includes('treed__pc__p51') ||                  // PC P51
+                                      lineId.includes('treed__pc__verum-t') ||              // PC Verum T
+                                      lineId.includes('treed__pc-abs__v0') ||               // PC-ABS V0
+                                      lineId.includes('treed__pc-pbt__b-mat') ||            // PC-PBT B-Mat
+                                      lineId.includes('treed__pc-pbt-gf__standard') ||      // PC-PBT-GF
+                                      lineId.includes('treed__peek-cf__cf15') ||            // PEEK-CF CF15
+                                      lineId.includes('treed__pet-cf__cf15') ||             // PET-CF CF15
+                                      lineId.includes('treed__pmma__hirma') ||              // PMMA Hirma
+                                      lineId.includes('treed__pp__p-lene-5') ||             // PP P-Lene 5
+                                      lineId.includes('treed__pp__p-lene-t15') ||           // PP P-Lene T15
+                                      lineId.includes('treed__pp-cf__cf18') ||              // PP-CF CF18
+                                      lineId.includes('treed__pp-gf__gf30') ||              // PP-GF GF30
+                                      lineId.includes('treed__pp-ll__fortis-ll') ||         // PP-LL Fortis
+                                      lineId.includes('treed__pps-cf__cf15') ||             // PPS-CF CF15
+                                      lineId.includes('treed__pps-gf__gf25') ||             // PPS-GF GF25
+                                      lineId.includes('treed__tpa__elasto-a') ||            // TPA Elasto A
+                                      lineId.includes('treed__tpu__pure-ft') ||             // TPU Pure FT
+                                      lineId.includes('treed__tpu-foam__pneumatique')       // TPU Foam Pneumatique
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
