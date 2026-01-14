@@ -9559,7 +9559,7 @@ Deno.serve(async (req) => {
       '3dxtech': 25,            // PEEK, PEKK, PEI, Carbon Fiber variants, etc.
       'eryone': 54,             // 54 distinct filament lines from 318-product CSV seed (PLA, PLA+, PETG, ABS, ASA, TPU, PA, PP + all variants)
       '3dhojor': 12,            // PLA, PETG, Silk, Matte, Marble, etc.
-      'sunlu': 38,              // CSV-seeded: PLA, PLA+, PLA+ 2.0 HS, PLA Meta, PLA Matte, PLA Silk, Matte Dual-Color, PETG, PETG Matte, ABS, Easy ABS, ABS-GF, ABS-FR, ASA, TPU, TPU-90A, PA-CF, PC, PC-ABS, PP, PEEK, etc.
+      'sunlu': 18,              // Updated: 18 product lines after aggressive MOQ/3kg/5kg filtering - actual obtainable lines from Shopify API
       'siraya-tech': 21,        // CSV-seeded filaments: 15 Fibreheart (engineering) + 4 Flex (TPU) + 2 Rebound (PEBA) = 21 product lines
       'sovol': 4,               // PLA, PETG, Silk PLA, Glow PLA (after bulk filtering)
       'flashforge': 8,          // PLA, ABS, PETG, TPU, Adventurer series
