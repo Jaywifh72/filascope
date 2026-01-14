@@ -6892,6 +6892,288 @@ AND product_title ILIKE '%Stone Age%';
 *Last Updated: 2026-01-14*`;
 }
 
+function generateTreeDFixPrompt(
+  brand: string,
+  checks: CheckResult[],
+  totalProducts: number,
+  aiAnalysis?: AIWebsiteAnalysis | null
+): string {
+  const failedChecks = checks.filter(c => c.status === 'fail');
+  const warningChecks = checks.filter(c => c.status === 'warning');
+  
+  const issuesSummary = [
+    ...failedChecks.map(c => `❌ ${c.checkName}: ${c.count} issues`),
+    ...warningChecks.map(c => `⚠️ ${c.checkName}: ${c.count} issues`)
+  ].join('\n');
+  
+  const detailedIssues = [...failedChecks, ...warningChecks].map(check => {
+    let section = `### ${check.checkName} - ${check.status === 'fail' ? '❌ FAIL' : '⚠️ WARNING'}\n`;
+    section += `${check.count} products affected:\n\n`;
+    
+    if (check.products && check.products.length > 0) {
+      check.products.slice(0, 10).forEach(p => {
+        section += `- **${p.title}**\n  - Issue: ${p.issue}\n`;
+        if (p.url) section += `  - URL: ${p.url}\n`;
+      });
+      if (check.products.length > 10) {
+        section += `\n... and ${check.products.length - 10} more\n`;
+      }
+    } else if (check.details) {
+      section += `- ${check.details}\n`;
+    }
+    return section;
+  }).join('\n\n');
+
+  // AI insights section if available
+  let aiInsightsSection = '';
+  if (aiAnalysis) {
+    const wrongDecisionsText = aiAnalysis.wrongDecisions?.length 
+      ? `### Wrong Decisions Identified\n${aiAnalysis.wrongDecisions.map(d => `- ${d}`).join('\n')}\n`
+      : '';
+    
+    aiInsightsSection = `
+---
+
+## 🤖 AI Website Analysis Results
+
+**Swatch Architecture Detected**: ${aiAnalysis.swatchType}
+
+${aiAnalysis.rootCause ? `### Root Cause Analysis\n${aiAnalysis.rootCause}\n` : ''}
+
+${wrongDecisionsText}
+
+${aiAnalysis.correctBehavior ? `### Correct Behavior Expected\n${aiAnalysis.correctBehavior}\n` : ''}
+
+---`;
+  }
+
+  // Categorize issues by root cause
+  const missingHexChecks = [...failedChecks, ...warningChecks].filter(c => 
+    c.checkName.includes('Swatch') || c.checkName.includes('Hex') ||
+    c.products?.some(p => p.issue?.toLowerCase().includes('hex'))
+  );
+  
+  const cardCountChecks = [...failedChecks, ...warningChecks].filter(c => 
+    c.checkName.includes('Card Count')
+  );
+  
+  const variantChecks = [...failedChecks, ...warningChecks].filter(c =>
+    c.checkName.includes('Variant Count')
+  );
+
+  // Build root cause sections
+  let rootCauseSections = '';
+  const priorityFixes: string[] = [];
+
+  // RC0: Sync function not deployed
+  if (totalProducts < 50) {
+    rootCauseSections += `
+### RC0: Sync Function Not Deployed / Wrong Version Running
+
+**SEVERITY:** 🔴 CRITICAL - No data or wrong data
+
+**Evidence:**
+- Only ${totalProducts} products in database (expected ~210)
+
+**ROOT CAUSE:** The updated CSV-seeded sync function may not be deployed.
+
+**FIX:**
+1. Deploy the edge function: \`sync-treed-products\`
+2. Re-run sync from Brand Sync Manager
+
+**VERIFICATION:**
+\`\`\`sql
+SELECT COUNT(*) FROM filaments WHERE vendor = 'TreeD';
+-- Should be ~210
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 0:** Deploy sync-treed-products edge function');
+  }
+
+  // RC1: CSV seed integrity
+  if (cardCountChecks.length > 0) {
+    rootCauseSections += `
+### RC1: CSV Seed Integrity / Product Line Count Mismatch
+
+**SEVERITY:** 🔴 HIGH - Wrong product grouping
+
+**Affected Checks:**
+${cardCountChecks.map(c => `- ${c.checkName}: ${c.details}`).join('\n')}
+
+**ROOT CAUSE:** Product line IDs in \`treed-seed.ts\` may not match expected count (47).
+
+**FIX LOCATION:** \`supabase/functions/_shared/treed-seed.ts\`
+
+**VERIFICATION:**
+\`\`\`sql
+-- Check product line count (should be 47)
+SELECT COUNT(DISTINCT product_line_id) FROM filaments WHERE vendor = 'TreeD';
+
+-- List all product lines
+SELECT product_line_id, COUNT(*) as variants 
+FROM filaments WHERE vendor = 'TreeD'
+GROUP BY product_line_id ORDER BY product_line_id;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 1:** Verify treed-seed.ts has correct productLineId values');
+  }
+
+  // RC2: Color hex mapping gaps
+  if (missingHexChecks.length > 0) {
+    const missingColors = missingHexChecks.flatMap(c => c.products || []).slice(0, 10);
+    rootCauseSections += `
+### RC2: Missing Color Hex Mappings
+
+**SEVERITY:** 🟡 HIGH - Swatches won't display correctly
+
+**Affected Colors:**
+${missingColors.map(p => `- \`${p.title}\`: ${p.issue}`).join('\n')}
+
+**ROOT CAUSE:** Italian color names not in \`TREED_COLOR_HEX_MAP\`
+
+**FIX LOCATION:** \`supabase/functions/_shared/treed-seed.ts\` → \`TREED_COLOR_HEX_MAP\`
+
+**EXACT CODE TO ADD:**
+\`\`\`typescript
+// Add missing Italian color mappings:
+export const TREED_COLOR_HEX_MAP: Record<string, string> = {
+  // ... existing mappings ...
+  
+  // TODO: Add missing colors extracted from sync logs
+};
+\`\`\`
+
+**VERIFICATION:**
+\`\`\`sql
+-- Count missing hex (should be 0)
+SELECT COUNT(*) FROM filaments WHERE vendor = 'TreeD' AND color_hex IS NULL;
+
+-- List missing
+SELECT product_title, color_family FROM filaments 
+WHERE vendor = 'TreeD' AND color_hex IS NULL;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 2:** Add missing colors to TREED_COLOR_HEX_MAP');
+  }
+
+  // RC3: Material normalization
+  if (variantChecks.length > 0) {
+    rootCauseSections += `
+### RC3: Material Normalization Issues
+
+**SEVERITY:** 🟡 MEDIUM - Some products may be miscategorized
+
+**ROOT CAUSE:** Special materials (PEEK, PPS, Carbonio) may need explicit material mapping.
+
+**FIX LOCATION:** \`supabase/functions/sync-treed-products/index.ts\` → \`enrichTreeDProduct()\`
+
+**KNOWN TREED MATERIALS:**
+- PLA variants: Ecogenius, Ecogenius Light, Ecogenius HD
+- Engineering: PEEK, PPS, PA-CF, PC, PP, PETG
+- Specialty: Shogun (wood-filled), Carbonio (carbon fiber), Metallo (metal-filled)
+- TPU variants: Shore hardness ranges
+
+**VERIFICATION:**
+\`\`\`sql
+SELECT material, COUNT(*) FROM filaments WHERE vendor = 'TreeD'
+GROUP BY material ORDER BY COUNT(*) DESC;
+\`\`\`
+`;
+    priorityFixes.push('**PRIORITY 3:** Verify material normalization in enrichTreeDProduct()');
+  }
+
+  return `# TreeD Filaments Integration Specialist
+
+You are the **TreeD Filaments Integration Specialist** for Filascope.
+
+## PLATFORM KNOWLEDGE
+
+**Manufacturer**: TreeD Filaments (treedfilaments.com) - Italian specialty filament manufacturer
+**Architecture**: CSV-seeded sync from \`treed-seed.ts\` (210 variants, 47 product lines)
+**Currency**: EUR (converted to USD at 1.08 rate)
+**Specialties**: Italian engineering materials, named product lines
+
+## KEY FILES
+
+- \`supabase/functions/_shared/treed-seed.ts\` - Curated seed data with TREED_COLOR_HEX_MAP
+- \`supabase/functions/sync-treed-products/index.ts\` - Sync function
+- \`supabase/functions/run-post-sync-check/index.ts\` - Validation
+
+## PRODUCT LINE ARCHITECTURE (47 Lines)
+
+| Category | Examples |
+|----------|----------|
+| **PLA** | Ecogenius, Ecogenius Light, Ecogenius HD |
+| **Engineering** | PEEK, PPS, PA-CF, PC, PP, PETG |
+| **Wood-Filled** | Shogun (various wood types) |
+| **Carbon Fiber** | Carbonio |
+| **Metal-Filled** | Metallo |
+| **TPU** | Various Shore hardness grades |
+
+## ROOT CAUSE ANALYSIS FRAMEWORK
+
+${rootCauseSections || '**All checks passing!**'}
+
+---
+
+## Fix Post Sync Check Issues for ${brand}
+
+### Summary
+- **Brand**: ${brand} (slug: treed-filaments)
+- **Total Products**: ${totalProducts}
+- **Failed Checks**: ${failedChecks.length}
+- **Warning Checks**: ${warningChecks.length}
+
+### Issues Found
+${issuesSummary || 'All checks passing!'}
+
+---
+
+## Detailed Issues
+
+${detailedIssues || 'No issues to display.'}
+
+${aiInsightsSection}
+
+---
+
+## STEP-BY-STEP FIX IMPLEMENTATION ORDER
+
+${priorityFixes.length > 0 ? priorityFixes.join('\n\n') : '**All checks passing - no fixes needed!**'}
+
+---
+
+## COMPREHENSIVE VERIFICATION QUERIES
+
+\`\`\`sql
+-- 1. Product count (target: ~210)
+SELECT COUNT(*) FROM filaments WHERE vendor = 'TreeD';
+
+-- 2. Product line count (target: 47)
+SELECT COUNT(DISTINCT product_line_id) FROM filaments WHERE vendor = 'TreeD';
+
+-- 3. Hex coverage (target: 100%)
+SELECT 
+  COUNT(*) as total,
+  COUNT(*) FILTER (WHERE color_hex IS NOT NULL) as with_hex,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE color_hex IS NOT NULL) / COUNT(*), 1) as pct
+FROM filaments WHERE vendor = 'TreeD';
+
+-- 4. Price validation (EUR converted to USD)
+SELECT MIN(variant_price), MAX(variant_price), AVG(variant_price)::numeric(10,2)
+FROM filaments WHERE vendor = 'TreeD';
+
+-- 5. Product line distribution
+SELECT product_line_id, COUNT(*) as variants
+FROM filaments WHERE vendor = 'TreeD'
+GROUP BY product_line_id ORDER BY product_line_id;
+\`\`\`
+
+---
+
+*Last Updated: 2026-01-14*`;
+}
+
 function generateRecreusFixPrompt(
   brand: string,
   checks: CheckResult[],
@@ -7174,6 +7456,11 @@ function generateAIFixPrompt(
   // Use brand-specific prompt generator for Spectrum Filaments
   if (brandSlug === 'spectrum-filaments') {
     return generateSpectrumFilamentsFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
+  // Use brand-specific prompt generator for TreeD Filaments
+  if (brandSlug === 'treed-filaments') {
+    return generateTreeDFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
   // Determine the best AI role for this specific set of issues
@@ -9624,7 +9911,7 @@ Deno.serve(async (req) => {
       'ultimaker': 10,          // S-Series materials
       'numakers': 13,           // CSV-seeded: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS
       'recreus': 14,            // CSV-seeded: TPU-60A, TPU-70A, TPU-82A, TPU-95A, TPU-FOAM, TPU-95A-FOAM, TPU-SEBS, TPU-Conductive, TPU-Purifier, TPU-Bio, rTPU, PETG, PLA, PP
-      'treed-filaments': 15,    // Ecogenius, Shogun, Carbonio, etc.
+      'treed-filaments': 47,    // CSV-seeded: 47 product lines from 210+ variants (Ecogenius, Shogun, Carbonio, PEEK, PPS, etc.)
       'voxelpla': 5,            // Basic PLA lines
       'ziro': 10,               // PLA, PETG, Silk, etc.
       'paramount-3d': 14,       // CSV-seeded: PLA (7 sub-lines: standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon = 14 total product lines
@@ -10572,7 +10859,7 @@ Deno.serve(async (req) => {
     );
     
     // Skip logo image check for product-level image brands (they intentionally share images)
-    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament', 'recreus', 'siraya-tech', 'sovol', 'sunlu'];
+    const SKIP_LOGO_IMAGE_CHECK_BRANDS = ['push-plastic', 'atomic-filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'prusament', 'recreus', 'siraya-tech', 'sovol', 'sunlu', 'treed-filaments'];
     const skipLogoImageCheck = SKIP_LOGO_IMAGE_CHECK_BRANDS.some(b => 
       brandSlug?.toLowerCase() === b || brandSlug?.toLowerCase().includes(b)
     );
@@ -10608,7 +10895,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol', 'sunlu'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol', 'sunlu', 'treed-filaments', 'treed filaments'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
@@ -10933,7 +11220,17 @@ Deno.serve(async (req) => {
                                       lineId.includes('sunlu__pla-matte-dual-color__') || // Dual-color IS the effect
                                       lineId.includes('sunlu__easy-abs__') ||             // Easy ABS limited colors
                                       lineId.includes('sunlu__asa__') ||                  // ASA limited colors
-                                      lineId.includes('sunlu__tpu__')                     // TPU limited colors
+                                      lineId.includes('sunlu__tpu__') ||                    // TPU limited colors
+                                      // TreeD Filaments single-color specialty products (CSV-seeded)
+                                      lineId.includes('treed__peek__') ||                   // PEEK only in Natural/Black
+                                      lineId.includes('treed__pps__') ||                    // PPS only in Natural
+                                      lineId.includes('treed__pa-cf__') ||                  // PA-CF only in Black
+                                      lineId.includes('treed__pc__') ||                     // PC limited colors
+                                      lineId.includes('treed__pp__') ||                     // PP limited colors
+                                      lineId.includes('treed__pei__') ||                    // PEI/ULTEM only in Amber
+                                      lineId.includes('treed__metal__') ||                  // Metal-filled limited colors
+                                      lineId.includes('treed__wood__') ||                   // Wood-filled limited colors
+                                      lineId.includes('treed__stone__')                     // Stone-filled limited colors
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
