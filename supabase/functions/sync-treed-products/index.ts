@@ -92,6 +92,52 @@ function filterConsumerProducts(products: TreeDSeedProduct[]): TreeDSeedProduct[
 }
 
 // ============================================================================
+// HELPER: GET COLOR FAMILY FROM HEX CODE
+// ============================================================================
+
+function getColorFamilyFromHex(hex: string): string {
+  const cleanHex = hex.replace('#', '');
+  const r = parseInt(cleanHex.substr(0, 2), 16);
+  const g = parseInt(cleanHex.substr(2, 2), 16);
+  const b = parseInt(cleanHex.substr(4, 2), 16);
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2 / 255;
+  
+  if (max === min) {
+    if (l > 0.9) return 'White';
+    if (l < 0.15) return 'Black';
+    return 'Gray';
+  }
+  
+  const d = max - min;
+  let h = 0;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  
+  const hue = h * 360;
+  const s = d / (1 - Math.abs(2 * l - 1)) / 255;
+  
+  if (s < 0.15) {
+    if (l > 0.85) return 'White';
+    if (l < 0.2) return 'Black';
+    return 'Gray';
+  }
+  
+  if (hue < 15 || hue >= 345) return 'Red';
+  if (hue < 45) return 'Orange';
+  if (hue < 70) return 'Yellow';
+  if (hue < 165) return 'Green';
+  if (hue < 195) return 'Cyan';
+  if (hue < 260) return 'Blue';
+  if (hue < 290) return 'Purple';
+  if (hue < 345) return 'Pink';
+  return 'Red';
+}
+
+// ============================================================================
 // STEP 2: TRANSFORM SEED TO DATABASE FORMAT
 // ============================================================================
 
@@ -120,6 +166,8 @@ function transformSeedToVariants(
     // Convert EUR to USD
     const priceUsd = convertEurToUsd(product.basePrice);
     
+    const normalizedHex = colorHex.startsWith('#') ? colorHex : `#${colorHex}`;
+    
     variants.push({
       product_id: productId,
       product_title: enrichment.cleanedTitle || product.name,
@@ -128,7 +176,8 @@ function transformSeedToVariants(
       material: enrichment.material || product.material,
       finish_type: enrichment.finishType || 'Standard',
       product_line_id: product.productLineId,
-      color_hex: colorHex.startsWith('#') ? colorHex : `#${colorHex}`,
+      color_hex: normalizedHex,
+      color_family: getColorFamilyFromHex(normalizedHex),
       variant_price: priceUsd,
       product_url: product.productUrl,
       featured_image: product.imageUrl,

@@ -10218,7 +10218,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
@@ -11230,7 +11230,29 @@ Deno.serve(async (req) => {
                                       lineId.includes('treed__pei__') ||                    // PEI/ULTEM only in Amber
                                       lineId.includes('treed__metal__') ||                  // Metal-filled limited colors
                                       lineId.includes('treed__wood__') ||                   // Wood-filled limited colors
-                                      lineId.includes('treed__stone__')                     // Stone-filled limited colors
+                                      lineId.includes('treed__stone__') ||                  // Stone-filled limited colors
+                                      // TreeD architectural/specialty HIPS and ASA (single shade products)
+                                      lineId.includes('treed__hips__monumental') ||         // Architectural HIPS
+                                      lineId.includes('treed__hips__sandy') ||              // Sandy HIPS
+                                      lineId.includes('treed__hips__clay') ||               // Clay HIPS
+                                      lineId.includes('treed__hips__dark-stone') ||         // Dark Stone HIPS
+                                      lineId.includes('treed__hips__heritage-brick') ||     // Heritage Brick HIPS
+                                      lineId.includes('treed__hips__caementum') ||          // Caementum HIPS
+                                      lineId.includes('treed__asa__monumental-evo') ||      // Monumental ASA
+                                      lineId.includes('treed__asa__clay-evo') ||            // Clay ASA
+                                      // TreeD engineering single-color materials
+                                      lineId.includes('treed__pa__hp-nat') ||               // PA HP NAT
+                                      lineId.includes('treed__pa__kk') ||                   // PA KK
+                                      lineId.includes('treed__pa__lubratech') ||            // PA Lubratech
+                                      lineId.includes('treed__pa__structura-ma') ||         // Structura MA
+                                      lineId.includes('treed__hdpe__') ||                   // HDPE limited colors
+                                      lineId.includes('treed__abs__food') ||                // ABS Food
+                                      lineId.includes('treed__abs__med') ||                 // ABS Med
+                                      lineId.includes('treed__abs-cf__') ||                 // ABS-CF black only
+                                      lineId.includes('treed__abs-esd__') ||                // ABS-ESD limited colors
+                                      lineId.includes('treed__pla__levigo') ||              // Levigo specialty
+                                      lineId.includes('treed__pla__shogun') ||              // Shogun wood-filled
+                                      lineId.includes('treed__pla__xray')                   // X-Ray specialty
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
@@ -11390,6 +11412,9 @@ Deno.serve(async (req) => {
                                    lineId.includes('sunlu__asa__') ||                  // ASA limited colors
                                    lineId.includes('sunlu__tpu__');                    // TPU limited colors
       if (isSingleColorProduct) continue;
+      
+      // Skip all TreeD product lines - they use product-level images (CSV-seeded, manufacturer limitation)
+      if (lineId.startsWith('treed__')) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
       const isProductLevelImageBrandForColorCheck = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
