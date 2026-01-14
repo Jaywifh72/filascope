@@ -1,7 +1,7 @@
 // Sunlu Shopify API Sync Pipeline
 // Fetches products from live store.sunlu.com API with enrichment from defaults
 //
-// Architecture: Live Shopify API with enrichment and Safe Delete pattern
+// Architecture: Live Shopify API with enrichment, Safe Delete pattern, and Background Sync
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
@@ -17,6 +17,13 @@ import {
   normalizeSunluMaterialFromTitle,
   generateSunluProductLineId,
 } from '../_shared/sunlu-seed.ts';
+import {
+  createSyncLog,
+  completeSyncLog,
+  createImmediateResponse,
+  runInBackground,
+  corsHeaders,
+} from '../_shared/background-sync.ts';
 
 // ============================================================================
 // INTERFACES
@@ -71,11 +78,6 @@ interface SyncResult {
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 const VENDOR_NAME = 'Sunlu';
 const SHOPIFY_BASE_URL = 'https://store.sunlu.com';
@@ -478,33 +480,22 @@ function adjustHexSlightly(hex: string, offset: number): string {
 // MAIN HANDLER
 // ============================================================================
 
-Deno.serve(async (req) => {
-  // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: CORS_HEADERS });
-  }
-  
+// ============================================================================
+// BACKGROUND SYNC WORKER
+// ============================================================================
+
+async function runSyncInBackground(
+  supabase: any,
+  syncLogId: string | null,
+  options: { cleanSlate: boolean; skipTds: boolean; dryRun: boolean }
+): Promise<void> {
   const startTime = Date.now();
+  let created = 0;
+  let updated = 0;
+  let errors = 0;
+  let variantsProcessed = 0;
   
   try {
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Parse options from request body
-    let options = {
-      cleanSlate: false,
-      skipTds: false,
-    };
-    
-    try {
-      const body = await req.json();
-      options = { ...options, ...body };
-    } catch {
-      // No body or invalid JSON, use defaults
-    }
-    
     console.log('[Sunlu Sync] Starting Shopify API sync with options:', options);
     console.log(`[Sunlu Sync] Expected product lines: ${SUNLU_EXPECTED_CARD_COUNT}`);
     
@@ -518,30 +509,17 @@ Deno.serve(async (req) => {
     const brandId = brand?.id || null;
     console.log('[Sunlu Sync] Brand ID:', brandId);
     
-    const results: SyncResult[] = [];
-    
     // Step 1: Fetch from Shopify API
     const products = await fetchShopifyProducts();
-    results.push({
-      step: 'fetch_shopify',
-      success: products.length > 0,
-      created: products.length,
-      message: `Fetched ${products.length} products from Shopify API`,
-    });
     
     // Step 2: Explode variants with region filtering
     const variants = explodeVariants(products);
-    results.push({
-      step: 'explode_variants',
-      success: variants.length > 0,
-      created: variants.length,
-      message: `Exploded to ${variants.length} US-region variants`,
-    });
+    variantsProcessed = variants.length;
     
     // Safe Delete Pattern: If clean slate OR we have enough valid variants
     if (options.cleanSlate || variants.length >= SUNLU_SAFE_DELETE_THRESHOLD) {
       console.log(`[Sunlu Sync] Performing safe delete (${variants.length} variants >= ${SUNLU_SAFE_DELETE_THRESHOLD} threshold)...`);
-      const { error: deleteError, count } = await supabase
+      const { error: deleteError } = await supabase
         .from('filaments')
         .delete()
         .ilike('vendor', 'sunlu');
@@ -549,68 +527,130 @@ Deno.serve(async (req) => {
       if (deleteError) {
         console.error('[Sunlu Sync] Delete error:', deleteError);
       } else {
-        console.log(`[Sunlu Sync] Deleted ${count || 'all'} existing Sunlu products`);
+        console.log('[Sunlu Sync] Deleted all existing Sunlu products');
       }
     }
     
     // Step 3: Upsert with enrichments
-    if (variants.length > 0) {
+    if (variants.length > 0 && !options.dryRun) {
       const upsertResult = await upsertVariants(supabase, variants, brandId);
-      results.push(upsertResult);
+      created = upsertResult.created || 0;
+      updated = upsertResult.updated || 0;
+      errors = upsertResult.errors || 0;
     }
     
     // Step 4: Verify TDS URLs
-    if (!options.skipTds) {
-      const tdsResult = await verifyTdsUrls(supabase);
-      results.push(tdsResult);
+    if (!options.skipTds && !options.dryRun) {
+      await verifyTdsUrls(supabase);
     }
     
     // Step 5: Fix duplicate hex codes
-    const hexResult = await fixDuplicateHexCodes(supabase);
-    results.push(hexResult);
-    
-    // Calculate totals
-    const duration = Date.now() - startTime;
-    const totalCreated = results.reduce((sum, r) => sum + (r.created || 0), 0);
-    const totalUpdated = results.reduce((sum, r) => sum + (r.updated || 0), 0);
-    const totalErrors = results.reduce((sum, r) => sum + (r.errors || 0), 0);
+    if (!options.dryRun) {
+      await fixDuplicateHexCodes(supabase);
+    }
     
     // Get product line distribution for logging
     const productLines = new Set(variants.map(v => v.productLineId));
-    console.log(`[Sunlu Sync] Product lines: ${productLines.size}`);
-    console.log(`[Sunlu Sync] Complete in ${duration}ms`);
-    console.log(`[Sunlu Sync] Summary: ${totalCreated} created, ${totalUpdated} updated, ${totalErrors} errors`);
+    const duration = Math.round((Date.now() - startTime) / 1000);
     
-    return new Response(
-      JSON.stringify({
-        success: totalErrors === 0,
-        duration_ms: duration,
-        results,
-        summary: {
+    console.log(`[Sunlu Sync] Product lines: ${productLines.size}`);
+    console.log(`[Sunlu Sync] Complete in ${duration}s`);
+    console.log(`[Sunlu Sync] Summary: ${created} created, ${updated} updated, ${errors} errors`);
+    
+    // Complete sync log
+    if (syncLogId) {
+      await completeSyncLog(supabase, syncLogId, {
+        status: errors === 0 ? 'completed' : 'partial',
+        created,
+        updated,
+        discovered: variantsProcessed,
+        failed: errors,
+        durationSeconds: duration,
+        successDetails: {
           products_fetched: products.length,
-          variants_processed: variants.length,
+          variants_processed: variantsProcessed,
           product_lines: productLines.size,
-          created: totalCreated,
-          updated: totalUpdated,
-          errors: totalErrors,
         },
-      }),
-      {
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      }
-    );
+      });
+    }
   } catch (error) {
     console.error('[Sunlu Sync] Fatal error:', error);
+    
+    // Mark sync as failed
+    if (syncLogId) {
+      await completeSyncLog(supabase, syncLogId, {
+        status: 'failed',
+        created,
+        updated,
+        discovered: variantsProcessed,
+        failed: errors + 1,
+        durationSeconds: Math.round((Date.now() - startTime) / 1000),
+        errorDetails: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+    }
+  }
+}
+
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
+
+Deno.serve(async (req) => {
+  // Handle CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
+  try {
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Parse options from request body
+    let options = {
+      cleanSlate: false,
+      skipTds: false,
+      dryRun: false,
+    };
+    
+    try {
+      const body = await req.json();
+      options = { ...options, ...body };
+    } catch {
+      // No body or invalid JSON, use defaults
+    }
+    
+    // Create sync log for tracking
+    const { syncLogId, error: logError } = await createSyncLog(
+      supabase,
+      'sunlu',
+      options.cleanSlate ? 'clean_slate' : 'incremental'
+    );
+    
+    if (logError) {
+      console.warn('[Sunlu Sync] Could not create sync log:', logError.message);
+    }
+    
+    // Run sync in background using EdgeRuntime.waitUntil
+    const syncPromise = runSyncInBackground(supabase, syncLogId, options);
+    runInBackground(syncPromise, 'sunlu');
+    
+    // Return immediately with job ID
+    return createImmediateResponse('Sunlu', syncLogId, options);
+  } catch (error) {
+    console.error('[Sunlu Sync] Handler error:', error);
     
     return new Response(
       JSON.stringify({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        duration_ms: Date.now() - startTime,
       }),
       {
         status: 500,
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }
