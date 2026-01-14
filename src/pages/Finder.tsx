@@ -1098,7 +1098,7 @@ const Finder = () => {
             }
           }
         }}
-        brands={(brands || []).map(b => ({ name: b, count: filterCounts[`brand_${b}`] || 0 }))}
+        brands={(brands || []).map(b => ({ name: b, count: filterCounts[`brand_${brandNameMap[b] || b}`] || 0 })).sort((a, b) => a.name.localeCompare(b.name))}
         selectedBrands={selectedBrands}
         onBrandsChange={setSelectedBrands}
         priceRange={priceRange}
