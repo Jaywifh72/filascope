@@ -10603,7 +10603,7 @@ Deno.serve(async (req) => {
     // eSUN uses CSV-seeded data which has product-level images (source data limitation)
     // Extrudr: Original S3 image URLs no longer exist, products fall back to placeholders
     // Fiberlogy: CSV-seeded data has placeholder images only
-    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol'];
+    const PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK = ['atomic filament', 'azurefilm', 'esun', 'extrudr', 'fiberlogy', 'formfutura', 'gizmo-dorks', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'paramount 3d', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sovol', 'sunlu'];
     const isProductLevelImageBrand = PRODUCT_LEVEL_IMAGE_BRANDS_LOGO_CHECK.some(b => 
       brandSlug?.toLowerCase().includes(b.replace(' ', '-')) || 
       brandSlug?.toLowerCase().includes(b.replace(' ', ''))
