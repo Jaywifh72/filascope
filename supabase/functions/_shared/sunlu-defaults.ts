@@ -218,6 +218,87 @@ export const SUNLU_TDS_URL = 'https://cdn.shopify.com/s/files/1/0152/6507/1190/f
 export const SUNLU_TDS_PAGE = 'https://store.sunlu.com/pages/filament-guide';
 
 // ============================================================================
+// DEFAULT PRICES (USD) - Fallback when API returns no price
+// ============================================================================
+
+const SUNLU_DEFAULT_PRICES: Record<string, number> = {
+  // Consumer PLA Series
+  'PLA': 13.99,
+  'PLA+': 14.99,
+  'PLA+ 2.0': 15.99,
+  'PLA+ 2.0 HS': 16.99,
+  'PLA+ HS': 16.99,
+  'PLA Meta': 15.99,
+  'PLA Silk': 18.99,
+  'PLA-Silk': 18.99,
+  'PLA Matte': 16.99,
+  'PLA-Matte': 16.99,
+  'PLA Matte Dual-Color': 19.99,
+  'PLA Glow': 17.99,
+  'PLA-Glow': 17.99,
+  'PLA Marble': 16.99,
+  'PLA-Marble': 16.99,
+  'PLA Wood': 18.99,
+  'PLA-Wood': 18.99,
+  'PLA Rainbow': 17.99,
+  'PLA-CF': 24.99,
+  'PLA AntiString': 15.99,
+  'PLA Refill': 12.99,
+  
+  // PETG Series
+  'PETG': 15.99,
+  'PETG-CF': 26.99,
+  'PETG-Matte': 17.99,
+  'PETG-Matte-HS': 18.99,
+  
+  // ABS Series
+  'ABS': 15.99,
+  'ABS-Easy': 16.99,
+  'Easy ABS': 16.99,
+  'ABS-FR': 44.99,
+  'ABS-GF': 26.99,
+  'ASA': 15.99,
+  
+  // TPU Series
+  'TPU': 22.99,
+  'TPU-90A': 22.99,
+  
+  // Engineering Materials
+  'PA': 34.99,
+  'PA-CF': 44.99,
+  'PA12-CF': 44.99,
+  'Easy PA': 34.99,
+  'PC': 29.99,
+  'PC-ABS': 29.99,
+  'PP': 26.99,
+  'PVB': 24.99,
+  'PEEK': 199.99,
+  'HIPS': 16.99,
+};
+
+export function getSunluDefaultPrice(material: string): number {
+  // Direct match
+  if (SUNLU_DEFAULT_PRICES[material]) {
+    return SUNLU_DEFAULT_PRICES[material];
+  }
+  
+  // Normalize and try again
+  const normalized = material.replace(/-/g, ' ').replace(/\s+/g, ' ').trim();
+  if (SUNLU_DEFAULT_PRICES[normalized]) {
+    return SUNLU_DEFAULT_PRICES[normalized];
+  }
+  
+  // Try with hyphen
+  const hyphenated = material.replace(/\s+/g, '-');
+  if (SUNLU_DEFAULT_PRICES[hyphenated]) {
+    return SUNLU_DEFAULT_PRICES[hyphenated];
+  }
+  
+  // Default fallback
+  return 15.99;
+}
+
+// ============================================================================
 // COLOR MAPPING
 // ============================================================================
 
