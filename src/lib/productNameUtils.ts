@@ -638,6 +638,37 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
     return `${line} ${material}`.trim();
   }
   
+  // SUNLU: Handle 3-part IDs like sunlu__pla-marble__standard
+  // Examples: sunlu__pla-marble__standard → "PLA Marble"
+  //           sunlu__petg-cf__standard → "PETG-CF"
+  //           sunlu__pla-matte-dual-color__standard → "PLA Matte Dual-Color"
+  if (parts[0] === 'sunlu' && parts.length >= 2) {
+    const materialSlug = parts[1]; // e.g., "pla-marble", "petg-cf", "pla-matte-dual-color"
+    
+    // Convert material slug to display name
+    const displayName = materialSlug
+      .split('-')
+      .map((word, idx) => {
+        const upper = word.toUpperCase();
+        // Keep material abbreviations uppercase
+        if (['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PC', 'PP', 'PA', 'PA12', 'PEEK', 'CF', 'GF', 'FR', 'PVB', 'HIPS', 'HS'].includes(upper)) {
+          return upper;
+        }
+        // Title case for descriptive words
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(' ')
+      // Fix formatting for composite suffixes (must be hyphenated)
+      .replace(/\s+CF\b/g, '-CF')
+      .replace(/\s+GF\b/g, '-GF')
+      .replace(/\s+FR\b/g, '-FR')
+      // Clean up special patterns
+      .replace(/Dual Color/g, 'Dual-Color')
+      .replace(/High Speed/g, 'HS');
+    
+    return displayName.trim();
+  }
+  
   // GEEETECH: Handle underscore-based slugs in product_line_id
   // Examples: geeetech__pla__silk_tri → "PLA Silk Tri-Color"
   //           geeetech__pla__hs_pla → "PLA High Speed"

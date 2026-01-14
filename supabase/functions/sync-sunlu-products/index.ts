@@ -169,12 +169,30 @@ function explodeVariants(products: ShopifyProduct[]): ProcessedVariant[] {
     
     for (const variant of product.variants) {
       // Parse region from variant title: "Ship to USA / Color"
-      const { region, color } = extractRegionFromVariant(variant.title);
+      let { region, color } = extractRegionFromVariant(variant.title);
       
       // Only include US region to avoid 4x duplicates
       if (region !== 'US') {
         skippedNonUS++;
         continue;
+      }
+      
+      // Fallback for single-color/effect products where "color" is just weight/size
+      // These products have variants like "USA / 1KG" with no actual color info
+      if (!color || /^\d+\s*kg$/i.test(color) || color === '1KG' || color === '1kg') {
+        const titleLower = product.title.toLowerCase();
+        if (/marble/i.test(titleLower)) {
+          color = 'Marble';
+        } else if (/glow/i.test(titleLower) || /luminous/i.test(titleLower)) {
+          color = 'Glow Green';
+        } else if (/galaxy/i.test(titleLower)) {
+          color = 'Galaxy';
+        } else if (/matte.*dual[\-\s]?color|dual[\-\s]?color.*matte/i.test(titleLower)) {
+          color = 'Dual-Color';
+        } else {
+          color = 'Default';
+        }
+        console.log(`[Step 2] Fallback color for "${product.title}": ${color}`);
       }
       
       // Check if variant itself should be excluded
