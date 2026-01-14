@@ -49,7 +49,7 @@ const IMAGE_SWATCH_BRANDS = ['3d-fuel', 'polymaker', 'hatchbox', 'sunlu', 'eryon
 const PRODUCT_LEVEL_IMAGE_BRANDS = ['ninjatek', 'kingroon', 'gizmo-dorks', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'siraya-tech', 'sovol', 'sunlu', 'treed-filaments', 'ultimaker'];
 
 // Brands that use CSV-seeded sync and should skip certain checks
-const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker'];
+const CSV_SEEDED_BRANDS = ['eryone', 'esun', 'extrudr', 'fillamentum', 'formfutura', 'geeetech', 'gizmo-dorks', 'hatchbox', 'colorfabb', 'fiberlogy', 'fusion-filaments', 'ic3d-printers', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla'];
 
 // Brands known to block Firecrawl/scrapers (redirect to cart, captcha, etc.)
 const SCRAPER_BLOCKED_BRANDS = ['3dhojor'];
@@ -7663,6 +7663,11 @@ function generateAIFixPrompt(
     return generateUltimakerFixPrompt(brand, checks, totalProducts, aiAnalysis);
   }
   
+  // Use brand-specific prompt generator for VoxelPLA
+  if (brandSlug === 'voxelpla') {
+    return generateVoxelPLAFixPrompt(brand, checks, totalProducts, aiAnalysis);
+  }
+  
   // Determine the best AI role for this specific set of issues
   const role = determineAIRole(checks, brandSlug);
   
@@ -10124,7 +10129,7 @@ Deno.serve(async (req) => {
       'numakers': 13,           // CSV-seeded: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS
       'recreus': 14,            // CSV-seeded: TPU-60A, TPU-70A, TPU-82A, TPU-95A, TPU-FOAM, TPU-95A-FOAM, TPU-SEBS, TPU-Conductive, TPU-Purifier, TPU-Bio, rTPU, PETG, PLA, PP
       'treed-filaments': 70,    // CSV-seeded: 70 unique product lines from 209 consumer variants
-      'voxelpla': 5,            // Basic PLA lines
+      'voxelpla': 3,            // CSV-seeded: PLA+ HS (Pro), PETG+ HS (Pro), Galaxy PETG+ HS (Pro) = 3 product lines
       'ziro': 10,               // PLA, PETG, Silk, etc.
       'paramount-3d': 14,       // CSV-seeded: PLA (7 sub-lines: standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon = 14 total product lines
       'cc3d': 10,               // PLA, PETG, Ceramic, Metal lines
@@ -10430,7 +10435,7 @@ Deno.serve(async (req) => {
     // CSV-seeded brands (Fiberlogy, Eryone, eSun, Extrudr) intentionally have no prices
     // Matter3D has bulk/pellet products with high prices that are filtered separately
     // Polymaker Fiberon engineering materials legitimately cost $289-$299+
-    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
+    const skipPriceCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'kingroon', 'matter3d', 'ninjatek', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla']; // CSV-seeded brands with EUR prices or multi-region pricing complexity
     const shouldRunPriceCheck = !skipPriceCheckBrands.includes(brandSlug);
     
     const isIndustrialBrand = brandSlug === '3dxtech';
