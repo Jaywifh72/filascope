@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
 
 interface BrandFilterProps {
   value: string | null;
@@ -25,6 +26,9 @@ const PLATFORM_COLORS: Record<string, string> = {
   custom: "bg-zinc-500",
 };
 
+// Create a Set for O(1) lookup
+const SYNC_MANAGER_BRANDS = new Set<string>(BRAND_SPECIFIC_FUNCTIONS);
+
 export function BrandFilter({
   value,
   onChange,
@@ -32,7 +36,7 @@ export function BrandFilter({
   showPlatformBadge = false,
 }: BrandFilterProps) {
   const { data: brands, isLoading } = useQuery({
-    queryKey: ["automated-brands-filter"],
+    queryKey: ["automated-brands-filter-synced"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("automated_brands")
@@ -41,7 +45,8 @@ export function BrandFilter({
         .order("display_name");
 
       if (error) throw error;
-      return data;
+      // Filter to only include brands in the sync manager
+      return data?.filter(brand => SYNC_MANAGER_BRANDS.has(brand.brand_slug)) || [];
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
