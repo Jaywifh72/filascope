@@ -9,22 +9,27 @@ import {
   generateVoxelPLAProductId,
   getVoxelPLAColorHex,
 } from '../_shared/voxelpla-seed.ts';
+import {
+  buildFieldCoverage,
+  createProductResult,
+  type SyncProductResult,
+} from '../_shared/sync-response-builder.ts';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-interface SyncResult {
-  success: boolean;
-  vendor: string;
-  productsCreated: number;
-  productsDeleted: number;
-  productsWithHex: number;
-  productsWithImages: number;
-  productLines: number;
-  duration_seconds: number;
-  errors: string[];
-  syncDecisions: SyncDecision[];
+interface SyncProgress {
+  stage: string;
+  current: number;
+  total: number;
+  message?: string;
+  productsProcessed?: number;
+  variantsFound?: number;
+  created?: number;
+  updated?: number;
+  errors?: number;
+  currentProduct?: string;
 }
 
 interface SyncDecision {
@@ -53,7 +58,48 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
   const syncDecisions: SyncDecision[] = [];
+  const productResults: SyncProductResult[] = [];
   const errors: string[] = [];
+
+  // Initialize Supabase client
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  let syncLogId: string | null = null;
+  let stats = {
+    productsProcessed: 0,
+    variantsFound: VOXELPLA_PRODUCT_SEED.length,
+    created: 0,
+    updated: 0,
+    errors: 0,
+  };
+
+  // Helper to update progress in the sync log
+  const updateProgress = async (stage: string, current: number, total: number, currentProduct?: string) => {
+    if (!syncLogId) return;
+    
+    const progress: SyncProgress = {
+      stage,
+      current,
+      total,
+      productsProcessed: stats.productsProcessed,
+      variantsFound: stats.variantsFound,
+      created: stats.created,
+      updated: stats.updated,
+      errors: stats.errors,
+      currentProduct,
+    };
+
+    try {
+      await supabase
+        .from('brand_sync_logs')
+        .update({ products_processed: progress as unknown as Record<string, unknown> })
+        .eq('id', syncLogId);
+    } catch (err) {
+      console.error('Error updating progress:', err);
+    }
+  };
 
   try {
     console.log('='.repeat(60));
@@ -61,14 +107,34 @@ Deno.serve(async (req) => {
     console.log(`Seed contains ${VOXELPLA_PRODUCT_SEED.length} products`);
     console.log('='.repeat(60));
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // =======================================================================
+    // STEP 0: Create sync log entry for progress tracking
+    // =======================================================================
+    console.log('\n[Step 0] Creating sync log entry...');
+
+    const { data: syncLog, error: logError } = await supabase
+      .from('brand_sync_logs')
+      .insert({
+        brand_slug: 'voxelpla',
+        status: 'running',
+        sync_type: 'clean_slate',
+        started_at: new Date().toISOString(),
+        products_discovered: VOXELPLA_PRODUCT_SEED.length,
+      })
+      .select('id')
+      .single();
+
+    if (logError) {
+      console.error('Failed to create sync log:', logError);
+    } else {
+      syncLogId = syncLog.id;
+      console.log(`[Step 0] Sync log created: ${syncLogId}`);
+    }
 
     // =======================================================================
     // STEP 1: Validate seed data
     // =======================================================================
+    await updateProgress('Validating seed data...', 0, 6);
     console.log('\n[Step 1] Validating seed data...');
     
     if (VOXELPLA_PRODUCT_SEED.length < SAFE_DELETE_THRESHOLD) {
@@ -93,6 +159,7 @@ Deno.serve(async (req) => {
     // =======================================================================
     // STEP 2: Get brand ID
     // =======================================================================
+    await updateProgress('Fetching brand information...', 1, 6);
     console.log('\n[Step 2] Fetching brand ID...');
 
     const { data: brand } = await supabase
@@ -104,9 +171,18 @@ Deno.serve(async (req) => {
     const brandId = brand?.id || null;
     console.log(`[Step 2] Brand ID: ${brandId || 'not found'}`);
 
+    // Mark brand as actively syncing
+    if (brandId) {
+      await supabase
+        .from('automated_brands')
+        .update({ scraping_active: true })
+        .eq('id', brandId);
+    }
+
     // =======================================================================
     // STEP 3: Delete existing VoxelPLA products
     // =======================================================================
+    await updateProgress('Deleting existing products...', 2, 6);
     console.log('\n[Step 3] Deleting existing VoxelPLA products...');
 
     const { data: deleted, error: deleteError } = await supabase
@@ -130,11 +206,28 @@ Deno.serve(async (req) => {
     });
 
     // =======================================================================
-    // STEP 4: Transform and insert seed products
+    // STEP 4: Transform and insert seed products with progress
     // =======================================================================
+    await updateProgress('Processing products...', 3, 6);
     console.log('\n[Step 4] Transforming seed products...');
 
-    const filamentRecords = VOXELPLA_PRODUCT_SEED.map(product => {
+    const filamentRecords = [];
+    const totalProducts = VOXELPLA_PRODUCT_SEED.length;
+
+    for (let i = 0; i < VOXELPLA_PRODUCT_SEED.length; i++) {
+      const product = VOXELPLA_PRODUCT_SEED[i];
+      stats.productsProcessed = i + 1;
+
+      // Update progress every 5 products or on last product
+      if (i % 5 === 0 || i === totalProducts - 1) {
+        await updateProgress(
+          `Processing ${product.material}...`,
+          3,
+          6,
+          product.title
+        );
+      }
+
       const normalizedMaterial = normalizeVoxelPLASeedMaterial(product.material);
       const productLineId = getVoxelPLAProductLineId(product.material);
       const printSettings = getVoxelPLASeedPrintSettings(product.material);
@@ -149,7 +242,7 @@ Deno.serve(async (req) => {
         details: `material=${normalizedMaterial}, line=${productLineId}, hex=${colorHex || 'MISSING'}`,
       });
 
-      return {
+      const record = {
         product_id: productId,
         product_title: product.title,
         product_handle: product.handle,
@@ -176,7 +269,24 @@ Deno.serve(async (req) => {
         last_scraped_at: new Date().toISOString(),
         sync_status: 'synced',
       };
-    });
+
+      filamentRecords.push(record);
+
+      // Track product result
+      productResults.push(createProductResult(
+        productId,
+        product.title,
+        'created',
+        {
+          featured_image: record.featured_image,
+          variant_price: null, // VoxelPLA doesn't have prices in seed
+          tds_url: record.tds_url,
+          color_hex: record.color_hex,
+          mpn: null,
+          nozzle_temp_min_c: record.nozzle_temp_min_c,
+        }
+      ));
+    }
 
     // Check for missing hex codes
     const missingHex = filamentRecords.filter(r => !r.color_hex);
@@ -195,6 +305,7 @@ Deno.serve(async (req) => {
     // =======================================================================
     // STEP 5: Batch insert
     // =======================================================================
+    await updateProgress('Inserting products to database...', 4, 6);
     console.log('\n[Step 5] Inserting products...');
 
     const { error: insertError } = await supabase
@@ -205,11 +316,13 @@ Deno.serve(async (req) => {
       throw new Error(`Insert failed: ${insertError.message}`);
     }
 
+    stats.created = filamentRecords.length;
     console.log(`[Step 5] Inserted ${filamentRecords.length} products`);
 
     // =======================================================================
     // STEP 6: Update brand statistics
     // =======================================================================
+    await updateProgress('Updating brand statistics...', 5, 6);
     console.log('\n[Step 6] Updating brand statistics...');
 
     try {
@@ -221,45 +334,115 @@ Deno.serve(async (req) => {
       errors.push(`Stats update error: ${err}`);
     }
 
-    // =======================================================================
-    // STEP 7: Calculate metrics
-    // =======================================================================
-    const productsWithHex = filamentRecords.filter(r => r.color_hex).length;
-    const productsWithImages = filamentRecords.filter(r => r.featured_image).length;
-    const productLines = [...new Set(filamentRecords.map(r => r.product_line_id))].length;
+    // Reset scraping_active flag
+    if (brandId) {
+      await supabase
+        .from('automated_brands')
+        .update({ 
+          scraping_active: false,
+          last_scrape_at: new Date().toISOString(),
+        })
+        .eq('id', brandId);
+    }
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    // =======================================================================
+    // STEP 7: Build field coverage and final response
+    // =======================================================================
+    await updateProgress('Calculating field coverage...', 6, 6);
+    console.log('\n[Step 7] Building field coverage...');
+
+    const fieldCoverage = await buildFieldCoverage(supabase, VENDOR_NAME);
+    const productLines = [...new Set(filamentRecords.map(r => r.product_line_id))].length;
+    const duration_ms = Date.now() - startTime;
+    const duration_seconds = (duration_ms / 1000).toFixed(2);
 
     console.log('\n' + '='.repeat(60));
     console.log('VoxelPLA Sync Complete');
-    console.log(`Duration: ${duration}s`);
-    console.log(`Products Created: ${filamentRecords.length}`);
-    console.log(`Products with Hex: ${productsWithHex}/${filamentRecords.length}`);
-    console.log(`Products with Images: ${productsWithImages}/${filamentRecords.length}`);
+    console.log(`Duration: ${duration_seconds}s`);
+    console.log(`Products Created: ${stats.created}`);
+    console.log(`Field Coverage: images=${fieldCoverage.images.percent}%, colors=${fieldCoverage.colors.percent}%`);
     console.log(`Product Lines: ${productLines}`);
     console.log('='.repeat(60));
 
-    const result: SyncResult = {
+    // Update sync log as completed
+    if (syncLogId) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          products_created: stats.created,
+          products_updated: 0,
+          products_failed: stats.errors,
+          duration_seconds: parseFloat(duration_seconds),
+          products_processed: {
+            stage: 'Complete',
+            current: 6,
+            total: 6,
+            productsProcessed: stats.productsProcessed,
+            variantsFound: stats.variantsFound,
+            created: stats.created,
+            updated: 0,
+            errors: stats.errors,
+          } as unknown as Record<string, unknown>,
+        })
+        .eq('id', syncLogId);
+    }
+
+    // Build standardized response matching BrandSyncResult format
+    const response = {
       success: true,
+      jobId: syncLogId,
+      brandSlug: 'voxelpla',
+      platform: 'shopify',
+      dryRun: false,
+      summary: {
+        totalDiscovered: VOXELPLA_PRODUCT_SEED.length,
+        created: stats.created,
+        updated: 0,
+        skipped: 0,
+        errors: stats.errors,
+      },
+      products: productResults,
+      fieldCoverage,
+      duration_ms,
+      startedAt: new Date(startTime).toISOString(),
+      completedAt: new Date().toISOString(),
+      // Additional VoxelPLA-specific data
       vendor: VENDOR_NAME,
-      productsCreated: filamentRecords.length,
       productsDeleted: deletedCount,
-      productsWithHex,
-      productsWithImages,
       productLines,
-      duration_seconds: parseFloat(duration),
-      errors,
       syncDecisions,
     };
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error('VoxelPLA Sync Failed:', error);
+
+    // Update sync log as failed
+    if (syncLogId) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          error_details: { error },
+          products_processed: {
+            stage: 'Failed',
+            current: 0,
+            total: 6,
+            productsProcessed: stats.productsProcessed,
+            created: stats.created,
+            errors: stats.errors + 1,
+          } as unknown as Record<string, unknown>,
+        })
+        .eq('id', syncLogId);
+    }
 
     return new Response(
       JSON.stringify({
@@ -268,7 +451,14 @@ Deno.serve(async (req) => {
         error,
         errors: [...errors, error],
         syncDecisions,
-        duration_seconds: ((Date.now() - startTime) / 1000).toFixed(2),
+        summary: {
+          totalDiscovered: VOXELPLA_PRODUCT_SEED.length,
+          created: stats.created,
+          updated: 0,
+          skipped: 0,
+          errors: stats.errors + 1,
+        },
+        duration_ms: Date.now() - startTime,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
