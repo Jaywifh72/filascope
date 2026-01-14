@@ -161,3 +161,23 @@ export const EXPECTED_CARD_COUNTS: Record<string, number> = {
   'voxelpla': 3,
   'ziro': 30, // 30 product lines expected from Ziro
 };
+
+// Product lines that legitimately have only 1 color variant (not a sync error)
+// These are effect-based or specialty products where the effect IS the product
+export const SINGLE_VARIANT_PRODUCT_LINES = [
+  // Ziro single-variant product lines
+  'ziro__pla__rainbow-glow',
+  'ziro__pla__stone-blue-white',
+  'ziro__pla__marble',
+  'ziro__pla__straw-fiber',
+  // Sunlu single-variant product lines
+  'sunlu__pla-marble__standard',
+  'sunlu__pla-galaxy__standard',
+  'sunlu__pa-cf__standard',
+  'sunlu__petg-cf__standard',
+  // VoxelPLA Galaxy is a separate product line
+  'voxelpla__petg__galaxy',
+  // Other brands with specialty single-color lines
+  'hatchbox__pla__stone',
+  'hatchbox__pla-cf__standard',
+];
