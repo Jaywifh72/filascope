@@ -543,34 +543,37 @@ const Finder = () => {
     },
   });
   
-  // Fetch true filament counts per brand (matching Sync Manager logic)
+  // Extract for convenience
+  const brands = brandsData?.displayNames;
+  const brandNameMap = brandsData?.brandNameMap || {};
+
+  // Fetch true filament counts per brand (matching Sync Manager logic exactly)
   const { data: brandFilamentCounts } = useQuery({
-    queryKey: ["brand-filament-counts"],
+    queryKey: ["brand-filament-counts", brandNameMap],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("filaments")
-        .select("vendor")
-        .not("material", "is", null)
-        .or("net_weight_g.is.null,net_weight_g.gte.300");
+      // Get all brand names we care about
+      const brandNames = Object.values(brandNameMap);
+      if (brandNames.length === 0) return {};
       
-      if (error) throw error;
-      
-      // Aggregate counts by vendor
+      // Fetch counts for each brand using the same logic as Sync Manager
       const counts: Record<string, number> = {};
-      data?.forEach(f => {
-        if (f.vendor) {
-          counts[f.vendor] = (counts[f.vendor] || 0) + 1;
+      
+      for (const brandName of brandNames) {
+        const { count, error } = await supabase
+          .from("filaments")
+          .select("*", { count: "exact", head: true })
+          .ilike("vendor", brandName);
+        
+        if (!error && count !== null) {
+          counts[brandName] = count;
         }
-      });
+      }
       
       return counts;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: Object.keys(brandNameMap).length > 0,
   });
-  
-  // Extract for convenience
-  const brands = brandsData?.displayNames;
-  const brandNameMap = brandsData?.brandNameMap || {};
 
   const { data: filaments, isLoading } = useQuery({
     queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, foodContact, amsOnly, selectedBrands, materials, brandNameMap],
