@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 // Material color mapping for visual swatches
 const MATERIAL_COLORS: Record<string, string> = {
@@ -26,11 +24,6 @@ const MATERIAL_COLORS: Record<string, string> = {
   'Specialty': '#f43f5e',
 };
 
-// Fallback top brands if DB fetch fails
-const FALLBACK_TOP_BRANDS = [
-  'Bambu Lab', 'Prusament', 'eSun', 'Overture', 'Hatchbox',
-  'Polymaker', 'Sunlu', 'Inland', 'ColorFabb', 'Fillamentum'
-];
 
 // Letter groupings for alphabetical sections
 const LETTER_GROUPS = [
@@ -110,26 +103,6 @@ export function HorizontalFilterBar({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const brandSearchRef = useRef<HTMLInputElement>(null);
 
-  // Fetch featured brands from automated_brands table
-  const { data: featuredBrandsData } = useQuery({
-    queryKey: ["featured-brands-filter"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("automated_brands")
-        .select("display_name")
-        .eq("featured", true)
-        .eq("is_visible", true)
-        .order("display_order")
-        .limit(10);
-      
-      if (error) throw error;
-      return data?.map(b => b.display_name) || [];
-    },
-    staleTime: 1000 * 60 * 10, // 10 minutes
-  });
-
-  // Use fetched featured brands or fallback
-  const topBrands = featuredBrandsData?.length ? featuredBrandsData : FALLBACK_TOP_BRANDS;
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -175,18 +148,6 @@ export function HorizontalFilterBar({
   const filteredBrands = brands.filter(brand => 
     brand.name.toLowerCase().includes(brandSearch.toLowerCase())
   );
-
-  // Get popular brands (intersection of topBrands and available brands), sorted alphabetically
-  const popularBrands = topBrands
-    .map(name => brands.find(b => b.name === name))
-    .filter((b): b is Brand => b !== undefined)
-    .filter(b => !brandSearch || b.name.toLowerCase().includes(brandSearch.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  // Get other brands (not in popular list), sorted alphabetically
-  const otherBrands = filteredBrands
-    .filter(b => !topBrands.includes(b.name))
-    .sort((a, b) => a.name.localeCompare(b.name));
 
   const applyBrandFilter = () => {
     setIsApplying('brand');
@@ -393,34 +354,19 @@ export function HorizontalFilterBar({
                     </p>
                   ) : (
                     <>
-                      {/* Top 10 Popular Section */}
-                      {popularBrands.length > 0 && !brandSearch && (
-                        <div className="p-2 border-b border-border">
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Top 10 Popular
-                          </div>
-                          {popularBrands.map((brand) => (
-                            <BrandRow key={brand.name} brand={brand} />
-                          ))}
-                        </div>
-                      )}
-
                       {/* All Brands - Alphabetical Groups */}
                       <div className="p-2">
-                        {!brandSearch && (
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            All Brands
-                          </div>
-                        )}
                         {brandSearch ? (
-                          // When searching, show flat list
-                          filteredBrands.map((brand) => (
-                            <BrandRow key={brand.name} brand={brand} />
-                          ))
+                          // When searching, show flat list sorted alphabetically
+                          filteredBrands
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((brand) => (
+                              <BrandRow key={brand.name} brand={brand} />
+                            ))
                         ) : (
-                          // When not searching, show alphabetical groups
+                          // When not searching, show alphabetical groups using ALL brands
                           LETTER_GROUPS.map(group => {
-                            const groupBrands = otherBrands
+                            const groupBrands = filteredBrands
                               .filter(b => group.letters.includes(b.name.charAt(0).toUpperCase()))
                               .sort((a, b) => a.name.localeCompare(b.name));
                             if (groupBrands.length === 0) return null;
