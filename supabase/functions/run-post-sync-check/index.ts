@@ -9911,7 +9911,7 @@ Deno.serve(async (req) => {
       'ultimaker': 10,          // S-Series materials
       'numakers': 13,           // CSV-seeded: PLA+, PLA Silk, Tri-Color Silk, PLA Matte, PLA Starlight, PLA Glow, PLA Marble, PLA Wood, PLA-CF, PETG-HS, PETG Translucent, ASA, ABS
       'recreus': 14,            // CSV-seeded: TPU-60A, TPU-70A, TPU-82A, TPU-95A, TPU-FOAM, TPU-95A-FOAM, TPU-SEBS, TPU-Conductive, TPU-Purifier, TPU-Bio, rTPU, PETG, PLA, PP
-      'treed-filaments': 40,    // CSV-seeded: ~40 unique product lines from 209 consumer variants (after filtering bulk/samples)
+      'treed-filaments': 70,    // CSV-seeded: 70 unique product lines from 209 consumer variants
       'voxelpla': 5,            // Basic PLA lines
       'ziro': 10,               // PLA, PETG, Silk, etc.
       'paramount-3d': 14,       // CSV-seeded: PLA (7 sub-lines: standard, stone, shimmer, skin-tones, military, matte, masterspool), PETG, ABS, ASA, FlexPLA, TPU, PVA, Nylon = 14 total product lines
