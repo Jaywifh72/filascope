@@ -9352,7 +9352,7 @@ Deno.serve(async (req) => {
           // For brands that add color suffixes to titles (like 3DXTech), strip the color
           // before comparing to the page H1 which typically shows just the product name
           // Skip for CSV-seeded brands where DB titles intentionally include color suffix
-          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
+          const skipTitleCheckBrands = ['eryone', 'esun', 'extrudr', 'fusion-filaments', 'geeetech', 'hatchbox', 'ic3d-printers', 'matter3d', 'ninjatek', 'overture', 'paramount-3d', 'polymaker', 'prusament', 'push-plastic', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla']; // CSV-seeded brands and Shopify brands with intentional " - Color" suffixes
           const shouldSkipTitleCheck = skipTitleCheckBrands.includes(brandSlug);
           
           if (shouldSkipTitleCheck) {
@@ -9445,7 +9445,7 @@ Deno.serve(async (req) => {
           // - matter3d: website HTML shows incorrect "magenta" from other page elements
           // - polymaker: website shows "you will love it" marketing text as color option
           // - proto-pasta: website scraping picks up navigation text like "makers of protopasta, scroll to top"
-          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments'];
+          const skipColorNameCheckBrands = ['matter3d', 'polymaker', 'proto-pasta', 'recreus', 'siraya-tech', 'sunlu', 'treed-filaments', 'voxelpla'];
           const shouldSkipColorNameCheck = skipColorNameCheckBrands.includes(brandSlug);
           
           if (pageInfo.colorSwatches.length > 0 && !shouldSkipColorNameCheck) {
@@ -11002,7 +11002,7 @@ Deno.serve(async (req) => {
     // Include Anycubic since they group products across promotional and regular URLs
     // Include Atomic Filament since each color variant IS a different product with its own URL
     // Include Proto-Pasta since each color variant IS a different Shopify product with its own URL
-    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments', 'proto-pasta', 'spectrum-filaments'];
+    const CROSS_PRODUCT_URL_BRANDS = [...IMAGE_SWATCH_BRANDS, 'anycubic', 'atomic-filament', 'fusion-filaments', 'proto-pasta', 'spectrum-filaments', 'voxelpla'];
     const isCrossProductSwatchBrand = CROSS_PRODUCT_URL_BRANDS.includes(brandSlug);
     
     for (const lineId of productLineIds.slice(0, 15)) {

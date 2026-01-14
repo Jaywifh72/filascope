@@ -8,6 +8,7 @@ import {
   getVoxelPLAFinishType,
   generateVoxelPLAProductId,
   getVoxelPLAColorHex,
+  getVoxelPLAColorFamily,
 } from '../_shared/voxelpla-seed.ts';
 import {
   buildFieldCoverage,
@@ -242,6 +243,9 @@ Deno.serve(async (req) => {
         details: `material=${normalizedMaterial}, line=${productLineId}, hex=${colorHex || 'MISSING'}`,
       });
 
+      // Resolve color family from hex code and color name
+      const colorFamily = getVoxelPLAColorFamily(colorHex, product.color);
+
       const record = {
         product_id: productId,
         product_title: product.title,
@@ -255,6 +259,7 @@ Deno.serve(async (req) => {
         product_line_id: productLineId,
         finish_type: finishType,
         color_hex: colorHex,
+        color_family: colorFamily,
         diameter_nominal_mm: 1.75,
         net_weight_g: 1000,
         high_speed_capable: true,
