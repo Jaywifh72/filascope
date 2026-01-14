@@ -10106,7 +10106,17 @@ Deno.serve(async (req) => {
                                       lineId.includes('recreus__pp__') ||                // PP limited colors (2)
                                       lineId.includes('recreus__pla-lw__') ||            // Lightweight PLA limited colors (2)
                                       lineId.includes('recreus__tpu-bio__') ||           // Balena Bio-TPU limited colors (2)
-                                      lineId.includes('recreus__tpu-sebs__')             // SEBS limited colors (2)
+                                      lineId.includes('recreus__tpu-sebs__') ||          // SEBS limited colors (2)
+                                      // Spectrum Filaments single-color specialty products (Shopify API sync)
+                                      lineId.includes('spectrum__abs-medical__') ||       // Medical-grade ABS only in White
+                                      lineId.includes('spectrum__aquaprint-pla__') ||     // AquaPrint only in Natural
+                                      lineId.includes('spectrum__asa-x-cf10__refill') ||  // ASA-X CF10 refill single color
+                                      lineId.includes('spectrum__pa6-cf15__') ||          // PA6-CF15 only in Carbon Black
+                                      lineId.includes('spectrum__pa6-cs20-fr-v0__') ||    // PA6-CS20 FR V0 only in Black
+                                      lineId.includes('spectrum__pc-ptfe__') ||           // PC/PTFE only in Black
+                                      lineId.includes('spectrum__pet-g-fr-v0__') ||       // PET-G FR V0 only in Black
+                                      lineId.includes('spectrum__pps-am230__') ||         // PPS AM230 only in NAT
+                                      lineId.includes('spectrum__s-flex-carbon__')        // S-Flex Carbon only in Carbon Black
         
         if (!isSingleColorProduct) {
           variantCountIssues.push({
@@ -10232,7 +10242,17 @@ Deno.serve(async (req) => {
                                    lineId.includes('push-plastic__petg-cf__') ||       // PETG-CF only in Black
                                    lineId.includes('push-plastic__pa-cf__') ||         // PA-CF only in Black
                                    lineId.includes('push-plastic__pc-cf__') ||         // PC-CF only in Black
-                                   lineId.includes('push-plastic__pla-ht__');          // High Heat+Tough PLA limited colors (3)
+                                   lineId.includes('push-plastic__pla-ht__') ||       // High Heat+Tough PLA limited colors (3)
+                                   // Spectrum Filaments single-color specialty products (Shopify API sync)
+                                   lineId.includes('spectrum__abs-medical__') ||       // Medical-grade ABS only in White
+                                   lineId.includes('spectrum__aquaprint-pla__') ||     // AquaPrint only in Natural
+                                   lineId.includes('spectrum__asa-x-cf10__refill') ||  // ASA-X CF10 refill single color
+                                   lineId.includes('spectrum__pa6-cf15__') ||          // PA6-CF15 only in Carbon Black
+                                   lineId.includes('spectrum__pa6-cs20-fr-v0__') ||    // PA6-CS20 FR V0 only in Black
+                                   lineId.includes('spectrum__pc-ptfe__') ||           // PC/PTFE only in Black
+                                   lineId.includes('spectrum__pet-g-fr-v0__') ||       // PET-G FR V0 only in Black
+                                   lineId.includes('spectrum__pps-am230__') ||         // PPS AM230 only in NAT
+                                   lineId.includes('spectrum__s-flex-carbon__');       // S-Flex Carbon only in Carbon Black
       if (isSingleColorProduct) continue;
       
       // Skip brands that use product-level images (not color-specific) - source data limitation
