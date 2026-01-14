@@ -470,13 +470,6 @@ export const brandInfo: Record<string, BrandInfoData> = {
     headquarters: "Sežana, Slovenia",
     website: "https://www.azurefilm.com"
   },
-  "CC3D": {
-    summary: "CC3D is the registered global brand of Hangzhou Zhuopu New Material Technology Co., Ltd., a Chinese company specializing in the research, development, and manufacturing of 3D printing consumables. Based in Hangzhou, the company has built expertise in biodegradable polymer materials including PLA, PBAT, and other sustainable plastics for additive manufacturing.\n\nCC3D has established itself as a significant player in the Chinese filament market with growing international recognition. The company's product development focuses on both standard materials and eco-friendly alternatives, reflecting increasing demand for sustainable 3D printing options. Their manufacturing capabilities serve both consumer and industrial markets, with products distributed through various channels including direct sales and OEM partnerships.\n\nThe company's leadership emphasizes product quality as the core of development while maintaining meticulous customer service as a cultural cornerstone. CC3D continues to expand their material portfolio and global reach, positioning themselves as one of China's first dedicated 3D printer filament factories with ambitions to serve the worldwide maker community.",
-    location: "Hangzhou, China",
-    companyType: "private",
-    headquarters: "Hangzhou, Zhejiang Province, China",
-    website: "https://cc3dglobal.com"
-  },
   "Dikale": {
     summary: "Dikale is a brand focused on 3D printing pens and compatible filaments, carving out a niche in the creative tools market that bridges traditional crafting with additive manufacturing. The company's products target educators, hobbyists, and DIY enthusiasts who use 3D pens for artistic expression, prototyping, and hands-on learning experiences.\n\nDikale's filament line is specifically optimized for 3D pen applications, with an emphasis on low-temperature materials like PLA that are safe and easy to use in handheld devices. Their product range features an extensive color palette including standard colors, glow-in-the-dark options, and specialty finishes that enable creative projects from jewelry making to model repair. The company also offers 3D printer filaments in standard spool formats.\n\nThe brand has built a following among crafters and educators who appreciate the accessibility of 3D pen technology for introducing 3D printing concepts without the complexity of traditional printers. Dikale's products are widely available through major e-commerce platforms, making them easily accessible to consumers worldwide.",
     companyType: "private",

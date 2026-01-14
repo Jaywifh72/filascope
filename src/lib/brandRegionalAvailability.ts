@@ -427,14 +427,6 @@ export const BRAND_REGIONAL_AVAILABILITY: Record<string, BrandRegions> = {
     AU: { store: false, amazon: false },
     JP: { store: false, amazon: false },
   },
-  'CC3D': {
-    US: { store: true, amazon: true },
-    CA: { store: false, amazon: false },
-    UK: { store: false, amazon: false },
-    EU: { store: false, amazon: false },
-    AU: { store: false, amazon: false },
-    JP: { store: false, amazon: false },
-  },
   'Recycling Fabrik': {
     US: { store: true, amazon: false },
     CA: { store: false, amazon: false },

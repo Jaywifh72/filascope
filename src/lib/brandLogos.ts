@@ -59,7 +59,7 @@ export const brandLogos: Record<string, string> = {
   "Recreus": "/images/brands/recreus.png",
   "IC3D": "/images/brands/ic3d.png",
   "IC3D Printers": "/images/brands/ic3d.png",
-  "CC3D": "/images/brands/cc3d.png",
+  
   "Duramic 3D": "/images/brands/duramic3d.png",
   "DURAMIC 3D": "/images/brands/duramic3d.png",
   "Extrudr": "/images/brands/extrudr.ico",
