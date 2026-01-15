@@ -585,7 +585,7 @@ const Finder = () => {
   });
 
   const { data: filaments, isLoading } = useQuery({
-    queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials, brandNameMap],
+    queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials, brandNameMap, carbonFiber, glassFiber, woodFilled],
     enabled: !!materials && !!brandsData, // Wait for materials and brands to load first
     queryFn: async () => {
       // Build the query function that will be called for each page
@@ -641,6 +641,17 @@ const Finder = () => {
           const vendorNames = selectedBrands.map(b => brandNameMap[b] || b);
           const brandFilters = vendorNames.map(v => `vendor.eq.${v}`).join(",");
           query = query.or(brandFilters);
+        }
+
+        // Add finish_type filters for reinforced materials (moves filtering to database)
+        if (carbonFiber) {
+          query = query.eq("finish_type", "Carbon");
+        }
+        if (glassFiber) {
+          query = query.eq("finish_type", "Glass Fiber");
+        }
+        if (woodFilled) {
+          query = query.eq("finish_type", "Wood");
         }
 
         return query;
