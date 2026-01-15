@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogIn, Lock, Mail, Eye, EyeOff, Database, BarChart, Zap, Bell } from "lucide-react";
+import filascopeLogo from "@/assets/filascope-logo-dark.jpg";
 
 interface ComingSoonPageProps {
   onLoginSuccess: () => void;
@@ -167,24 +168,16 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
             }}
           />
           
-          {/* Logo */}
+          {/* Logo with cyan glow */}
           <div className="relative">
             <img 
-              src="/filascope-logo.svg" 
-              alt="FilaScope" 
-              className="h-14 sm:h-20 w-auto"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                if (fallback) fallback.style.display = 'block';
+              src={filascopeLogo}
+              alt="FilaScope - Measure Material. Master the Print." 
+              className="h-20 sm:h-28 w-auto"
+              style={{
+                filter: 'drop-shadow(0 0 20px rgba(0, 207, 232, 0.5)) drop-shadow(0 0 40px rgba(0, 207, 232, 0.3))',
               }}
             />
-            <h1 
-              className="hidden text-3xl sm:text-4xl font-black text-white tracking-tight"
-              style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-            >
-              FILASCOPE
-            </h1>
           </div>
         </div>
 
