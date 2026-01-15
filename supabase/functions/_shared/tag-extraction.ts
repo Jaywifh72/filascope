@@ -194,21 +194,32 @@ export function normalizeFinishType(existingType: string | null): FinishType {
  */
 export function extractFinishType(title: string, material: string): FinishType {
   const text = `${title} ${material}`.toLowerCase();
+  const titleLower = title.toLowerCase();
 
-  // Carbon Fiber - check material suffixes and explicit mentions
-  // Patterns: PLA-CF, PETG+CF, CF15, "carbon fiber", and the phrase as separate words
-  if (
-    /-cf\b/i.test(text) ||
-    /\+cf\b/i.test(text) ||
-    /\bcf\d+/i.test(text) ||        // CF15, CF30
-    /carbon\s*fiber/i.test(text) ||
+  // Carbon Fiber - comprehensive pattern matching
+  // Check for explicit Carbon Fiber indicators first
+  const hasCFIndicator = 
+    /-cf\b/i.test(text) ||           // PA6-CF, PETG-CF, ASA-CF
+    /\+cf\b/i.test(text) ||          // PETG+CF, PLA+CF
+    /\bcf\d+/i.test(text) ||         // CF15, CF20, CF30
+    /carbon\s*fiber/i.test(text) ||  // "carbon fiber" anywhere
+    /carbon\s*fibre/i.test(text) ||  // British spelling
     /\bcarbon\s*filled/i.test(text) ||
     /\bcarbon\s*reinforced/i.test(text) ||
-    /\bcarbon\b.*\b(pla|petg|abs|asa|nylon|pa|pc)\b/i.test(text) ||  // "Carbon" before material
-    /\b(pla|petg|abs|asa|nylon|pa|pc)\b.*\bcarbon\b/i.test(text)     // "Carbon" after material, excluding just color
-  ) {
-    // Make sure it's not just "carbon" as a color (e.g., "Carbon Black")
-    if (!/carbon\s*(black|grey|gray)\b/i.test(text) || /fiber|fibre|cf\b|-cf\b/i.test(text)) {
+    /carbonx/i.test(text) ||         // CarbonX brand products
+    /\bcarbon\b.*composite/i.test(text) ||
+    /composite.*\bcarbon\b/i.test(text);
+  
+  // Also check title-specific patterns for materials that use -CF suffix
+  const titleHasCF = /\b(pa|ppa|asa|pps|abs|pla|petg|pet|pc|pp|nylon)\s*-?\s*6?\s*-?cf\b/i.test(titleLower) ||
+                     /\b(pa6|pa12|pa66|ppa|asa|pps|pet|peek|pei)\s*-?cf\b/i.test(titleLower);
+
+  if (hasCFIndicator || titleHasCF) {
+    // Exclude cases where "carbon" is just a color name (e.g., "Carbon Black")
+    // but keep it if there's any fiber/CF indicator
+    const isJustColorName = /carbon\s*(black|grey|gray)\b/i.test(text) && 
+                            !/-cf\b|\+cf\b|cf\d|fiber|fibre|carbonx|composite/i.test(text);
+    if (!isJustColorName) {
       return "Carbon";
     }
   }
@@ -342,9 +353,17 @@ export function isAbrasive(title: string, material: string): boolean {
  */
 export function hasCarbonFiber(title: string, material: string): boolean {
   const t = ((title || '') + ' ' + (material || '')).toLowerCase();
-  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|cf\s*\d|\bpla-cf\b|\bpetg-cf\b|\babs-cf\b|\bpa-cf\b|\bpc-cf\b|\bpet-cf\b|\bnylon.*cf\b|\bcf\b/i;
-  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre/i.test(t);
-  return !hasPolycarbonate && cfPattern.test(t);
+  
+  // Comprehensive CF pattern matching
+  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|cf\s*\d|carbonx|\bpla-?cf\b|\bpetg-?cf\b|\babs-?cf\b|\bpa-?cf\b|\bpa6-?cf\b|\bpa12-?cf\b|\bpc-?cf\b|\bpet-?cf\b|\basa-?cf\b|\bpps-?cf\b|\bnylon.*cf\b|carbon\s*filled|carbon\s*reinforced/i;
+  
+  // Exclude pure polycarbonate (PC) unless it has actual CF indicator
+  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre|-cf\b|\+cf\b|cf\d/i.test(t);
+  
+  // Exclude "carbon black" as a color unless there's a CF indicator
+  const isJustCarbonColor = /carbon\s*(black|grey|gray)\b/i.test(t) && !/-cf\b|\+cf\b|cf\d|fiber|fibre|carbonx/i.test(t);
+  
+  return !hasPolycarbonate && !isJustCarbonColor && cfPattern.test(t);
 }
 
 /**
