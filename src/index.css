@@ -159,12 +159,37 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   
+  /* Typography Hierarchy - High-End Tech Aesthetic */
   h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', 'Geist', system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
+  }
+  
+  /* Technical data uses monospace */
+  .font-mono, code, pre, kbd, samp {
+    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  }
+  
+  /* Technical labels - small uppercase with wide tracking */
+  .tech-label {
+    @apply text-xs uppercase tracking-[0.3em] font-medium;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Logo text style - heavy weight, tight tracking */
+  .logo-text {
+    @apply font-black tracking-tighter;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Section headings - light weight, wide tracking */
+  .section-heading {
+    @apply font-light tracking-[0.2em] uppercase;
+    font-family: 'Inter', sans-serif;
   }
 }
 

@@ -133,7 +133,7 @@ const Navbar = () => {
               <DropdownMenuTrigger asChild>
                 <button 
                   className={cn(
-                    "relative flex items-center gap-1.5 px-6 py-3 text-sm font-semibold transition-colors duration-200 group",
+                    "relative flex items-center gap-1.5 px-6 py-3 text-sm font-semibold transition-colors duration-200 group font-inter",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     "hover:text-[#00CFE8]",
                     isResourcesActive ? 'text-[#00CFE8] font-bold' : 'text-white/90'
@@ -152,10 +152,10 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="start" 
-                className="bg-card/95 backdrop-blur-xl border-border min-w-[220px] p-2"
+                className="bg-card/95 backdrop-blur-xl border-border min-w-[220px] p-2 font-inter"
               >
                 <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                  <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium font-inter">
                     <Puzzle className="w-4 h-4 text-muted-foreground" />
                     Accessories
                   </Link>
