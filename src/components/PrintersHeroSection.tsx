@@ -55,50 +55,125 @@ const colorConfig = {
   cyan: {
     bg: 'bg-primary/15',
     text: 'text-primary',
-    glow: 'bg-primary',
-    hoverBorder: 'hover:border-primary/50',
-    hoverShadow: 'hover:shadow-[0_16px_48px_rgba(0,217,217,0.25)]',
+    glow: 'rgba(0, 217, 217, 0.4)',
+    glowHover: 'rgba(0, 217, 217, 0.6)',
+    borderHover: 'rgba(0, 217, 217, 0.5)',
+    shadowHover: '0 20px 60px rgba(0, 217, 217, 0.3)',
   },
   purple: {
     bg: 'bg-violet-500/15',
     text: 'text-violet-400',
-    glow: 'bg-violet-500',
-    hoverBorder: 'hover:border-violet-400/50',
-    hoverShadow: 'hover:shadow-[0_16px_48px_rgba(167,139,250,0.25)]',
+    glow: 'rgba(167, 139, 250, 0.4)',
+    glowHover: 'rgba(167, 139, 250, 0.6)',
+    borderHover: 'rgba(167, 139, 250, 0.5)',
+    shadowHover: '0 20px 60px rgba(167, 139, 250, 0.3)',
   },
   green: {
     bg: 'bg-emerald-500/15',
     text: 'text-emerald-400',
-    glow: 'bg-emerald-500',
-    hoverBorder: 'hover:border-emerald-400/50',
-    hoverShadow: 'hover:shadow-[0_16px_48px_rgba(34,197,94,0.25)]',
+    glow: 'rgba(34, 197, 94, 0.4)',
+    glowHover: 'rgba(34, 197, 94, 0.6)',
+    borderHover: 'rgba(34, 197, 94, 0.5)',
+    shadowHover: '0 20px 60px rgba(34, 197, 94, 0.3)',
   },
 };
 
 const StatBlock = ({ icon: Icon, targetNumber, displayText, suffix = '', label, delay, colorVariant }: StatBlockProps) => {
   const count = useCountUp(targetNumber ?? 0, 2000);
   const colors = colorConfig[colorVariant];
-  
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Calculate tilt (max 8 degrees)
+    const tiltX = ((y - centerY) / centerY) * -8;
+    const tiltY = ((x - centerX) / centerX) * 8;
+    
+    setTilt({ x: tiltX, y: tiltY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+    setIsHovered(false);
+  };
+
   return (
     <div 
-      className={`group flex flex-col items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-10 py-8 min-w-[200px] w-full sm:w-auto transition-all duration-300 hover:-translate-y-2 hover:bg-white/8 ${colors.hoverBorder} ${colors.hoverShadow} animate-fade-in`}
-      style={{ animationDelay: delay }}
+      className="group relative min-w-[200px] w-full sm:w-auto animate-fade-in"
+      style={{ 
+        animationDelay: delay,
+        perspective: '1000px',
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
       role="group"
       aria-label={`${targetNumber ? count.toLocaleString() : displayText} ${label}`}
     >
-      {/* Icon with colored glow */}
-      <div className={`relative p-3 rounded-full ${colors.bg}`}>
-        <Icon className={`w-12 h-12 ${colors.text} group-hover:scale-110 transition-transform duration-300`} />
-        <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${colors.glow}`} />
+      {/* 3D Card Container */}
+      <div 
+        className="relative flex flex-col items-center gap-4 bg-gradient-to-b from-white/8 to-white/4 border border-white/10 rounded-2xl px-10 py-8 transition-all duration-300 ease-out"
+        style={{
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0) ${isHovered ? 'translateY(-8px)' : ''}`,
+          transformStyle: 'preserve-3d',
+          borderColor: isHovered ? colors.borderHover : 'rgba(255, 255, 255, 0.1)',
+          boxShadow: isHovered 
+            ? `${colors.shadowHover}, inset 0 1px 0 rgba(255,255,255,0.1)` 
+            : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+        }}
+      >
+        {/* Icon with colored glow */}
+        <div className={`relative p-4 rounded-2xl ${colors.bg}`}>
+          {/* Background glow behind icon */}
+          <div 
+            className="absolute inset-0 rounded-2xl blur-2xl transition-opacity duration-300"
+            style={{ 
+              background: isHovered ? colors.glowHover : colors.glow,
+              opacity: isHovered ? 0.8 : 0.5,
+              transform: 'translateZ(-10px) scale(1.2)',
+            }}
+          />
+          <Icon 
+            className={`relative z-10 w-12 h-12 ${colors.text} transition-transform duration-300`}
+            style={{ transform: isHovered ? 'scale(1.1) translateZ(20px)' : 'scale(1)' }}
+          />
+        </div>
+        
+        {/* Number with bold Inter font */}
+        <span 
+          className="text-5xl font-black text-white leading-tight transition-all duration-300"
+          style={{ 
+            fontFamily: 'Inter, system-ui, sans-serif',
+            letterSpacing: '-0.02em',
+            textShadow: isHovered ? '0 4px 12px rgba(0, 217, 217, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.3)',
+            transform: 'translateZ(30px)',
+          }}
+        >
+          {targetNumber !== null ? count.toLocaleString() : displayText}{suffix}
+        </span>
+        
+        {/* Label */}
+        <span 
+          className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em]"
+          style={{ transform: 'translateZ(15px)' }}
+        >
+          {label}
+        </span>
+
+        {/* Subtle inner highlight for 3D depth */}
+        <div 
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)',
+          }}
+        />
       </div>
-      
-      {/* Number with count-up animation */}
-      <span className="text-5xl font-extrabold text-white leading-tight group-hover:text-primary transition-colors duration-300 drop-shadow-[0_2px_4px_rgba(255,255,255,0.1)]">
-        {targetNumber !== null ? count.toLocaleString() : displayText}{suffix}
-      </span>
-      
-      {/* Label */}
-      <span className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em]">{label}</span>
     </div>
   );
 };
