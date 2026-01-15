@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       const material = filament.material || "";
       const existingFinish = filament.finish_type;
 
-      // Step 1: Always try to extract fresh from title/material
+      // Step 1: Extract fresh from title/material
       const extractedFinish = extractFinishType(title, material);
       
       // Step 2: Determine new finish_type based on mode
@@ -98,13 +98,14 @@ Deno.serve(async (req) => {
       let reason = "";
 
       if (forceOverwrite) {
-        // Force mode: Always extract fresh, but try normalizing existing first if extracted is Standard
+        // Force mode: Prioritize extraction, then normalize existing
+        // This ensures we catch CF patterns in title even if existing value is wrong
         if (extractedFinish !== "Standard") {
           newFinishType = extractedFinish;
           reason = "force-extracted from title/material";
           stats.extracted++;
         } else if (existingFinish && existingFinish !== "Standard") {
-          // Existing has a value, normalize it
+          // Normalize the existing value if extraction returned Standard
           newFinishType = normalizeFinishType(existingFinish);
           reason = `force-normalized from '${existingFinish}'`;
           stats.normalized++;
@@ -113,7 +114,17 @@ Deno.serve(async (req) => {
         }
       } else {
         // Normal mode: only update if needed
-        if (existingFinish && existingFinish !== "Standard") {
+        // First try extraction (catches more patterns), then normalize existing
+        if (extractedFinish !== "Standard") {
+          // Extraction found something specific
+          if (existingFinish !== extractedFinish) {
+            newFinishType = extractedFinish;
+            reason = "extracted from title/material";
+            stats.extracted++;
+          } else {
+            newFinishType = extractedFinish;
+          }
+        } else if (existingFinish && existingFinish !== "Standard") {
           // Normalize the existing value
           newFinishType = normalizeFinishType(existingFinish);
           if (newFinishType !== existingFinish) {
@@ -121,12 +132,7 @@ Deno.serve(async (req) => {
             stats.normalized++;
           }
         } else {
-          // Extract from title/material if no finish_type or is Standard
-          newFinishType = extractedFinish;
-          if (newFinishType !== "Standard") {
-            reason = "extracted from title/material";
-            stats.extracted++;
-          }
+          newFinishType = "Standard";
         }
       }
 
