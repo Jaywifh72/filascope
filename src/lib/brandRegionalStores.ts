@@ -447,6 +447,44 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     baseDomain: 'www.bondtech.se',
     defaultCurrency: 'EUR',
   },
+  
+  // === ADDITIONAL GLOBAL BRANDS (for Carbon Fiber and other products) ===
+  
+  'TreeD Filaments': {
+    pattern: 'global',
+    baseDomain: 'treedfilaments.com',
+    defaultCurrency: 'EUR',
+  },
+  
+  'Push Plastic': {
+    pattern: 'global',
+    baseDomain: 'www.pushplastic.com',
+    defaultCurrency: 'USD',
+  },
+  
+  'Numakers': {
+    pattern: 'global',
+    baseDomain: 'numakers.com',
+    defaultCurrency: 'USD',
+  },
+  
+  'IC3D Printers': {
+    pattern: 'global',
+    baseDomain: 'ic3dprinters.com',
+    defaultCurrency: 'USD',
+  },
+  
+  'AzureFilm': {
+    pattern: 'global',
+    baseDomain: 'azurefilm.com',
+    defaultCurrency: 'EUR',
+  },
+  
+  '3D-Fuel': {
+    pattern: 'global',
+    baseDomain: '3dfuel.com',
+    defaultCurrency: 'USD',
+  },
 };
 
 /**
@@ -468,7 +506,7 @@ export function getBrandConfig(vendor: string | null | undefined): BrandStoreCon
     }
   }
   
-  // Partial match for common variations
+  // Partial match for common variations (case-insensitive mappings)
   const variations: Record<string, string> = {
     'bambulab': 'Bambu Lab',
     'bambu': 'Bambu Lab',
@@ -478,6 +516,36 @@ export function getBrandConfig(vendor: string | null | undefined): BrandStoreCon
     'sunlu': 'SUNLU',
     'qidi tech': 'QIDI',
     'qidi': 'QIDI',
+    'proto-pasta': 'Proto-pasta',
+    'protopasta': 'Proto-pasta',
+    'amolen': 'AMOLEN',
+    'spectrum': 'Spectrum Filaments',
+    'spectrum filaments': 'Spectrum Filaments',
+    'treed': 'TreeD Filaments',
+    'treed filaments': 'TreeD Filaments',
+    '3dxtech': '3DXTech',
+    'atomic': 'Atomic Filament',
+    'atomic filament': 'Atomic Filament',
+    'formfutura': 'FormFutura',
+    'fillamentum': 'Fillamentum',
+    'gizmo dorks': 'Gizmo Dorks',
+    'gizmodorks': 'Gizmo Dorks',
+    'ultimaker': 'Ultimaker',
+    'push plastic': 'Push Plastic',
+    'pushplastic': 'Push Plastic',
+    'numakers': 'Numakers',
+    'ic3d': 'IC3D Printers',
+    'ic3d printers': 'IC3D Printers',
+    'matter3d': 'Matter3D',
+    '3d-fuel': '3D-Fuel',
+    '3dfuel': '3D-Fuel',
+    'azurefilm': 'AzureFilm',
+    'hatchbox': 'Hatchbox',
+    'overture': 'Overture',
+    'extrudr': 'Extrudr',
+    'prusament': 'Prusament',
+    'geeetech': 'Geeetech',
+    'ziro': 'Ziro',
   };
   
   const variation = variations[normalizedVendor];
