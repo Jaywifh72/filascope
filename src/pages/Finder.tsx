@@ -745,19 +745,18 @@ const Finder = () => {
 
   // Helper to check if filament is a carbon fiber filament
   const isCarbonFiberFilament = (filament: any): boolean => {
-    const material = filament.material?.toLowerCase() || '';
-    const title = filament.product_title?.toLowerCase() || '';
-    const hasCFContent = filament.carbon_fiber_percentage !== null && filament.carbon_fiber_percentage !== undefined && filament.carbon_fiber_percentage > 0;
-    const finishType = filament.finish_type?.toLowerCase() || '';
+    // Primary: check normalized finish_type
+    if (filament.finish_type === 'Carbon') return true;
     
-    // Check finish_type variations: carbon, carbon fiber, composite-cf, cf-*
-    if (finishType.includes('carbon') || finishType.includes('cf') || finishType.includes('composite')) return true;
+    // Secondary: check carbon_fiber_percentage
+    if (filament.carbon_fiber_percentage && filament.carbon_fiber_percentage > 0) return true;
     
-    // Check title/material patterns - avoid false positives from "Polycarbonate" (PC)
-    const hasPolycarbonate = /polycarbonate/i.test(title) && !/carbon\s*fiber/i.test(title);
-    const hasCFPattern = /carbon\s*fiber|carbon-fiber|-cf\b|\+cf\b|cf\s*\d|\bcf\b/i.test(title + ' ' + material);
+    // Fallback: pattern match for any missed cases (but avoid Polycarbonate false positives)
+    const text = ((filament.product_title || '') + ' ' + (filament.material || '')).toLowerCase();
+    const hasPolycarbonate = /polycarbonate/i.test(text) && !/carbon\s*fiber/i.test(text);
+    if (hasPolycarbonate) return false;
     
-    return hasCFContent || (!hasPolycarbonate && hasCFPattern);
+    return /-cf\b|\+cf\b|\bcf\d+|carbon\s*fiber/i.test(text);
   };
 
   // Get carbon fiber percentage for display

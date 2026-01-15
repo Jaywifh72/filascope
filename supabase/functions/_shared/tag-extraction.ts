@@ -24,44 +24,168 @@ export type FinishType =
  * Handles variations like "Carbon Fiber", "CF", "Composite-CF" -> "Carbon"
  */
 export function normalizeFinishType(existingType: string | null): FinishType {
-  if (!existingType) return 'Standard';
-  const t = existingType.toLowerCase().trim();
-  
+  if (!existingType) return "Standard";
+
+  const normalized = existingType.toLowerCase().trim();
+
   // Carbon Fiber variations → 'Carbon'
-  if (t.includes('carbon') || t === 'cf' || t.includes('composite-cf')) return 'Carbon';
-  
-  // Glass Fiber variations → 'Glass Fiber'  
-  if (t.includes('glass') || t === 'gf' || t.includes('composite-gf')) return 'Glass Fiber';
-  
+  if (
+    normalized === "carbon" ||
+    normalized === "carbon fiber" ||
+    normalized === "carbonfiber" ||
+    normalized === "composite-cf" ||
+    normalized === "cf" ||
+    normalized.includes("carbon fiber") ||
+    normalized.includes("carbon-fiber") ||
+    /^cf\d*$/.test(normalized) // CF, CF15, CF30
+  ) {
+    return "Carbon";
+  }
+
+  // Glass Fiber variations → 'Glass Fiber'
+  if (
+    normalized === "glass" ||
+    normalized === "glass fiber" ||
+    normalized === "glassfiber" ||
+    normalized === "composite-gf" ||
+    normalized === "gf" ||
+    normalized.includes("glass fiber") ||
+    normalized.includes("glass-fiber") ||
+    /^gf\d*$/.test(normalized) // GF, GF15, GF30
+  ) {
+    return "Glass Fiber";
+  }
+
   // Silk variations → 'Silk'
-  if (t === 'silk' || t === 'shimmer' || t.includes('silk')) return 'Silk';
-  
+  if (
+    normalized === "silk" ||
+    normalized === "shimmer" ||
+    normalized === "shiny" ||
+    normalized === "pearl" ||
+    normalized.includes("silk")
+  ) {
+    return "Silk";
+  }
+
   // Metallic variations → 'Metallic'
-  if (t === 'metallic' || t === 'metal' || t.includes('metallic')) return 'Metallic';
-  
-  // Sparkle variations → 'Sparkle'
-  if (t === 'sparkle' || t === 'glitter' || t === 'galaxy' || t === 'starlight' || t.includes('sparkle')) return 'Sparkle';
-  
-  // Translucent variations → 'Translucent'
-  if (t === 'translucent' || t === 'transparent' || t === 'clear' || t.includes('translucent')) return 'Translucent';
-  
-  // Glow variations → 'Glow'
-  if (t === 'glow' || t === 'luminous' || t === 'fluorescent' || t === 'uv reactive' || t === 'uv' || t.includes('glow')) return 'Glow';
-  
+  if (
+    normalized === "metallic" ||
+    normalized === "metal" ||
+    normalized === "chrome" ||
+    normalized.includes("metallic")
+  ) {
+    return "Metallic";
+  }
+
   // Matte variations → 'Matte'
-  if (t === 'matte' || t === 'semi-matte' || t.includes('matte')) return 'Matte';
-  
+  if (
+    normalized === "matte" ||
+    normalized === "matt" ||
+    normalized === "flat" ||
+    normalized === "semi-matte" ||
+    normalized.includes("matte")
+  ) {
+    return "Matte";
+  }
+
   // Wood variations → 'Wood'
-  if (t === 'wood' || t.includes('wood')) return 'Wood';
-  
+  if (
+    normalized === "wood" ||
+    normalized === "wood fill" ||
+    normalized === "woodfill" ||
+    normalized.includes("wood")
+  ) {
+    return "Wood";
+  }
+
+  // Glow variations → 'Glow'
+  if (
+    normalized === "glow" ||
+    normalized === "glow in the dark" ||
+    normalized === "gitd" ||
+    normalized === "phosphorescent" ||
+    normalized === "fluorescent" ||
+    normalized === "uv reactive" ||
+    normalized === "uv" ||
+    normalized === "neon" ||
+    normalized.includes("glow")
+  ) {
+    return "Glow";
+  }
+
+  // Translucent variations → 'Translucent'
+  if (
+    normalized === "translucent" ||
+    normalized === "transparent" ||
+    normalized === "clear" ||
+    normalized.includes("translucent") ||
+    normalized.includes("transparent")
+  ) {
+    return "Translucent";
+  }
+
+  // Sparkle variations → 'Sparkle'
+  if (
+    normalized === "sparkle" ||
+    normalized === "sparkly" ||
+    normalized === "glitter" ||
+    normalized === "galaxy" ||
+    normalized === "starlight" ||
+    normalized.includes("sparkle") ||
+    normalized.includes("glitter")
+  ) {
+    return "Sparkle";
+  }
+
   // Marble variations → 'Marble'
-  if (t === 'marble' || t === 'stone' || t.includes('marble')) return 'Marble';
-  
+  if (
+    normalized === "marble" ||
+    normalized === "stone" ||
+    normalized.includes("marble")
+  ) {
+    return "Marble";
+  }
+
   // Multicolor variations → 'Multicolor'
-  if (t === 'multicolor' || t === 'gradient' || t === 'rainbow' || t === 'multi' || t.includes('multicolor')) return 'Multicolor';
-  
-  // Standard/Unknown → 'Standard'
-  return 'Standard';
+  if (
+    normalized === "multicolor" ||
+    normalized === "multi" ||
+    normalized === "rainbow" ||
+    normalized === "gradient" ||
+    normalized === "colorchange" ||
+    normalized === "colorshift" ||
+    normalized === "iridescent" ||
+    normalized.includes("multi")
+  ) {
+    return "Multicolor";
+  }
+
+  // Gloss variations → 'Standard' (gloss is default for most filaments)
+  if (
+    normalized === "gloss" ||
+    normalized === "glossy" ||
+    normalized === "natural"
+  ) {
+    return "Standard";
+  }
+
+  // If it's already a valid finish type, return with proper casing
+  const validTypes: Record<string, FinishType> = {
+    standard: "Standard",
+    carbon: "Carbon",
+    "glass fiber": "Glass Fiber",
+    silk: "Silk",
+    metallic: "Metallic",
+    matte: "Matte",
+    wood: "Wood",
+    glow: "Glow",
+    translucent: "Translucent",
+    sparkle: "Sparkle",
+    marble: "Marble",
+    multicolor: "Multicolor",
+  };
+
+  return validTypes[normalized] || "Standard";
 }
 
 /**
@@ -69,48 +193,97 @@ export function normalizeFinishType(existingType: string | null): FinishType {
  * Uses pattern matching to identify special finishes
  */
 export function extractFinishType(title: string, material: string): FinishType {
-  const t = ((title || '') + ' ' + (material || '')).toLowerCase();
-  
-  // Order matters - check more specific patterns first
-  
-  // Carbon fiber (check before other patterns) - include material suffixes like PLA-CF, PETG-CF
-  // Also match standalone "CF" in material field and "Carbon" in titles
-  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|cf\s*\d|\bpla-cf\b|\bpetg-cf\b|\babs-cf\b|\bpa-cf\b|\bpc-cf\b|\bpet-cf\b|\bnylon.*cf\b|\bcf\b/i;
-  // Avoid matching "Polycarbonate" without actual carbon fiber
-  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre/i.test(t);
-  if (!hasPolycarbonate && cfPattern.test(t)) return 'Carbon';
-  
-  // Glass fiber - include material suffixes like PA-GF, PETG-GF
-  if (/glass\s*fiber|glass-fiber|glass\s*fibre|-gf\b|\+gf\b|gf\s*\d|fiberglass|\bpa-gf\b|\bpetg-gf\b|\bpla-gf\b/i.test(t)) return 'Glass Fiber';
-  
-  // Wood filled
-  if (/\bwood\b|timber|bamboo/i.test(t) && !/hollywood|rosewood|driftwood/i.test(t)) return 'Wood';
-  
-  // Silk/Shimmer (very common, high priority)
-  if (/\bsilk\b|shimmer/i.test(t)) return 'Silk';
-  
-  // Matte finish (exclude "matter" and similar words)
-  if (/\bmatte\b/i.test(t)) return 'Matte';
-  
-  // Metallic finish
-  if (/\bmetallic\b|metal\s*finish/i.test(t)) return 'Metallic';
-  
-  // Sparkle/Glitter/Galaxy
-  if (/sparkle|glitter|galaxy|starlight|starry|cosmic/i.test(t)) return 'Sparkle';
-  
-  // Translucent/Transparent
-  if (/translucent|transparent|clear\b|crystal/i.test(t) && !/crystal\s*white/i.test(t)) return 'Translucent';
-  
+  const text = `${title} ${material}`.toLowerCase();
+
+  // Carbon Fiber - check material suffixes and explicit mentions
+  // Patterns: PLA-CF, PETG+CF, CF15, "carbon fiber", and the phrase as separate words
+  if (
+    /-cf\b/i.test(text) ||
+    /\+cf\b/i.test(text) ||
+    /\bcf\d+/i.test(text) ||        // CF15, CF30
+    /carbon\s*fiber/i.test(text) ||
+    /\bcarbon\s*filled/i.test(text) ||
+    /\bcarbon\s*reinforced/i.test(text) ||
+    /\bcarbon\b.*\b(pla|petg|abs|asa|nylon|pa|pc)\b/i.test(text) ||  // "Carbon" before material
+    /\b(pla|petg|abs|asa|nylon|pa|pc)\b.*\bcarbon\b/i.test(text)     // "Carbon" after material, excluding just color
+  ) {
+    // Make sure it's not just "carbon" as a color (e.g., "Carbon Black")
+    if (!/carbon\s*(black|grey|gray)\b/i.test(text) || /fiber|fibre|cf\b|-cf\b/i.test(text)) {
+      return "Carbon";
+    }
+  }
+
+  // Glass Fiber - similar patterns
+  if (
+    /-gf\b/i.test(text) ||
+    /\+gf\b/i.test(text) ||
+    /\bgf\d+/i.test(text) ||        // GF15, GF30
+    /glass\s*fiber/i.test(text) ||
+    /\bglass\s*filled/i.test(text) ||
+    /\bglass\s*reinforced/i.test(text)
+  ) {
+    return "Glass Fiber";
+  }
+
+  // Silk / Shimmer
+  if (/\bsilk\b/i.test(text) || /\bshimmer\b/i.test(text)) {
+    return "Silk";
+  }
+
+  // Metallic / Metal
+  if (/\bmetallic\b/i.test(text) || /\bmetal\b/i.test(text)) {
+    return "Metallic";
+  }
+
+  // Matte
+  if (/\bmatte?\b/i.test(text)) {
+    return "Matte";
+  }
+
+  // Wood Fill - but exclude color names like "Rosewood" without wood content
+  if (
+    /\bwood\s*fill/i.test(text) ||
+    /\bwood\s*pla/i.test(text) ||
+    /-wood\b/i.test(text) ||
+    /\+wood\b/i.test(text)
+  ) {
+    return "Wood";
+  }
+
   // Glow in the dark
-  if (/\bglow\b|luminous|phosphorescent|gid\b|gitd\b/i.test(t)) return 'Glow';
-  
-  // Marble effect
-  if (/\bmarble\b/i.test(t)) return 'Marble';
-  
-  // Rainbow/Gradient/Multicolor
-  if (/rainbow|gradient|multicolor|multi-color|tri-color|tricolor|dual[\s-]?color/i.test(t)) return 'Multicolor';
-  
-  return 'Standard';
+  if (
+    /\bglow\b/i.test(text) ||
+    /\bgitd\b/i.test(text) ||
+    /glow[\s-]*in[\s-]*the[\s-]*dark/i.test(text) ||
+    /\bphosphorescent\b/i.test(text)
+  ) {
+    return "Glow";
+  }
+
+  // Translucent / Transparent / Clear
+  if (
+    /\btranslucent\b/i.test(text) ||
+    /\btransparent\b/i.test(text) ||
+    /\bclear\b/i.test(text)
+  ) {
+    return "Translucent";
+  }
+
+  // Sparkle / Glitter / Galaxy
+  if (
+    /\bsparkle\b/i.test(text) ||
+    /\bglitter\b/i.test(text) ||
+    /\bgalaxy\b/i.test(text)
+  ) {
+    return "Sparkle";
+  }
+
+  // Marble
+  if (/\bmarble\b/i.test(text)) {
+    return "Marble";
+  }
+
+  return "Standard";
 }
 
 /**
@@ -129,25 +302,38 @@ export function isHighSpeedCapable(title: string, material: string): boolean {
  * Carbon fiber, glass fiber, and some metal-filled filaments are abrasive
  */
 export function isAbrasive(title: string, material: string): boolean {
-  const t = ((title || '') + ' ' + (material || '')).toLowerCase();
-  
-  // Carbon fiber - include material suffixes
-  const cfPattern = /carbon\s*fiber|carbon-fiber|carbon\s*fibre|-cf\b|\+cf\b|\bpla-cf\b|\bpetg-cf\b|\babs-cf\b|\bpa-cf\b|\bpc-cf\b|\bpet-cf\b|\bnylon.*cf\b/i;
-  const hasPolycarbonate = /polycarbonate/i.test(t) && !/carbon\s*fiber|carbon\s*fibre/i.test(t);
-  if (!hasPolycarbonate && cfPattern.test(t)) return true;
-  
-  // Glass fiber - include material suffixes
-  if (/glass\s*fiber|glass-fiber|glass\s*fibre|-gf\b|\+gf\b|fiberglass|\bpa-gf\b|\bpetg-gf\b|\bpla-gf\b/i.test(t)) return true;
-  
-  // Metal filled (not metallic finish)
-  if (/metal[\s-]?fill|copper[\s-]?fill|bronze[\s-]?fill|iron[\s-]?fill|steel[\s-]?fill/i.test(t)) return true;
-  
-  // Ceramic filled
-  if (/ceramic/i.test(t)) return true;
-  
-  // Kevlar
-  if (/kevlar/i.test(t)) return true;
-  
+  const text = `${title} ${material}`.toLowerCase();
+
+  // Carbon fiber patterns
+  if (
+    /-cf\b/i.test(text) ||
+    /\+cf\b/i.test(text) ||
+    /\bcf\d+/i.test(text) ||
+    /carbon\s*fiber/i.test(text)
+  ) {
+    return true;
+  }
+
+  // Glass fiber patterns
+  if (
+    /-gf\b/i.test(text) ||
+    /\+gf\b/i.test(text) ||
+    /\bgf\d+/i.test(text) ||
+    /glass\s*fiber/i.test(text)
+  ) {
+    return true;
+  }
+
+  // Metal fill patterns
+  if (
+    /\bmetal\s*fill/i.test(text) ||
+    /\bsteel/i.test(text) ||
+    /\bcopper\s*fill/i.test(text) ||
+    /\bbronze\s*fill/i.test(text)
+  ) {
+    return true;
+  }
+
   return false;
 }
 
