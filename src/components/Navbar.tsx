@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -92,11 +93,11 @@ const Navbar = () => {
   return (
     <>
       <nav 
-        className={`sticky top-0 z-50 border-b border-[#333] transition-all duration-300 ${
-          isScrolled 
-            ? "bg-[#0A0A0A]/98 backdrop-blur-xl shadow-[0_4px_12px_rgba(0,0,0,0.2)]" 
-            : "bg-[#0A0A0A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0A0A0A]/80"
-        }`}
+        className="sticky top-0 z-50 transition-all duration-300 bg-background/70 backdrop-blur-[12px] supports-[backdrop-filter]:bg-background/60"
+        style={{
+          borderBottom: '1px solid transparent',
+          borderImage: 'linear-gradient(90deg, #00CFE8, transparent 70%) 1',
+        }}
       >
         <div className={`flex items-center px-6 gap-4 transition-all duration-300 ${
           isScrolled ? "h-16 md:h-20" : "h-20 md:h-24"
@@ -130,13 +131,23 @@ const Navbar = () => {
             {/* Resources Dropdown - Consolidates Accessories, Reference, and Wizard */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-              <button 
-                  className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold transition-all duration-200 rounded-md hover:text-primary hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary border-b-2 ${
-                    isResourcesActive ? 'text-primary border-primary font-bold' : 'text-white/90 border-transparent'
-                  }`}
+                <button 
+                  className={cn(
+                    "relative flex items-center gap-1.5 px-6 py-3 text-sm font-semibold transition-colors duration-200 group",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "hover:text-[#00CFE8]",
+                    isResourcesActive ? 'text-[#00CFE8] font-bold' : 'text-white/90'
+                  )}
                 >
                   Resources
                   <ChevronDown className="w-4 h-4" />
+                  {/* Animated underline */}
+                  <span 
+                    className={cn(
+                      "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[#00CFE8] transition-all duration-300 ease-out",
+                      isResourcesActive ? "w-full" : "w-0 group-hover:w-full"
+                    )}
+                  />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
