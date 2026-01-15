@@ -5,10 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, CheckCircle2, XCircle, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Search, CheckCircle2, XCircle, FileText, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
+import { useToast } from "@/hooks/use-toast";
 interface Brand {
   id: string;
   brand_name: string;
@@ -28,6 +29,7 @@ interface Filament {
 export function CompletionCheckPanel() {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
   // Fetch all brands
   const { data: brands, isLoading: brandsLoading } = useQuery({
@@ -104,6 +106,54 @@ export function CompletionCheckPanel() {
     setSelectedBrand(prev => prev === brandSlug ? null : brandSlug);
   };
 
+  const handleDownloadCSV = () => {
+    if (!filaments || filaments.length === 0 || !selectedBrand) {
+      toast({
+        title: "No data to export",
+        description: "Select a brand with filaments first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const brand = brands?.find(b => b.brand_slug === selectedBrand);
+    const brandName = brand?.display_name || selectedBrand;
+
+    // Build CSV content
+    const headers = ["Filament Name", "Material", "Tags", "TDS Acquired"];
+    const rows = filaments.map(f => {
+      const allTags = [
+        ...(f.use_case_tags || []),
+        ...(f.industry_tags || [])
+      ].join("; ");
+      
+      return [
+        `"${(f.product_title || "").replace(/"/g, '""')}"`,
+        f.material || "",
+        `"${allTags.replace(/"/g, '""')}"`,
+        f.tds_url ? "Yes" : "No"
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${brandName.replace(/\s+/g, "_")}_completion_check.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "CSV Downloaded",
+      description: `Exported ${filaments.length} filaments for ${brandName}.`,
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -162,25 +212,37 @@ export function CompletionCheckPanel() {
           <div className="lg:col-span-2 space-y-4">
             {selectedBrand ? (
               <>
-                {/* Stats Summary */}
+                {/* Stats Summary with Download Button */}
                 {stats && (
-                  <div className="grid grid-cols-4 gap-3">
-                    <div className="bg-muted/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold">{stats.total}</div>
-                      <div className="text-xs text-muted-foreground">Total Filaments</div>
+                  <div className="flex items-start gap-4">
+                    <div className="grid grid-cols-4 gap-3 flex-1">
+                      <div className="bg-muted/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.total}</div>
+                        <div className="text-xs text-muted-foreground">Total Filaments</div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.materialPercent}%</div>
+                        <div className="text-xs text-muted-foreground">With Material</div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.tagsPercent}%</div>
+                        <div className="text-xs text-muted-foreground">With Tags</div>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold">{stats.tdsPercent}%</div>
+                        <div className="text-xs text-muted-foreground">With TDS</div>
+                      </div>
                     </div>
-                    <div className="bg-muted/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold">{stats.materialPercent}%</div>
-                      <div className="text-xs text-muted-foreground">With Material</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold">{stats.tagsPercent}%</div>
-                      <div className="text-xs text-muted-foreground">With Tags</div>
-                    </div>
-                    <div className="bg-muted/30 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold">{stats.tdsPercent}%</div>
-                      <div className="text-xs text-muted-foreground">With TDS</div>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadCSV}
+                      disabled={!filaments || filaments.length === 0}
+                      className="shrink-0"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download CSV
+                    </Button>
                   </div>
                 )}
 
