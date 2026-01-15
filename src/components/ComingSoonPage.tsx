@@ -182,21 +182,32 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
             }}
           />
           
-          {/* Logo with cyan glow */}
-          <div className="relative">
-            <img 
-              src={filascopeLogo}
-              alt="FilaScope - Measure Material. Master the Print." 
-              className="h-20 sm:h-28 w-auto"
-              style={{
-                filter: 'drop-shadow(0 0 20px rgba(0, 207, 232, 0.5)) drop-shadow(0 0 40px rgba(0, 207, 232, 0.3))',
+          {/* Logo text with cyan glow */}
+          <div className="relative flex flex-col items-center">
+            <h1 
+              className="text-4xl sm:text-6xl font-black tracking-tighter"
+              style={{ 
+                fontFamily: 'Inter, system-ui, sans-serif',
+                filter: 'drop-shadow(0 0 20px rgba(0, 207, 232, 0.4))',
               }}
-            />
+            >
+              <span className="text-white">FILA</span>
+              <span style={{ color: '#00CFE8' }}>SCOPE</span>
+            </h1>
+            <p 
+              className="mt-2 text-xs uppercase text-white/50"
+              style={{ 
+                letterSpacing: '0.3em',
+                fontFamily: 'Inter, system-ui, sans-serif',
+              }}
+            >
+              Measure Material. Master the Print.
+            </p>
           </div>
         </div>
 
         {/* Coming Soon Text */}
-        <h2 
+        <h2
           className="text-2xl sm:text-3xl font-bold text-white/90 mb-2 text-center"
           style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
         >
