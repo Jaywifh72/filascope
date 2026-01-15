@@ -149,6 +149,45 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Authentication check - require admin role
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify user token
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check admin role
+    const { data: isAdmin } = await authClient.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin',
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const url = new URL(req.url);
     const vendor = url.searchParams.get('vendor');
 
@@ -159,12 +198,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Generating CSV for vendor: ${vendor}`);
+    console.log(`Generating CSV for vendor: ${vendor} (requested by user: ${user.id})`);
 
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create Supabase client with service role for data access
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch all filaments for the vendor (case-insensitive)
     const { data: filaments, error } = await supabase
