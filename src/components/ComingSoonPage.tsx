@@ -214,13 +214,14 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
 
         {/* Coming Soon Text */}
         <h2
-          className="text-2xl sm:text-3xl font-bold text-white/90 mb-2 text-center"
+          className="text-2xl sm:text-3xl font-light text-gray-400 text-center uppercase tracking-[0.2em]"
           style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
         >
-          Coming Soon
+          The future of filament{' '}
+          <span style={{ color: '#00CFE8' }}>is loading.</span>
         </h2>
-        <p className="text-white/50 text-center mb-8 max-w-md">
-          The ultimate 3D printing filament database is launching soon. Be the first to know.
+        <p className="text-gray-500 text-center mb-12 max-w-xl leading-relaxed mt-4">
+          We are indexing thousands of materials and printer profiles to provide you with the most accurate 3D printing data hub ever built.
         </p>
 
         {/* Countdown Timer */}
