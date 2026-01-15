@@ -256,13 +256,7 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
         </form>
 
         {/* Features */}
-        <div 
-          className="w-full max-w-4xl flex flex-col sm:flex-row items-start sm:items-center justify-center gap-8 sm:gap-12 py-6 px-8 rounded-xl"
-          style={{
-            background: 'rgba(15, 18, 24, 0.8)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          }}
-        >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-8 sm:gap-12 mb-12">
           <FeatureItem icon={Database} title="Massive Database" description="8,000+ Filaments profiled." color="#00CFE8" />
           <FeatureItem icon={BarChart} title="Smart Comparisons" description="Find the perfect material." color="#FF6B9D" />
           <FeatureItem icon={Zap} title="Printer Optimization" description="G-code ready settings." color="#FFB800" />
