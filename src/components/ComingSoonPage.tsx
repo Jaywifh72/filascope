@@ -55,9 +55,9 @@ const CountdownCard = ({ value, label }: { value: number; label: string }) => (
 );
 
 const FeatureItem = ({ icon: Icon, title, description, color }: { icon: typeof Database; title: string; description: string; color: string }) => (
-  <div className="flex items-center gap-4">
+  <div className="flex items-center gap-4 whitespace-nowrap">
     <div 
-      className="flex items-center justify-center w-12 h-12 rounded-xl"
+      className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl"
       style={{
         background: `${color}15`,
         border: `1px solid ${color}30`,
