@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllFilaments } from "@/lib/supabaseHelpers";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -587,62 +588,66 @@ const Finder = () => {
     queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials, brandNameMap],
     enabled: !!materials && !!brandsData, // Wait for materials and brands to load first
     queryFn: async () => {
-      let query = supabase.from("filaments").select("*");
+      // Build the query function that will be called for each page
+      const buildQuery = () => {
+        let query = supabase.from("filaments").select("*");
 
-      // Filter 1: Exclude non-filament products (null material = not a filament)
-      query = query.not("material", "is", null);
+        // Filter 1: Exclude non-filament products (null material = not a filament)
+        query = query.not("material", "is", null);
 
-      // Filter 2: Exclude sample/small spools (< 300g) but allow null weights
-      query = query.or("net_weight_g.is.null,net_weight_g.gte.300");
+        // Filter 2: Exclude sample/small spools (< 300g) but allow null weights
+        query = query.or("net_weight_g.is.null,net_weight_g.gte.300");
 
-      // Check if search term is a color name - if so, skip text search (will filter by color later)
-      const isColorSearch = searchTerm ? extractColorFromText(searchTerm) : null;
-      
-      if (searchTerm && !isColorSearch) {
-        query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
-      }
-
-      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
-        // Check if any base materials have specific variants selected
-        const allRawMaterials: string[] = [];
-        selectedMaterials.forEach(baseMaterial => {
-          const selectedNormalizedVariants = selectedVariants[baseMaterial];
-          if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
-            // Expand normalized variants to raw material names
-            selectedNormalizedVariants.forEach(normalizedVariant => {
-              const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
-              allRawMaterials.push(...rawMaterials);
-            });
-          }
-        });
+        // Check if search term is a color name - if so, skip text search (will filter by color later)
+        const isColorSearch = searchTerm ? extractColorFromText(searchTerm) : null;
         
-        // If specific variants are selected, filter by those raw material names
-        // Otherwise filter by base materials
-        if (allRawMaterials.length > 0) {
-          const materialFilters = allRawMaterials.map(m => `material.eq.${m}`).join(",");
-          query = query.or(materialFilters);
-        } else {
-          const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
-          query = query.or(materialFilters);
+        if (searchTerm && !isColorSearch) {
+          query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
         }
-      }
 
-      if (brassOnly) {
-        query = query.eq("is_nozzle_abrasive", false);
-      }
+        if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
+          // Check if any base materials have specific variants selected
+          const allRawMaterials: string[] = [];
+          selectedMaterials.forEach(baseMaterial => {
+            const selectedNormalizedVariants = selectedVariants[baseMaterial];
+            if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
+              // Expand normalized variants to raw material names
+              selectedNormalizedVariants.forEach(normalizedVariant => {
+                const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
+                allRawMaterials.push(...rawMaterials);
+              });
+            }
+          });
+          
+          // If specific variants are selected, filter by those raw material names
+          // Otherwise filter by base materials
+          if (allRawMaterials.length > 0) {
+            const materialFilters = allRawMaterials.map(m => `material.eq.${m}`).join(",");
+            query = query.or(materialFilters);
+          } else {
+            const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
+            query = query.or(materialFilters);
+          }
+        }
 
-      // AMS filtering is done client-side using isAMSCompatible function
+        if (brassOnly) {
+          query = query.eq("is_nozzle_abrasive", false);
+        }
 
-      if (selectedBrands.length > 0) {
-        // Use brandNameMap to convert display names to actual vendor names for filtering
-        const vendorNames = selectedBrands.map(b => brandNameMap[b] || b);
-        const brandFilters = vendorNames.map(v => `vendor.eq.${v}`).join(",");
-        query = query.or(brandFilters);
-      }
+        // AMS filtering is done client-side using isAMSCompatible function
 
-      // Fetch all filaments (override default 1000-row limit)
-      const { data, error } = await query.limit(10000);
-      if (error) throw error;
+        if (selectedBrands.length > 0) {
+          // Use brandNameMap to convert display names to actual vendor names for filtering
+          const vendorNames = selectedBrands.map(b => brandNameMap[b] || b);
+          const brandFilters = vendorNames.map(v => `vendor.eq.${v}`).join(",");
+          query = query.or(brandFilters);
+        }
+
+        return query;
+      };
+
+      // Use pagination to fetch all matching filaments (bypasses 1000-row limit)
+      const data = await fetchAllFilaments(buildQuery);
       return data;
     },
   });
