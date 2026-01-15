@@ -226,6 +226,15 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .animate-dropdown-open {
   animation: dropdown-open 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
