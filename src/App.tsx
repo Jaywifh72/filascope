@@ -12,7 +12,7 @@ import { CompareTray } from "./components/CompareTray";
 import { PrinterCompareProvider } from "./hooks/usePrinterCompare";
 import { PrinterCompareBar } from "./components/PrinterCompareBar";
 import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatibleCount";
-
+import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
@@ -48,6 +48,7 @@ const AdminABTests = lazy(() => import("./pages/AdminABTests"));
 const AdminDocs = lazy(() => import("./pages/AdminDocs"));
 const AdminFieldCoverage = lazy(() => import("./pages/AdminFieldCoverage"));
 const AdminFilamentScraper = lazy(() => import("./pages/AdminFilamentScraper"));
+const AdminSiteSettings = lazy(() => import("./pages/AdminSiteSettings"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -86,6 +87,7 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                <MaintenanceModeWrapper>
                 <Navbar />
                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
                   <Routes>
@@ -134,6 +136,7 @@ const App = () => (
                   <Route path="/admin/docs" element={<AdminDocs />} />
                   <Route path="/admin/field-coverage" element={<AdminFieldCoverage />} />
                   <Route path="/admin/filament-scraper" element={<AdminFilamentScraper />} />
+                  <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />
@@ -150,6 +153,7 @@ const App = () => (
               </Suspense>
               <CompareTray />
                 <PrinterCompareBar />
+                </MaintenanceModeWrapper>
               </BrowserRouter>
             </TooltipProvider>
           </PrinterCompareProvider>
