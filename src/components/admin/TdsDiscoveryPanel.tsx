@@ -160,6 +160,29 @@ export function TdsDiscoveryPanel() {
     }
   };
 
+  // Run batch TDS parsing for ALL Brand Sync Manager brands
+  const handleBatchParseAllSyncManager = async () => {
+    setBatchParseRunning(true);
+    setBatchParseProgress({ current: 0, total: 43 }); // 43 brands in sync manager
+    try {
+      const { data, error } = await supabase.functions.invoke('batch-parse-all-tds', {
+        body: { mode: 'parse-sync-manager', limit: 50, dryRun }
+      });
+      if (error) throw error;
+      toast({ 
+        title: 'Batch Parse Complete', 
+        description: `Processed ${data?.summary?.brandsProcessed || 0} brands, ${data?.summary?.totalSuccessful || 0} filaments updated` 
+      });
+      // Refresh audit
+      handleBatchAudit();
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Parse failed', variant: 'destructive' });
+    } finally {
+      setBatchParseRunning(false);
+      setBatchParseProgress(null);
+    }
+  };
+
   // Run normalization audit
   const handleNormalizationAudit = async () => {
     setNormalizationRunning(true);
@@ -350,17 +373,31 @@ export function TdsDiscoveryPanel() {
                       </div>
                     ))}
                   </div>
-                  <Button 
-                    onClick={handleBatchParsePriority} 
-                    disabled={batchParseRunning} 
-                    className="w-full"
-                  >
-                    {batchParseRunning ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
-                    ) : (
-                      <>Parse Priority Brands {dryRun ? '(Dry Run)' : ''}</>
-                    )}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleBatchParsePriority} 
+                      disabled={batchParseRunning} 
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      {batchParseRunning ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
+                      ) : (
+                        <>Parse Priority {dryRun ? '(Dry)' : ''}</>
+                      )}
+                    </Button>
+                    <Button 
+                      onClick={handleBatchParseAllSyncManager} 
+                      disabled={batchParseRunning} 
+                      className="flex-1"
+                    >
+                      {batchParseRunning ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
+                      ) : (
+                        <>Parse All 43 Brands {dryRun ? '(Dry)' : ''}</>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
 

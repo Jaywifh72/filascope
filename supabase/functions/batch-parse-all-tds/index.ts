@@ -14,6 +14,18 @@ const PRIORITY_BRANDS = [
   'voxelpla', 'spectrum-filaments'
 ];
 
+// All brands from the Brand Sync Manager (use exact database slugs)
+const SYNC_MANAGER_BRANDS = [
+  '3d-fuel', '3dhojor', '3dxtech', 'amolen', 'anycubic', 'atomic-filament', 'azurefilm', 'bambu-lab',
+  'colorfabb', 'creality', 'duramic-3d', 'elegoo', 'eryone', 'esun', 'extrudr',
+  'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments',
+  'geeetech', 'gizmo-dorks', 'hatchbox', 'ic3d-printers', 'kingroon', 'matter3d',
+  'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker',
+  'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'siraya-tech',
+  'sovol', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla',
+  'yousu', 'ziro'
+];
+
 interface BrandStats {
   brandSlug: string;
   brandName: string;
@@ -73,8 +85,9 @@ Deno.serve(async (req) => {
     
     const body = await req.json();
     const { 
-      mode = 'audit', // 'audit' | 'parse' | 'parse-priority' | 'parse-brand'
+      mode = 'audit', // 'audit' | 'parse' | 'parse-priority' | 'parse-brand' | 'parse-sync-manager'
       brandSlug = null,
+      brandSlugs = null, // Array of brand slugs to process
       limit = 10, // per brand
       dryRun = true,
       force = false,
@@ -182,9 +195,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // PARSE-PRIORITY MODE: Parse priority brands in sequence
-    if (mode === 'parse-priority' || mode === 'parse') {
-      console.log(`Batch parsing TDS for ${mode === 'parse-priority' ? 'priority' : 'all'} brands`);
+    // PARSE-PRIORITY, PARSE-SYNC-MANAGER, or PARSE MODE: Parse brands in sequence
+    if (mode === 'parse-priority' || mode === 'parse' || mode === 'parse-sync-manager' || (Array.isArray(brandSlugs) && brandSlugs.length > 0)) {
+      const modeLabel = mode === 'parse-priority' 
+        ? 'priority' 
+        : mode === 'parse-sync-manager' 
+          ? 'sync-manager' 
+          : brandSlugs?.length 
+            ? 'custom' 
+            : 'all';
+      console.log(`Batch parsing TDS for ${modeLabel} brands`);
       
       // Get brands to process
       const { data: brands } = await supabase
@@ -199,10 +219,17 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Filter to priority brands if in priority mode
-      const brandsToProcess = mode === 'parse-priority'
-        ? brands.filter(b => PRIORITY_BRANDS.includes(b.brand_slug))
-        : brands;
+      // Filter based on mode
+      let brandsToProcess = brands;
+      if (Array.isArray(brandSlugs) && brandSlugs.length > 0) {
+        // Custom list provided
+        brandsToProcess = brands.filter(b => brandSlugs.includes(b.brand_slug));
+      } else if (mode === 'parse-sync-manager') {
+        // All Brand Sync Manager brands
+        brandsToProcess = brands.filter(b => SYNC_MANAGER_BRANDS.includes(b.brand_slug));
+      } else if (mode === 'parse-priority') {
+        brandsToProcess = brands.filter(b => PRIORITY_BRANDS.includes(b.brand_slug));
+      }
 
       const results: BatchResult[] = [];
       let totalProcessed = 0;
