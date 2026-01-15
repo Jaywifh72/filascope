@@ -75,20 +75,22 @@ interface BrandStats {
   colors: string[];
 }
 
-interface AutomatedBrand {
+// Public brand type - matches v_public_brands view (no scraping config)
+interface PublicBrand {
   id: string;
   brand_name: string;
   brand_slug: string;
   display_name: string;
   description: string | null;
-  platform_type: string;
   featured: boolean | null;
-  scraping_enabled: boolean | null;
-  last_scrape_at: string | null;
   product_count: number | null;
-  products_with_urls: number | null;
+  active_product_count: number | null;
   color_primary: string | null;
+  color_secondary: string | null;
   website_url: string | null;
+  logo_url: string | null;
+  is_visible: boolean | null;
+  display_order: number | null;
 }
 
 // ColorStack component for displaying brand's color range
@@ -160,14 +162,14 @@ const Brands = () => {
   const { data: automatedBrands } = useQuery({
     queryKey: ["automated-brands-metadata"],
     queryFn: async () => {
+      // Use public view to avoid exposing sensitive scraping configuration
       const { data, error } = await supabase
-        .from("automated_brands")
+        .from("v_public_brands")
         .select("*")
-        .eq("is_visible", true)
         .order("display_order");
       
       if (error) throw error;
-      return data as AutomatedBrand[];
+      return data as PublicBrand[];
     },
   });
 
@@ -307,7 +309,7 @@ const Brands = () => {
 
   // Stats
   const totalProducts = brands?.reduce((sum, b) => sum + b.count, 0) || 0;
-  const automatedCount = automatedBrands?.filter(b => b.scraping_enabled).length || 0;
+  const brandCount = automatedBrands?.length || 0;
 
   return (
     <div className="min-h-screen p-8">
@@ -594,8 +596,8 @@ const Brands = () => {
               <p className="text-sm text-muted-foreground">Total Filaments</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{automatedCount}</p>
-              <p className="text-sm text-muted-foreground">Automated Sync</p>
+              <p className="text-3xl font-bold text-primary">{brandCount}</p>
+              <p className="text-sm text-muted-foreground">Tracked Brands</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-primary">{platforms.length}</p>
