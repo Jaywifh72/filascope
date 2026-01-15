@@ -208,7 +208,7 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
 
         {/* Coming Soon Text */}
         <h2
-          className="text-2xl sm:text-3xl font-light text-gray-400 text-center uppercase tracking-[0.2em]"
+          className="text-xl sm:text-2xl md:text-3xl font-light text-gray-400 text-center uppercase tracking-[0.2em] whitespace-nowrap"
           style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
         >
           The future of filament{' '}
