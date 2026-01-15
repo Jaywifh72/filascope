@@ -524,11 +524,10 @@ const Finder = () => {
   const { data: brandsData } = useQuery({
     queryKey: ["brands-synced"],
     queryFn: async () => {
-      // Fetch from automated_brands - only brands in sync manager
+      // Fetch from public brands view - excludes sensitive scraping config
       const { data: automatedBrands, error: automatedError } = await supabase
-        .from("automated_brands")
+        .from("v_public_brands")
         .select("display_name, brand_name, brand_slug")
-        .eq("is_visible", true)
         .order("display_name");
       
       if (automatedError) throw automatedError;

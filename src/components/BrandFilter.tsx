@@ -14,7 +14,6 @@ interface BrandFilterProps {
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder?: string;
-  showPlatformBadge?: boolean;
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -33,15 +32,14 @@ export function BrandFilter({
   value,
   onChange,
   placeholder = "All Brands",
-  showPlatformBadge = false,
 }: BrandFilterProps) {
   const { data: brands, isLoading } = useQuery({
     queryKey: ["automated-brands-filter-synced"],
     queryFn: async () => {
+      // Use public view to avoid exposing scraping configuration
       const { data, error } = await supabase
-        .from("automated_brands")
-        .select("brand_slug, display_name, platform_type, product_count")
-        .eq("is_visible", true)
+        .from("v_public_brands")
+        .select("brand_slug, display_name, product_count")
         .order("display_name");
 
       if (error) throw error;
@@ -66,16 +64,9 @@ export function BrandFilter({
           <SelectItem key={brand.brand_slug} value={brand.brand_slug}>
             <div className="flex items-center justify-between gap-2 w-full">
               <span>{brand.display_name}</span>
-              <div className="flex items-center gap-1.5">
-                {showPlatformBadge && brand.platform_type && (
-                  <span
-                    className={`w-2 h-2 rounded-full ${PLATFORM_COLORS[brand.platform_type] || "bg-zinc-500"}`}
-                  />
-                )}
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {brand.product_count}
-                </span>
-              </div>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {brand.product_count}
+              </span>
             </div>
           </SelectItem>
         ))}

@@ -368,11 +368,27 @@ const BrandDetail = () => {
     }
   };
 
-  // Fetch automated brand data (for sync status, platform info)
+  // Fetch public brand data (safe for all users)
   const { data: automatedBrand } = useQuery({
-    queryKey: ["automated-brand", decodedBrand],
+    queryKey: ["public-brand", decodedBrand],
     queryFn: async () => {
-      // Try to find by brand_name or brand_slug
+      const { data, error } = await supabase
+        .from("v_public_brands")
+        .select("*")
+        .or(`brand_name.ilike.${decodedBrand},brand_slug.eq.${decodedBrand.toLowerCase().replace(/\s+/g, '-')}`)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!decodedBrand,
+  });
+
+  // Admin-only query for scraping status and sensitive data
+  const { data: adminBrandData } = useQuery({
+    queryKey: ["admin-brand-data", decodedBrand, isAdmin],
+    queryFn: async () => {
+      if (!isAdmin) return null;
       const { data, error } = await supabase
         .from("automated_brands")
         .select("*")
@@ -382,7 +398,7 @@ const BrandDetail = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!decodedBrand,
+    enabled: !!decodedBrand && isAdmin,
   });
 
   const { data: filaments, isLoading } = useQuery({
@@ -608,9 +624,10 @@ const BrandDetail = () => {
                         {getCompanyTypeLabel(brandInfo.companyType)}
                       </Badge>
                     )}
-                    {automatedBrand?.platform_type && (
-                      <Badge className={`${PLATFORM_COLORS[automatedBrand.platform_type] || 'bg-zinc-500'} text-white capitalize`}>
-                        {automatedBrand.platform_type}
+                    {/* Platform badge - admin only */}
+                    {isAdmin && adminBrandData?.platform_type && (
+                      <Badge className={`${PLATFORM_COLORS[adminBrandData.platform_type] || 'bg-zinc-500'} text-white capitalize`}>
+                        {adminBrandData.platform_type}
                       </Badge>
                     )}
                   </div>
@@ -720,12 +737,12 @@ const BrandDetail = () => {
                 )}
 
                 {/* Admin: Scraping Status Card */}
-                {isAdmin && automatedBrand && (
+                {isAdmin && adminBrandData && (
                   <div className="mt-4 p-4 bg-muted/30 rounded-lg border">
                     <div className="flex items-center gap-2 mb-3">
                       <RefreshCw className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-medium">Scraping Status</span>
-                      {automatedBrand.scraping_active && (
+                      {adminBrandData.scraping_active && (
                         <Badge className="bg-primary/20 text-primary text-xs">
                           <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                           Running
@@ -736,7 +753,7 @@ const BrandDetail = () => {
                       <div>
                         <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</div>
                         <div className="flex items-center gap-1.5">
-                          {automatedBrand.scraping_enabled ? (
+                          {adminBrandData.scraping_enabled ? (
                             <>
                               <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                               <span className="text-green-500 font-medium">Enabled</span>
@@ -754,8 +771,8 @@ const BrandDetail = () => {
                         <div className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                           <span>
-                            {automatedBrand.last_scrape_at 
-                              ? new Date(automatedBrand.last_scrape_at).toLocaleDateString()
+                            {adminBrandData.last_scrape_at 
+                              ? new Date(adminBrandData.last_scrape_at).toLocaleDateString()
                               : "Never"}
                           </span>
                         </div>
@@ -763,21 +780,21 @@ const BrandDetail = () => {
                       <div>
                         <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Success Rate</div>
                         <div className="font-medium">
-                          {automatedBrand.total_scrapes && automatedBrand.total_scrapes > 0
-                            ? `${Math.round((automatedBrand.successful_scrapes || 0) / automatedBrand.total_scrapes * 100)}%`
+                          {adminBrandData.total_scrapes && adminBrandData.total_scrapes > 0
+                            ? `${Math.round((adminBrandData.successful_scrapes || 0) / adminBrandData.total_scrapes * 100)}%`
                             : "N/A"}
                         </div>
                       </div>
                       <div>
                         <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Products with URLs</div>
                         <div className="font-medium">
-                          {automatedBrand.products_with_urls || 0} / {automatedBrand.product_count || 0}
+                          {adminBrandData.products_with_urls || 0} / {adminBrandData.product_count || 0}
                         </div>
                       </div>
                     </div>
-                    {automatedBrand.last_error && (
+                    {adminBrandData.last_error && (
                       <div className="mt-3 p-2 bg-destructive/10 rounded border border-destructive/20 text-xs text-destructive">
-                        <span className="font-medium">Last Error:</span> {automatedBrand.last_error}
+                        <span className="font-medium">Last Error:</span> {adminBrandData.last_error}
                       </div>
                     )}
                   </div>

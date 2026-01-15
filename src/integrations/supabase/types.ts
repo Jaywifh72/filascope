@@ -298,6 +298,13 @@ export type Database = {
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "affiliate_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
         ]
       }
       automated_brands: {
@@ -626,6 +633,13 @@ export type Database = {
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
         ]
       }
       brand_sync_logs: {
@@ -715,6 +729,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
             referencedColumns: ["id"]
           },
         ]
@@ -1939,6 +1960,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
             referencedColumns: ["id"]
           },
           {
@@ -3319,6 +3347,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_discovery_queue_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
             referencedColumns: ["id"]
           },
         ]
@@ -5372,6 +5407,57 @@ export type Database = {
           product_title: string | null
           product_url: string | null
           status: string | null
+        }
+        Relationships: []
+      }
+      v_public_brands: {
+        Row: {
+          active_product_count: number | null
+          brand_name: string | null
+          brand_slug: string | null
+          color_primary: string | null
+          color_secondary: string | null
+          description: string | null
+          display_name: string | null
+          display_order: number | null
+          featured: boolean | null
+          id: string | null
+          is_visible: boolean | null
+          logo_url: string | null
+          product_count: number | null
+          website_url: string | null
+        }
+        Insert: {
+          active_product_count?: number | null
+          brand_name?: string | null
+          brand_slug?: string | null
+          color_primary?: string | null
+          color_secondary?: string | null
+          description?: string | null
+          display_name?: string | null
+          display_order?: number | null
+          featured?: boolean | null
+          id?: string | null
+          is_visible?: boolean | null
+          logo_url?: string | null
+          product_count?: number | null
+          website_url?: string | null
+        }
+        Update: {
+          active_product_count?: number | null
+          brand_name?: string | null
+          brand_slug?: string | null
+          color_primary?: string | null
+          color_secondary?: string | null
+          description?: string | null
+          display_name?: string | null
+          display_order?: number | null
+          featured?: boolean | null
+          id?: string | null
+          is_visible?: boolean | null
+          logo_url?: string | null
+          product_count?: number | null
+          website_url?: string | null
         }
         Relationships: []
       }
