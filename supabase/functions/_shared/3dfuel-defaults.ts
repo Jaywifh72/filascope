@@ -908,13 +908,83 @@ export function getColorFamily(colorName: string): string {
   return 'Other';
 }
 
+// ============================================================================
+// 3D-FUEL TDS URL MAPPING
+// ============================================================================
+
+export const THREED_FUEL_TDS_URLS: Record<string, string> = {
+  // Map product_line_id patterns to TDS URLs
+  'pro-pctg': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/3D-Fuel_Pro_PCTG_TDS_9-2-25.pdf',
+  'tough-pro-pla': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/TDS-3DFuel-Pro-PLA.pdf',
+  'standard-pla': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/TDS-3DFuel-Standard-PLA.pdf',
+  'pro-abs': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/TDS-3DFuel-Workday-ABS.pdf',
+  'pro-asa': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/TDS-3DFuel-ASA.pdf',
+  'pro-petg': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/3D_Fuel_Pro_PETG_9-22-25.pdf',
+  'pet-cf': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/3D_Fuel_PET-CF_9-22-25.pdf',
+  // Silk PLA+ variants use Standard PLA+ or Tough Pro PLA+ TDS
+  'silk-pla': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/TDS-3DFuel-Standard-PLA.pdf',
+  'dual-color-silk-pla': 'https://cdn.shopify.com/s/files/1/0027/5339/6848/files/TDS-3DFuel-Standard-PLA.pdf',
+};
+
 /**
- * Build TDS URL based on product handle
+ * Get TDS URL for a 3D-Fuel product based on product_line_id
+ */
+export function get3DFuelTdsUrl(productLineId: string | null): string | null {
+  if (!productLineId) return null;
+  
+  // Remove vendor prefix if present (e.g., "3dfuel__pro-pctg" -> "pro-pctg")
+  const normalizedId = productLineId.replace(/^3dfuel__/i, '').toLowerCase();
+  
+  // Try exact match first
+  if (THREED_FUEL_TDS_URLS[normalizedId]) {
+    return THREED_FUEL_TDS_URLS[normalizedId];
+  }
+  
+  // Try partial match for variants
+  for (const [key, url] of Object.entries(THREED_FUEL_TDS_URLS)) {
+    if (normalizedId.includes(key) || key.includes(normalizedId)) {
+      return url;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Build TDS URL based on product handle (legacy function, now uses product_line_id)
  */
 export function buildTdsUrl(productHandle: string): string | null {
-  // 3D-Fuel typically hosts TDS in their CDN
-  // Format: https://cdn.shopify.com/s/files/1/0xxx/xxxx/files/TDS-{product}.pdf
-  // We return null here as we need to scrape for actual TDS URLs
+  // Try to match based on product handle patterns
+  const lower = productHandle.toLowerCase();
+  
+  if (lower.includes('pro-pctg') || lower.includes('pctg')) {
+    return THREED_FUEL_TDS_URLS['pro-pctg'];
+  }
+  if (lower.includes('tough-pro-pla') || lower.includes('pro-pla')) {
+    return THREED_FUEL_TDS_URLS['tough-pro-pla'];
+  }
+  if (lower.includes('standard-pla')) {
+    return THREED_FUEL_TDS_URLS['standard-pla'];
+  }
+  if (lower.includes('pro-abs') || lower.includes('workday-abs')) {
+    return THREED_FUEL_TDS_URLS['pro-abs'];
+  }
+  if (lower.includes('pro-asa') || lower.includes('asa')) {
+    return THREED_FUEL_TDS_URLS['pro-asa'];
+  }
+  if (lower.includes('pro-petg')) {
+    return THREED_FUEL_TDS_URLS['pro-petg'];
+  }
+  if (lower.includes('pet-cf')) {
+    return THREED_FUEL_TDS_URLS['pet-cf'];
+  }
+  if (lower.includes('silk-pla')) {
+    return THREED_FUEL_TDS_URLS['silk-pla'];
+  }
+  if (lower.includes('dual-color-silk')) {
+    return THREED_FUEL_TDS_URLS['dual-color-silk-pla'];
+  }
+  
   return null;
 }
 
