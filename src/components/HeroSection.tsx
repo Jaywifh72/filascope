@@ -215,25 +215,43 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full sm:w-auto animate-fade-in"
             style={{ animationDelay: "0.6s" }}
           >
-            {/* Primary Button - Dominant */}
+            {/* Primary Button - Cyan-to-Blue Gradient */}
             <Button 
               size="lg"
               onClick={() => navigate("/compare")}
-              className="w-full sm:w-[220px] h-14 px-10 bg-gradient-to-r from-primary to-[hsl(180_70%_40%)] text-slate-900 hover:from-[hsl(180_100%_47%)] hover:to-[hsl(180_70%_45%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-lg rounded-xl shadow-[0_8px_24px_rgba(0,217,217,0.3)]"
+              className="w-full sm:w-[220px] h-14 px-10 bg-gradient-to-r from-[hsl(180_100%_50%)] via-[hsl(200_100%_50%)] to-[hsl(220_100%_60%)] text-white hover:from-[hsl(180_100%_55%)] hover:via-[hsl(200_100%_55%)] hover:to-[hsl(220_100%_65%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-lg rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.4)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
             >
               Compare Filaments
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             
-            {/* Secondary Button - Subordinate */}
+            {/* Secondary Button - Ghost with Shimmer Border */}
             <Button 
               size="lg"
               variant="outline"
               onClick={() => navigate("/wizard")}
-              className="w-full sm:w-[180px] h-[52px] px-6 bg-transparent border border-primary/60 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base rounded-xl"
+              className="group relative w-full sm:w-[200px] h-[52px] px-6 bg-transparent text-primary hover:text-primary/90 hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base rounded-xl overflow-hidden border-0"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Material Wizard
+              {/* Animated shimmer border */}
+              <span 
+                className="absolute inset-0 rounded-xl"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, hsl(180 100% 50%), hsl(280 100% 70%), hsl(180 100% 50%), transparent)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 3s linear infinite',
+                  padding: '1px',
+                  WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  maskComposite: 'exclude',
+                }}
+              />
+              {/* Inner background */}
+              <span className="absolute inset-[1px] rounded-[11px] bg-background group-hover:bg-primary/5 transition-colors duration-200" />
+              {/* Content */}
+              <span className="relative flex items-center">
+                <span className="mr-2 text-lg">✨</span>
+                Material Wizard
+              </span>
             </Button>
           </div>
         </div>
