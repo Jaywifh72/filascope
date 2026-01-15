@@ -132,18 +132,32 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
       className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden"
       style={{ background: '#0A0C10' }}
     >
-      {/* Background glows */}
+      {/* Background glow blobs */}
       <div 
-        className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full opacity-30 blur-[120px] pointer-events-none"
-        style={{ background: '#00CFE8' }}
+        className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full pointer-events-none"
+        style={{ 
+          background: '#00CFE8',
+          opacity: 0.1,
+          filter: 'blur(120px)',
+        }}
       />
       <div 
-        className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full opacity-20 blur-[120px] pointer-events-none"
-        style={{ background: '#FF0055' }}
+        className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full pointer-events-none"
+        style={{ 
+          background: '#FF0055',
+          opacity: 0.1,
+          filter: 'blur(120px)',
+        }}
       />
+      
+      {/* Radial dot grid overlay */}
       <div 
-        className="absolute top-[40%] right-[20%] w-[30%] h-[30%] rounded-full opacity-15 blur-[100px] pointer-events-none"
-        style={{ background: '#00CFE8' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.5) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          opacity: 0.03,
+        }}
       />
 
       {/* Content container */}
