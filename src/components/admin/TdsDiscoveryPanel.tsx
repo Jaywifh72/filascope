@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { useEnrichmentQueue } from '@/hooks/useEnrichmentQueue';
 import { useEnrichmentMetrics } from '@/hooks/useEnrichmentMetrics';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { BRAND_SPECIFIC_FUNCTIONS } from '@/lib/brand-sync-config';
 
 // Brand-specific TDS scrapers
 const BRAND_SPECIFIC_SCRAPERS: Record<string, string> = {
@@ -26,6 +27,9 @@ const BRAND_SPECIFIC_SCRAPERS: Record<string, string> = {
   '3dxtech': 'update-3dxtech-tds',
   'amolen': 'update-amolen-specs',
 };
+
+// Total brands in sync manager for reference
+const SYNC_MANAGER_BRAND_COUNT = BRAND_SPECIFIC_FUNCTIONS.length;
 
 interface BatchAuditResult {
   summary: {
@@ -60,7 +64,7 @@ export function TdsDiscoveryPanel() {
   const [specificRunning, setSpecificRunning] = useState<string | null>(null);
   const [specificResults, setSpecificResults] = useState<Record<string, { found: number; notFound: number }>>({});
   const { runSingle, runQueue, state, isRunning } = useEnrichmentQueue();
-  const { lowTdsBrands, isLoading, refresh } = useEnrichmentMetrics();
+  const { brands: allBrands, isLoading, refresh } = useEnrichmentMetrics();
 
   // Batch parsing state
   const [batchAuditResult, setBatchAuditResult] = useState<BatchAuditResult | null>(null);
@@ -70,6 +74,27 @@ export function TdsDiscoveryPanel() {
   // Normalization state
   const [normalizationAudit, setNormalizationAudit] = useState<NormalizationAudit | null>(null);
   const [normalizationRunning, setNormalizationRunning] = useState(false);
+
+  // Filter brands to only those in the Sync Manager
+  const syncManagerBrands = useMemo(() => {
+    return allBrands
+      .filter(b => BRAND_SPECIFIC_FUNCTIONS.includes(b.brandSlug as any))
+      .sort((a, b) => b.totalProducts - a.totalProducts);
+  }, [allBrands]);
+
+  // Calculate overall TDS stats for Sync Manager brands
+  const tdsStats = useMemo(() => {
+    const total = syncManagerBrands.reduce((sum, b) => sum + b.totalProducts, 0);
+    const withTds = syncManagerBrands.reduce((sum, b) => sum + b.withTds, 0);
+    const withParsing = syncManagerBrands.reduce((sum, b) => sum + b.withFullParsing, 0);
+    return {
+      totalProducts: total,
+      withTds,
+      withParsing,
+      tdsCoverage: total > 0 ? Math.round((withTds / total) * 100) : 0,
+      parsingCoverage: withTds > 0 ? Math.round((withParsing / withTds) * 100) : 0,
+    };
+  }, [syncManagerBrands]);
 
   const toggleBrand = (slug: string) => {
     setSelectedBrands(prev => {
@@ -93,7 +118,7 @@ export function TdsDiscoveryPanel() {
   };
 
   const handleDiscoverAll = async () => {
-    const ops = lowTdsBrands.map(b => ({
+    const ops = syncManagerBrands.map(b => ({
       type: 'tds-discovery' as const, brandSlug: b.brandSlug, dryRun,
     }));
     await runQueue(ops);
@@ -163,7 +188,7 @@ export function TdsDiscoveryPanel() {
   // Run batch TDS parsing for ALL Brand Sync Manager brands
   const handleBatchParseAllSyncManager = async () => {
     setBatchParseRunning(true);
-    setBatchParseProgress({ current: 0, total: 43 }); // 43 brands in sync manager
+    setBatchParseProgress({ current: 0, total: SYNC_MANAGER_BRAND_COUNT });
     try {
       const { data, error } = await supabase.functions.invoke('batch-parse-all-tds', {
         body: { mode: 'parse-sync-manager', limit: 50, dryRun }
@@ -173,8 +198,9 @@ export function TdsDiscoveryPanel() {
         title: 'Batch Parse Complete', 
         description: `Processed ${data?.summary?.brandsProcessed || 0} brands, ${data?.summary?.totalSuccessful || 0} filaments updated` 
       });
-      // Refresh audit
+      // Refresh audit and metrics
       handleBatchAudit();
+      refresh();
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Parse failed', variant: 'destructive' });
     } finally {
@@ -243,6 +269,26 @@ export function TdsDiscoveryPanel() {
 
           {/* Discovery Tab */}
           <TabsContent value="discovery" className="space-y-4">
+            {/* Overall Stats for Discovery */}
+            <div className="grid grid-cols-4 gap-3 text-center p-3 bg-muted rounded-lg">
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold">{syncManagerBrands.length}</p>
+                <p className="text-xs text-muted-foreground">Sync Brands</p>
+              </div>
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold">{tdsStats.totalProducts}</p>
+                <p className="text-xs text-muted-foreground">Total Products</p>
+              </div>
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold text-green-600">{tdsStats.withTds}</p>
+                <p className="text-xs text-muted-foreground">With TDS</p>
+              </div>
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold text-primary">{tdsStats.tdsCoverage}%</p>
+                <p className="text-xs text-muted-foreground">TDS Coverage</p>
+              </div>
+            </div>
+
             {isRunning && state.currentOperation?.type === 'tds-discovery' && (
               <div className="space-y-2 p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-2 text-sm">
@@ -263,7 +309,7 @@ export function TdsDiscoveryPanel() {
                   </div>
                 ))
               ) : (
-                lowTdsBrands.map(brand => {
+                syncManagerBrands.map(brand => {
                   const result = getResultForBrand(brand.brandSlug);
                   const specificResult = specificResults[brand.brandSlug];
                   const isProcessing = isRunning && state.currentOperation?.brandSlug === brand.brandSlug;
@@ -294,7 +340,7 @@ export function TdsDiscoveryPanel() {
                             {result?.details?.discovered || specificResult?.found || 0} found
                           </Badge>
                         )}
-                        <Badge variant={brand.tdsCoverage === 0 ? 'destructive' : brand.tdsCoverage < 25 ? 'secondary' : 'outline'}>
+                        <Badge variant={brand.tdsCoverage === 0 ? 'destructive' : brand.tdsCoverage < 50 ? 'secondary' : 'outline'}>
                           {brand.tdsCoverage}%
                         </Badge>
                         {hasSpecificScraper ? (
@@ -322,14 +368,34 @@ export function TdsDiscoveryPanel() {
               <Button onClick={handleDiscoverSelected} disabled={isRunning || selectedBrands.size === 0} variant="secondary">
                 Discover Selected ({selectedBrands.size})
               </Button>
-              <Button onClick={handleDiscoverAll} disabled={isRunning || lowTdsBrands.length === 0}>
-                {isRunning ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</> : <>Discover All ({lowTdsBrands.length})</>}
+              <Button onClick={handleDiscoverAll} disabled={isRunning || syncManagerBrands.length === 0}>
+                {isRunning ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</> : <>Discover All ({syncManagerBrands.length} brands)</>}
               </Button>
             </div>
           </TabsContent>
 
           {/* Parsing Tab */}
           <TabsContent value="parsing" className="space-y-4">
+            {/* Overall Parsing Stats from live metrics */}
+            <div className="grid grid-cols-4 gap-3 text-center p-3 bg-muted rounded-lg">
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold">{syncManagerBrands.length}</p>
+                <p className="text-xs text-muted-foreground">Sync Brands</p>
+              </div>
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold text-green-600">{tdsStats.withTds}</p>
+                <p className="text-xs text-muted-foreground">With TDS</p>
+              </div>
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold text-blue-600">{tdsStats.withParsing}</p>
+                <p className="text-xs text-muted-foreground">Fully Parsed</p>
+              </div>
+              <div className="p-2 bg-background rounded">
+                <p className="text-2xl font-bold text-primary">{tdsStats.parsingCoverage}%</p>
+                <p className="text-xs text-muted-foreground">Parse Coverage</p>
+              </div>
+            </div>
+
             <div className="p-4 bg-muted rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -362,44 +428,56 @@ export function TdsDiscoveryPanel() {
                 </div>
               )}
 
-              {batchAuditResult?.priorityBrands && batchAuditResult.priorityBrands.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Priority Brands (need parsing)</p>
-                  <div className="max-h-[200px] overflow-y-auto space-y-1">
-                    {batchAuditResult.priorityBrands.slice(0, 10).map(brand => (
-                      <div key={brand.brandSlug} className="flex justify-between text-sm p-2 bg-background rounded">
+              {/* All Sync Manager Brands Parsing Status */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">All Sync Manager Brands ({syncManagerBrands.length})</p>
+                <div className="max-h-[200px] overflow-y-auto space-y-1">
+                  {syncManagerBrands.map(brand => {
+                    const needsParsing = brand.withTds - brand.withFullParsing;
+                    const parsePercent = brand.withTds > 0 
+                      ? Math.round((brand.withFullParsing / brand.withTds) * 100) 
+                      : 0;
+                    return (
+                      <div key={brand.brandSlug} className="flex justify-between items-center text-sm p-2 bg-background rounded">
                         <span>{brand.brandName}</span>
-                        <span className="text-amber-600">{brand.needsParsing} / {brand.totalWithTds}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={needsParsing > 0 ? 'text-amber-600' : 'text-green-600'}>
+                            {brand.withFullParsing}/{brand.withTds}
+                          </span>
+                          <Badge variant={parsePercent === 100 ? 'default' : parsePercent >= 50 ? 'secondary' : 'destructive'}>
+                            {parsePercent}%
+                          </Badge>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleBatchParsePriority} 
-                      disabled={batchParseRunning} 
-                      variant="secondary"
-                      className="flex-1"
-                    >
-                      {batchParseRunning ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
-                      ) : (
-                        <>Parse Priority {dryRun ? '(Dry)' : ''}</>
-                      )}
-                    </Button>
-                    <Button 
-                      onClick={handleBatchParseAllSyncManager} 
-                      disabled={batchParseRunning} 
-                      className="flex-1"
-                    >
-                      {batchParseRunning ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
-                      ) : (
-                        <>Parse All 43 Brands {dryRun ? '(Dry)' : ''}</>
-                      )}
-                    </Button>
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleBatchParsePriority} 
+                    disabled={batchParseRunning} 
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    {batchParseRunning ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
+                    ) : (
+                      <>Parse Priority {dryRun ? '(Dry)' : ''}</>
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={handleBatchParseAllSyncManager} 
+                    disabled={batchParseRunning} 
+                    className="flex-1"
+                  >
+                    {batchParseRunning ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Parsing...</>
+                    ) : (
+                      <>Parse All {SYNC_MANAGER_BRAND_COUNT} Brands {dryRun ? '(Dry)' : ''}</>
+                    )}
+                  </Button>
+                </div>
+              </div>
 
               {batchParseProgress && (
                 <div className="space-y-1">
