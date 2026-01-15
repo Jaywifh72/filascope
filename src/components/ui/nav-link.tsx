@@ -9,7 +9,7 @@ interface CustomNavLinkProps extends NavLinkProps {
 
 export const NavLink = ({ 
   className, 
-  activeClassName = "text-primary border-primary font-bold", 
+  activeClassName = "text-[#00CFE8] font-bold", 
   children, 
   ...props 
 }: CustomNavLinkProps) => {
@@ -17,21 +17,31 @@ export const NavLink = ({
     <RouterNavLink
       className={({ isActive }) =>
         cn(
-          // Base styles with reserved border space to prevent layout shift
-          "px-4 py-3 text-sm font-semibold transition-all duration-200 rounded-md",
-          "text-white/90 hover:text-primary hover:bg-white/5",
+          // Base styles with increased horizontal padding
+          "relative px-6 py-3 text-sm font-semibold transition-colors duration-200",
+          "text-white/90",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          // Always reserve space for underline
-          "border-b-2 border-transparent",
+          // Hover effect - text color shift to cyan
+          "hover:text-[#00CFE8]",
+          // Group for underline animation
+          "group",
           className,
           isActive && activeClassName
         )
       }
-      // Accessibility: announce current page to screen readers
       {...props}
     >
       {({ isActive }) => (
-        <span aria-current={isActive ? "page" : undefined}>{children}</span>
+        <>
+          <span aria-current={isActive ? "page" : undefined}>{children}</span>
+          {/* Animated underline - slides in from center on hover, always visible when active */}
+          <span 
+            className={cn(
+              "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[#00CFE8] transition-all duration-300 ease-out",
+              isActive ? "w-full" : "w-0 group-hover:w-full"
+            )}
+          />
+        </>
       )}
     </RouterNavLink>
   );
