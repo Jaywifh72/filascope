@@ -176,7 +176,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 isFocused ? "scale-[1.01]" : ""
               }`}
             >
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10" />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 z-10" />
               <input
                 type="text"
                 placeholder="Search by brand, material, or color..."
@@ -184,10 +184,10 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 onChange={(e) => onSearchChange(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                className={`w-full h-16 pl-14 pr-44 text-lg bg-white text-slate-800 placeholder:text-slate-400 rounded-2xl border-2 transition-all duration-300 outline-none ${
+                className={`w-full h-16 pl-14 pr-44 text-lg bg-[#1A1D23] text-white placeholder:text-slate-500 rounded-2xl border transition-all duration-300 outline-none ${
                   isFocused 
-                    ? "border-primary shadow-[0_0_0_4px_rgba(0,217,217,0.1)]" 
-                    : "border-transparent"
+                    ? "border-[#00CFE8] shadow-[0_0_12px_rgba(0,207,232,0.4)]" 
+                    : "border-white/10"
                 }`}
                 aria-label="Search filaments by brand, material, or color"
               />

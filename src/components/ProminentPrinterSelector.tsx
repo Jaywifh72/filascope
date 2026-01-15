@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Printer, ChevronDown, AlertCircle, CheckCircle } from "lucide-react";
+import { Printer, ChevronDown, AlertCircle, CheckCircle, Box } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { PrinterSelectorDropdown } from "./PrinterSelectorDropdown";
@@ -112,7 +112,7 @@ export function ProminentPrinterSelector({ compatibleCount }: ProminentPrinterSe
           boxShadow: hasSelection ? "0 0 30px rgba(0, 217, 217, 0.15)" : undefined,
         }}
       >
-        {/* Left - Icon */}
+        {/* Left - 3D Printer Icon */}
         <div
           className={cn(
             "flex items-center justify-center w-12 h-12 rounded-xl flex-shrink-0",
@@ -120,7 +120,7 @@ export function ProminentPrinterSelector({ compatibleCount }: ProminentPrinterSe
           )}
         >
           {hasSelection ? (
-            <Printer className="w-7 h-7 text-primary" strokeWidth={2} />
+            <Box className="w-7 h-7 text-primary" strokeWidth={2} />
           ) : (
             <AlertCircle className="w-7 h-7 text-orange-400" strokeWidth={2} />
           )}
@@ -154,12 +154,13 @@ export function ProminentPrinterSelector({ compatibleCount }: ProminentPrinterSe
                 <div
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg",
-                    "bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.3)]",
+                    "bg-[rgba(34,197,94,0.12)] border border-[rgba(34,197,94,0.25)]",
+                    "shadow-[0_0_12px_rgba(34,197,94,0.2)]",
                     countAnimating && "animate-[badge-pulse_0.6s_ease-out]"
                   )}
                 >
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-semibold text-green-500">
+                  <CheckCircle className="w-4 h-4 text-green-700" />
+                  <span className="text-sm font-semibold text-green-700">
                     {compatibleCount.toLocaleString()} <span className="hidden sm:inline">compatible</span>
                   </span>
                 </div>
