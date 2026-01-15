@@ -32,49 +32,43 @@ const calculateTimeLeft = () => {
 
 const CountdownCard = ({ value, label }: { value: number; label: string }) => (
   <div 
-    className="flex flex-col items-center justify-center px-4 py-3 sm:px-6 sm:py-4 rounded-xl"
+    className="flex flex-col items-center justify-center w-20 h-24 sm:w-28 sm:h-32 rounded-2xl"
     style={{
-      background: 'rgba(255, 255, 255, 0.03)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
+      background: 'rgba(20, 24, 32, 0.8)',
+      border: '1px solid rgba(0, 207, 232, 0.2)',
+      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
     }}
   >
     <span 
-      className="text-3xl sm:text-5xl font-black text-white tabular-nums"
+      className="text-4xl sm:text-5xl font-bold text-white tabular-nums"
       style={{ fontFamily: "'JetBrains Mono', 'Roboto Mono', monospace" }}
     >
       {String(value).padStart(2, '0')}
     </span>
     <span 
-      className="text-xs sm:text-sm uppercase mt-1 font-bold"
-      style={{ 
-        color: '#00CFE8',
-        letterSpacing: '0.25em',
-      }}
+      className="text-xs uppercase mt-2 font-semibold tracking-[0.2em]"
+      style={{ color: '#00CFE8' }}
     >
       {label}
     </span>
   </div>
 );
 
-const FeatureItem = ({ icon: Icon, label, color }: { icon: typeof Database; label: string; color: string }) => (
-  <div className="flex flex-col items-center gap-3 text-center">
+const FeatureItem = ({ icon: Icon, title, description, color }: { icon: typeof Database; title: string; description: string; color: string }) => (
+  <div className="flex items-center gap-4">
     <div 
-      className="relative p-4 rounded-xl"
+      className="flex items-center justify-center w-12 h-12 rounded-xl"
       style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        background: `${color}15`,
+        border: `1px solid ${color}30`,
       }}
     >
-      {/* Icon glow */}
-      <div 
-        className="absolute inset-0 rounded-xl opacity-40 blur-xl"
-        style={{ background: color }}
-      />
-      <Icon className="relative w-7 h-7 text-white" />
+      <Icon className="w-5 h-5" style={{ color }} />
     </div>
-    <span className="text-sm text-white/70 font-medium">{label}</span>
+    <div className="flex flex-col">
+      <span className="text-sm font-semibold text-white">{title}</span>
+      <span className="text-xs text-gray-500">{description}</span>
+    </div>
   </div>
 );
 
@@ -233,36 +227,45 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
         </div>
 
         {/* Email Capture */}
-        <form onSubmit={handleNotifyMe} className="flex flex-col sm:flex-row gap-3 w-full max-w-md mb-12">
-          <div className="relative flex-1">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-            <Input
-              type="email"
-              value={notifyEmail}
-              onChange={(e) => setNotifyEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="pl-12 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#00CFE8]/50 focus:ring-[#00CFE8]/20 rounded-xl"
-            />
-          </div>
+        <form 
+          onSubmit={handleNotifyMe} 
+          className="flex items-center w-full max-w-lg mb-16 rounded-full overflow-hidden"
+          style={{
+            background: 'rgba(30, 34, 44, 0.9)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          }}
+        >
+          <Input
+            type="email"
+            value={notifyEmail}
+            onChange={(e) => setNotifyEmail(e.target.value)}
+            placeholder="Enter email for early access"
+            className="flex-1 h-14 px-6 bg-transparent border-0 text-white placeholder:text-gray-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
           <Button 
             type="submit"
             disabled={notifyLoading}
-            className="h-12 px-6 font-semibold rounded-xl text-white transition-all duration-200 hover:-translate-y-0.5"
+            className="h-10 px-6 mr-2 font-semibold rounded-full text-white transition-all duration-200"
             style={{
               background: 'linear-gradient(135deg, #00CFE8 0%, #0088FF 100%)',
-              boxShadow: '0 4px 20px rgba(0, 207, 232, 0.35)',
             }}
           >
-            <Bell className="w-4 h-4 mr-2" />
             {notifyLoading ? "Joining..." : "Notify Me"}
+            <Zap className="w-4 h-4 ml-2" />
           </Button>
         </form>
 
         {/* Features */}
-        <div className="flex gap-8 sm:gap-16 mb-12">
-          <FeatureItem icon={Database} label="Massive Database" color="#00CFE8" />
-          <FeatureItem icon={BarChart} label="Smart Comparisons" color="#00CFE8" />
-          <FeatureItem icon={Zap} label="Printer Optimization" color="#FF0055" />
+        <div 
+          className="w-full max-w-4xl flex flex-col sm:flex-row items-start sm:items-center justify-center gap-8 sm:gap-12 py-6 px-8 rounded-xl"
+          style={{
+            background: 'rgba(15, 18, 24, 0.8)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          }}
+        >
+          <FeatureItem icon={Database} title="Massive Database" description="8,000+ Filaments profiled." color="#00CFE8" />
+          <FeatureItem icon={BarChart} title="Smart Comparisons" description="Find the perfect material." color="#FF6B9D" />
+          <FeatureItem icon={Zap} title="Printer Optimization" description="G-code ready settings." color="#FFB800" />
         </div>
 
         {/* Admin Login Toggle */}
