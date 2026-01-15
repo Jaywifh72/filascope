@@ -19,6 +19,7 @@ const corsHeaders = {
 interface NormalizeOptions {
   dryRun?: boolean;
   limit?: number;
+  forceOverwrite?: boolean;
 }
 
 interface NormalizeResult {
@@ -50,9 +51,9 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const options: NormalizeOptions = await req.json().catch(() => ({}));
-    const { dryRun = true, limit } = options;
+    const { dryRun = true, limit, forceOverwrite = false } = options;
 
-    console.log(`[normalize-filament-tags] Starting with dryRun=${dryRun}, limit=${limit || 'all'}`);
+    console.log(`[normalize-filament-tags] Starting with dryRun=${dryRun}, limit=${limit || 'all'}, forceOverwrite=${forceOverwrite}`);
 
     // Fetch all filaments
     let query = supabase
@@ -89,23 +90,43 @@ Deno.serve(async (req) => {
       const material = filament.material || "";
       const existingFinish = filament.finish_type;
 
-      // Step 1: Normalize existing finish_type if present
+      // Step 1: Always try to extract fresh from title/material
+      const extractedFinish = extractFinishType(title, material);
+      
+      // Step 2: Determine new finish_type based on mode
       let newFinishType: FinishType;
       let reason = "";
 
-      if (existingFinish && existingFinish !== "Standard") {
-        // Normalize the existing value
-        newFinishType = normalizeFinishType(existingFinish);
-        if (newFinishType !== existingFinish) {
-          reason = `normalized from '${existingFinish}'`;
+      if (forceOverwrite) {
+        // Force mode: Always extract fresh, but try normalizing existing first if extracted is Standard
+        if (extractedFinish !== "Standard") {
+          newFinishType = extractedFinish;
+          reason = "force-extracted from title/material";
+          stats.extracted++;
+        } else if (existingFinish && existingFinish !== "Standard") {
+          // Existing has a value, normalize it
+          newFinishType = normalizeFinishType(existingFinish);
+          reason = `force-normalized from '${existingFinish}'`;
           stats.normalized++;
+        } else {
+          newFinishType = "Standard";
         }
       } else {
-        // Step 2: Extract from title/material if no finish_type or is Standard
-        newFinishType = extractFinishType(title, material);
-        if (newFinishType !== "Standard") {
-          reason = "extracted from title/material";
-          stats.extracted++;
+        // Normal mode: only update if needed
+        if (existingFinish && existingFinish !== "Standard") {
+          // Normalize the existing value
+          newFinishType = normalizeFinishType(existingFinish);
+          if (newFinishType !== existingFinish) {
+            reason = `normalized from '${existingFinish}'`;
+            stats.normalized++;
+          }
+        } else {
+          // Extract from title/material if no finish_type or is Standard
+          newFinishType = extractedFinish;
+          if (newFinishType !== "Standard") {
+            reason = "extracted from title/material";
+            stats.extracted++;
+          }
         }
       }
 
@@ -119,7 +140,11 @@ Deno.serve(async (req) => {
       // Build update object only for changed fields
       const updateFields: Record<string, unknown> = {};
 
-      if (newFinishType !== existingFinish && (reason || newFinishType !== "Standard")) {
+      // For forceOverwrite, always update finish_type if we have a reason
+      if (forceOverwrite && reason) {
+        updateFields.finish_type = newFinishType;
+        normalizations[newFinishType] = (normalizations[newFinishType] || 0) + 1;
+      } else if (newFinishType !== existingFinish && (reason || newFinishType !== "Standard")) {
         updateFields.finish_type = newFinishType;
         normalizations[newFinishType] = (normalizations[newFinishType] || 0) + 1;
       }
