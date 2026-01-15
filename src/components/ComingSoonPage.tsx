@@ -42,11 +42,17 @@ const CountdownCard = ({ value, label }: { value: number; label: string }) => (
   >
     <span 
       className="text-3xl sm:text-5xl font-black text-white tabular-nums"
-      style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+      style={{ fontFamily: "'JetBrains Mono', 'Roboto Mono', monospace" }}
     >
       {String(value).padStart(2, '0')}
     </span>
-    <span className="text-xs sm:text-sm text-white/50 uppercase tracking-widest mt-1">
+    <span 
+      className="text-xs sm:text-sm uppercase mt-1 font-bold"
+      style={{ 
+        color: '#00CFE8',
+        letterSpacing: '0.25em',
+      }}
+    >
       {label}
     </span>
   </div>
