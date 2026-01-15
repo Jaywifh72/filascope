@@ -22,6 +22,7 @@ const BRAND_SPECIFIC_SCRAPERS: Record<string, string> = {
   'push-plastic': 'scrape-pushplastic-tds',
   'filaments-ca': 'scrape-filaments-ca-tds',
   '3d-fuel': 'update-3dfuel-tds',
+  '3dxtech': 'update-3dxtech-tds',
 };
 
 export function TdsDiscoveryPanel() {

@@ -2,6 +2,122 @@
 // Premium industrial filament manufacturer specializing in high-performance and ESD materials
 
 // ============================================================================
+// TDS URL MAPPINGS
+// ============================================================================
+
+export const DXTECH_TDS_URLS: Record<string, string> = {
+  // 3DXSTAT ESD Materials
+  'esd-abs': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD_ABS_v3.pdf',
+  'esd-petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD-PETG-TDS-v03.pdf',
+  'esd-pla': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD_PLA_TDS_v3.pdf',
+  'esd-pc': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD_PC_v3.pdf',
+  'esd-nylon': 'https://www.3dxtech.com/wp-content/uploads/2021/03/3DXSTAT_ESD_PA12_TDS_v1.pdf',
+  'esd-pa12': 'https://www.3dxtech.com/wp-content/uploads/2021/03/3DXSTAT_ESD_PA12_TDS_v1.pdf',
+  
+  // CarbonX Line
+  'abs-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ABS_CF-TDS-v03.pdf',
+  'carbonx-abs': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ABS_CF-TDS-v03.pdf',
+  'asa-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/07/CF_ASA_v1.pdf',
+  'carbonx-asa': 'https://www.3dxtech.com/wp-content/uploads/2021/07/CF_ASA_v1.pdf',
+  'petg-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG_CF-TDS-v03.pdf',
+  'carbonx-petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG_CF-TDS-v03.pdf',
+  'pla-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PLA_CF-TDS-v03.pdf',
+  'carbonx-pla': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PLA_CF-TDS-v03.pdf',
+  'pc-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PC_CF-TDS-v03.pdf',
+  'carbonx-pc': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PC_CF-TDS-v03.pdf',
+  'nylon-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PA12_CF-TDS-v03.pdf',
+  'pa12-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PA12_CF-TDS-v03.pdf',
+  'carbonx-nylon': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PA12_CF-TDS-v03.pdf',
+  
+  // 3DXMAX ASA
+  'asa': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ASA_TDS_v03.pdf',
+  '3dxmax-asa': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ASA_TDS_v03.pdf',
+  
+  // MAX-G PETG
+  'petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG-TDS-v03.pdf',
+  'max-g': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG-TDS-v03.pdf',
+  'maxg-petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG-TDS-v03.pdf',
+  
+  // ThermaX PEEK
+  'peek': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PEEK-TDS-v03.pdf',
+  'thermax-peek': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PEEK-TDS-v03.pdf',
+};
+
+/**
+ * Get TDS URL for a 3DXtech filament based on product_line_id, material, or product title
+ */
+export function get3DXTechTdsUrl(
+  productLineId: string | null,
+  material: string | null,
+  productTitle: string | null
+): string | null {
+  // First try direct product_line_id match
+  if (productLineId) {
+    const normalizedLineId = productLineId.toLowerCase().trim();
+    if (DXTECH_TDS_URLS[normalizedLineId]) {
+      return DXTECH_TDS_URLS[normalizedLineId];
+    }
+  }
+  
+  // Try material-based matching
+  if (material) {
+    const normalizedMaterial = material.toLowerCase().trim();
+    
+    // Check for ESD materials
+    if (normalizedMaterial.includes('esd')) {
+      if (normalizedMaterial.includes('abs')) return DXTECH_TDS_URLS['esd-abs'];
+      if (normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['esd-petg'];
+      if (normalizedMaterial.includes('pla')) return DXTECH_TDS_URLS['esd-pla'];
+      if (normalizedMaterial.includes('pc') && !normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['esd-pc'];
+      if (normalizedMaterial.includes('nylon') || normalizedMaterial.includes('pa12')) return DXTECH_TDS_URLS['esd-nylon'];
+    }
+    
+    // Check for carbon fiber materials
+    if (normalizedMaterial.includes('cf') || normalizedMaterial.includes('carbon')) {
+      if (normalizedMaterial.includes('abs')) return DXTECH_TDS_URLS['abs-cf'];
+      if (normalizedMaterial.includes('asa')) return DXTECH_TDS_URLS['asa-cf'];
+      if (normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['petg-cf'];
+      if (normalizedMaterial.includes('pla')) return DXTECH_TDS_URLS['pla-cf'];
+      if (normalizedMaterial.includes('pc') && !normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['pc-cf'];
+      if (normalizedMaterial.includes('nylon') || normalizedMaterial.includes('pa12')) return DXTECH_TDS_URLS['nylon-cf'];
+    }
+    
+    // Check for base materials
+    if (normalizedMaterial === 'asa') return DXTECH_TDS_URLS['asa'];
+    if (normalizedMaterial === 'petg') return DXTECH_TDS_URLS['petg'];
+    if (normalizedMaterial === 'peek') return DXTECH_TDS_URLS['peek'];
+  }
+  
+  // Try title-based matching as fallback
+  if (productTitle) {
+    const normalizedTitle = productTitle.toLowerCase();
+    
+    if (normalizedTitle.includes('3dxstat') || normalizedTitle.includes('esd')) {
+      if (normalizedTitle.includes('abs')) return DXTECH_TDS_URLS['esd-abs'];
+      if (normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['esd-petg'];
+      if (normalizedTitle.includes('pla')) return DXTECH_TDS_URLS['esd-pla'];
+      if (normalizedTitle.includes('pc') && !normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['esd-pc'];
+      if (normalizedTitle.includes('nylon') || normalizedTitle.includes('pa12')) return DXTECH_TDS_URLS['esd-nylon'];
+    }
+    
+    if (normalizedTitle.includes('carbonx') || normalizedTitle.includes('carbon')) {
+      if (normalizedTitle.includes('abs')) return DXTECH_TDS_URLS['abs-cf'];
+      if (normalizedTitle.includes('asa')) return DXTECH_TDS_URLS['asa-cf'];
+      if (normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['petg-cf'];
+      if (normalizedTitle.includes('pla')) return DXTECH_TDS_URLS['pla-cf'];
+      if (normalizedTitle.includes('pc') && !normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['pc-cf'];
+      if (normalizedTitle.includes('nylon') || normalizedTitle.includes('pa12')) return DXTECH_TDS_URLS['nylon-cf'];
+    }
+    
+    if (normalizedTitle.includes('3dxmax') && normalizedTitle.includes('asa')) return DXTECH_TDS_URLS['asa'];
+    if (normalizedTitle.includes('max-g') || (normalizedTitle.includes('maxg') && normalizedTitle.includes('petg'))) return DXTECH_TDS_URLS['petg'];
+    if (normalizedTitle.includes('thermax') && normalizedTitle.includes('peek')) return DXTECH_TDS_URLS['peek'];
+  }
+  
+  return null;
+}
+
+// ============================================================================
 // MATERIAL NORMALIZATION
 // ============================================================================
 
