@@ -17,8 +17,8 @@ export const NavLink = ({
     <RouterNavLink
       className={({ isActive }) =>
         cn(
-          // Base styles with increased horizontal padding
-          "relative px-6 py-3 text-sm font-semibold transition-colors duration-200",
+          // Base styles with increased horizontal padding and Inter font
+          "relative px-6 py-3 text-sm font-semibold transition-colors duration-200 font-inter",
           "text-white/90",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           // Hover effect - text color shift to cyan
