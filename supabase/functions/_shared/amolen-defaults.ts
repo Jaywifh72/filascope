@@ -234,6 +234,93 @@ export function getAmolenPrintSettings(material: string): PrintSettings | null {
 }
 
 // ============================================================================
+// PRODUCT PAGE SPEC URLS (Amolen lists specs on product pages, not separate TDS)
+// ============================================================================
+
+export const AMOLEN_SPEC_PAGES: Record<string, string> = {
+  // PLA Lines
+  'high-speed': 'https://www.amolen.com/products/pla-basic-high-speed',
+  'pla-plus-high-speed': 'https://www.amolen.com/products/pla-plus-high-speed',
+  'silk-basic': 'https://www.amolen.com/products/pla-silk-basic',
+  'silk-dual': 'https://www.amolen.com/products/pla-silk-dual',
+  'silk-tri': 'https://www.amolen.com/products/pla-silk-triple',
+  'silk-rainbow': 'https://www.amolen.com/products/pla-silk-rainbow',
+  'silk-s-series': 'https://www.amolen.com/products/pla-silk-s-series',
+  'shimmer': 'https://www.amolen.com/products/pla-silk-shiny',
+  'matte-basic': 'https://www.amolen.com/products/pla-matte',
+  'matte-dual': 'https://www.amolen.com/products/pla-matte-dual-filament-1-75mm-1kg-2-2lb',
+  'matte-rainbow': 'https://www.amolen.com/products/pla-matte-rainbow-filament-1-75mm-1kg-2-2lb',
+  'galaxy': 'https://www.amolen.com/products/pla-galaxy',
+  'wood': 'https://www.amolen.com/products/pla-wood',
+  'pla-cf-standard': 'https://www.amolen.com/products/silk-basic-pla-filament-1-75mm-copy',
+  'glow-in-dark': 'https://www.amolen.com/products/pla-glow',
+  
+  // PETG Lines
+  'petg-standard': 'https://www.amolen.com/products/petg-basic',
+  'petg-transparent': 'https://www.amolen.com/products/petg-transparent',
+  
+  // TPU Lines
+  'tpu-standard': 'https://www.amolen.com/products/tpu-basic',
+  'tpu-transparent': 'https://www.amolen.com/products/tpu-transparent-1-75mm-1kg-2-2lb',
+  'tpu-glow': 'https://www.amolen.com/products/tpu-glow',
+  'tpu-rainbow': 'https://www.amolen.com/products/tpu-rainbow',
+  
+  // PEBA
+  'peba-standard': 'https://www.amolen.com/products/peba-basic',
+};
+
+/**
+ * Get the spec source page URL for an Amolen product line
+ */
+export function getAmolenSpecPageUrl(productLineId: string | null): string | null {
+  if (!productLineId) return null;
+  
+  // Extract the line segment from product_line_id (e.g., "amolen__pla__silk-basic" -> "silk-basic")
+  const parts = productLineId.split('__');
+  const lineSegment = parts[parts.length - 1];
+  const materialSegment = parts.length > 1 ? parts[1] : null;
+  
+  // Direct match
+  if (AMOLEN_SPEC_PAGES[lineSegment]) {
+    return AMOLEN_SPEC_PAGES[lineSegment];
+  }
+  
+  // Try material + line combo for TPU/PETG/PEBA
+  if (materialSegment) {
+    const comboKey = `${materialSegment}-${lineSegment}`;
+    if (AMOLEN_SPEC_PAGES[comboKey]) {
+      return AMOLEN_SPEC_PAGES[comboKey];
+    }
+    
+    // For TPU specifically
+    if (materialSegment === 'tpu-95a') {
+      if (lineSegment === 'standard') return AMOLEN_SPEC_PAGES['tpu-standard'];
+      if (lineSegment === 'transparent') return AMOLEN_SPEC_PAGES['tpu-transparent'];
+      if (lineSegment === 'glow') return AMOLEN_SPEC_PAGES['tpu-glow'];
+      if (lineSegment === 'rainbow') return AMOLEN_SPEC_PAGES['tpu-rainbow'];
+    }
+    
+    // For PETG
+    if (materialSegment === 'petg') {
+      if (lineSegment === 'standard') return AMOLEN_SPEC_PAGES['petg-standard'];
+      if (lineSegment === 'transparent') return AMOLEN_SPEC_PAGES['petg-transparent'];
+    }
+    
+    // For PEBA
+    if (materialSegment === 'peba') {
+      return AMOLEN_SPEC_PAGES['peba-standard'];
+    }
+    
+    // For PLA-CF
+    if (materialSegment === 'pla-cf') {
+      return AMOLEN_SPEC_PAGES['pla-cf-standard'];
+    }
+  }
+  
+  return null;
+}
+
+// ============================================================================
 // PRODUCT LINE ID GENERATION
 // ============================================================================
 

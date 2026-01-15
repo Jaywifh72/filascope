@@ -23,6 +23,7 @@ const BRAND_SPECIFIC_SCRAPERS: Record<string, string> = {
   'filaments-ca': 'scrape-filaments-ca-tds',
   '3d-fuel': 'update-3dfuel-tds',
   '3dxtech': 'update-3dxtech-tds',
+  'amolen': 'update-amolen-specs',
 };
 
 export function TdsDiscoveryPanel() {
