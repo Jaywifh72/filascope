@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogIn, LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { FilascopeLogo } from "@/components/FilascopeLogo";
+import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
@@ -104,7 +104,13 @@ const Navbar = () => {
         }`}>
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0">
-            <FilascopeLogo size={isScrolled ? "sm" : "lg"} />
+            <img 
+              src={filascopeLogo} 
+              alt="FilaScope" 
+              className={`w-auto object-contain transition-all duration-300 ${
+                isScrolled ? "h-12 md:h-16" : "h-16 md:h-24"
+              }`}
+            />
           </Link>
 
           {/* Navigation Links - Improved contrast, spacing, and consolidated items */}
