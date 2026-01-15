@@ -39,16 +39,10 @@ const CountdownCard = ({ value, label }: { value: number; label: string }) => (
       boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
     }}
   >
-    <span 
-      className="text-4xl sm:text-5xl font-bold text-white tabular-nums"
-      style={{ fontFamily: "'JetBrains Mono', 'Roboto Mono', monospace" }}
-    >
+    <span className="text-4xl sm:text-5xl font-bold text-white tabular-nums font-mono">
       {String(value).padStart(2, '0')}
     </span>
-    <span 
-      className="text-xs uppercase mt-2 font-semibold tracking-[0.2em]"
-      style={{ color: '#00CFE8' }}
-    >
+    <span className="text-xs uppercase mt-2 font-medium tracking-[0.3em] text-[#00CFE8] font-inter">
       {label}
     </span>
   </div>
@@ -66,8 +60,8 @@ const FeatureItem = ({ icon: Icon, title, description, color }: { icon: typeof D
       <Icon className="w-5 h-5" style={{ color }} />
     </div>
     <div className="flex flex-col">
-      <span className="text-sm font-semibold text-white">{title}</span>
-      <span className="text-xs text-gray-500">{description}</span>
+      <span className="text-sm font-semibold text-white font-inter">{title}</span>
+      <span className="text-xs text-gray-500 font-mono">{description}</span>
     </div>
   </div>
 );
@@ -185,36 +179,26 @@ export const ComingSoonPage = ({ onLoginSuccess }: ComingSoonPageProps) => {
           {/* Logo text with cyan glow */}
           <div className="relative flex flex-col items-center">
             <h1 
-              className="text-4xl sm:text-6xl font-black tracking-tighter"
+              className="text-4xl sm:text-6xl font-black tracking-tighter font-inter"
               style={{ 
-                fontFamily: 'Inter, system-ui, sans-serif',
                 filter: 'drop-shadow(0 0 20px rgba(0, 207, 232, 0.4))',
               }}
             >
               <span className="text-white">FILA</span>
-              <span style={{ color: '#00CFE8' }}>SCOPE</span>
+              <span className="text-[#00CFE8]">SCOPE</span>
             </h1>
-            <p 
-              className="mt-2 text-xs uppercase text-white/50"
-              style={{ 
-                letterSpacing: '0.3em',
-                fontFamily: 'Inter, system-ui, sans-serif',
-              }}
-            >
+            <p className="mt-2 text-xs uppercase text-white/50 tracking-[0.3em] font-inter">
               Measure Material. Master the Print.
             </p>
           </div>
         </div>
 
         {/* Coming Soon Text */}
-        <h2
-          className="text-xl sm:text-2xl md:text-3xl font-light text-gray-400 text-center uppercase tracking-[0.2em] whitespace-nowrap"
-          style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-        >
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-light text-gray-400 text-center uppercase tracking-[0.2em] whitespace-nowrap font-inter">
           The future of filament{' '}
-          <span style={{ color: '#00CFE8' }}>is loading.</span>
+          <span className="text-[#00CFE8]">is loading.</span>
         </h2>
-        <p className="text-gray-500 text-center mb-12 max-w-xl leading-relaxed mt-4">
+        <p className="text-gray-500 text-center mb-12 max-w-xl leading-relaxed mt-4 font-inter">
           We are indexing thousands of materials and printer profiles to provide you with the most accurate 3D printing data hub ever built.
         </p>
 
