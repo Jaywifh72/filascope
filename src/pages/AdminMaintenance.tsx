@@ -27,6 +27,7 @@ import { BrandCategoryTabs } from "@/components/admin/BrandCategoryTabs";
 import { EnrichmentDashboard } from "@/components/admin/EnrichmentDashboard";
 import { BrandSyncManager } from "@/components/admin/BrandSyncManager";
 import { ScraperProfilesPanel } from "@/components/admin/ScraperProfilesPanel";
+import { CompletionCheckPanel } from "@/components/admin/CompletionCheckPanel";
 import { useStartBambuScrapeJob, useRecentScrapeJobs, ScrapeJob } from "@/hooks/useBambuScrapeJob";
 import { useBambuScrapeQueue } from "@/hooks/useBambuScrapeQueue";
 import { useActiveScrapeJob } from "@/hooks/useActiveScrapeJob";
@@ -364,6 +365,10 @@ const AdminMaintenance = () => {
             <Wand2 className="w-4 h-4" />
             Sync Manager
           </TabsTrigger>
+          <TabsTrigger value="completion-check" className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            Completion Check
+          </TabsTrigger>
           <TabsTrigger value="ai-profiles" className="flex items-center gap-2">
             <Brain className="w-4 h-4" />
             AI Profiles
@@ -394,6 +399,11 @@ const AdminMaintenance = () => {
         {/* Sync Manager Tab - Execute brand sync pipelines */}
         <TabsContent value="sync-manager" className="space-y-6 mt-6">
           <BrandSyncManager />
+        </TabsContent>
+
+        {/* Completion Check Tab - Brand filament data completeness */}
+        <TabsContent value="completion-check" className="space-y-6 mt-6">
+          <CompletionCheckPanel />
         </TabsContent>
 
         {/* AI Profiles Tab - Manage AI-generated scraper profiles */}
