@@ -42,6 +42,138 @@ interface BatchResult {
   skipped: number;
 }
 
+// Background sync runner for long-running operations
+async function runBatchParseInBackground(
+  supabase: any,
+  supabaseUrl: string,
+  authHeader: string,
+  brandsToProcess: { id: string; brand_slug: string; display_name: string }[],
+  limit: number,
+  dryRun: boolean,
+  force: boolean,
+  syncLogId: string | null
+): Promise<void> {
+  console.log(`Starting background batch parse for ${brandsToProcess.length} brands`);
+  
+  const results: BatchResult[] = [];
+  let totalProcessed = 0;
+  let totalSuccessful = 0;
+  let totalFailed = 0;
+  let currentBrandIndex = 0;
+
+  for (const brand of brandsToProcess) {
+    currentBrandIndex++;
+    
+    // Update progress in sync log
+    if (syncLogId && !dryRun) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          products_processed: {
+            current_brand: brand.brand_slug,
+            brands_completed: currentBrandIndex - 1,
+            total_brands: brandsToProcess.length,
+            total_processed: totalProcessed,
+            total_successful: totalSuccessful,
+          },
+        })
+        .eq('id', syncLogId);
+    }
+    
+    // Check if this brand has filaments needing parsing
+    const { count: needsParsing } = await supabase
+      .from('filaments')
+      .select('id', { count: 'exact', head: true })
+      .eq('brand_id', brand.id)
+      .not('tds_url', 'is', null)
+      .or('density_g_cm3.is.null,tensile_strength_xy_mpa.is.null,drying_temp_c.is.null');
+
+    if (!needsParsing || needsParsing === 0) {
+      results.push({
+        brandSlug: brand.brand_slug,
+        brandName: brand.display_name,
+        processed: 0,
+        successful: 0,
+        failed: 0,
+        skipped: 0,
+      });
+      continue;
+    }
+
+    console.log(`Processing ${brand.brand_slug} (${needsParsing} need parsing)`);
+
+    try {
+      // Call parse-filament-tds for this brand
+      const response = await fetch(`${supabaseUrl}/functions/v1/parse-filament-tds`, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brand_slug: brand.brand_slug,
+          limit,
+          dry_run: dryRun,
+          force,
+        }),
+      });
+
+      const result = await response.json();
+
+      results.push({
+        brandSlug: brand.brand_slug,
+        brandName: brand.display_name,
+        processed: result.processed || 0,
+        successful: result.successful || 0,
+        failed: result.failed || 0,
+        skipped: (result.processed || 0) - (result.successful || 0) - (result.failed || 0),
+      });
+
+      totalProcessed += result.processed || 0;
+      totalSuccessful += result.successful || 0;
+      totalFailed += result.failed || 0;
+
+      // Rate limit between brands
+      await new Promise(r => setTimeout(r, 2000));
+
+    } catch (err) {
+      console.error(`Error processing ${brand.brand_slug}:`, err);
+      results.push({
+        brandSlug: brand.brand_slug,
+        brandName: brand.display_name,
+        processed: 0,
+        successful: 0,
+        failed: 1,
+        skipped: 0,
+      });
+      totalFailed++;
+    }
+  }
+
+  // Complete the sync log
+  if (syncLogId && !dryRun) {
+    await supabase
+      .from('brand_sync_logs')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        products_updated: totalSuccessful,
+        products_failed: totalFailed,
+        products_discovered: totalProcessed,
+        success_details: {
+          brandsProcessed: results.filter(r => r.processed > 0).length,
+          totalProcessed,
+          totalSuccessful,
+          totalFailed,
+          results,
+        },
+      })
+      .eq('id', syncLogId);
+  }
+
+  console.log(`Batch parse complete: ${totalSuccessful} successful, ${totalFailed} failed`);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -231,93 +363,43 @@ Deno.serve(async (req) => {
         brandsToProcess = brands.filter(b => PRIORITY_BRANDS.includes(b.brand_slug));
       }
 
-      const results: BatchResult[] = [];
-      let totalProcessed = 0;
-      let totalSuccessful = 0;
-      let totalFailed = 0;
+      // Create a sync log entry for tracking
+      let syncLogId: string | null = null;
+      if (!dryRun) {
+        const { data: logEntry } = await supabase
+          .from('brand_sync_logs')
+          .insert({
+            brand_slug: `batch-tds-${modeLabel}`,
+            sync_type: 'incremental',
+            status: 'running',
+            started_at: new Date().toISOString(),
+            notes: `Batch TDS parsing for ${brandsToProcess.length} brands`,
+          })
+          .select('id')
+          .single();
+        if (logEntry) syncLogId = logEntry.id;
+      }
 
-      for (const brand of brandsToProcess) {
-        // Check if this brand has filaments needing parsing
-        const { count: needsParsing } = await supabase
-          .from('filaments')
-          .select('id', { count: 'exact', head: true })
-          .eq('brand_id', brand.id)
-          .not('tds_url', 'is', null)
-          .or('density_g_cm3.is.null,tensile_strength_xy_mpa.is.null,drying_temp_c.is.null');
+      // Run in background
+      const bgPromise = runBatchParseInBackground(
+        supabase, supabaseUrl, authHeader, brandsToProcess,
+        limit, dryRun, force, syncLogId
+      );
 
-        if (!needsParsing || needsParsing === 0) {
-          results.push({
-            brandSlug: brand.brand_slug,
-            brandName: brand.display_name,
-            processed: 0,
-            successful: 0,
-            failed: 0,
-            skipped: 0,
-          });
-          continue;
-        }
-
-        console.log(`Processing ${brand.brand_slug} (${needsParsing} need parsing)`);
-
-        try {
-          // Call parse-filament-tds for this brand
-          const response = await fetch(`${supabaseUrl}/functions/v1/parse-filament-tds`, {
-            method: 'POST',
-            headers: {
-              'Authorization': authHeader,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              brand_slug: brand.brand_slug,
-              limit,
-              dry_run: dryRun,
-              force,
-            }),
-          });
-
-          const result = await response.json();
-
-          results.push({
-            brandSlug: brand.brand_slug,
-            brandName: brand.display_name,
-            processed: result.processed || 0,
-            successful: result.successful || 0,
-            failed: result.failed || 0,
-            skipped: (result.processed || 0) - (result.successful || 0) - (result.failed || 0),
-          });
-
-          totalProcessed += result.processed || 0;
-          totalSuccessful += result.successful || 0;
-          totalFailed += result.failed || 0;
-
-          // Rate limit between brands
-          await new Promise(r => setTimeout(r, 2000));
-
-        } catch (err) {
-          console.error(`Error processing ${brand.brand_slug}:`, err);
-          results.push({
-            brandSlug: brand.brand_slug,
-            brandName: brand.display_name,
-            processed: 0,
-            successful: 0,
-            failed: 1,
-            skipped: 0,
-          });
-          totalFailed++;
-        }
+      if (typeof (globalThis as any).EdgeRuntime !== 'undefined') {
+        (globalThis as any).EdgeRuntime.waitUntil(bgPromise);
+      } else {
+        bgPromise.catch(err => console.error('Background parse error:', err));
       }
 
       return new Response(JSON.stringify({
         success: true,
         mode,
+        background: true,
+        syncLogId,
+        message: `Started background TDS parsing for ${brandsToProcess.length} brands`,
         dryRun,
-        summary: {
-          brandsProcessed: results.filter(r => r.processed > 0).length,
-          totalProcessed,
-          totalSuccessful,
-          totalFailed,
-        },
-        results,
+        brandsToProcess: brandsToProcess.length,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
