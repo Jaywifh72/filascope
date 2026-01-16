@@ -32,6 +32,7 @@ import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants, getBaseProductName, getColorFromTitle } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { AdvancedTdsSection } from "@/components/filament/sections/AdvancedTdsSection";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -653,6 +654,9 @@ const FilamentDetail = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Advanced Details (TDS) Section */}
+        <AdvancedTdsSection filament={filament} className="mb-8" />
 
         {/* Similar Materials - at bottom of page */}
         {filament && id && (
