@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 interface TDSData {
+  // Print settings
   nozzle_temp_min_c: number | null;
   nozzle_temp_max_c: number | null;
   nozzle_temp_sweetspot_c: number | null;
@@ -15,22 +16,69 @@ interface TDSData {
   print_speed_min_mms: number | null;
   fan_min_percent: number | null;
   fan_max_percent: number | null;
+  retraction_length_mm: number | null;
+  retraction_speed_mms: number | null;
+  enclosure_required: boolean | null;
+  
+  // Drying
   drying_temp_c: number | null;
   drying_time_hours: number | null;
+  
+  // Physical properties
   density_g_cm3: number | null;
+  water_absorption_percent: number | null;
+  
+  // Mechanical - XY plane
   tensile_strength_xy_mpa: number | null;
   tensile_modulus_xy_mpa: number | null;
   elongation_break_xy_percent: number | null;
+  
+  // Mechanical - Z direction
+  tensile_strength_z_mpa: number | null;
+  tensile_modulus_z_mpa: number | null;
+  elongation_break_z_percent: number | null;
+  
+  // Flexural properties
   flexural_strength_mpa: number | null;
+  bending_strength_mpa: number | null;
+  bending_modulus_mpa: number | null;
+  
+  // Impact & hardness
+  impact_strength_kj_m2: number | null;
+  notched_izod_j_m: number | null;
   shore_hardness_d: number | null;
+  hardness_shore_a: number | null;
+  
+  // Thermal properties
   tg_c: number | null;
   melt_temp_c: number | null;
+  vicat_softening_temp_c: number | null;
+  hdt_045_mpa_c: number | null;
+  hdt_18_mpa_c: number | null;
+  
+  // Melt & flow
+  melt_index_g_10min: number | null;
+  
+  // Print quality parameters
+  max_overhang_angle_deg: number | null;
+  max_bridging_length_mm: number | null;
+  
+  // Annealing
+  annealing_temp_c: number | null;
+  annealing_time_hours: number | null;
+  
+  // Optical properties
+  transmission_distance: number | null;
+  light_transmission_percent: number | null;
+  haze_percent: number | null;
+  
+  // Electrical properties
+  surface_resistivity_ohm: number | null;
+  
+  // Other
   moisture_sensitivity_level: string | null;
   is_nozzle_abrasive: boolean | null;
-  enclosure_required: boolean | null;
-  retraction_distance_mm: number | null;
-  annealing_temp_c: number | null;
-  transmission_distance: number | null;
+  chemical_resistance: Record<string, string> | null;
   extraction_confidence: number;
 }
 
@@ -40,7 +88,7 @@ interface ValidationResult {
   cleanedData: Partial<TDSData>;
 }
 
-const TDS_EXTRACTION_PROMPT = `You are a technical data sheet (TDS) parser for 3D printing filaments. Extract all available specifications from the provided TDS content.
+const TDS_EXTRACTION_PROMPT = `You are a technical data sheet (TDS) parser for 3D printing filaments. Extract ALL available specifications from the provided TDS content.
 
 Return a JSON object with these fields (use null if not found):
 
@@ -54,7 +102,8 @@ PRINT SETTINGS:
 - print_speed_min_mms: Minimum recommended print speed in mm/s (number)
 - fan_min_percent: Minimum cooling fan percentage (number 0-100)
 - fan_max_percent: Maximum cooling fan percentage (number 0-100)
-- retraction_distance_mm: Recommended retraction distance in mm (number)
+- retraction_length_mm: Recommended retraction distance/length in mm (number)
+- retraction_speed_mms: Recommended retraction speed in mm/s (number)
 - enclosure_required: Whether an enclosure is required or strongly recommended (boolean)
 
 DRYING:
@@ -62,34 +111,72 @@ DRYING:
 - drying_time_hours: Recommended drying time in hours (number)
 
 PHYSICAL PROPERTIES:
-- density_g_cm3: Density in g/cm³ (number, typically 1.0-1.5)
-- tensile_strength_xy_mpa: Tensile strength in MPa (number)
-- tensile_modulus_xy_mpa: Tensile/Young's modulus in MPa (number)
-- elongation_break_xy_percent: Elongation at break in percent (number)
-- flexural_strength_mpa: Flexural strength in MPa (number)
-- shore_hardness_d: Shore D hardness (number)
-- tg_c: Glass transition temperature in Celsius (number)
-- melt_temp_c: Melting temperature in Celsius (number)
-- annealing_temp_c: Annealing temperature if applicable (number)
+- density_g_cm3: Density in g/cm³ (number, typically 1.0-2.0)
+- water_absorption_percent: Saturated water absorption rate in percent (number)
 
-HUEFORGE/OPTICAL PROPERTIES (CRITICAL FOR LITHOPHANES):
-- transmission_distance: Light transmission distance in mm for HueForge lithophanes (number, typically 0.5-8.0)
-  Also look for: "TD", "TD value", "transmission", "light transmission", "optical distance", "light penetration"
-  This is the most important value for HueForge lithophane printing.
-  If multiple TD values given for different colors, extract the average or the "white" value.
+MECHANICAL PROPERTIES - XY PLANE (horizontal):
+- tensile_strength_xy_mpa: Tensile strength XY in MPa (number)
+- tensile_modulus_xy_mpa: Tensile/Young's modulus XY in MPa (number)
+- elongation_break_xy_percent: Elongation at break XY in percent (number)
+
+MECHANICAL PROPERTIES - Z DIRECTION (vertical/layer adhesion):
+- tensile_strength_z_mpa: Tensile strength Z in MPa (number)
+- tensile_modulus_z_mpa: Tensile modulus Z in MPa (number)
+- elongation_break_z_percent: Elongation at break Z in percent (number)
+
+FLEXURAL PROPERTIES:
+- flexural_strength_mpa: Flexural strength in MPa (number)
+- bending_strength_mpa: Bending strength in MPa (same as flexural, use if labeled "bending")
+- bending_modulus_mpa: Bending/flexural modulus in MPa (number)
+
+IMPACT & HARDNESS:
+- impact_strength_kj_m2: Impact strength (Charpy/Izod unnotched) in kJ/m² (number)
+- notched_izod_j_m: Notched Izod impact strength in J/m (number)
+- shore_hardness_d: Shore D hardness (number)
+- hardness_shore_a: Shore A hardness for flexible materials (number)
+
+THERMAL PROPERTIES:
+- tg_c: Glass transition temperature (Tg) in Celsius (number)
+- melt_temp_c: Melting temperature in Celsius (number)
+- vicat_softening_temp_c: Vicat softening temperature in Celsius (number)
+- hdt_045_mpa_c: Heat deflection temperature at 0.45 MPa in Celsius (number)
+- hdt_18_mpa_c: Heat deflection temperature at 1.8 MPa in Celsius (number)
+
+MELT & FLOW:
+- melt_index_g_10min: Melt flow index/MFI in g/10min (number)
+
+PRINT QUALITY PARAMETERS:
+- max_overhang_angle_deg: Maximum overhang angle without supports in degrees (number)
+- max_bridging_length_mm: Maximum bridging length in mm (number)
+
+ANNEALING/POST-PROCESSING:
+- annealing_temp_c: Annealing temperature in Celsius (number)
+- annealing_time_hours: Annealing time in hours (number)
+
+OPTICAL PROPERTIES (CRITICAL FOR HUEFORGE):
+- transmission_distance: Light transmission distance (TD) in mm for HueForge (number, typically 0.5-8.0)
+  Also look for: "TD", "TD value", "transmission", "light transmission", "optical distance"
+- light_transmission_percent: Light transmission/transmittance in percent (number)
+- haze_percent: Haze value in percent (number)
+
+ELECTRICAL PROPERTIES:
+- surface_resistivity_ohm: Surface resistivity in Ohm (number)
 
 OTHER:
 - moisture_sensitivity_level: "low", "medium", or "high"
 - is_nozzle_abrasive: true if contains glass fiber, carbon fiber, metal, or other abrasive materials (boolean)
+- chemical_resistance: Object with chemical names as keys and resistance ratings as values (e.g., {"Acetone": "Poor", "Ethanol": "Good"})
 - extraction_confidence: Your confidence in the extraction accuracy from 0-100 (number)
 
 IMPORTANT RULES:
 1. Only extract values explicitly stated in the TDS
-2. Convert all temperatures to Celsius
+2. Convert all temperatures to Celsius (if Fahrenheit, convert)
 3. For temperature ranges like "200-220°C", extract min and max separately
 4. For single recommended temps, use that as the sweetspot
 5. Return ONLY valid JSON, no additional text
-6. For transmission_distance, look carefully for TD values - they are critical for HueForge users
+6. Extract Z-direction properties separately from XY properties when available
+7. Look for HDT values - they are often listed as "HDT/A" (0.45 MPa) and "HDT/B" (1.8 MPa)
+8. Melt Index may be labeled as "MFI", "MFR", or "Melt Flow Rate"
 
 TDS CONTENT:
 `;
@@ -295,6 +382,7 @@ async function extractTDSWithAI(tdsContent: string, lovableApiKey: string): Prom
     try {
       const extracted = JSON.parse(jsonStr);
       return {
+        // Print settings
         nozzle_temp_min_c: extracted.nozzle_temp_min_c ?? null,
         nozzle_temp_max_c: extracted.nozzle_temp_max_c ?? null,
         nozzle_temp_sweetspot_c: extracted.nozzle_temp_sweetspot_c ?? null,
@@ -304,22 +392,69 @@ async function extractTDSWithAI(tdsContent: string, lovableApiKey: string): Prom
         print_speed_min_mms: extracted.print_speed_min_mms ?? null,
         fan_min_percent: extracted.fan_min_percent ?? null,
         fan_max_percent: extracted.fan_max_percent ?? null,
+        retraction_length_mm: extracted.retraction_length_mm ?? null,
+        retraction_speed_mms: extracted.retraction_speed_mms ?? null,
+        enclosure_required: extracted.enclosure_required ?? null,
+        
+        // Drying
         drying_temp_c: extracted.drying_temp_c ?? null,
         drying_time_hours: extracted.drying_time_hours ?? null,
+        
+        // Physical properties
         density_g_cm3: extracted.density_g_cm3 ?? null,
+        water_absorption_percent: extracted.water_absorption_percent ?? null,
+        
+        // Mechanical - XY plane
         tensile_strength_xy_mpa: extracted.tensile_strength_xy_mpa ?? null,
         tensile_modulus_xy_mpa: extracted.tensile_modulus_xy_mpa ?? null,
         elongation_break_xy_percent: extracted.elongation_break_xy_percent ?? null,
+        
+        // Mechanical - Z direction
+        tensile_strength_z_mpa: extracted.tensile_strength_z_mpa ?? null,
+        tensile_modulus_z_mpa: extracted.tensile_modulus_z_mpa ?? null,
+        elongation_break_z_percent: extracted.elongation_break_z_percent ?? null,
+        
+        // Flexural properties
         flexural_strength_mpa: extracted.flexural_strength_mpa ?? null,
+        bending_strength_mpa: extracted.bending_strength_mpa ?? null,
+        bending_modulus_mpa: extracted.bending_modulus_mpa ?? null,
+        
+        // Impact & hardness
+        impact_strength_kj_m2: extracted.impact_strength_kj_m2 ?? null,
+        notched_izod_j_m: extracted.notched_izod_j_m ?? null,
         shore_hardness_d: extracted.shore_hardness_d ?? null,
+        hardness_shore_a: extracted.hardness_shore_a ?? null,
+        
+        // Thermal properties
         tg_c: extracted.tg_c ?? null,
         melt_temp_c: extracted.melt_temp_c ?? null,
+        vicat_softening_temp_c: extracted.vicat_softening_temp_c ?? null,
+        hdt_045_mpa_c: extracted.hdt_045_mpa_c ?? null,
+        hdt_18_mpa_c: extracted.hdt_18_mpa_c ?? null,
+        
+        // Melt & flow
+        melt_index_g_10min: extracted.melt_index_g_10min ?? null,
+        
+        // Print quality parameters
+        max_overhang_angle_deg: extracted.max_overhang_angle_deg ?? null,
+        max_bridging_length_mm: extracted.max_bridging_length_mm ?? null,
+        
+        // Annealing
+        annealing_temp_c: extracted.annealing_temp_c ?? null,
+        annealing_time_hours: extracted.annealing_time_hours ?? null,
+        
+        // Optical properties
+        transmission_distance: extracted.transmission_distance ?? null,
+        light_transmission_percent: extracted.light_transmission_percent ?? null,
+        haze_percent: extracted.haze_percent ?? null,
+        
+        // Electrical properties
+        surface_resistivity_ohm: extracted.surface_resistivity_ohm ?? null,
+        
+        // Other
         moisture_sensitivity_level: extracted.moisture_sensitivity_level ?? null,
         is_nozzle_abrasive: extracted.is_nozzle_abrasive ?? null,
-        enclosure_required: extracted.enclosure_required ?? null,
-        retraction_distance_mm: extracted.retraction_distance_mm ?? null,
-        annealing_temp_c: extracted.annealing_temp_c ?? null,
-        transmission_distance: extracted.transmission_distance ?? null,
+        chemical_resistance: extracted.chemical_resistance ?? null,
         extraction_confidence: extracted.extraction_confidence ?? 0,
       };
     } catch (parseError) {
@@ -559,13 +694,37 @@ Deno.serve(async (req) => {
             const updateData: Record<string, any> = {};
             
             const fields = [
+              // Print settings
               'nozzle_temp_min_c', 'nozzle_temp_max_c', 'nozzle_temp_sweetspot_c',
-              'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms',
-              'fan_min_percent', 'fan_max_percent', 'drying_temp_c', 'drying_time_hours',
-              'density_g_cm3', 'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa',
-              'elongation_break_xy_percent', 'flexural_strength_mpa', 'shore_hardness_d',
-              'tg_c', 'melt_temp_c', 'moisture_sensitivity_level', 'is_nozzle_abrasive',
-              'transmission_distance'
+              'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms', 'print_speed_min_mms',
+              'fan_min_percent', 'fan_max_percent', 'retraction_length_mm', 'retraction_speed_mms',
+              'enclosure_required',
+              // Drying
+              'drying_temp_c', 'drying_time_hours',
+              // Physical properties
+              'density_g_cm3', 'water_absorption_percent',
+              // Mechanical - XY plane
+              'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa', 'elongation_break_xy_percent',
+              // Mechanical - Z direction
+              'tensile_strength_z_mpa', 'tensile_modulus_z_mpa', 'elongation_break_z_percent',
+              // Flexural properties
+              'flexural_strength_mpa', 'bending_strength_mpa', 'bending_modulus_mpa',
+              // Impact & hardness
+              'impact_strength_kj_m2', 'notched_izod_j_m', 'shore_hardness_d', 'hardness_shore_a',
+              // Thermal properties
+              'tg_c', 'melt_temp_c', 'vicat_softening_temp_c', 'hdt_045_mpa_c', 'hdt_18_mpa_c',
+              // Melt & flow
+              'melt_index_g_10min',
+              // Print quality parameters
+              'max_overhang_angle_deg', 'max_bridging_length_mm',
+              // Annealing
+              'annealing_temp_c', 'annealing_time_hours',
+              // Optical properties
+              'transmission_distance', 'light_transmission_percent', 'haze_percent',
+              // Electrical properties
+              'surface_resistivity_ohm',
+              // Other
+              'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
             ];
 
             for (const field of fields) {
@@ -690,13 +849,37 @@ Deno.serve(async (req) => {
       const updateData: Record<string, any> = { tds_url: finalTdsUrl };
       
       const fields = [
+        // Print settings
         'nozzle_temp_min_c', 'nozzle_temp_max_c', 'nozzle_temp_sweetspot_c',
-        'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms',
-        'fan_min_percent', 'fan_max_percent', 'drying_temp_c', 'drying_time_hours',
-        'density_g_cm3', 'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa',
-        'elongation_break_xy_percent', 'flexural_strength_mpa', 'shore_hardness_d',
-        'tg_c', 'melt_temp_c', 'moisture_sensitivity_level', 'is_nozzle_abrasive',
-        'transmission_distance'
+        'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms', 'print_speed_min_mms',
+        'fan_min_percent', 'fan_max_percent', 'retraction_length_mm', 'retraction_speed_mms',
+        'enclosure_required',
+        // Drying
+        'drying_temp_c', 'drying_time_hours',
+        // Physical properties
+        'density_g_cm3', 'water_absorption_percent',
+        // Mechanical - XY plane
+        'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa', 'elongation_break_xy_percent',
+        // Mechanical - Z direction
+        'tensile_strength_z_mpa', 'tensile_modulus_z_mpa', 'elongation_break_z_percent',
+        // Flexural properties
+        'flexural_strength_mpa', 'bending_strength_mpa', 'bending_modulus_mpa',
+        // Impact & hardness
+        'impact_strength_kj_m2', 'notched_izod_j_m', 'shore_hardness_d', 'hardness_shore_a',
+        // Thermal properties
+        'tg_c', 'melt_temp_c', 'vicat_softening_temp_c', 'hdt_045_mpa_c', 'hdt_18_mpa_c',
+        // Melt & flow
+        'melt_index_g_10min',
+        // Print quality parameters
+        'max_overhang_angle_deg', 'max_bridging_length_mm',
+        // Annealing
+        'annealing_temp_c', 'annealing_time_hours',
+        // Optical properties
+        'transmission_distance', 'light_transmission_percent', 'haze_percent',
+        // Electrical properties
+        'surface_resistivity_ohm',
+        // Other
+        'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
       ];
 
       for (const field of fields) {
