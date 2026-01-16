@@ -25,6 +25,7 @@ import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
+import { ScoreCalculationTooltip } from "@/components/filament/education/ScoreCalculationTooltip";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -504,13 +505,25 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ELEMENT 2: Rating
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3 flex items-center gap-3" data-card-element="2">
-        {/* Rating Badge */}
+        {/* Rating Badge with Tooltip */}
         {overallScore !== null ? (
-          <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5">
-            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-            <span className="text-lg font-bold text-white">{overallScore.toFixed(1)}</span>
-            <span className="text-sm font-medium text-slate-400">/10</span>
-          </div>
+          <HoverCard openDelay={200}>
+            <HoverCardTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5 cursor-help">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                <span className="text-lg font-bold text-white">{overallScore.toFixed(1)}</span>
+                <span className="text-sm font-medium text-slate-400">/10</span>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" className="w-72 p-3 bg-popover border-border">
+              <ScoreCalculationTooltip 
+                scoreType="ease_of_printing"
+                filament={filament as FilamentDataForScoring}
+                showBreakdown={true}
+                inline
+              />
+            </HoverCardContent>
+          </HoverCard>
         ) : (
           <div className="inline-flex items-center gap-1.5 bg-slate-500/15 border border-slate-500/30 rounded-lg px-3 py-1.5">
             <Star className="w-4 h-4 text-slate-400" />

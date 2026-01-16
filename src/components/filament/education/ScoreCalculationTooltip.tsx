@@ -17,13 +17,16 @@ interface ScoreCalculationTooltipProps {
   filament?: FilamentDataForScoring;
   className?: string;
   showBreakdown?: boolean;
+  /** If true, renders content directly without wrapper (for embedding in external HoverCard) */
+  inline?: boolean;
 }
 
 export function ScoreCalculationTooltip({ 
   scoreType, 
   filament, 
   className,
-  showBreakdown = false 
+  showBreakdown = false,
+  inline = false
 }: ScoreCalculationTooltipProps) {
   const methodology = SCORE_METHODOLOGY[scoreType];
   
@@ -107,6 +110,11 @@ export function ScoreCalculationTooltip({
       </div>
     </div>
   );
+
+  // If inline, just return the content directly (for embedding in external HoverCard)
+  if (inline) {
+    return content;
+  }
 
   // Use HoverCard for detailed breakdown, Tooltip for simple
   if (showBreakdown && breakdown) {
