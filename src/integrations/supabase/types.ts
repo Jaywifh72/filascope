@@ -1626,13 +1626,18 @@ export type Database = {
           amazon_match_confidence: number | null
           amazon_price_usd: number | null
           amazon_prices_last_updated_at: string | null
+          annealing_temp_c: number | null
+          annealing_time_hours: number | null
           auto_created: boolean | null
           auto_updated: boolean | null
           available_regions: string[] | null
           bed_temp_max_c: number | null
           bed_temp_min_c: number | null
+          bending_modulus_mpa: number | null
+          bending_strength_mpa: number | null
           brand_id: string | null
           carbon_fiber_percentage: number | null
+          chemical_resistance: Json | null
           color_family: string | null
           color_family_id: string | null
           color_hex: string | null
@@ -1645,6 +1650,7 @@ export type Database = {
           ean: string | null
           ease_of_printing_score: number | null
           elongation_break_xy_percent: number | null
+          elongation_break_z_percent: number | null
           external_data_hash: string | null
           fan_max_percent: number | null
           fan_min_percent: number | null
@@ -1655,14 +1661,23 @@ export type Database = {
           food_contact_rating: string | null
           glass_fiber_percentage: number | null
           gtin: string | null
+          hardness_shore_a: number | null
+          haze_percent: number | null
+          hdt_045_mpa_c: number | null
+          hdt_18_mpa_c: number | null
           high_speed_capable: boolean | null
           id: string
+          impact_strength_kj_m2: number | null
           industry_tags: string[] | null
           is_nozzle_abrasive: boolean | null
           last_external_sync_at: string | null
           last_scraped_at: string | null
+          light_transmission_percent: number | null
           material: string | null
           material_id: string | null
+          max_bridging_length_mm: number | null
+          max_overhang_angle_deg: number | null
+          melt_index_g_10min: number | null
           melt_temp_c: number | null
           moisture_care: string | null
           moisture_level_id: string | null
@@ -1670,11 +1685,13 @@ export type Database = {
           mpn: string | null
           net_weight_g: number | null
           next_scrape_at: string | null
+          notched_izod_j_m: number | null
           nozzle_care: string | null
           nozzle_temp_max_c: number | null
           nozzle_temp_min_c: number | null
           nozzle_temp_sweetspot_c: number | null
           pack_quantity: number | null
+          poissons_ratio: number | null
           price_aud: number | null
           price_cad: number | null
           price_eur: number | null
@@ -1695,17 +1712,23 @@ export type Database = {
           published_at: string | null
           recommended_nozzle_type: string | null
           regional_prices_updated_at: string | null
+          retraction_length_mm: number | null
+          retraction_speed_mms: number | null
           scrape_frequency_hours: number | null
           shore_hardness_d: number | null
+          shrinkage_annealed_percent: number | null
           spool_ams_fit: boolean | null
           spool_material: string | null
           spool_outer_d_mm: number | null
           spool_width_mm: number | null
           strength_index: number | null
+          surface_resistivity_ohm: number | null
           sync_status: string | null
           tds_url: string | null
           tensile_modulus_xy_mpa: number | null
+          tensile_modulus_z_mpa: number | null
           tensile_strength_xy_mpa: number | null
+          tensile_strength_z_mpa: number | null
           tg_c: number | null
           transmission_distance: number | null
           upc: string | null
@@ -1720,11 +1743,15 @@ export type Database = {
           variant_price: number | null
           variant_sku: string | null
           vendor: string | null
+          vicat_softening_temp_c: number | null
+          volume_resistivity_ohm_cm: number | null
+          water_absorption_percent: number | null
           wood_fiber_length_mm: number | null
           wood_particle_size_microns: number | null
           wood_powder_percentage: number | null
           wood_scent_level: string | null
           wood_type: string | null
+          youngs_modulus_mpa: number | null
         }
         Insert: {
           amazon_link_de?: string | null
@@ -1733,13 +1760,18 @@ export type Database = {
           amazon_match_confidence?: number | null
           amazon_price_usd?: number | null
           amazon_prices_last_updated_at?: string | null
+          annealing_temp_c?: number | null
+          annealing_time_hours?: number | null
           auto_created?: boolean | null
           auto_updated?: boolean | null
           available_regions?: string[] | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
+          bending_modulus_mpa?: number | null
+          bending_strength_mpa?: number | null
           brand_id?: string | null
           carbon_fiber_percentage?: number | null
+          chemical_resistance?: Json | null
           color_family?: string | null
           color_family_id?: string | null
           color_hex?: string | null
@@ -1752,6 +1784,7 @@ export type Database = {
           ean?: string | null
           ease_of_printing_score?: number | null
           elongation_break_xy_percent?: number | null
+          elongation_break_z_percent?: number | null
           external_data_hash?: string | null
           fan_max_percent?: number | null
           fan_min_percent?: number | null
@@ -1762,14 +1795,23 @@ export type Database = {
           food_contact_rating?: string | null
           glass_fiber_percentage?: number | null
           gtin?: string | null
+          hardness_shore_a?: number | null
+          haze_percent?: number | null
+          hdt_045_mpa_c?: number | null
+          hdt_18_mpa_c?: number | null
           high_speed_capable?: boolean | null
           id?: string
+          impact_strength_kj_m2?: number | null
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
           last_external_sync_at?: string | null
           last_scraped_at?: string | null
+          light_transmission_percent?: number | null
           material?: string | null
           material_id?: string | null
+          max_bridging_length_mm?: number | null
+          max_overhang_angle_deg?: number | null
+          melt_index_g_10min?: number | null
           melt_temp_c?: number | null
           moisture_care?: string | null
           moisture_level_id?: string | null
@@ -1777,11 +1819,13 @@ export type Database = {
           mpn?: string | null
           net_weight_g?: number | null
           next_scrape_at?: string | null
+          notched_izod_j_m?: number | null
           nozzle_care?: string | null
           nozzle_temp_max_c?: number | null
           nozzle_temp_min_c?: number | null
           nozzle_temp_sweetspot_c?: number | null
           pack_quantity?: number | null
+          poissons_ratio?: number | null
           price_aud?: number | null
           price_cad?: number | null
           price_eur?: number | null
@@ -1802,17 +1846,23 @@ export type Database = {
           published_at?: string | null
           recommended_nozzle_type?: string | null
           regional_prices_updated_at?: string | null
+          retraction_length_mm?: number | null
+          retraction_speed_mms?: number | null
           scrape_frequency_hours?: number | null
           shore_hardness_d?: number | null
+          shrinkage_annealed_percent?: number | null
           spool_ams_fit?: boolean | null
           spool_material?: string | null
           spool_outer_d_mm?: number | null
           spool_width_mm?: number | null
           strength_index?: number | null
+          surface_resistivity_ohm?: number | null
           sync_status?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
+          tensile_modulus_z_mpa?: number | null
           tensile_strength_xy_mpa?: number | null
+          tensile_strength_z_mpa?: number | null
           tg_c?: number | null
           transmission_distance?: number | null
           upc?: string | null
@@ -1827,11 +1877,15 @@ export type Database = {
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
+          vicat_softening_temp_c?: number | null
+          volume_resistivity_ohm_cm?: number | null
+          water_absorption_percent?: number | null
           wood_fiber_length_mm?: number | null
           wood_particle_size_microns?: number | null
           wood_powder_percentage?: number | null
           wood_scent_level?: string | null
           wood_type?: string | null
+          youngs_modulus_mpa?: number | null
         }
         Update: {
           amazon_link_de?: string | null
@@ -1840,13 +1894,18 @@ export type Database = {
           amazon_match_confidence?: number | null
           amazon_price_usd?: number | null
           amazon_prices_last_updated_at?: string | null
+          annealing_temp_c?: number | null
+          annealing_time_hours?: number | null
           auto_created?: boolean | null
           auto_updated?: boolean | null
           available_regions?: string[] | null
           bed_temp_max_c?: number | null
           bed_temp_min_c?: number | null
+          bending_modulus_mpa?: number | null
+          bending_strength_mpa?: number | null
           brand_id?: string | null
           carbon_fiber_percentage?: number | null
+          chemical_resistance?: Json | null
           color_family?: string | null
           color_family_id?: string | null
           color_hex?: string | null
@@ -1859,6 +1918,7 @@ export type Database = {
           ean?: string | null
           ease_of_printing_score?: number | null
           elongation_break_xy_percent?: number | null
+          elongation_break_z_percent?: number | null
           external_data_hash?: string | null
           fan_max_percent?: number | null
           fan_min_percent?: number | null
@@ -1869,14 +1929,23 @@ export type Database = {
           food_contact_rating?: string | null
           glass_fiber_percentage?: number | null
           gtin?: string | null
+          hardness_shore_a?: number | null
+          haze_percent?: number | null
+          hdt_045_mpa_c?: number | null
+          hdt_18_mpa_c?: number | null
           high_speed_capable?: boolean | null
           id?: string
+          impact_strength_kj_m2?: number | null
           industry_tags?: string[] | null
           is_nozzle_abrasive?: boolean | null
           last_external_sync_at?: string | null
           last_scraped_at?: string | null
+          light_transmission_percent?: number | null
           material?: string | null
           material_id?: string | null
+          max_bridging_length_mm?: number | null
+          max_overhang_angle_deg?: number | null
+          melt_index_g_10min?: number | null
           melt_temp_c?: number | null
           moisture_care?: string | null
           moisture_level_id?: string | null
@@ -1884,11 +1953,13 @@ export type Database = {
           mpn?: string | null
           net_weight_g?: number | null
           next_scrape_at?: string | null
+          notched_izod_j_m?: number | null
           nozzle_care?: string | null
           nozzle_temp_max_c?: number | null
           nozzle_temp_min_c?: number | null
           nozzle_temp_sweetspot_c?: number | null
           pack_quantity?: number | null
+          poissons_ratio?: number | null
           price_aud?: number | null
           price_cad?: number | null
           price_eur?: number | null
@@ -1909,17 +1980,23 @@ export type Database = {
           published_at?: string | null
           recommended_nozzle_type?: string | null
           regional_prices_updated_at?: string | null
+          retraction_length_mm?: number | null
+          retraction_speed_mms?: number | null
           scrape_frequency_hours?: number | null
           shore_hardness_d?: number | null
+          shrinkage_annealed_percent?: number | null
           spool_ams_fit?: boolean | null
           spool_material?: string | null
           spool_outer_d_mm?: number | null
           spool_width_mm?: number | null
           strength_index?: number | null
+          surface_resistivity_ohm?: number | null
           sync_status?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
+          tensile_modulus_z_mpa?: number | null
           tensile_strength_xy_mpa?: number | null
+          tensile_strength_z_mpa?: number | null
           tg_c?: number | null
           transmission_distance?: number | null
           upc?: string | null
@@ -1934,11 +2011,15 @@ export type Database = {
           variant_price?: number | null
           variant_sku?: string | null
           vendor?: string | null
+          vicat_softening_temp_c?: number | null
+          volume_resistivity_ohm_cm?: number | null
+          water_absorption_percent?: number | null
           wood_fiber_length_mm?: number | null
           wood_particle_size_microns?: number | null
           wood_powder_percentage?: number | null
           wood_scent_level?: string | null
           wood_type?: string | null
+          youngs_modulus_mpa?: number | null
         }
         Relationships: [
           {
