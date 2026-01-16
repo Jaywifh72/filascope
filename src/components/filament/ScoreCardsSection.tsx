@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BookOpen } from 'lucide-react';
 import { ScoreCard } from './ScoreCard';
 import { ScoreMethodologyModal } from './ScoreMethodologyModal';
@@ -15,6 +15,7 @@ import { usePrinterSelection } from '@/hooks/usePrinterSelection';
 import { getAllConditionalScores } from '@/lib/conditionalScoring';
 import type { Database } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FilamentDataForScoring } from '@/lib/scoreCalculation';
 
 type Filament = Database['public']['Tables']['filaments']['Row'];
 
@@ -131,6 +132,7 @@ export function ScoreCardsSection({ filament }: ScoreCardsSectionProps) {
               data={card}
               filamentId={filament.id}
               material={filament.material}
+              filamentData={filament as FilamentDataForScoring}
               onMethodologyClick={() => setMethodologyOpen(card.id)}
               animationDelay={index * 100}
               scoringMode={scoringMode}

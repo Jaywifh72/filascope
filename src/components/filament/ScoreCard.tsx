@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Printer, Dumbbell, Coins, Info, ChartBar, Star, ExternalLink, Globe, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -18,11 +18,18 @@ import { useScoreHistory } from '@/hooks/useScoreHistory';
 import { ConditionalScoreResult } from '@/lib/conditionalScoring';
 import { CommunityRatingStats } from '@/hooks/useCommunityRatings';
 import { ScoringMode } from './ScoringModeToggle';
+import { ScoreCalculationTooltip } from './education/ScoreCalculationTooltip';
+import { 
+  calculateEaseBreakdown, 
+  calculateStrengthBreakdown,
+  type FilamentDataForScoring 
+} from '@/lib/scoreCalculation';
 
 interface ScoreCardProps {
   data: ScoreCardData;
   filamentId: string;
   material: string | null;
+  filamentData?: FilamentDataForScoring;
   onMethodologyClick: () => void;
   animationDelay?: number;
   scoringMode?: ScoringMode;
@@ -88,6 +95,7 @@ export function ScoreCard({
   data, 
   filamentId, 
   material, 
+  filamentData,
   onMethodologyClick, 
   animationDelay = 0,
   scoringMode = 'absolute',
@@ -99,6 +107,17 @@ export function ScoreCard({
   const [showHistory, setShowHistory] = useState(false);
   const Icon = ICONS[data.icon];
   const colors = SCORE_COLORS[data.rating];
+  
+  // Calculate live score breakdown for tooltip
+  const liveBreakdown = useMemo(() => {
+    if (!filamentData) return null;
+    if (data.id === 'ease_of_printing') {
+      return calculateEaseBreakdown(filamentData);
+    } else if (data.id === 'strength_index') {
+      return calculateStrengthBreakdown(filamentData);
+    }
+    return null;
+  }, [filamentData, data.id]);
   
   // Fetch contextual comparisons
   const { data: contextualData } = useContextualComparisons(
@@ -173,7 +192,15 @@ export function ScoreCard({
         <div className="flex items-center gap-2">
           <Icon className={cn('w-5 h-5', colors.text)} />
           <span className="font-semibold text-foreground">{data.label}</span>
-          <InfoTooltip term={data.id} side="right" />
+          {/* Live score calculation tooltip */}
+          {(data.id === 'ease_of_printing' || data.id === 'strength_index') && filamentData && (
+            <ScoreCalculationTooltip 
+              scoreType={data.id as 'ease_of_printing' | 'strength_index'} 
+              filament={filamentData}
+              showBreakdown={true}
+            />
+          )}
+          {data.id === 'value_score' && <InfoTooltip term={data.id} side="right" />}
         </div>
         <div className="flex items-center gap-1">
           {/* Scoring mode indicator */}
