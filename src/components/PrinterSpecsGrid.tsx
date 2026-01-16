@@ -1,72 +1,95 @@
 import { useState, useRef, useCallback } from "react";
-import { Thermometer, Circle, Zap, Droplets, Wind, Gauge } from "lucide-react";
+import { Thermometer, Circle, Zap, Wind, Gauge, Printer } from "lucide-react";
+import { usePrinterSpecsRange, PrinterSpecsRange } from "@/hooks/usePrinterSpecsRange";
 
 interface SpecCardData {
   id: string;
   label: string;
-  value: string;
+  getValue: (specs: PrinterSpecsRange) => string;
   unit: string;
   icon: React.ElementType;
-  subLabel?: string;
+  subLabel: string;
 }
 
-const MATERIAL_SPECS: SpecCardData[] = [
+const PRINTER_SPECS: SpecCardData[] = [
   {
     id: "nozzle-temp",
     label: "NOZZLE TEMP",
-    value: "190-220",
+    getValue: (specs) => {
+      if (specs.nozzleTempMin === null || specs.nozzleTempMax === null) return "--";
+      return `${specs.nozzleTempMin}-${specs.nozzleTempMax}`;
+    },
     unit: "°C",
     icon: Thermometer,
-    subLabel: "PLA Standard",
+    subLabel: "Max Supported",
   },
   {
     id: "bed-temp",
     label: "BED TEMP",
-    value: "50-60",
+    getValue: (specs) => {
+      if (specs.bedTempMin === null || specs.bedTempMax === null) return "--";
+      return `${specs.bedTempMin}-${specs.bedTempMax}`;
+    },
     unit: "°C",
     icon: Thermometer,
-    subLabel: "Heated Bed",
+    subLabel: "Max Heated",
   },
   {
-    id: "diameter",
-    label: "DIAMETER",
-    value: "1.75",
+    id: "nozzle-dia",
+    label: "NOZZLE DIA",
+    getValue: (specs) => {
+      if (specs.nozzleDiaMin === null || specs.nozzleDiaMax === null) return "--";
+      return `${specs.nozzleDiaMin}-${specs.nozzleDiaMax}`;
+    },
     unit: "mm",
     icon: Circle,
-    subLabel: "±0.02 Tolerance",
+    subLabel: "Stock Range",
   },
   {
     id: "print-speed",
     label: "PRINT SPEED",
-    value: "40-100",
+    getValue: (specs) => {
+      if (specs.printSpeedMin === null || specs.printSpeedMax === null) return "--";
+      return `${specs.printSpeedMin}-${specs.printSpeedMax}`;
+    },
     unit: "mm/s",
     icon: Zap,
-    subLabel: "Optimal Range",
+    subLabel: "Max Capable",
   },
   {
-    id: "density",
-    label: "DENSITY",
-    value: "1.24",
-    unit: "g/cm³",
-    icon: Droplets,
-    subLabel: "Material Weight",
+    id: "acceleration",
+    label: "ACCELERATION",
+    getValue: (specs) => {
+      if (specs.accelerationMin === null || specs.accelerationMax === null) return "--";
+      // Format large numbers with k suffix
+      const formatAccel = (v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`;
+      return `${formatAccel(specs.accelerationMin)}-${formatAccel(specs.accelerationMax)}`;
+    },
+    unit: "mm/s²",
+    icon: Gauge,
+    subLabel: "XY Max",
   },
   {
     id: "flow-rate",
     label: "FLOW RATE",
-    value: "95-105",
-    unit: "%",
+    getValue: (specs) => {
+      if (specs.flowRateMin === null || specs.flowRateMax === null) return "--";
+      return `${specs.flowRateMin}-${specs.flowRateMax}`;
+    },
+    unit: "mm³/s",
     icon: Wind,
-    subLabel: "Calibrated",
+    subLabel: "Volumetric",
   },
 ];
 
 interface SpecCardProps {
   spec: SpecCardData;
+  specs: PrinterSpecsRange | undefined;
   delay: number;
+  isLoading: boolean;
 }
 
-const SpecCard = ({ spec, delay }: SpecCardProps) => {
+const SpecCard = ({ spec, specs, delay, isLoading }: SpecCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [glowPosition, setGlowPosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
@@ -81,6 +104,7 @@ const SpecCard = ({ spec, delay }: SpecCardProps) => {
   }, []);
 
   const Icon = spec.icon;
+  const value = specs ? spec.getValue(specs) : "--";
 
   return (
     <div
@@ -129,20 +153,24 @@ const SpecCard = ({ spec, delay }: SpecCardProps) => {
 
         {/* Main value - monospace font */}
         <div className="flex items-baseline gap-1 mb-1">
-          <span className="font-mono text-2xl font-bold text-foreground tracking-tight">
-            {spec.value}
-          </span>
-          <span className="font-mono text-sm text-muted-foreground">
-            {spec.unit}
-          </span>
+          {isLoading ? (
+            <div className="h-8 w-20 bg-muted/50 rounded animate-pulse" />
+          ) : (
+            <>
+              <span className="font-mono text-2xl font-bold text-foreground tracking-tight">
+                {value}
+              </span>
+              <span className="font-mono text-sm text-muted-foreground">
+                {spec.unit}
+              </span>
+            </>
+          )}
         </div>
 
         {/* Sub label */}
-        {spec.subLabel && (
-          <span className="text-[11px] text-muted-foreground/70">
-            {spec.subLabel}
-          </span>
-        )}
+        <span className="text-[11px] text-muted-foreground/70">
+          {spec.subLabel}
+        </span>
 
         {/* Decorative scan line */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -156,23 +184,31 @@ const SpecCard = ({ spec, delay }: SpecCardProps) => {
   );
 };
 
-export function MaterialSpecsGrid() {
+export function PrinterSpecsGrid() {
+  const { data: specs, isLoading } = usePrinterSpecsRange();
+
   return (
     <section className="w-full py-12 px-6 md:px-10">
       <div className="max-w-[1400px] mx-auto">
         {/* Section header */}
         <div className="flex items-center gap-3 mb-6">
-          <Gauge className="w-5 h-5 text-primary" />
+          <Printer className="w-5 h-5 text-primary" />
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-[0.2em]">
-            Material Specs Reference
+            3D Printer Specs
           </h2>
           <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
         </div>
 
         {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {MATERIAL_SPECS.map((spec, index) => (
-            <SpecCard key={spec.id} spec={spec} delay={index * 100} />
+          {PRINTER_SPECS.map((spec, index) => (
+            <SpecCard 
+              key={spec.id} 
+              spec={spec} 
+              specs={specs}
+              delay={index * 100} 
+              isLoading={isLoading}
+            />
           ))}
         </div>
       </div>
@@ -180,4 +216,4 @@ export function MaterialSpecsGrid() {
   );
 }
 
-export default MaterialSpecsGrid;
+export default PrinterSpecsGrid;
