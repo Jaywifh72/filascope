@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Layers, Building2, TrendingUp, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProminentPrinterSelector } from "@/components/ProminentPrinterSelector";
-
+import { MaterialSpecsGrid } from "@/components/MaterialSpecsGrid";
 interface HeroSectionProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -253,6 +253,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 Material Wizard
               </span>
             </Button>
+          </div>
+          
+          {/* Material Specs Grid */}
+          <div 
+            className="w-full mt-12 animate-fade-in"
+            style={{ animationDelay: "0.7s" }}
+          >
+            <MaterialSpecsGrid />
           </div>
         </div>
       </div>
