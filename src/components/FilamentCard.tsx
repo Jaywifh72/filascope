@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { 
   Star, 
@@ -24,6 +24,7 @@ import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRe
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -222,8 +223,14 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     variantIndicators?.priceRange?.max !== null &&
     variantIndicators?.priceRange?.min !== variantIndicators?.priceRange?.max;
 
-  // Score
-  const overallScore = filament.value_score || 7.0;
+  // Dynamically calculate score based on filament data
+  const dynamicScore = useMemo(() => {
+    const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
+    return breakdown.score;
+  }, [filament]);
+  
+  // Use stored score if available, otherwise use dynamically calculated score
+  const overallScore = filament.ease_of_printing_score ?? dynamicScore ?? null;
   
   // Check for limited data - count available data points
   // Requires at least: price + (one score OR two TDS specs)
@@ -498,11 +505,18 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3 flex items-center gap-3" data-card-element="2">
         {/* Rating Badge */}
-        <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5">
-          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-          <span className="text-lg font-bold text-white">{overallScore.toFixed(1)}</span>
-          <span className="text-sm font-medium text-slate-400">/10</span>
-        </div>
+        {overallScore !== null ? (
+          <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5">
+            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            <span className="text-lg font-bold text-white">{overallScore.toFixed(1)}</span>
+            <span className="text-sm font-medium text-slate-400">/10</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 bg-slate-500/15 border border-slate-500/30 rounded-lg px-3 py-1.5">
+            <Star className="w-4 h-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-400">No score</span>
+          </div>
+        )}
         
         {/* Limited Data Badge (inline with rating) */}
         {hasLimitedData && (
