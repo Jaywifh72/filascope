@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from '@/integrations/supabase/types';
-import { FileText, Thermometer, Ruler, Gauge, FlaskConical, Wrench, Droplets, ExternalLink, Info, Layers, Settings, Palette, Archive, Tag, Zap } from 'lucide-react';
+import { FileText, Thermometer, Ruler, Gauge, FlaskConical, Wrench, Droplets, ExternalLink, Info, Layers, Settings, Palette, Archive, Tag, Zap, Cpu, Eye, Activity, Hammer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
@@ -147,7 +147,7 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
 export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSectionProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  // Advanced Details: All granular TDS specifications (excludes items in Details section)
+  // Advanced Details: All granular TDS specifications from manufacturer data sheets
   const allSpecGroups: SpecGroup[] = [
     {
       title: 'Temperature Settings',
@@ -163,15 +163,70 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
       ],
     },
     {
-      title: 'Mechanical Properties',
+      title: 'Thermal Properties',
+      icon: <Activity className="w-4 h-4" />,
+      specs: [
+        { label: 'Melt Index', value: (filament as any).melt_index_g_10min ? `${(filament as any).melt_index_g_10min} g/10min` : null },
+        { label: 'Vicat Softening Temp', value: (filament as any).vicat_softening_temp_c ? `${(filament as any).vicat_softening_temp_c}°C` : null },
+        { label: 'HDT @ 0.45 MPa', value: (filament as any).hdt_045_mpa_c ? `${(filament as any).hdt_045_mpa_c}°C` : null },
+        { label: 'HDT @ 1.8 MPa', value: (filament as any).hdt_18_mpa_c ? `${(filament as any).hdt_18_mpa_c}°C` : null },
+      ],
+    },
+    {
+      title: 'Mechanical - XY Plane',
       icon: <FlaskConical className="w-4 h-4" />,
       specs: [
-        { label: 'Tensile Strength (XY)', value: filament.tensile_strength_xy_mpa ? `${filament.tensile_strength_xy_mpa} MPa` : null },
-        { label: 'Tensile Modulus (XY)', value: filament.tensile_modulus_xy_mpa ? `${filament.tensile_modulus_xy_mpa} MPa` : null },
+        { label: 'Tensile Strength', value: filament.tensile_strength_xy_mpa ? `${filament.tensile_strength_xy_mpa} MPa` : null },
+        { label: 'Tensile Modulus', value: filament.tensile_modulus_xy_mpa ? `${filament.tensile_modulus_xy_mpa} MPa` : null },
+        { label: 'Elongation at Break', value: filament.elongation_break_xy_percent ? `${filament.elongation_break_xy_percent}%` : null },
+        { label: "Young's Modulus", value: (filament as any).youngs_modulus_mpa ? `${(filament as any).youngs_modulus_mpa} MPa` : null },
+        { label: "Poisson's Ratio", value: (filament as any).poissons_ratio ? `${(filament as any).poissons_ratio}` : null },
+      ],
+    },
+    {
+      title: 'Mechanical - Z Direction',
+      icon: <Layers className="w-4 h-4" />,
+      specs: [
+        { label: 'Tensile Strength (Z)', value: (filament as any).tensile_strength_z_mpa ? `${(filament as any).tensile_strength_z_mpa} MPa` : null },
+        { label: 'Tensile Modulus (Z)', value: (filament as any).tensile_modulus_z_mpa ? `${(filament as any).tensile_modulus_z_mpa} MPa` : null },
+        { label: 'Elongation at Break (Z)', value: (filament as any).elongation_break_z_percent ? `${(filament as any).elongation_break_z_percent}%` : null },
+      ],
+    },
+    {
+      title: 'Flexural Properties',
+      icon: <Hammer className="w-4 h-4" />,
+      specs: [
         { label: 'Flexural Strength', value: filament.flexural_strength_mpa ? `${filament.flexural_strength_mpa} MPa` : null },
-        { label: 'Elongation at Break (XY)', value: filament.elongation_break_xy_percent ? `${filament.elongation_break_xy_percent}%` : null },
+        { label: 'Bending Modulus', value: (filament as any).bending_modulus_mpa ? `${(filament as any).bending_modulus_mpa} MPa` : null },
+        { label: 'Bending Strength', value: (filament as any).bending_strength_mpa ? `${(filament as any).bending_strength_mpa} MPa` : null },
+      ],
+    },
+    {
+      title: 'Impact & Hardness',
+      icon: <Zap className="w-4 h-4" />,
+      specs: [
+        { label: 'Charpy Impact Strength', value: (filament as any).impact_strength_kj_m2 ? `${(filament as any).impact_strength_kj_m2} kJ/m²` : null },
+        { label: 'Notched Izod', value: (filament as any).notched_izod_j_m ? `${(filament as any).notched_izod_j_m} J/m` : null },
         { label: 'Shore Hardness D', value: filament.shore_hardness_d ? `${filament.shore_hardness_d}` : null },
+        { label: 'Shore Hardness A', value: (filament as any).hardness_shore_a ? `${(filament as any).hardness_shore_a}` : null },
+      ],
+    },
+    {
+      title: 'Physical Properties',
+      icon: <Ruler className="w-4 h-4" />,
+      specs: [
         { label: 'Density', value: filament.density_g_cm3 ? `${filament.density_g_cm3} g/cm³` : null },
+        { label: 'Water Absorption', value: (filament as any).water_absorption_percent ? `${(filament as any).water_absorption_percent}%` : null },
+      ],
+    },
+    {
+      title: 'Print Quality Parameters',
+      icon: <Gauge className="w-4 h-4" />,
+      specs: [
+        { label: 'Max Overhang Angle', value: (filament as any).max_overhang_angle_deg ? `${(filament as any).max_overhang_angle_deg}°` : null },
+        { label: 'Max Bridging Length', value: (filament as any).max_bridging_length_mm ? `${(filament as any).max_bridging_length_mm} mm` : null },
+        { label: 'Retraction Length', value: (filament as any).retraction_length_mm ? `${(filament as any).retraction_length_mm} mm` : null },
+        { label: 'Retraction Speed', value: (filament as any).retraction_speed_mms ? `${(filament as any).retraction_speed_mms} mm/s` : null },
       ],
     },
     {
@@ -183,6 +238,31 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
         { label: 'Nozzle Care', value: filament.nozzle_care },
         { label: 'Drying Temp', value: filament.drying_temp_c ? `${filament.drying_temp_c}°C` : null },
         { label: 'Drying Time', value: filament.drying_time_hours ? `${filament.drying_time_hours} hours` : null },
+      ],
+    },
+    {
+      title: 'Annealing / Post-Processing',
+      icon: <Settings className="w-4 h-4" />,
+      specs: [
+        { label: 'Annealing Temp', value: (filament as any).annealing_temp_c ? `${(filament as any).annealing_temp_c}°C` : null },
+        { label: 'Annealing Time', value: (filament as any).annealing_time_hours ? `${(filament as any).annealing_time_hours} hours` : null },
+        { label: 'Shrinkage After Annealing', value: (filament as any).shrinkage_annealed_percent ? `${(filament as any).shrinkage_annealed_percent}%` : null },
+      ],
+    },
+    {
+      title: 'Electrical Properties',
+      icon: <Cpu className="w-4 h-4" />,
+      specs: [
+        { label: 'Surface Resistivity', value: (filament as any).surface_resistivity_ohm ? `${(filament as any).surface_resistivity_ohm} Ω` : null },
+        { label: 'Volume Resistivity', value: (filament as any).volume_resistivity_ohm_cm ? `${(filament as any).volume_resistivity_ohm_cm} Ω·cm` : null },
+      ],
+    },
+    {
+      title: 'Optical Properties',
+      icon: <Eye className="w-4 h-4" />,
+      specs: [
+        { label: 'Light Transmission', value: (filament as any).light_transmission_percent ? `${(filament as any).light_transmission_percent}%` : null },
+        { label: 'Haze', value: (filament as any).haze_percent ? `${(filament as any).haze_percent}%` : null },
       ],
     },
     {
@@ -211,7 +291,7 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
     },
     {
       title: 'Pricing & Availability',
-      icon: <Settings className="w-4 h-4" />,
+      icon: <Tag className="w-4 h-4" />,
       specs: [
         { label: 'Variant Price', value: filament.variant_price ? `$${filament.variant_price.toFixed(2)}` : null },
         { label: 'Compare At Price', value: filament.variant_compare_at_price ? `$${filament.variant_compare_at_price.toFixed(2)}` : null },
