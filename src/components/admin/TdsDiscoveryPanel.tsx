@@ -374,7 +374,7 @@ export function TdsDiscoveryPanel() {
                         {(result || specificResult) && (
                           <Badge variant="default" className="bg-green-600">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {result?.details?.discovered || specificResult?.found || 0} found
+                            {result?.details?.tdsFound || result?.details?.discovered || specificResult?.found || 0} found
                           </Badge>
                         )}
                         <Badge variant={brand.tdsCoverage === 0 ? 'destructive' : brand.tdsCoverage < 50 ? 'secondary' : 'outline'}>

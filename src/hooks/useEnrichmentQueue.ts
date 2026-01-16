@@ -78,7 +78,7 @@ export function useEnrichmentQueue() {
         operation: { type: 'tds-discovery', brandSlug, dryRun },
         success: data?.success ?? false,
         message: data?.success 
-          ? `Discovered ${data?.discovered || 0} TDS URLs` 
+          ? `Discovered ${data?.tdsFound || data?.discovered || 0} TDS URLs` 
           : (data?.error || 'Unknown error'),
         details: data,
         duration_ms: Date.now() - startTime,
