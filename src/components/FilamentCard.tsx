@@ -218,14 +218,18 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   // Score
   const overallScore = filament.value_score || 7.0;
   
-  // Check for limited data
+  // Check for limited data - now considers raw specs too
   const dataPoints = [
     filament.ease_of_printing_score,
     filament.strength_index,
     filament.printability_index,
     filament.variant_price,
+    // Also count raw TDS specs as data
+    (filament as any).nozzle_temp_min_c || (filament as any).nozzle_temp_max_c,
+    (filament as any).tensile_strength_xy_mpa,
+    (filament as any).density_g_cm3,
   ].filter(v => v !== null && v !== undefined);
-  const hasLimitedData = dataPoints.length < 3;
+  const hasLimitedData = dataPoints.length < 4;
 
   // Budget-friendly threshold
   const isBudgetFriendly = pricePerKg && pricePerKg < 20;
@@ -503,8 +507,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                 <span className="text-[10px] font-medium text-slate-400">Limited Data</span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[200px]">
-              Score based on limited specifications - may not be fully representative
+            <TooltipContent side="top" className="text-xs max-w-[240px]">
+              <p className="font-medium mb-1">Score based on limited data</p>
+              <p className="text-muted-foreground">Missing key specs like tensile strength, density, or calculated scores. Data is enriched via TDS parsing.</p>
             </TooltipContent>
           </Tooltip>
         )}

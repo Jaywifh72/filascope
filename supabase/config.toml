@@ -437,3 +437,6 @@ verify_jwt = false
 
 [functions.populate-filament-tags]
 verify_jwt = true
+
+[functions.calculate-filament-scores]
+verify_jwt = true
