@@ -63,6 +63,13 @@ interface Filament {
   featured_image?: string | null;
   variant_available?: boolean | null;
   product_line_id?: string | null;
+  // TDS specs for data completeness check
+  nozzle_temp_min_c?: number | null;
+  nozzle_temp_max_c?: number | null;
+  bed_temp_min_c?: number | null;
+  bed_temp_max_c?: number | null;
+  tensile_strength_xy_mpa?: number | null;
+  density_g_cm3?: number | null;
   // Regional pricing fields
   product_url?: string | null;
   product_url_ca?: string | null;
@@ -218,18 +225,17 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   // Score
   const overallScore = filament.value_score || 7.0;
   
-  // Check for limited data - now considers raw specs too
-  const dataPoints = [
-    filament.ease_of_printing_score,
-    filament.strength_index,
-    filament.printability_index,
-    filament.variant_price,
-    // Also count raw TDS specs as data
-    (filament as any).nozzle_temp_min_c || (filament as any).nozzle_temp_max_c,
-    (filament as any).tensile_strength_xy_mpa,
-    (filament as any).density_g_cm3,
-  ].filter(v => v !== null && v !== undefined);
-  const hasLimitedData = dataPoints.length < 4;
+  // Check for limited data - count available data points
+  // Requires at least: price + (one score OR two TDS specs)
+  const hasPrice = filament.variant_price !== null && filament.variant_price !== undefined;
+  const hasTempSpecs = (filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) && 
+                       (filament.bed_temp_min_c || filament.bed_temp_max_c);
+  const hasStrengthData = filament.tensile_strength_xy_mpa || filament.density_g_cm3;
+  const hasAnyScore = filament.ease_of_printing_score || filament.strength_index || filament.printability_index;
+  const hasMaterial = filament.material !== null && filament.material !== undefined;
+  
+  // Not limited if: has price AND (has any score OR has temp specs OR has strength data OR has material)
+  const hasLimitedData = !hasPrice || (!hasAnyScore && !hasTempSpecs && !hasStrengthData && !hasMaterial);
 
   // Budget-friendly threshold
   const isBudgetFriendly = pricePerKg && pricePerKg < 20;
