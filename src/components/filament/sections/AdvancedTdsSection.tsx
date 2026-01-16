@@ -289,43 +289,6 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
         { label: 'Value Score', value: filament.value_score ? `${filament.value_score}/100` : null },
       ],
     },
-    {
-      title: 'Pricing & Availability',
-      icon: <Tag className="w-4 h-4" />,
-      specs: [
-        { label: 'Variant Price', value: filament.variant_price ? `$${filament.variant_price.toFixed(2)}` : null },
-        { label: 'Compare At Price', value: filament.variant_compare_at_price ? `$${filament.variant_compare_at_price.toFixed(2)}` : null },
-        { label: 'Available', value: filament.variant_available !== null ? (filament.variant_available ? '✓ Yes' : '✗ No') : null },
-        { label: 'Price USD (Amazon)', value: filament.amazon_price_usd ? `$${filament.amazon_price_usd.toFixed(2)}` : null },
-        { label: 'Price EUR', value: filament.price_eur ? `€${filament.price_eur.toFixed(2)}` : null },
-        { label: 'Price GBP', value: filament.price_gbp ? `£${filament.price_gbp.toFixed(2)}` : null },
-        { label: 'Price CAD', value: filament.price_cad ? `C$${filament.price_cad.toFixed(2)}` : null },
-        { label: 'Price AUD', value: filament.price_aud ? `A$${filament.price_aud.toFixed(2)}` : null },
-        { label: 'Price JPY', value: filament.price_jpy ? `¥${filament.price_jpy.toFixed(0)}` : null },
-      ],
-    },
-    {
-      title: 'Use Cases & Tags',
-      icon: <Wrench className="w-4 h-4" />,
-      specs: [
-        { label: 'Use Case Tags', value: filament.use_case_tags?.length ? filament.use_case_tags.join(', ') : null },
-        { label: 'Industry Tags', value: filament.industry_tags?.length ? filament.industry_tags.join(', ') : null },
-        { label: 'Available Regions', value: filament.available_regions?.length ? filament.available_regions.join(', ') : null },
-      ],
-    },
-    {
-      title: 'Metadata',
-      icon: <FileText className="w-4 h-4" />,
-      specs: [
-        { label: 'Created At', value: filament.created_at ? new Date(filament.created_at).toLocaleDateString() : null },
-        { label: 'Updated At', value: filament.updated_at ? new Date(filament.updated_at).toLocaleDateString() : null },
-        { label: 'Published At', value: filament.published_at ? new Date(filament.published_at).toLocaleDateString() : null },
-        { label: 'Last Scraped', value: filament.last_scraped_at ? new Date(filament.last_scraped_at).toLocaleDateString() : null },
-        { label: 'Auto Created', value: filament.auto_created !== null ? (filament.auto_created ? 'Yes' : 'No') : null },
-        { label: 'Auto Updated', value: filament.auto_updated !== null ? (filament.auto_updated ? 'Yes' : 'No') : null },
-        { label: 'Sync Status', value: filament.sync_status },
-      ],
-    },
   ];
 
   const groupsWithData = allSpecGroups.map(group => ({
