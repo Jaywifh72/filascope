@@ -56,24 +56,64 @@ function hasFullParsing(f: { tds_url: string | null; nozzle_temp_min_c: number |
   return f.tds_url && f.nozzle_temp_min_c && f.drying_temp_c;
 }
 
-async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
-  const { data: overallData, error: overallError } = await supabase
-    .from('filaments')
-    .select('id, color_hex, tds_url, featured_image, nozzle_temp_min_c, drying_temp_c, density_g_cm3, price_eur, price_gbp, price_cad, price_aud, price_jpy');
+// Paginated fetch to bypass 1000-row limit
+type FilamentMetricRow = {
+  id?: string;
+  vendor: string | null;
+  color_hex: string | null;
+  tds_url: string | null;
+  featured_image: string | null;
+  nozzle_temp_min_c: number | null;
+  drying_temp_c: number | null;
+  density_g_cm3: number | null;
+  price_eur: number | null;
+  price_gbp: number | null;
+  price_cad: number | null;
+  price_aud: number | null;
+  price_jpy: number | null;
+};
 
-  if (overallError) throw overallError;
+async function fetchAllFilaments(): Promise<FilamentMetricRow[]> {
+  const PAGE_SIZE = 1000;
+  const allData: FilamentMetricRow[] = [];
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('filaments')
+      .select('id, vendor, color_hex, tds_url, featured_image, nozzle_temp_min_c, drying_temp_c, density_g_cm3, price_eur, price_gbp, price_cad, price_aud, price_jpy')
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      allData.push(...data);
+      offset += PAGE_SIZE;
+      hasMore = data.length === PAGE_SIZE;
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return allData;
+}
+
+async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
+  // Fetch all filaments with pagination
+  const allFilaments = await fetchAllFilaments();
 
   const overall: OverallMetrics = {
-    total: overallData?.length || 0,
-    withColorHex: overallData?.filter(f => f.color_hex !== null).length || 0,
-    withTds: overallData?.filter(f => f.tds_url !== null).length || 0,
-    withImage: overallData?.filter(f => f.featured_image !== null).length || 0,
-    withFullParsing: overallData?.filter(f => f.tds_url && f.nozzle_temp_min_c && f.drying_temp_c && f.density_g_cm3).length || 0,
-    withEur: overallData?.filter(f => f.price_eur !== null).length || 0,
-    withGbp: overallData?.filter(f => f.price_gbp !== null).length || 0,
-    withCad: overallData?.filter(f => f.price_cad !== null).length || 0,
-    withAud: overallData?.filter(f => f.price_aud !== null).length || 0,
-    withJpy: overallData?.filter(f => f.price_jpy !== null).length || 0,
+    total: allFilaments.length,
+    withColorHex: allFilaments.filter(f => f.color_hex !== null).length,
+    withTds: allFilaments.filter(f => f.tds_url !== null).length,
+    withImage: allFilaments.filter(f => f.featured_image !== null).length,
+    withFullParsing: allFilaments.filter(f => f.tds_url && f.nozzle_temp_min_c && f.drying_temp_c && f.density_g_cm3).length,
+    withEur: allFilaments.filter(f => f.price_eur !== null).length,
+    withGbp: allFilaments.filter(f => f.price_gbp !== null).length,
+    withCad: allFilaments.filter(f => f.price_cad !== null).length,
+    withAud: allFilaments.filter(f => f.price_aud !== null).length,
+    withJpy: allFilaments.filter(f => f.price_jpy !== null).length,
   };
 
   const { data: brandsData, error: brandsError } = await supabase
@@ -83,14 +123,9 @@ async function fetchEnrichmentMetrics(): Promise<EnrichmentMetricsData> {
 
   if (brandsError) throw brandsError;
 
-  const { data: filamentsByVendor, error: vendorError } = await supabase
-    .from('filaments')
-    .select('vendor, color_hex, tds_url, featured_image, nozzle_temp_min_c, drying_temp_c, density_g_cm3, price_eur, price_gbp, price_cad, price_aud, price_jpy');
-
-  if (vendorError) throw vendorError;
-
-  const vendorMap = new Map<string, typeof filamentsByVendor>();
-  filamentsByVendor?.forEach(f => {
+  // Build vendor map from all filaments
+  const vendorMap = new Map<string, FilamentMetricRow[]>();
+  allFilaments.forEach(f => {
     const key = f.vendor?.toLowerCase() || '';
     if (!vendorMap.has(key)) vendorMap.set(key, []);
     vendorMap.get(key)!.push(f);
