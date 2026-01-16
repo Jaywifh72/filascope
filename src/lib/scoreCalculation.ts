@@ -142,10 +142,11 @@ export function calculateEaseBreakdown(filament: FilamentDataForScoring): ScoreB
   }
 
   const confidence = Math.min(100, dataPoints * 15 + 20);
-  const finalScore = dataPoints >= 2 ? Math.max(1, Math.min(10, score)) : null;
+  // Calculate score even with 1 data point (material only) - it's still useful
+  const finalScore = dataPoints >= 1 ? Math.max(1, Math.min(10, score)) : null;
 
   return {
-    score: finalScore ? Math.round(finalScore * 10) / 10 : null,
+    score: finalScore !== null ? Math.round(finalScore * 10) / 10 : null,
     factors,
     confidence,
     dataPoints,
@@ -215,10 +216,11 @@ export function calculateStrengthBreakdown(filament: FilamentDataForScoring): Sc
   }
 
   const confidence = Math.min(100, dataPoints * 18 + 15);
-  const finalScore = dataPoints >= 2 ? Math.max(1, Math.min(10, score)) : null;
+  // Calculate score even with 1 data point (material only) - it's still useful
+  const finalScore = dataPoints >= 1 ? Math.max(1, Math.min(10, score)) : null;
 
   return {
-    score: finalScore ? Math.round(finalScore * 10) / 10 : null,
+    score: finalScore !== null ? Math.round(finalScore * 10) / 10 : null,
     factors,
     confidence,
     dataPoints,
