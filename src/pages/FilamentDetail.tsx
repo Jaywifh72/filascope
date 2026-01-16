@@ -616,26 +616,6 @@ const FilamentDetail = () => {
         {/* Sentinel for sticky buy bar trigger */}
         <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
-        {/* Similar Materials */}
-        {filament && id && (
-          <SimilarMaterialsModule
-            filamentId={id}
-            material={filament.material}
-            vendor={filament.vendor}
-            currentPricePerKg={
-              filament.variant_price && filament.net_weight_g
-                ? filament.variant_price / (filament.net_weight_g / 1000)
-                : null
-            }
-            currentScores={{
-              ease_of_printing_score: filament.ease_of_printing_score,
-              value_score: filament.value_score,
-              strength_index: filament.strength_index,
-              printability_index: filament.printability_index,
-            }}
-          />
-        )}
-
         {/* Technical Details Accordion */}
         <TechnicalDetailsAccordion filament={filament} className="mb-8" />
 
@@ -672,6 +652,26 @@ const FilamentDetail = () => {
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {/* Similar Materials - at bottom of page */}
+        {filament && id && (
+          <SimilarMaterialsModule
+            filamentId={id}
+            material={filament.material}
+            vendor={filament.vendor}
+            currentPricePerKg={
+              filament.variant_price && filament.net_weight_g
+                ? filament.variant_price / (filament.net_weight_g / 1000)
+                : null
+            }
+            currentScores={{
+              ease_of_printing_score: filament.ease_of_printing_score,
+              value_score: filament.value_score,
+              strength_index: filament.strength_index,
+              printability_index: filament.printability_index,
+            }}
+          />
         )}
       </div>
 
