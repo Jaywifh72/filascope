@@ -337,40 +337,6 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
           </AccordionItem>
         )}
 
-        {/* Export Full Data */}
-        <AccordionItem value="export-data" className="border-border">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/50">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Database className="w-5 h-5 text-primary" />
-              </div>
-              <div className="text-left">
-                <h2 className="font-semibold">Export Full Data</h2>
-                <div className="text-xs text-muted-foreground">
-                  Download all {FILAMENT_FIELD_MAPPINGS.length} fields as CSV
-                </div>
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Export complete filament data including pricing, technical specs, mechanical properties, 
-                and all metadata fields organized by category.
-              </p>
-              <Button 
-                onClick={() => {
-                  exportFilamentToFullCSV(filament);
-                  toast.success(`Exported ${FILAMENT_FIELD_MAPPINGS.length} fields to CSV`);
-                }}
-                className="gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Download Full CSV ({FILAMENT_FIELD_MAPPINGS.length} fields)
-              </Button>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
       </Accordion>
     </Card>
   );
