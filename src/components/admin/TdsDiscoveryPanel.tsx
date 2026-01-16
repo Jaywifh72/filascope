@@ -75,11 +75,48 @@ export function TdsDiscoveryPanel() {
   const [normalizationAudit, setNormalizationAudit] = useState<NormalizationAudit | null>(null);
   const [normalizationRunning, setNormalizationRunning] = useState(false);
 
-  // Filter brands to only those in the Sync Manager
+  // Build complete list of ALL 43 Sync Manager brands, including those without products
   const syncManagerBrands = useMemo(() => {
-    return allBrands
-      .filter(b => BRAND_SPECIFIC_FUNCTIONS.includes(b.brandSlug as any))
-      .sort((a, b) => b.totalProducts - a.totalProducts);
+    const brandMap = new Map(allBrands.map(b => [b.brandSlug, b]));
+    
+    // Create entries for all brands in BRAND_SPECIFIC_FUNCTIONS
+    return BRAND_SPECIFIC_FUNCTIONS.map(slug => {
+      const existing = brandMap.get(slug);
+      if (existing) return existing;
+      
+      // Create placeholder for brands not yet in database
+      const displayName = slug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      return {
+        brandId: undefined,
+        brandSlug: slug,
+        brandName: displayName,
+        totalProducts: 0,
+        withColorHex: 0,
+        withTds: 0,
+        withImage: 0,
+        withoutImage: 0,
+        withFullParsing: 0,
+        withEur: 0,
+        withGbp: 0,
+        withCad: 0,
+        withAud: 0,
+        withJpy: 0,
+        colorCoverage: 0,
+        tdsCoverage: 0,
+        imageCoverage: 0,
+        parsingCoverage: 0,
+        eurCoverage: 0,
+        gbpCoverage: 0,
+        cadCoverage: 0,
+        audCoverage: 0,
+        jpyCoverage: 0,
+        supportedRegions: [],
+      };
+    }).sort((a, b) => b.totalProducts - a.totalProducts);
   }, [allBrands]);
 
   // Calculate overall TDS stats for Sync Manager brands
