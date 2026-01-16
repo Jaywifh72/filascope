@@ -108,7 +108,7 @@ export function ScoreCard({
   const Icon = ICONS[data.icon];
   const colors = SCORE_COLORS[data.rating];
   
-  // Calculate live score breakdown for tooltip
+  // Calculate live score breakdown for tooltip - this makes scores dynamic
   const liveBreakdown = useMemo(() => {
     if (!filamentData) return null;
     if (data.id === 'ease_of_printing') {
@@ -118,6 +118,9 @@ export function ScoreCard({
     }
     return null;
   }, [filamentData, data.id]);
+  
+  // Use live calculated score if available, otherwise fall back to stored score
+  const liveScore = liveBreakdown?.score ?? null;
   
   // Fetch contextual comparisons
   const { data: contextualData } = useContextualComparisons(
@@ -169,9 +172,11 @@ export function ScoreCard({
   const distributionBounds = getDistributionBounds();
   
   // Determine which score to show based on mode
+  // Priority: conditional score (printer-adjusted) > live calculated score > stored score
+  const baseScore = liveScore !== null ? liveScore : data.displayScore;
   const displayScore = conditionalScore && printerName 
     ? conditionalScore.adjustedScore 
-    : data.displayScore;
+    : baseScore;
   
   return (
     <div
