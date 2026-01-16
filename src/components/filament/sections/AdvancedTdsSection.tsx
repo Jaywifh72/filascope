@@ -24,61 +24,58 @@ interface SpecGroup {
   specs: SpecItem[];
 }
 
-// Key details section (simplified view)
+// Key details section (simplified view) - Print Settings, Physical, Appearance, Product Identifiers
 export function DetailsSectionSimple({ filament, className }: AdvancedTdsSectionProps) {
   const keySpecs: SpecGroup[] = [
-    {
-      title: 'Temperature',
-      icon: <Thermometer className="w-4 h-4" />,
-      specs: [
-        { label: 'Nozzle Temp', value: filament.nozzle_temp_min_c && filament.nozzle_temp_max_c ? `${filament.nozzle_temp_min_c}–${filament.nozzle_temp_max_c}°C` : null },
-        { label: 'Bed Temp', value: filament.bed_temp_min_c && filament.bed_temp_max_c ? `${filament.bed_temp_min_c}–${filament.bed_temp_max_c}°C` : null },
-        { label: 'Glass Transition (Tg)', value: filament.tg_c ? `${filament.tg_c}°C` : null },
-      ],
-    },
     {
       title: 'Print Settings',
       icon: <Gauge className="w-4 h-4" />,
       specs: [
         { label: 'Max Print Speed', value: filament.print_speed_max_mms ? `${filament.print_speed_max_mms} mm/s` : null },
+        { label: 'Fan Min %', value: filament.fan_min_percent !== null ? `${filament.fan_min_percent}%` : null },
+        { label: 'Fan Max %', value: filament.fan_max_percent !== null ? `${filament.fan_max_percent}%` : null },
         { label: 'High-Speed Capable', value: filament.high_speed_capable !== null ? (filament.high_speed_capable ? '✓ Yes' : '✗ No') : null },
         { label: 'Recommended Nozzle', value: filament.recommended_nozzle_type },
+        { label: 'Abrasive', value: filament.is_nozzle_abrasive !== null ? (filament.is_nozzle_abrasive ? '⚠️ Yes' : '✓ No') : null },
       ],
     },
     {
-      title: 'Mechanical',
-      icon: <FlaskConical className="w-4 h-4" />,
-      specs: [
-        { label: 'Tensile Strength', value: filament.tensile_strength_xy_mpa ? `${filament.tensile_strength_xy_mpa} MPa` : null },
-        { label: 'Density', value: filament.density_g_cm3 ? `${filament.density_g_cm3} g/cm³` : null },
-        { label: 'Shore Hardness D', value: filament.shore_hardness_d ? `${filament.shore_hardness_d}` : null },
-      ],
-    },
-    {
-      title: 'Physical',
+      title: 'Physical Dimensions',
       icon: <Ruler className="w-4 h-4" />,
       specs: [
         { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : null },
         { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null },
+        { label: 'Pack Quantity', value: filament.pack_quantity && filament.pack_quantity > 1 ? `${filament.pack_quantity} spools` : null },
+        { label: 'Spool Material', value: filament.spool_material },
+        { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm ? `${filament.spool_outer_d_mm}mm` : null },
+        { label: 'Spool Width', value: filament.spool_width_mm ? `${filament.spool_width_mm}mm` : null },
         { label: 'AMS Compatible', value: filament.spool_ams_fit !== null ? (filament.spool_ams_fit ? '✓ Yes' : '✗ No') : null },
       ],
     },
     {
-      title: 'Drying',
-      icon: <Droplets className="w-4 h-4" />,
+      title: 'Appearance & HueForge',
+      icon: <Palette className="w-4 h-4" />,
       specs: [
-        { label: 'Drying Temp', value: filament.drying_temp_c ? `${filament.drying_temp_c}°C` : null },
-        { label: 'Drying Time', value: filament.drying_time_hours ? `${filament.drying_time_hours} hours` : null },
-        { label: 'Moisture Sensitivity', value: filament.moisture_sensitivity_level },
+        { label: 'Transmission Distance', value: filament.transmission_distance ? `${filament.transmission_distance}` : null },
+        { label: 'Color Family', value: filament.color_family },
+        { label: 'Color Hex', value: filament.color_hex ? `#${filament.color_hex}` : null },
+        { label: 'Finish Type', value: filament.finish_type },
+        { label: 'Food Contact Rating', value: filament.food_contact_rating },
       ],
     },
     {
-      title: 'Appearance',
-      icon: <Palette className="w-4 h-4" />,
+      title: 'Product Identifiers',
+      icon: <Tag className="w-4 h-4" />,
       specs: [
-        { label: 'Finish Type', value: filament.finish_type },
-        { label: 'Color Family', value: filament.color_family },
-        { label: 'Transmission Distance', value: filament.transmission_distance ? `${filament.transmission_distance}` : null },
+        { label: 'Material', value: filament.material },
+        { label: 'Vendor', value: filament.vendor },
+        { label: 'Product Handle', value: filament.product_handle },
+        { label: 'Product ID', value: filament.product_id },
+        { label: 'Variant SKU', value: filament.variant_sku },
+        { label: 'MPN', value: filament.mpn },
+        { label: 'EAN', value: filament.ean },
+        { label: 'UPC', value: filament.upc },
+        { label: 'GTIN', value: filament.gtin },
       ],
     },
   ];
@@ -120,18 +117,21 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {groupsWithData.map((group, groupIdx) => (
-            <div key={groupIdx} className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <div key={groupIdx} className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground pb-2 border-b border-border">
                 <span className="text-primary">{group.icon}</span>
                 {group.title}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {group.specs.map((spec, specIdx) => (
-                  <div key={specIdx} className="text-sm">
-                    <span className="text-muted-foreground text-xs">{spec.label}</span>
-                    <div className="font-medium text-foreground">{spec.value}</div>
+                  <div 
+                    key={specIdx} 
+                    className="flex justify-between items-start text-sm py-1 hover:bg-muted/30 px-1 rounded transition-colors"
+                  >
+                    <span className="text-muted-foreground">{spec.label}</span>
+                    <span className="font-medium text-foreground text-right">{spec.value}</span>
                   </div>
                 ))}
               </div>
@@ -147,6 +147,7 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
 export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSectionProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
+  // Advanced Details: All granular TDS specifications (excludes items in Details section)
   const allSpecGroups: SpecGroup[] = [
     {
       title: 'Temperature Settings',
@@ -162,19 +163,6 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
       ],
     },
     {
-      title: 'Print Settings',
-      icon: <Gauge className="w-4 h-4" />,
-      specs: [
-        { label: 'Max Print Speed', value: filament.print_speed_max_mms ? `${filament.print_speed_max_mms} mm/s` : null },
-        { label: 'Fan Min %', value: filament.fan_min_percent !== null ? `${filament.fan_min_percent}%` : null },
-        { label: 'Fan Max %', value: filament.fan_max_percent !== null ? `${filament.fan_max_percent}%` : null },
-        { label: 'High-Speed Capable', value: filament.high_speed_capable !== null ? (filament.high_speed_capable ? '✓ Yes' : '✗ No') : null },
-        { label: 'Recommended Nozzle', value: filament.recommended_nozzle_type },
-        { label: 'Nozzle Care', value: filament.nozzle_care },
-        { label: 'Abrasive', value: filament.is_nozzle_abrasive !== null ? (filament.is_nozzle_abrasive ? '⚠️ Yes' : '✓ No') : null },
-      ],
-    },
-    {
       title: 'Mechanical Properties',
       icon: <FlaskConical className="w-4 h-4" />,
       specs: [
@@ -187,43 +175,14 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
       ],
     },
     {
-      title: 'Physical Dimensions',
-      icon: <Ruler className="w-4 h-4" />,
-      specs: [
-        { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : null },
-        { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null },
-        { label: 'Pack Quantity', value: filament.pack_quantity && filament.pack_quantity > 1 ? `${filament.pack_quantity} spools` : null },
-      ],
-    },
-    {
-      title: 'Spool Specifications',
-      icon: <Archive className="w-4 h-4" />,
-      specs: [
-        { label: 'Spool Material', value: filament.spool_material },
-        { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm ? `${filament.spool_outer_d_mm}mm` : null },
-        { label: 'Spool Width', value: filament.spool_width_mm ? `${filament.spool_width_mm}mm` : null },
-        { label: 'AMS Compatible', value: filament.spool_ams_fit !== null ? (filament.spool_ams_fit ? '✓ Yes' : '✗ No') : null },
-      ],
-    },
-    {
       title: 'Moisture & Drying',
       icon: <Droplets className="w-4 h-4" />,
       specs: [
         { label: 'Moisture Sensitivity', value: filament.moisture_sensitivity_level },
         { label: 'Moisture Care', value: filament.moisture_care },
+        { label: 'Nozzle Care', value: filament.nozzle_care },
         { label: 'Drying Temp', value: filament.drying_temp_c ? `${filament.drying_temp_c}°C` : null },
         { label: 'Drying Time', value: filament.drying_time_hours ? `${filament.drying_time_hours} hours` : null },
-      ],
-    },
-    {
-      title: 'Appearance & HueForge',
-      icon: <Palette className="w-4 h-4" />,
-      specs: [
-        { label: 'Transmission Distance', value: filament.transmission_distance ? `${filament.transmission_distance}` : null },
-        { label: 'Color Family', value: filament.color_family },
-        { label: 'Color Hex', value: filament.color_hex ? `#${filament.color_hex}` : null },
-        { label: 'Finish Type', value: filament.finish_type },
-        { label: 'Food Contact Rating', value: filament.food_contact_rating },
       ],
     },
     {
@@ -248,21 +207,6 @@ export function AdvancedDetailsSection({ filament, className }: AdvancedTdsSecti
         { label: 'Strength Index', value: filament.strength_index ? `${filament.strength_index}/100` : null },
         { label: 'Printability Index', value: filament.printability_index ? `${filament.printability_index}/100` : null },
         { label: 'Value Score', value: filament.value_score ? `${filament.value_score}/100` : null },
-      ],
-    },
-    {
-      title: 'Product Identifiers',
-      icon: <Tag className="w-4 h-4" />,
-      specs: [
-        { label: 'Material', value: filament.material },
-        { label: 'Vendor', value: filament.vendor },
-        { label: 'Product Handle', value: filament.product_handle },
-        { label: 'Product ID', value: filament.product_id },
-        { label: 'Variant SKU', value: filament.variant_sku },
-        { label: 'MPN', value: filament.mpn },
-        { label: 'EAN', value: filament.ean },
-        { label: 'UPC', value: filament.upc },
-        { label: 'GTIN', value: filament.gtin },
       ],
     },
     {
