@@ -42,108 +42,125 @@ interface EnrichmentStats {
 }
 
 /**
- * Extract price from Prusa product page - enhanced patterns
+ * Extract price from Prusa HTML - proven working patterns from sync-prusament-data
  */
-function extractPrusaPrice(markdown: string, html: string, metadata: any): number | null {
-  // Try JSON-LD product schema first (most reliable)
-  if (metadata?.jsonLd) {
-    try {
-      const jsonLd = typeof metadata.jsonLd === 'string' 
-        ? JSON.parse(metadata.jsonLd) 
-        : metadata.jsonLd;
-      
-      const products = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
-      for (const item of products) {
-        if (item['@type'] === 'Product' && item.offers) {
-          const offers = Array.isArray(item.offers) ? item.offers : [item.offers];
-          for (const offer of offers) {
-            if (offer.price) {
-              const price = parseFloat(String(offer.price).replace(',', '.'));
-              if (!isNaN(price) && price > 0 && price < 500) {
-                console.log(`[Prusament] Found JSON-LD price: €${price}`);
-                return price;
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.log('[Prusament] Error parsing JSON-LD:', e);
-    }
-  }
-
-  // Try meta tags
-  const metaPriceKeys = ['product:price:amount', 'og:price:amount', 'price'];
-  for (const key of metaPriceKeys) {
-    if (metadata?.[key]) {
-      const price = parseFloat(String(metadata[key]).replace(',', '.'));
-      if (!isNaN(price) && price > 0 && price < 500) {
-        console.log(`[Prusament] Found meta price (${key}): €${price}`);
-        return price;
-      }
-    }
-  }
-
-  // Parse HTML for JSON-LD in script tags
-  if (html) {
-    const ldJsonMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
-    if (ldJsonMatch) {
-      for (const match of ldJsonMatch) {
-        try {
-          const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '').trim();
-          const jsonData = JSON.parse(jsonContent);
-          const items = Array.isArray(jsonData) ? jsonData : [jsonData];
-          for (const item of items) {
-            if (item['@type'] === 'Product' && item.offers?.price) {
-              const price = parseFloat(String(item.offers.price).replace(',', '.'));
-              if (!isNaN(price) && price > 0 && price < 500) {
-                console.log(`[Prusament] Found HTML JSON-LD price: €${price}`);
-                return price;
-              }
-            }
-          }
-        } catch (e) {
-          // Continue to next match
-        }
-      }
-    }
-
-    // Look for price spans/elements in HTML
-    const htmlPricePatterns = [
-      /<span[^>]*class="[^"]*price[^"]*"[^>]*>.*?€\s*(\d+[.,]\d{2})/gi,
-      /data-price="(\d+[.,]\d{2})"/gi,
-      /itemprop="price"[^>]*content="(\d+[.,]\d{2})"/gi,
-    ];
-
-    for (const pattern of htmlPricePatterns) {
-      const match = pattern.exec(html);
-      if (match) {
-        const price = parseFloat(match[1].replace(',', '.'));
-        if (!isNaN(price) && price > 5 && price < 500) {
-          console.log(`[Prusament] Found HTML element price: €${price}`);
-          return price;
-        }
-      }
-    }
-  }
-
-  // Extract from markdown content - look for price patterns (European format)
+function extractPrusaPrice(html: string): { price: number | null; currency: string } {
   const pricePatterns = [
-    /€\s*(\d+[.,]\d{2})/,
-    /EUR\s*(\d+[.,]\d{2})/i,
-    /(\d+[.,]\d{2})\s*€/,
-    /price[:\s]*€?\s*(\d+[.,]\d{2})/i,
-    /\*\*€(\d+[.,]\d{2})\*\*/,
+    // Meta tags (most reliable)
+    /<meta[^>]*property="product:price:amount"[^>]*content="([0-9.]+)"/i,
+    // JSON-LD schema
+    /"price":\s*"?([0-9.]+)"?/,
+    /"offers":\s*\{[^}]*"price":\s*"?([0-9.]+)"?/,
+    // Prusa-specific class patterns
+    /class="[^"]*price[^"]*"[^>]*>\s*(?:€|\$|£)?\s*([0-9,.]+)/i,
+    /data-price="([0-9.]+)"/i,
+    // Regular price in span/div
+    />\s*\$([0-9]+\.[0-9]{2})\s*</,
+    />\s*€([0-9]+[,.]?[0-9]*)\s*</,
+    // Sale/regular price patterns
+    /sale[-_]?price[^>]*>.*?(?:€|\$)?\s*([0-9,.]+)/is,
+    /regular[-_]?price[^>]*>.*?(?:€|\$)?\s*([0-9,.]+)/is,
+    // Generic price extraction
+    /(?:Price|Cena)[:\s]*(?:€|\$)?\s*([0-9,.]+)/i,
   ];
 
+  let currency = 'USD';
+  if (html.includes('€') || html.includes('EUR')) {
+    currency = 'EUR';
+  }
+
   for (const pattern of pricePatterns) {
-    const match = markdown.match(pattern);
-    if (match) {
-      const price = parseFloat(match[1].replace(',', '.'));
-      if (!isNaN(price) && price > 5 && price < 500) {
-        console.log(`[Prusament] Found markdown price: €${price}`);
-        return price;
+    const match = html.match(pattern);
+    if (match && match[1]) {
+      let priceStr = match[1].replace(/,/g, '.');
+      if (priceStr.split('.').length > 2) {
+        const parts = priceStr.split('.');
+        priceStr = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1];
       }
+      const price = parseFloat(priceStr);
+      
+      if (price >= 10 && price <= 200) {
+        console.log(`[Prusament] Price found: ${currency} ${price}`);
+        return { price, currency };
+      }
+    }
+  }
+
+  return { price: null, currency };
+}
+
+/**
+ * Extract product image from Prusa HTML - proven working patterns from sync-prusament-data
+ */
+function extractPrusaImage(html: string): string | null {
+  // First, try og:image which usually has the product image
+  const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i) ||
+                       html.match(/<meta[^>]*content="([^"]+)"[^>]*property="og:image"/i);
+  
+  if (ogImageMatch && ogImageMatch[1]) {
+    let imageUrl = ogImageMatch[1];
+    if (imageUrl.includes('/product/') || imageUrl.includes('content/images/product')) {
+      imageUrl = imageUrl.replace(/width=\d+/, 'width=1024');
+      console.log(`[Prusament] OG Image found: ${imageUrl.substring(0, 80)}...`);
+      return imageUrl;
+    }
+  }
+
+  // Look for product images in HTML content
+  const productImagePatterns = [
+    /src="(https:\/\/www\.prusa3d\.com\/cdn-cgi\/image\/[^"]*content\/images\/product\/[^"]+)"/gi,
+    /src="(https:\/\/cdn\.prusa3d\.com\/content\/images\/product\/[^"]+\.(?:jpg|jpeg|png|webp))"/gi,
+    /"image"\s*:\s*"(https:\/\/[^"]*prusa[^"]*\/content\/images\/product\/[^"]+)"/gi,
+    /data-src="(https:\/\/[^"]*prusa[^"]*\/content\/images\/product\/[^"]+)"/gi,
+  ];
+
+  for (const pattern of productImagePatterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      if (match && match[1]) {
+        let imageUrl = match[1];
+        
+        if (imageUrl.includes('/country/') || 
+            imageUrl.includes('/flag/') ||
+            imageUrl.includes('logo') ||
+            imageUrl.includes('icon') ||
+            imageUrl.includes('banner') ||
+            imageUrl.includes('thumbnail') ||
+            imageUrl.includes('_small') ||
+            imageUrl.includes('_thumb')) {
+          continue;
+        }
+        
+        if (imageUrl.includes('cdn-cgi/image/')) {
+          imageUrl = imageUrl.replace(/width=\d+/, 'width=1024');
+        }
+        
+        console.log(`[Prusament] Product image found: ${imageUrl.substring(0, 80)}...`);
+        return imageUrl;
+      }
+    }
+  }
+
+  // Fallback: find any reasonable product image
+  const allImages = html.matchAll(/src="([^"]+)"/gi);
+  for (const imgMatch of allImages) {
+    const src = imgMatch[1];
+    if (src && 
+        (src.includes('/product/') || src.includes('content/images/product')) &&
+        !src.includes('/country/') &&
+        !src.includes('/flag/') &&
+        !src.includes('logo') && 
+        !src.includes('icon') && 
+        !src.includes('banner') &&
+        !src.includes('thumbnail') &&
+        !src.includes('width=45') &&
+        (src.includes('.jpg') || src.includes('.jpeg') || src.includes('.png') || src.includes('.webp'))) {
+      let imageUrl = src;
+      if (imageUrl.includes('cdn-cgi/image/')) {
+        imageUrl = imageUrl.replace(/width=\d+/, 'width=1024');
+      }
+      console.log(`[Prusament] Fallback image found: ${imageUrl.substring(0, 80)}...`);
+      return imageUrl;
     }
   }
 
@@ -151,129 +168,26 @@ function extractPrusaPrice(markdown: string, html: string, metadata: any): numbe
 }
 
 /**
- * Check if an image URL is a valid product image
+ * Check availability from HTML
  */
-function isValidProductImage(url: string): boolean {
-  if (!url || typeof url !== 'string') return false;
-  if (url.includes(',')) return false; // Multiple URLs concatenated
-  if (url.includes('livechatinc.com')) return false; // Known junk
-  if (url.includes('trustpilot')) return false;
-  if (url.includes('logo') && !url.includes('product')) return false;
-  if (url.includes('icon') && !url.includes('product')) return false;
-  if (url.includes('banner') && !url.includes('product')) return false;
-  // Accept Prusa CDN images or any reasonable image URL
-  return url.includes('prusa') || url.includes('.jpg') || url.includes('.png') || url.includes('.webp');
-}
-
-/**
- * Upgrade image URL to higher quality
- */
-function upgradeImageQuality(url: string): string {
-  if (url.includes('cdn-cgi/image/')) {
-    return url.replace(/width=\d+/, 'width=1024');
-  }
-  return url;
-}
-
-/**
- * Extract high-quality product image from Prusa page - FIXED for Firecrawl response formats
- */
-function extractPrusaImage(html: string, metadata: any, productUrl: string): { url: string | null; fromHtml: boolean } {
-  // Strategy 1: Parse og:image directly from HTML (most reliable)
-  const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
-                       html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-  
-  if (ogImageMatch?.[1]) {
-    // Take only FIRST URL if comma-separated
-    const imageUrl = ogImageMatch[1].split(',')[0].trim();
-    if (isValidProductImage(imageUrl)) {
-      console.log(`[Prusament] Image found via HTML og:image: ${imageUrl.substring(0, 80)}...`);
-      return { url: upgradeImageQuality(imageUrl), fromHtml: true };
-    }
-  }
-
-  // Strategy 2: Try Firecrawl metadata (multiple formats - Firecrawl uses different keys)
-  const metadataImage = metadata?.ogImage?.[0]?.url || 
-                        metadata?.ogImage?.[0] ||
-                        (typeof metadata?.ogImage === 'string' ? metadata.ogImage : null) ||
-                        metadata?.['og:image'] ||
-                        metadata?.image;
-  if (metadataImage) {
-    const imageUrl = String(metadataImage).split(',')[0].trim();
-    if (isValidProductImage(imageUrl)) {
-      console.log(`[Prusament] Image found via Firecrawl metadata: ${imageUrl.substring(0, 80)}...`);
-      return { url: upgradeImageQuality(imageUrl), fromHtml: false };
-    }
-  }
-
-  // Strategy 3: twitter:image from metadata or HTML
-  const twitterImage = metadata?.['twitter:image'] || metadata?.twitterImage;
-  if (twitterImage) {
-    const imageUrl = String(twitterImage).split(',')[0].trim();
-    if (isValidProductImage(imageUrl)) {
-      console.log(`[Prusament] Image found via twitter:image: ${imageUrl.substring(0, 80)}...`);
-      return { url: upgradeImageQuality(imageUrl), fromHtml: false };
-    }
-  }
-
-  // Strategy 4: Search HTML for product images in JSON-LD
-  const jsonLdImageMatch = html.match(/"image"\s*:\s*"(https:\/\/[^"]*prusa[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/i) ||
-                           html.match(/"image"\s*:\s*\[\s*"(https:\/\/[^"]+)"/i);
-  if (jsonLdImageMatch?.[1]) {
-    const imageUrl = jsonLdImageMatch[1].split(',')[0].trim();
-    if (isValidProductImage(imageUrl)) {
-      console.log(`[Prusament] Image found via JSON-LD: ${imageUrl.substring(0, 80)}...`);
-      return { url: upgradeImageQuality(imageUrl), fromHtml: true };
-    }
-  }
-
-  // Strategy 5: Search HTML for product images in img tags
-  const productImagePatterns = [
-    /src=["'](https:\/\/www\.prusa3d\.com\/cdn-cgi\/image\/[^"']*content\/images\/product\/[^"']+)["']/gi,
-    /src=["'](https:\/\/cdn\.prusa3d\.com\/content\/images\/product\/[^"']+\.(?:jpg|jpeg|png|webp))["']/gi,
+function checkAvailability(html: string): boolean {
+  const outOfStockPatterns = [
+    /out[-\s]?of[-\s]?stock/i,
+    /sold[-\s]?out/i,
+    /unavailable/i,
+    /"availability":\s*"OutOfStock"/i,
   ];
-  
-  for (const pattern of productImagePatterns) {
-    const match = pattern.exec(html);
-    if (match?.[1] && isValidProductImage(match[1])) {
-      console.log(`[Prusament] Image found via HTML img tag: ${match[1].substring(0, 80)}...`);
-      return { url: upgradeImageQuality(match[1]), fromHtml: true };
+
+  for (const pattern of outOfStockPatterns) {
+    if (pattern.test(html)) {
+      return false;
     }
   }
-
-  // Strategy 6: Construct from URL slug (last resort - needs validation)
-  const urlSlug = productUrl.split('/').filter(Boolean).pop() || '';
-  if (urlSlug) {
-    const constructedUrl = `https://www.prusa3d.com/cdn-cgi/image/width=1024,format=auto,quality=85/content/images/product/${urlSlug}.jpg`;
-    console.log(`[Prusament] Using constructed image URL: ${constructedUrl.substring(0, 80)}...`);
-    return { url: constructedUrl, fromHtml: false };
-  }
-
-  console.log(`[Prusament] No image found for ${productUrl}`);
-  return { url: null, fromHtml: false };
+  return true;
 }
 
 /**
- * Validate that an image URL returns a valid image (only for constructed URLs)
- */
-async function validateImageUrl(url: string): Promise<boolean> {
-  try {
-    const response = await fetch(url, { 
-      method: 'HEAD',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; FilascopeBot/1.0)',
-      },
-    });
-    if (!response.ok) return false;
-    const contentType = response.headers.get('content-type');
-    return contentType?.startsWith('image/') || false;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Scrape a single Prusa product page using Firecrawl - enhanced with HTML
+ * Scrape a single Prusa product page using Firecrawl - simplified HTML-only approach
  */
 async function scrapePrusaProduct(
   productUrl: string,
@@ -295,9 +209,9 @@ async function scrapePrusaProduct(
       },
       body: JSON.stringify({
         url: productUrl,
-        formats: ['markdown', 'html'], // Request HTML for better extraction
+        formats: ['html'], // Only HTML - proven to work
         onlyMainContent: false,
-        waitFor: 3000, // Wait longer for dynamic content
+        waitFor: 3000,
       }),
     });
 
@@ -307,41 +221,25 @@ async function scrapePrusaProduct(
     }
 
     const data = await response.json();
-    const markdown = data.data?.markdown || data.markdown || '';
-    const html = data.data?.html || data.html || '';
-    const metadata = data.data?.metadata || data.metadata || {};
+    const html = data.data?.html || '';
 
-    // Log metadata keys for debugging
-    console.log(`[Prusament] Metadata keys for ${productUrl}: ${Object.keys(metadata || {}).join(', ')}`);
-
-    // Extract price with enhanced patterns
-    result.priceEur = extractPrusaPrice(markdown, html, metadata);
-    if (result.priceEur) {
-      result.priceUsd = convertEurToUsd(result.priceEur);
+    if (!html || html.length < 500) {
+      console.log(`[Prusament] Invalid HTML response for ${productUrl} (${html.length} chars)`);
+      return result;
     }
 
-    // Extract image with fixed multi-strategy approach
-    const imageResult = extractPrusaImage(html, metadata, productUrl);
-    if (imageResult.url) {
-      if (imageResult.fromHtml) {
-        // HTML-parsed images are trusted - no validation needed
-        result.imageUrl = imageResult.url;
-      } else {
-        // Only validate constructed/fallback URLs
-        const isValid = await validateImageUrl(imageResult.url);
-        if (isValid) {
-          result.imageUrl = imageResult.url;
-        } else {
-          console.log(`[Prusament] Image validation failed for ${imageResult.url}`);
-        }
-      }
+    // Extract price using proven patterns
+    const priceResult = extractPrusaPrice(html);
+    if (priceResult.price) {
+      result.priceEur = priceResult.price;
+      result.priceUsd = convertEurToUsd(priceResult.price);
     }
+
+    // Extract image using proven patterns - no validation needed
+    result.imageUrl = extractPrusaImage(html);
 
     // Check availability
-    const lowerContent = (markdown + html).toLowerCase();
-    if (lowerContent.includes('out of stock') || lowerContent.includes('unavailable') || lowerContent.includes('discontinued')) {
-      result.available = false;
-    }
+    result.available = checkAvailability(html);
 
     console.log(`[Prusament] Scraped ${productUrl}: €${result.priceEur} -> $${result.priceUsd}, image: ${result.imageUrl ? 'YES' : 'NO'}`);
 
