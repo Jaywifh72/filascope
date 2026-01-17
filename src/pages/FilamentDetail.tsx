@@ -618,7 +618,7 @@ const FilamentDetail = () => {
         <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
         {/* Technical Details Accordion */}
-        <TechnicalDetailsAccordion filament={filament} className="mb-8" />
+        <TechnicalDetailsAccordion filament={displayFilament} className="mb-8" />
 
         {/* Simplified Printer Compatibility */}
         {selectedPrinter && compatibility && (
@@ -656,7 +656,7 @@ const FilamentDetail = () => {
         )}
 
         {/* Advanced Details (TDS) Section */}
-        <AdvancedTdsSection filament={filament} className="mb-8" />
+        <AdvancedTdsSection filament={displayFilament} className="mb-8" />
       </div>
 
       {/* Admin Edit Image Dialog */}
