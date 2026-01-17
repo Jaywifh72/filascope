@@ -121,10 +121,11 @@ export const SKIP_COLOR_COUNT_CHECK_BRANDS = [
 ];
 
 // Brands to skip price validity check (premium materials, unusual pricing)
+// NOTE: Prusament removed - now has price/image scraping via sync-prusament-products
 export const SKIP_PRICE_CHECK_BRANDS = [
   'treed-filaments', 'colorfabb', 'fillamentum', 'extrudr', 'ninjatek',
   'matter3d', 'kingroon', 'numakers', 'overture', 'push-plastic', 'recreus',
-  'spectrum', 'prusament', 'proto-pasta', 'ultimaker'
+  'spectrum', 'proto-pasta', 'ultimaker'
 ];
 
 // Expected card counts for brands (number of product lines)

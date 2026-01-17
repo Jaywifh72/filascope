@@ -2873,7 +2873,8 @@ Deno.serve(async (req) => {
     // Verify that products have featured_image populated for detail page display
     
     // Skip image coverage check for CSV-seeded brands with no image data (known limitation)
-    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy', 'gizmo-dorks', 'paramount-3d', 'prusament'];
+    // NOTE: Prusament removed - now has image scraping via sync-prusament-products
+    const NO_IMAGE_BRANDS = ['extrudr', 'fiberlogy', 'gizmo-dorks', 'paramount-3d'];
     const isNoImageBrand = NO_IMAGE_BRANDS.some(b => 
       brandSlug?.toLowerCase() === b || brandName?.toLowerCase() === b
     );
