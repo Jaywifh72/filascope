@@ -657,26 +657,6 @@ const FilamentDetail = () => {
 
         {/* Advanced Details (TDS) Section */}
         <AdvancedTdsSection filament={filament} className="mb-8" />
-
-        {/* Similar Materials - at bottom of page */}
-        {filament && id && (
-          <SimilarMaterialsModule
-            filamentId={id}
-            material={filament.material}
-            vendor={filament.vendor}
-            currentPricePerKg={
-              filament.variant_price && filament.net_weight_g
-                ? filament.variant_price / (filament.net_weight_g / 1000)
-                : null
-            }
-            currentScores={{
-              ease_of_printing_score: filament.ease_of_printing_score,
-              value_score: filament.value_score,
-              strength_index: filament.strength_index,
-              printability_index: filament.printability_index,
-            }}
-          />
-        )}
       </div>
 
       {/* Admin Edit Image Dialog */}
