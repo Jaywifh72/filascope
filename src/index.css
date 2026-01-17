@@ -325,6 +325,41 @@ All colors MUST be HSL.
   animation: scan 3s ease-in-out infinite;
 }
 
+/* Lab Readout Card Scan Animations */
+@keyframes lab-scan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes lab-header-scan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.6;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
 .animate-dropdown-open {
   animation: dropdown-open 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
