@@ -777,11 +777,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const body = await req.json();
-    const { tds_url, product_url, filament_id, brand_slug, dry_run = false, force = false, limit = 10, background = true } = body;
+    const { tds_url, product_url, filament_id, brand_slug, dry_run = false, force = false, limit = 1000, background = true } = body;
 
     // BATCH MODE: Process multiple filaments for a brand
     if (brand_slug) {
-      console.log(`Batch parsing TDS for brand: ${brand_slug}, limit: ${limit}, force: ${force}, background: ${background}`);
+      console.log(`[parse-filament-tds] Starting batch for brand: ${brand_slug}, limit: ${limit}, force: ${force}, background: ${background}`);
 
       // Get brand ID
       const { data: brand } = await supabase
@@ -791,19 +791,35 @@ Deno.serve(async (req) => {
         .single();
 
       if (!brand) {
+        console.error(`[parse-filament-tds] Brand not found: ${brand_slug}`);
         return new Response(JSON.stringify({ error: 'Brand not found' }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
 
-      // Build query for filaments needing parsing
+      // First, get the count of filaments needing parsing for accurate reporting
+      let countQuery = supabase
+        .from('filaments')
+        .select('id', { count: 'exact', head: true })
+        .eq('brand_id', brand.id)
+        .not('tds_url', 'is', null);
+      
+      if (!force) {
+        countQuery = countQuery.or('nozzle_temp_min_c.is.null,drying_temp_c.is.null,density_g_cm3.is.null');
+      }
+      
+      const { count: totalNeedsParsing } = await countQuery;
+      console.log(`[parse-filament-tds] Brand ${brand_slug}: ${totalNeedsParsing || 0} filaments need parsing`);
+
+      // Build query for filaments needing parsing - use the actual count or limit
+      const effectiveLimit = Math.min(limit, totalNeedsParsing || 1000);
       let query = supabase
         .from('filaments')
         .select('id, product_title, tds_url, material')
         .eq('brand_id', brand.id)
         .not('tds_url', 'is', null)
-        .limit(limit);
+        .limit(effectiveLimit);
 
       // If not forcing, only get unparsed filaments
       if (!force) {
@@ -813,7 +829,7 @@ Deno.serve(async (req) => {
       const { data: filaments, error: queryError } = await query;
 
       if (queryError) {
-        console.error('Query error:', queryError);
+        console.error('[parse-filament-tds] Query error:', queryError);
         return new Response(JSON.stringify({ error: 'Failed to query filaments' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -821,6 +837,7 @@ Deno.serve(async (req) => {
       }
 
       if (!filaments || filaments.length === 0) {
+        console.log(`[parse-filament-tds] Brand ${brand_slug}: No filaments need parsing`);
         return new Response(JSON.stringify({
           success: true,
           processed: 0,
@@ -833,7 +850,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      console.log(`Found ${filaments.length} filaments to parse for ${brand_slug}`);
+      console.log(`[parse-filament-tds] Brand ${brand_slug}: Processing ${filaments.length} filaments (of ${totalNeedsParsing} total needing parsing)`)
 
       // Create sync log entry for tracking
       const { data: logEntry, error: logError } = await supabase
