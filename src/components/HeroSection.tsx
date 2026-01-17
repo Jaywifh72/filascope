@@ -23,14 +23,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left">
-            {/* Headline */}
+            {/* Headline - Cinematic styling */}
             <h1 
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-light tracking-[0.08em] leading-[1.15] mb-8 animate-fade-in uppercase"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-light tracking-[0.2em] leading-[1.15] mb-8 animate-fade-in uppercase"
             >
               Measure Material.
               <br />
               Master The{" "}
-              <span className="text-primary italic font-normal">Print.</span>
+              <span className="font-bold italic" style={{ color: '#00CFE8' }}>Print.</span>
             </h1>
             
             {/* Sub-text */}
@@ -81,88 +81,121 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             </div>
           </div>
           
-          {/* Right: 3D Box Visual */}
+          {/* Right: Glass Container with 3D Box Visual */}
           <div 
             className="hidden lg:flex justify-center items-center animate-fade-in"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Glassmorphic Container */}
+            {/* Large Glass Container */}
             <div 
-              className="relative p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl"
+              className="relative p-12 rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
               style={{
                 transform: "rotate(6deg)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                background: "rgba(255, 255, 255, 0.02)",
               }}
             >
-              {/* Scan Line Animation */}
+              {/* Horizontal Cyan Scan Line */}
               <div 
-                className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-60 z-20 pointer-events-none"
+                className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none"
                 style={{
-                  animation: "scanLine 4s ease-in-out infinite",
+                  background: "linear-gradient(90deg, transparent, #00CFE8, transparent)",
+                  boxShadow: "0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)",
+                  animation: "heroScanLine 4s ease-in-out infinite",
                 }}
               />
               
-              {/* 3D Stacked Boxes */}
-              <div className="relative w-[280px] h-[280px] flex items-center justify-center">
+              {/* 3D Stacked Boxes - Filascope Logo */}
+              <div className="relative w-[320px] h-[320px] flex items-center justify-center" style={{ perspective: "1000px" }}>
                 {/* Bottom Box - Magenta */}
                 <div 
-                  className="absolute w-32 h-32 rounded-2xl border-2 border-[#FF0055]/40 bg-gradient-to-br from-[#FF0055]/20 to-[#FF0055]/5 shadow-[0_25px_50px_-12px_rgba(255,0,85,0.3)]"
+                  className="absolute w-36 h-36 rounded-2xl"
                   style={{
-                    transform: "translateX(-40px) translateY(50px) translateZ(-30px) rotateX(-15deg) rotateY(15deg)",
+                    transform: "translateX(-45px) translateY(55px) translateZ(-30px) rotateX(-15deg) rotateY(15deg)",
                     transformStyle: "preserve-3d",
+                    border: "2px solid rgba(255, 0, 85, 0.5)",
+                    background: "linear-gradient(135deg, rgba(255, 0, 85, 0.25) 0%, rgba(255, 0, 85, 0.08) 100%)",
+                    boxShadow: "0 25px 50px -12px rgba(255, 0, 85, 0.35)",
                   }}
                 />
                 
                 {/* Middle Box - Clear/Glass */}
                 <div 
-                  className="absolute w-32 h-32 rounded-2xl border-2 border-white/30 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-sm shadow-[0_25px_50px_-12px_rgba(255,255,255,0.15)]"
+                  className="absolute w-36 h-36 rounded-2xl backdrop-blur-sm"
                   style={{
-                    transform: "translateX(0px) translateY(10px) translateZ(0px) rotateX(-15deg) rotateY(15deg)",
+                    transform: "translateX(0px) translateY(12px) translateZ(0px) rotateX(-15deg) rotateY(15deg)",
                     transformStyle: "preserve-3d",
+                    border: "2px solid rgba(255, 255, 255, 0.35)",
+                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%)",
+                    boxShadow: "0 25px 50px -12px rgba(255, 255, 255, 0.15)",
                   }}
                 />
                 
                 {/* Top Box - Cyan */}
                 <div 
-                  className="absolute w-32 h-32 rounded-2xl border-2 border-primary/50 bg-gradient-to-br from-primary/25 to-primary/5 shadow-[0_25px_50px_-12px_rgba(0,207,232,0.4)]"
+                  className="absolute w-36 h-36 rounded-2xl"
                   style={{
-                    transform: "translateX(40px) translateY(-30px) translateZ(30px) rotateX(-15deg) rotateY(15deg)",
+                    transform: "translateX(45px) translateY(-35px) translateZ(30px) rotateX(-15deg) rotateY(15deg)",
                     transformStyle: "preserve-3d",
+                    border: "2px solid rgba(0, 207, 232, 0.6)",
+                    background: "linear-gradient(135deg, rgba(0, 207, 232, 0.3) 0%, rgba(0, 207, 232, 0.08) 100%)",
+                    boxShadow: "0 25px 50px -12px rgba(0, 207, 232, 0.45), inset 0 0 30px rgba(0, 207, 232, 0.1)",
                   }}
                 >
-                  {/* Glow effect on top box */}
-                  <div className="absolute inset-0 rounded-2xl bg-primary/10 blur-xl" />
+                  {/* Inner glow effect */}
+                  <div 
+                    className="absolute inset-0 rounded-2xl blur-xl"
+                    style={{ background: "rgba(0, 207, 232, 0.15)" }}
+                  />
                 </div>
                 
                 {/* Decorative grid lines */}
-                <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
                   <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
                   <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
                 </div>
               </div>
               
-              {/* Corner accents */}
-              <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-primary/40 rounded-tl-lg" />
-              <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-primary/40 rounded-br-lg" />
+              {/* Corner accents - Cyan */}
+              <div 
+                className="absolute top-5 left-5 w-10 h-10 rounded-tl-lg"
+                style={{ 
+                  borderLeft: "2px solid rgba(0, 207, 232, 0.5)",
+                  borderTop: "2px solid rgba(0, 207, 232, 0.5)",
+                }}
+              />
+              <div 
+                className="absolute bottom-5 right-5 w-10 h-10 rounded-br-lg"
+                style={{ 
+                  borderRight: "2px solid rgba(0, 207, 232, 0.5)",
+                  borderBottom: "2px solid rgba(0, 207, 232, 0.5)",
+                }}
+              />
             </div>
           </div>
         </div>
       </div>
       
-      {/* Add scan line keyframes */}
+      {/* Hero scan line keyframes */}
       <style>{`
-        @keyframes scanLine {
-          0%, 100% {
+        @keyframes heroScanLine {
+          0% {
             top: 0%;
             opacity: 0;
           }
-          10% {
-            opacity: 0.6;
+          5% {
+            opacity: 1;
+          }
+          45% {
+            opacity: 1;
           }
           50% {
             top: 100%;
-            opacity: 0.6;
+            opacity: 0;
           }
-          60% {
+          100% {
+            top: 100%;
             opacity: 0;
           }
         }
