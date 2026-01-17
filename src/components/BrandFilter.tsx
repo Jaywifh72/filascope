@@ -39,12 +39,22 @@ export function BrandFilter({
       // Use public view to avoid exposing scraping configuration
       const { data, error } = await supabase
         .from("v_public_brands")
-        .select("brand_slug, display_name, product_count")
-        .order("display_name");
+        .select("brand_slug, display_name, product_count");
 
       if (error) throw error;
-      // Filter to only include brands in the sync manager
-      return data?.filter(brand => SYNC_MANAGER_BRANDS.has(brand.brand_slug)) || [];
+      // Filter to only include brands in the sync manager, then sort with numbers first, then alphabetically
+      const filtered = data?.filter(brand => SYNC_MANAGER_BRANDS.has(brand.brand_slug)) || [];
+      return filtered.sort((a, b) => {
+        const aStartsWithNumber = /^\d/.test(a.display_name);
+        const bStartsWithNumber = /^\d/.test(b.display_name);
+        
+        // Numbers first
+        if (aStartsWithNumber && !bStartsWithNumber) return -1;
+        if (!aStartsWithNumber && bStartsWithNumber) return 1;
+        
+        // Then alphabetically
+        return a.display_name.localeCompare(b.display_name);
+      });
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
