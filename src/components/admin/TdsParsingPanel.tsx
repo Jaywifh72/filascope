@@ -49,11 +49,12 @@ function useParsingStats() {
   return useQuery({
     queryKey: ['tds-parsing-stats'],
     queryFn: async () => {
-      // Get brands with TDS URLs
+      // Get ALL scraping-enabled brands (all 43)
       const { data: brands } = await supabase
         .from('automated_brands')
         .select('id, brand_slug, display_name')
-        .eq('scraping_enabled', true);
+        .eq('scraping_enabled', true)
+        .order('display_name');
 
       if (!brands) return [];
 
@@ -67,8 +68,6 @@ function useParsingStats() {
           .eq('brand_id', brand.id)
           .not('tds_url', 'is', null);
 
-        if (!withTds || withTds === 0) continue;
-
         // Get fully parsed (has temps + drying + density)
         const { count: fullyParsed } = await supabase
           .from('filaments')
@@ -79,7 +78,7 @@ function useParsingStats() {
           .not('drying_temp_c', 'is', null)
           .not('density_g_cm3', 'is', null);
 
-        // Get partially parsed (has at least temps)
+        // Get partially parsed (has at least temps but missing drying or density)
         const { count: partiallyParsed } = await supabase
           .from('filaments')
           .select('*', { count: 'exact', head: true })
@@ -88,23 +87,28 @@ function useParsingStats() {
           .not('nozzle_temp_min_c', 'is', null)
           .or('drying_temp_c.is.null,density_g_cm3.is.null');
 
+        const tdsCount = withTds || 0;
         const parsed = fullyParsed || 0;
-        const partial = (partiallyParsed || 0) - parsed;
-        const needs = withTds - (parsed + partial);
+        const partial = Math.max(0, (partiallyParsed || 0) - parsed);
+        const needs = Math.max(0, tdsCount - (parsed + partial));
 
         stats.push({
           brandSlug: brand.brand_slug,
           brandName: brand.display_name,
-          withTds: withTds || 0,
+          withTds: tdsCount,
           fullyParsed: parsed,
           partiallyParsed: partial,
           needsParsing: needs,
-          parsingCoverage: Math.round((parsed / withTds) * 100),
+          parsingCoverage: tdsCount > 0 ? Math.round((parsed / tdsCount) * 100) : 0,
         });
       }
 
-      return stats.filter(s => s.needsParsing > 0 || s.partiallyParsed > 0)
-        .sort((a, b) => b.needsParsing - a.needsParsing);
+      // Sort by needs parsing (descending), then by name
+      return stats.sort((a, b) => {
+        if (b.needsParsing !== a.needsParsing) return b.needsParsing - a.needsParsing;
+        if (b.partiallyParsed !== a.partiallyParsed) return b.partiallyParsed - a.partiallyParsed;
+        return a.brandName.localeCompare(b.brandName);
+      });
     },
     staleTime: 60000,
   });
