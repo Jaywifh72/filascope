@@ -15,11 +15,13 @@ const COLOR_WORDS = [
   'Tan', 'Teal', 'Turquoise', 'Violet', 'White', 'Yellow', 'Natural', 'Clear', 'Transparent',
   'Jet Black', 'Lipstick Red', 'Prusa Pro Green', 'Prusa Galaxy Black', 'Prusa Orange',
   'Signal White', 'Olive Green', 'Sapphire Blue', 'Azure Blue', 'Opal Green', 'Mystic Green',
-  'Mystic Brown', 'Galaxy Black', 'Galaxy Silver',
+  'Mystic Brown', 'Galaxy Black', 'Galaxy Silver', 'Army Green',
   'Brick Red', 'Indigo Blue', 'Malachite Green', 'Titan Gray', 'Violet Purple',
   'Bambu Green', 'Navy Blue', 'Tangerine Yellow', 'Azure',
   'Anthracite Grey', 'Carmine Red', 'Chalky Blue', 'Jungle Green', 'Mango Yellow',
   'Neon Green', 'Shimmering Violet', 'Ultramarine Blue', 'Carbon Fiber Black',
+  "Gentleman's Grey", 'Ms Pink', 'Mr Wintermint', 'Oh My Gold', 'Pineapple Yellow',
+  'Lipstick Red', 'Urban Grey',
 ];
 
 // Terms that are PRODUCT VARIANTS (not colors)
