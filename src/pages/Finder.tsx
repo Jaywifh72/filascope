@@ -15,6 +15,8 @@ import { Slider } from "@/components/ui/slider";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { ExternalLink, ChevronDown, GitCompare, X, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
 import { FilamentCard } from "@/components/FilamentCard";
+import { LabReadoutCard } from "@/components/LabReadoutCard";
+import { DataInventoryControlBar, type SortOption } from "@/components/DataInventoryControlBar";
 import { FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -1426,6 +1428,15 @@ const Finder = () => {
           </div>
         </div>
 
+        {/* Data Inventory Control Bar */}
+        {!isLoading && displayedGroups.length > 0 && (
+          <DataInventoryControlBar
+            sortBy={sortBy as SortOption}
+            onSortChange={(val) => setSortBy(val)}
+            resultCount={totalCount}
+          />
+        )}
+
         {/* Filaments Display */}
         {isLoading ? (
           <FilamentCardSkeletonGrid count={12} />
@@ -1446,25 +1457,15 @@ const Finder = () => {
               getColorMatchPercent={getColorMatchPercent}
             />
           ) : (
-            /* Grid View - Redesigned Cards with Grouped Products */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" id="filament-grid">
+            /* Grid View - Laboratory Readout Cards */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="filament-grid">
               {displayedGroups.map((group, index) => {
                 const filament = group.representativeFilament;
-                // Calculate color match percentage for hex search
-                const isHexSearchActive = hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/);
-                const searchHex = isHexSearchActive ? (hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`) : null;
-                const normalizedHex = filament.color_hex 
-                  ? (filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`)
-                  : null;
-                const colorMatchPercent = searchHex && normalizedHex 
-                  ? getColorMatchPercent(searchHex, normalizedHex) 
-                  : null;
 
                 return (
-                  <FilamentCard
+                  <LabReadoutCard
                     key={filament.id}
                     filament={filament}
-                    colorMatchPercent={colorMatchPercent}
                     index={index}
                     displayTitle={group.baseName}
                     variantIndicators={group.variants.length > 1 ? {
@@ -1473,7 +1474,6 @@ const Finder = () => {
                       variantCount: group.variants.length,
                       priceRange: group.priceRange,
                       anyInStock: group.anyInStock,
-                      colorStockStatus: Object.fromEntries(group.colorStockStatus),
                     } : undefined}
                   />
                 );
