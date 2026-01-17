@@ -25,17 +25,17 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
           <div className="flex flex-col items-start text-left order-1">
             {/* Headline - Smaller, more compact */}
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-light tracking-[0.15em] leading-[1.2] mb-6 animate-fade-in uppercase"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-light tracking-[0.2em] leading-[1.2] mb-6 animate-fade-in uppercase"
             >
               Measure Material.
               <br />
               Master The{" "}
-              <span className="font-bold italic text-primary">Print.</span>
+              <span className="font-black italic text-primary">Print.</span>
             </h1>
             
             {/* Sub-text */}
             <p 
-              className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 max-w-[540px] animate-fade-in"
+              className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed mb-12 max-w-[540px] animate-fade-in"
               style={{ animationDelay: "0.15s" }}
             >
               The future of filament is loading. We are indexing thousands of materials to provide the most accurate 3D printing data hub ever built.
