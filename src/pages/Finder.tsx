@@ -1376,7 +1376,7 @@ const Finder = () => {
       />
 
       {/* Main Content Area with Technical Console Sidebar */}
-      <div className="flex">
+      <div className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-6 items-start">
         {/* Technical Console Sidebar */}
         <TechnicalConsoleSidebar
           selectedMaterials={selectedMaterials}
@@ -1407,7 +1407,7 @@ const Finder = () => {
         />
 
         {/* Main Content */}
-        <div className="flex-1 max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
+        <div className="flex-1 min-w-0">
           <main className="w-full">
 
         {/* Results count and View Mode Toggle */}
