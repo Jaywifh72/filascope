@@ -95,23 +95,24 @@ const Navbar = () => {
     return user?.email?.split("@")[0] || 'User';
   };
 
-  // Lab-style nav link component
+  // Lab-style nav link component - Uppercase with tracking-widest
   const LabNavLink = ({ to, children, end = false }: { to: string; children: React.ReactNode; end?: boolean }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
     return (
       <Link
         to={to}
         className={cn(
-          "lab-nav-link relative py-3 px-4 transition-colors duration-200",
-          "hover:text-[hsl(187,100%,46%)]",
-          active ? "text-[hsl(187,100%,46%)]" : "text-foreground/80"
+          "relative py-3 px-4 transition-colors duration-200",
+          "text-xs font-bold uppercase tracking-widest",
+          "hover:text-[#00CFE8]",
+          active ? "text-[#00CFE8]" : "text-foreground/80"
         )}
       >
         {children}
         {/* Underline indicator */}
         <span 
           className={cn(
-            "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[hsl(187,100%,46%)] transition-all duration-300",
+            "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[#00CFE8] transition-all duration-300",
             active ? "w-full" : "w-0 group-hover:w-full"
           )}
         />
@@ -156,10 +157,11 @@ const Navbar = () => {
               <DropdownMenuTrigger asChild>
                 <button 
                   className={cn(
-                    "lab-nav-link relative flex items-center gap-1.5 py-3 px-4 transition-colors duration-200 group",
+                    "relative flex items-center gap-1.5 py-3 px-4 transition-colors duration-200 group",
+                    "text-xs font-bold uppercase tracking-widest",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-[hsl(187,100%,46%)]",
-                    isResourcesActive ? 'text-[hsl(187,100%,46%)]' : 'text-foreground/80'
+                    "hover:text-[#00CFE8]",
+                    isResourcesActive ? 'text-[#00CFE8]' : 'text-foreground/80'
                   )}
                 >
                   Resources
