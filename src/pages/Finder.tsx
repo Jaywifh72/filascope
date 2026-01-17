@@ -34,6 +34,7 @@ import HeroSection from "@/components/HeroSection";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
+import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
@@ -1372,10 +1373,40 @@ const Finder = () => {
         filterCounts={filterCounts}
       />
 
-      {/* Main Content Area - Full Width (sidebar removed) */}
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
+      {/* Main Content Area with Technical Console Sidebar */}
+      <div className="flex">
+        {/* Technical Console Sidebar */}
+        <TechnicalConsoleSidebar
+          selectedMaterials={selectedMaterials}
+          onMaterialChange={(material, checked) => {
+            if (checked) {
+              const newMaterials = selectedMaterials.includes("All") ? [material] : [...selectedMaterials, material];
+              setSelectedMaterials(newMaterials);
+            } else {
+              setSelectedMaterials(selectedMaterials.filter(m => m !== material));
+            }
+          }}
+          selectedBrands={selectedBrands}
+          onBrandChange={(brand, checked) => {
+            if (checked) {
+              setSelectedBrands([...selectedBrands, brand]);
+            } else {
+              setSelectedBrands(selectedBrands.filter(b => b !== brand));
+            }
+          }}
+          carbonFiber={carbonFiber}
+          onCarbonFiberChange={setCarbonFiber}
+          glassFiber={glassFiber}
+          onGlassFiberChange={setGlassFiber}
+          woodFilled={woodFilled}
+          onWoodFilledChange={setWoodFilled}
+          spoolSize={largeSpools ? "large" : "standard"}
+          onSpoolSizeChange={(size) => setLargeSpools(size === "large")}
+        />
+
         {/* Main Content */}
-        <main className="w-full">
+        <div className="flex-1 max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
+          <main className="w-full">
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
@@ -1471,7 +1502,8 @@ const Finder = () => {
             <p className="text-muted-foreground text-lg">No filaments found</p>
           </div>
         )}
-      </main>
+          </main>
+        </div>
       </div>
 
       {/* Multi-select mode banner */}
