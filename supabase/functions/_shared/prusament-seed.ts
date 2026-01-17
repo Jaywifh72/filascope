@@ -21,6 +21,45 @@ export interface PrusamentProductSeed {
   weightGrams: number;
   hasNfc: boolean;
   isRefill: boolean;
+  priceEur?: number; // EUR price from Prusa website
+}
+
+/**
+ * Get default price in EUR based on material type and weight
+ * These are approximate MSRP values from prusa3d.com
+ */
+export function getPrusamentDefaultPriceEur(material: string, weightGrams: number): number {
+  const normalizedMaterial = material.toUpperCase();
+  
+  // Base price per kg in EUR
+  const basePricePerKgEur: Record<string, number> = {
+    'PLA': 24.99,
+    'RPLA': 24.99,
+    'PETG': 26.99,
+    'ASA': 34.99,
+    'PC BLEND': 44.99,
+    'PC': 49.99,
+    'PA11-CF': 74.99,
+    'PP-CF': 64.99,
+    'PP-GF': 54.99,
+    'TPU': 39.99,
+    'PVB': 44.99,
+    'WOODFILL': 39.99,
+    'PEI': 89.99,
+  };
+  
+  const basePrice = basePricePerKgEur[normalizedMaterial] || 27.99;
+  const priceMultiplier = weightGrams / 1000;
+  
+  return Math.round(basePrice * priceMultiplier * 100) / 100;
+}
+
+/**
+ * Convert EUR to USD using approximate exchange rate
+ */
+export function convertEurToUsd(eurPrice: number): number {
+  const EUR_TO_USD_RATE = 1.08; // Approximate rate
+  return Math.round(eurPrice * EUR_TO_USD_RATE * 100) / 100;
 }
 
 /**
