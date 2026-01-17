@@ -225,21 +225,40 @@ export function TdsDiscoveryPanel() {
   // Run batch TDS parsing for ALL Brand Sync Manager brands
   const handleBatchParseAllSyncManager = async () => {
     setBatchParseRunning(true);
-    setBatchParseProgress({ current: 0, total: SYNC_MANAGER_BRAND_COUNT });
+    setBatchParseProgress({ current: 0, total: SYNC_MANAGER_BRAND_COUNT, brand: 'Starting...' });
+    
+    toast({ 
+      title: 'Batch Parse Started', 
+      description: `Processing ${SYNC_MANAGER_BRAND_COUNT} brands. This may take several minutes...` 
+    });
+    
     try {
       const { data, error } = await supabase.functions.invoke('batch-parse-all-tds', {
         body: { mode: 'parse-sync-manager', limit: 50, dryRun }
       });
+      
       if (error) throw error;
+      
+      const brandsProcessed = data?.summary?.brandsProcessed || 0;
+      const totalSuccessful = data?.summary?.totalSuccessful || 0;
+      const totalFailed = data?.summary?.totalFailed || 0;
+      
       toast({ 
-        title: 'Batch Parse Complete', 
-        description: `Processed ${data?.summary?.brandsProcessed || 0} brands, ${data?.summary?.totalSuccessful || 0} filaments updated` 
+        title: dryRun ? 'Dry Run Complete' : 'Batch Parse Complete', 
+        description: `Processed ${brandsProcessed} brands: ${totalSuccessful} updated, ${totalFailed} failed`,
+        variant: totalFailed > 0 ? 'destructive' : 'default'
       });
+      
       // Refresh audit and metrics
       handleBatchAudit();
       refresh();
     } catch (err) {
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Parse failed', variant: 'destructive' });
+      console.error('Batch parse error:', err);
+      toast({ 
+        title: 'Error', 
+        description: err instanceof Error ? err.message : 'Parse failed. Check edge function logs.', 
+        variant: 'destructive' 
+      });
     } finally {
       setBatchParseRunning(false);
       setBatchParseProgress(null);
