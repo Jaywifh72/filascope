@@ -40,6 +40,88 @@ interface BatchResult {
   successful: number;
   failed: number;
   skipped: number;
+  status: 'completed' | 'timeout' | 'error' | 'skipped';
+  message?: string;
+}
+
+// Safely call parse-filament-tds with timeout and error handling
+async function callParseTdsWithTimeout(
+  supabaseUrl: string,
+  authHeader: string,
+  brandSlug: string,
+  limit: number,
+  dryRun: boolean,
+  force: boolean,
+  timeoutMs: number = 55000
+): Promise<{ success: boolean; data?: any; error?: string; timedOut?: boolean }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/parse-filament-tds`, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        brand_slug: brandSlug,
+        limit,
+        dry_run: dryRun,
+        force,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    // Check HTTP status first
+    if (!response.ok) {
+      console.warn(`Brand ${brandSlug} returned HTTP ${response.status}`);
+      return { 
+        success: false, 
+        error: `HTTP ${response.status}: ${response.statusText}` 
+      };
+    }
+
+    // Get response text first to validate
+    const text = await response.text();
+    
+    // Check if response is empty
+    if (!text || text.trim() === '') {
+      console.warn(`Brand ${brandSlug} returned empty response`);
+      return { success: false, error: 'Empty response' };
+    }
+
+    // Check if response is HTML (error page)
+    if (text.startsWith('<!DOCTYPE') || text.startsWith('<html') || text.startsWith('<')) {
+      console.warn(`Brand ${brandSlug} returned HTML instead of JSON`);
+      return { success: false, error: 'Received HTML error page' };
+    }
+
+    // Try to parse as JSON
+    try {
+      const data = JSON.parse(text);
+      return { success: true, data };
+    } catch (parseErr) {
+      console.error(`Brand ${brandSlug} JSON parse failed:`, text.substring(0, 200));
+      return { success: false, error: 'Invalid JSON response' };
+    }
+
+  } catch (err) {
+    clearTimeout(timeoutId);
+    
+    if (err instanceof Error && err.name === 'AbortError') {
+      console.log(`Brand ${brandSlug} timed out after ${timeoutMs}ms`);
+      return { success: false, error: 'Request timeout', timedOut: true };
+    }
+    
+    console.error(`Brand ${brandSlug} fetch error:`, err);
+    return { 
+      success: false, 
+      error: err instanceof Error ? err.message : 'Unknown fetch error' 
+    };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -89,7 +171,7 @@ Deno.serve(async (req) => {
       brandSlug = null,
       brandSlugs = null, // Array of brand slugs to process
       syncLogId = null, // For status checks
-      limit = 10, // per brand
+      limit = 5, // per brand - reduced to prevent timeouts
       dryRun = true,
       force = false,
     } = body;
@@ -186,34 +268,39 @@ Deno.serve(async (req) => {
     if (mode === 'parse-brand' && brandSlug) {
       console.log(`Parsing TDS for brand: ${brandSlug}, limit: ${limit}`);
       
-      // Call the existing parse-filament-tds function with brand_slug
-      const response = await fetch(`${supabaseUrl}/functions/v1/parse-filament-tds`, {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          brand_slug: brandSlug,
-          limit,
-          dry_run: dryRun,
-          force,
-        }),
-      });
+      const result = await callParseTdsWithTimeout(
+        supabaseUrl,
+        authHeader,
+        brandSlug,
+        limit,
+        dryRun,
+        force,
+        55000
+      );
 
-      const result = await response.json();
+      if (!result.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          mode: 'parse-brand',
+          brandSlug,
+          error: result.error,
+          timedOut: result.timedOut,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       return new Response(JSON.stringify({
         success: true,
         mode: 'parse-brand',
         brandSlug,
-        ...result,
+        ...result.data,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // PARSE-PRIORITY, PARSE-SYNC-MANAGER, or PARSE MODE: Parse brands synchronously
+    // PARSE-PRIORITY, PARSE-SYNC-MANAGER, or PARSE MODE: Parse brands synchronously with robust error handling
     if (mode === 'parse-priority' || mode === 'parse' || mode === 'parse-sync-manager' || (Array.isArray(brandSlugs) && brandSlugs.length > 0)) {
       const modeLabel = mode === 'parse-priority' 
         ? 'priority' 
@@ -264,11 +351,12 @@ Deno.serve(async (req) => {
         if (logEntry) logId = logEntry.id;
       }
 
-      // Process brands synchronously (not in background)
+      // Process brands synchronously with robust error handling
       const results: BatchResult[] = [];
       let totalProcessed = 0;
       let totalSuccessful = 0;
       let totalFailed = 0;
+      let totalTimedOut = 0;
       let currentBrandIndex = 0;
 
       for (const brand of brandsToProcess) {
@@ -285,6 +373,8 @@ Deno.serve(async (req) => {
                 total_brands: brandsToProcess.length,
                 total_processed: totalProcessed,
                 total_successful: totalSuccessful,
+                total_failed: totalFailed,
+                total_timed_out: totalTimedOut,
               },
             })
             .eq('id', logId);
@@ -306,58 +396,72 @@ Deno.serve(async (req) => {
             successful: 0,
             failed: 0,
             skipped: 0,
+            status: 'skipped',
+            message: 'No filaments need parsing',
           });
           continue;
         }
 
         console.log(`Processing ${brand.brand_slug} (${needsParsing} need parsing)`);
 
-        try {
-          // Call parse-filament-tds for this brand
-          const response = await fetch(`${supabaseUrl}/functions/v1/parse-filament-tds`, {
-            method: 'POST',
-            headers: {
-              'Authorization': authHeader,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              brand_slug: brand.brand_slug,
-              limit,
-              dry_run: dryRun,
-              force,
-            }),
-          });
+        // Call parse-filament-tds with timeout and error handling
+        const result = await callParseTdsWithTimeout(
+          supabaseUrl,
+          authHeader,
+          brand.brand_slug,
+          limit,
+          dryRun,
+          force,
+          55000 // 55 second timeout per brand
+        );
 
-          const result = await response.json();
-
+        if (!result.success) {
+          // Handle failed/timeout case gracefully
+          if (result.timedOut) {
+            totalTimedOut++;
+            results.push({
+              brandSlug: brand.brand_slug,
+              brandName: brand.display_name,
+              processed: 0,
+              successful: 0,
+              failed: 0,
+              skipped: 0,
+              status: 'timeout',
+              message: result.error,
+            });
+          } else {
+            totalFailed++;
+            results.push({
+              brandSlug: brand.brand_slug,
+              brandName: brand.display_name,
+              processed: 0,
+              successful: 0,
+              failed: 1,
+              skipped: 0,
+              status: 'error',
+              message: result.error,
+            });
+          }
+        } else {
+          // Success case
+          const data = result.data;
           results.push({
             brandSlug: brand.brand_slug,
             brandName: brand.display_name,
-            processed: result.processed || 0,
-            successful: result.successful || 0,
-            failed: result.failed || 0,
-            skipped: (result.processed || 0) - (result.successful || 0) - (result.failed || 0),
+            processed: data.processed || 0,
+            successful: data.successful || 0,
+            failed: data.failed || 0,
+            skipped: (data.processed || 0) - (data.successful || 0) - (data.failed || 0),
+            status: 'completed',
           });
 
-          totalProcessed += result.processed || 0;
-          totalSuccessful += result.successful || 0;
-          totalFailed += result.failed || 0;
-
-          // Rate limit between brands
-          await new Promise(r => setTimeout(r, 1000));
-
-        } catch (err) {
-          console.error(`Error processing ${brand.brand_slug}:`, err);
-          results.push({
-            brandSlug: brand.brand_slug,
-            brandName: brand.display_name,
-            processed: 0,
-            successful: 0,
-            failed: 1,
-            skipped: 0,
-          });
-          totalFailed++;
+          totalProcessed += data.processed || 0;
+          totalSuccessful += data.successful || 0;
+          totalFailed += data.failed || 0;
         }
+
+        // Rate limit between brands - 2 seconds to be safe
+        await new Promise(r => setTimeout(r, 2000));
       }
 
       // Complete the sync log
@@ -371,7 +475,8 @@ Deno.serve(async (req) => {
             products_failed: totalFailed,
             products_discovered: totalProcessed,
             success_details: {
-              brandsProcessed: results.filter(r => r.processed > 0).length,
+              brandsProcessed: results.filter(r => r.status === 'completed').length,
+              brandsTimedOut: totalTimedOut,
               totalProcessed,
               totalSuccessful,
               totalFailed,
@@ -381,7 +486,7 @@ Deno.serve(async (req) => {
           .eq('id', logId);
       }
 
-      console.log(`Batch parse complete: ${totalSuccessful} successful, ${totalFailed} failed`);
+      console.log(`Batch parse complete: ${totalSuccessful} successful, ${totalFailed} failed, ${totalTimedOut} timed out`);
 
       return new Response(JSON.stringify({
         success: true,
@@ -389,7 +494,10 @@ Deno.serve(async (req) => {
         syncLogId: logId,
         dryRun,
         summary: {
-          brandsProcessed: results.filter(r => r.processed > 0).length,
+          brandsProcessed: results.filter(r => r.status === 'completed').length,
+          brandsTimedOut: totalTimedOut,
+          brandsSkipped: results.filter(r => r.status === 'skipped').length,
+          brandsErrored: results.filter(r => r.status === 'error').length,
           totalBrands: brandsToProcess.length,
           totalProcessed,
           totalSuccessful,
