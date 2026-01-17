@@ -585,9 +585,10 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const body = await req.json();
-    const { tds_url, product_url, filament_id, brand_slug, dry_run = false, force = false, limit = 25 } = body;
+    const { tds_url, product_url, filament_id, brand_slug, dry_run = false, force = false, limit = 5 } = body;
 
     // BATCH MODE: Process multiple filaments for a brand
+    // Uses smaller batches (limit=5 default) to prevent timeouts
     if (brand_slug) {
       console.log(`Batch parsing TDS for brand: ${brand_slug}, limit: ${limit}, force: ${force}`);
 
@@ -641,18 +642,25 @@ Deno.serve(async (req) => {
         });
       }
 
-      console.log(`Found ${filaments.length} filaments to parse`);
+      console.log(`Found ${filaments.length} filaments to parse for ${brand_slug}`);
 
       const results: any[] = [];
       let successful = 0;
       let failed = 0;
 
+      // Process filaments sequentially with individual timeouts
       for (const filament of filaments) {
+        const startTime = Date.now();
         console.log(`Processing: ${filament.product_title}`);
 
         try {
-          // Fetch TDS content
-          const tdsContent = await fetchTDSContent(filament.tds_url!, firecrawlApiKey);
+          // Fetch TDS content with timeout
+          const tdsContent = await Promise.race([
+            fetchTDSContent(filament.tds_url!, firecrawlApiKey),
+            new Promise<null>((_, reject) => 
+              setTimeout(() => reject(new Error('TDS fetch timeout')), 30000)
+            )
+          ]);
           
           if (!tdsContent) {
             results.push({
@@ -662,13 +670,19 @@ Deno.serve(async (req) => {
               fieldsExtracted: 0,
               confidence: 0,
               error: 'Could not fetch TDS content',
+              duration_ms: Date.now() - startTime,
             });
             failed++;
             continue;
           }
 
-          // Extract with AI
-          const extractedData = await extractTDSWithAI(tdsContent, lovableApiKey);
+          // Extract with AI with timeout
+          const extractedData = await Promise.race([
+            extractTDSWithAI(tdsContent, lovableApiKey),
+            new Promise<null>((_, reject) => 
+              setTimeout(() => reject(new Error('AI extraction timeout')), 45000)
+            )
+          ]);
           
           if (!extractedData) {
             results.push({
@@ -678,6 +692,7 @@ Deno.serve(async (req) => {
               fieldsExtracted: 0,
               confidence: 0,
               error: 'AI extraction failed',
+              duration_ms: Date.now() - startTime,
             });
             failed++;
             continue;
@@ -752,30 +767,32 @@ Deno.serve(async (req) => {
             success: true,
             fieldsExtracted,
             confidence: extractedData.extraction_confidence,
-            data: validation.cleanedData,
-            validationWarnings: validation.warnings,
+            duration_ms: Date.now() - startTime,
           });
           successful++;
+          console.log(`Completed ${filament.product_title} in ${Date.now() - startTime}ms`);
 
-          // Rate limit between requests
-          await new Promise(r => setTimeout(r, 1500));
+          // Shorter rate limit - 1 second between filaments
+          await new Promise(r => setTimeout(r, 1000));
 
         } catch (error) {
-          console.error(`Error processing ${filament.id}:`, error);
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+          console.error(`Error processing ${filament.id}: ${errorMsg}`);
           results.push({
             filamentId: filament.id,
             productTitle: filament.product_title,
             success: false,
             fieldsExtracted: 0,
             confidence: 0,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: errorMsg,
+            duration_ms: Date.now() - startTime,
           });
           failed++;
         }
       }
 
-      // Log to brand_sync_logs
-      if (!dry_run) {
+      // Log to brand_sync_logs only if we processed something
+      if (!dry_run && (successful > 0 || failed > 0)) {
         await supabase.from('brand_sync_logs').insert({
           brand_slug,
           brand_id: brand.id,
@@ -783,9 +800,20 @@ Deno.serve(async (req) => {
           status: 'completed',
           products_updated: successful,
           products_failed: failed,
-          success_details: { results },
+          success_details: { 
+            filaments_count: filaments.length,
+            results_summary: results.map(r => ({
+              id: r.filamentId,
+              success: r.success,
+              fields: r.fieldsExtracted,
+              duration_ms: r.duration_ms,
+              error: r.error,
+            }))
+          },
         });
       }
+
+      console.log(`Brand ${brand_slug} complete: ${successful} successful, ${failed} failed`);
 
       return new Response(JSON.stringify({
         success: true,
