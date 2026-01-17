@@ -423,6 +423,16 @@ All colors MUST be HSL.
     background: linear-gradient(90deg, #ef4444, #f87171);
   }
 
+  /* Button hover lift effect - applies to all buttons */
+  .btn-lift {
+    @apply transition-all duration-200;
+  }
+
+  .btn-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px hsla(187 100% 46% / 0.2);
+  }
+
   /* Filter button hover lift effect */
   .filter-btn-hover {
     @apply transition-all duration-200;
@@ -431,6 +441,26 @@ All colors MUST be HSL.
   .filter-btn-hover:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px hsla(0 0% 0% / 0.3);
+  }
+
+  /* Breathing pulse animation for primary action buttons */
+  @keyframes breathing-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsla(187 100% 46% / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 20px 4px hsla(187 100% 46% / 0.2);
+    }
+  }
+
+  .btn-breathing {
+    animation: breathing-pulse 3s ease-in-out infinite;
+  }
+
+  .btn-breathing:hover {
+    animation: none;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px hsla(187 100% 46% / 0.3);
   }
 
   /* Filter tag animations */

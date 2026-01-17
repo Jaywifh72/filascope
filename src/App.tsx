@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
+import { TechFooter } from "./components/TechFooter";
 import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
 import { CompareTray } from "./components/CompareTray";
@@ -153,6 +154,7 @@ const App = () => (
               </Suspense>
               <CompareTray />
                 <PrinterCompareBar />
+                <TechFooter />
                 </MaintenanceModeWrapper>
               </BrowserRouter>
             </TooltipProvider>
