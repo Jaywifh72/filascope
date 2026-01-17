@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogIn, LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2 } from "lucide-react";
+import { LogIn, LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, FlaskConical } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -12,7 +12,6 @@ import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
-import { NavLink } from "@/components/ui/nav-link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +35,12 @@ const Navbar = () => {
   const isResourcesActive = ['/accessories', '/reference', '/wizard'].some(path => 
     location.pathname.startsWith(path)
   );
+
+  // Check active nav link
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,17 +95,43 @@ const Navbar = () => {
     return user?.email?.split("@")[0] || 'User';
   };
 
+  // Lab-style nav link component
+  const LabNavLink = ({ to, children, end = false }: { to: string; children: React.ReactNode; end?: boolean }) => {
+    const active = end ? location.pathname === to : location.pathname.startsWith(to);
+    return (
+      <Link
+        to={to}
+        className={cn(
+          "lab-nav-link relative py-3 px-4 transition-colors duration-200",
+          "hover:text-[hsl(187,100%,46%)]",
+          active ? "text-[hsl(187,100%,46%)]" : "text-foreground/80"
+        )}
+      >
+        {children}
+        {/* Underline indicator */}
+        <span 
+          className={cn(
+            "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[hsl(187,100%,46%)] transition-all duration-300",
+            active ? "w-full" : "w-0 group-hover:w-full"
+          )}
+        />
+      </Link>
+    );
+  };
+
   return (
     <>
       <nav 
-        className="sticky top-0 z-50 transition-all duration-300 bg-background/70 backdrop-blur-[12px] supports-[backdrop-filter]:bg-background/60"
+        className="sticky top-0 z-50 transition-all duration-300"
         style={{
-          borderBottom: '1px solid transparent',
-          borderImage: 'linear-gradient(90deg, #00CFE8, transparent 70%) 1',
+          background: 'hsla(220, 20%, 4%, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid hsla(220, 15%, 18%, 0.5)',
         }}
       >
-        <div className={`flex items-center px-6 gap-4 transition-all duration-300 ${
-          isScrolled ? "h-16 md:h-20" : "h-20 md:h-24"
+        <div className={`flex items-center px-6 gap-6 transition-all duration-300 ${
+          isScrolled ? "h-16 md:h-18" : "h-18 md:h-20"
         }`}>
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0">
@@ -108,59 +139,47 @@ const Navbar = () => {
               src={filascopeLogo} 
               alt="FilaScope" 
               className={`w-auto object-contain transition-all duration-300 ${
-                isScrolled ? "h-12 md:h-16" : "h-16 md:h-24"
+                isScrolled ? "h-10 md:h-12" : "h-12 md:h-16"
               }`}
             />
           </Link>
 
-          {/* Navigation Links - Improved contrast, spacing, and consolidated items */}
-          <nav className="hidden lg:flex items-center gap-6 flex-1 justify-center">
-            <NavLink to="/" end>
-              Materials
-            </NavLink>
-            <NavLink to="/printers">
-              Printers
-            </NavLink>
-            <NavLink to="/brands">
-              Brands
-            </NavLink>
-            <NavLink to="/compare">
-              Compare
-            </NavLink>
+          {/* Navigation Links - Lab Style */}
+          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+            <LabNavLink to="/" end>Materials</LabNavLink>
+            <LabNavLink to="/printers">Printers</LabNavLink>
+            <LabNavLink to="/brands">Brands</LabNavLink>
+            <LabNavLink to="/compare">Compare</LabNavLink>
             
-            {/* Resources Dropdown - Consolidates Accessories, Reference, and Wizard */}
+            {/* Resources Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button 
                   className={cn(
-                    "relative flex items-center gap-1.5 px-6 py-3 text-sm font-semibold transition-colors duration-200 group font-inter",
+                    "lab-nav-link relative flex items-center gap-1.5 py-3 px-4 transition-colors duration-200 group",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-[#00CFE8]",
-                    isResourcesActive ? 'text-[#00CFE8] font-bold' : 'text-white/90'
+                    "hover:text-[hsl(187,100%,46%)]",
+                    isResourcesActive ? 'text-[hsl(187,100%,46%)]' : 'text-foreground/80'
                   )}
                 >
                   Resources
-                  <ChevronDown className="w-4 h-4" />
-                  {/* Animated underline */}
-                  <span 
-                    className={cn(
-                      "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[#00CFE8] transition-all duration-300 ease-out",
-                      isResourcesActive ? "w-full" : "w-0 group-hover:w-full"
-                    )}
-                  />
+                  <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
-                align="start" 
-                className="bg-card/95 backdrop-blur-xl border-border min-w-[220px] p-2 font-inter"
+                align="center" 
+                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-[hsl(220,15%,18%)] min-w-[220px] p-2"
+                style={{
+                  backdropFilter: 'blur(20px)',
+                }}
               >
                 <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium font-inter">
+                  <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                     <Puzzle className="w-4 h-4 text-muted-foreground" />
                     Accessories
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuSeparator className="my-2 bg-border/50" />
                 <DropdownMenuItem asChild className="rounded-lg">
                   <Link to="/reference/slicers" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                     <Scissors className="w-4 h-4 text-muted-foreground" />
@@ -191,7 +210,7 @@ const Navbar = () => {
                     Specialty Tools
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuSeparator className="my-2 bg-border/50" />
                 <DropdownMenuItem asChild className="rounded-lg">
                   <Link to="/wizard" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                     <Wand2 className="w-4 h-4 text-muted-foreground" />
@@ -200,11 +219,21 @@ const Navbar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
           </nav>
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
+            {/* Lab Access Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden md:flex items-center gap-2 border-foreground/30 bg-transparent hover:bg-foreground/5 hover:border-foreground/50 text-xs uppercase font-bold tracking-[0.15em] px-4"
+              onClick={() => navigate('/auth')}
+            >
+              <FlaskConical className="w-3.5 h-3.5" />
+              Lab Access
+            </Button>
+            
             <TrendingTriggerButton
               onClick={trendingPanel.openPanel}
               newTrendCount={trendingPanel.newTrendCount}
@@ -215,7 +244,7 @@ const Navbar = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-[#333] bg-[#1A1A1A] font-mono text-xs gap-2 pl-1.5 pr-3">
+                  <Button variant="outline" size="sm" className="border-border bg-card font-mono text-xs gap-2 pl-1.5 pr-3">
                     <Avatar className="w-6 h-6">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
                       <AvatarFallback className="text-[10px] bg-muted">
@@ -225,7 +254,7 @@ const Navbar = () => {
                     <span className="hidden sm:inline">{getDisplayLabel()}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#333]">
+                <DropdownMenuContent align="end" className="bg-card border-border">
                   <div className="flex items-center gap-3 px-2 py-2">
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
@@ -242,7 +271,7 @@ const Navbar = () => {
                       </span>
                     </div>
                   </div>
-                  <DropdownMenuSeparator className="bg-[#333]" />
+                  <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem asChild>
                     <Link to="/vault" className="flex items-center font-mono text-xs">
                       <Archive className="w-3 h-3 mr-2" />
@@ -255,7 +284,7 @@ const Navbar = () => {
                       SETTINGS
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-[#333]" />
+                  <DropdownMenuSeparator className="bg-border" />
                   {isAdmin && (
                     <>
                       <DropdownMenuItem asChild>
@@ -270,7 +299,7 @@ const Navbar = () => {
                           MAINTENANCE
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-[#333]" />
+                      <DropdownMenuSeparator className="bg-border" />
                     </>
                   )}
                   <DropdownMenuItem onClick={handleSignOut} className="font-mono text-xs">
@@ -279,14 +308,7 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Button variant="outline" size="sm" asChild className="border-[#333] bg-[#1A1A1A] font-mono text-xs">
-                <Link to="/auth">
-                  <LogIn className="w-3 h-3 mr-1.5" />
-                  LOGIN
-                </Link>
-              </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </nav>

@@ -44,39 +44,39 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Pure dark theme with neon cyan accents */
-    --background: 0 0% 4%; /* #0A0A0A */
+    /* High-End Laboratory Theme - Deep dark with precision accents */
+    --background: 220 20% 4%; /* #0A0C10 */
     --foreground: 0 0% 95%;
 
-    --card: 0 0% 6%; /* Slightly lighter than background */
+    --card: 220 15% 7%; /* Slightly lighter than background */
     --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 8%;
+    --popover: 220 15% 9%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 180 100% 50%; /* Neon Cyan #00FFFF */
-    --primary-foreground: 0 0% 4%;
+    --primary: 187 100% 46%; /* Lab Cyan #00CFE8 */
+    --primary-foreground: 220 20% 4%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 220 15% 12%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 10% 65%;
 
-    --accent: 0 0% 15%;
+    --accent: 220 15% 15%;
     --accent-foreground: 0 0% 95%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 345 100% 53%; /* Lab Magenta #FF0055 */
     --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 20%; /* #333333 */
-    --border-hover: 180 100% 50%; /* Neon Cyan for hover */
-    --input: 0 0% 15%;
-    --ring: 180 100% 50%;
+    --border: 220 15% 18%;
+    --border-hover: 187 100% 46%; /* Lab Cyan for hover */
+    --input: 220 15% 15%;
+    --ring: 187 100% 46%;
 
     --radius: 0.5rem;
 
-    --chart-1: 180 100% 50%;
+    --chart-1: 187 100% 46%;
     --chart-2: 160 80% 45%;
     --chart-3: 200 40% 30%;
     --chart-4: 45 80% 60%;
@@ -85,27 +85,32 @@ All colors MUST be HSL.
     --amazon: 36 100% 50%;
     --amazon-foreground: 0 0% 0%;
 
-    --sidebar-background: 0 0% 4%;
+    --sidebar-background: 220 20% 4%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 180 100% 50%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-primary: 187 100% 46%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 15% 12%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 180 100% 50%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 187 100% 46%;
+
+    /* Lab Theme Colors */
+    --lab-cyan: 187 100% 46%; /* #00CFE8 */
+    --lab-magenta: 345 100% 53%; /* #FF0055 */
+    --lab-background: 220 20% 4%; /* #0A0C10 */
 
     /* Custom effects */
-    --gradient-cyan: linear-gradient(135deg, hsl(180 100% 50%), hsl(160 80% 45%));
-    --shadow-glow: 0 0 20px hsla(180 100% 50% / 0.3);
-    --shadow-glow-strong: 0 0 30px hsla(180 100% 50% / 0.5);
+    --gradient-cyan: linear-gradient(135deg, hsl(187 100% 46%), hsl(160 80% 45%));
+    --shadow-glow: 0 0 20px hsla(187 100% 46% / 0.3);
+    --shadow-glow-strong: 0 0 30px hsla(187 100% 46% / 0.5);
 
     /* Semantic Colors - For status indicators and badges */
     --color-success: 142 76% 36%;
     --color-success-light: 142 76% 90%;
     --color-warning: 25 95% 53%;
     --color-warning-light: 25 95% 90%;
-    --color-error: 0 84% 60%;
-    --color-error-light: 0 84% 90%;
+    --color-error: 345 100% 53%;
+    --color-error-light: 345 100% 90%;
     --color-info: 217 91% 60%;
     --color-info-light: 217 91% 90%;
     --color-neutral: 215 16% 47%;
@@ -159,12 +164,45 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
+    position: relative;
   }
   
-  /* Typography Hierarchy - High-End Tech Aesthetic */
+  /* Laboratory Background Effects */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: -2;
+    background: 
+      /* Radial dot grid overlay */
+      radial-gradient(circle at center, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: 
+      /* Cyan glow - top right */
+      radial-gradient(ellipse 60% 50% at 85% 15%, hsla(187 100% 46% / 0.05) 0%, transparent 60%),
+      /* Magenta glow - bottom left */
+      radial-gradient(ellipse 60% 50% at 15% 85%, hsla(345 100% 53% / 0.05) 0%, transparent 60%);
+  }
+  
+  /* Typography Hierarchy - High-End Laboratory Aesthetic */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', 'Geist', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
   }
@@ -189,6 +227,12 @@ All colors MUST be HSL.
   /* Section headings - light weight, wide tracking */
   .section-heading {
     @apply font-light tracking-[0.2em] uppercase;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Lab navigation link style */
+  .lab-nav-link {
+    @apply text-xs uppercase font-bold tracking-[0.2em];
     font-family: 'Inter', sans-serif;
   }
 }
