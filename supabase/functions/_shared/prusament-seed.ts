@@ -342,19 +342,15 @@ export const PRUSAMENT_PRODUCT_SEED: PrusamentProductSeed[] = [
   { filamentName: 'Prusament PP Glass Fiber Natural 850g (NFC)', material: 'PP-GF', productUrl: 'https://www.prusa3d.com/product/prusament-pp-glass-fiber-natural-850g-nfc/', color: 'Natural', colorHex: '#F5F5DC', weightGrams: 850, hasNfc: true, isRefill: false },
   
   // =====================================================================
-  // PVB (Alcohol-smoothable)
+  // DISCONTINUED PRODUCTS (removed from sync ~2025):
+  // - Prusament PVB Natural 500g (NFC) - product page returns MK404
+  // - Prusament Woodfill Chocolate Brown 750g - product page returns MK404
+  // - Prusament Woodfill Linden Light 750g - product page returns MK404
+  // - Prusament Woodfill Pastel Brown 750g - product page returns MK404
   // =====================================================================
-  { filamentName: 'Prusament PVB Natural 500g (NFC)', material: 'PVB', productUrl: 'https://www.prusa3d.com/product/prusament-pvb-natural-500g-nfc/', color: 'Natural', colorHex: '#F5F5DC', weightGrams: 500, hasNfc: true, isRefill: false },
   
   // =====================================================================
-  // WOODFILL (PLA + Wood)
-  // =====================================================================
-  { filamentName: 'Prusament Woodfill Chocolate Brown 750g', material: 'Woodfill', productUrl: 'https://www.prusa3d.com/product/prusament-woodfill-chocolate-brown-750g/', color: 'Chocolate Brown', colorHex: '#7B3F00', weightGrams: 750, hasNfc: false, isRefill: false },
-  { filamentName: 'Prusament Woodfill Linden Light 750g', material: 'Woodfill', productUrl: 'https://www.prusa3d.com/product/prusament-woodfill-linden-light-750g/', color: 'Linden Light', colorHex: '#DEB887', weightGrams: 750, hasNfc: false, isRefill: false },
-  { filamentName: 'Prusament Woodfill Pastel Brown 750g', material: 'Woodfill', productUrl: 'https://www.prusa3d.com/product/prusament-woodfill-pastel-brown-750g/', color: 'Pastel Brown', colorHex: '#8B4513', weightGrams: 750, hasNfc: false, isRefill: false },
-  
-  // =====================================================================
-  // PEI 1010 (High-performance ULTEM)
+  // PEI 1010 (High-performance ULTEM) - Currently out of stock but real product
   // =====================================================================
   { filamentName: 'Prusament PEI 1010 Natural 500g (NFC)', material: 'PEI', productUrl: 'https://www.prusa3d.com/product/prusament-pei-1010-natural-500g-nfc/', color: 'Natural', colorHex: '#F5F5DC', weightGrams: 500, hasNfc: true, isRefill: false },
 ];
