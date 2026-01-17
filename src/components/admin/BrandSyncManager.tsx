@@ -84,7 +84,7 @@ export function BrandSyncManager() {
   const [dryRun, setDryRun] = useState(true);
   const [cleanSlate, setCleanSlate] = useState(false);
   const [materialFilter, setMaterialFilter] = useState("");
-  const [limit, setLimit] = useState<number>(100);
+  const [limit, setLimit] = useState<number>(500);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [syncDocsOpen, setSyncDocsOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);

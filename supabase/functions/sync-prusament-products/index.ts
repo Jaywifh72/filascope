@@ -376,14 +376,17 @@ Deno.serve(async (req) => {
 
     // Parse options
     let enableScraping = true;
+    let limit: number | undefined;
     try {
       const body = await req.json();
       enableScraping = body.enableScraping !== false;
+      limit = body.limit;
     } catch { /* no body */ }
 
     console.log('[Prusament] Starting CSV-seeded sync (upsert pattern)...');
     console.log(`[Prusament] Seed contains ${PRUSAMENT_PRODUCT_SEED.length} products`);
     console.log(`[Prusament] Background scraping enabled: ${enableScraping && !!firecrawlApiKey}`);
+    console.log(`[Prusament] Limit: ${limit || 'none (all products)'}`);
 
     // Get brand info
     const { data: brand } = await supabase
@@ -403,15 +406,66 @@ Deno.serve(async (req) => {
       })
       .eq('brand_slug', 'prusament');
 
-    // Filter seed data
-    const validProducts = PRUSAMENT_PRODUCT_SEED.filter(p => !shouldExcludePrusamentProduct(p));
+    // Filter seed data and apply limit
+    let validProducts = PRUSAMENT_PRODUCT_SEED.filter(p => !shouldExcludePrusamentProduct(p));
+    const totalValidProducts = validProducts.length;
+    
+    // Apply limit if specified
+    if (limit && limit > 0 && limit < validProducts.length) {
+      validProducts = validProducts.slice(0, limit);
+      console.log(`[Prusament] Limiting to ${limit} of ${totalValidProducts} valid products`);
+    }
+    
     stats.discovered = validProducts.length;
-    console.log(`[Prusament] Valid products after filtering: ${validProducts.length}`);
+    console.log(`[Prusament] Processing ${validProducts.length} products (${totalValidProducts} total available)`);
+
+    // Create sync log for progress tracking
+    const { data: syncLog } = await supabase
+      .from('brand_sync_logs')
+      .insert({
+        brand_slug: 'prusament',
+        brand_id: brandId,
+        sync_type: 'incremental',
+        status: 'in_progress',
+        started_at: new Date().toISOString(),
+        products_discovered: validProducts.length,
+      })
+      .select('id')
+      .single();
+    
+    const syncLogId = syncLog?.id;
+    console.log(`[Prusament] Sync log created: ${syncLogId}`);
 
     // Track product IDs for background enrichment
     const productIdsForEnrichment: string[] = [];
 
+    // Helper to update sync progress
+    const updateProgress = async (current: number, currentProduct: string) => {
+      if (!syncLogId) return;
+      try {
+        await supabase
+          .from('brand_sync_logs')
+          .update({
+            products_processed: {
+              stage: 'Processing products',
+              current,
+              total: validProducts.length,
+              current_product: currentProduct,
+              productsProcessed: current,
+              created: stats.created,
+              updated: stats.updated,
+              errors: stats.errors,
+              isRealProgress: true,
+            },
+          })
+          .eq('id', syncLogId);
+      } catch (e) {
+        console.log('[Prusament] Failed to update progress:', e);
+      }
+    };
+
     // PHASE 1: Fast upsert all products from CSV seed (no scraping, no deletion)
+    let processedCount = 0;
     for (const product of validProducts) {
       try {
         const cleanColor = cleanPrusamentColorName(product.color);
@@ -507,9 +561,16 @@ Deno.serve(async (req) => {
         // Track for background enrichment
         productIdsForEnrichment.push(productId);
 
+        // Update progress every 10 products
+        processedCount++;
+        if (processedCount % 10 === 0 || processedCount === validProducts.length) {
+          await updateProgress(processedCount, product.filamentName);
+        }
+
       } catch (err) {
         console.error(`[Prusament] Error processing ${product.filamentName}:`, err);
         stats.errors++;
+        processedCount++;
       }
     }
 
@@ -540,6 +601,32 @@ Deno.serve(async (req) => {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[Prusament] Phase 1 (seed sync) complete in ${duration}s:`, stats);
 
+    // Mark sync log as completed with final stats
+    if (syncLogId) {
+      await supabase
+        .from('brand_sync_logs')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          duration_seconds: Math.round(parseFloat(duration)),
+          products_created: stats.created,
+          products_updated: stats.updated,
+          products_failed: stats.errors,
+          products_discovered: validProducts.length,
+          products_processed: {
+            stage: 'Complete',
+            current: validProducts.length,
+            total: validProducts.length,
+            productsProcessed: validProducts.length,
+            created: stats.created,
+            updated: stats.updated,
+            errors: stats.errors,
+            isRealProgress: true,
+          },
+        })
+        .eq('id', syncLogId);
+    }
+
     // PHASE 2: Background enrichment with real prices/images
     if (enableScraping && firecrawlApiKey && productIdsForEnrichment.length > 0) {
       console.log(`[Prusament] Starting background enrichment for ${productIdsForEnrichment.length} products...`);
@@ -561,6 +648,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       vendor: 'Prusament',
+      syncLogId,
       stats,
       duration: `${duration}s`,
       backgroundEnrichment: enableScraping && !!firecrawlApiKey,

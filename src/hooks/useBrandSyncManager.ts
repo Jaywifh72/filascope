@@ -168,7 +168,21 @@ export function useBrandSyncManager() {
           };
 
           setResult(syncResult);
-          setProgress({ stage: 'Complete', current: 100, total: 100, isRealProgress: true });
+          
+          // Use actual product counts for completion, not hardcoded 100
+          const actualTotal = data.products_discovered || 
+                              (data.products_created || 0) + (data.products_updated || 0) + (data.products_failed || 0) ||
+                              100;
+          setProgress({ 
+            stage: 'Complete', 
+            current: actualTotal, 
+            total: actualTotal, 
+            isRealProgress: true,
+            productsProcessed: actualTotal,
+            created: data.products_created || 0,
+            updated: data.products_updated || 0,
+            errors: data.products_failed || 0,
+          });
 
           // Invalidate queries
           queryClient.invalidateQueries({ queryKey: ['brand-data-quality', brandSlug] });
@@ -313,7 +327,16 @@ export function useBrandSyncManager() {
       }
 
       // For synchronous syncs (like dry run or generic), handle normally
-      setProgress({ stage: 'Complete', current: 100, total: 100, isRealProgress: true });
+      const syncTotal = data?.stats?.discovered || data?.summary?.total || data?.summary?.totalDiscovered || 100;
+      setProgress({ 
+        stage: 'Complete', 
+        current: syncTotal, 
+        total: syncTotal, 
+        isRealProgress: true,
+        created: data?.stats?.created || data?.summary?.created || 0,
+        updated: data?.stats?.updated || data?.summary?.updated || 0,
+        errors: data?.stats?.errors || data?.summary?.errors || 0,
+      });
 
       const syncResult: SyncResult = {
         success: data?.success ?? true,
