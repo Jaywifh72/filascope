@@ -202,18 +202,26 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             </div>
           </form>
 
-          {/* Prominent Printer Selector - NEW POSITION */}
+          {/* Prominent Printer Selector */}
           <div 
-            className="w-full mb-8 animate-fade-in"
+            className="w-full mb-4 animate-fade-in"
             style={{ animationDelay: "0.55s" }}
           >
             <ProminentPrinterSelector compatibleCount={compatibleCount} />
           </div>
           
+          {/* Printer Specs Grid - directly below printer selector */}
+          <div 
+            className="w-full mb-8 animate-fade-in"
+            style={{ animationDelay: "0.6s" }}
+          >
+            <PrinterSpecsGrid />
+          </div>
+          
           {/* CTA Button Row */}
           <div 
             className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 w-full sm:w-auto animate-fade-in"
-            style={{ animationDelay: "0.6s" }}
+            style={{ animationDelay: "0.65s" }}
           >
             {/* Primary Button - Cyan-to-Blue Gradient */}
             <Button 
@@ -253,14 +261,6 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 Material Wizard
               </span>
             </Button>
-          </div>
-          
-          {/* Material Specs Grid */}
-          <div 
-            className="w-full mt-12 animate-fade-in"
-            style={{ animationDelay: "0.7s" }}
-          >
-            <PrinterSpecsGrid />
           </div>
         </div>
       </div>
