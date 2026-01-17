@@ -18,18 +18,19 @@ const ResultsHeader = ({
   const printerName = selectedPrinter?.model_name || "";
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-4 hover:border-primary/20 transition-colors duration-300">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 hover:border-primary/20 transition-colors duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         {/* Results Count */}
         <div className="flex flex-col gap-1">
-          <p className="text-lg sm:text-xl font-semibold text-foreground">
-            <span className="text-primary font-bold">{count.toLocaleString()}</span>
-            {" "}filaments found
-          </p>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
+            <span className="text-primary font-black">{count.toLocaleString()}</span>
+            {" "}
+            <span className="font-light">filaments found</span>
+          </h2>
           
           {/* Printer Context */}
           {selectedPrinter && (
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <p className="text-sm text-muted-foreground font-light flex items-center gap-1.5">
               <Printer className="w-3.5 h-3.5" />
               Compatible with {printerBrand} {printerName}
             </p>

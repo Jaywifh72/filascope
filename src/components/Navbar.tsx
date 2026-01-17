@@ -135,7 +135,7 @@ const Navbar = () => {
           isScrolled ? "h-16 md:h-18" : "h-18 md:h-20"
         }`}>
           {/* Logo */}
-          <Link to="/" className="flex items-center shrink-0">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <img 
               src={filascopeLogo} 
               alt="FilaScope" 
@@ -143,6 +143,9 @@ const Navbar = () => {
                 isScrolled ? "h-10 md:h-12" : "h-12 md:h-16"
               }`}
             />
+            <span className="hidden sm:inline font-black text-lg uppercase tracking-[0.2em] text-foreground">
+              Filascope
+            </span>
           </Link>
 
           {/* Navigation Links - Lab Style */}

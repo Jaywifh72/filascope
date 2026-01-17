@@ -1,7 +1,7 @@
 const SectionSeparator = () => {
   return (
     <div 
-      className="py-12 sm:py-16 w-full flex justify-center"
+      className="py-16 sm:py-20 w-full flex justify-center"
       role="separator"
       aria-hidden="true"
     >
