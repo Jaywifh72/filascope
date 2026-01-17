@@ -64,7 +64,8 @@ export function CTAButtons({
         >
           <Button
             size="lg"
-            className="h-[52px] px-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
+            variant="primary"
+            className="h-[52px] px-8 gap-2 font-bold"
           >
             View Official Store
             {storePrice && (

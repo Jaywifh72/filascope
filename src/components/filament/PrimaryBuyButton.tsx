@@ -82,12 +82,13 @@ export function PrimaryBuyButton({
           "h-14 px-5 rounded-lg",
           "bg-primary text-primary-foreground",
           "font-semibold text-lg",
-          "shadow-[0_4px_12px_hsl(var(--primary)/0.3)]",
-          "hover:brightness-110 hover:scale-[1.02] hover:shadow-[0_8px_24px_hsl(var(--primary)/0.4)]",
+          "shadow-[0_4px_12px_hsla(187,100%,46%,0.3)]",
+          "hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_hsla(187,100%,46%,0.4)]",
           "active:scale-[0.98]",
           "transition-all duration-200 ease-out",
           "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
-          isLoading && "opacity-70 pointer-events-none"
+          "btn-breathing",
+          isLoading && "opacity-70 pointer-events-none animate-none"
         )}
       >
         <span className="flex items-center gap-2">
