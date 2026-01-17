@@ -5,8 +5,7 @@ import {
   Check, 
   ArrowRight,
   Thermometer,
-  Droplets,
-  ShieldCheck
+  Droplets
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -195,19 +194,19 @@ export function LabReadoutCard({
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-lg transition-all duration-300 overflow-hidden",
-        "border border-white/[0.05]",
+        "group relative rounded-3xl transition-all duration-300 overflow-hidden",
+        "border border-white/10",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-        isHovered && !isOutOfStock && "border-[#00CFE8]/60 shadow-[0_0_25px_hsla(187,100%,46%,0.35)]",
+        isHovered && !isOutOfStock && "border-[#00CFE8]/60 shadow-[0_0_30px_rgba(0,207,232,0.3)]",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
         isOutOfStock && "opacity-70"
       )}
       style={{
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.08}s both`,
-        background: "rgba(0, 0, 0, 0.4)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
+        background: "rgba(10, 12, 16, 0.6)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -215,101 +214,57 @@ export function LabReadoutCard({
         setShowTooltip(false);
       }}
     >
-      {/* Scan Line Animation on Hover */}
-      {isHovered && !isOutOfStock && (
-        <div 
-          className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80 pointer-events-none z-20"
-          style={{
-            animation: 'lab-scan 2s ease-in-out infinite',
-          }}
-        />
-      )}
 
       {/* Out of Stock Overlay */}
       {isOutOfStock && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none">
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none rounded-3xl">
           <span className="text-xs font-mono uppercase tracking-wider text-white/80 bg-black/70 px-3 py-1.5 rounded">
             Out of Stock
           </span>
         </div>
       )}
 
-      {/* Checkbox */}
-      <div 
-        className="absolute top-3 left-3 z-10"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <button
-          onClick={handleCompareToggle}
-          disabled={isCompareDisabled}
-          aria-label={`Add ${filament.product_title} to comparison`}
-          aria-checked={isSelected}
-          role="checkbox"
-          className={cn(
-            "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
-            isSelected || isPendingSelection
-              ? "bg-primary border-primary"
-              : "bg-black/40 border-white/30 hover:border-primary hover:bg-primary/10",
-            isCompareDisabled && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          {(isSelected || isPendingSelection) && (
-            <Check className="w-3 h-3 text-background" strokeWidth={3} />
-          )}
-        </button>
-        
-        {showTooltip && !isSelected && !isCompareDisabled && (
-          <div className="absolute top-full left-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20">
-            Add to compare
-          </div>
-        )}
-      </div>
-
       {/* ═══════════════════════════════════════════════════════════════
-          HEADER: Material Name + Validated Badge | Price (top right)
+          HEADER: Dark header area with material name + price
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative px-4 pt-4 pb-3 border-b border-white/[0.06]">
-        {/* Scan line animation overlay for header */}
-        {isHovered && !isOutOfStock && (
-          <div 
-            className="absolute inset-0 pointer-events-none overflow-hidden"
-            aria-hidden="true"
+      <div className="relative bg-[#14171C] px-4 pt-4 pb-4">
+        {/* Checkbox positioned in header */}
+        <div 
+          className="absolute top-3 left-3 z-10"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <button
+            onClick={handleCompareToggle}
+            disabled={isCompareDisabled}
+            aria-label={`Add ${filament.product_title} to comparison`}
+            aria-checked={isSelected}
+            role="checkbox"
+            className={cn(
+              "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
+              isSelected || isPendingSelection
+                ? "bg-primary border-primary"
+                : "bg-black/40 border-white/30 hover:border-primary hover:bg-primary/10",
+              isCompareDisabled && "opacity-50 cursor-not-allowed"
+            )}
           >
-            <div 
-              className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00CFE8]/60 to-transparent"
-              style={{
-                animation: 'lab-header-scan 1.5s ease-in-out infinite',
-              }}
-            />
-          </div>
-        )}
+            {(isSelected || isPendingSelection) && (
+              <Check className="w-3 h-3 text-background" strokeWidth={3} />
+            )}
+          </button>
+          
+          {showTooltip && !isSelected && !isCompareDisabled && (
+            <div className="absolute top-full left-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20">
+              Add to compare
+            </div>
+          )}
+        </div>
 
         <div className="flex items-start justify-between gap-3 pl-7">
-          {/* Left: Rating + Name + Validated Badge */}
+          {/* Left: Brand + Name */}
           <div className="flex-1 min-w-0">
-            {/* Star Rating */}
-            <div className="flex items-center gap-0.5 mb-1.5">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i}
-                  className={cn(
-                    "w-3.5 h-3.5",
-                    i < starCount 
-                      ? "fill-amber-400 text-amber-400" 
-                      : "fill-transparent text-white/20"
-                  )}
-                />
-              ))}
-              {overallScore && (
-                <span className="ml-1.5 text-[10px] font-mono text-muted-foreground">
-                  {overallScore.toFixed(1)}
-                </span>
-              )}
-            </div>
-            
             {/* Brand */}
-            <div className="flex items-center gap-1.5 mb-1">
+            <div className="flex items-center gap-1.5 mb-1.5">
               {brandLogo && !imageError ? (
                 <img 
                   src={brandLogo} 
@@ -323,17 +278,17 @@ export function LabReadoutCard({
               </span>
             </div>
             
-            {/* Material Name + Validated Badge */}
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
-                {getDisplayTitle()}
-              </h3>
-              {/* Validated Badge */}
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded flex-shrink-0">
-                <ShieldCheck className="w-2.5 h-2.5" />
-                Validated
+            {/* Material Name */}
+            <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-1">
+              {getDisplayTitle()}
+            </h3>
+            
+            {/* Material Type Badge */}
+            {filament.material && (
+              <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
+                {filament.material}
               </span>
-            </div>
+            )}
           </div>
 
           {/* Right: Price (Bold Monospace) */}
@@ -341,57 +296,63 @@ export function LabReadoutCard({
             {isValidPrice && pricePerKg ? (
               <div>
                 <span 
-                  className="text-lg font-bold text-foreground"
-                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  className="text-xl font-bold text-foreground font-mono"
                 >
                   {formatRegionalPrice(pricePerKg, false, userCurrency)}
                 </span>
-                <span 
-                  className="block text-[10px] text-muted-foreground"
-                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                >
+                <span className="block text-[10px] text-muted-foreground font-mono">
                   /kg
                 </span>
               </div>
             ) : (
-              <span 
-                className="text-sm text-muted-foreground"
-                style={{ fontFamily: "'JetBrains Mono', monospace" }}
-              >
+              <span className="text-sm text-muted-foreground font-mono">
                 —
               </span>
             )}
           </div>
         </div>
+        
+        {/* Cyan Scan Line at bottom of header */}
+        <div 
+          className={cn(
+            "absolute bottom-0 left-0 right-0 h-[2px] transition-all duration-300",
+            isHovered && !isOutOfStock 
+              ? "bg-[#00CFE8] shadow-[0_0_12px_#00CFE8,0_0_24px_rgba(0,207,232,0.5)]" 
+              : "bg-[#00CFE8]/30"
+          )}
+          style={{
+            animation: isHovered && !isOutOfStock ? 'scanPulse 1.5s ease-in-out infinite' : 'none',
+          }}
+        />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          BODY: 2-Column Grid - Ideal Temp & Volumetric Flow
+          BODY: 2-Column Technical Grid - Nozzle Temp & Flow Rate
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-4 bg-black/20">
         <div className="grid grid-cols-2 gap-3">
-          {/* Ideal Temp */}
-          <div className="bg-white/[0.02] border border-white/[0.05] rounded px-3 py-2">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Thermometer className="w-3 h-3 text-primary" />
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                Ideal Temp
+          {/* Nozzle Temp */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Thermometer className="w-3 h-3 text-[#00CFE8]" />
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
+                Nozzle Temp
               </span>
             </div>
-            <span className="font-mono text-sm font-semibold text-foreground">
+            <span className="font-mono text-base font-bold text-foreground block">
               {nozzleTemp}
             </span>
           </div>
 
-          {/* Volumetric Flow */}
-          <div className="bg-white/[0.02] border border-white/[0.05] rounded px-3 py-2">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Droplets className="w-3 h-3 text-primary" />
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                Max Speed
+          {/* Flow Rate */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Droplets className="w-3 h-3 text-[#00CFE8]" />
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
+                Flow Rate
               </span>
             </div>
-            <span className="font-mono text-sm font-semibold text-foreground">
+            <span className="font-mono text-base font-bold text-foreground block">
               {volumetricFlow}
             </span>
           </div>
@@ -399,25 +360,46 @@ export function LabReadoutCard({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          FOOTER: Material Badge + View Details CTA
+          FOOTER: Rating + View Details CTA
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-4 pb-4 pt-1 flex items-center justify-between">
-        {/* Material Badge */}
-        {filament.material && (
-          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
-            {filament.material}
-          </span>
-        )}
+      <div className="px-4 py-3 flex items-center justify-between border-t border-white/[0.05]">
+        {/* Star Rating */}
+        <div className="flex items-center gap-1">
+          {[...Array(5)].map((_, i) => (
+            <Star 
+              key={i}
+              className={cn(
+                "w-3 h-3",
+                i < starCount 
+                  ? "fill-amber-400 text-amber-400" 
+                  : "fill-transparent text-white/20"
+              )}
+            />
+          ))}
+          {overallScore && (
+            <span className="ml-1 text-[10px] font-mono text-muted-foreground">
+              {overallScore.toFixed(1)}
+            </span>
+          )}
+        </div>
 
         {/* View Details Link */}
         <Link
           to={`/filament/${filament.id}`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors group/link"
+          className="inline-flex items-center gap-1 text-xs font-medium text-[#00CFE8] hover:text-[#00CFE8]/80 transition-colors group/link"
         >
           <span>Details</span>
-          <ArrowRight className="w-3 h-3 transition-transform group-hover/link:translate-x-0.5" />
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5" />
         </Link>
       </div>
+      
+      {/* Scan pulse animation keyframes */}
+      <style>{`
+        @keyframes scanPulse {
+          0%, 100% { opacity: 1; box-shadow: 0 0 12px #00CFE8, 0 0 24px rgba(0,207,232,0.5); }
+          50% { opacity: 0.7; box-shadow: 0 0 6px #00CFE8, 0 0 12px rgba(0,207,232,0.3); }
+        }
+      `}</style>
     </div>
   );
 }
