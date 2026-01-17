@@ -354,34 +354,23 @@ export function HorizontalFilterBar({
                     </p>
                   ) : (
                     <>
-                      {/* All Brands - Alphabetical Groups */}
+                      {/* All Brands - Flat alphabetical list with numbers first */}
                       <div className="p-2">
-                        {brandSearch ? (
-                          // When searching, show flat list sorted alphabetically
-                          filteredBrands
-                            .sort((a, b) => a.name.localeCompare(b.name))
-                            .map((brand) => (
-                              <BrandRow key={brand.name} brand={brand} />
-                            ))
-                        ) : (
-                          // When not searching, show alphabetical groups using ALL brands
-                          LETTER_GROUPS.map(group => {
-                            const groupBrands = filteredBrands
-                              .filter(b => group.letters.includes(b.name.charAt(0).toUpperCase()))
-                              .sort((a, b) => a.name.localeCompare(b.name));
-                            if (groupBrands.length === 0) return null;
-                            return (
-                              <div key={group.label}>
-                                <div className="px-3 py-1 text-xs text-muted-foreground/70 sticky top-0 bg-popover border-b border-border/50 mb-1">
-                                  {group.label}
-                                </div>
-                                {groupBrands.map((brand) => (
-                                  <BrandRow key={brand.name} brand={brand} />
-                                ))}
-                              </div>
-                            );
+                        {[...filteredBrands]
+                          .sort((a, b) => {
+                            const aStartsWithNumber = /^\d/.test(a.name);
+                            const bStartsWithNumber = /^\d/.test(b.name);
+                            
+                            // Numbers first
+                            if (aStartsWithNumber && !bStartsWithNumber) return -1;
+                            if (!aStartsWithNumber && bStartsWithNumber) return 1;
+                            
+                            // Then alphabetically
+                            return a.name.localeCompare(b.name);
                           })
-                        )}
+                          .map((brand) => (
+                            <BrandRow key={brand.name} brand={brand} />
+                          ))}
                       </div>
                     </>
                   )}
