@@ -171,30 +171,29 @@ export function TechnicalConsoleSidebar({
 
   return (
     <aside className="hidden lg:flex flex-col w-72 border-r border-border bg-background/80 backdrop-blur-md sticky top-0 h-screen overflow-y-auto shrink-0">
-      {/* Header */}
+      {/* ═══════════════════════════════════════════════════════════════
+          PRINTER HUB - System Config Header
+          ═══════════════════════════════════════════════════════════════ */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Settings2 className="w-4 h-4 text-primary" />
-          <span className="font-mono text-xs font-bold text-foreground uppercase tracking-[0.15em]">
-            Technical Console
-          </span>
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded bg-primary/10 border border-primary/20">
+            <Printer className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-mono text-[11px] font-bold text-foreground uppercase tracking-[0.15em]">
+              System Config
+            </span>
+            <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+              Printer Hub
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* System Config Section */}
+      {/* Printer Selection + Live Specs */}
       <div className="p-4 border-b border-border space-y-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Printer className="w-3.5 h-3.5 text-primary" />
-          <span className="font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">
-            System Config
-          </span>
-        </div>
-
-        {/* Printer Selector */}
+        {/* Printer Selector Dropdowns */}
         <div className="space-y-2">
-          <label className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-            Select Printer
-          </label>
           <Select
             value={selectedBrand || ""}
             onValueChange={(val) => {
@@ -233,48 +232,45 @@ export function TechnicalConsoleSidebar({
           )}
         </div>
 
-        {/* Printer Specs Grid - 2x3 */}
-        <div className="grid grid-cols-2 gap-2 pt-2">
-          <SpecItem 
-            icon={Circle} 
-            label="Nozzle Dia" 
-            value={specs.nozzleDia !== null ? `${specs.nozzleDia}` : "--"} 
-            unit="mm"
+        {/* Live Specs Header */}
+        <div className="flex items-center gap-2 pt-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.2em]">
+            Live Specs
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        {/* 2x3 Live Specs Grid */}
+        <div className="grid grid-cols-3 gap-1.5">
+          <LiveSpecCell 
+            label="Nozzle" 
+            value={specs.nozzleDia !== null ? `${specs.nozzleDia}mm` : "--"}
             isLoading={printerLoading}
           />
-          <SpecItem 
-            icon={Thermometer} 
+          <LiveSpecCell 
             label="Nozzle Temp" 
-            value={specs.nozzleTemp !== null ? `${specs.nozzleTemp}` : "--"} 
-            unit="°C"
+            value={specs.nozzleTemp !== null ? `${specs.nozzleTemp}°C` : "--"}
             isLoading={printerLoading}
           />
-          <SpecItem 
-            icon={Thermometer} 
+          <LiveSpecCell 
             label="Bed Temp" 
-            value={specs.bedTemp !== null ? `${specs.bedTemp}` : "--"} 
-            unit="°C"
+            value={specs.bedTemp !== null ? `${specs.bedTemp}°C` : "--"}
             isLoading={printerLoading}
           />
-          <SpecItem 
-            icon={Zap} 
+          <LiveSpecCell 
             label="Max Speed" 
-            value={specs.printSpeed !== null ? `${specs.printSpeed}` : "--"} 
-            unit="mm/s"
+            value={specs.printSpeed !== null ? `${specs.printSpeed}mm/s` : "--"}
             isLoading={printerLoading}
           />
-          <SpecItem 
-            icon={Gauge} 
-            label="Acceleration" 
-            value={formatAcceleration(specs.acceleration)} 
-            unit="mm/s²"
+          <LiveSpecCell 
+            label="Accel" 
+            value={formatAcceleration(specs.acceleration) + (specs.acceleration !== null ? "mm/s²" : "")}
             isLoading={printerLoading}
           />
-          <SpecItem 
-            icon={Wind} 
+          <LiveSpecCell 
             label="Flow Rate" 
-            value={specs.flowRate !== null ? `${specs.flowRate}` : "--"} 
-            unit="mm³/s"
+            value={specs.flowRate !== null ? `${specs.flowRate}mm³/s` : "--"}
             isLoading={printerLoading}
           />
         </div>
@@ -337,31 +333,31 @@ export function TechnicalConsoleSidebar({
   );
 }
 
-interface SpecItemProps {
-  icon: React.ElementType;
+/* ═══════════════════════════════════════════════════════════════
+   LIVE SPEC CELL - Compact monospace readout for raw machine data
+   ═══════════════════════════════════════════════════════════════ */
+interface LiveSpecCellProps {
   label: string;
   value: string;
-  unit: string;
   isLoading?: boolean;
 }
 
-function SpecItem({ icon: Icon, label, value, unit, isLoading }: SpecItemProps) {
+function LiveSpecCell({ label, value, isLoading }: LiveSpecCellProps) {
   return (
-    <div className="flex items-center gap-2 p-2 rounded bg-background/50 border border-border/50">
-      <Icon className="w-3 h-3 text-primary flex-shrink-0" />
-      <div className="flex flex-col min-w-0">
-        <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider truncate">
-          {label}
+    <div className="flex flex-col items-center justify-center p-1.5 rounded bg-background/30 border border-border/30">
+      <span className="font-mono text-[8px] text-muted-foreground uppercase tracking-wider text-center leading-tight">
+        {label}
+      </span>
+      {isLoading ? (
+        <div className="h-3.5 w-8 bg-muted/50 rounded animate-pulse mt-0.5" />
+      ) : (
+        <span 
+          className="font-mono text-[10px] font-bold text-foreground tabular-nums"
+          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        >
+          {value}
         </span>
-        {isLoading ? (
-          <div className="h-4 w-10 bg-muted/50 rounded animate-pulse" />
-        ) : (
-          <div className="flex items-baseline gap-0.5">
-            <span className="font-mono text-sm font-bold text-foreground">{value}</span>
-            <span className="font-mono text-[9px] text-muted-foreground">{unit}</span>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
