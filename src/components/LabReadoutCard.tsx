@@ -5,7 +5,8 @@ import {
   Check, 
   ArrowRight,
   Thermometer,
-  Droplets
+  Droplets,
+  ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -195,15 +196,18 @@ export function LabReadoutCard({
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
         "group relative rounded-lg transition-all duration-300 overflow-hidden",
-        "bg-card border border-white/[0.08]",
+        "border border-white/[0.05]",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-        isHovered && !isOutOfStock && "border-primary shadow-[0_0_20px_hsla(187,100%,46%,0.3)]",
+        isHovered && !isOutOfStock && "border-[#00CFE8]/60 shadow-[0_0_25px_hsla(187,100%,46%,0.35)]",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
         isOutOfStock && "opacity-70"
       )}
       style={{
-        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.08}s both`
+        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.08}s both`,
+        background: "rgba(0, 0, 0, 0.4)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -263,9 +267,9 @@ export function LabReadoutCard({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          HEADER: Star Rating + Material Name + Price
+          HEADER: Material Name + Validated Badge | Price (top right)
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative px-4 pt-4 pb-3 border-b border-white/[0.06] bg-white/[0.02]">
+      <div className="relative px-4 pt-4 pb-3 border-b border-white/[0.06]">
         {/* Scan line animation overlay for header */}
         {isHovered && !isOutOfStock && (
           <div 
@@ -273,7 +277,7 @@ export function LabReadoutCard({
             aria-hidden="true"
           >
             <div 
-              className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+              className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00CFE8]/60 to-transparent"
               style={{
                 animation: 'lab-header-scan 1.5s ease-in-out infinite',
               }}
@@ -282,7 +286,7 @@ export function LabReadoutCard({
         )}
 
         <div className="flex items-start justify-between gap-3 pl-7">
-          {/* Left: Rating + Name */}
+          {/* Left: Rating + Name + Validated Badge */}
           <div className="flex-1 min-w-0">
             {/* Star Rating */}
             <div className="flex items-center gap-0.5 mb-1.5">
@@ -304,7 +308,7 @@ export function LabReadoutCard({
               )}
             </div>
             
-            {/* Brand + Material Name */}
+            {/* Brand */}
             <div className="flex items-center gap-1.5 mb-1">
               {brandLogo && !imageError ? (
                 <img 
@@ -319,22 +323,43 @@ export function LabReadoutCard({
               </span>
             </div>
             
-            <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
-              {getDisplayTitle()}
-            </h3>
+            {/* Material Name + Validated Badge */}
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
+                {getDisplayTitle()}
+              </h3>
+              {/* Validated Badge */}
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded flex-shrink-0">
+                <ShieldCheck className="w-2.5 h-2.5" />
+                Validated
+              </span>
+            </div>
           </div>
 
-          {/* Right: Price */}
+          {/* Right: Price (Bold Monospace) */}
           <div className="text-right flex-shrink-0">
             {isValidPrice && pricePerKg ? (
               <div>
-                <span className="font-mono text-lg font-bold text-foreground">
+                <span 
+                  className="text-lg font-bold text-foreground"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
                   {formatRegionalPrice(pricePerKg, false, userCurrency)}
                 </span>
-                <span className="block text-[10px] text-muted-foreground font-mono">/kg</span>
+                <span 
+                  className="block text-[10px] text-muted-foreground"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  /kg
+                </span>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground font-mono">—</span>
+              <span 
+                className="text-sm text-muted-foreground"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                —
+              </span>
             )}
           </div>
         </div>
