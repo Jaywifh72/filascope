@@ -16,21 +16,21 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <section className="relative overflow-hidden min-h-[90vh] flex items-center">
-      {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-16 md:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+    <section className="relative overflow-hidden">
+      {/* Main content - Compact height, no separate background */}
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-12 md:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           {/* Left: Text Content */}
-          <div className="flex flex-col items-start text-left">
-            {/* Headline - Cinematic styling */}
+          <div className="flex flex-col items-start text-left order-1">
+            {/* Headline - Smaller, more compact */}
             <h1 
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-light tracking-[0.2em] leading-[1.15] mb-8 animate-fade-in uppercase"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-light tracking-[0.15em] leading-[1.2] mb-6 animate-fade-in uppercase"
             >
               Measure Material.
               <br />
               Master The{" "}
-              <span className="font-bold italic" style={{ color: '#00CFE8' }}>Print.</span>
+              <span className="font-bold italic text-primary">Print.</span>
             </h1>
             
             {/* Sub-text */}
@@ -83,12 +83,12 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
           
           {/* Right: Glass Container with 3D Box Visual */}
           <div 
-            className="hidden lg:flex justify-center items-center animate-fade-in"
+            className="hidden lg:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Large Glass Container */}
+            {/* Compact Glass Container */}
             <div 
-              className="relative p-12 rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
+              className="relative p-8 rounded-2xl border border-white/10 shadow-xl overflow-hidden"
               style={{
                 transform: "rotate(6deg)",
                 backdropFilter: "blur(20px)",
@@ -106,46 +106,46 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 }}
               />
               
-              {/* 3D Stacked Boxes - Filascope Logo */}
-              <div className="relative w-[320px] h-[320px] flex items-center justify-center" style={{ perspective: "1000px" }}>
+              {/* 3D Stacked Boxes - Compact */}
+              <div className="relative w-[240px] h-[240px] flex items-center justify-center" style={{ perspective: "1000px" }}>
                 {/* Bottom Box - Magenta */}
                 <div 
-                  className="absolute w-36 h-36 rounded-2xl"
+                  className="absolute w-28 h-28 rounded-xl"
                   style={{
-                    transform: "translateX(-45px) translateY(55px) translateZ(-30px) rotateX(-15deg) rotateY(15deg)",
+                    transform: "translateX(-35px) translateY(40px) translateZ(-25px) rotateX(-15deg) rotateY(15deg)",
                     transformStyle: "preserve-3d",
                     border: "2px solid rgba(255, 0, 85, 0.5)",
                     background: "linear-gradient(135deg, rgba(255, 0, 85, 0.25) 0%, rgba(255, 0, 85, 0.08) 100%)",
-                    boxShadow: "0 25px 50px -12px rgba(255, 0, 85, 0.35)",
+                    boxShadow: "0 20px 40px -12px rgba(255, 0, 85, 0.35)",
                   }}
                 />
                 
                 {/* Middle Box - Clear/Glass */}
                 <div 
-                  className="absolute w-36 h-36 rounded-2xl backdrop-blur-sm"
+                  className="absolute w-28 h-28 rounded-xl backdrop-blur-sm"
                   style={{
-                    transform: "translateX(0px) translateY(12px) translateZ(0px) rotateX(-15deg) rotateY(15deg)",
+                    transform: "translateX(0px) translateY(8px) translateZ(0px) rotateX(-15deg) rotateY(15deg)",
                     transformStyle: "preserve-3d",
                     border: "2px solid rgba(255, 255, 255, 0.35)",
                     background: "linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%)",
-                    boxShadow: "0 25px 50px -12px rgba(255, 255, 255, 0.15)",
+                    boxShadow: "0 20px 40px -12px rgba(255, 255, 255, 0.15)",
                   }}
                 />
                 
                 {/* Top Box - Cyan */}
                 <div 
-                  className="absolute w-36 h-36 rounded-2xl"
+                  className="absolute w-28 h-28 rounded-xl"
                   style={{
-                    transform: "translateX(45px) translateY(-35px) translateZ(30px) rotateX(-15deg) rotateY(15deg)",
+                    transform: "translateX(35px) translateY(-28px) translateZ(25px) rotateX(-15deg) rotateY(15deg)",
                     transformStyle: "preserve-3d",
                     border: "2px solid rgba(0, 207, 232, 0.6)",
                     background: "linear-gradient(135deg, rgba(0, 207, 232, 0.3) 0%, rgba(0, 207, 232, 0.08) 100%)",
-                    boxShadow: "0 25px 50px -12px rgba(0, 207, 232, 0.45), inset 0 0 30px rgba(0, 207, 232, 0.1)",
+                    boxShadow: "0 20px 40px -12px rgba(0, 207, 232, 0.45), inset 0 0 20px rgba(0, 207, 232, 0.1)",
                   }}
                 >
                   {/* Inner glow effect */}
                   <div 
-                    className="absolute inset-0 rounded-2xl blur-xl"
+                    className="absolute inset-0 rounded-xl blur-lg"
                     style={{ background: "rgba(0, 207, 232, 0.15)" }}
                   />
                 </div>
@@ -159,14 +159,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               
               {/* Corner accents - Cyan */}
               <div 
-                className="absolute top-5 left-5 w-10 h-10 rounded-tl-lg"
+                className="absolute top-4 left-4 w-8 h-8 rounded-tl-lg"
                 style={{ 
                   borderLeft: "2px solid rgba(0, 207, 232, 0.5)",
                   borderTop: "2px solid rgba(0, 207, 232, 0.5)",
                 }}
               />
               <div 
-                className="absolute bottom-5 right-5 w-10 h-10 rounded-br-lg"
+                className="absolute bottom-4 right-4 w-8 h-8 rounded-br-lg"
                 style={{ 
                   borderRight: "2px solid rgba(0, 207, 232, 0.5)",
                   borderBottom: "2px solid rgba(0, 207, 232, 0.5)",
