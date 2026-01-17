@@ -36,28 +36,25 @@ interface BrandStats {
 interface BatchResult {
   brandSlug: string;
   brandName: string;
-  processed: number;
-  successful: number;
-  failed: number;
-  skipped: number;
-  status: 'completed' | 'timeout' | 'error' | 'skipped';
+  syncLogId?: string;
+  filamentCount: number;
+  status: 'started' | 'skipped' | 'error';
   message?: string;
 }
 
-// Safely call parse-filament-tds with timeout and error handling
-async function callParseTdsWithTimeout(
+// Fire-and-forget call to parse-filament-tds - returns immediately
+async function triggerBrandParsing(
   supabaseUrl: string,
   authHeader: string,
   brandSlug: string,
   limit: number,
   dryRun: boolean,
-  force: boolean,
-  timeoutMs: number = 55000
-): Promise<{ success: boolean; data?: any; error?: string; timedOut?: boolean }> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
+  force: boolean
+): Promise<{ success: boolean; syncLogId?: string; message?: string; filamentCount?: number }> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for trigger
+
     const response = await fetch(`${supabaseUrl}/functions/v1/parse-filament-tds`, {
       method: 'POST',
       headers: {
@@ -69,57 +66,59 @@ async function callParseTdsWithTimeout(
         limit,
         dry_run: dryRun,
         force,
+        background: true, // Enable background processing
       }),
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
 
-    // Check HTTP status first
     if (!response.ok) {
-      console.warn(`Brand ${brandSlug} returned HTTP ${response.status}`);
-      return { 
-        success: false, 
-        error: `HTTP ${response.status}: ${response.statusText}` 
-      };
+      const text = await response.text();
+      console.warn(`Brand ${brandSlug} trigger failed with HTTP ${response.status}: ${text.substring(0, 100)}`);
+      return { success: false, message: `HTTP ${response.status}` };
     }
 
-    // Get response text first to validate
     const text = await response.text();
     
-    // Check if response is empty
     if (!text || text.trim() === '') {
-      console.warn(`Brand ${brandSlug} returned empty response`);
-      return { success: false, error: 'Empty response' };
+      return { success: false, message: 'Empty response' };
     }
 
-    // Check if response is HTML (error page)
     if (text.startsWith('<!DOCTYPE') || text.startsWith('<html') || text.startsWith('<')) {
-      console.warn(`Brand ${brandSlug} returned HTML instead of JSON`);
-      return { success: false, error: 'Received HTML error page' };
+      return { success: false, message: 'HTML error response' };
     }
 
-    // Try to parse as JSON
     try {
       const data = JSON.parse(text);
-      return { success: true, data };
+      
+      // Check if it's a "no filaments need parsing" response
+      if (data.message === 'No filaments need parsing') {
+        return { success: true, message: 'No filaments need parsing', filamentCount: 0 };
+      }
+      
+      return { 
+        success: true, 
+        syncLogId: data.syncLogId,
+        message: data.message || 'Background processing started',
+        filamentCount: data.processed || 0,
+      };
     } catch (parseErr) {
-      console.error(`Brand ${brandSlug} JSON parse failed:`, text.substring(0, 200));
-      return { success: false, error: 'Invalid JSON response' };
+      console.error(`Brand ${brandSlug} JSON parse failed:`, text.substring(0, 100));
+      return { success: false, message: 'Invalid JSON' };
     }
 
   } catch (err) {
-    clearTimeout(timeoutId);
-    
     if (err instanceof Error && err.name === 'AbortError') {
-      console.log(`Brand ${brandSlug} timed out after ${timeoutMs}ms`);
-      return { success: false, error: 'Request timeout', timedOut: true };
+      // Timeout is OK for fire-and-forget - the background process may still be running
+      console.log(`Brand ${brandSlug} trigger timed out - may still be processing in background`);
+      return { success: true, message: 'Triggered (response timeout)', filamentCount: -1 };
     }
     
-    console.error(`Brand ${brandSlug} fetch error:`, err);
+    console.error(`Brand ${brandSlug} trigger error:`, err);
     return { 
       success: false, 
-      error: err instanceof Error ? err.message : 'Unknown fetch error' 
+      message: err instanceof Error ? err.message : 'Unknown error' 
     };
   }
 }
@@ -171,7 +170,7 @@ Deno.serve(async (req) => {
       brandSlug = null,
       brandSlugs = null, // Array of brand slugs to process
       syncLogId = null, // For status checks
-      limit = 5, // per brand - reduced to prevent timeouts
+      limit = 25, // per brand - higher limit now that we use background processing
       dryRun = true,
       force = false,
     } = body;
@@ -264,43 +263,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    // PARSE-BRAND MODE: Parse a single brand
+    // PARSE-BRAND MODE: Trigger parsing for a single brand
     if (mode === 'parse-brand' && brandSlug) {
-      console.log(`Parsing TDS for brand: ${brandSlug}, limit: ${limit}`);
+      console.log(`Triggering TDS parsing for brand: ${brandSlug}, limit: ${limit}`);
       
-      const result = await callParseTdsWithTimeout(
+      const result = await triggerBrandParsing(
         supabaseUrl,
         authHeader,
         brandSlug,
         limit,
         dryRun,
-        force,
-        55000
+        force
       );
 
-      if (!result.success) {
-        return new Response(JSON.stringify({
-          success: false,
-          mode: 'parse-brand',
-          brandSlug,
-          error: result.error,
-          timedOut: result.timedOut,
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
       return new Response(JSON.stringify({
-        success: true,
+        success: result.success,
         mode: 'parse-brand',
         brandSlug,
-        ...result.data,
+        syncLogId: result.syncLogId,
+        message: result.message,
+        filamentCount: result.filamentCount,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // PARSE-PRIORITY, PARSE-SYNC-MANAGER, or PARSE MODE: Parse brands synchronously with robust error handling
+    // PARSE-PRIORITY, PARSE-SYNC-MANAGER, or PARSE MODE: Trigger all brands in fire-and-forget mode
     if (mode === 'parse-priority' || mode === 'parse' || mode === 'parse-sync-manager' || (Array.isArray(brandSlugs) && brandSlugs.length > 0)) {
       const modeLabel = mode === 'parse-priority' 
         ? 'priority' 
@@ -309,7 +297,7 @@ Deno.serve(async (req) => {
           : brandSlugs?.length 
             ? 'custom' 
             : 'all';
-      console.log(`Batch parsing TDS for ${modeLabel} brands`);
+      console.log(`Batch triggering TDS parsing for ${modeLabel} brands`);
       
       // Get brands to process
       const { data: brands } = await supabase
@@ -334,183 +322,121 @@ Deno.serve(async (req) => {
         brandsToProcess = brands.filter(b => PRIORITY_BRANDS.includes(b.brand_slug));
       }
 
-      // Create a sync log entry for tracking
-      let logId: string | null = null;
-      if (!dryRun) {
-        const { data: logEntry } = await supabase
-          .from('brand_sync_logs')
-          .insert({
-            brand_slug: `batch-tds-${modeLabel}`,
-            sync_type: 'incremental',
-            status: 'running',
-            started_at: new Date().toISOString(),
-            notes: `Batch TDS parsing for ${brandsToProcess.length} brands`,
-          })
-          .select('id')
-          .single();
-        if (logEntry) logId = logEntry.id;
-      }
+      // Create a master sync log for tracking the batch
+      const { data: masterLog } = await supabase
+        .from('brand_sync_logs')
+        .insert({
+          brand_slug: `batch-tds-${modeLabel}`,
+          sync_type: 'batch_tds_parsing',
+          status: 'running',
+          started_at: new Date().toISOString(),
+          notes: `Triggering TDS parsing for ${brandsToProcess.length} brands`,
+        })
+        .select('id')
+        .single();
 
-      // Process brands synchronously with robust error handling
+      const masterLogId = masterLog?.id;
+
+      // Trigger all brands - fire and forget
       const results: BatchResult[] = [];
-      let totalProcessed = 0;
-      let totalSuccessful = 0;
-      let totalFailed = 0;
-      let totalTimedOut = 0;
-      let currentBrandIndex = 0;
+      let brandsStarted = 0;
+      let brandsSkipped = 0;
+      let brandsErrored = 0;
+      let totalFilaments = 0;
 
       for (const brand of brandsToProcess) {
-        currentBrandIndex++;
+        console.log(`Triggering ${brand.brand_slug}...`);
         
-        // Update progress in sync log
-        if (logId && !dryRun) {
-          await supabase
-            .from('brand_sync_logs')
-            .update({
-              products_processed: {
-                current_brand: brand.brand_slug,
-                brands_completed: currentBrandIndex - 1,
-                total_brands: brandsToProcess.length,
-                total_processed: totalProcessed,
-                total_successful: totalSuccessful,
-                total_failed: totalFailed,
-                total_timed_out: totalTimedOut,
-              },
-            })
-            .eq('id', logId);
-        }
-        
-        // Check if this brand has filaments needing parsing
-        const { count: needsParsing } = await supabase
-          .from('filaments')
-          .select('id', { count: 'exact', head: true })
-          .eq('brand_id', brand.id)
-          .not('tds_url', 'is', null)
-          .or('density_g_cm3.is.null,tensile_strength_xy_mpa.is.null,drying_temp_c.is.null');
-
-        if (!needsParsing || needsParsing === 0) {
-          results.push({
-            brandSlug: brand.brand_slug,
-            brandName: brand.display_name,
-            processed: 0,
-            successful: 0,
-            failed: 0,
-            skipped: 0,
-            status: 'skipped',
-            message: 'No filaments need parsing',
-          });
-          continue;
-        }
-
-        console.log(`Processing ${brand.brand_slug} (${needsParsing} need parsing)`);
-
-        // Call parse-filament-tds with timeout and error handling
-        const result = await callParseTdsWithTimeout(
+        const result = await triggerBrandParsing(
           supabaseUrl,
           authHeader,
           brand.brand_slug,
           limit,
           dryRun,
-          force,
-          55000 // 55 second timeout per brand
+          force
         );
 
-        if (!result.success) {
-          // Handle failed/timeout case gracefully
-          if (result.timedOut) {
-            totalTimedOut++;
+        if (result.success) {
+          if (result.filamentCount === 0) {
+            // No filaments need parsing
             results.push({
               brandSlug: brand.brand_slug,
               brandName: brand.display_name,
-              processed: 0,
-              successful: 0,
-              failed: 0,
-              skipped: 0,
-              status: 'timeout',
-              message: result.error,
+              filamentCount: 0,
+              status: 'skipped',
+              message: 'No filaments need parsing',
             });
+            brandsSkipped++;
           } else {
-            totalFailed++;
             results.push({
               brandSlug: brand.brand_slug,
               brandName: brand.display_name,
-              processed: 0,
-              successful: 0,
-              failed: 1,
-              skipped: 0,
-              status: 'error',
-              message: result.error,
+              syncLogId: result.syncLogId,
+              filamentCount: result.filamentCount || 0,
+              status: 'started',
+              message: result.message,
             });
+            brandsStarted++;
+            totalFilaments += result.filamentCount || 0;
           }
         } else {
-          // Success case
-          const data = result.data;
           results.push({
             brandSlug: brand.brand_slug,
             brandName: brand.display_name,
-            processed: data.processed || 0,
-            successful: data.successful || 0,
-            failed: data.failed || 0,
-            skipped: (data.processed || 0) - (data.successful || 0) - (data.failed || 0),
-            status: 'completed',
+            filamentCount: 0,
+            status: 'error',
+            message: result.message,
           });
-
-          totalProcessed += data.processed || 0;
-          totalSuccessful += data.successful || 0;
-          totalFailed += data.failed || 0;
+          brandsErrored++;
         }
 
-        // Rate limit between brands - 2 seconds to be safe
-        await new Promise(r => setTimeout(r, 2000));
+        // Small delay between triggers to avoid overwhelming the system
+        await new Promise(r => setTimeout(r, 500));
       }
 
-      // Complete the sync log
-      if (logId && !dryRun) {
+      // Update master sync log
+      if (masterLogId) {
         await supabase
           .from('brand_sync_logs')
           .update({
             status: 'completed',
             completed_at: new Date().toISOString(),
-            products_updated: totalSuccessful,
-            products_failed: totalFailed,
-            products_discovered: totalProcessed,
+            products_discovered: totalFilaments,
             success_details: {
-              brandsProcessed: results.filter(r => r.status === 'completed').length,
-              brandsTimedOut: totalTimedOut,
-              totalProcessed,
-              totalSuccessful,
-              totalFailed,
+              brandsStarted,
+              brandsSkipped,
+              brandsErrored,
+              totalFilaments,
               results,
             },
+            notes: `Triggered ${brandsStarted} brands, ${brandsSkipped} skipped, ${brandsErrored} errors`,
           })
-          .eq('id', logId);
+          .eq('id', masterLogId);
       }
 
-      console.log(`Batch parse complete: ${totalSuccessful} successful, ${totalFailed} failed, ${totalTimedOut} timed out`);
+      console.log(`Batch trigger complete: ${brandsStarted} started, ${brandsSkipped} skipped, ${brandsErrored} errors`);
 
       return new Response(JSON.stringify({
         success: true,
         mode,
-        syncLogId: logId,
+        masterSyncLogId: masterLogId,
         dryRun,
         summary: {
-          brandsProcessed: results.filter(r => r.status === 'completed').length,
-          brandsTimedOut: totalTimedOut,
-          brandsSkipped: results.filter(r => r.status === 'skipped').length,
-          brandsErrored: results.filter(r => r.status === 'error').length,
+          brandsTriggered: brandsStarted,
+          brandsSkipped,
+          brandsErrored,
           totalBrands: brandsToProcess.length,
-          totalProcessed,
-          totalSuccessful,
-          totalFailed,
+          totalFilaments,
         },
         results,
+        message: `Triggered parsing for ${brandsStarted} brands (${totalFilaments} filaments). Check individual sync logs for progress.`,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     return new Response(JSON.stringify({ 
-      error: 'Invalid mode. Use: audit, parse, parse-priority, parse-brand, or status' 
+      error: 'Invalid mode. Use: audit, parse, parse-priority, parse-brand, parse-sync-manager, or status' 
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

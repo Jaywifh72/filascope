@@ -301,6 +301,9 @@ async function fetchTDSContent(tdsUrl: string, firecrawlApiKey: string): Promise
   console.log(`Fetching TDS from: ${tdsUrl}`);
   
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -313,7 +316,10 @@ async function fetchTDSContent(tdsUrl: string, firecrawlApiKey: string): Promise
         onlyMainContent: false,
         waitFor: 3000,
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error('Firecrawl error:', await response.text());
@@ -331,7 +337,11 @@ async function fetchTDSContent(tdsUrl: string, firecrawlApiKey: string): Promise
     console.log(`Extracted ${markdown.length} characters from TDS`);
     return markdown;
   } catch (error) {
-    console.error('Error fetching TDS:', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('TDS fetch timeout');
+    } else {
+      console.error('Error fetching TDS:', error);
+    }
     return null;
   }
 }
@@ -340,6 +350,9 @@ async function extractTDSWithAI(tdsContent: string, lovableApiKey: string): Prom
   console.log('Extracting TDS data with AI...');
   
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 40000); // 40 second timeout
+    
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -355,7 +368,10 @@ async function extractTDSWithAI(tdsContent: string, lovableApiKey: string): Prom
           }
         ],
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -462,7 +478,11 @@ async function extractTDSWithAI(tdsContent: string, lovableApiKey: string): Prom
       return null;
     }
   } catch (error) {
-    console.error('AI extraction error:', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('AI extraction timeout');
+    } else {
+      console.error('AI extraction error:', error);
+    }
     return null;
   }
 }
@@ -528,6 +548,178 @@ async function findTDSUrl(productUrl: string, firecrawlApiKey: string): Promise<
   }
 }
 
+// Process filaments in background - this function runs after response is sent
+async function processFilamentsInBackground(
+  filaments: any[],
+  syncLogId: string,
+  brandSlug: string,
+  brandId: string,
+  firecrawlApiKey: string,
+  lovableApiKey: string,
+  supabaseUrl: string,
+  supabaseServiceKey: string,
+  dryRun: boolean
+): Promise<void> {
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  
+  let successful = 0;
+  let failed = 0;
+  const results: any[] = [];
+  
+  console.log(`[BG] Starting background processing for ${brandSlug}: ${filaments.length} filaments`);
+
+  for (let i = 0; i < filaments.length; i++) {
+    const filament = filaments[i];
+    const startTime = Date.now();
+    
+    console.log(`[BG] Processing ${i + 1}/${filaments.length}: ${filament.product_title}`);
+
+    // Update progress in sync log
+    await supabase
+      .from('brand_sync_logs')
+      .update({
+        products_processed: {
+          current: i + 1,
+          total: filaments.length,
+          successful,
+          failed,
+          current_product: filament.product_title,
+        },
+        notes: `Processing ${i + 1}/${filaments.length}: ${filament.product_title}`,
+      })
+      .eq('id', syncLogId);
+
+    try {
+      // Fetch TDS content
+      const tdsContent = await fetchTDSContent(filament.tds_url!, firecrawlApiKey);
+      
+      if (!tdsContent) {
+        results.push({
+          filamentId: filament.id,
+          productTitle: filament.product_title,
+          success: false,
+          fieldsExtracted: 0,
+          error: 'Could not fetch TDS content',
+          duration_ms: Date.now() - startTime,
+        });
+        failed++;
+        continue;
+      }
+
+      // Extract with AI
+      const extractedData = await extractTDSWithAI(tdsContent, lovableApiKey);
+      
+      if (!extractedData) {
+        results.push({
+          filamentId: filament.id,
+          productTitle: filament.product_title,
+          success: false,
+          fieldsExtracted: 0,
+          error: 'AI extraction failed',
+          duration_ms: Date.now() - startTime,
+        });
+        failed++;
+        continue;
+      }
+
+      // Validate
+      const validation = validateExtractedData(extractedData, filament.material);
+      const fieldsExtracted = Object.entries(validation.cleanedData)
+        .filter(([k, v]) => v !== null && k !== 'extraction_confidence')
+        .length;
+
+      // Update database if not dry run
+      if (!dryRun) {
+        const updateData: Record<string, any> = {};
+        
+        const fields = [
+          'nozzle_temp_min_c', 'nozzle_temp_max_c', 'nozzle_temp_sweetspot_c',
+          'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms', 'print_speed_min_mms',
+          'fan_min_percent', 'fan_max_percent', 'retraction_length_mm', 'retraction_speed_mms',
+          'enclosure_required', 'drying_temp_c', 'drying_time_hours',
+          'density_g_cm3', 'water_absorption_percent',
+          'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa', 'elongation_break_xy_percent',
+          'tensile_strength_z_mpa', 'tensile_modulus_z_mpa', 'elongation_break_z_percent',
+          'flexural_strength_mpa', 'bending_strength_mpa', 'bending_modulus_mpa',
+          'impact_strength_kj_m2', 'notched_izod_j_m', 'shore_hardness_d', 'hardness_shore_a',
+          'tg_c', 'melt_temp_c', 'vicat_softening_temp_c', 'hdt_045_mpa_c', 'hdt_18_mpa_c',
+          'melt_index_g_10min', 'max_overhang_angle_deg', 'max_bridging_length_mm',
+          'annealing_temp_c', 'annealing_time_hours',
+          'transmission_distance', 'light_transmission_percent', 'haze_percent',
+          'surface_resistivity_ohm', 'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
+        ];
+
+        for (const field of fields) {
+          const value = (validation.cleanedData as any)[field];
+          if (value !== null && value !== undefined) {
+            updateData[field] = value;
+          }
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          const { error: updateError } = await supabase
+            .from('filaments')
+            .update(updateData)
+            .eq('id', filament.id);
+
+          if (updateError) {
+            console.error('[BG] Update error:', updateError);
+          }
+        }
+      }
+
+      results.push({
+        filamentId: filament.id,
+        productTitle: filament.product_title,
+        success: true,
+        fieldsExtracted,
+        confidence: extractedData.extraction_confidence,
+        duration_ms: Date.now() - startTime,
+      });
+      successful++;
+      console.log(`[BG] Completed ${filament.product_title} in ${Date.now() - startTime}ms`);
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[BG] Error processing ${filament.id}: ${errorMsg}`);
+      results.push({
+        filamentId: filament.id,
+        productTitle: filament.product_title,
+        success: false,
+        fieldsExtracted: 0,
+        error: errorMsg,
+        duration_ms: Date.now() - startTime,
+      });
+      failed++;
+    }
+
+    // Small delay between filaments to avoid rate limits
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  // Complete the sync log
+  console.log(`[BG] Background processing complete: ${successful} successful, ${failed} failed`);
+  await supabase
+    .from('brand_sync_logs')
+    .update({
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      products_updated: successful,
+      products_failed: failed,
+      success_details: { 
+        filaments_count: filaments.length,
+        results_summary: results.map(r => ({
+          id: r.filamentId,
+          success: r.success,
+          fields: r.fieldsExtracted,
+          duration_ms: r.duration_ms,
+          error: r.error,
+        }))
+      },
+    })
+    .eq('id', syncLogId);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -585,12 +777,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const body = await req.json();
-    const { tds_url, product_url, filament_id, brand_slug, dry_run = false, force = false, limit = 5 } = body;
+    const { tds_url, product_url, filament_id, brand_slug, dry_run = false, force = false, limit = 10, background = true } = body;
 
     // BATCH MODE: Process multiple filaments for a brand
-    // Uses smaller batches (limit=5 default) to prevent timeouts
     if (brand_slug) {
-      console.log(`Batch parsing TDS for brand: ${brand_slug}, limit: ${limit}, force: ${force}`);
+      console.log(`Batch parsing TDS for brand: ${brand_slug}, limit: ${limit}, force: ${force}, background: ${background}`);
 
       // Get brand ID
       const { data: brand } = await supabase
@@ -644,23 +835,79 @@ Deno.serve(async (req) => {
 
       console.log(`Found ${filaments.length} filaments to parse for ${brand_slug}`);
 
+      // Create sync log entry for tracking
+      const { data: logEntry, error: logError } = await supabase
+        .from('brand_sync_logs')
+        .insert({
+          brand_slug,
+          brand_id: brand.id,
+          sync_type: 'tds_parsing',
+          status: 'running',
+          started_at: new Date().toISOString(),
+          notes: `Processing ${filaments.length} filaments`,
+          products_processed: {
+            current: 0,
+            total: filaments.length,
+            successful: 0,
+            failed: 0,
+          },
+        })
+        .select('id')
+        .single();
+
+      if (logError || !logEntry) {
+        console.error('Failed to create sync log:', logError);
+        return new Response(JSON.stringify({ error: 'Failed to create sync log' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      const syncLogId = logEntry.id;
+
+      // BACKGROUND MODE: Return immediately and process in background
+      if (background && typeof (globalThis as any).EdgeRuntime !== 'undefined') {
+        console.log(`Starting background processing for ${brand_slug}, syncLogId: ${syncLogId}`);
+        
+        // Start background processing
+        (globalThis as any).EdgeRuntime.waitUntil(
+          processFilamentsInBackground(
+            filaments,
+            syncLogId,
+            brand_slug,
+            brand.id,
+            firecrawlApiKey,
+            lovableApiKey,
+            supabaseUrl,
+            supabaseServiceKey,
+            dry_run
+          )
+        );
+
+        // Return immediately with the sync log ID
+        return new Response(JSON.stringify({
+          success: true,
+          background: true,
+          syncLogId,
+          message: `Background processing started for ${filaments.length} filaments`,
+          processed: filaments.length,
+          brand: brand_slug,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // FOREGROUND MODE: Process synchronously (for single filament or small batches)
       const results: any[] = [];
       let successful = 0;
       let failed = 0;
 
-      // Process filaments sequentially with individual timeouts
       for (const filament of filaments) {
         const startTime = Date.now();
         console.log(`Processing: ${filament.product_title}`);
 
         try {
-          // Fetch TDS content with timeout
-          const tdsContent = await Promise.race([
-            fetchTDSContent(filament.tds_url!, firecrawlApiKey),
-            new Promise<null>((_, reject) => 
-              setTimeout(() => reject(new Error('TDS fetch timeout')), 30000)
-            )
-          ]);
+          const tdsContent = await fetchTDSContent(filament.tds_url!, firecrawlApiKey);
           
           if (!tdsContent) {
             results.push({
@@ -676,13 +923,7 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Extract with AI with timeout
-          const extractedData = await Promise.race([
-            extractTDSWithAI(tdsContent, lovableApiKey),
-            new Promise<null>((_, reject) => 
-              setTimeout(() => reject(new Error('AI extraction timeout')), 45000)
-            )
-          ]);
+          const extractedData = await extractTDSWithAI(tdsContent, lovableApiKey);
           
           if (!extractedData) {
             results.push({
@@ -698,48 +939,29 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Validate
           const validation = validateExtractedData(extractedData, filament.material);
           const fieldsExtracted = Object.entries(validation.cleanedData)
             .filter(([k, v]) => v !== null && k !== 'extraction_confidence')
             .length;
 
-          // Update database if not dry run
           if (!dry_run) {
             const updateData: Record<string, any> = {};
             
             const fields = [
-              // Print settings
               'nozzle_temp_min_c', 'nozzle_temp_max_c', 'nozzle_temp_sweetspot_c',
               'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms', 'print_speed_min_mms',
               'fan_min_percent', 'fan_max_percent', 'retraction_length_mm', 'retraction_speed_mms',
-              'enclosure_required',
-              // Drying
-              'drying_temp_c', 'drying_time_hours',
-              // Physical properties
+              'enclosure_required', 'drying_temp_c', 'drying_time_hours',
               'density_g_cm3', 'water_absorption_percent',
-              // Mechanical - XY plane
               'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa', 'elongation_break_xy_percent',
-              // Mechanical - Z direction
               'tensile_strength_z_mpa', 'tensile_modulus_z_mpa', 'elongation_break_z_percent',
-              // Flexural properties
               'flexural_strength_mpa', 'bending_strength_mpa', 'bending_modulus_mpa',
-              // Impact & hardness
               'impact_strength_kj_m2', 'notched_izod_j_m', 'shore_hardness_d', 'hardness_shore_a',
-              // Thermal properties
               'tg_c', 'melt_temp_c', 'vicat_softening_temp_c', 'hdt_045_mpa_c', 'hdt_18_mpa_c',
-              // Melt & flow
-              'melt_index_g_10min',
-              // Print quality parameters
-              'max_overhang_angle_deg', 'max_bridging_length_mm',
-              // Annealing
+              'melt_index_g_10min', 'max_overhang_angle_deg', 'max_bridging_length_mm',
               'annealing_temp_c', 'annealing_time_hours',
-              // Optical properties
               'transmission_distance', 'light_transmission_percent', 'haze_percent',
-              // Electrical properties
-              'surface_resistivity_ohm',
-              // Other
-              'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
+              'surface_resistivity_ohm', 'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
             ];
 
             for (const field of fields) {
@@ -772,8 +994,7 @@ Deno.serve(async (req) => {
           successful++;
           console.log(`Completed ${filament.product_title} in ${Date.now() - startTime}ms`);
 
-          // Shorter rate limit - 1 second between filaments
-          await new Promise(r => setTimeout(r, 1000));
+          await new Promise(r => setTimeout(r, 500));
 
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -791,13 +1012,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Log to brand_sync_logs only if we processed something
-      if (!dry_run && (successful > 0 || failed > 0)) {
-        await supabase.from('brand_sync_logs').insert({
-          brand_slug,
-          brand_id: brand.id,
-          sync_type: 'tds_parsing',
+      // Update sync log
+      await supabase
+        .from('brand_sync_logs')
+        .update({
           status: 'completed',
+          completed_at: new Date().toISOString(),
           products_updated: successful,
           products_failed: failed,
           success_details: { 
@@ -810,13 +1030,14 @@ Deno.serve(async (req) => {
               error: r.error,
             }))
           },
-        });
-      }
+        })
+        .eq('id', syncLogId);
 
       console.log(`Brand ${brand_slug} complete: ${successful} successful, ${failed} failed`);
 
       return new Response(JSON.stringify({
         success: true,
+        syncLogId,
         processed: filaments.length,
         successful,
         failed,
@@ -870,44 +1091,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate extracted data
     const validation = validateExtractedData(extractedData);
     
     if (filament_id && !dry_run) {
       const updateData: Record<string, any> = { tds_url: finalTdsUrl };
       
       const fields = [
-        // Print settings
         'nozzle_temp_min_c', 'nozzle_temp_max_c', 'nozzle_temp_sweetspot_c',
         'bed_temp_min_c', 'bed_temp_max_c', 'print_speed_max_mms', 'print_speed_min_mms',
         'fan_min_percent', 'fan_max_percent', 'retraction_length_mm', 'retraction_speed_mms',
-        'enclosure_required',
-        // Drying
-        'drying_temp_c', 'drying_time_hours',
-        // Physical properties
+        'enclosure_required', 'drying_temp_c', 'drying_time_hours',
         'density_g_cm3', 'water_absorption_percent',
-        // Mechanical - XY plane
         'tensile_strength_xy_mpa', 'tensile_modulus_xy_mpa', 'elongation_break_xy_percent',
-        // Mechanical - Z direction
         'tensile_strength_z_mpa', 'tensile_modulus_z_mpa', 'elongation_break_z_percent',
-        // Flexural properties
         'flexural_strength_mpa', 'bending_strength_mpa', 'bending_modulus_mpa',
-        // Impact & hardness
         'impact_strength_kj_m2', 'notched_izod_j_m', 'shore_hardness_d', 'hardness_shore_a',
-        // Thermal properties
         'tg_c', 'melt_temp_c', 'vicat_softening_temp_c', 'hdt_045_mpa_c', 'hdt_18_mpa_c',
-        // Melt & flow
-        'melt_index_g_10min',
-        // Print quality parameters
-        'max_overhang_angle_deg', 'max_bridging_length_mm',
-        // Annealing
+        'melt_index_g_10min', 'max_overhang_angle_deg', 'max_bridging_length_mm',
         'annealing_temp_c', 'annealing_time_hours',
-        // Optical properties
         'transmission_distance', 'light_transmission_percent', 'haze_percent',
-        // Electrical properties
-        'surface_resistivity_ohm',
-        // Other
-        'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
+        'surface_resistivity_ohm', 'moisture_sensitivity_level', 'is_nozzle_abrasive', 'chemical_resistance',
       ];
 
       for (const field of fields) {
