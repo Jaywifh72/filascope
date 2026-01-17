@@ -170,11 +170,11 @@ export function TechnicalConsoleSidebar({
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 border-r border-border bg-background/80 backdrop-blur-md sticky top-0 h-screen overflow-y-auto shrink-0">
+    <aside className="hidden lg:flex flex-col w-72 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
       {/* ═══════════════════════════════════════════════════════════════
           PRINTER HUB - System Config Header
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-white/10">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded bg-primary/10 border border-primary/20">
             <Printer className="w-4 h-4 text-primary" />
@@ -191,7 +191,7 @@ export function TechnicalConsoleSidebar({
       </div>
 
       {/* Printer Selection + Live Specs */}
-      <div className="p-4 border-b border-border space-y-4">
+      <div className="p-4 border-b border-white/10 space-y-4">
         {/* Printer Selector Dropdowns */}
         <div className="space-y-2">
           <Select
@@ -201,7 +201,7 @@ export function TechnicalConsoleSidebar({
               setSelectedPrinterId("");
             }}
           >
-            <SelectTrigger className="w-full h-9 bg-background/50 border-border font-mono text-xs">
+            <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 font-mono text-xs">
               <SelectValue placeholder="Select brand..." />
             </SelectTrigger>
             <SelectContent>
@@ -218,7 +218,7 @@ export function TechnicalConsoleSidebar({
               value={selectedPrinterId || ""}
               onValueChange={setSelectedPrinterId}
             >
-              <SelectTrigger className="w-full h-9 bg-background/50 border-border font-mono text-xs">
+              <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 font-mono text-xs">
                 <SelectValue placeholder="Select model..." />
               </SelectTrigger>
               <SelectContent>
@@ -234,11 +234,11 @@ export function TechnicalConsoleSidebar({
 
         {/* Live Specs Header */}
         <div className="flex items-center gap-2 pt-2">
-          <div className="h-px flex-1 bg-border" />
+          <div className="h-px flex-1 bg-white/10" />
           <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.2em]">
             Live Specs
           </span>
-          <div className="h-px flex-1 bg-border" />
+          <div className="h-px flex-1 bg-white/10" />
         </div>
 
         {/* 2x3 Live Specs Grid */}
@@ -277,7 +277,7 @@ export function TechnicalConsoleSidebar({
       </div>
 
       {/* Spool Configuration Section */}
-      <div className="p-4 border-b border-border space-y-3">
+      <div className="p-4 border-b border-white/10 space-y-3">
         <div className="flex items-center gap-2">
           <Package className="w-3.5 h-3.5 text-primary" />
           <span className="font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">
@@ -286,7 +286,7 @@ export function TechnicalConsoleSidebar({
         </div>
 
         <Select value={localSpoolSize} onValueChange={handleSpoolSizeChange}>
-          <SelectTrigger className="w-full h-9 bg-background/50 border-border font-mono text-xs">
+          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 font-mono text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -344,7 +344,7 @@ interface LiveSpecCellProps {
 
 function LiveSpecCell({ label, value, isLoading }: LiveSpecCellProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-1.5 rounded bg-background/30 border border-border/30">
+    <div className="flex flex-col items-center justify-center p-1.5 rounded bg-white/5 border border-white/10">
       <span className="font-mono text-[8px] text-muted-foreground uppercase tracking-wider text-center leading-tight">
         {label}
       </span>
@@ -388,7 +388,7 @@ function FilterCluster({ title, icon: Icon, options, selected, onToggle }: Filte
               "px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-wider rounded-sm border transition-all duration-150",
               selected.includes(option.id)
                 ? "bg-primary/20 border-primary/50 text-primary"
-                : "bg-background/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                : "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/30 hover:text-foreground"
             )}
           >
             {option.label}
