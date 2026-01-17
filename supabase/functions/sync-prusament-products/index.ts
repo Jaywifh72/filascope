@@ -151,49 +151,119 @@ function extractPrusaPrice(markdown: string, html: string, metadata: any): numbe
 }
 
 /**
- * Extract high-quality product image from Prusa page
+ * Check if an image URL is a valid product image
  */
-function extractPrusaImage(metadata: any, productUrl: string): string | null {
-  // Priority 1: og:image from metadata (usually high quality)
-  if (metadata?.['og:image']) {
-    const ogImage = metadata['og:image'];
-    // Ensure it's a product image, not a logo or placeholder
-    if (ogImage.includes('content/images/product/') || ogImage.includes('cdn-cgi/image')) {
-      // Upgrade to 1024px width for high quality
-      let upgradedUrl = ogImage;
-      if (ogImage.includes('width=')) {
-        upgradedUrl = ogImage.replace(/width=\d+/, 'width=1024');
-      }
-      return upgradedUrl;
-    }
-    // Accept og:image even if it doesn't match Prusa CDN pattern
-    return ogImage;
-  }
-
-  // Priority 2: twitter:image
-  if (metadata?.['twitter:image']) {
-    const twitterImage = metadata['twitter:image'];
-    if (twitterImage.includes('content/images/product/') || twitterImage.includes('cdn-cgi/image')) {
-      return twitterImage.replace(/width=\d+/, 'width=1024');
-    }
-    return twitterImage;
-  }
-
-  // Priority 3: Construct image URL from product URL slug
-  const urlSlug = productUrl.split('/').filter(Boolean).pop() || '';
-  if (urlSlug) {
-    return `https://www.prusa3d.com/cdn-cgi/image/width=1024,format=auto,quality=85/content/images/product/${urlSlug}.jpg`;
-  }
-
-  return null;
+function isValidProductImage(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  if (url.includes(',')) return false; // Multiple URLs concatenated
+  if (url.includes('livechatinc.com')) return false; // Known junk
+  if (url.includes('trustpilot')) return false;
+  if (url.includes('logo') && !url.includes('product')) return false;
+  if (url.includes('icon') && !url.includes('product')) return false;
+  if (url.includes('banner') && !url.includes('product')) return false;
+  // Accept Prusa CDN images or any reasonable image URL
+  return url.includes('prusa') || url.includes('.jpg') || url.includes('.png') || url.includes('.webp');
 }
 
 /**
- * Validate that an image URL returns a valid image
+ * Upgrade image URL to higher quality
+ */
+function upgradeImageQuality(url: string): string {
+  if (url.includes('cdn-cgi/image/')) {
+    return url.replace(/width=\d+/, 'width=1024');
+  }
+  return url;
+}
+
+/**
+ * Extract high-quality product image from Prusa page - FIXED for Firecrawl response formats
+ */
+function extractPrusaImage(html: string, metadata: any, productUrl: string): { url: string | null; fromHtml: boolean } {
+  // Strategy 1: Parse og:image directly from HTML (most reliable)
+  const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+                       html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+  
+  if (ogImageMatch?.[1]) {
+    // Take only FIRST URL if comma-separated
+    const imageUrl = ogImageMatch[1].split(',')[0].trim();
+    if (isValidProductImage(imageUrl)) {
+      console.log(`[Prusament] Image found via HTML og:image: ${imageUrl.substring(0, 80)}...`);
+      return { url: upgradeImageQuality(imageUrl), fromHtml: true };
+    }
+  }
+
+  // Strategy 2: Try Firecrawl metadata (multiple formats - Firecrawl uses different keys)
+  const metadataImage = metadata?.ogImage?.[0]?.url || 
+                        metadata?.ogImage?.[0] ||
+                        (typeof metadata?.ogImage === 'string' ? metadata.ogImage : null) ||
+                        metadata?.['og:image'] ||
+                        metadata?.image;
+  if (metadataImage) {
+    const imageUrl = String(metadataImage).split(',')[0].trim();
+    if (isValidProductImage(imageUrl)) {
+      console.log(`[Prusament] Image found via Firecrawl metadata: ${imageUrl.substring(0, 80)}...`);
+      return { url: upgradeImageQuality(imageUrl), fromHtml: false };
+    }
+  }
+
+  // Strategy 3: twitter:image from metadata or HTML
+  const twitterImage = metadata?.['twitter:image'] || metadata?.twitterImage;
+  if (twitterImage) {
+    const imageUrl = String(twitterImage).split(',')[0].trim();
+    if (isValidProductImage(imageUrl)) {
+      console.log(`[Prusament] Image found via twitter:image: ${imageUrl.substring(0, 80)}...`);
+      return { url: upgradeImageQuality(imageUrl), fromHtml: false };
+    }
+  }
+
+  // Strategy 4: Search HTML for product images in JSON-LD
+  const jsonLdImageMatch = html.match(/"image"\s*:\s*"(https:\/\/[^"]*prusa[^"]*\.(?:jpg|jpeg|png|webp)[^"]*)"/i) ||
+                           html.match(/"image"\s*:\s*\[\s*"(https:\/\/[^"]+)"/i);
+  if (jsonLdImageMatch?.[1]) {
+    const imageUrl = jsonLdImageMatch[1].split(',')[0].trim();
+    if (isValidProductImage(imageUrl)) {
+      console.log(`[Prusament] Image found via JSON-LD: ${imageUrl.substring(0, 80)}...`);
+      return { url: upgradeImageQuality(imageUrl), fromHtml: true };
+    }
+  }
+
+  // Strategy 5: Search HTML for product images in img tags
+  const productImagePatterns = [
+    /src=["'](https:\/\/www\.prusa3d\.com\/cdn-cgi\/image\/[^"']*content\/images\/product\/[^"']+)["']/gi,
+    /src=["'](https:\/\/cdn\.prusa3d\.com\/content\/images\/product\/[^"']+\.(?:jpg|jpeg|png|webp))["']/gi,
+  ];
+  
+  for (const pattern of productImagePatterns) {
+    const match = pattern.exec(html);
+    if (match?.[1] && isValidProductImage(match[1])) {
+      console.log(`[Prusament] Image found via HTML img tag: ${match[1].substring(0, 80)}...`);
+      return { url: upgradeImageQuality(match[1]), fromHtml: true };
+    }
+  }
+
+  // Strategy 6: Construct from URL slug (last resort - needs validation)
+  const urlSlug = productUrl.split('/').filter(Boolean).pop() || '';
+  if (urlSlug) {
+    const constructedUrl = `https://www.prusa3d.com/cdn-cgi/image/width=1024,format=auto,quality=85/content/images/product/${urlSlug}.jpg`;
+    console.log(`[Prusament] Using constructed image URL: ${constructedUrl.substring(0, 80)}...`);
+    return { url: constructedUrl, fromHtml: false };
+  }
+
+  console.log(`[Prusament] No image found for ${productUrl}`);
+  return { url: null, fromHtml: false };
+}
+
+/**
+ * Validate that an image URL returns a valid image (only for constructed URLs)
  */
 async function validateImageUrl(url: string): Promise<boolean> {
   try {
-    const response = await fetch(url, { method: 'HEAD' });
+    const response = await fetch(url, { 
+      method: 'HEAD',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FilascopeBot/1.0)',
+      },
+    });
     if (!response.ok) return false;
     const contentType = response.headers.get('content-type');
     return contentType?.startsWith('image/') || false;
@@ -241,20 +311,29 @@ async function scrapePrusaProduct(
     const html = data.data?.html || data.html || '';
     const metadata = data.data?.metadata || data.metadata || {};
 
+    // Log metadata keys for debugging
+    console.log(`[Prusament] Metadata keys for ${productUrl}: ${Object.keys(metadata || {}).join(', ')}`);
+
     // Extract price with enhanced patterns
     result.priceEur = extractPrusaPrice(markdown, html, metadata);
     if (result.priceEur) {
       result.priceUsd = convertEurToUsd(result.priceEur);
     }
 
-    // Extract and validate image
-    const potentialImage = extractPrusaImage(metadata, productUrl);
-    if (potentialImage) {
-      const isValid = await validateImageUrl(potentialImage);
-      if (isValid) {
-        result.imageUrl = potentialImage;
+    // Extract image with fixed multi-strategy approach
+    const imageResult = extractPrusaImage(html, metadata, productUrl);
+    if (imageResult.url) {
+      if (imageResult.fromHtml) {
+        // HTML-parsed images are trusted - no validation needed
+        result.imageUrl = imageResult.url;
       } else {
-        console.log(`[Prusament] Image validation failed for ${potentialImage}`);
+        // Only validate constructed/fallback URLs
+        const isValid = await validateImageUrl(imageResult.url);
+        if (isValid) {
+          result.imageUrl = imageResult.url;
+        } else {
+          console.log(`[Prusament] Image validation failed for ${imageResult.url}`);
+        }
       }
     }
 
