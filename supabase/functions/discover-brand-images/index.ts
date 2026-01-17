@@ -73,6 +73,25 @@ const BRAND_IMAGE_PATTERNS: Record<string, {
       /data-master="([^"]+)"/i,
     ],
   },
+  'fiberlogy': {
+    platform: 'custom',
+    patterns: [
+      // Fiberlogy uses ShopArena with <picture> elements and storefrontImages
+      /<img[^>]+src="(https:\/\/fiberlogy\.com\/environment\/cache\/images\/[^"]+)"/i,
+      /src="(\/environment\/cache\/images\/[^"]+\.(jpg|png|webp))"/i,
+      /<picture[^>]*>.*?<img[^>]+src="([^"]+storefrontImages[^"]+)"/is,
+      /<meta\s+property="og:image"\s+content="([^"]+)"/i,
+    ],
+  },
+  'paramount-3d': {
+    platform: 'custom',
+    patterns: [
+      // Wix platform uses static.wixstatic.com
+      /src="(https:\/\/static\.wixstatic\.com\/media\/[^"]+\.(jpg|jpeg|png|webp)[^"]*)"/i,
+      /<img[^>]+fetchpriority="high"[^>]+src="(https:\/\/static\.wixstatic\.com[^"]+)"/i,
+      /<meta\s+property="og:image"\s+content="([^"]+wixstatic[^"]+)"/i,
+    ],
+  },
 };
 
 // Generic patterns for unknown brands
