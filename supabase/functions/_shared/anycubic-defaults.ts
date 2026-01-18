@@ -57,44 +57,53 @@ export const ANYCUBIC_PRODUCT_WHITELIST: AnycubicWhitelistProduct[] = [
 ];
 
 // ============================================================================
-// TDS URL PATTERNS - Known Anycubic TDS locations on nice-cdn.com
+// TDS URL PATTERNS - Official Anycubic TDS locations on Shopify CDN
 // ============================================================================
 
 export const ANYCUBIC_TDS_PATTERNS: Record<string, string> = {
   // Standard PLA variants
-  'pla basic': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PLA_V3.0.pdf',
-  'pla+': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PLA_V3.0.pdf',
-  'pla pro': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PLA_V3.0.pdf',
-  
-  // High Speed PLA
-  'high speed pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PLA.pdf',
-  'hs pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PLA.pdf',
-  'high-speed pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PLA.pdf',
+  'pla basic': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PLA_V3.0.pdf?v=1757585748',
+  'pla basic refill': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PLA_V3.0_862edf72-8eb1-44b9-84cc-caacd4a42fa0.pdf?v=1757657147',
+  'pla+': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PLA__V3.0.pdf?v=1757589534',
+  'pla+ refill': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PLA_V3.0_862edf72-8eb1-44b9-84cc-caacd4a42fa0.pdf?v=1757657147',
+  'pla special': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PLA_V3.0.pdf?v=1757585748',
   
   // Specialty PLA
-  'silk pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_SILK_PLA.pdf',
-  'matte pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_Matte_PLA.pdf',
-  'marble pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_Marble_PLA.pdf',
-  'glow pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_Glow_PLA.pdf',
-  'glow-in-the-dark pla': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_Glow_PLA.pdf',
+  'pla silk': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_silk_V3.0.pdf?v=1758526566',
+  'silk pla': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_silk_V3.0.pdf?v=1758526566',
+  'pla matte': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Matte_V3.0.pdf?v=1758527075',
+  'matte pla': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Matte_V3.0.pdf?v=1758527075',
+  'pla metal': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Metal_V3.0.pdf?v=1758525990',
+  'metal pla': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Metal_V3.0.pdf?v=1758525990',
+  'pla marble': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Marble_V3.0.pdf?v=1758283111',
+  'marble pla': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Marble_V3.0.pdf?v=1758283111',
+  'pla glow': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Glow_V3.0.pdf?v=1758527363',
+  'glow pla': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Glow_V3.0.pdf?v=1758527363',
+  'glow-in-the-dark pla': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PLA_Glow_V3.0.pdf?v=1758527363',
   
   // PETG variants
-  'petg': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PETG.pdf',
-  'petg+': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_PETG.pdf',
-  'high speed petg': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PETG.pdf',
-  'hs petg': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_High_Speed_PETG.pdf',
+  'petg': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PETG_V3.0.pdf?v=1757584046',
+  'petg filament': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PETG_V3.0.pdf?v=1757584046',
+  'petg refill': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PETG_V3.0.pdf?v=1757584046',
+  'petg translucent': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_PETG_V3.0.pdf?v=1757584046',
   
   // ABS variants
-  'abs': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_ABS.pdf',
-  'abs+': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_ABS.pdf',
-  
-  // TPU
-  'tpu': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_TPU.pdf',
-  'tpu 95a': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_TPU.pdf',
-  'flexible tpu': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_TPU.pdf',
+  'abs': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_ABS_V3.0.pdf?v=1757580251',
+  'abs filament': 'https://cdn.shopify.com/s/files/1/0698/1235/5357/files/ANYCUBIC_TDS_ABS_V3.0.pdf?v=1757580251',
   
   // ASA
-  'asa': 'https://3d.nice-cdn.com/upload/file/ANYCUBIC_TDS_ASA.pdf',
+  'asa': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_ASA_V3.0.pdf?v=1758535865',
+  'asa filament': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_ASA_V3.0.pdf?v=1758535865',
+  
+  // PC (Polycarbonate)
+  'pc': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PC__V3.0.pdf?v=1762426947',
+  'pc filament': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_PC__V3.0.pdf?v=1762426947',
+  
+  // TPU
+  'tpu': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_TPU_V3.0.pdf?v=1758535420',
+  'tpu filament': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_TPU_V3.0.pdf?v=1758535420',
+  'tpu 95a': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_TPU_V3.0.pdf?v=1758535420',
+  'flexible tpu': 'https://cdn.shopify.com/s/files/1/0245/5519/2380/files/ANYCUBIC_TDS_TPU_V3.0.pdf?v=1758535420',
 };
 
 /**
