@@ -218,41 +218,83 @@ export function generateSirayaTechProductLineId(title: string, material?: string
 
 // ============================================================================
 // TDS URL MAPPING
+// Curated official Siraya Tech TDS page URLs (17 products)
 // ============================================================================
 
-// TDS URLs by product handle or material - these are Google Drive links
 const SIRAYATECH_TDS_URLS: Record<string, string> = {
-  // Flex TPU line
-  'flex-tpu-85a': 'https://drive.google.com/file/d/1NgeHc1f3Kyhhnw6HXYoTaaK8w_0ZSb1Y/view',
-  'flex-tpu-95a': 'https://drive.google.com/file/d/1Zn8qXn5S8yzLr6dMm7xYfGhKjIpLmNoP/view',
-  'flex-tpu-64d': 'https://drive.google.com/file/d/1HjKlMnOpQrStUvWxYz1234567890ABC/view',
-  'flex-tpu-air': 'https://drive.google.com/file/d/1DefGhIjKlMnOpQrStUvWxYz123456/view',
+  // Fibreheart PPA line
+  'ppa': 'https://siraya.tech/pages/siraya-tech-fibreheart-ppa-filament-tds',
+  'fibreheart-ppa': 'https://siraya.tech/pages/siraya-tech-fibreheart-ppa-filament-tds',
+  'ppa-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-paht-cf-ppa-based-tds',
+  'paht-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-paht-cf-ppa-based-tds',
+  'fibreheart-ppa-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-paht-cf-ppa-based-tds',
+  'ppa-cf-core': 'https://siraya.tech/pages/siraya-tech-fibreheart-ppa-cf-core-tds',
+  'fibreheart-ppa-cf-core': 'https://siraya.tech/pages/siraya-tech-fibreheart-ppa-cf-core-tds',
   
-  // Fibreheart engineering line - use pages URLs as fallback
+  // Fibreheart PET/PETG-CF line
+  'pet-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-pet-cf-tds',
   'fibreheart-pet-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-pet-cf-tds',
-  'fibreheart-ppa-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-ppa-cf-tds',
+  'petg-cf-hf': 'https://siraya.tech/pages/fibreheart-petg-cf-hf-tds-3d-printing-filament',
+  'fibreheart-petg-cf-hf': 'https://siraya.tech/pages/fibreheart-petg-cf-hf-tds-3d-printing-filament',
+  'petg-cf-pro': 'https://siraya.tech/pages/fibreheart-petg-cf-pro-filament-technical-data-tds',
+  'fibreheart-petg-cf-pro': 'https://siraya.tech/pages/fibreheart-petg-cf-pro-filament-technical-data-tds',
+  
+  // Fibreheart ABS-CF line
+  'abs-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-abs-cf-tds',
   'fibreheart-abs-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-abs-cf-tds',
-  'fibreheart-abs-gf': 'https://siraya.tech/pages/siraya-tech-fibreheart-abs-gf-tds',
+  'abs-cf-core': 'https://siraya.tech/pages/siraya-tech-fibreheart-abs-cf-core-tds',
+  'fibreheart-abs-cf-core': 'https://siraya.tech/pages/siraya-tech-fibreheart-abs-cf-core-tds',
+  
+  // Fibreheart Glass Fiber line
+  'asa-gf': 'https://siraya.tech/pages/siraya-tech-fibreheart-asa-gf-tds',
   'fibreheart-asa-gf': 'https://siraya.tech/pages/siraya-tech-fibreheart-asa-gf-tds',
-  'fibreheart-petg-cf': 'https://siraya.tech/pages/siraya-tech-fibreheart-petg-cf-tds',
+  'abs-gf': 'https://siraya.tech/pages/fibreheart-abs-gf-filament-tds',
+  'fibreheart-abs-gf': 'https://siraya.tech/pages/fibreheart-abs-gf-filament-tds',
+  
+  // Flex TPU line
+  'flex-tpu-64d': 'https://siraya.tech/pages/flex-tpu-64d-filament-tds',
+  'tpu-64d': 'https://siraya.tech/pages/flex-tpu-64d-filament-tds',
+  'flex-tpu-85a': 'https://siraya.tech/pages/siraya-tech-fibreheart-flex-tpu-85a-tds',
+  'tpu-85a': 'https://siraya.tech/pages/siraya-tech-fibreheart-flex-tpu-85a-tds',
+  'flex-tpu-95a': 'https://siraya.tech/pages/siraya-tech-fibreheart-flex-tpu-95a-tds',
+  'tpu-95a': 'https://siraya.tech/pages/siraya-tech-fibreheart-flex-tpu-95a-tds',
+  'flex-tpu-air': 'https://siraya.tech/pages/siraya-tech-flex-tpu-air-tds',
+  'tpu-air': 'https://siraya.tech/pages/siraya-tech-flex-tpu-air-tds',
   
   // Rebound PEBA line
   'rebound-peba-95a': 'https://siraya.tech/pages/siraya-tech-rebound-peba-95a-tds',
-  'rebound-peba-air': 'https://siraya.tech/pages/siraya-tech-rebound-peba-air-tds',
+  'peba-95a': 'https://siraya.tech/pages/siraya-tech-rebound-peba-95a-tds',
+  'rebound-peba-air': 'https://siraya.tech/pages/siraya-tech-rebound-peba-air-70a-95a-tds',
+  'peba-air': 'https://siraya.tech/pages/siraya-tech-rebound-peba-air-70a-95a-tds',
+  'peba-air-70a-95a': 'https://siraya.tech/pages/siraya-tech-rebound-peba-air-70a-95a-tds',
+  
+  // ABS High-Temp High-Flow
+  'abs-high-temp': 'https://siraya.tech/pages/siraya-tech-abs-high-temp-high-flow-filament-user-guide',
+  'abs-high-temp-high-flow': 'https://siraya.tech/pages/siraya-tech-abs-high-temp-high-flow-filament-user-guide',
+  'abs-hthf': 'https://siraya.tech/pages/siraya-tech-abs-high-temp-high-flow-filament-user-guide',
 };
 
-export function matchSirayaTechTds(handle: string): string | null {
-  const handleLower = handle.toLowerCase().replace(/_/g, '-');
+export function matchSirayaTechTds(handle: string, material?: string | null): { url: string; pattern: string } | null {
+  if (!handle && !material) return null;
   
-  // Direct match
-  if (SIRAYATECH_TDS_URLS[handleLower]) {
-    return SIRAYATECH_TDS_URLS[handleLower];
+  const normalizedHandle = (handle || '').toLowerCase().replace(/_/g, '-');
+  const normalizedMaterial = (material || '').toLowerCase().replace(/_/g, '-');
+  const combined = `${normalizedHandle} ${normalizedMaterial}`;
+  
+  // Sort by key length (longest first) for most specific match
+  const sorted = Object.entries(SIRAYATECH_TDS_URLS).sort((a, b) => b[0].length - a[0].length);
+  
+  // Direct match on handle
+  if (SIRAYATECH_TDS_URLS[normalizedHandle]) {
+    return { url: SIRAYATECH_TDS_URLS[normalizedHandle], pattern: normalizedHandle };
   }
   
-  // Partial match
-  for (const [key, url] of Object.entries(SIRAYATECH_TDS_URLS)) {
-    if (handleLower.includes(key) || key.includes(handleLower)) {
-      return url;
+  // Fuzzy match
+  for (const [pattern, url] of sorted) {
+    if (combined.includes(pattern.replace(/-/g, ' ')) || 
+        combined.includes(pattern.replace(/-/g, '')) ||
+        combined.includes(pattern)) {
+      return { url, pattern };
     }
   }
   
@@ -358,7 +400,8 @@ export function enrichSirayaTechProduct(
   const cleanedTitle = cleanSirayaTechTitle(title);
   
   // Match TDS URL
-  const tdsUrl = matchSirayaTechTds(handle);
+  const tdsMatch = matchSirayaTechTds(handle, finalMaterial);
+  const tdsUrl = tdsMatch?.url || null;
   
   return {
     material: finalMaterial,
