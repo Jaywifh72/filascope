@@ -284,11 +284,6 @@ export function LabReadoutCard({
                 {filament.vendor || "Unknown"}
               </span>
             </div>
-            
-            {/* Material Name */}
-            <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
-              {getDisplayTitle()}
-            </h3>
           </div>
 
         </div>
@@ -311,6 +306,11 @@ export function LabReadoutCard({
           BODY: 2-Column Technical Grid - Nozzle Temp & Flow Rate
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-4 bg-black/20">
+        {/* Material Name */}
+        <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-3">
+          {getDisplayTitle()}
+        </h3>
+        
         {/* Material Badge + Price Row */}
         <div className="flex items-center justify-between mb-3">
           {/* Material Type Badge */}
