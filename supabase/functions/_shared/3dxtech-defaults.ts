@@ -2,118 +2,152 @@
 // Premium industrial filament manufacturer specializing in high-performance and ESD materials
 
 // ============================================================================
-// TDS URL MAPPINGS
+// TDS URL MAPPINGS - Curated official download URLs (71 products)
 // ============================================================================
 
-export const DXTECH_TDS_URLS: Record<string, string> = {
+/** Curated TDS URL patterns from official 3DXtech Shopify CDN */
+export const DXTECH_TDS_PATTERNS: Record<string, { url: string; aliases?: string[] }> = {
   // 3DXSTAT ESD Materials
-  'esd-abs': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD_ABS_v3.pdf',
-  'esd-petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD-PETG-TDS-v03.pdf',
-  'esd-pla': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD_PLA_TDS_v3.pdf',
-  'esd-pc': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ESD_PC_v3.pdf',
-  'esd-nylon': 'https://www.3dxtech.com/wp-content/uploads/2021/03/3DXSTAT_ESD_PA12_TDS_v1.pdf',
-  'esd-pa12': 'https://www.3dxtech.com/wp-content/uploads/2021/03/3DXSTAT_ESD_PA12_TDS_v1.pdf',
-  
+  '3dxstat-esd-pekk': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_PEKK_TDS.pdf', aliases: ['esd-pekk'] },
+  '3dxstat-esd-ultem-9085': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3XDSTAT_ESD_Ultem_v3_TDS.pdf', aliases: ['esd-pei-9085', 'esd-ultem-9085'] },
+  '3dxstat-esd-ultem-1010': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_Ultem1010_TDS_v3.1.pdf', aliases: ['esd-pei-1010', 'esd-ultem-1010'] },
+  '3dxstat-esd-pps': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_PPS_v3_TDS.pdf', aliases: ['esd-pps'] },
+  '3dxstat-esd-pvdf': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_PVDF_v3_TDS.pdf', aliases: ['esd-pvdf'] },
+  '3dxstat-esd-pc': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_PC_v3_TDS.pdf', aliases: ['esd-pc'] },
+  '3dxstat-esd-petg': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD-PETG-TDS-v03.pdf', aliases: ['esd-petg'] },
+  '3dxstat-esd-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_ABS_TDS_v3.pdf', aliases: ['esd-abs'] },
+  '3dxstat-esd-pla': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_PLA_TDS_v3.pdf', aliases: ['esd-pla'] },
+  '3dxstat-esd-flex-tpu-90a': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_TPU_90A_TDS_v1.1.pdf', aliases: ['esd-tpu', 'esd-flex-tpu'] },
+  '3dxstat-esd-nylon-12': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXSTAT_ESD_PA12_TDS_v1.pdf', aliases: ['esd-pa12', 'esd-nylon'] },
+
   // CarbonX Line
-  'abs-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ABS_CF-TDS-v03.pdf',
-  'carbonx-abs': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ABS_CF-TDS-v03.pdf',
-  'asa-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/07/CF_ASA_v1.pdf',
-  'carbonx-asa': 'https://www.3dxtech.com/wp-content/uploads/2021/07/CF_ASA_v1.pdf',
-  'petg-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG_CF-TDS-v03.pdf',
-  'carbonx-petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG_CF-TDS-v03.pdf',
-  'pla-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PLA_CF-TDS-v03.pdf',
-  'carbonx-pla': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PLA_CF-TDS-v03.pdf',
-  'pc-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PC_CF-TDS-v03.pdf',
-  'carbonx-pc': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PC_CF-TDS-v03.pdf',
-  'nylon-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PA12_CF-TDS-v03.pdf',
-  'pa12-cf': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PA12_CF-TDS-v03.pdf',
-  'carbonx-nylon': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PA12_CF-TDS-v03.pdf',
-  
-  // 3DXMAX ASA
-  'asa': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ASA_TDS_v03.pdf',
-  '3dxmax-asa': 'https://www.3dxtech.com/wp-content/uploads/2021/03/ASA_TDS_v03.pdf',
-  
-  // MAX-G PETG
-  'petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG-TDS-v03.pdf',
-  'max-g': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG-TDS-v03.pdf',
-  'maxg-petg': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PETG-TDS-v03.pdf',
-  
-  // ThermaX PEEK
-  'peek': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PEEK-TDS-v03.pdf',
-  'thermax-peek': 'https://www.3dxtech.com/wp-content/uploads/2021/03/PEEK-TDS-v03.pdf',
+  'carbonx-cf-pekk': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF20_PEEK_TDS_v1.pdf', aliases: ['cf-pekk', 'pekk-cf'] },
+  'carbonx-cf-pekk-a': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF15_PEKK-A__TDS_v1.pdf', aliases: ['cf-pekk-a', 'pekk-a-cf'] },
+  'carbonx-cf-peek10': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PEEK_TDS_v3.pdf', aliases: ['cf-peek10', 'peek10-cf'] },
+  'carbonx-cf-peek20': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF20_PEEK_TDS_v1.pdf', aliases: ['cf-peek20', 'peek20-cf'] },
+  'carbonx-cf-pei-1010': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_Ultem_TDS_v3.pdf', aliases: ['cf-pei-1010', 'cf-ultem-1010', 'pei-1010-cf'] },
+  'carbonx-cf-pei-9085': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_Ultem_9085_TDS.pdf', aliases: ['cf-pei-9085', 'cf-ultem-9085', 'pei-9085-cf'] },
+  'carbonx-cf-pc': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PC_TDSv3.pdf', aliases: ['cf-pc', 'pc-cf'] },
+  'carbonx-cf-ezpc': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_ezPC_TDSv1.pdf', aliases: ['cf-ezpc', 'ezpc-cf'] },
+  'carbonx-cf-pp': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PP_TDSv1.pdf', aliases: ['cf-pp', 'pp-cf'] },
+  'carbonx-cf-pa6-gen3': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_PA6_G3_TDS_v3.0.pdf', aliases: ['cf-pa6', 'pa6-cf', 'nylon6-cf'] },
+  'carbonx-cf-pc-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PC_ABS_TDS_v1.1.pdf', aliases: ['cf-pc-abs', 'pc-abs-cf'] },
+  'carbonx-cf-ht-nylon': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_HTN_TDS_v2.pdf', aliases: ['cf-htn', 'htn-cf', 'ht-nylon-cf'] },
+  'carbonx-cf-pa12': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PA12_TDS_v1.pdf', aliases: ['cf-pa12', 'pa12-cf', 'nylon12-cf'] },
+  'carbonx-cf-petg': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PETG_TDS_v3.pdf', aliases: ['cf-petg', 'petg-cf'] },
+  'carbonx-cf-asa': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_ASA_TDS_v1.pdf', aliases: ['cf-asa', 'asa-cf'] },
+  'carbonx-cf-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_ABS_TDS_v3.pdf', aliases: ['cf-abs', 'abs-cf'] },
+  'carbonx-cf-pla': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/CarbonX_CF_PLA_TDS_v3.pdf', aliases: ['cf-pla', 'pla-cf'] },
+  'obsidian-pa6-cf': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/Obsidian-PA6CF-TDS_v1.pdf', aliases: ['obsidian', 'onyx-alternative'] },
+
+  // THERMAX Line
+  'thermax-pekk-c': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/Thermax_PEKK-C_TDS_v3.3.pdf', aliases: ['pekk-c'] },
+  'thermax-pekk-a': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/Thermax_PEKK-A_TDS_v2.1.pdf', aliases: ['pekk-a'] },
+  'thermax-peek': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/Themax_PEEK_TDS_v3.pdf', aliases: ['peek'] },
+  'thermax-tpi-extem': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/Thermax_TPI_TDS_TDS_v1.pdf', aliases: ['tpi', 'extem'] },
+  'thermax-pei-1010': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_PEI_1010_TDS_v4.pdf', aliases: ['pei-1010', 'ultem-1010'] },
+  'thermax-pei-9085': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_PEI_9085_TDS_v4.pdf', aliases: ['pei-9085', 'ultem-9085'] },
+  'thermax-ppsu': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_PPSU_TDS_v3.pdf', aliases: ['ppsu'] },
+  'thermax-psu': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_PSU_TDS_v3.pdf', aliases: ['psu'] },
+  'thermax-pps': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_PPS_TDS_v3.pdf', aliases: ['pps'] },
+  'thermax-ppe-ps': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_PPE_PS_TDS_v1.pdf', aliases: ['ppe-ps'] },
+  'thermax-hts': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_HTS_SDS_v1.0.pdf', aliases: ['hts', 'high-temp-support'] },
+  'thermax-mts': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_MTS1_SDS_v1.0.pdf', aliases: ['mts', 'medium-temp-support'] },
+  'thermax-hts1': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_HTS1_TDS_v1.pdf', aliases: ['hts1'] },
+  'thermax-hts2': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/THERMAX_HTS2_TDS_v1.pdf', aliases: ['hts2'] },
+
+  // FibreX Glass Fiber Line
+  'fibrex-peek-gf20': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIBREX_GF20_PEEK_v2.pdf', aliases: ['peek-gf20', 'gf20-peek'] },
+  'fibrex-pei-gf30': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIBREX_GF30_ULTEM_PEI_v1.pdf', aliases: ['pei-gf30', 'gf30-pei', 'ultem-gf30'] },
+  'fibrex-pa6-gf30': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/AMIDEX_Nylon_GF30_TDS_v1.pdf', aliases: ['pa6-gf30', 'gf30-pa6', 'nylon6-gf30'] },
+  'fibrex-pa12-gf30': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIBREX_PA12_GF30_TDS_v1.0.pdf', aliases: ['pa12-gf30', 'gf30-pa12', 'nylon12-gf30'] },
+  'fibrex-abs-gf': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIBREX_GF_ABS__TDS_v1.pdf', aliases: ['abs-gf', 'gf-abs'] },
+  'fibrex-pp-gf30': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIBREX_GF_PP_TDS_v1.pdf', aliases: ['pp-gf30', 'gf30-pp'] },
+
+  // Specialty Materials
+  'simubone': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/SimuBone_TDS_v1.pdf', aliases: ['bone-modeling'] },
+  'fluorx-pvdf': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FLUORX_PVDF_TDS_v3.pdf', aliases: ['pvdf'] },
+  'evolv3d-obc': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/EVOLV3D_OBC-TDS.pdf', aliases: ['obc'] },
+  'hyperlite-pp': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/Hyperlite_PP_TDS_v1.pdf', aliases: ['hyperlite', 'pp'] },
+  'amidex-nylon-6-66': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/AMIDEX_PA6_Copolymer_v1.0.pdf', aliases: ['pa6-66', 'nylon-6-66', 'amidex'] },
+  'wearx-pa6': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/wearx_tds_FW_PA6_Copolymer_v1.0.pdf', aliases: ['wearx', 'wear-resistant-pa6'] },
+
+  // 3DXMAX Line
+  '3dxmax-pc': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_PC_TDS_v3.pdf', aliases: ['max-pc'] },
+  'ezpc': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/ezPC_TDS_v01.pdf', aliases: ['ez-pc'] },
+  '3dxmax-pc-asa': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_PCASA_TDS_v3.pdf', aliases: ['max-pc-asa', 'pc-asa'] },
+  '3dxmax-pc-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_PCABS_TDS_v3.pdf', aliases: ['max-pc-abs', 'pc-abs'] },
+  '3dxpro-low-gloss-petg': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXPRO_LG_PETG_TDS_v3.pdf', aliases: ['lg-petg', 'low-gloss-petg'] },
+  'max-g-petg': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/MAXG_PCTG_TDS_v1.0.pdf', aliases: ['maxg', 'max-g', 'pctg'] },
+  'ecomax-pla': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/ECOMAX_PLA_TDS_v3.pdf', aliases: ['eco-pla'] },
+  'ecomax-tough-pla': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/ECOMAX_Tough_PLA_TDS_v1.pdf', aliases: ['tough-pla'] },
+  '3dxmax-asa': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_ASA_TDS_v3.pdf', aliases: ['max-asa', 'asa'] },
+  '3dxmax-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_ABS_TDS_v3.pdf', aliases: ['max-abs', 'abs'] },
+  '3dxmax-hips': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_HIPS_TDS_v3.pdf', aliases: ['max-hips', 'hips'] },
+  '3dxmax-lts2': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/3DXMAX_LTS2_TDS_v1.pdf', aliases: ['lts2', 'low-temp-support'] },
+
+  // Firewire Flame Retardant
+  'firewire-fr-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIREWIRE_FR_ABS_TDS_v3.pdf', aliases: ['fr-abs'] },
+  'firewire-fr-pc-abs': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/FIREWIRE_FR_PCABS_TDS_v3.pdf', aliases: ['fr-pc-abs'] },
+
+  // Support Materials
+  'aquatek-x1': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/AQUATEK_X1_SDS_v1.0.pdf', aliases: ['aquatek', 'usm', 'water-soluble'] },
+  'aquatek-pva': { url: 'https://cdn.shopify.com/s/files/1/0625/4185/6821/files/AQUATEK_PVA_TDS_v1.pdf', aliases: ['pva'] },
 };
 
 /**
- * Get TDS URL for a 3DXtech filament based on product_line_id, material, or product title
+ * Match a product to its TDS URL using curated patterns
+ */
+export function match3DXTechTds(
+  productLineId: string | null,
+  material: string | null,
+  productTitle: string | null
+): string | null {
+  const searchTerms = [
+    productLineId?.toLowerCase().trim(),
+    material?.toLowerCase().trim(),
+    productTitle?.toLowerCase().trim(),
+  ].filter(Boolean) as string[];
+
+  // Direct key match
+  for (const term of searchTerms) {
+    const normalized = term.replace(/[\s_]+/g, '-');
+    if (DXTECH_TDS_PATTERNS[normalized]) {
+      return DXTECH_TDS_PATTERNS[normalized].url;
+    }
+  }
+
+  // Alias match
+  for (const [key, { url, aliases }] of Object.entries(DXTECH_TDS_PATTERNS)) {
+    for (const term of searchTerms) {
+      const normalized = term.replace(/[\s_]+/g, '-');
+      if (aliases?.some(alias => normalized.includes(alias) || alias.includes(normalized))) {
+        return url;
+      }
+      // Check if key words are in the term
+      const keyParts = key.split('-').filter(p => p.length > 2);
+      if (keyParts.length >= 2 && keyParts.every(part => normalized.includes(part))) {
+        return url;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get TDS URL for a 3DXtech filament - uses curated patterns first, then falls back to legacy logic
  */
 export function get3DXTechTdsUrl(
   productLineId: string | null,
   material: string | null,
   productTitle: string | null
 ): string | null {
-  // First try direct product_line_id match
-  if (productLineId) {
-    const normalizedLineId = productLineId.toLowerCase().trim();
-    if (DXTECH_TDS_URLS[normalizedLineId]) {
-      return DXTECH_TDS_URLS[normalizedLineId];
-    }
-  }
-  
-  // Try material-based matching
-  if (material) {
-    const normalizedMaterial = material.toLowerCase().trim();
-    
-    // Check for ESD materials
-    if (normalizedMaterial.includes('esd')) {
-      if (normalizedMaterial.includes('abs')) return DXTECH_TDS_URLS['esd-abs'];
-      if (normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['esd-petg'];
-      if (normalizedMaterial.includes('pla')) return DXTECH_TDS_URLS['esd-pla'];
-      if (normalizedMaterial.includes('pc') && !normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['esd-pc'];
-      if (normalizedMaterial.includes('nylon') || normalizedMaterial.includes('pa12')) return DXTECH_TDS_URLS['esd-nylon'];
-    }
-    
-    // Check for carbon fiber materials
-    if (normalizedMaterial.includes('cf') || normalizedMaterial.includes('carbon')) {
-      if (normalizedMaterial.includes('abs')) return DXTECH_TDS_URLS['abs-cf'];
-      if (normalizedMaterial.includes('asa')) return DXTECH_TDS_URLS['asa-cf'];
-      if (normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['petg-cf'];
-      if (normalizedMaterial.includes('pla')) return DXTECH_TDS_URLS['pla-cf'];
-      if (normalizedMaterial.includes('pc') && !normalizedMaterial.includes('petg')) return DXTECH_TDS_URLS['pc-cf'];
-      if (normalizedMaterial.includes('nylon') || normalizedMaterial.includes('pa12')) return DXTECH_TDS_URLS['nylon-cf'];
-    }
-    
-    // Check for base materials
-    if (normalizedMaterial === 'asa') return DXTECH_TDS_URLS['asa'];
-    if (normalizedMaterial === 'petg') return DXTECH_TDS_URLS['petg'];
-    if (normalizedMaterial === 'peek') return DXTECH_TDS_URLS['peek'];
-  }
-  
-  // Try title-based matching as fallback
-  if (productTitle) {
-    const normalizedTitle = productTitle.toLowerCase();
-    
-    if (normalizedTitle.includes('3dxstat') || normalizedTitle.includes('esd')) {
-      if (normalizedTitle.includes('abs')) return DXTECH_TDS_URLS['esd-abs'];
-      if (normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['esd-petg'];
-      if (normalizedTitle.includes('pla')) return DXTECH_TDS_URLS['esd-pla'];
-      if (normalizedTitle.includes('pc') && !normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['esd-pc'];
-      if (normalizedTitle.includes('nylon') || normalizedTitle.includes('pa12')) return DXTECH_TDS_URLS['esd-nylon'];
-    }
-    
-    if (normalizedTitle.includes('carbonx') || normalizedTitle.includes('carbon')) {
-      if (normalizedTitle.includes('abs')) return DXTECH_TDS_URLS['abs-cf'];
-      if (normalizedTitle.includes('asa')) return DXTECH_TDS_URLS['asa-cf'];
-      if (normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['petg-cf'];
-      if (normalizedTitle.includes('pla')) return DXTECH_TDS_URLS['pla-cf'];
-      if (normalizedTitle.includes('pc') && !normalizedTitle.includes('petg')) return DXTECH_TDS_URLS['pc-cf'];
-      if (normalizedTitle.includes('nylon') || normalizedTitle.includes('pa12')) return DXTECH_TDS_URLS['nylon-cf'];
-    }
-    
-    if (normalizedTitle.includes('3dxmax') && normalizedTitle.includes('asa')) return DXTECH_TDS_URLS['asa'];
-    if (normalizedTitle.includes('max-g') || (normalizedTitle.includes('maxg') && normalizedTitle.includes('petg'))) return DXTECH_TDS_URLS['petg'];
-    if (normalizedTitle.includes('thermax') && normalizedTitle.includes('peek')) return DXTECH_TDS_URLS['peek'];
-  }
-  
+  // Try curated patterns first (71 official URLs)
+  const curatedUrl = match3DXTechTds(productLineId, material, productTitle);
+  if (curatedUrl) return curatedUrl;
+
+  // Legacy fallback logic for any edge cases
   return null;
 }
 
