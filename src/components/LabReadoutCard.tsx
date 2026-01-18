@@ -264,15 +264,21 @@ export function LabReadoutCard({
           {/* Left: Brand + Name */}
           <div className="flex-1 min-w-0">
             {/* Brand */}
-            <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="flex items-center gap-2 mb-1.5">
               {brandLogo && !imageError ? (
                 <img 
                   src={brandLogo} 
                   alt={`${filament.vendor} logo`}
-                  className="w-4 h-4 rounded object-contain"
+                  className="w-5 h-5 rounded object-contain bg-white/10 p-0.5"
                   onError={() => setImageError(true)}
                 />
-              ) : null}
+              ) : (
+                <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-muted-foreground">
+                    {(filament.vendor || "?").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                 {filament.vendor || "Unknown"}
               </span>
