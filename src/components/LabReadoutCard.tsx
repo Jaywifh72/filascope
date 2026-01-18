@@ -271,16 +271,9 @@ export function LabReadoutCard({
             </div>
             
             {/* Material Name */}
-            <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-1">
+            <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
               {getDisplayTitle()}
             </h3>
-            
-            {/* Material Type Badge */}
-            {filament.material && (
-              <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
-                {filament.material}
-              </span>
-            )}
           </div>
 
           {/* Right: Price (Bold Monospace) */}
@@ -322,6 +315,15 @@ export function LabReadoutCard({
           BODY: 2-Column Technical Grid - Nozzle Temp & Flow Rate
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-4 bg-black/20">
+        {/* Material Type Badge */}
+        {filament.material && (
+          <div className="mb-3">
+            <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
+              {filament.material}
+            </span>
+          </div>
+        )}
+        
         <div className="grid grid-cols-2 gap-3">
           {/* Nozzle Temp */}
           <div className="space-y-1">
