@@ -812,18 +812,95 @@ export function generatePolymakerProductLineId(title: string, material?: string 
 }
 
 // ============================================================================
-// TDS URL Patterns
+// TDS URL Patterns - Explicit Product Line Mappings
 // ============================================================================
 
-// Polymaker uses two TDS URL patterns
+// Authoritative TDS URL mapping from Polymaker's official documentation
+export const POLYMAKER_TDS_URLS: Record<string, string> = {
+  'panchroma-pla': 'https://polymaker.com/wp-content/uploads/Panchroma_TDS_V2.1.pdf',
+  'panchroma pla': 'https://polymaker.com/wp-content/uploads/Panchroma_TDS_V2.1.pdf',
+  'polysonic-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolySonic-PLA-EN_V5.3-TDS.pdf',
+  'polysonic pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolySonic-PLA-EN_V5.3-TDS.pdf',
+  'ht-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polymaker-HT-PLA_TDS_EN_V1.1.pdf',
+  'polymaker ht-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polymaker-HT-PLA_TDS_EN_V1.1.pdf',
+  'ht-pla-gf': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polymaker-HT-PLA-GF_TDS_EN_V1.1.pdf',
+  'polymaker ht-pla-gf': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polymaker-HT-PLA-GF_TDS_EN_V1.1.pdf',
+  'polyterra-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyTerra-PLA_TDS_V5.3.pdf',
+  'polyterra pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyTerra-PLA_TDS_V5.3.pdf',
+  'polysonic-pla-pro': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolySonic-PLA-Pro-EN_V5.3.pdf',
+  'polysonic pla pro': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolySonic-PLA-Pro-EN_V5.3.pdf',
+  'polylite-pla-pro': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polylite-PLA-Pro-EN_V5.3-1.pdf',
+  'polylite pla pro': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polylite-PLA-Pro-EN_V5.3-1.pdf',
+  'polylite-pla-cf': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PLA-CF_TDS_US_5.3.pdf',
+  'polylite pla-cf': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PLA-CF_TDS_US_5.3.pdf',
+  'polylite-lw-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_LW-PLA_TDS_US_5.3.pdf',
+  'polylite lw-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_LW-PLA_TDS_US_5.3.pdf',
+  'polylite-cospla': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polylite-CosPLA-Version-B-EN_V5_3.pdf',
+  'polylite cospla': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polylite-CosPLA-Version-B-EN_V5_3.pdf',
+  'cospla': 'https://polymaker.com/wp-content/uploads/lana-downloads/Polylite-CosPLA-Version-B-EN_V5_3.pdf',
+  'polymax-pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax-PLA_TDS_V5.3.pdf',
+  'polymax pla': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax-PLA_TDS_V5.3.pdf',
+  'fiberon-pet-cf17': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_FIBERON-PET-CF17_V1.0_EN.pdf',
+  'fiberon pet-cf17': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_FIBERON-PET-CF17_V1.0_EN.pdf',
+  'fiberon-petg-rcf08': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_FIBERON-PETG-rCF08_V1.0_EN.pdf',
+  'fiberon petg-rcf08': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_FIBERON-PETG-rCF08_V1.0_EN.pdf',
+  'polymaker-petg': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_Polymaker_PETG_V2.0_2025-11-17.pdf',
+  'polymaker petg': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_Polymaker_PETG_V2.0_2025-11-17.pdf',
+  'polylite-petg': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PETG_TDS_EN_V5.4.pdf',
+  'polylite petg': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PETG_TDS_EN_V5.4.pdf',
+  'polymax-petg': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PETG_TDS_V5.3.pdf',
+  'polymax petg': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PETG_TDS_V5.3.pdf',
+  'fiberon-petg-esd': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PETG-ESD_TDS_V5.3.pdf',
+  'fiberon petg-esd': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PETG-ESD_TDS_V5.3.pdf',
+  'polymax-petg-esd': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PETG-ESD_TDS_V5.3.pdf',
+  'fiberon-asa-cf08': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_FIBERON-ASA-CF08_V1.0_EN.pdf',
+  'fiberon asa-cf08': 'https://polymaker.com/wp-content/uploads/lana-downloads/TDS_FIBERON-ASA-CF08_V1.0_EN.pdf',
+  'polylite-abs': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite-ABS_TDS_EN_V5.5.pdf',
+  'polylite abs': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite-ABS_TDS_EN_V5.5.pdf',
+  'polylite-asa': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_ASA_TDS_V5.3.pdf',
+  'polylite asa': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_ASA_TDS_V5.3.pdf',
+  'polylite-pc': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PC_TDS_V5.3.pdf',
+  'polylite pc': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyLite_PC_TDS_V5.3.pdf',
+  'polymax-pc': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PC_TDS_V5.3.pdf',
+  'polymax pc': 'https://polymaker.com/wp-content/uploads/lana-downloads/PolyMax_PC_TDS_V5.3.pdf',
+};
+
+// Lookup TDS URL from product line name with fuzzy matching
 export function generatePolymakerTdsUrl(title: string, handle?: string): string | null {
-  const productSlug = handle || title.toLowerCase()
+  const lower = title.toLowerCase().trim();
+  
+  // Direct lookup first
+  if (POLYMAKER_TDS_URLS[lower]) {
+    return POLYMAKER_TDS_URLS[lower];
+  }
+  
+  // Try normalized key (spaces to hyphens)
+  const hyphenated = lower.replace(/\s+/g, '-').replace(/[™]/g, '');
+  if (POLYMAKER_TDS_URLS[hyphenated]) {
+    return POLYMAKER_TDS_URLS[hyphenated];
+  }
+  
+  // Fuzzy match: find best matching key
+  for (const [key, url] of Object.entries(POLYMAKER_TDS_URLS)) {
+    // Check if title contains the key or vice versa
+    if (lower.includes(key) || key.includes(lower)) {
+      return url;
+    }
+    // Check without trademark symbols and with normalized spacing
+    const cleanKey = key.replace(/[™-]/g, ' ').replace(/\s+/g, ' ').trim();
+    const cleanTitle = lower.replace(/[™-]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (cleanTitle.includes(cleanKey) || cleanKey.includes(cleanTitle)) {
+      return url;
+    }
+  }
+  
+  // Fallback: generate legacy URL pattern
+  const productSlug = (handle || title).toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/--+/g, '-');
   
-  // New CDN pattern (preferred)
-  return `https://cdn.shopify.com/s/files/1/0548/7299/7945/files/TDS_${productSlug}.pdf`;
+  return `https://polymaker.com/wp-content/uploads/lana-downloads/${productSlug}_TDS_V5.3.pdf`;
 }
 
 export function generateLegacyTdsUrl(title: string): string | null {
@@ -832,7 +909,6 @@ export function generateLegacyTdsUrl(title: string): string | null {
     .replace(/[^a-z0-9-]/g, '')
     .replace(/--+/g, '-');
   
-  // Legacy pattern
   return `https://polymaker.com/wp-content/uploads/lana-downloads/${productSlug}_TDS_V5.3.pdf`;
 }
 
