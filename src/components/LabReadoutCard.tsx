@@ -260,11 +260,11 @@ export function LabReadoutCard({
           )}
         </div>
 
-        <div className="flex items-start justify-between gap-3 pl-7">
-          {/* Left: Brand + Name */}
-          <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-3 pl-7 h-full">
+          {/* Left: Brand Logo */}
+          <div className="flex-1 min-w-0 h-full flex items-center">
             {/* Brand Logo */}
-            <div className="mb-1.5 h-[90%]">
+            <div className="h-[90%] flex items-center">
               {filament.vendor ? (
                 <img 
                   src={getBrandLogo(filament.vendor)} 
