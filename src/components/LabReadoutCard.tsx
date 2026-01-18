@@ -276,25 +276,6 @@ export function LabReadoutCard({
             </h3>
           </div>
 
-          {/* Right: Price (Bold Monospace) */}
-          <div className="text-right flex-shrink-0">
-            {isValidPrice && pricePerKg ? (
-              <div>
-                <span 
-                  className="text-xl font-bold text-foreground font-mono"
-                >
-                  {formatRegionalPrice(pricePerKg, false, userCurrency)}
-                </span>
-                <span className="block text-[10px] text-muted-foreground font-mono">
-                  /kg
-                </span>
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground font-mono">
-                —
-              </span>
-            )}
-          </div>
         </div>
         
         {/* Cyan Scan Line at bottom of header */}
@@ -315,14 +296,33 @@ export function LabReadoutCard({
           BODY: 2-Column Technical Grid - Nozzle Temp & Flow Rate
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-4 bg-black/20">
-        {/* Material Type Badge */}
-        {filament.material && (
-          <div className="mb-3">
+        {/* Material Badge + Price Row */}
+        <div className="flex items-center justify-between mb-3">
+          {/* Material Type Badge */}
+          {filament.material && (
             <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
               {filament.material}
             </span>
+          )}
+          
+          {/* Price */}
+          <div className="text-right flex-shrink-0">
+            {isValidPrice && pricePerKg ? (
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-bold text-foreground font-mono">
+                  {formatRegionalPrice(pricePerKg, false, userCurrency)}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  /kg
+                </span>
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground font-mono">
+                —
+              </span>
+            )}
           </div>
-        )}
+        </div>
         
         <div className="grid grid-cols-2 gap-3">
           {/* Nozzle Temp */}
