@@ -6,21 +6,51 @@
  */
 
 // ============================================================================
-// TDS URL PATTERNS
+// TDS URL PATTERNS - Curated official Fusion Filaments TDS URLs
 // ============================================================================
 
 export const FUSION_TDS_PATTERNS: Record<string, string> = {
-  // Fusion Filaments doesn't have public TDS PDFs - specs are on product pages
-  // If they add TDS in future, map them here
+  // Official TDS PDFs from fusionfilaments.com
+  'HT-PLA': 'https://www.fusionfilaments.com/web/content/14854?unique=100d83b2aad70da2b9f8d18ba841b0a8152ea40b',
+  'PLA': 'https://www.fusionfilaments.com/web/content/14862?unique=51c7d7badc82f5084a75f7c5e29890d5221d8a3a&download=true',
+  'PETG': 'https://www.fusionfilaments.com/web/content/14863?unique=b9e281aed7e5952fb125a0c757f2b02c8ad59c83&download=true',
+  'HT-PET': 'https://www.fusionfilaments.com/web/content/14864?unique=1fa47f16ae7881713daafb6e1f7f553e0385b590&download=true',
+  'ABS GLOSS': 'https://www.fusionfilaments.com/web/content/14865?unique=fefcca8388fa122681d49c534fb4bd4d3dad386f&download=true',
+  'ABS MATTE': 'https://www.fusionfilaments.com/web/content/14866?unique=2942c44cfceb939fec4f215fe7c5b32bba1bad0d&download=true',
+  'ASA': 'https://www.fusionfilaments.com/web/content/14867?unique=dcb90d9923384191e0fabd021230b6621e6161e0&download=true',
 };
 
+/**
+ * Match a product title against known Fusion Filaments TDS patterns
+ * Uses explicit matching with material-based aliases
+ */
 export function matchFusionTds(title: string): { url: string; pattern: string } | null {
   if (!title) return null;
+  
   const normalizedTitle = title.toUpperCase();
-  const sorted = Object.entries(FUSION_TDS_PATTERNS).sort((a, b) => b[0].length - a[0].length);
-  for (const [pattern, url] of sorted) {
-    if (normalizedTitle.includes(pattern.toUpperCase())) return { url, pattern };
+  
+  // Direct material matching with priority order (most specific first)
+  const materialPatterns = [
+    { pattern: 'HT-PLA', aliases: ['HT-PLA', 'HTPLA', 'HT PLA', 'HTPLA+', 'HT-PLA+'] },
+    { pattern: 'HT-PET', aliases: ['HT-PET', 'HTPET', 'HT PET', 'HTPET+', 'HT-PET+'] },
+    { pattern: 'ABS GLOSS', aliases: ['ABS GLOSS', 'ABS-GLOSS'] },
+    { pattern: 'ABS MATTE', aliases: ['ABS MATTE', 'ABS-MATTE', 'ABS MATT'] },
+    { pattern: 'ASA', aliases: ['ASA', 'EASY-ASA', 'EASYASA'] },
+    { pattern: 'PETG', aliases: ['PETG', 'PCTG'] },
+    { pattern: 'PLA', aliases: ['HS-PLA', 'HSPLA', 'HS PLA', 'PLA'] },
+  ];
+  
+  for (const { pattern, aliases } of materialPatterns) {
+    for (const alias of aliases) {
+      if (normalizedTitle.includes(alias)) {
+        const url = FUSION_TDS_PATTERNS[pattern];
+        if (url) {
+          return { url, pattern };
+        }
+      }
+    }
   }
+  
   return null;
 }
 
