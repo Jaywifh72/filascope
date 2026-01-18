@@ -2,7 +2,7 @@
  * DURAMIC 3D BRAND-SPECIFIC DEFAULTS
  * 
  * Configuration for Duramic 3D filament sync pipeline including:
- * - TDS URL patterns (limited - Duramic has no dedicated TDS pages)
+ * - TDS URL patterns (4 official Shopify CDN URLs)
  * - Default print settings by material
  * - Material normalization
  * - Finish type detection
@@ -12,24 +12,41 @@
 
 // ============================================================================
 // TDS URL PATTERNS
-// Note: Duramic 3D doesn't have dedicated TDS pages on their website
-// These are placeholders for potential Amazon listing documentation
+// Curated official Shopify CDN URLs for Duramic 3D TDS documents
 // ============================================================================
 
 export const DURAMIC_TDS_PATTERNS: Record<string, string> = {
-  // Duramic doesn't publish TDS PDFs - specs are embedded in product pages
-  // This map remains empty but structured for future discovery
+  // PLA variants
+  'pla-plus': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_PLA_Plus_TDS_EN_V1.1.pdf?v=1629881206',
+  'pla+': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_PLA_Plus_TDS_EN_V1.1.pdf?v=1629881206',
+  'matte-pla': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_PLA_TDS_EN_V1.1.pdf?v=1629881206',
+  'pla-matte': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_PLA_TDS_EN_V1.1.pdf?v=1629881206',
+  'pla': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_PLA_TDS_EN_V1.1.pdf?v=1629881206',
+  
+  // PETG
+  'petg': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_PETG_TDS_V4-G105.pdf?v=1629881207',
+  
+  // TPU
+  'tpu': 'https://cdn.shopifycdn.net/s/files/1/0279/4933/4599/files/Duramic_TPU_TDS_EN_V1.1.pdf?v=1629881207',
 };
 
-export function matchDuramicTds(title: string): { url: string; pattern: string } | null {
-  if (!title) return null;
-  const normalizedTitle = title.toUpperCase();
+export function matchDuramicTds(title: string, material?: string | null): { url: string; pattern: string } | null {
+  if (!title && !material) return null;
+  
+  const normalizedTitle = (title || '').toUpperCase();
+  const normalizedMaterial = (material || '').toUpperCase();
+  const combined = `${normalizedTitle} ${normalizedMaterial}`;
+  
+  // Sort by key length (longest first) for most specific match
   const sorted = Object.entries(DURAMIC_TDS_PATTERNS).sort((a, b) => b[0].length - a[0].length);
+  
   for (const [pattern, url] of sorted) {
-    if (normalizedTitle.includes(pattern.toUpperCase())) {
+    if (combined.includes(pattern.toUpperCase().replace(/-/g, ' ')) || 
+        combined.includes(pattern.toUpperCase().replace(/-/g, ''))) {
       return { url, pattern };
     }
   }
+  
   return null;
 }
 
