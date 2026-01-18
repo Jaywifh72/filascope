@@ -392,73 +392,98 @@ export function generateColorFabbProductLineId(title: string, material: string):
 }
 
 // =============================================================================
-// TDS URL MAPPING
+// TDS URL MAPPING - Curated official ColorFabb TDS download URLs
 // =============================================================================
 
-const TDS_URL_BASE = 'https://colorfabb.com/media/datasheets/tds/colorfabb';
-
 export const COLORFABB_TDS_PATTERNS: Record<string, string> = {
-  // PLA variants
-  'PLA/PHA': `${TDS_URL_BASE}/TDS_E_ColorFabb_PLA_PHA.pdf`,
-  'PLA Economy': `${TDS_URL_BASE}/TDS_E_ColorFabb_PLA_Economy.pdf`,
-  'PLA Semi-Matte': `${TDS_URL_BASE}/TDS_E_ColorFabb_PLA_Semi-Matte.pdf`,
-  'PLA High Speed Pro': `${TDS_URL_BASE}/TDS_E_ColorFabb_PLA_High_Speed_Pro.pdf`,
-  'PLA-HP': `${TDS_URL_BASE}/TDS_E_ColorFabb_PLA_High_Speed_Pro.pdf`,
-  'PLA Silk': `${TDS_URL_BASE}/TDS_E_ColorFabb_PLA_Silk.pdf`,
-  'rPLA': `${TDS_URL_BASE}/TDS_E_ColorFabb_rPLA.pdf`,
-  'Vibers PLA': `${TDS_URL_BASE}/TDS_E_ColorFabb_Vibers_PLA.pdf`,
+  // ASA - Official download URLs from downloads.colorfabb.com
+  'ASA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/ASA/colorFabb%20ASA&files=TDS_E_ColorFabb_ASA.pdf',
+  'LW-ASA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/ASA/colorFabb%20LW-ASA&files=TDS_E_colorFabb%20LW-ASA.pdf',
   
-  // Lightweight/Foaming
-  'LW-PLA': `${TDS_URL_BASE}/TDS_E_ColorFabb_LW-PLA.pdf`,
-  'LW-PLA-HT': `${TDS_URL_BASE}/TDS_E_ColorFabb_LW-PLA_HT.pdf`,
-  'LW-ASA': `${TDS_URL_BASE}/TDS_E_ColorFabb_LW-ASA.pdf`,
-  'varioShore TPU': `${TDS_URL_BASE}/TDS_E_ColorFabb_varioShore_TPU.pdf`,
+  // Co-Polyester - nGen, XT, HT series
+  'Copolyester': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb%20nGen&files=TDS_E_ColorFabb_nGen.pdf',
+  'nGen': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb%20nGen&files=TDS_E_ColorFabb_nGen.pdf',
+  'nGen-Flex': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb%20nGen&files=TDS_E_ColorFabb_nGen_FLEX.pdf',
+  'nGen-CF10': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb%20nGen&files=TDS_nGen%20CF10.pdf',
+  'PETG Economy': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb%20PETG&files=TDS_E_ColorFabb_PETG-Economy.pdf',
+  'HT': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb_HT&files=TDS_E_ColorFabb_HT.pdf',
+  'XT': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb_XT&files=TDS_E_ColorFabb_XT%202.pdf',
+  'XT-CF20': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/Co-Polyester/colorFabb_XT&files=TDS_colorFabb_XT-CF20.pdf',
   
-  // Specialty fills - with new material name mappings
-  'PLA-Metal': `${TDS_URL_BASE}/TDS_E_ColorFabb_bronzeFill.pdf`,
-  'bronzeFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_bronzeFill.pdf`,
-  'copperFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_copperFill.pdf`,
-  'steelFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_steelFill.pdf`,
-  'brassFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_brassFill.pdf`,
-  'PLA-Wood': `${TDS_URL_BASE}/TDS_E_ColorFabb_woodFill.pdf`,
-  'woodFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_woodFill.pdf`,
-  'corkFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_corkFill.pdf`,
-  'bambooFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_bambooFill.pdf`,
-  'PLA-Glow': `${TDS_URL_BASE}/TDS_E_ColorFabb_glowFill.pdf`,
-  'glowFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_glowFill.pdf`,
-  'PLA-Stone': `${TDS_URL_BASE}/TDS_E_ColorFabb_stoneFill.pdf`,
-  'stoneFill': `${TDS_URL_BASE}/TDS_E_ColorFabb_stoneFill.pdf`,
-  
-  // Co-polyesters (Copolyester material)
-  'Copolyester': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen.pdf`,
-  'nGen': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen.pdf`,
-  'nGen-CF10': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen_CF10.pdf`,
-  'nGen-Flex': `${TDS_URL_BASE}/TDS_E_ColorFabb_nGen_Flex.pdf`,
-  'XT': `${TDS_URL_BASE}/TDS_E_ColorFabb_XT.pdf`,
-  'XT-CF20': `${TDS_URL_BASE}/TDS_E_ColorFabb_XT-CF20.pdf`,
-  'HT': `${TDS_URL_BASE}/TDS_E_ColorFabb_HT.pdf`,
-  
-  // PETG
-  'PETG Economy': `${TDS_URL_BASE}/TDS_E_ColorFabb_PETG_Economy.pdf`,
-  'PETG Semi-Matte': `${TDS_URL_BASE}/TDS_E_ColorFabb_PETG_Semi-Matte.pdf`,
-  
-  // Engineering
-  'ASA': `${TDS_URL_BASE}/TDS_E_ColorFabb_ASA.pdf`,
-  'PA Neat': `${TDS_URL_BASE}/TDS_E_ColorFabb_PA_Neat.pdf`,
-  'PA': `${TDS_URL_BASE}/TDS_E_ColorFabb_PA.pdf`,
-  'PA-CF': `${TDS_URL_BASE}/TDS_E_ColorFabb_PA-CF_Low_Warp.pdf`,
-  
-  // TPU
-  'TPU 85A': `${TDS_URL_BASE}/TDS_E_ColorFabb_TPU_85A.pdf`,
-  'TPU 95A': `${TDS_URL_BASE}/TDS_E_ColorFabb_TPU_95A.pdf`,
+  // PA (Nylon)
+  'PA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PA/colorFabb%20PA%20BMD&files=TDS_E%20PA%20Blue%20Metal%20Detectable.pdf',
+  'PA Blue Metal Detectable': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PA/colorFabb%20PA%20BMD&files=TDS_E%20PA%20Blue%20Metal%20Detectable.pdf',
+  'PA Neat': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PA/colorFabb%20PA%20Neat&files=TDS_E%20colorFabb%20PA-NEAT.pdf',
+  'PA-NEAT': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PA/colorFabb%20PA%20Neat&files=TDS_E%20colorFabb%20PA-NEAT.pdf',
   
   // PHA
-  'PHA': `${TDS_URL_BASE}/TDS_E_ColorFabb_allPHA.pdf`,
-  'allPHA': `${TDS_URL_BASE}/TDS_E_ColorFabb_allPHA.pdf`,
+  'PHA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PHA/colorFabb%20allPHA&files=TDS_E%20ColorFabb%20allPHA.pdf',
+  'allPHA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PHA/colorFabb%20allPHA&files=TDS_E%20ColorFabb%20allPHA.pdf',
+  
+  // PLA - COLOR on Demand
+  'PLA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PLA/colorFabb%20COD&files=TDS_E%20ColorFabb%20COLOR%20on%20Demand.pdf',
+  'PLA/PHA': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PLA/colorFabb%20COD&files=TDS_E%20ColorFabb%20COLOR%20on%20Demand.pdf',
+  'COLOR on Demand': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/PLA/colorFabb%20COD&files=TDS_E%20ColorFabb%20COLOR%20on%20Demand.pdf',
+  
+  // TPU
+  'TPU 85A': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/TPU/colorFabb%20TPU85A&files=TDS_colorFabb_TPU85A.pdf',
+  'TPU 95A': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/TPU/colorFabb%20TPU95A&files=TDS_colorFabb_TPU95A.pdf',
+  'varioShore TPU': 'https://downloads.colorfabb.com/index.php/s/rtfDDRCa723Xdor/download?path=/Technical%20Data%20Sheets/TPU/colorFabb%20TPU85A&files=TDS_colorFabb_TPU85A.pdf',
 };
 
+/**
+ * Match a product title against known ColorFabb TDS patterns
+ * Uses explicit matching with material-based aliases for fuzzy lookup
+ */
+export function matchColorFabbTds(title: string): { url: string; pattern: string } | null {
+  if (!title) return null;
+  
+  const normalizedTitle = title.toUpperCase();
+  
+  // Material matching patterns with aliases (most specific first)
+  const materialPatterns = [
+    { pattern: 'XT-CF20', aliases: ['XT-CF20', 'XT CF20', 'XTCF20'] },
+    { pattern: 'nGen-CF10', aliases: ['NGEN-CF10', 'NGEN CF10', 'NGENCF10', 'CF10'] },
+    { pattern: 'nGen-Flex', aliases: ['NGEN-FLEX', 'NGEN FLEX', 'NGENFLEX'] },
+    { pattern: 'PA Blue Metal Detectable', aliases: ['PA BLUE METAL', 'PA BMD', 'BLUE METAL DETECTABLE'] },
+    { pattern: 'PA-NEAT', aliases: ['PA-NEAT', 'PA NEAT', 'PANEAT'] },
+    { pattern: 'PETG Economy', aliases: ['PETG ECONOMY', 'PETG-ECONOMY'] },
+    { pattern: 'LW-ASA', aliases: ['LW-ASA', 'LWASA', 'LW ASA'] },
+    { pattern: 'TPU 85A', aliases: ['TPU85A', 'TPU 85A', 'TPU-85A', 'VARIOSHORE'] },
+    { pattern: 'TPU 95A', aliases: ['TPU95A', 'TPU 95A', 'TPU-95A'] },
+    { pattern: 'allPHA', aliases: ['ALLPHA', 'ALL-PHA', 'ALL PHA'] },
+    { pattern: 'nGen', aliases: ['NGEN'] },
+    { pattern: 'ASA', aliases: ['ASA'] },
+    { pattern: 'HT', aliases: ['COLORFABB HT', ' HT '] },
+    { pattern: 'XT', aliases: ['COLORFABB XT', ' XT '] },
+    { pattern: 'PA Neat', aliases: ['PA NEAT', 'PA-NEAT'] },
+    { pattern: 'PA', aliases: [' PA ', 'PA-', '-PA'] },
+    { pattern: 'PHA', aliases: ['PHA'] },
+    { pattern: 'PLA', aliases: ['PLA', 'COLOR ON DEMAND', 'COD'] },
+  ];
+  
+  for (const { pattern, aliases } of materialPatterns) {
+    for (const alias of aliases) {
+      if (normalizedTitle.includes(alias)) {
+        const url = COLORFABB_TDS_PATTERNS[pattern];
+        if (url) {
+          return { url, pattern };
+        }
+      }
+    }
+  }
+  
+  return null;
+}
+
 export function getColorFabbTdsUrl(material: string): string | null {
-  return COLORFABB_TDS_PATTERNS[material] || null;
+  // First try direct lookup
+  const directUrl = COLORFABB_TDS_PATTERNS[material];
+  if (directUrl) return directUrl;
+  
+  // Fallback to fuzzy matching
+  const match = matchColorFabbTds(material);
+  return match?.url || null;
 }
 
 // =============================================================================
