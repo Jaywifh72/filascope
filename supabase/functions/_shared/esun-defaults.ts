@@ -14,34 +14,43 @@
 // TDS URL PATTERNS
 // ============================================================================
 
+/**
+ * Curated TDS URL mappings for eSun products
+ * These are official manufacturer URLs for high-fidelity TDS discovery
+ */
 export const ESUN_TDS_PATTERNS: Record<string, string> = {
-  'pla+': 'https://www.esun3d.com/uploads/eSUN_PLA+-Filament_TDS_V4.0.pdf',
-  'pla': 'https://www.esun3d.com/uploads/eSUN_PLA-Basic_TDS_V1.0.pdf',
-  'pla-basic': 'https://www.esun3d.com/uploads/eSUN_PLA-Basic_TDS_V1.0.pdf',
-  'pla-matte': 'https://www.esun3d.com/uploads/eSUN_ePLA-Matte_TDS_V1.0.pdf',
-  'pla-silk': 'https://www.esun3d.com/uploads/eSUN_ePLA-Silk_TDS_V1.0.pdf',
-  'pla-lw': 'https://www.esun3d.com/uploads/eSUN_ePLA-LW_TDS_V1.0.pdf',
-  'pla-st': 'https://www.esun3d.com/uploads/eSUN_ePLA-ST_TDS_V1.0.pdf',
-  'pla-cf': 'https://www.esun3d.com/uploads/eSUN_ePLA-CF_TDS_V1.0.pdf',
-  'pla+hs': 'https://www.esun3d.com/uploads/eSUN_PLA+HS_TDS_V1.0.pdf',
-  'petg': 'https://www.esun3d.com/uploads/eSUN_PETG_TDS_V4.0.pdf',
-  'petg-cf': 'https://www.esun3d.com/uploads/eSUN_ePETG-CF_TDS_V1.0.pdf',
-  'petg+hs': 'https://www.esun3d.com/uploads/eSUN_ePETG-HS_TDS_V1.0.pdf',
-  'petg-esd': 'https://www.esun3d.com/uploads/eSUN_PETG-ESD_TDS_V1.0.pdf',
-  'abs+': 'https://www.esun3d.com/uploads/eSUN_ABS+_TDS_V4.0.pdf',
-  'abs-cf': 'https://www.esun3d.com/uploads/eSUN_eABS-CF_TDS_V1.0.pdf',
-  'abs+hs': 'https://www.esun3d.com/uploads/eSUN_eABS-HS_TDS_V1.0.pdf',
-  'asa+': 'https://www.esun3d.com/uploads/eSUN_eASA_TDS_V1.0.pdf',
-  'tpu-95a': 'https://www.esun3d.com/uploads/eSUN_eTPU-95A_TDS_V4.0.pdf',
-  'tpu-83a': 'https://www.esun3d.com/uploads/eSUN_eTPE-83A_TDS_V1.0.pdf',
-  'tpu-lw': 'https://www.esun3d.com/uploads/eSUN_eTPU-LW_TDS_V1.0.pdf',
-  'pa': 'https://www.esun3d.com/uploads/eSUN_ePA_TDS_V1.0.pdf',
-  'pa-cf': 'https://www.esun3d.com/uploads/eSUN_ePA-CF_TDS_V1.0.pdf',
-  'pa12-cf': 'https://www.esun3d.com/uploads/eSUN_ePA12-CF_TDS_V1.0.pdf',
-  'paht-cf': 'https://www.esun3d.com/uploads/eSUN_ePAHT-CF_TDS_V1.0.pdf',
-  'pc': 'https://www.esun3d.com/uploads/eSUN_ePC_TDS_V1.0.pdf',
-  'pva': 'https://www.esun3d.com/uploads/eSUN_ePVA_TDS_V1.0.pdf',
-  'hips': 'https://www.esun3d.com/uploads/eSUN_HIPS_TDS_V1.0.pdf',
+  // Core materials
+  'pla+': 'https://www.esun3d.com/uploads/PLA+-TDS-EN-.pdf',
+  'pla': 'https://www.esun3d.com/uploads/eSUN_PLA-Filament_TDS_V4.0.pdf',
+  'pla-basic': 'https://www.esun3d.com/uploads/PLA-Basic-TDS-EN.pdf',
+  'abs': 'https://www.esun3d.com/uploads/eSUN_ABS-Filament_TDS_V4.02.pdf',
+  'petg': 'https://www.esun3d.com/uploads/PETG-TDS1.pdf',
+  
+  // PLA variants
+  'pla-matte': 'https://www.esun3d.com/uploads/PLA-Matte-TDS-2025.06.19.pdf',
+  'pla-silk': 'https://www.esun3d.com/uploads/PLA-Silk-TDS-2025.06.19.pdf',
+  'pla-cf': 'https://www.esun3d.com/uploads/ePLA-CF.pdf',
+  'pla-wood': 'https://www.esun3d.com/uploads/PLA-wood-TDS-EN-2025.4.17.pdf',
+  'pla+hs': 'https://www.esun3d.com/uploads/PLA+HS-TDS.pdf',
+  'pla-hs': 'https://www.esun3d.com/uploads/ePLA-HS.pdf',
+  
+  // Engineering materials
+  'asa+': 'https://www.esun3d.com/uploads/ASA+_TDS-V1-.pdf',
+  'pa-cf': 'https://www.esun3d.com/uploads/eSUN_ePA-CF-Filament_TDS_V4.01.pdf',
+  'petg-cf': 'https://www.esun3d.com/uploads/PETG-CF_TDS-V1-2024.07.25.pdf',
+  
+  // Flex
+  'tpu-95a': 'https://www.esun3d.com/uploads/eSUN_eTPU-95A-Filament_TDS_V4.0.pdf',
+  'tpu-64d': 'https://www.esun3d.com/uploads/TPU-64D-TDS.pdf',
+  
+  // Support materials
+  'hips': 'https://www.esun3d.com/uploads/eSUN_HIPS-Filament_TDS_V4.01.pdf',
+  
+  // Aliases for variant matching
+  'epla-cf': 'https://www.esun3d.com/uploads/ePLA-CF.pdf',
+  'epla-hs': 'https://www.esun3d.com/uploads/ePLA-HS.pdf',
+  'etpu-95a': 'https://www.esun3d.com/uploads/eSUN_eTPU-95A-Filament_TDS_V4.0.pdf',
+  'epa-cf': 'https://www.esun3d.com/uploads/eSUN_ePA-CF-Filament_TDS_V4.01.pdf',
 };
 
 export function matchEsunTds(title: string): { url: string; pattern: string } | null {
