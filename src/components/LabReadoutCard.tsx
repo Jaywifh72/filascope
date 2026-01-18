@@ -227,7 +227,7 @@ export function LabReadoutCard({
       {/* ═══════════════════════════════════════════════════════════════
           HEADER: Dark header area with material name + price
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative bg-[#14171C] px-4 pt-4 pb-4">
+      <div className="relative bg-[#14171C] px-4 pt-4 pb-4 h-[72px]">
         {/* Checkbox positioned in header */}
         <div 
           className="absolute top-3 left-3 z-10"
