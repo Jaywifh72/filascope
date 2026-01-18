@@ -339,32 +339,17 @@ export function LabReadoutCard({
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-3">
-          {/* Nozzle Temp */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Thermometer className="w-3 h-3 text-[#00CFE8]" />
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
-                Nozzle Temp
-              </span>
-            </div>
-            <span className="font-mono text-base font-bold text-foreground block">
-              {nozzleTemp}
+        {/* Nozzle Temp */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            <Thermometer className="w-3 h-3 text-[#00CFE8]" />
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
+              Nozzle Temp
             </span>
           </div>
-
-          {/* Flow Rate */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Droplets className="w-3 h-3 text-[#00CFE8]" />
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
-                Flow Rate
-              </span>
-            </div>
-            <span className="font-mono text-base font-bold text-foreground block">
-              {volumetricFlow}
-            </span>
-          </div>
+          <span className="font-mono text-base font-bold text-foreground block">
+            {nozzleTemp}
+          </span>
         </div>
       </div>
 
