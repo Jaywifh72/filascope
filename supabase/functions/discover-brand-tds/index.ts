@@ -893,10 +893,13 @@ function findDocumentInJsonLd(data: any): string | null {
   return null;
 }
 
-// Validate TDS URL is accessible
+// Validate TDS URL is accessible (with timeout)
 async function validateTdsUrl(url: string): Promise<boolean> {
   try {
-    const response = await fetch(url, { method: 'HEAD' });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    const response = await fetch(url, { method: 'HEAD', signal: controller.signal });
+    clearTimeout(timeoutId);
     return response.ok;
   } catch {
     return false;
@@ -999,6 +1002,10 @@ Deno.serve(async (req) => {
           // Step 2: Scrape product page if no known URL found
           if (!result.tdsUrl && filament.product_url) {
             try {
+              // Add timeout to prevent "Network connection lost" errors
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+              
               const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
                 method: 'POST',
                 headers: {
@@ -1009,8 +1016,12 @@ Deno.serve(async (req) => {
                   url: filament.product_url,
                   formats: ['html'],
                   onlyMainContent: false,
+                  timeout: 20000, // Firecrawl-side timeout
                 }),
+                signal: controller.signal,
               });
+              
+              clearTimeout(timeoutId);
 
               if (scrapeResponse.ok) {
                 const scrapeData = await scrapeResponse.json();
@@ -1034,7 +1045,12 @@ Deno.serve(async (req) => {
               // Rate limiting
               await new Promise(r => setTimeout(r, 1000));
             } catch (err) {
-              result.error = err instanceof Error ? err.message : 'Scrape failed';
+              if (err instanceof Error && err.name === 'AbortError') {
+                result.error = 'Request timeout (25s)';
+              } else {
+                result.error = err instanceof Error ? err.message : 'Scrape failed';
+              }
+              console.warn(`[discover-brand-tds] Scrape error for ${filament.product_url}: ${result.error}`);
             }
           }
           
@@ -1157,6 +1173,10 @@ Deno.serve(async (req) => {
       // Step 2: Scrape product page if no known URL
       if (!result.tdsUrl) {
         try {
+          // Add timeout to prevent "Network connection lost" errors
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+          
           const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
             method: 'POST',
             headers: {
@@ -1167,8 +1187,12 @@ Deno.serve(async (req) => {
               url: filament.product_url,
               formats: ['html'],
               onlyMainContent: false,
+              timeout: 20000, // Firecrawl-side timeout
             }),
+            signal: controller.signal,
           });
+          
+          clearTimeout(timeoutId);
 
           if (!scrapeResponse.ok) {
             result.error = `Scrape failed: ${scrapeResponse.status}`;
@@ -1195,7 +1219,12 @@ Deno.serve(async (req) => {
             }
           }
         } catch (err) {
-          result.error = err instanceof Error ? err.message : 'Unknown error';
+          if (err instanceof Error && err.name === 'AbortError') {
+            result.error = 'Request timeout (25s)';
+          } else {
+            result.error = err instanceof Error ? err.message : 'Unknown error';
+          }
+          console.warn(`[discover-brand-tds] Scrape error for ${filament.product_url}: ${result.error}`);
         }
       }
 
