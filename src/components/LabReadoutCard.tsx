@@ -263,9 +263,24 @@ export function LabReadoutCard({
         <div className="flex items-start justify-between gap-3 pl-7">
           {/* Left: Brand + Name */}
           <div className="flex-1 min-w-0">
-            {/* Brand */}
-            <div className="mb-1.5">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            {/* Brand Logo */}
+            <div className="mb-1.5 h-4">
+              {filament.vendor ? (
+                <img 
+                  src={getBrandLogo(filament.vendor)} 
+                  alt={filament.vendor}
+                  className="h-4 w-auto max-w-[80px] object-contain opacity-70"
+                  onError={(e) => {
+                    // Fallback to text if logo fails
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <span className={cn(
+                "text-[10px] text-muted-foreground uppercase tracking-wider",
+                filament.vendor ? "hidden" : ""
+              )}>
                 {filament.vendor || "Unknown"}
               </span>
             </div>
