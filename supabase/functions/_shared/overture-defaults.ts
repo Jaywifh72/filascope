@@ -15,6 +15,82 @@
  * - Carbon Fiber PLA
  */
 
+// ============================================================
+// TDS URL Patterns - Curated from official Overture documentation
+// ============================================================
+export const OVERTURE_TDS_PATTERNS: Record<string, string> = {
+  // Core Materials
+  'pla': 'https://overture3d.com/cdn/shop/files/OVERTURE_PLA_TDS_EN_V5.1_a4102671-a3b0-416f-9191-7e6feb681e3e.pdf?v=3056189678228575855',
+  'petg': 'https://overture3d.com/cdn/shop/files/OVERTURE_PETG_TDS_EN_V5.2_2.pdf?v=9802109789192864041',
+  'abs': 'https://overture3d.com/cdn/shop/files/OVERTURE_ABS_TDS_EN_V5.1_9d827267-f215-4734-9c0b-c04232b8df92.pdf?v=14112127381514289602',
+  'asa': 'https://overture3d.com/cdn/shop/files/OVERTURE_ASA_TDS_EN_V5.1_60023de4-0977-4f96-9c55-0d94bacc7d0f.pdf?v=13809907352339313230',
+  'tpu': 'https://overture3d.com/cdn/shop/files/OVERTURE_TPU_TDS_EN_V5.1_195e4c18-e1da-47fc-964f-a651a96edc78.pdf?v=3016081695131481537',
+  
+  // PLA Variants
+  'matte-pla': 'https://overture3d.com/cdn/shop/files/OVERTURE_MATTE_PLA_TDS_EN_V5.1_0ae7a33c-dd34-49b9-a202-c6ba0fddfdcb.pdf?v=8219732571127076035',
+  'pla-matte': 'https://overture3d.com/cdn/shop/files/OVERTURE_MATTE_PLA_TDS_EN_V5.1_0ae7a33c-dd34-49b9-a202-c6ba0fddfdcb.pdf?v=8219732571127076035',
+  'pla-pro': 'https://overture3d.com/cdn/shop/files/OVERTURE_PLA_PROFESSIONAL_TDS_EN_V5.1_b6097b34-61cd-4f4c-9f6e-260f44e22ebe.pdf?v=1470696260597554615',
+  'pla-professional': 'https://overture3d.com/cdn/shop/files/OVERTURE_PLA_PROFESSIONAL_TDS_EN_V5.1_b6097b34-61cd-4f4c-9f6e-260f44e22ebe.pdf?v=1470696260597554615',
+  'silk-pla': 'https://overture3d.com/cdn/shop/files/OVERTURE_SILK_PLA_TDS_EN_V5.1_09e26446-13ed-49b4-a85f-b8a460d8b16e.pdf?v=4835263043845209884',
+  'pla-silk': 'https://overture3d.com/cdn/shop/files/OVERTURE_SILK_PLA_TDS_EN_V5.1_09e26446-13ed-49b4-a85f-b8a460d8b16e.pdf?v=4835263043845209884',
+  'easy-pla': 'https://overture3d.com/cdn/shop/files/OVERTURE__EASY_PLA_TDS_EN_V5.1_f2df1ff7-e3da-4ae4-8c69-7e90319c05c1.pdf?v=12114623221063733916',
+  'pla-easy': 'https://overture3d.com/cdn/shop/files/OVERTURE__EASY_PLA_TDS_EN_V5.1_f2df1ff7-e3da-4ae4-8c69-7e90319c05c1.pdf?v=12114623221063733916',
+  'super-pla': 'https://overture3d.com/cdn/shop/files/OVERTURE_SUPER_PLA__TDS_EN_V5.1_fff22cb0-35bb-4889-9e0a-f8bbb914a865.pdf?v=13928545924607624736',
+  'pla-super': 'https://overture3d.com/cdn/shop/files/OVERTURE_SUPER_PLA__TDS_EN_V5.1_fff22cb0-35bb-4889-9e0a-f8bbb914a865.pdf?v=13928545924607624736',
+  'glow-pla': 'https://overture3d.com/cdn/shop/files/OVERTURE__EASY_PLA_TDS_EN_V5.1.pdf?v=11676870451522155229',
+  'pla-glow': 'https://overture3d.com/cdn/shop/files/OVERTURE__EASY_PLA_TDS_EN_V5.1.pdf?v=11676870451522155229',
+  
+  // Other Materials
+  'high-speed-tpu': 'https://overture3d.com/cdn/shop/files/OVERTURE__HIGH_SPEED_TPU_TDS_EN_V5.1_112e83e3-da49-495b-bd52-96b491f2fc64.pdf?v=708369137709490471',
+  'tpu-hs': 'https://overture3d.com/cdn/shop/files/OVERTURE__HIGH_SPEED_TPU_TDS_EN_V5.1_112e83e3-da49-495b-bd52-96b491f2fc64.pdf?v=708369137709490471',
+  'hs-tpu': 'https://overture3d.com/cdn/shop/files/OVERTURE__HIGH_SPEED_TPU_TDS_EN_V5.1_112e83e3-da49-495b-bd52-96b491f2fc64.pdf?v=708369137709490471',
+  'easy-nylon': 'https://overture3d.com/cdn/shop/files/OVERTURE_EASY_NYLON_TDS_EN_V5.1_b6ce0042-6686-42dd-a5ab-696d2cc734b8.pdf?v=11212874094828829355',
+  'nylon': 'https://overture3d.com/cdn/shop/files/OVERTURE_EASY_NYLON_TDS_EN_V5.1_b6ce0042-6686-42dd-a5ab-696d2cc734b8.pdf?v=11212874094828829355',
+  'pa': 'https://overture3d.com/cdn/shop/files/OVERTURE_EASY_NYLON_TDS_EN_V5.1_b6ce0042-6686-42dd-a5ab-696d2cc734b8.pdf?v=11212874094828829355',
+  'pc-pro': 'https://overture3d.com/cdn/shop/files/OVERTURE_PC_PROFESSIONAL_TDS_EN_V5.1_b609023a-6c21-4c78-b6f7-5c84407e4938.pdf?v=78315135494492787',
+  'pc-professional': 'https://overture3d.com/cdn/shop/files/OVERTURE_PC_PROFESSIONAL_TDS_EN_V5.1_b609023a-6c21-4c78-b6f7-5c84407e4938.pdf?v=78315135494492787',
+  'pc': 'https://overture3d.com/cdn/shop/files/OVERTURE_PC_PROFESSIONAL_TDS_EN_V5.1_b609023a-6c21-4c78-b6f7-5c84407e4938.pdf?v=78315135494492787',
+};
+
+/**
+ * Match TDS URL for an Overture product
+ */
+export function matchOvertureTds(productLineId: string | null, material: string | null): string | null {
+  if (!productLineId && !material) return null;
+  
+  // Try product line ID first
+  if (productLineId) {
+    const lineKey = productLineId.replace('overture__', '').replace(/__/g, '-');
+    if (OVERTURE_TDS_PATTERNS[lineKey]) {
+      return OVERTURE_TDS_PATTERNS[lineKey];
+    }
+    
+    // Try parts of the line ID
+    const parts = lineKey.split('-');
+    for (const part of parts) {
+      if (OVERTURE_TDS_PATTERNS[part]) {
+        return OVERTURE_TDS_PATTERNS[part];
+      }
+    }
+  }
+  
+  // Try material
+  if (material) {
+    const materialKey = material.toLowerCase().replace(/[\s_]+/g, '-');
+    if (OVERTURE_TDS_PATTERNS[materialKey]) {
+      return OVERTURE_TDS_PATTERNS[materialKey];
+    }
+    
+    // Try base material
+    const baseMaterial = material.toLowerCase().split('-')[0];
+    if (OVERTURE_TDS_PATTERNS[baseMaterial]) {
+      return OVERTURE_TDS_PATTERNS[baseMaterial];
+    }
+  }
+  
+  return null;
+}
+
 export interface OvertureProductLine {
   id: string;
   material: string;
