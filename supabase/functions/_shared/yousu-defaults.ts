@@ -81,6 +81,69 @@ export function normalizeYousuMaterial(title: string): {
 }
 
 // ============================================================================
+// TDS URL MAPPING
+// Curated official Yousu TDS PDF URLs (14 products)
+// ============================================================================
+
+export const YOUSU_TDS_PATTERNS: Record<string, string> = {
+  // PLA variants
+  'pla': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPLATDS-081b.pdf',
+  'pla+': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPLATDS-8e09.pdf',
+  'pla-plus': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPLATDS-8e09.pdf',
+  'silk-pla': 'https://ysfilament.com/u_file/2206/13/file/YOUSUSILKPLATDS-81c3.pdf',
+  'pla-silk': 'https://ysfilament.com/u_file/2206/13/file/YOUSUSILKPLATDS-81c3.pdf',
+  'wood-pla': 'https://ysfilament.com/u_file/2206/14/file/YOUSUWOODTDS-eb4e.pdf',
+  'pla-wood': 'https://ysfilament.com/u_file/2206/14/file/YOUSUWOODTDS-eb4e.pdf',
+  
+  // ABS
+  'abs': 'https://ysfilament.com/u_file/2211/09/file/ABSTDS-af53.pdf',
+  
+  // PETG
+  'petg': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPETGTDS-8fb4.pdf',
+  
+  // Engineering plastics
+  'pc': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPCTDS-535a.pdf',
+  'polycarbonate': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPCTDS-535a.pdf',
+  'pp': 'https://ysfilament.com/u_file/2211/06/file/YOUSU3DPPTDS-4872.pdf',
+  'polypropylene': 'https://ysfilament.com/u_file/2211/06/file/YOUSU3DPPTDS-4872.pdf',
+  'pom': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPOMTDS-ae63.pdf',
+  'hips': 'https://ysfilament.com/u_file/2206/14/file/YOUSUHIPSTDS-c1e5.pdf',
+  
+  // Nylon
+  'nylon': 'https://ysfilament.com/u_file/2206/14/file/YOUSUNylonTDS-38ef.pdf',
+  'pa': 'https://ysfilament.com/u_file/2206/14/file/YOUSUNylonTDS-38ef.pdf',
+  'pa6': 'https://ysfilament.com/u_file/2206/14/file/YOUSUNylonTDS-38ef.pdf',
+  
+  // Flexible
+  'tpu': 'https://ysfilament.com/u_file/2206/13/file/YOUSU3DTPUTDS-fd35.pdf',
+  
+  // Support / Specialty
+  'pva': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPVATDS-6752.pdf',
+  'pvb': 'https://ysfilament.com/u_file/2206/14/file/YOUSUPVBTDS-9c2c.pdf',
+};
+
+export function matchYousuTds(title: string, material?: string | null): { url: string; pattern: string } | null {
+  if (!title && !material) return null;
+  
+  const normalizedTitle = (title || '').toLowerCase();
+  const normalizedMaterial = (material || '').toLowerCase();
+  const combined = `${normalizedTitle} ${normalizedMaterial}`;
+  
+  // Sort by key length (longest first) for most specific match
+  const sorted = Object.entries(YOUSU_TDS_PATTERNS).sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [pattern, url] of sorted) {
+    if (combined.includes(pattern.replace(/-/g, ' ')) || 
+        combined.includes(pattern.replace(/-/g, '')) ||
+        combined.includes(pattern)) {
+      return { url, pattern };
+    }
+  }
+  
+  return null;
+}
+
+// ============================================================================
 // PRINT SETTINGS
 // ============================================================================
 
