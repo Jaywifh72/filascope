@@ -489,7 +489,133 @@ export function getTreeDColorHex(colorName: string): string | null {
 }
 
 // ============================================================================
-// TDS URL CONSTRUCTION
+// TDS URL PATTERNS (Curated from official manufacturer data)
+// ============================================================================
+
+/**
+ * Curated TDS URL mappings for TreeD Filaments products
+ * These are official manufacturer URLs for high-fidelity TDS discovery
+ */
+export const TREED_TDS_PATTERNS: Record<string, string> = {
+  // PLA Family
+  'pla ecogenius': 'https://treedfilaments.com/datasheets/tech/TDS_PLAECO.pdf',
+  'pla fusion': 'https://treedfilaments.com/datasheets/tech/TDS_PLAFUSI.pdf',
+  'pla gonzales': 'https://treedfilaments.com/datasheets/tech/TDS_PLAGONZ.pdf',
+  'pla levigo': 'https://treedfilaments.com/datasheets/tech/TDS_PLALEV.pdf',
+  'pla shineless': 'https://treedfilaments.com/datasheets/tech/TDS_PLASHINE.pdf',
+  'pla shogun': 'https://treedfilaments.com/datasheets/tech/TDS_PLASHOG.pdf',
+  'pla fast forward': 'https://treedfilaments.com/datasheets/tech/TDS_PLAFF.pdf',
+  'pla xray': 'https://treedfilaments.com/datasheets/tech/TDS_PLAXR.pdf',
+  'pla kyotoflex': 'https://treedfilaments.com/datasheets/tech/TDS_KYO.pdf',
+  'pla high temperature': 'https://treedfilaments.com/datasheets/tech/TDS_PLAHT.pdf',
+  
+  // HIPS/Decorative
+  'monumental': 'https://treedfilaments.com/datasheets/tech/TDS_MONU.pdf',
+  'monumental evo': 'https://treedfilaments.com/datasheets/tech/TDS_MONEV.pdf',
+  'sandy': 'https://treedfilaments.com/datasheets/tech/TDS_SAND.pdf',
+  'clay': 'https://treedfilaments.com/datasheets/tech/TDS_CLAY.pdf',
+  'clay evo': 'https://treedfilaments.com/datasheets/tech/TDS_CLAEV.pdf',
+  'dark stone': 'https://treedfilaments.com/datasheets/tech/TDS_DARKST.pdf',
+  'heritage brick': 'https://treedfilaments.com/datasheets/tech/TDS_HERBR.pdf',
+  'caementum': 'https://treedfilaments.com/datasheets/tech/TDS_CAEM.pdf',
+  'hips stiron': 'https://treedfilaments.com/datasheets/tech/TDS_HIPS.pdf',
+  
+  // PP/PE Family
+  'fortis ll': 'https://treedfilaments.com/datasheets/tech/TDS_FORTLL.pdf',
+  'pp p-lene 4': 'https://treedfilaments.com/datasheets/tech/TDS_PP4.pdf',
+  'pp p-lene 5': 'https://treedfilaments.com/datasheets/tech/TDS_PP5.pdf',
+  'pp p-lene t15': 'https://treedfilaments.com/datasheets/tech/TDS_PPT15.pdf',
+  'pp gf30': 'https://treedfilaments.com/datasheets/tech/TDS_PPGF.pdf',
+  'pp cf 18': 'https://treedfilaments.com/datasheets/tech/TDS_PPCF.pdf',
+  'pe e-lene hd': 'https://treedfilaments.com/datasheets/tech/TDS_PEHD.pdf',
+  
+  // PA/Nylon Family
+  'pa kk': 'https://treedfilaments.com/datasheets/tech/TDS_PAKK.pdf',
+  'structura ma': 'https://treedfilaments.com/datasheets/tech/TDS_STRUCT.pdf',
+  'pa hp nat': 'https://treedfilaments.com/datasheets/tech/TDS_PAHPN.pdf',
+  'pa hp cf 15': 'https://treedfilaments.com/datasheets/tech/TDS_PAHPCF.pdf',
+  'pa hp gs10': 'https://treedfilaments.com/datasheets/tech/TDS_PAHPGS.pdf',
+  'pa cf25': 'https://treedfilaments.com/datasheets/tech/TDS_PA25.pdf',
+  'pa longchain': 'https://treedfilaments.com/datasheets/tech/TDS_LONG.pdf',
+  'pa lubratech': 'https://treedfilaments.com/datasheets/tech/TDS_LUBR.pdf',
+  'carbonio cf15': 'https://treedfilaments.com/datasheets/tech/TDS_CARB.pdf',
+  'carbonio fast forward': 'https://treedfilaments.com/datasheets/tech/TDS_CARBFF.pdf',
+  
+  // PC Family
+  'pc p51': 'https://treedfilaments.com/datasheets/tech/TDS_PC51.pdf',
+  'pc abs v0': 'https://treedfilaments.com/datasheets/tech/TDS_PCABV0.pdf',
+  'pc abs tenax': 'https://treedfilaments.com/datasheets/tech/TDS_PCABT.pdf',
+  'pc pbt b-mat': 'https://treedfilaments.com/datasheets/tech/TDS_BMAT.pdf',
+  'pc pbt gf': 'https://treedfilaments.com/datasheets/tech/TDS_PCPBTGF.pdf',
+  'verum t': 'https://treedfilaments.com/datasheets/tech/TDS_VERU.pdf',
+  
+  // ABS Family
+  'abs esd': 'https://treedfilaments.com/datasheets/tech/TDS_ABSES.pdf',
+  'abs t-mat': 'https://treedfilaments.com/datasheets/tech/TDS_ABST.pdf',
+  'abs performance': 'https://treedfilaments.com/datasheets/tech/TDS_ABSP.pdf',
+  'abs zx': 'https://treedfilaments.com/datasheets/tech/TDS_ABSZX.pdf',
+  'abs king': 'https://treedfilaments.com/datasheets/tech/TDS_ABSK.pdf',
+  'abs food': 'https://treedfilaments.com/datasheets/tech/TDS_ABSF.pdf',
+  'abs med': 'https://treedfilaments.com/datasheets/tech/TDS_ABSM.pdf',
+  'abs cf': 'https://treedfilaments.com/datasheets/tech/TDS_ABSCF.pdf',
+  'abs fast forward': 'https://treedfilaments.com/datasheets/tech/TDS_ABSFF.pdf',
+  
+  // ASA/PMMA
+  'asa uv729': 'https://treedfilaments.com/datasheets/tech/TDS_ASA.pdf',
+  'pmma hirma': 'https://treedfilaments.com/datasheets/tech/TDS_PMMA.pdf',
+  
+  // PETG Family
+  'g-pet': 'https://treedfilaments.com/datasheets/tech/TDS_GPET.pdf',
+  'petg fast forward': 'https://treedfilaments.com/datasheets/tech/TDS_PETGFF.pdf',
+  'pet cf 15': 'https://treedfilaments.com/datasheets/tech/TDS_PETCF.pdf',
+  
+  // TPU/TPE Family
+  'pure ft': 'https://treedfilaments.com/datasheets/tech/TDS_PURE.pdf',
+  'elasto a': 'https://treedfilaments.com/datasheets/tech/TDS_ELAST.pdf',
+  'tpe-u flexmark 9': 'https://treedfilaments.com/datasheets/tech/TDS_FLEX9.pdf',
+  'tpe-u flexmark 8': 'https://treedfilaments.com/datasheets/tech/TDS_FLEX8.pdf',
+  'tpe-u flexmark 7': 'https://treedfilaments.com/datasheets/tech/TDS_FLEX7.pdf',
+  'flexmark 9': 'https://treedfilaments.com/datasheets/tech/TDS_FLEX9.pdf',
+  'flexmark 8': 'https://treedfilaments.com/datasheets/tech/TDS_FLEX8.pdf',
+  'flexmark 7': 'https://treedfilaments.com/datasheets/tech/TDS_FLEX7.pdf',
+  'tpe-e ultraflex+': 'https://treedfilaments.com/datasheets/tech/TDS_ULTRA+.pdf',
+  'tpe-e ultraflex': 'https://treedfilaments.com/datasheets/tech/TDS_ULTRA.pdf',
+  'ultraflex+': 'https://treedfilaments.com/datasheets/tech/TDS_ULTRA+.pdf',
+  'ultraflex': 'https://treedfilaments.com/datasheets/tech/TDS_ULTRA.pdf',
+  'tpe-a flexability+': 'https://treedfilaments.com/datasheets/tech/TDS_FLEXA+.pdf',
+  'tpe-a flexability': 'https://treedfilaments.com/datasheets/tech/TDS_FLEXA.pdf',
+  'flexability+': 'https://treedfilaments.com/datasheets/tech/TDS_FLEXA+.pdf',
+  'flexability': 'https://treedfilaments.com/datasheets/tech/TDS_FLEXA.pdf',
+  'pneumatique': 'https://treedfilaments.com/datasheets/tech/TDS_PNEU.pdf',
+  
+  // High-performance polymers
+  'peek cf 15': 'https://treedfilaments.com/datasheets/tech/TDS_PEEKCF.pdf',
+  'peek nat': 'https://treedfilaments.com/datasheets/tech/TDS_PEEKN.pdf',
+  'pps gf 25': 'https://treedfilaments.com/datasheets/tech/TDS_PPSGF.pdf',
+  'pps cf15': 'https://treedfilaments.com/datasheets/tech/TDS_PPSCF.pdf',
+  
+  // Bundles
+  'fast forward 3-pack': 'https://treedfilaments.com/datasheets/tech/TDS_FF3PACK.pdf',
+};
+
+export function matchTreeDTds(title: string): { url: string; pattern: string } | null {
+  if (!title) return null;
+  const normalizedTitle = title.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Sort by key length (longer = more specific)
+  const sorted = Object.entries(TREED_TDS_PATTERNS).sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [pattern, url] of sorted) {
+    if (normalizedTitle.includes(pattern)) {
+      return { url, pattern };
+    }
+  }
+  
+  return null;
+}
+
+// ============================================================================
+// TDS URL CONSTRUCTION (Legacy fallback)
 // ============================================================================
 
 const TREED_TDS_BASE = 'https://treedfilaments.com/assets/tds';
