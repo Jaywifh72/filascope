@@ -10,38 +10,50 @@
 export const FORMFUTURA_DEFAULTS_VERSION = '2026-01-09-v2';
 
 // ============================================================================
-// TDS URL PATTERNS
+// TDS URL PATTERNS - Official FormFutura download URLs
 // ============================================================================
 
 export const FORMFUTURA_TDS_PATTERNS: Record<string, string> = {
-  // PLA Family
-  'EASYFIL EPLA': 'https://www.formfutura.com/web/content/256521',
-  'EPLA': 'https://www.formfutura.com/web/content/256521',
-  'PREMIUM PLA CF03': 'https://3d.nice-cdn.com/upload/file/formfutura-tds-premiumplacf03.pdf',
-  'PLA CF03': 'https://3d.nice-cdn.com/upload/file/formfutura-tds-premiumplacf03.pdf',
-  'VOLCANO PLA': 'https://www.formfutura.com/datasheets/volcano-pla-tds.pdf',
-  'MATT PLA': 'https://www.formfutura.com/datasheets/matt-pla-tds.pdf',
-  'MATTE PLA': 'https://www.formfutura.com/datasheets/matt-pla-tds.pdf',
-  'HIGH GLOSS PLA': 'https://www.formfutura.com/datasheets/high-gloss-pla-tds.pdf',
-  'GALAXY PLA': 'https://www.formfutura.com/datasheets/galaxy-pla-tds.pdf',
-  'GLOW PLA': 'https://www.formfutura.com/datasheets/glow-pla-tds.pdf',
-  'PREMIUM PLA': 'https://www.formfutura.com/datasheets/premium-pla-tds.pdf',
-  'TOUGH PLA': 'https://www.formfutura.com/datasheets/tough-pla-tds.pdf',
-  'REFORM RPLA': 'https://www.formfutura.com/datasheets/reform-rpla-tds.pdf',
-  'REFORM ORGANIC': 'https://www.formfutura.com/datasheets/reform-organic-rpla-tds.pdf',
-  'BULK PLA': 'https://www.formfutura.com/datasheets/bulk-pla-tds.pdf',
+  // PLA Family - Official URLs
+  'EASYFIL EPLA': 'https://www.formfutura.com/web/content/256521?download=true',
+  'EPLA': 'https://www.formfutura.com/web/content/256521?download=true',
+  'BULK PLA': 'https://www.formfutura.com/web/content/273966?download=true',
+  'REFORM RPLA': 'https://www.formfutura.com/web/content/256632?download=true',
+  'REFORM - RPLA': 'https://www.formfutura.com/web/content/256632?download=true',
+  'REFILL PLA': 'https://www.formfutura.com/web/content/256626?download=true',
+  'PREMIUM PLA': 'https://www.formfutura.com/web/content/256613?download=true',
+  'TOUGH PLA': 'https://www.formfutura.com/web/content/256649?download=true',
+  'PREMIUM PLA FLAME RETARDANT': 'https://www.formfutura.com/web/content/256617?download=true',
+  'PREMIUM PLA CF03': 'https://www.formfutura.com/web/content/256615?download=true',
+  'PLA CF03': 'https://www.formfutura.com/web/content/256615?download=true',
+  'VOLCANO PLA 150C': 'https://www.formfutura.com/web/content/275229?download=true',
+  'VOLCANO PLA': 'https://www.formfutura.com/web/content/256653?download=true',
+  'MATT PLA': 'https://www.formfutura.com/web/content/256590?download=true',
+  'MATTE PLA': 'https://www.formfutura.com/web/content/256590?download=true',
+  'HIGH GLOSS PLA': 'https://www.formfutura.com/web/content/256566?download=true',
+  'HIGH GLOSS PLA COLORMORPH': 'https://www.formfutura.com/web/content/256568?download=true',
+  'COLORMORPH': 'https://www.formfutura.com/web/content/256568?download=true',
+  'GALAXY PLA': 'https://www.formfutura.com/web/content/256560?download=true',
+  'REFORM ORGANIC RPLA': 'https://www.formfutura.com/web/content/256627?download=true',
+  'REFORM - ORGANIC RPLA': 'https://www.formfutura.com/web/content/256627?download=true',
   
-  // PETG Family
+  // Specialty - Official URLs
+  'STONEFIL': 'https://www.formfutura.com/web/content/256646?download=true',
+  'EASYWOOD': 'https://www.formfutura.com/web/content/256523?download=true',
+  'METALFIL - CLASSIC COPPER': 'https://www.formfutura.com/web/content/256597?download=true',
+  'METALFIL CLASSIC COPPER': 'https://www.formfutura.com/web/content/256597?download=true',
+  'METALFIL - ANCIENT BRONZE': 'https://www.formfutura.com/web/content/256594?download=true',
+  'METALFIL ANCIENT BRONZE': 'https://www.formfutura.com/web/content/256594?download=true',
+  'METALFIL - BRASS': 'https://www.formfutura.com/web/content/256596?download=true',
+  'METALFIL BRASS': 'https://www.formfutura.com/web/content/256596?download=true',
+  
+  // Legacy fallback patterns for other product lines
   'HDGLASS': 'https://www.formfutura.com/datasheets/hdglass-tds.pdf',
   'HD GLASS': 'https://www.formfutura.com/datasheets/hdglass-tds.pdf',
   'REFORM RPETG': 'https://www.formfutura.com/datasheets/reform-rpetg-tds.pdf',
   'BULK PETG': 'https://www.formfutura.com/datasheets/bulk-petg-tds.pdf',
-  
-  // ASA Family
   'APOLLOX CF10': 'https://3d.nice-cdn.com/upload/file/formfutura-tds-apolloxcf10.pdf',
   'APOLLOX': 'https://www.formfutura.com/datasheets/apollox-tds.pdf',
-  
-  // Engineering
   'CLEARSCENT ABS': 'https://www.formfutura.com/datasheets/clearscent-abs-tds.pdf',
   'STYX PA6-GF30': 'https://www.formfutura.com/datasheets/styx-pa6-gf30-tds.pdf',
   'STYX PA6 GF30': 'https://www.formfutura.com/datasheets/styx-pa6-gf30-tds.pdf',
@@ -49,19 +61,15 @@ export const FORMFUTURA_TDS_PATTERNS: Record<string, string> = {
   'LUVOCOM': 'https://www.formfutura.com/datasheets/luvocom-3f-paht-cf-9891-tds.pdf',
   'PAHT CF': 'https://www.formfutura.com/datasheets/luvocom-3f-paht-cf-9891-tds.pdf',
   'CENTAUR PP': 'https://www.formfutura.com/datasheets/centaur-pp-tds.pdf',
-  
-  // Flexible
   'PYTHON FLEX 90A': 'https://www.formfutura.com/datasheets/python-flex-90a-tds.pdf',
   'PYTHONFLEX 90A': 'https://www.formfutura.com/datasheets/python-flex-90a-tds.pdf',
   'PYTHON FLEX 98A': 'https://www.formfutura.com/datasheets/python-flex-98a-tds.pdf',
   'PYTHONFLEX 98A': 'https://www.formfutura.com/datasheets/python-flex-98a-tds.pdf',
-  
-  // Specialty
-  'EASYWOOD': 'https://www.formfutura.com/datasheets/easywood-tds.pdf',
   'BIOFIL PCL': 'https://www.formfutura.com/datasheets/biofil-pcl-tds.pdf',
   'PCL': 'https://www.formfutura.com/datasheets/biofil-pcl-tds.pdf',
   'HIPS': 'https://www.formfutura.com/datasheets/easyfil-hips-tds.pdf',
   'PVA': 'https://www.formfutura.com/datasheets/helios-pva-tds.pdf',
+  'GLOW PLA': 'https://www.formfutura.com/datasheets/glow-pla-tds.pdf',
 };
 
 export function matchFormFuturaTds(title: string): { url: string; pattern: string } | null {
