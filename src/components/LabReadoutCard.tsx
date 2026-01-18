@@ -264,12 +264,12 @@ export function LabReadoutCard({
           {/* Left: Brand + Name */}
           <div className="flex-1 min-w-0">
             {/* Brand Logo */}
-            <div className="mb-1.5 h-4">
+            <div className="mb-1.5 h-[90%]">
               {filament.vendor ? (
                 <img 
                   src={getBrandLogo(filament.vendor)} 
                   alt={filament.vendor}
-                  className="h-4 w-auto max-w-[80px] object-contain opacity-70"
+                  className="h-full w-auto max-w-[240px] object-contain opacity-70"
                   onError={(e) => {
                     // Fallback to text if logo fails
                     e.currentTarget.style.display = 'none';
