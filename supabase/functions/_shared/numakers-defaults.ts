@@ -9,7 +9,7 @@
  * - Wide color selection with creative names (Thanos Purple, Ryobix Green)
  * - High-speed PETG (PETG-HS)
  * - PLA Starlight (glitter finish)
- * - No TDS PDFs - uses "Cheat Sheets" for slicer settings
+ * - TDS PDFs available via Scribd for core materials
  * - 1kg spools standard
  * 
  * Excluded Products:
@@ -17,6 +17,53 @@
  * - Hueforge Packs (multi-spool bundles)
  * - Warehouse Clearance (mystery/older formula)
  */
+
+// ============================================================================
+// TDS URL PATTERNS - Curated official Scribd document URLs
+// ============================================================================
+
+export const NUMAKERS_TDS_PATTERNS: Record<string, string> = {
+  // Core materials - official Scribd TDS documents
+  'PLA+': 'https://www.scribd.com/document/868964978/PLA-TDS-2',
+  'PLA': 'https://www.scribd.com/document/868964978/PLA-TDS-2',
+  'PETG': 'https://www.scribd.com/document/868964958/PETG-TDS-2',
+  'PETG-HS': 'https://www.scribd.com/document/868964958/PETG-TDS-2',
+  'ABS': 'https://www.scribd.com/document/868964969/ABS-TDS',
+  'ASA': 'https://www.scribd.com/document/868964972/ASA-TDS',
+};
+
+/**
+ * Match a product title against known Numakers TDS patterns
+ * Uses explicit matching with material-based aliases
+ */
+export function matchNumakersTds(title: string): { url: string; pattern: string } | null {
+  if (!title) return null;
+  
+  const normalizedTitle = title.toUpperCase();
+  
+  // Direct material matching with priority order (most specific first)
+  const materialPatterns = [
+    { pattern: 'PETG-HS', aliases: ['PETG-HS', 'PETG HS', 'HIGH-SPEED PETG', 'HIGH SPEED PETG'] },
+    { pattern: 'PETG', aliases: ['PETG', 'PETG TRANSLUCENT'] },
+    { pattern: 'PLA+', aliases: ['PLA+', 'PLA PLUS'] },
+    { pattern: 'ASA', aliases: ['ASA'] },
+    { pattern: 'ABS', aliases: ['ABS'] },
+    { pattern: 'PLA', aliases: ['PLA MATTE', 'PLA SILK', 'PLA MARBLE', 'PLA GLOW', 'PLA WOOD', 'PLA CF', 'PLA STARLIGHT', 'PLA'] },
+  ];
+  
+  for (const { pattern, aliases } of materialPatterns) {
+    for (const alias of aliases) {
+      if (normalizedTitle.includes(alias)) {
+        const url = NUMAKERS_TDS_PATTERNS[pattern];
+        if (url) {
+          return { url, pattern };
+        }
+      }
+    }
+  }
+  
+  return null;
+}
 
 // ============================================================================
 // CSV SEED DATA
