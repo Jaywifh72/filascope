@@ -60,7 +60,7 @@ export const brandLogos: Record<string, string> = {
   "Push Plastic": "/images/brands/push-plastic-long.png",
   
   "Fusion Filaments": "/images/brands/fusion-filaments-long.webp",
-  "Spectrum Filaments": "/images/brands/spectrum-filaments.svg",
+  "Spectrum Filaments": "/images/brands/spectrum-white.png",
   "Kingroon": "/images/brands/kingroon-long.webp",
   "KINGROON": "/images/brands/kingroon-long.webp",
   "Recreus": "/images/brands/recreus-white.png",
