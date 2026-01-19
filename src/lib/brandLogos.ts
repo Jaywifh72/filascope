@@ -63,7 +63,7 @@ export const brandLogos: Record<string, string> = {
   "Spectrum Filaments": "/images/brands/spectrum-filaments.svg",
   "Kingroon": "/images/brands/kingroon-long.webp",
   "KINGROON": "/images/brands/kingroon-long.webp",
-  "Recreus": "/images/brands/recreus.png",
+  "Recreus": "/images/brands/recreus-white.png",
   "IC3D": "/images/brands/ic3d-long.png",
   "IC3D Printers": "/images/brands/ic3d-long.png",
   "Numakers": "/images/brands/numakers-white.png",
