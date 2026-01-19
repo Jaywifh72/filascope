@@ -177,7 +177,7 @@ const PrintersHeroSection = ({
         }
       `}</style>
       
-      <section className="relative py-12 overflow-hidden border-b border-white/10">
+      <section className="relative h-[60vh] min-h-[450px] max-h-[600px] overflow-hidden border-b border-white/10">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#00CFE8]/5 via-transparent to-[#FF0055]/3" />
         
@@ -196,12 +196,12 @@ const PrintersHeroSection = ({
             {/* Stats Row */}
             <div className="flex items-center gap-8 mb-8">
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#00CFE8]">{printerCount}</span>
+                <span className="text-3xl font-black font-mono text-[#00CFE8]">{printerCount}</span>
                 <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Printers</span>
               </div>
               <div className="w-px h-8 bg-white/20" />
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#00CFE8]">{brandCount}+</span>
+                <span className="text-3xl font-black font-mono text-[#00CFE8]">{brandCount}+</span>
                 <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Brands</span>
               </div>
             </div>
@@ -252,12 +252,8 @@ const PrintersHeroSection = ({
           {/* Right Side - Glassmorphic 3D Visual */}
           <div className="hidden lg:flex flex-1 items-center justify-center">
             <div 
-              className="relative w-[400px] h-[350px] rounded-3xl overflow-hidden"
+              className="relative w-[400px] h-[350px] bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.1)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
               }}
             >
