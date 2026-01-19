@@ -58,7 +58,7 @@ export const brandLogos: Record<string, string> = {
   "JAYO": "/images/brands/jayo.jpg",
   "SainSmart": "/images/brands/sainsmart.png",
   "Push Plastic": "/images/brands/push-plastic.png",
-  "Fusion Filaments": "/images/brands/fusion-filaments.png",
+  "Fusion Filaments": "/images/brands/fusion-filaments-long.webp",
   "Spectrum Filaments": "/images/brands/spectrum-filaments.svg",
   "Kingroon": "/images/brands/kingroon.png",
   "KINGROON": "/images/brands/kingroon.png",
