@@ -21,6 +21,8 @@ export const brandLogos: Record<string, string> = {
   "ColorFabb": "/images/brands/colorfabb-long.webp",
   "Matter3D": "/images/brands/matter3d-white.webp",
   "Prusament": "/images/brands/prusament-white.png",
+  "SUNLU": "/images/brands/sunlu-light.png",
+  "Sunlu": "/images/brands/sunlu-light.png",
   "HATCHBOX": "/images/brands/hatchbox-white.png",
   "Hatchbox": "/images/brands/hatchbox-white.png",
   "GreenGate3D": "/images/brands/greengate3d.webp",
