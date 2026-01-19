@@ -79,7 +79,7 @@ const Navbar = () => {
     return user?.email?.split("@")[0] || 'User';
   };
 
-  // Lab-style nav link component - Uppercase with tracking-widest
+  // Lab-style nav link component - 10px uppercase with 0.2em tracking
   const LabNavLink = ({
     to,
     children,
@@ -90,19 +90,14 @@ const Navbar = () => {
     end?: boolean;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
-    return <Link to={to} className={cn("relative py-3 px-4 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "hover:text-[#00CFE8]", active ? "text-[#00CFE8]" : "text-foreground/80")}>
+    return <Link to={to} className={cn("relative py-3 px-4 transition-colors duration-200", "text-[10px] font-bold uppercase tracking-[0.2em]", "hover:text-[#00CFE8]", active ? "text-[#00CFE8]" : "text-foreground/80")}>
         {children}
         {/* Underline indicator */}
         <span className={cn("absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[#00CFE8] transition-all duration-300", active ? "w-full" : "w-0 group-hover:w-full")} />
       </Link>;
   };
   return <>
-      <nav className="sticky top-0 z-50 transition-all duration-300" style={{
-      background: 'hsla(220, 20%, 4%, 0.85)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid hsla(220, 15%, 18%, 0.5)'
-    }}>
+      <nav className="sticky top-0 z-50 bg-[#0A0C10]/95 backdrop-blur-2xl border-b border-white/10 transition-all duration-300">
         <div className={`flex items-center px-6 gap-6 transition-all duration-300 ${isScrolled ? "h-16 md:h-18" : "h-18 md:h-20"}`}>
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
@@ -120,7 +115,7 @@ const Navbar = () => {
             {/* Resources Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn("relative flex items-center gap-1.5 py-3 px-4 transition-colors duration-200 group", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-[#00CFE8]", isResourcesActive ? 'text-[#00CFE8]' : 'text-foreground/80')}>
+                <button className={cn("relative flex items-center gap-1.5 py-3 px-4 transition-colors duration-200 group", "text-[10px] font-bold uppercase tracking-[0.2em]", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-[#00CFE8]", isResourcesActive ? 'text-[#00CFE8]' : 'text-foreground/80')}>
                   Resources
                   <ChevronDown className="w-3 h-3" />
                 </button>
@@ -178,11 +173,14 @@ const Navbar = () => {
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
-            {/* Lab Access Button */}
-            <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2 border-foreground/30 bg-transparent hover:bg-foreground/5 hover:border-foreground/50 text-xs uppercase font-bold tracking-[0.15em] px-4" onClick={() => navigate('/auth')}>
+            {/* Lab Access Button - Pill-shaped with cyan glow on hover */}
+            <button
+              onClick={() => navigate('/auth')}
+              className="hidden md:flex items-center gap-2 h-9 px-5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/90 transition-all duration-200 hover:border-[#00CFE8]/50 hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] hover:text-[#00CFE8]"
+            >
               <FlaskConical className="w-3.5 h-3.5" />
               Lab Access
-            </Button>
+            </button>
             
             <TrendingTriggerButton onClick={trendingPanel.openPanel} newTrendCount={trendingPanel.newTrendCount} isOpen={trendingPanel.isOpen} />
             <WishlistButton />
