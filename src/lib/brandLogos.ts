@@ -6,8 +6,8 @@ export const brandLogos: Record<string, string> = {
   "3DHOJOR": "/images/brands/3dhojor.png",
   "3D Solutech": "/images/brands/3d-solutech.png",
   "Bambu Lab": "/images/brands/bambulab-long.webp",
-  "Overture": "/images/brands/overture.png",
-  "Overture 3D": "/images/brands/overture.png",
+  "Overture": "/images/brands/overture-long.webp",
+  "Overture 3D": "/images/brands/overture-long.webp",
   "3DXTech": "/images/brands/3dxtech-long.png",
   "Filamentum": "/images/brands/filamentum-long.webp",
   "Fillamentum": "/images/brands/filamentum-long.webp", // Alternate spelling
