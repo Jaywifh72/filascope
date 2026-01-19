@@ -35,7 +35,7 @@ export const brandLogos: Record<string, string> = {
   "Phaetus": "/images/brands/phaetus.webp",
   "Gizmo Dorks": "/images/brands/gizmodorks-white.webp",
   "GizmoDorks": "/images/brands/gizmodorks-white.webp",
-  "Polymaker": "/images/brands/polymaker.webp",
+  "Polymaker": "/images/brands/polymaker-long.png",
   "VoxelPLA": "/images/brands/voxelpla.webp",
   "VOXELPLA": "/images/brands/voxelpla.webp",
   "3DFuel": "/images/brands/3dfuel.webp",
