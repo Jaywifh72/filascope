@@ -18,7 +18,7 @@ export const brandLogos: Record<string, string> = {
   "Siraya Tech": "/images/brands/siraya-tech.webp",
   "NinjaTek": "/images/brands/ninjatek.webp",
   "eSun": "/images/brands/esun.webp",
-  "ColorFabb": "/images/brands/colorfabb.webp",
+  "ColorFabb": "/images/brands/colorfabb-long.webp",
   "Matter3D": "/images/brands/matter3d.webp",
   "Prusament": "/images/brands/prusament.webp",
   "SUNLU": "/images/brands/sunlu.webp",
