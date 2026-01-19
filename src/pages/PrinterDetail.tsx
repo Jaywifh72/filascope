@@ -34,6 +34,7 @@ import { CTAButtons } from "@/components/printer/CTAButtons";
 import { PriceInsightsWidget } from "@/components/printer/PriceInsightsWidget";
 import { PriceHistoryModal } from "@/components/printer/PriceHistoryModal";
 import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSection";
+import { HardwareIntelligenceReport } from "@/components/printer/HardwareIntelligenceReport";
 import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/SocialProofSidebar";
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
@@ -777,6 +778,9 @@ const PrinterDetail = () => {
             </>
           );
         })()}
+
+        {/* Hardware Intelligence Report */}
+        <HardwareIntelligenceReport printer={printer} brand={brand} />
 
         {/* Firmware & Software Sections */}
         <div className="max-w-[1400px] mx-auto px-10 md:px-10 px-5 space-y-6">
