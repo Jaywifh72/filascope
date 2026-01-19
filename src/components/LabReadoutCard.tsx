@@ -5,7 +5,7 @@ import {
   Check, 
   ArrowRight,
   Thermometer,
-  Droplets
+  Wind
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -70,7 +70,6 @@ export function LabReadoutCard({
 }: LabReadoutCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const { formatRegionalPrice, currency: userCurrency } = useCurrency();
   
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
@@ -136,8 +135,8 @@ export function LabReadoutCard({
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
   
   // Temp calculations
-  const nozzleTemp = filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
-    ? `${filament.nozzle_temp_min_c}–${filament.nozzle_temp_max_c}°C`
+  const idealTemp = filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
+    ? `${Math.round((filament.nozzle_temp_min_c + filament.nozzle_temp_max_c) / 2)}°C`
     : filament.nozzle_temp_min_c 
       ? `${filament.nozzle_temp_min_c}°C`
       : filament.nozzle_temp_max_c
@@ -145,7 +144,7 @@ export function LabReadoutCard({
         : "—";
   
   const volumetricFlow = filament.print_speed_max_mms 
-    ? `${filament.print_speed_max_mms} mm/s`
+    ? `${filament.print_speed_max_mms} mm³/s`
     : "—";
 
   const handleCompareToggle = () => {
@@ -194,17 +193,17 @@ export function LabReadoutCard({
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-3xl transition-all duration-300 overflow-hidden",
+        "group relative rounded-2xl transition-all duration-300 overflow-hidden",
         "border border-white/10",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-        isHovered && !isOutOfStock && "border-[#00CFE8]/60 shadow-[0_0_30px_rgba(0,207,232,0.3)]",
+        isHovered && !isOutOfStock && "border-[#00CFE8]/60 shadow-[0_0_30px_rgba(0,207,232,0.25)]",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
         isOutOfStock && "opacity-70"
       )}
       style={{
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.08}s both`,
-        background: "rgba(10, 12, 16, 0.6)",
+        background: "rgba(10, 12, 16, 0.85)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
       }}
@@ -217,7 +216,7 @@ export function LabReadoutCard({
 
       {/* Out of Stock Overlay */}
       {isOutOfStock && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none rounded-3xl">
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none rounded-2xl">
           <span className="text-xs font-mono uppercase tracking-wider text-white/80 bg-black/70 px-3 py-1.5 rounded">
             Out of Stock
           </span>
@@ -225,12 +224,111 @@ export function LabReadoutCard({
       )}
 
       {/* ═══════════════════════════════════════════════════════════════
-          HEADER: Dark header area with material name + price
+          HEADER: Dark header with Stars, Material, Price
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative bg-[#14171C] px-4 pt-4 pb-4 h-[72px]">
-        {/* Checkbox positioned in header */}
+      <div className="relative bg-[#14171C] px-4 py-3">
+        {/* Scanning Line Animation on Hover */}
         <div 
-          className="absolute top-3 left-3 z-10"
+          className={cn(
+            "absolute inset-0 pointer-events-none overflow-hidden",
+            isHovered && !isOutOfStock ? "opacity-100" : "opacity-0"
+          )}
+        >
+          <div 
+            className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00CFE8] to-transparent"
+            style={{
+              animation: isHovered && !isOutOfStock ? 'headerScan 2s ease-in-out infinite' : 'none',
+              boxShadow: '0 0 15px 3px rgba(0, 207, 232, 0.5)',
+            }}
+          />
+        </div>
+        
+        {/* Header Content Row */}
+        <div className="relative flex items-center justify-between gap-2">
+          {/* Left: Star Rating */}
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i}
+                className={cn(
+                  "w-3 h-3",
+                  i < starCount 
+                    ? "fill-amber-400 text-amber-400" 
+                    : "fill-transparent text-white/20"
+                )}
+              />
+            ))}
+          </div>
+          
+          {/* Center: Material Badge */}
+          {filament.material && (
+            <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 border border-violet-500/40 text-violet-300 rounded-md">
+              {filament.material}
+            </span>
+          )}
+          
+          {/* Right: Price */}
+          <div className="text-right flex-shrink-0">
+            {isValidPrice && pricePerKg ? (
+              <span className="text-lg font-black text-foreground font-mono tracking-tight">
+                {formatRegionalPrice(pricePerKg, false, userCurrency)}
+              </span>
+            ) : (
+              <span className="text-sm text-muted-foreground font-mono">—</span>
+            )}
+          </div>
+        </div>
+        
+        {/* Bottom Glow Line */}
+        <div 
+          className={cn(
+            "absolute bottom-0 left-0 right-0 h-px transition-all duration-300",
+            isHovered && !isOutOfStock 
+              ? "bg-[#00CFE8]/80" 
+              : "bg-white/10"
+          )}
+        />
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MANUFACTURER MARK: Circular Brand Logo (Top Right of Body)
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="absolute top-[60px] right-4 z-10">
+        <div 
+          className={cn(
+            "w-12 h-12 rounded-full border-2 overflow-hidden flex items-center justify-center transition-all duration-300",
+            isHovered 
+              ? "border-[#00CFE8]/60 bg-white/10" 
+              : "border-white/20 bg-black/40"
+          )}
+        >
+          {brandLogo ? (
+            <img 
+              src={brandLogo} 
+              alt={filament.vendor || "Brand"}
+              className={cn(
+                "w-8 h-8 object-contain transition-all duration-300",
+                isHovered ? "opacity-100 grayscale-0" : "opacity-50 grayscale"
+              )}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          ) : (
+            <span className="text-[8px] font-bold text-muted-foreground uppercase">
+              {(filament.vendor || "?").slice(0, 2)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          BODY: Material Name + 2-Column Specs Grid
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="px-4 pt-4 pb-3">
+        {/* Checkbox */}
+        <div 
+          className="absolute top-[68px] left-4 z-10"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
@@ -244,7 +342,7 @@ export function LabReadoutCard({
               "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
               isSelected || isPendingSelection
                 ? "bg-primary border-primary"
-                : "bg-black/40 border-white/30 hover:border-primary hover:bg-primary/10",
+                : "bg-black/60 border-white/30 hover:border-primary hover:bg-primary/10",
               isCompareDisabled && "opacity-50 cursor-not-allowed"
             )}
           >
@@ -259,122 +357,57 @@ export function LabReadoutCard({
             </div>
           )}
         </div>
-
-        <div className="flex items-center justify-center gap-3 h-full">
-          {/* Center: Brand Logo */}
-          <div className="h-full flex items-center justify-center">
-            {/* Brand Logo */}
-            <div className="h-[90%] flex items-center justify-center">
-              {filament.vendor ? (
-                <img 
-                  src={getBrandLogo(filament.vendor)} 
-                  alt={filament.vendor}
-                  className="h-full w-auto max-w-[240px] object-contain opacity-70"
-                  onError={(e) => {
-                    // Fallback to text if logo fails
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-              ) : null}
-              <span className={cn(
-                "text-[10px] text-muted-foreground uppercase tracking-wider",
-                filament.vendor ? "hidden" : ""
-              )}>
-                {filament.vendor || "Unknown"}
-              </span>
-            </div>
-          </div>
-        </div>
         
-        {/* Cyan Scan Line at bottom of header */}
-        <div 
-          className={cn(
-            "absolute bottom-0 left-0 right-0 h-[2px] transition-all duration-300",
-            isHovered && !isOutOfStock 
-              ? "bg-[#00CFE8] shadow-[0_0_12px_#00CFE8,0_0_24px_rgba(0,207,232,0.5)]" 
-              : "bg-[#00CFE8]/30"
-          )}
-          style={{
-            animation: isHovered && !isOutOfStock ? 'scanPulse 1.5s ease-in-out infinite' : 'none',
-          }}
-        />
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════
-          BODY: 2-Column Technical Grid - Nozzle Temp & Flow Rate
-          ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-4 py-4 bg-black/20">
         {/* Material Name */}
-        <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-3">
+        <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-4 pr-14">
           {getDisplayTitle()}
         </h3>
         
-        {/* Material Badge + Price Row */}
-        <div className="flex items-center justify-between mb-3">
-          {/* Material Type Badge */}
-          {filament.material && (
-            <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
-              {filament.material}
-            </span>
-          )}
-          
-          {/* Price */}
-          <div className="text-right flex-shrink-0">
-            {isValidPrice && pricePerKg ? (
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-bold text-foreground font-mono">
-                  {formatRegionalPrice(pricePerKg, false, userCurrency)}
-                </span>
-                <span className="text-[10px] text-muted-foreground font-mono">
-                  /kg
-                </span>
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground font-mono">
-                —
+        {/* 2-Column Specs Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {/* Ideal Temp */}
+          <div className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Thermometer className="w-3 h-3 text-[#00CFE8]" />
+              <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                Ideal Temp
               </span>
-            )}
-          </div>
-        </div>
-        
-        {/* Nozzle Temp */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5">
-            <Thermometer className="w-3 h-3 text-[#00CFE8]" />
-            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
-              Nozzle Temp
+            </div>
+            <span className="font-mono text-base font-bold text-foreground block">
+              {idealTemp}
             </span>
           </div>
-          <span className="font-mono text-base font-bold text-foreground block">
-            {nozzleTemp}
-          </span>
+          
+          {/* Volumetric Flow */}
+          <div className="p-3 rounded-lg bg-white/[0.03] border border-white/5">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Wind className="w-3 h-3 text-[#00CFE8]" />
+              <span className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                Flow Rate
+              </span>
+            </div>
+            <span className="font-mono text-base font-bold text-foreground block">
+              {volumetricFlow}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          FOOTER: Rating + View Details CTA
+          FOOTER: View Details CTA
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-3 flex items-center justify-between border-t border-white/[0.05]">
-        {/* Star Rating */}
-        <div className="flex items-center gap-1">
-          {[...Array(5)].map((_, i) => (
-            <Star 
-              key={i}
-              className={cn(
-                "w-3 h-3",
-                i < starCount 
-                  ? "fill-amber-400 text-amber-400" 
-                  : "fill-transparent text-white/20"
-              )}
-            />
-          ))}
-          {overallScore && (
-            <span className="ml-1 text-[10px] font-mono text-muted-foreground">
+        {/* Score Display */}
+        {overallScore && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Score</span>
+            <span className="font-mono text-sm font-bold text-[#00CFE8]">
               {overallScore.toFixed(1)}
             </span>
-          )}
-        </div>
+          </div>
+        )}
+        
+        {!overallScore && <div />}
 
         {/* View Details Link */}
         <Link
@@ -386,8 +419,14 @@ export function LabReadoutCard({
         </Link>
       </div>
       
-      {/* Scan pulse animation keyframes */}
+      {/* Animation keyframes */}
       <style>{`
+        @keyframes headerScan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
         @keyframes scanPulse {
           0%, 100% { opacity: 1; box-shadow: 0 0 12px #00CFE8, 0 0 24px rgba(0,207,232,0.5); }
           50% { opacity: 0.7; box-shadow: 0 0 6px #00CFE8, 0 0 12px rgba(0,207,232,0.3); }
