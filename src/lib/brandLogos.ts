@@ -49,7 +49,7 @@ export const brandLogos: Record<string, string> = {
   "FIBERLOGY": "/images/brands/fiberlogy-wide.webp",
   "Ziro": "/images/brands/ziro.webp",
   "ZIRO": "/images/brands/ziro.webp",
-  "Paramount 3D": "/images/brands/paramount-3d.webp",
+  "Paramount 3D": "/images/brands/paramount-3d-white.png",
   "Proto-Pasta": "/images/brands/proto-pasta.webp",
   "proto-pasta": "/images/brands/proto-pasta.webp",
   "GEEETECH": "/images/brands/geeetech-white.png",
