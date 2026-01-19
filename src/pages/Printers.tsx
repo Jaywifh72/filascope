@@ -25,7 +25,7 @@ import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
-import { PrintersSidebar } from "@/components/printers/PrintersSidebar";
+import { TechnicalControlConsole } from "@/components/TechnicalControlConsole";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -575,18 +575,34 @@ export default function Printers() {
 
       {/* Main Content Area with Sidebar */}
       <div className="max-w-[1800px] mx-auto px-4 lg:px-8 py-10">
-        <div className="flex gap-8">
-          {/* Sticky Sidebar */}
-          <PrintersSidebar
-            selectedMaterials={sidebarMaterials}
-            onMaterialsChange={setSidebarMaterials}
-            selectedBrands={sidebarBrands}
-            onBrandsChange={setSidebarBrands}
-            selectedReinforced={sidebarReinforced}
-            onReinforcedChange={setSidebarReinforced}
-            spoolSize={sidebarSpoolSize}
-            onSpoolSizeChange={setSidebarSpoolSize}
-            availableBrands={brands || []}
+        <div className="flex gap-8 items-start">
+          {/* Sticky Sidebar - Hardware Registry Mode */}
+          <TechnicalControlConsole
+            mode="printers"
+            selectedOEMs={sidebarBrands}
+            onOEMChange={(oem, checked) => {
+              if (checked) {
+                setSidebarBrands([...sidebarBrands, oem]);
+              } else {
+                setSidebarBrands(sidebarBrands.filter(b => b !== oem));
+              }
+            }}
+            selectedKinematics={sidebarMaterials}
+            onKinematicsChange={(kinematics, checked) => {
+              if (checked) {
+                setSidebarMaterials([...sidebarMaterials, kinematics]);
+              } else {
+                setSidebarMaterials(sidebarMaterials.filter(m => m !== kinematics));
+              }
+            }}
+            selectedQuickFilters={sidebarReinforced}
+            onQuickFilterChange={(filter, checked) => {
+              if (checked) {
+                setSidebarReinforced([...sidebarReinforced, filter]);
+              } else {
+                setSidebarReinforced(sidebarReinforced.filter(r => r !== filter));
+              }
+            }}
           />
           
           {/* Main Content */}
