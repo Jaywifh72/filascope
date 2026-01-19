@@ -11,7 +11,7 @@ export const brandLogos: Record<string, string> = {
   "3DXTech": "/images/brands/3dxtech-long.png",
   "Filamentum": "/images/brands/filamentum.webp",
   "Fillamentum": "/images/brands/filamentum.webp", // Alternate spelling
-  "Amolen": "/images/brands/amolen.webp",
+  "Amolen": "/images/brands/amolen-long.webp",
   "FormFutura": "/images/brands/formfutura.webp",
   "Taulman3D": "/images/brands/taulman3d.webp",
   "Ultimaker": "/images/brands/ultimaker.webp",
