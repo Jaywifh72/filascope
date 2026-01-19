@@ -20,7 +20,7 @@ export const brandLogos: Record<string, string> = {
   "eSun": "/images/brands/esun-long.png",
   "ColorFabb": "/images/brands/colorfabb-long.webp",
   "Matter3D": "/images/brands/matter3d-white.webp",
-  "Prusament": "/images/brands/prusament.webp",
+  "Prusament": "/images/brands/prusament-white.png",
   "SUNLU": "/images/brands/sunlu.webp",
   "Sunlu": "/images/brands/sunlu.webp",
   "HATCHBOX": "/images/brands/hatchbox-white.png",
