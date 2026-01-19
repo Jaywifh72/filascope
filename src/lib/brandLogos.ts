@@ -70,7 +70,7 @@ export const brandLogos: Record<string, string> = {
   
   // Printer brands
   "AnkerMake": "/images/brands/ankermake.png",
-  "Anycubic": "/images/brands/anycubic.webp",
+  "Anycubic": "/images/brands/anycubic-long.webp",
   "Creality": "/images/brands/creality.png",
   "Elegoo": "/images/brands/elegoo.png",
   "FlashForge": "/images/brands/flashforge.png",
