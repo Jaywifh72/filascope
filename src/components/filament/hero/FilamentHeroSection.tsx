@@ -13,6 +13,7 @@ import { normalizeColorHex } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
 import type { Retailer } from './RetailersModal';
 import { cleanFilamentDisplayName } from '@/lib/productNameUtils';
+import { getBrandLogo } from '@/lib/brandLogos';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -153,14 +154,28 @@ export function FilamentHeroSection({
 
           {/* Right Column - Info & Purchase (60%) */}
           <div className="flex flex-col gap-5">
-            {/* Brand Name */}
+            {/* Brand Logo/Name */}
             <div>
               <Link 
                 to={`/brands/${encodeURIComponent(pricingFilament.vendor || '')}`}
-                className="text-sm font-bold text-primary uppercase tracking-wider hover:underline inline-flex items-center gap-1.5 group"
+                className="inline-flex items-center gap-1.5 group hover:opacity-80 transition-opacity"
               >
-                {pricingFilament.vendor}
-                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {getBrandLogo(pricingFilament.vendor) ? (
+                  <img 
+                    src={getBrandLogo(pricingFilament.vendor)!} 
+                    alt={pricingFilament.vendor || 'Brand'}
+                    className="h-8 w-auto max-w-[180px] object-contain"
+                    onError={(e) => {
+                      // Fallback to text if logo fails
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <span className={getBrandLogo(pricingFilament.vendor) ? "hidden text-sm font-bold text-primary uppercase tracking-wider" : "text-sm font-bold text-primary uppercase tracking-wider"}>
+                  {pricingFilament.vendor}
+                </span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
               </Link>
             </div>
             
