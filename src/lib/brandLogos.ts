@@ -45,6 +45,8 @@ export const brandLogos: Record<string, string> = {
   "ERYONE": "/images/brands/eryone-white.png",
   "Inland": "/images/brands/inland.webp",
   "INLAND": "/images/brands/inland.webp",
+  "Fiberlogy": "/images/brands/fiberlogy-wide.webp",
+  "FIBERLOGY": "/images/brands/fiberlogy-wide.webp",
   "Ziro": "/images/brands/ziro.webp",
   "ZIRO": "/images/brands/ziro.webp",
   "Paramount 3D": "/images/brands/paramount-3d.webp",
