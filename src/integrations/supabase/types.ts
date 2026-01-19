@@ -2801,6 +2801,7 @@ export type Database = {
           build_volume_y_mm: number | null
           build_volume_z_mm: number | null
           cloud_platforms: string | null
+          coming_soon: boolean | null
           common_failure_points: string | null
           common_mods_tags: string | null
           community_popularity_score: number | null
@@ -2987,6 +2988,7 @@ export type Database = {
           build_volume_y_mm?: number | null
           build_volume_z_mm?: number | null
           cloud_platforms?: string | null
+          coming_soon?: boolean | null
           common_failure_points?: string | null
           common_mods_tags?: string | null
           community_popularity_score?: number | null
@@ -3173,6 +3175,7 @@ export type Database = {
           build_volume_y_mm?: number | null
           build_volume_z_mm?: number | null
           cloud_platforms?: string | null
+          coming_soon?: boolean | null
           common_failure_points?: string | null
           common_mods_tags?: string | null
           community_popularity_score?: number | null
