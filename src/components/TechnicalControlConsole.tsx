@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   Thermometer, 
   Circle, 
@@ -12,9 +12,12 @@ import {
   Cpu,
   Box,
   Move,
-  Droplets
+  Droplets,
+  Building2
 } from "lucide-react";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -63,21 +66,7 @@ const SPOOL_SIZES = [
   { id: "refill", label: "Refill", description: "No spool" },
 ];
 
-// OEM Ecosystems for Printers View
-const OEM_ECOSYSTEMS = [
-  { id: "bambu-lab", label: "Bambu Lab" },
-  { id: "prusa", label: "Prusa" },
-  { id: "creality", label: "Creality" },
-  { id: "anycubic", label: "Anycubic" },
-  { id: "elegoo", label: "Elegoo" },
-  { id: "qidi", label: "QIDI" },
-  { id: "voron", label: "Voron" },
-  { id: "sovol", label: "Sovol" },
-  { id: "flashforge", label: "FlashForge" },
-  { id: "raise3d", label: "Raise3D" },
-  { id: "ratrig", label: "Rat Rig" },
-  { id: "flsun", label: "FLSUN" },
-];
+// OEM Ecosystems removed - now fetched dynamically from database
 
 // Motion Kinematics for Printers View
 const MOTION_KINEMATICS = [
@@ -167,6 +156,28 @@ export function TechnicalControlConsole({
     setSelectedPrinterId,
     printerLoading,
   } = usePrinterSelection();
+
+  // Fetch all printer brands for the Brand Ecosystem filter
+  const { data: printerBrands } = useQuery({
+    queryKey: ["printer-brands-ecosystem"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("printer_brands")
+        .select("brand")
+        .order("brand");
+      if (error) throw error;
+      return data.map(b => b.brand);
+    },
+  });
+
+  // Convert printer brands to filter options
+  const brandEcosystemOptions = useMemo(() => {
+    if (!printerBrands) return [];
+    return printerBrands.map(brand => ({
+      id: brand.toLowerCase().replace(/\s+/g, '-'),
+      label: brand
+    }));
+  }, [printerBrands]);
 
   // Local state for internal management
   const [localSpoolSize, setLocalSpoolSize] = useState(spoolSize);
@@ -469,11 +480,11 @@ export function TechnicalControlConsole({
 
             {/* Filter Clusters Section */}
             <div className="p-4 space-y-5 flex-1">
-              {/* OEM Ecosystem */}
+              {/* Brand Ecosystem */}
               <FilterCluster 
-                title="OEM Ecosystem"
-                icon={Box}
-                options={OEM_ECOSYSTEMS}
+                title="Brand Ecosystem"
+                icon={Building2}
+                options={brandEcosystemOptions}
                 selected={localOEMs}
                 onToggle={handleOEMToggle}
               />
