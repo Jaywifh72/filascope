@@ -260,11 +260,11 @@ export function LabReadoutCard({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 pl-7 h-full">
-          {/* Left: Brand Logo */}
-          <div className="flex-1 min-w-0 h-full flex items-center">
+        <div className="flex items-center justify-center gap-3 h-full">
+          {/* Center: Brand Logo */}
+          <div className="h-full flex items-center justify-center">
             {/* Brand Logo */}
-            <div className="h-[90%] flex items-center">
+            <div className="h-[90%] flex items-center justify-center">
               {filament.vendor ? (
                 <img 
                   src={getBrandLogo(filament.vendor)} 
@@ -285,7 +285,6 @@ export function LabReadoutCard({
               </span>
             </div>
           </div>
-
         </div>
         
         {/* Cyan Scan Line at bottom of header */}
