@@ -186,7 +186,7 @@ const PrintersHeroSection = ({
           <div className="flex-1 flex flex-col justify-center pr-8 lg:pr-16">
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-light uppercase tracking-[0.2em] leading-tight mb-8">
-              <span className="block text-foreground">Measure Material.</span>
+              <span className="block text-foreground">Precision Hardware.</span>
               <span className="block">
                 <span className="text-foreground">Master the </span>
                 <span className="text-[#00CFE8] italic font-medium">Print.</span>
