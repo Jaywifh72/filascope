@@ -103,6 +103,7 @@ export default function Printers() {
   const [sidebarBrands, setSidebarBrands] = useState<string[]>([]);
   const [sidebarReinforced, setSidebarReinforced] = useState<string[]>([]);
   const [sidebarSpoolSize, setSidebarSpoolSize] = useState("any");
+  const [hideDiscontinued, setHideDiscontinued] = useState(false);
   
   // Progressive disclosure state
   const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
@@ -273,6 +274,9 @@ export default function Printers() {
     if (!printers) return [];
 
     const filtered = printers.filter(printer => {
+      // Hide discontinued filter
+      if (hideDiscontinued && printer.discontinued) return false;
+      
       const price = getPrice(printer);
       const maxDimension = Math.max(
         printer.build_volume_x_mm || 0,
@@ -620,6 +624,8 @@ export default function Printers() {
                 setSidebarReinforced(sidebarReinforced.filter(r => r !== filter));
               }
             }}
+            hideDiscontinued={hideDiscontinued}
+            onHideDiscontinuedChange={setHideDiscontinued}
           />
           
           {/* Main Content */}

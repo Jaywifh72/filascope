@@ -13,7 +13,9 @@ import {
   Box,
   Move,
   Droplets,
-  Building2
+  Building2,
+  Ban,
+  Check
 } from "lucide-react";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { useQuery } from "@tanstack/react-query";
@@ -113,6 +115,8 @@ interface PrintersViewProps {
   onKinematicsChange?: (kinematics: string, checked: boolean) => void;
   selectedQuickFilters?: string[];
   onQuickFilterChange?: (filter: string, checked: boolean) => void;
+  hideDiscontinued?: boolean;
+  onHideDiscontinuedChange?: (checked: boolean) => void;
 }
 
 interface TechnicalControlConsoleProps extends MaterialsViewProps, PrintersViewProps {
@@ -145,6 +149,8 @@ export function TechnicalControlConsole({
   onKinematicsChange,
   selectedQuickFilters = [],
   onQuickFilterChange,
+  hideDiscontinued = false,
+  onHideDiscontinuedChange,
 }: TechnicalControlConsoleProps) {
   const { 
     selectedPrinter, 
@@ -506,6 +512,35 @@ export function TechnicalControlConsole({
                 selected={localQuickFilters}
                 onToggle={handleQuickFilterToggle}
               />
+
+              {/* Hide Discontinued Toggle */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Ban className="w-3 h-3 text-primary" />
+                  <span className="font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">
+                    Availability
+                  </span>
+                </div>
+                <button
+                  onClick={() => onHideDiscontinuedChange?.(!hideDiscontinued)}
+                  className={cn(
+                    "w-full px-3 py-2 font-mono text-[10px] font-medium uppercase tracking-wider rounded-sm border transition-all duration-150 text-left flex items-center gap-2",
+                    hideDiscontinued
+                      ? "bg-primary/20 border-primary/50 text-primary"
+                      : "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  )}
+                >
+                  <div className={cn(
+                    "w-3 h-3 rounded-sm border flex items-center justify-center transition-all",
+                    hideDiscontinued 
+                      ? "bg-primary border-primary" 
+                      : "border-white/30"
+                  )}>
+                    {hideDiscontinued && <Check className="w-2 h-2 text-background" strokeWidth={3} />}
+                  </div>
+                  Hide Discontinued
+                </button>
+              </div>
             </div>
           </>
         )}
