@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode, AppWindow, Trash2, AlertTriangle } from "lucide-react";
+import { Upload, ArrowLeft, Database, Search, Loader2, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw, DollarSign, Sparkles, Cpu, Globe, FileCode, AppWindow, Trash2, AlertTriangle, BarChart3 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils"; // utility for conditional classnames
 import { BRAND_REGIONAL_AVAILABILITY } from "@/lib/brandRegionalAvailability";
+import PrinterDataComparisonPanel from "@/components/admin/PrinterDataComparisonPanel";
 
 function BrandAvailabilityDisplay({ brand }: { brand: string }) {
   const availability = BRAND_REGIONAL_AVAILABILITY[brand];
@@ -1410,7 +1411,7 @@ export default function AdminPrinters() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="discover">Discover</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
             <TabsTrigger value="review">
@@ -1420,6 +1421,10 @@ export default function AdminPrinters() {
                   {pendingPrinters.length}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="comparison" className="gap-1">
+              <BarChart3 className="h-4 w-4" />
+              Comparison
             </TabsTrigger>
           </TabsList>
 
@@ -3012,6 +3017,10 @@ export default function AdminPrinters() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="comparison" className="space-y-6">
+            <PrinterDataComparisonPanel />
           </TabsContent>
         </Tabs>
       </div>
