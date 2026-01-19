@@ -68,7 +68,7 @@ export const brandLogos: Record<string, string> = {
   
   "Duramic 3D": "/images/brands/duramic3d-white.webp",
   "DURAMIC 3D": "/images/brands/duramic3d-white.webp",
-  "Extrudr": "/images/brands/extrudr.ico",
+  "Extrudr": "/images/brands/extrudr-logo.png",
   "Filaments.ca": "/images/brands/filaments-ca.png",
   
   // Printer brands
