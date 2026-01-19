@@ -15,12 +15,10 @@ import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
 import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components/PrintersAdvancedFiltersModal";
-import LargeFeaturedPrinterCard from "@/components/printers/LargeFeaturedPrinterCard";
-import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
-import SmallDeemphasizedPrinterCard from "@/components/printers/SmallDeemphasizedPrinterCard";
+import { PrinterLabReadoutCard } from "@/components/printers/PrinterLabReadoutCard";
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
-import { getCardSize } from "@/lib/printerCardUtils";
+import { DataInventoryControlBar, type SortOption } from "@/components/DataInventoryControlBar";
 import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
@@ -524,7 +522,26 @@ export default function Printers() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Atmospheric Glow Blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Cyan blob - top right */}
+        <div 
+          className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(0,207,232,0.05) 0%, transparent 70%)',
+            transform: 'translate(30%, -30%)',
+          }}
+        />
+        {/* Magenta blob - bottom left */}
+        <div 
+          className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(255,0,85,0.05) 0%, transparent 70%)',
+            transform: 'translate(-30%, 30%)',
+          }}
+        />
+      </div>
       {/* Hero Section */}
       <PrintersHeroSection
         searchTerm={searchTerm}
@@ -607,28 +624,12 @@ export default function Printers() {
           
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {/* Results Header - Laboratory Style */}
-            <div className="w-full mb-8 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 px-6 hover:border-primary/20 transition-colors duration-300">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
-                  <span className="text-primary font-black">{filteredPrinters?.length || 0}</span>
-                  {" "}
-                  <span className="font-light">printers found</span>
-                </h2>
-                
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearAllFilters}
-                    className="text-muted-foreground hover:text-foreground self-start sm:self-auto"
-                  >
-                    <X className="w-4 h-4 mr-1.5" />
-                    Clear all filters
-                  </Button>
-                )}
-              </div>
-            </div>
+            {/* Data Inventory Control Bar */}
+            <DataInventoryControlBar
+              sortBy={sortBy as SortOption}
+              onSortChange={(val) => setSortBy(val)}
+              resultCount={filteredPrinters?.length || 0}
+            />
             
             {/* Printer Grid */}
             {isLoading ? (
@@ -643,63 +644,14 @@ export default function Printers() {
               />
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
-                  {displayedPrinters.map((printer, index) => {
-                    const cardInfo = getCardSize(printer, index);
-                    const printerIsSelected = isSelected(printer.id);
-
-                    const handleToggleCompare = () => toggleCompareSelection(printer);
-                    const handleEditImage = (e: React.MouseEvent) => openImageEditDialog(printer, e);
-                    const handleRescrape = (e: React.MouseEvent) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      rescrapeMutation.mutate(printer.id);
-                    };
-
-                    if (cardInfo.size === 'large') {
-                      return (
-                        <LargeFeaturedPrinterCard
-                          key={printer.id}
-                          printer={printer}
-                          cardInfo={cardInfo}
-                          isSelected={printerIsSelected}
-                          isMaxReached={isMaxReached}
-                          onToggleCompare={handleToggleCompare}
-                          isAdmin={isAdmin}
-                          onEditImage={handleEditImage}
-                          onRescrape={handleRescrape}
-                          isRescraping={rescrapeMutation.isPending}
-                        />
-                      );
-                    }
-
-                    if (cardInfo.size === 'small') {
-                      return (
-                        <SmallDeemphasizedPrinterCard
-                          key={printer.id}
-                          printer={printer}
-                          cardInfo={cardInfo}
-                          isSelected={printerIsSelected}
-                          isMaxReached={isMaxReached}
-                          onToggleCompare={handleToggleCompare}
-                        />
-                      );
-                    }
-
-                    return (
-                      <MediumStandardPrinterCard
-                        key={printer.id}
-                        printer={printer}
-                        isSelected={printerIsSelected}
-                        isMaxReached={isMaxReached}
-                        onToggleCompare={handleToggleCompare}
-                        isAdmin={isAdmin}
-                        onEditImage={handleEditImage}
-                        onRescrape={handleRescrape}
-                        isRescraping={rescrapeMutation.isPending}
-                      />
-                    );
-                  })}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                  {displayedPrinters.map((printer, index) => (
+                    <PrinterLabReadoutCard
+                      key={printer.id}
+                      printer={printer}
+                      index={index}
+                    />
+                  ))}
                 </div>
 
                 {/* Load More / End State */}
