@@ -25,6 +25,7 @@ import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
+import { PrintersSidebar } from "@/components/printers/PrintersSidebar";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -98,6 +99,12 @@ export default function Printers() {
   const [buildVolumeFilter, setBuildVolumeFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  
+  // Sidebar filter state
+  const [sidebarMaterials, setSidebarMaterials] = useState<string[]>([]);
+  const [sidebarBrands, setSidebarBrands] = useState<string[]>([]);
+  const [sidebarReinforced, setSidebarReinforced] = useState<string[]>([]);
+  const [sidebarSpoolSize, setSidebarSpoolSize] = useState("any");
   
   // Progressive disclosure state
   const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
@@ -566,143 +573,162 @@ export default function Printers() {
         />
       </div>
 
-      {/* Main Content Area */}
-      <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-10">
-        {/* Results Header - Laboratory Style */}
-        <div className="w-full mb-8 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 px-6 hover:border-primary/20 transition-colors duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
-              <span className="text-primary font-black">{filteredPrinters?.length || 0}</span>
-              {" "}
-              <span className="font-light">printers found</span>
-            </h2>
+      {/* Main Content Area with Sidebar */}
+      <div className="max-w-[1800px] mx-auto px-4 lg:px-8 py-10">
+        <div className="flex gap-8">
+          {/* Sticky Sidebar */}
+          <PrintersSidebar
+            selectedMaterials={sidebarMaterials}
+            onMaterialsChange={setSidebarMaterials}
+            selectedBrands={sidebarBrands}
+            onBrandsChange={setSidebarBrands}
+            selectedReinforced={sidebarReinforced}
+            onReinforcedChange={setSidebarReinforced}
+            spoolSize={sidebarSpoolSize}
+            onSpoolSizeChange={setSidebarSpoolSize}
+            availableBrands={brands || []}
+          />
+          
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            {/* Results Header - Laboratory Style */}
+            <div className="w-full mb-8 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 px-6 hover:border-primary/20 transition-colors duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
+                  <span className="text-primary font-black">{filteredPrinters?.length || 0}</span>
+                  {" "}
+                  <span className="font-light">printers found</span>
+                </h2>
+                
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearAllFilters}
+                    className="text-muted-foreground hover:text-foreground self-start sm:self-auto"
+                  >
+                    <X className="w-4 h-4 mr-1.5" />
+                    Clear all filters
+                  </Button>
+                )}
+              </div>
+            </div>
             
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAllFilters}
-                className="text-muted-foreground hover:text-foreground self-start sm:self-auto"
-              >
-                <X className="w-4 h-4 mr-1.5" />
-                Clear all filters
-              </Button>
+            {/* Printer Grid */}
+            {isLoading ? (
+              <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
+            ) : filteredPrinters.length === 0 ? (
+              <PrintersEmptyState
+                searchQuery={searchTerm}
+                activeFiltersCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0) + activeQuickFilters.length}
+                onResetFilters={handleClearAllFilters}
+                onSearchBrand={(brand) => setSearchTerm(brand)}
+                totalPrinters={printers?.length || 0}
+              />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
+                  {displayedPrinters.map((printer, index) => {
+                    const cardInfo = getCardSize(printer, index);
+                    const printerIsSelected = isSelected(printer.id);
+
+                    const handleToggleCompare = () => toggleCompareSelection(printer);
+                    const handleEditImage = (e: React.MouseEvent) => openImageEditDialog(printer, e);
+                    const handleRescrape = (e: React.MouseEvent) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      rescrapeMutation.mutate(printer.id);
+                    };
+
+                    if (cardInfo.size === 'large') {
+                      return (
+                        <LargeFeaturedPrinterCard
+                          key={printer.id}
+                          printer={printer}
+                          cardInfo={cardInfo}
+                          isSelected={printerIsSelected}
+                          isMaxReached={isMaxReached}
+                          onToggleCompare={handleToggleCompare}
+                          isAdmin={isAdmin}
+                          onEditImage={handleEditImage}
+                          onRescrape={handleRescrape}
+                          isRescraping={rescrapeMutation.isPending}
+                        />
+                      );
+                    }
+
+                    if (cardInfo.size === 'small') {
+                      return (
+                        <SmallDeemphasizedPrinterCard
+                          key={printer.id}
+                          printer={printer}
+                          cardInfo={cardInfo}
+                          isSelected={printerIsSelected}
+                          isMaxReached={isMaxReached}
+                          onToggleCompare={handleToggleCompare}
+                        />
+                      );
+                    }
+
+                    return (
+                      <MediumStandardPrinterCard
+                        key={printer.id}
+                        printer={printer}
+                        isSelected={printerIsSelected}
+                        isMaxReached={isMaxReached}
+                        onToggleCompare={handleToggleCompare}
+                        isAdmin={isAdmin}
+                        onEditImage={handleEditImage}
+                        onRescrape={handleRescrape}
+                        isRescraping={rescrapeMutation.isPending}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Load More / End State */}
+                {hasMore ? (
+                  <div className="flex flex-col items-center gap-4 py-12">
+                    <Button
+                      onClick={loadMore}
+                      disabled={isLoadingMore}
+                      variant="outline"
+                      className="h-14 px-10 bg-primary/10 border-2 border-primary/40 hover:bg-primary/20 hover:border-primary text-primary font-semibold"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Printers
+                          <ArrowDown className="ml-2 h-5 w-5" />
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      Showing {displayedCount} of {filteredPrinters.length} printers
+                    </p>
+                  </div>
+                ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
+                  <div className="flex flex-col items-center gap-4 py-12">
+                    <div className="w-12 h-12 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
+                      <Check className="h-6 w-6 text-green-500" />
+                    </div>
+                    <p className="text-base font-semibold">
+                      You've viewed all {filteredPrinters.length} printers
+                    </p>
+                    <Button variant="ghost" onClick={scrollToTop} className="text-muted-foreground hover:text-primary">
+                      <ArrowUp className="mr-2 h-4 w-4" />
+                      Back to Top
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
-        {/* Printer Grid */}
-        {isLoading ? (
-          <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
-        ) : filteredPrinters.length === 0 ? (
-          <PrintersEmptyState
-            searchQuery={searchTerm}
-            activeFiltersCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0) + activeQuickFilters.length}
-            onResetFilters={handleClearAllFilters}
-            onSearchBrand={(brand) => setSearchTerm(brand)}
-            totalPrinters={printers?.length || 0}
-          />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
-              {displayedPrinters.map((printer, index) => {
-                const cardInfo = getCardSize(printer, index);
-                const printerIsSelected = isSelected(printer.id);
-
-                const handleToggleCompare = () => toggleCompareSelection(printer);
-                const handleEditImage = (e: React.MouseEvent) => openImageEditDialog(printer, e);
-                const handleRescrape = (e: React.MouseEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  rescrapeMutation.mutate(printer.id);
-                };
-
-                if (cardInfo.size === 'large') {
-                  return (
-                    <LargeFeaturedPrinterCard
-                      key={printer.id}
-                      printer={printer}
-                      cardInfo={cardInfo}
-                      isSelected={printerIsSelected}
-                      isMaxReached={isMaxReached}
-                      onToggleCompare={handleToggleCompare}
-                      isAdmin={isAdmin}
-                      onEditImage={handleEditImage}
-                      onRescrape={handleRescrape}
-                      isRescraping={rescrapeMutation.isPending}
-                    />
-                  );
-                }
-
-                if (cardInfo.size === 'small') {
-                  return (
-                    <SmallDeemphasizedPrinterCard
-                      key={printer.id}
-                      printer={printer}
-                      cardInfo={cardInfo}
-                      isSelected={printerIsSelected}
-                      isMaxReached={isMaxReached}
-                      onToggleCompare={handleToggleCompare}
-                    />
-                  );
-                }
-
-                return (
-                  <MediumStandardPrinterCard
-                    key={printer.id}
-                    printer={printer}
-                    isSelected={printerIsSelected}
-                    isMaxReached={isMaxReached}
-                    onToggleCompare={handleToggleCompare}
-                    isAdmin={isAdmin}
-                    onEditImage={handleEditImage}
-                    onRescrape={handleRescrape}
-                    isRescraping={rescrapeMutation.isPending}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Load More / End State */}
-            {hasMore ? (
-              <div className="flex flex-col items-center gap-4 py-12">
-                <Button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  variant="outline"
-                  className="h-14 px-10 bg-primary/10 border-2 border-primary/40 hover:bg-primary/20 hover:border-primary text-primary font-semibold"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Printers
-                      <ArrowDown className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </Button>
-                <p className="text-sm text-muted-foreground">
-                  Showing {displayedCount} of {filteredPrinters.length} printers
-                </p>
-              </div>
-            ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
-              <div className="flex flex-col items-center gap-4 py-12">
-                <div className="w-12 h-12 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
-                  <Check className="h-6 w-6 text-green-500" />
-                </div>
-                <p className="text-base font-semibold">
-                  You've viewed all {filteredPrinters.length} printers
-                </p>
-                <Button variant="ghost" onClick={scrollToTop} className="text-muted-foreground hover:text-primary">
-                  <ArrowUp className="mr-2 h-4 w-4" />
-                  Back to Top
-                </Button>
-              </div>
-            )}
-          </>
-        )}
       </div>
 
       {/* Image Edit Dialog */}
