@@ -91,6 +91,8 @@ export const brandLogos: Record<string, string> = {
   "Sovol": "/images/brands/sovol-long.webp",
   "UltiMaker": "/images/brands/ultimaker.webp",
   "Voron Design": "/images/brands/voron-design.png",
+  "TreeD Filaments": "/images/brands/treed-light.png",
+  "TreeD": "/images/brands/treed-light.png",
 };
 
 // Helper function to get brand logo with fallback
