@@ -2,6 +2,8 @@
 // All images optimized to 128x128px WebP format for performance
 export const brandLogos: Record<string, string> = {
   // Filament brands
+  "3Dhojor": "/images/brands/3dhojor.png",
+  "3DHOJOR": "/images/brands/3dhojor.png",
   "3D Solutech": "/images/brands/3d-solutech.png",
   "Bambu Lab": "/images/brands/bambu-lab.webp",
   "Overture": "/images/brands/overture.png",
