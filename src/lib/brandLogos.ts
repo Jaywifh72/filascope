@@ -63,8 +63,8 @@ export const brandLogos: Record<string, string> = {
   "Kingroon": "/images/brands/kingroon.png",
   "KINGROON": "/images/brands/kingroon.png",
   "Recreus": "/images/brands/recreus.png",
-  "IC3D": "/images/brands/ic3d.png",
-  "IC3D Printers": "/images/brands/ic3d.png",
+  "IC3D": "/images/brands/ic3d-long.png",
+  "IC3D Printers": "/images/brands/ic3d-long.png",
   
   "Duramic 3D": "/images/brands/duramic3d-white.webp",
   "DURAMIC 3D": "/images/brands/duramic3d-white.webp",
