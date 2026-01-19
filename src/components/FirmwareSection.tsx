@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -17,6 +18,8 @@ import {
   CheckCircle2,
   FileText,
   HardDrive,
+  ChevronDown,
+  Layers,
 } from "lucide-react";
 import { format } from "date-fns";
 import DOMPurify from "dompurify";
@@ -228,114 +231,119 @@ export const FirmwareSection = ({ printerId, brandName, printerName }: FirmwareS
               </Card>
             )}
 
-            {/* All Firmware Releases */}
-            <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">
-                All Releases ({firmware.length})
-              </h4>
-              <Accordion type="single" collapsible className="space-y-2">
-                {firmware.map((fw) => (
-                  <AccordionItem
-                    key={fw.id}
-                    value={fw.id}
-                    className="border rounded-lg px-4 bg-card hover:bg-muted/30 transition-colors"
-                  >
-                    <AccordionTrigger className="hover:no-underline py-4">
-                      <div className="flex items-center gap-4 w-full">
-                        <div className="flex items-center gap-2 min-w-[120px]">
-                          <span className="font-mono font-bold text-lg">v{fw.version}</span>
-                          {fw.is_latest && (
-                            <Badge variant="secondary" className="text-xs">Latest</Badge>
-                          )}
-                        </div>
-                        {fw.release_date && (
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(fw.release_date), "MMM d, yyyy")}
-                          </span>
-                        )}
-                        {fw.file_size_mb && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <HardDrive className="h-3 w-3" />
-                            {fw.file_size_mb} MB
-                          </span>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="space-y-4 pt-2">
-                        {fw.release_notes && (
-                          <div className="space-y-2">
-                            <h5 className="text-sm font-semibold flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-primary" />
-                              Release Notes
-                            </h5>
-                            <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2 prose-ul:my-1 prose-li:my-0">
-                              <div 
-                                dangerouslySetInnerHTML={{ 
-                                  __html: renderReleaseNotes(fw.release_notes)
-                                }}
-                              />
+            {/* Older Firmware Releases - Collapsible */}
+            {firmware.filter(fw => !fw.is_latest).length > 0 && (
+              <Collapsible defaultOpen={false}>
+                <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
+                  <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                    <Layers className="h-4 w-4" />
+                    Older Versions ({firmware.filter(fw => !fw.is_latest).length})
+                  </h4>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {firmware.filter(fw => !fw.is_latest).map((fw) => (
+                      <AccordionItem
+                        key={fw.id}
+                        value={fw.id}
+                        className="border rounded-lg px-4 bg-card hover:bg-muted/30 transition-colors"
+                      >
+                        <AccordionTrigger className="hover:no-underline py-4">
+                          <div className="flex items-center gap-4 w-full">
+                            <div className="flex items-center gap-2 min-w-[120px]">
+                              <span className="font-mono font-bold text-lg">v{fw.version}</span>
+                            </div>
+                            {fw.release_date && (
+                              <span className="text-sm text-muted-foreground">
+                                {format(new Date(fw.release_date), "MMM d, yyyy")}
+                              </span>
+                            )}
+                            {fw.file_size_mb && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <HardDrive className="h-3 w-3" />
+                                {fw.file_size_mb} MB
+                              </span>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-4">
+                          <div className="space-y-4 pt-2">
+                            {fw.release_notes && (
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-semibold flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-primary" />
+                                  Release Notes
+                                </h5>
+                                <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2 prose-ul:my-1 prose-li:my-0">
+                                  <div 
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: renderReleaseNotes(fw.release_notes)
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {fw.changelog && (
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-semibold">Changelog</h5>
+                                <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                                  <div 
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: renderReleaseNotes(fw.changelog)
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {fw.known_issues && (
+                              <div className="space-y-2">
+                                <h5 className="text-sm font-semibold flex items-center gap-2 text-amber-600">
+                                  <AlertTriangle className="h-4 w-4" />
+                                  Known Issues
+                                </h5>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                                  {fw.known_issues}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {fw.download_url && (
+                                <a
+                                  href={fw.download_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button size="sm" className="gap-2">
+                                    <Download className="h-3 w-3" />
+                                    Download Firmware
+                                  </Button>
+                                </a>
+                              )}
+                              {fw.source_url && (
+                                <a
+                                  href={fw.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button size="sm" variant="outline" className="gap-2">
+                                    <ExternalLink className="h-3 w-3" />
+                                    View Source
+                                  </Button>
+                                </a>
+                              )}
                             </div>
                           </div>
-                        )}
-
-                        {fw.changelog && (
-                          <div className="space-y-2">
-                            <h5 className="text-sm font-semibold">Changelog</h5>
-                            <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                              <div 
-                                dangerouslySetInnerHTML={{ 
-                                  __html: renderReleaseNotes(fw.changelog)
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {fw.known_issues && (
-                          <div className="space-y-2">
-                            <h5 className="text-sm font-semibold flex items-center gap-2 text-amber-600">
-                              <AlertTriangle className="h-4 w-4" />
-                              Known Issues
-                            </h5>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-                              {fw.known_issues}
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex flex-wrap gap-2 pt-2">
-                          {fw.download_url && (
-                            <a
-                              href={fw.download_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Button size="sm" className="gap-2">
-                                <Download className="h-3 w-3" />
-                                Download Firmware
-                              </Button>
-                            </a>
-                          )}
-                          {fw.source_url && (
-                            <a
-                              href={fw.source_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Button size="sm" variant="outline" className="gap-2">
-                                <ExternalLink className="h-3 w-3" />
-                                View Source
-                              </Button>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         )}
       </CardContent>
