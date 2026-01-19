@@ -28,7 +28,7 @@ export const brandLogos: Record<string, string> = {
   "GreenGate3D": "/images/brands/greengate3d.webp",
   "MatterHackers": "/images/brands/matterhackers.webp",
   "Printed Solid": "/images/brands/printed-solid.webp",
-  "Atomic Filament": "/images/brands/atomic.webp",
+  "Atomic Filament": "/images/brands/atomic-long.jpg",
   "Phaetus": "/images/brands/phaetus.webp",
   "Gizmo Dorks": "/images/brands/gizmo-dorks.webp",
   "GizmoDorks": "/images/brands/gizmo-dorks.webp",
