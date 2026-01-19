@@ -15,7 +15,7 @@ export const brandLogos: Record<string, string> = {
   "FormFutura": "/images/brands/formfutura-white.png",
   "Taulman3D": "/images/brands/taulman3d.webp",
   "Ultimaker": "/images/brands/ultimaker.webp",
-  "Siraya Tech": "/images/brands/siraya-tech.webp",
+  "Siraya Tech": "/images/brands/siraya-tech-light.png",
   "NinjaTek": "/images/brands/ninjatek-white.png",
   "eSun": "/images/brands/esun-long.png",
   "ColorFabb": "/images/brands/colorfabb-long.webp",
