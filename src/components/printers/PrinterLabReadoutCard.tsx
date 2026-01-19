@@ -7,7 +7,8 @@ import {
   Thermometer,
   Box,
   Zap,
-  Printer as PrinterIcon
+  Printer as PrinterIcon,
+  Ban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -154,15 +155,24 @@ export function PrinterLabReadoutCard({
               ))}
             </div>
             
-            {/* Center: Technology Badge */}
-            <span className={cn(
-              "inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md",
-              isFDM() 
-                ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300"
-                : "bg-violet-500/20 border border-violet-500/40 text-violet-300"
-            )}>
-              {techLabel}
-            </span>
+            {/* Center: Technology Badge + Discontinued Badge */}
+            <div className="flex items-center gap-1.5">
+              <span className={cn(
+                "inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md",
+                isFDM() 
+                  ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300"
+                  : "bg-violet-500/20 border border-violet-500/40 text-violet-300"
+              )}>
+                {techLabel}
+              </span>
+              
+              {printer.discontinued && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase tracking-wider rounded-md bg-red-500/20 border border-red-500/40 text-red-300">
+                  <Ban className="w-2.5 h-2.5" />
+                  EOL
+                </span>
+              )}
+            </div>
             
             {/* Right: Price */}
             <div className="text-right flex-shrink-0">
