@@ -390,6 +390,45 @@ export default function Printers() {
         if (!matchesAny) return false;
       }
 
+      // Sidebar Brand Ecosystem filter (AND logic - must match selected brand)
+      if (sidebarBrands.length > 0) {
+        const printerBrand = printer.brand?.brand?.toLowerCase().replace(/\s+/g, '-') || '';
+        const matchesBrand = sidebarBrands.some(selectedBrand => 
+          printerBrand === selectedBrand.toLowerCase()
+        );
+        if (!matchesBrand) return false;
+      }
+
+      // Sidebar Motion Kinematics filter (OR logic)
+      if (sidebarMaterials.length > 0) {
+        const motion = (printer.motion_system_notes || '').toLowerCase();
+        const style = (printer.machine_style || '').toLowerCase();
+        const matchesKinematics = sidebarMaterials.some(kinematics => {
+          const k = kinematics.toLowerCase();
+          if (k === 'corexy') return motion.includes('corexy') || style.includes('corexy');
+          if (k === 'cartesian') return motion.includes('cartesian') || style.includes('cartesian') || style.includes('bedslinger');
+          if (k === 'delta') return motion.includes('delta') || style.includes('delta');
+          if (k === 'idex') return motion.includes('idex') || (printer.extruder_count || 1) > 1;
+          if (k === 'toolchanger') return motion.includes('toolchanger') || style.includes('toolchanger');
+          if (k === 'infinite-z') return motion.includes('infinite') || style.includes('belt');
+          return false;
+        });
+        if (!matchesKinematics) return false;
+      }
+
+      // Sidebar Quick Filters (AND logic for hardware features)
+      if (sidebarReinforced.length > 0) {
+        const matchesAllQuickFilters = sidebarReinforced.every(filter => {
+          switch (filter) {
+            case 'enclosed': return printer.has_enclosure;
+            case 'multi-material': return printer.multi_material_supported;
+            case 'high-speed': return printerSpeed >= 300;
+            default: return true;
+          }
+        });
+        if (!matchesAllQuickFilters) return false;
+      }
+
       return true;
     });
 
@@ -408,7 +447,7 @@ export default function Printers() {
         default: return 0;
       }
     });
-  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, hideDiscontinued, sidebarBrands, sidebarMaterials, sidebarReinforced]);
 
   const advancedFilterCount = 
     advancedFilters.brands.length +
