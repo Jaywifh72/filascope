@@ -8,7 +8,8 @@ import {
   Box,
   Zap,
   Printer as PrinterIcon,
-  Ban
+  Ban,
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -155,7 +156,7 @@ export function PrinterLabReadoutCard({
               ))}
             </div>
             
-            {/* Center: Technology Badge + Discontinued Badge */}
+            {/* Center: Technology Badge */}
             <div className="flex items-center gap-1.5">
               <span className={cn(
                 "inline-flex items-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md",
@@ -165,13 +166,6 @@ export function PrinterLabReadoutCard({
               )}>
                 {techLabel}
               </span>
-              
-              {printer.discontinued && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase tracking-wider rounded-md bg-red-500/20 border border-red-500/40 text-red-300">
-                  <Ban className="w-2.5 h-2.5" />
-                  EOL
-                </span>
-              )}
             </div>
             
             {/* Right: Price */}
@@ -259,6 +253,23 @@ export function PrinterLabReadoutCard({
         <div className="px-4 pt-4 pb-3">
           {/* Printer Image */}
           <div className="relative aspect-[4/3] mb-4 flex items-center justify-center">
+            {/* Status Badge - Overlays the image area */}
+            {printer.discontinued && (
+              <div className="absolute top-2 right-2 z-20">
+                <span className="inline-flex items-center gap-1 bg-red-500/90 text-white text-[9px] uppercase font-bold tracking-wider px-2 py-1 rounded shadow-lg">
+                  <Ban className="w-2.5 h-2.5" />
+                  DISCONTINUED
+                </span>
+              </div>
+            )}
+            {!printer.discontinued && printer.coming_soon && (
+              <div className="absolute top-2 right-2 z-20">
+                <span className="inline-flex items-center gap-1 bg-[#00CFE8]/90 text-white text-[9px] uppercase font-bold tracking-wider px-2 py-1 rounded shadow-lg">
+                  <Clock className="w-2.5 h-2.5" />
+                  COMING SOON
+                </span>
+              </div>
+            )}
             {productImage ? (
               <img 
                 src={productImage} 
