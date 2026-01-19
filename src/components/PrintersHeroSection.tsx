@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Printer, Building2, TrendingUp, ArrowRight, Sparkles, DollarSign, Home, Palette, Ruler, FlaskConical, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, Wand2 } from "lucide-react";
 
 interface PrintersHeroSectionProps {
   searchTerm: string;
@@ -13,212 +12,136 @@ interface PrintersHeroSectionProps {
   onOpenQuiz?: () => void;
 }
 
-// Count-up animation hook
-const useCountUp = (end: number, duration: number = 2000) => {
-  const [count, setCount] = useState(0);
-  
-  useEffect(() => {
-    let startTime: number;
-    let animationFrame: number;
-    
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      
-      // Ease-out curve for satisfying slowdown at end
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(easeOut * end));
-      
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-    
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
-  
-  return count;
-};
-
-interface StatBlockProps {
-  icon: React.ElementType;
-  targetNumber: number | null;
-  displayText?: string;
-  suffix?: string;
-  label: string;
-  delay: string;
-  colorVariant: 'cyan' | 'purple' | 'green';
-}
-
-const colorConfig = {
-  cyan: {
-    bg: 'bg-primary/15',
-    text: 'text-primary',
-    glow: 'rgba(0, 217, 217, 0.4)',
-    glowHover: 'rgba(0, 217, 217, 0.6)',
-    borderHover: 'rgba(0, 217, 217, 0.5)',
-    shadowHover: '0 20px 60px rgba(0, 217, 217, 0.3)',
-  },
-  purple: {
-    bg: 'bg-violet-500/15',
-    text: 'text-violet-400',
-    glow: 'rgba(167, 139, 250, 0.4)',
-    glowHover: 'rgba(167, 139, 250, 0.6)',
-    borderHover: 'rgba(167, 139, 250, 0.5)',
-    shadowHover: '0 20px 60px rgba(167, 139, 250, 0.3)',
-  },
-  green: {
-    bg: 'bg-emerald-500/15',
-    text: 'text-emerald-400',
-    glow: 'rgba(34, 197, 94, 0.4)',
-    glowHover: 'rgba(34, 197, 94, 0.6)',
-    borderHover: 'rgba(34, 197, 94, 0.5)',
-    shadowHover: '0 20px 60px rgba(34, 197, 94, 0.3)',
-  },
-};
-
-const StatBlock = ({ icon: Icon, targetNumber, displayText, suffix = '', label, delay, colorVariant }: StatBlockProps) => {
-  const count = useCountUp(targetNumber ?? 0, 2000);
-  const colors = colorConfig[colorVariant];
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    
-    // Calculate tilt (max 8 degrees)
-    const tiltX = ((y - centerY) / centerY) * -8;
-    const tiltY = ((x - centerX) / centerX) * 8;
-    
-    setTilt({ x: tiltX, y: tiltY });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-    setIsHovered(false);
-  };
-
+// 3D Isometric Calibration Cube Component
+const CalibrationCube = () => {
   return (
-    <div 
-      className="group relative min-w-[200px] w-full sm:w-auto animate-fade-in"
-      style={{ 
-        animationDelay: delay,
-        perspective: '1000px',
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      role="group"
-      aria-label={`${targetNumber ? count.toLocaleString() : displayText} ${label}`}
-    >
-      {/* 3D Card Container */}
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* Scanning Laser Line */}
       <div 
-        className="relative flex flex-col items-center gap-4 bg-gradient-to-b from-white/8 to-white/4 border border-white/10 rounded-2xl px-10 py-8 transition-all duration-300 ease-out"
+        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00CFE8] to-transparent z-20 pointer-events-none"
         style={{
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0) ${isHovered ? 'translateY(-8px)' : ''}`,
+          animation: 'scanLine 4s ease-in-out infinite',
+          boxShadow: '0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)',
+        }}
+      />
+      
+      {/* 3D Isometric Cube Container */}
+      <div 
+        className="relative"
+        style={{
+          transform: 'rotateX(-20deg) rotateY(-30deg)',
           transformStyle: 'preserve-3d',
-          borderColor: isHovered ? colors.borderHover : 'rgba(255, 255, 255, 0.1)',
-          boxShadow: isHovered 
-            ? `${colors.shadowHover}, inset 0 1px 0 rgba(255,255,255,0.1)` 
-            : 'inset 0 1px 0 rgba(255,255,255,0.05)',
         }}
       >
-        {/* Icon with colored glow */}
-        <div className={`relative p-4 rounded-2xl ${colors.bg}`}>
-          {/* Background glow behind icon */}
+        {/* Cube */}
+        <div 
+          className="relative w-32 h-32"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          {/* Front Face */}
           <div 
-            className="absolute inset-0 rounded-2xl blur-2xl transition-opacity duration-300"
+            className="absolute w-32 h-32 border-2 border-[#00CFE8]/60 bg-[#00CFE8]/5"
             style={{ 
-              background: isHovered ? colors.glowHover : colors.glow,
-              opacity: isHovered ? 0.8 : 0.5,
-              transform: 'translateZ(-10px) scale(1.2)',
+              transform: 'translateZ(64px)',
+              backdropFilter: 'blur(4px)',
             }}
           />
-          <Icon 
-            className={`relative z-10 w-12 h-12 ${colors.text} transition-transform duration-300`}
-            style={{ transform: isHovered ? 'scale(1.1) translateZ(20px)' : 'scale(1)' }}
+          {/* Back Face */}
+          <div 
+            className="absolute w-32 h-32 border border-[#00CFE8]/30 bg-[#00CFE8]/3"
+            style={{ transform: 'translateZ(-64px)' }}
           />
+          {/* Left Face */}
+          <div 
+            className="absolute w-32 h-32 border border-[#00CFE8]/40 bg-[#00CFE8]/4"
+            style={{ 
+              transform: 'rotateY(-90deg) translateZ(64px)',
+              backdropFilter: 'blur(2px)',
+            }}
+          />
+          {/* Right Face */}
+          <div 
+            className="absolute w-32 h-32 border-2 border-[#00CFE8]/50 bg-[#00CFE8]/5"
+            style={{ 
+              transform: 'rotateY(90deg) translateZ(64px)',
+              backdropFilter: 'blur(4px)',
+            }}
+          />
+          {/* Top Face */}
+          <div 
+            className="absolute w-32 h-32 border-2 border-[#00CFE8]/60 bg-[#00CFE8]/8"
+            style={{ 
+              transform: 'rotateX(90deg) translateZ(64px)',
+              backdropFilter: 'blur(4px)',
+            }}
+          />
+          {/* Bottom Face */}
+          <div 
+            className="absolute w-32 h-32 border border-[#00CFE8]/20 bg-[#00CFE8]/2"
+            style={{ transform: 'rotateX(-90deg) translateZ(64px)' }}
+          />
+          
+          {/* Grid Lines on Top Face */}
+          <div 
+            className="absolute w-32 h-32 pointer-events-none"
+            style={{ transform: 'rotateX(90deg) translateZ(64px)' }}
+          >
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={`h-${i}`}
+                className="absolute w-full h-px bg-[#00CFE8]/20"
+                style={{ top: `${(i + 1) * 20}%` }}
+              />
+            ))}
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={`v-${i}`}
+                className="absolute h-full w-px bg-[#00CFE8]/20"
+                style={{ left: `${(i + 1) * 20}%` }}
+              />
+            ))}
+          </div>
         </div>
         
-        {/* Number with bold Inter font */}
-        <span 
-          className="text-5xl font-black text-white leading-tight transition-all duration-300"
-          style={{ 
-            fontFamily: 'Inter, system-ui, sans-serif',
-            letterSpacing: '-0.02em',
-            textShadow: isHovered ? '0 4px 12px rgba(0, 217, 217, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.3)',
-            transform: 'translateZ(30px)',
-          }}
-        >
-          {targetNumber !== null ? count.toLocaleString() : displayText}{suffix}
-        </span>
-        
-        {/* Label */}
-        <span 
-          className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em]"
-          style={{ transform: 'translateZ(15px)' }}
-        >
-          {label}
-        </span>
-
-        {/* Subtle inner highlight for 3D depth */}
+        {/* X Axis */}
         <div 
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)',
+          className="absolute flex items-center"
+          style={{ 
+            transform: 'translateX(80px) translateY(40px) translateZ(64px)',
           }}
-        />
+        >
+          <div className="w-16 h-0.5 bg-gradient-to-r from-[#00CFE8] to-[#00CFE8]/30" />
+          <span className="ml-2 text-[10px] font-mono text-[#00CFE8] tracking-wider">X</span>
+        </div>
+        
+        {/* Y Axis */}
+        <div 
+          className="absolute flex flex-col items-center"
+          style={{ 
+            transform: 'translateX(-10px) translateY(-100px) translateZ(64px)',
+          }}
+        >
+          <span className="mb-2 text-[10px] font-mono text-[#00CFE8] tracking-wider">Y</span>
+          <div className="h-16 w-0.5 bg-gradient-to-b from-[#00CFE8]/30 to-[#00CFE8]" />
+        </div>
+        
+        {/* Z Axis */}
+        <div 
+          className="absolute flex items-center"
+          style={{ 
+            transform: 'translateX(-80px) translateY(60px) rotateY(-45deg)',
+          }}
+        >
+          <span className="mr-2 text-[10px] font-mono text-[#00CFE8] tracking-wider">Z</span>
+          <div className="w-12 h-0.5 bg-gradient-to-r from-[#00CFE8] to-[#00CFE8]/30" />
+        </div>
       </div>
+      
+      {/* Floating Measurement Points */}
+      <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full bg-[#00CFE8] animate-pulse" style={{ boxShadow: '0 0 10px rgba(0, 207, 232, 0.8)' }} />
+      <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 rounded-full bg-[#00CFE8]/70 animate-pulse" style={{ animationDelay: '0.5s' }} />
+      <div className="absolute bottom-1/3 right-1/4 w-2 h-2 rounded-full bg-[#00CFE8] animate-pulse" style={{ animationDelay: '1s', boxShadow: '0 0 10px rgba(0, 207, 232, 0.8)' }} />
     </div>
-  );
-};
-
-// Quick filter chip definitions
-const quickFilters = [
-  { id: 'budget', label: 'Budget', icon: DollarSign, description: 'Under $500' },
-  { id: 'beginner', label: 'Beginner', icon: Home, description: 'Easy to use' },
-  { id: 'multicolor', label: 'Multi-Color', icon: Palette, description: 'AMS/MMU' },
-  { id: 'large', label: 'Large Format', icon: Ruler, description: '300mm+' },
-  { id: 'resin', label: 'Resin', icon: FlaskConical, description: 'SLA/MSLA' },
-  { id: 'speed', label: 'High-Speed', icon: Zap, description: '300mm/s+' },
-];
-
-interface QuickFilterChipProps {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  description: string;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-const QuickFilterChip = ({ id, label, icon: Icon, description, isActive, onClick }: QuickFilterChipProps) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        h-12 px-5 
-        flex items-center gap-2.5
-        rounded-xl
-        border transition-all duration-200
-        cursor-pointer
-        ${isActive 
-          ? 'bg-primary/15 border-primary/50 text-primary font-semibold' 
-          : 'bg-white/5 border-white/15 text-white hover:bg-white/8 hover:border-primary/30 hover:text-primary hover:-translate-y-0.5 hover:shadow-lg'
-        }
-      `}
-      role="button"
-      aria-pressed={isActive}
-      title={description}
-    >
-      <Icon className="w-5 h-5" />
-      <span className="text-sm font-medium">{label}</span>
-    </button>
   );
 };
 
@@ -239,144 +162,139 @@ const PrintersHeroSection = ({
   };
 
   return (
-    <section className="relative overflow-x-clip border-b border-border">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background to-background" />
+    <>
+      {/* Inline keyframes for scan animation */}
+      <style>{`
+        @keyframes scanLine {
+          0%, 100% {
+            top: 15%;
+            opacity: 0.3;
+          }
+          50% {
+            top: 85%;
+            opacity: 1;
+          }
+        }
+      `}</style>
       
-      {/* Optional: Subtle geometric background element */}
-      <div 
-        className="absolute -top-24 -right-24 w-[400px] h-[400px] opacity-[0.06] pointer-events-none rotate-[15deg]"
-        style={{
-          background: "conic-gradient(from 0deg, hsl(var(--primary)), hsl(280 70% 60%), hsl(340 75% 55%), hsl(45 90% 55%), hsl(160 80% 45%), hsl(200 80% 50%), hsl(var(--primary)))",
-          borderRadius: "50%",
-        }}
-      />
-      
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-10 py-16 md:py-20 lg:py-24">
-        <div className="flex flex-col items-center text-center">
-          
-          {/* Headline */}
-          <h1 
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-bold tracking-tight leading-[1.1] mb-4 animate-fade-in"
-            style={{ letterSpacing: "-0.02em" }}
-          >
-            Find Your{" "}
-            <span className="text-primary">Perfect</span>{" "}
-            Printer
-          </h1>
-          
-          {/* Subheadline */}
-          <p 
-            className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl animate-fade-in"
-            style={{ animationDelay: "0.1s" }}
-          >
-            Compare specs, prices, and features in one place
-          </p>
-          
-          {/* Stat Blocks */}
-          <div className="flex flex-col sm:flex-row justify-center items-stretch gap-4 sm:gap-6 lg:gap-12 mb-12 w-full sm:w-auto">
-            <StatBlock 
-              icon={Printer} 
-              targetNumber={printerCount}
-              label="Printers" 
-              delay="0.2s"
-              colorVariant="cyan"
-            />
-            <StatBlock 
-              icon={Building2} 
-              targetNumber={brandCount}
-              suffix="+"
-              label="Brands" 
-              delay="0.3s"
-              colorVariant="purple"
-            />
-            <StatBlock 
-              icon={TrendingUp} 
-              targetNumber={null}
-              displayText="Real-Time"
-              label="Pricing" 
-              delay="0.4s"
-              colorVariant="green"
-            />
-          </div>
-          
-          {/* Search Bar */}
-          <form 
-            onSubmit={handleSearchSubmit}
-            className="w-full max-w-[700px] mb-8 animate-fade-in"
-            style={{ animationDelay: "0.5s" }}
-            role="search"
-          >
-            <div 
-              className={`relative transition-all duration-300 ${
-                isFocused ? "scale-[1.01]" : ""
-              }`}
-            >
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10" />
-              <input
-                type="text"
-                placeholder="Search by brand, model, or feature..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className={`w-full h-16 pl-14 pr-44 text-lg bg-white text-slate-800 placeholder:text-slate-400 rounded-2xl border-2 transition-all duration-300 outline-none ${
-                  isFocused 
-                    ? "border-primary shadow-[0_0_0_4px_rgba(0,217,217,0.1)]" 
-                    : "border-transparent"
-                }`}
-                aria-label="Search printers by brand, model, or feature"
-              />
+      <section className="relative h-[60vh] min-h-[500px] max-h-[700px] overflow-hidden border-b border-white/10">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00CFE8]/5 via-transparent to-[#FF0055]/3" />
+        
+        <div className="relative z-10 h-full max-w-[1600px] mx-auto px-6 lg:px-12 flex items-center">
+          {/* Left Side - Text Content */}
+          <div className="flex-1 flex flex-col justify-center pr-8 lg:pr-16">
+            {/* Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-light uppercase tracking-[0.2em] leading-tight mb-8">
+              <span className="block text-foreground">Measure Material.</span>
+              <span className="block">
+                <span className="text-foreground">Master the </span>
+                <span className="text-[#00CFE8] italic font-medium">Print.</span>
+              </span>
+            </h1>
+            
+            {/* Stats Row */}
+            <div className="flex items-center gap-8 mb-8">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-[#00CFE8]">{printerCount}</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Printers</span>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-[#00CFE8]">{brandCount}+</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Brands</span>
+              </div>
+            </div>
+            
+            {/* Action Row - Button + Search */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-2xl">
+              {/* Material Wizard Button */}
               <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-40 bg-gradient-to-r from-primary to-[hsl(180_70%_40%)] hover:from-[hsl(180_100%_47%)] hover:to-[hsl(180_70%_45%)] text-slate-900 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_4px_12px_rgba(0,217,217,0.3)]"
-                aria-label="Submit search"
+                onClick={() => navigate('/wizard')}
+                className="flex items-center justify-center gap-2.5 h-14 px-8 rounded-xl font-semibold text-sm transition-all duration-300 btn-breathing"
+                style={{
+                  background: 'linear-gradient(135deg, #00CFE8 0%, #0077B6 100%)',
+                  color: '#0A0C10',
+                  boxShadow: '0 4px 20px rgba(0, 207, 232, 0.3)',
+                }}
               >
-                <Search className="w-4 h-4" />
-                Search
+                <Wand2 className="w-5 h-5" />
+                Material Wizard
               </button>
-            </div>
-          </form>
-
-          {/* Quick Filter Chips */}
-          <div 
-            className="w-full max-w-[900px] mb-10 animate-fade-in"
-            style={{ animationDelay: "0.55s" }}
-          >
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Quick Filters
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {quickFilters.map((filter) => (
-                <QuickFilterChip
-                  key={filter.id}
-                  {...filter}
-                  isActive={activeQuickFilters.includes(filter.id)}
-                  onClick={() => onQuickFilterToggle(filter.id)}
-                />
-              ))}
+              
+              {/* Search Bar */}
+              <form 
+                onSubmit={handleSearchSubmit}
+                className="flex-1 min-w-0"
+              >
+                <div 
+                  className={`relative transition-all duration-300 ${isFocused ? 'scale-[1.02]' : ''}`}
+                >
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                  <input
+                    type="text"
+                    placeholder="Search printers..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    className={`w-full h-14 pl-12 pr-4 text-sm bg-white/5 text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                      isFocused 
+                        ? 'border-[#00CFE8] shadow-[0_0_0_3px_rgba(0,207,232,0.15)]' 
+                        : 'border-white/10 hover:border-white/20'
+                    }`}
+                  />
+                </div>
+              </form>
             </div>
           </div>
           
-          {/* Quiz CTA */}
-          <div 
-            className="flex flex-col items-center gap-3 animate-fade-in"
-            style={{ animationDelay: "0.6s" }}
-          >
-            <p className="text-muted-foreground">Not sure what you need?</p>
-            <Button 
-              variant="outline"
-              onClick={onOpenQuiz}
-              className="h-[52px] px-7 bg-transparent border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base rounded-xl group"
+          {/* Right Side - Glassmorphic 3D Visual */}
+          <div className="hidden lg:flex flex-1 items-center justify-center">
+            <div 
+              className="relative w-[400px] h-[350px] rounded-3xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+              }}
             >
-              <Sparkles className="mr-2 h-5 w-5" />
-              Take Our Printer Quiz
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-            </Button>
+              {/* Corner Accents */}
+              <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-[#00CFE8]/50" />
+              <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-[#00CFE8]/50" />
+              <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-[#00CFE8]/50" />
+              <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-[#00CFE8]/50" />
+              
+              {/* Header Label */}
+              <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#00CFE8] animate-pulse" />
+                <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#00CFE8]">
+                  Calibration
+                </span>
+              </div>
+              
+              {/* 3D Cube */}
+              <CalibrationCube />
+              
+              {/* Footer Stats */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6">
+                <div className="text-center">
+                  <span className="block text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Precision</span>
+                  <span className="block text-sm font-mono text-[#00CFE8]">±0.01mm</span>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="text-center">
+                  <span className="block text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Status</span>
+                  <span className="block text-sm font-mono text-emerald-400">Active</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 
