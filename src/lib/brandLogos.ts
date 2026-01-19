@@ -35,6 +35,7 @@ export const brandLogos: Record<string, string> = {
   "VOXELPLA": "/images/brands/voxelpla.webp",
   "3DFuel": "/images/brands/3dfuel.webp",
   "3D-Fuel": "/images/brands/3dfuel.webp",
+  "3D Fuel": "/images/brands/3dfuel.webp",
   "Eryone": "/images/brands/eryone.webp",
   "ERYONE": "/images/brands/eryone.webp",
   "Inland": "/images/brands/inland.webp",
