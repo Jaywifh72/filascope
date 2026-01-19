@@ -177,7 +177,7 @@ const PrintersHeroSection = ({
         }
       `}</style>
       
-      <section className="relative h-[60vh] min-h-[500px] max-h-[700px] overflow-hidden border-b border-white/10">
+      <section className="relative py-12 overflow-hidden border-b border-white/10">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#00CFE8]/5 via-transparent to-[#FF0055]/3" />
         
