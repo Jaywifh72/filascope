@@ -1,4 +1,18 @@
 import React from 'react';
+import { 
+  Shield, 
+  Crosshair, 
+  Palette, 
+  Zap, 
+  Flame, 
+  Wifi, 
+  ScanLine, 
+  Bot, 
+  BatteryCharging, 
+  VolumeX, 
+  Camera,
+  type LucideIcon
+} from 'lucide-react';
 
 interface AdvantageCardsSectionProps {
   printer: {
@@ -19,102 +33,102 @@ interface AdvantageCardsSectionProps {
 
 interface FeatureCardData {
   key: string;
-  emoji: string;
+  Icon: LucideIcon;
   name: string;
   benefit: string;
   priority: number;
 }
 
 const AdvantageCardsSection: React.FC<AdvantageCardsSectionProps> = ({ printer }) => {
-  // Define all feature cards with their benefits
+  // Define all feature cards with their benefits - Technical style
   const allFeatures: (FeatureCardData & { show: boolean })[] = [
     {
       key: 'enclosed',
       priority: 1,
       show: !!printer.has_enclosure,
-      emoji: '🏠',
+      Icon: Shield,
       name: 'ENCLOSED',
-      benefit: 'Safer for home use & smells contained'
+      benefit: 'FUME_CONTAINMENT: ACTIVE // SAFETY: ENHANCED'
     },
     {
       key: 'autoLeveling',
       priority: 2,
       show: !!printer.auto_bed_leveling,
-      emoji: '🎯',
-      name: 'AUTO-LEVEL',
-      benefit: 'Perfect first layer every time'
+      Icon: Crosshair,
+      name: 'AUTO_LEVEL',
+      benefit: 'Z_OFFSET: AUTO // MESH_BED: ENABLED'
     },
     {
       key: 'multiColor',
       priority: 3,
       show: !!printer.multi_material_supported,
-      emoji: '🎨',
-      name: 'MULTI-COLOR',
-      benefit: `${printer.multi_material_max_spools || 4} colors • no manual swaps`
+      Icon: Palette,
+      name: 'MULTI_COLOR',
+      benefit: `SPOOL_COUNT: ${printer.multi_material_max_spools || 4} // SWAP: AUTO`
     },
     {
       key: 'inputShaping',
       priority: 4,
       show: !!printer.input_shaping_supported,
-      emoji: '⚡',
-      name: 'INPUT SHAPING',
-      benefit: 'Eliminates ghosting at high speeds'
+      Icon: Zap,
+      name: 'INPUT_SHAPING',
+      benefit: 'RESONANCE_COMP: ACTIVE // GHOSTING: NULL'
     },
     {
       key: 'heatedBed',
       priority: 5,
       show: !!printer.bed_heated,
-      emoji: '🔥',
-      name: 'HEATED BED',
-      benefit: 'Print ABS & engineering materials'
+      Icon: Flame,
+      name: 'HEATED_BED',
+      benefit: 'MATERIALS: ABS_ASA_PA // ADHESION: OPTIMAL'
     },
     {
       key: 'wifi',
       priority: 6,
       show: !!printer.has_wifi,
-      emoji: '📱',
-      name: 'WI-FI',
-      benefit: 'Print from anywhere in your home'
+      Icon: Wifi,
+      name: 'WIRELESS',
+      benefit: 'PROTOCOL: 802.11 // REMOTE_ACCESS: ENABLED'
     },
     {
       key: 'filamentSensor',
       priority: 7,
       show: !!printer.filament_runout_detection,
-      emoji: '🔍',
-      name: 'FILAMENT SENSOR',
-      benefit: 'Never ruin a print again'
+      Icon: ScanLine,
+      name: 'RUNOUT_SENSOR',
+      benefit: 'DETECTION: ACTIVE // AUTO_PAUSE: ENABLED'
     },
     {
       key: 'aiDetection',
       priority: 8,
       show: !!printer.ai_spaghetti_detection,
-      emoji: '🤖',
-      name: 'AI DETECTION',
-      benefit: 'Automatic failure detection'
+      Icon: Bot,
+      name: 'AI_DETECTION',
+      benefit: 'FAILURE_SCAN: ACTIVE // MODE: AUTONOMOUS'
     },
     {
       key: 'powerResume',
       priority: 9,
       show: !!printer.power_loss_recovery,
-      emoji: '🔋',
-      name: 'POWER RESUME',
-      benefit: 'Continues after power outage'
+      Icon: BatteryCharging,
+      name: 'POWER_RESUME',
+      benefit: 'STATE_SAVE: ACTIVE // RECOVERY: AUTO'
     },
     {
       key: 'quiet',
       priority: 10,
       show: (printer.noise_level_printing_db ?? 100) <= 55,
-      emoji: '🔇',
-      name: 'QUIET',
-      benefit: 'Office-friendly noise levels'
+      Icon: VolumeX,
+      name: 'SILENT_MODE',
+      benefit: 'NOISE_LEVEL: LOW // ENV: OFFICE_SAFE'
     },
     {
       key: 'remoteMonitoring',
       priority: 11,
       show: !!printer.remote_monitoring_supported,
-      emoji: '📷',
-      name: 'CAMERA',
-      benefit: 'Monitor prints remotely'
+      Icon: Camera,
+      name: 'MONITORING',
+      benefit: 'STREAM: ACTIVE // REMOTE_VIEW: ENABLED'
     }
   ];
 
@@ -129,11 +143,11 @@ const AdvantageCardsSection: React.FC<AdvantageCardsSectionProps> = ({ printer }
 
   return (
     <section 
-      className="max-w-[1400px] mx-auto px-10 py-10 md:px-10 md:py-10"
-      aria-label="Key printer features"
+      className="max-w-[1400px] mx-auto px-5 md:px-10 py-8 md:py-10"
+      aria-label="System capabilities"
     >
-      <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider text-center mb-6">
-        Key Features
+      <h3 className="font-mono text-xs text-primary uppercase tracking-[0.2em] text-center mb-6">
+        {">> "}SYSTEM_CAPABILITIES
       </h3>
       
       <div 
@@ -147,31 +161,46 @@ const AdvantageCardsSection: React.FC<AdvantageCardsSectionProps> = ({ printer }
             : 'grid-cols-1'
         }`}
       >
-        {cardsToDisplay.map((card) => (
-          <div
-            key={card.key}
-            className="bg-white/5 border border-white/10 rounded-[10px] p-4 h-[140px] md:h-[140px] min-h-[120px]
-                       flex flex-col items-center justify-center text-center gap-2.5
-                       transition-all duration-200 cursor-default
-                       hover:bg-white/[0.08] hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-lg"
-            aria-label={`${card.name}: ${card.benefit}`}
-          >
-            {/* Emoji Icon */}
-            <span className="text-[32px] leading-none" aria-hidden="true">
-              {card.emoji}
-            </span>
-            
-            {/* Feature Name */}
-            <span className="text-xs font-bold text-primary uppercase tracking-wide">
-              {card.name}
-            </span>
-            
-            {/* Benefit Text */}
-            <span className="text-[13px] font-medium text-muted-foreground leading-snug line-clamp-2">
-              {card.benefit}
-            </span>
-          </div>
-        ))}
+        {cardsToDisplay.map((card) => {
+          const IconComponent = card.Icon;
+          return (
+            <div
+              key={card.key}
+              className="relative bg-[#0A0C10] border border-primary/10 p-4 h-[140px] md:h-[150px]
+                         flex flex-col items-center justify-center text-center gap-2.5
+                         transition-all duration-200 cursor-default
+                         hover:border-primary/30 hover:bg-primary/[0.02]"
+              aria-label={`${card.name}: ${card.benefit}`}
+            >
+              {/* Corner brackets - smaller for compact cards */}
+              <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-primary/30" />
+              <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-primary/30" />
+              <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-primary/30" />
+              <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-primary/30" />
+              
+              {/* Lucide Icon */}
+              <IconComponent className="w-6 h-6 text-primary" strokeWidth={1.5} />
+              
+              {/* Feature Name */}
+              <span className="font-mono text-[11px] font-bold text-primary uppercase tracking-wider">
+                {">> "}{card.name}
+              </span>
+              
+              {/* Benefit Text - Technical */}
+              <span className="font-mono text-[10px] text-muted-foreground leading-snug tracking-wide">
+                {card.benefit}
+              </span>
+              
+              {/* Status Indicator */}
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="font-mono text-[9px] text-green-400 uppercase tracking-wider">
+                  ACTIVE
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

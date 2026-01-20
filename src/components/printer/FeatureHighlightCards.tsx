@@ -1,4 +1,3 @@
-import { Star, Award, Lightbulb } from 'lucide-react';
 import { generateFeatureCards, FeatureCardData } from '@/lib/printerRatingGenerator';
 
 interface FeatureHighlightCardsProps {
@@ -16,28 +15,38 @@ interface FeatureHighlightCardsProps {
   };
 }
 
-// Visual rating component with emojis
-const VisualRating = ({ rating, emoji }: { rating: number; emoji: string }) => {
+// Terminal-style progress bar visualizer
+const ProgressBarRating = ({ rating }: { rating: number }) => {
+  const filledBlocks = rating;
+  const emptyBlocks = 5 - rating;
+  
   return (
-    <div 
-      className="flex justify-center items-center gap-1 text-[28px] leading-none"
-      aria-label={`${rating} out of 5 stars`}
-    >
-      {Array.from({ length: 5 }).map((_, index) => (
-        <span 
-          key={index} 
-          className={index < rating ? 'opacity-100' : 'opacity-20'}
-          aria-hidden="true"
-        >
-          {emoji}
-        </span>
-      ))}
+    <div className="flex items-center gap-3 font-mono">
+      <div className="flex items-center gap-0.5">
+        {/* Filled blocks */}
+        {Array.from({ length: filledBlocks }).map((_, i) => (
+          <div 
+            key={`filled-${i}`}
+            className="w-5 h-3 bg-primary"
+          />
+        ))}
+        {/* Empty blocks */}
+        {Array.from({ length: emptyBlocks }).map((_, i) => (
+          <div 
+            key={`empty-${i}`}
+            className="w-5 h-3 bg-white/10"
+          />
+        ))}
+      </div>
+      <span className="text-xs text-muted-foreground">
+        LEVEL: {rating}/5
+      </span>
     </div>
   );
 };
 
-// Comparison badge component
-const ComparisonBadge = ({ 
+// Terminal status badge component
+const StatusBadge = ({ 
   text, 
   variant 
 }: { 
@@ -45,56 +54,54 @@ const ComparisonBadge = ({
   variant: 'green' | 'gold' | 'blue' 
 }) => {
   const variantStyles = {
-    green: 'bg-green-500/15 border-green-500/30 text-green-500',
-    gold: 'bg-amber-500/15 border-amber-500/30 text-amber-500',
-    blue: 'bg-blue-500/15 border-blue-500/30 text-blue-500'
-  };
-
-  const icons = {
-    green: <Star className="w-4 h-4" />,
-    gold: <Award className="w-4 h-4" />,
-    blue: <Lightbulb className="w-4 h-4" />
+    green: 'border-green-500/40 text-green-400',
+    gold: 'border-amber-500/40 text-amber-400',
+    blue: 'border-primary/40 text-primary'
   };
 
   return (
     <div 
-      className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border text-[13px] font-semibold mt-auto ${variantStyles[variant]}`}
-      role="status"
+      className={`font-mono text-[11px] uppercase tracking-wider px-3 py-1.5 border bg-[#0A0C10] mt-auto ${variantStyles[variant]}`}
     >
-      {icons[variant]}
-      <span>{text}</span>
+      [{text}]
     </div>
   );
 };
 
-// Individual feature card
+// Individual feature card with terminal styling
 const FeatureCard = ({ data }: { data: FeatureCardData }) => {
   return (
     <div 
-      className="bg-primary/[0.08] border-2 border-primary/30 rounded-2xl p-7 min-h-[280px] flex flex-col items-center text-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,217,217,0.2)] hover:border-primary/50 hover:bg-primary/[0.12] md:min-h-[280px] min-h-[260px] md:p-7 p-6"
+      className="relative bg-[#0A0C10] border border-primary/20 p-6 min-h-[280px] flex flex-col items-center text-center gap-4 transition-all duration-300 hover:border-primary/40 hover:bg-primary/[0.02] group"
       role="article"
-      aria-label={`${data.category} feature: ${data.primaryValue}`}
+      aria-label={`${data.category} analysis: ${data.primaryValue}`}
     >
+      {/* Corner brackets */}
+      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-primary/50" />
+      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-primary/50" />
+      <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-primary/50" />
+      <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-primary/50" />
+      
       {/* Category Header */}
-      <div className="text-xs font-bold text-primary uppercase tracking-[0.08em] leading-none self-stretch">
-        {data.category}
+      <div className="font-mono text-[11px] text-primary uppercase tracking-[0.15em] self-stretch">
+        {">> "}{data.categoryKey}
       </div>
       
-      {/* Visual Rating */}
-      <VisualRating rating={data.rating} emoji={data.emoji} />
+      {/* Progress Bar Rating */}
+      <ProgressBarRating rating={data.rating} />
       
       {/* Primary Value */}
-      <div className="text-[32px] md:text-[32px] text-[28px] font-bold text-white leading-tight">
+      <div className="font-mono text-2xl md:text-3xl font-bold text-white leading-tight">
         {data.primaryValue}
       </div>
       
-      {/* Context Text */}
-      <p className="text-[15px] font-medium text-slate-300 leading-relaxed text-center max-w-[90%] m-0">
+      {/* Context Text - Technical style */}
+      <p className="font-mono text-[11px] text-muted-foreground leading-relaxed text-center tracking-wide">
         {data.contextText}
       </p>
       
-      {/* Comparison Badge */}
-      <ComparisonBadge text={data.badgeText} variant={data.badgeVariant} />
+      {/* Status Badge */}
+      <StatusBadge text={data.badgeText} variant={data.badgeVariant} />
     </div>
   );
 };
@@ -119,14 +126,14 @@ export function FeatureHighlightCards({ printer }: FeatureHighlightCardsProps) {
   const cards = generateFeatureCards(ratingData);
 
   return (
-    <section className="max-w-[1400px] mx-auto px-10 py-16 md:px-10 md:py-16 px-5 py-10">
+    <section className="max-w-[1400px] mx-auto px-5 md:px-10 py-10 md:py-16">
       {/* Section Header */}
-      <h2 className="text-base font-bold text-primary uppercase tracking-[0.08em] text-center mb-10">
-        Standout Features
+      <h2 className="font-mono text-xs text-primary uppercase tracking-[0.2em] text-center mb-8">
+        {">> "}PERFORMANCE_ANALYSIS
       </h2>
       
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
         {cards.map((card, index) => (
           <FeatureCard key={index} data={card} />
         ))}

@@ -13,8 +13,8 @@ export interface PrinterRatingData {
 
 export interface FeatureCardData {
   category: string;
+  categoryKey: string; // For terminal-style formatting
   rating: number;
-  emoji: string;
   primaryValue: string;
   contextText: string;
   badgeText: string;
@@ -60,73 +60,73 @@ export function getTempRating(maxTemp: number | null | undefined): number {
   return 1;
 }
 
-// Context text generators
+// Context text generators - Technical style
 export function getSpeedContext(speed: number | null | undefined, rating: number): string {
-  if (rating === 5) return "2x faster than standard FDM printers";
-  if (rating === 4) return "Significantly faster than most printers";
-  if (rating === 3) return "Good balance of speed and quality";
-  if (rating === 2) return "Reliable printing at moderate speeds";
-  return "Focused on quality over speed";
+  if (rating === 5) return "VELOCITY: 2X_STANDARD // CLASS: HIGH_SPEED";
+  if (rating === 4) return "VELOCITY: ABOVE_AVERAGE // THROUGHPUT: ENHANCED";
+  if (rating === 3) return "MODE: BALANCED // SPEED_VS_QUALITY: OPTIMIZED";
+  if (rating === 2) return "MODE: RELIABLE // PRINT_SPEED: MODERATE";
+  return "PRIORITY: QUALITY // SPEED_MODE: CONSERVATIVE";
 }
 
 export function getVolumeContext(volume: { x: number | null; y: number | null; z: number | null }, rating: number): string {
-  if (rating === 5) return "Print full-size cosplay helmets";
-  if (rating === 4) return "Large enough for most projects";
-  if (rating === 3) return "Generous build space for everyday prints";
-  if (rating === 2) return "Compact footprint, adequate volume";
-  return "Perfect for small detailed prints";
+  if (rating === 5) return "CAPACITY: COSPLAY_HELMETS // SCALE: FULL_SIZE";
+  if (rating === 4) return "CAPACITY: LARGE // CLEARANCE: MOST_PROJECTS";
+  if (rating === 3) return "CAPACITY: STANDARD // USE_CASE: EVERYDAY";
+  if (rating === 2) return "FOOTPRINT: COMPACT // VOLUME: ADEQUATE";
+  return "FOOTPRINT: MINIMAL // DETAIL: OPTIMIZED";
 }
 
 export function getMultiColorContext(colorCount: number | null | undefined, hasAMS?: boolean | null): string {
-  if (hasAMS) return "No manual swap • AMS included";
-  if (colorCount && colorCount >= 4) return "Automatic material switching";
-  if (colorCount && colorCount >= 2) return "Multi-color prints possible";
-  return "Single extruder setup";
+  if (hasAMS) return "AMS_INCLUDED: TRUE // SWAP_MODE: AUTOMATIC";
+  if (colorCount && colorCount >= 4) return "MULTI_SPOOL: ACTIVE // SWAP_MODE: AUTO";
+  if (colorCount && colorCount >= 2) return "DUAL_EXTRUSION: ENABLED";
+  return "EXTRUDER_COUNT: 1 // MODE: SINGLE_MATERIAL";
 }
 
 export function getTempContext(maxTemp: number | null | undefined, rating: number): string {
-  if (rating === 5) return "Print engineering-grade materials";
-  if (rating === 4) return "Handles high-performance filaments";
-  if (rating === 3) return "Works with most standard materials";
-  return "Optimized for PLA and PETG";
+  if (rating === 5) return "MATERIALS: ENGINEERING_GRADE // ACCESS: FULL";
+  if (rating === 4) return "MATERIALS: HIGH_PERFORMANCE // ACCESS: EXTENDED";
+  if (rating === 3) return "MATERIALS: STANDARD // COMPATIBILITY: BROAD";
+  return "MATERIALS: PLA_PETG // COMPATIBILITY: BASIC";
 }
 
 export function getEnclosureContext(heated?: boolean | null): string {
-  if (heated) return "Heated enclosure for warping-free prints";
-  return "Safer for home use & contains fumes";
+  if (heated) return "THERMAL_CONTROL: ACTIVE // WARP_PREVENTION: ENABLED";
+  return "FUME_CONTAINMENT: ACTIVE // SAFETY: ENHANCED";
 }
 
-// Badge text generators
+// Badge text generators - Terminal status style
 export function getSpeedBadge(rating: number): { badgeText: string; badgeVariant: 'green' | 'gold' | 'blue' } {
-  if (rating === 5) return { badgeText: "Top 5% of printers", badgeVariant: 'green' };
-  if (rating === 4) return { badgeText: "Excellent Speed", badgeVariant: 'green' };
-  if (rating === 3) return { badgeText: "Competitive Speed", badgeVariant: 'blue' };
-  return { badgeText: "Quality-Focused", badgeVariant: 'blue' };
+  if (rating === 5) return { badgeText: "STATUS: TOP_5_PERCENTILE", badgeVariant: 'green' };
+  if (rating === 4) return { badgeText: "STATUS: EXCELLENT", badgeVariant: 'green' };
+  if (rating === 3) return { badgeText: "STATUS: COMPETITIVE", badgeVariant: 'blue' };
+  return { badgeText: "STATUS: QUALITY_FOCUS", badgeVariant: 'blue' };
 }
 
 export function getVolumeBadge(rating: number): { badgeText: string; badgeVariant: 'green' | 'gold' | 'blue' } {
-  if (rating === 5) return { badgeText: "Large Format Leader", badgeVariant: 'gold' };
-  if (rating === 4) return { badgeText: "Above Average Size", badgeVariant: 'green' };
-  if (rating === 3) return { badgeText: "Standard Build Volume", badgeVariant: 'blue' };
-  return { badgeText: "Compact Design", badgeVariant: 'blue' };
+  if (rating === 5) return { badgeText: "DESIGNATION: LARGE_FORMAT", badgeVariant: 'gold' };
+  if (rating === 4) return { badgeText: "STATUS: ABOVE_AVERAGE", badgeVariant: 'green' };
+  if (rating === 3) return { badgeText: "STATUS: STANDARD", badgeVariant: 'blue' };
+  return { badgeText: "DESIGNATION: COMPACT", badgeVariant: 'blue' };
 }
 
 export function getMultiColorBadge(colorCount: number | null | undefined, hasAMS?: boolean | null): { badgeText: string; badgeVariant: 'green' | 'gold' | 'blue' } {
-  if (hasAMS) return { badgeText: "Beginner-Friendly", badgeVariant: 'blue' };
-  if (colorCount && colorCount >= 4) return { badgeText: "Multi-Color Ready", badgeVariant: 'green' };
-  if (colorCount && colorCount >= 2) return { badgeText: "Dual-Color Capable", badgeVariant: 'blue' };
-  return { badgeText: "Single Material", badgeVariant: 'blue' };
+  if (hasAMS) return { badgeText: "STATUS: BEGINNER_READY", badgeVariant: 'blue' };
+  if (colorCount && colorCount >= 4) return { badgeText: "STATUS: MULTI_COLOR", badgeVariant: 'green' };
+  if (colorCount && colorCount >= 2) return { badgeText: "STATUS: DUAL_COLOR", badgeVariant: 'blue' };
+  return { badgeText: "STATUS: SINGLE_MATERIAL", badgeVariant: 'blue' };
 }
 
 export function getTempBadge(rating: number): { badgeText: string; badgeVariant: 'green' | 'gold' | 'blue' } {
-  if (rating === 5) return { badgeText: "Advanced Materials Ready", badgeVariant: 'green' };
-  if (rating === 4) return { badgeText: "High-Temp Capable", badgeVariant: 'green' };
-  return { badgeText: "Standard Materials", badgeVariant: 'blue' };
+  if (rating === 5) return { badgeText: "STATUS: ADVANCED_MATERIALS", badgeVariant: 'green' };
+  if (rating === 4) return { badgeText: "STATUS: HIGH_TEMP", badgeVariant: 'green' };
+  return { badgeText: "STATUS: STANDARD_MATERIALS", badgeVariant: 'blue' };
 }
 
 export function getEnclosureBadge(heated?: boolean | null): { badgeText: string; badgeVariant: 'green' | 'gold' | 'blue' } {
-  if (heated) return { badgeText: "Professional Grade", badgeVariant: 'gold' };
-  return { badgeText: "Home-Friendly", badgeVariant: 'green' };
+  if (heated) return { badgeText: "GRADE: PROFESSIONAL", badgeVariant: 'gold' };
+  return { badgeText: "STATUS: HOME_SAFE", badgeVariant: 'green' };
 }
 
 // Generate all three feature cards for a printer
@@ -137,8 +137,8 @@ export function generateFeatureCards(printer: PrinterRatingData): FeatureCardDat
   const speedRating = getSpeedRating(printer.maxSpeed);
   cards.push({
     category: "PRINT SPEED",
+    categoryKey: "PRINT_SPEED",
     rating: speedRating,
-    emoji: "⚡",
     primaryValue: printer.maxSpeed ? `${printer.maxSpeed} mm/s` : "N/A",
     contextText: getSpeedContext(printer.maxSpeed, speedRating),
     ...getSpeedBadge(speedRating)
@@ -150,8 +150,8 @@ export function generateFeatureCards(printer: PrinterRatingData): FeatureCardDat
   const hasValidVolume = volume.x && volume.y && volume.z;
   cards.push({
     category: "BUILD VOLUME",
+    categoryKey: "BUILD_VOLUME",
     rating: volumeRating,
-    emoji: "📦",
     primaryValue: hasValidVolume 
       ? `${volume.x}×${volume.y}×${volume.z}mm`
       : "N/A",
@@ -164,8 +164,8 @@ export function generateFeatureCards(printer: PrinterRatingData): FeatureCardDat
     const colorRating = getColorRating(printer.multiMaterialMaxSpools, printer.hasAMS);
     cards.push({
       category: "MULTI-COLOR",
+      categoryKey: "MULTI_COLOR",
       rating: colorRating,
-      emoji: "🎨",
       primaryValue: `${printer.multiMaterialMaxSpools} Colors`,
       contextText: getMultiColorContext(printer.multiMaterialMaxSpools, printer.hasAMS),
       ...getMultiColorBadge(printer.multiMaterialMaxSpools, printer.hasAMS)
@@ -174,8 +174,8 @@ export function generateFeatureCards(printer: PrinterRatingData): FeatureCardDat
     const tempRating = getTempRating(printer.maxNozzleTemp);
     cards.push({
       category: "TEMPERATURE RANGE",
+      categoryKey: "TEMP_RANGE",
       rating: tempRating,
-      emoji: "🔥",
       primaryValue: `${printer.maxNozzleTemp}°C`,
       contextText: getTempContext(printer.maxNozzleTemp, tempRating),
       ...getTempBadge(tempRating)
@@ -183,8 +183,8 @@ export function generateFeatureCards(printer: PrinterRatingData): FeatureCardDat
   } else if (printer.hasEnclosure) {
     cards.push({
       category: "SAFETY & DESIGN",
+      categoryKey: "SAFETY_DESIGN",
       rating: printer.enclosureHeated ? 5 : 4,
-      emoji: "🛡️",
       primaryValue: printer.enclosureHeated ? "Heated Enclosure" : "Enclosed",
       contextText: getEnclosureContext(printer.enclosureHeated),
       ...getEnclosureBadge(printer.enclosureHeated)
@@ -194,8 +194,8 @@ export function generateFeatureCards(printer: PrinterRatingData): FeatureCardDat
     const tempRating = getTempRating(printer.maxNozzleTemp);
     cards.push({
       category: "TEMPERATURE RANGE",
+      categoryKey: "TEMP_RANGE",
       rating: tempRating,
-      emoji: "🔥",
       primaryValue: printer.maxNozzleTemp ? `${printer.maxNozzleTemp}°C` : "Standard",
       contextText: getTempContext(printer.maxNozzleTemp, tempRating),
       ...getTempBadge(tempRating)
