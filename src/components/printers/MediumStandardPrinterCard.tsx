@@ -136,8 +136,19 @@ export default function MediumStandardPrinterCard({
             )}
           </div>
 
+          {/* Brand Logo - Above Image */}
+          {getBrandLogo(printer.brand?.brand || null) && (
+            <div className="flex justify-center mt-6 mb-2">
+              <img 
+                src={getBrandLogo(printer.brand?.brand || null)!} 
+                alt={`${printer.brand?.brand} logo`}
+                className="h-6 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300"
+              />
+            </div>
+          )}
+
           {/* Printer Image */}
-          <div className="relative aspect-square mb-4 mt-6">
+          <div className={`relative aspect-square mb-4 ${!getBrandLogo(printer.brand?.brand || null) ? 'mt-6' : ''}`}>
             {productImage ? (
               <img 
                 src={productImage} 
@@ -204,16 +215,6 @@ export default function MediumStandardPrinterCard({
             Deploy Unit
           </button>
 
-          {/* Brand Logo - Bottom Right, Subtle */}
-          {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-30 transition-opacity duration-300">
-              <img 
-                src={getBrandLogo(printer.brand?.brand || null)!} 
-                alt={`${printer.brand?.brand} logo`}
-                className="h-auto max-w-[32px] object-contain"
-              />
-            </div>
-          )}
         </div>
       </Link>
     </article>
