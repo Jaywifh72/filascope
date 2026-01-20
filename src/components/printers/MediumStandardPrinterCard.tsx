@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { Heart, ExternalLink, Printer as PrinterIcon, RefreshCw, ImageIcon, Crosshair } from "lucide-react";
+import { Heart, ExternalLink, Printer as PrinterIcon, RefreshCw, ImageIcon, Crosshair, CheckCircle2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
+import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
@@ -38,7 +39,16 @@ export default function MediumStandardPrinterCard({
   const productImage = getPrinterImage(printer);
   const badges = getPrinterBadges(printer, 2);
 
-  const price = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd;
+  // Fetch live price from store (uses caching to avoid excessive API calls)
+  const fallbackPrice = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd;
+  const { 
+    currentPrice: livePrice, 
+    isLoading: priceLoading, 
+    isLivePrice 
+  } = usePrinterCurrentPrice(printer.official_store_url, fallbackPrice);
+
+  // Use live price if available, otherwise fall back to database price
+  const price = isLivePrice && livePrice !== null ? livePrice : fallbackPrice;
 
   return (
     <article 
@@ -138,9 +148,12 @@ export default function MediumStandardPrinterCard({
             <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
               Unit Cost:{" "}
             </span>
-            {price ? (
-              <span className="font-mono text-lg font-bold text-amber-400">
+            {priceLoading ? (
+              <span className="font-mono text-sm text-muted-foreground animate-pulse">Loading...</span>
+            ) : price ? (
+              <span className="font-mono text-lg font-bold text-amber-400 inline-flex items-center gap-1.5">
                 {formatPrice(price)}
+                {isLivePrice && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
               </span>
             ) : (
               <span className="font-mono text-sm text-muted-foreground">TBD</span>
