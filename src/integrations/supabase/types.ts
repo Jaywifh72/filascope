@@ -2627,6 +2627,66 @@ export type Database = {
           },
         ]
       }
+      printer_inventory: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          estimated_ship_days: number | null
+          id: string
+          last_checked: string | null
+          price: number | null
+          printer_id: string
+          product_url: string | null
+          retailer_id: string
+          stock_quantity: number | null
+          stock_status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          estimated_ship_days?: number | null
+          id?: string
+          last_checked?: string | null
+          price?: number | null
+          printer_id: string
+          product_url?: string | null
+          retailer_id: string
+          stock_quantity?: number | null
+          stock_status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          estimated_ship_days?: number | null
+          id?: string
+          last_checked?: string | null
+          price?: number | null
+          printer_id?: string
+          product_url?: string | null
+          retailer_id?: string
+          stock_quantity?: number | null
+          stock_status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_inventory_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_inventory_retailer_id_fkey"
+            columns: ["retailer_id"]
+            isOneToOne: false
+            referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printer_price_history: {
         Row: {
           currency: string

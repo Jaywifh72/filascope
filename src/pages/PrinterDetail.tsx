@@ -37,6 +37,7 @@ import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSect
 import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/SocialProofSidebar";
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
+import { usePrinterInventory, getAggregatedStockStatus } from "@/hooks/usePrinterInventory";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -120,6 +121,8 @@ const PrinterDetail = () => {
     },
   });
 
+  // Fetch real inventory data
+  const { data: inventoryData } = usePrinterInventory(printer?.id);
 
   // Extract brand name for accessory query
   const printerBrand = typeof printer?.brand === 'object' && printer?.brand !== null && 'brand' in printer.brand 
@@ -748,7 +751,7 @@ const PrinterDetail = () => {
             recentReviews,
             staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
             staffPickReasons,
-            stockStatus: printer.discontinued ? 'discontinued' as const : 'in-stock' as const,
+            stockStatus: getAggregatedStockStatus(inventoryData || [], printer.discontinued),
             shippingTime: 'Ships within 2-3 business days',
             trustSignals: [
               'Free shipping on orders over $500',
