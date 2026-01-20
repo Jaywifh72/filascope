@@ -679,20 +679,22 @@ const PrinterDetail = () => {
                 reviewCount={printer.review_count_aggregated}
               />
 
-              {/* Price Section - Terminal Style */}
+              {/* Price Section - Terminal Style (hidden for discontinued) */}
               <PriceSection
                 price={displayPrice}
                 msrp={displayMsrp}
                 trend={isLivePrice ? { direction: 'down' as const, percentage: liveCompareAtPrice && livePrice ? Math.round((1 - livePrice / liveCompareAtPrice) * 100) : undefined, period: 'sale' } : undefined}
+                isDiscontinued={printer.discontinued}
               />
 
-              {/* Price Insights Widget */}
+              {/* Price Insights Widget (hidden for discontinued) */}
               <PriceInsightsWidget
                 printerId={printer.id}
                 currentPrice={displayPrice}
                 currentAmazonPrice={printer.current_price_usd_amazon}
                 msrp={displayMsrp}
                 onViewFullHistory={() => setShowPriceHistoryModal(true)}
+                isDiscontinued={printer.discontinued}
               />
 
               {/* Value Proposition */}
@@ -710,6 +712,7 @@ const PrinterDetail = () => {
                 storePrice={displayPrice}
                 getAffiliateUrl={getAffiliateUrl}
                 brand={brand}
+                isDiscontinued={printer.discontinued}
               />
             </div>
           </div>

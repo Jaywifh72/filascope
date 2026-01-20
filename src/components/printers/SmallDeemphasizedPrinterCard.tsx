@@ -140,19 +140,21 @@ export default function SmallDeemphasizedPrinterCard({
             variant="compact"
           />
 
-          {/* Price - Muted */}
-          <div className="mb-3">
-            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/60">
-              Last Price:{" "}
-            </span>
-            {printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd ? (
-              <span className="font-mono text-sm font-semibold text-muted-foreground/80">
-                {formatPrice(printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd || 0)}
+          {/* Price - Only show for non-discontinued printers */}
+          {!printer.discontinued && (
+            <div className="mb-3">
+              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/60">
+                Last Price:{" "}
               </span>
-            ) : (
-              <span className="font-mono text-xs text-muted-foreground/50">N/A</span>
-            )}
-          </div>
+              {printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd ? (
+                <span className="font-mono text-sm font-semibold text-muted-foreground/80">
+                  {formatPrice(printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd || 0)}
+                </span>
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground/50">N/A</span>
+              )}
+            </div>
+          )}
 
           {/* Status Message & CTA */}
           <div className="mt-auto space-y-2">

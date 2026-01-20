@@ -148,7 +148,9 @@ export default function MediumStandardPrinterCard({
             <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
               Unit Cost:{" "}
             </span>
-            {priceLoading ? (
+            {printer.discontinued ? (
+              <span className="font-mono text-sm text-destructive/70">DISCONTINUED</span>
+            ) : priceLoading ? (
               <span className="font-mono text-sm text-muted-foreground animate-pulse">Loading...</span>
             ) : price ? (
               <span className="font-mono text-lg font-bold text-amber-400 inline-flex items-center gap-1.5">

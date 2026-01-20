@@ -9,6 +9,7 @@ interface CTAButtonsProps {
   storePrice?: number | null;
   getAffiliateUrl?: (url: string, brand: string | null) => string | null;
   brand?: string | null;
+  isDiscontinued?: boolean;
 }
 
 export function CTAButtons({
@@ -17,6 +18,7 @@ export function CTAButtons({
   storePrice,
   getAffiliateUrl,
   brand,
+  isDiscontinued,
 }: CTAButtonsProps) {
   const { addPrinter, isSelected, isMaxReached } = usePrinterCompare();
   const { formatPrice } = useCurrency();
@@ -57,7 +59,7 @@ export function CTAButtons({
           >
             <Crosshair className="h-5 w-5" />
             INITIATE REQUISITION
-            {storePrice && (
+            {storePrice && !isDiscontinued && (
               <span className="ml-1 text-primary-foreground/80">
                 [{formatPrice(storePrice, false)}]
               </span>
