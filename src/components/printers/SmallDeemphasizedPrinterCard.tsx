@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart, ExternalLink, Printer as PrinterIcon, Bell } from "lucide-react";
+import { Heart, ExternalLink, Printer as PrinterIcon, Bell, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -7,6 +7,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { getPrinterImage, getPrinterBadges, type CardSizeResult } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
+import PrinterSpecGrid from "./PrinterSpecGrid";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -30,12 +31,11 @@ export default function SmallDeemphasizedPrinterCard({
 }: SmallDeemphasizedPrinterCardProps) {
   const { formatPrice } = useCurrency();
   const productImage = getPrinterImage(printer);
-  // Only show discontinued badge for small cards
   const badges = getPrinterBadges(printer, 1);
 
   return (
     <article 
-      className="group relative opacity-75 hover:opacity-100 transition-opacity"
+      className="group relative opacity-60 hover:opacity-90 transition-opacity"
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name} - ${cardInfo.badge?.label || 'Discontinued'}`}
     >
@@ -43,19 +43,19 @@ export default function SmallDeemphasizedPrinterCard({
         <div 
           className="
             relative
-            bg-[hsl(0_0%_8%)] 
-            border border-white/8 
+            bg-[hsl(220_15%_5%)] 
+            border border-white/5 
             rounded-xl 
             p-4
             transition-all duration-300 ease-out
-            hover:border-white/20 
+            hover:border-white/15 
             cursor-pointer
             h-full
             flex flex-col
-            max-h-[360px]
+            max-h-[400px]
           "
         >
-          {/* Status Badge - Using PrinterBadge */}
+          {/* Status Badge */}
           {badges.length > 0 && (
             <div className="absolute top-3 left-3 z-10">
               <PrinterBadge 
@@ -66,7 +66,7 @@ export default function SmallDeemphasizedPrinterCard({
             </div>
           )}
 
-          {/* Comparison Checkbox - Top Right, Standalone */}
+          {/* Comparison Checkbox */}
           <div className="absolute top-3 right-3 z-10">
             <ComparisonCheckbox
               checked={isSelected}
@@ -76,17 +76,17 @@ export default function SmallDeemphasizedPrinterCard({
             />
           </div>
 
-          {/* Action Icons - Below Checkbox */}
+          {/* Action Icons */}
           <div className="absolute top-12 right-3 flex flex-col gap-1.5 z-10">
             <button 
-              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
               aria-label="Add to favorites"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
               }}
             >
-              <Heart className="h-3.5 w-3.5 text-white/50 hover:text-red-400 transition-colors" />
+              <Heart className="h-3 w-3 text-white/40 hover:text-red-400 transition-colors" />
             </button>
             
             {printer.official_product_url && (
@@ -94,22 +94,22 @@ export default function SmallDeemphasizedPrinterCard({
                 href={printer.official_product_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
                 onClick={(e) => e.stopPropagation()}
                 aria-label="View on manufacturer website"
               >
-                <ExternalLink className="h-3.5 w-3.5 text-white/50 hover:text-primary transition-colors" />
+                <ExternalLink className="h-3 w-3 text-white/40 hover:text-primary transition-colors" />
               </a>
             )}
           </div>
 
-          {/* Printer Image - Smaller */}
-          <div className="relative aspect-[4/3] mb-3 flex items-center justify-center">
+          {/* Printer Image - Smaller, grayscale */}
+          <div className="relative aspect-[4/3] mb-3 flex items-center justify-center mt-6">
             {productImage ? (
               <img 
                 src={productImage} 
                 alt={`${printer.brand?.brand} ${printer.model_name}`}
-                className="w-full h-full object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)] grayscale-[30%]"
+                className="w-full h-full object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)] grayscale-[50%] group-hover:grayscale-[20%] transition-all"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -117,49 +117,57 @@ export default function SmallDeemphasizedPrinterCard({
               />
             ) : null}
             <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-              <PrinterIcon className="h-12 w-12 text-white/15" />
+              <PrinterIcon className="h-12 w-12 text-white/10" />
             </div>
           </div>
 
           {/* Printer Name */}
-          <h3 className="text-lg font-bold text-foreground/80 mb-1 line-clamp-2">
+          <h3 className="text-base font-bold text-foreground/70 mb-1 line-clamp-2">
             {printer.brand?.brand} {printer.model_name}
           </h3>
 
-          {/* Build Volume + Speed - Single Line */}
-          <p className="text-[13px] text-muted-foreground mb-2">
-            {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-              <span>{printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm</span>
-            )}
-            {printer.build_volume_x_mm && printer.max_print_speed_mms && <span> • </span>}
-            {printer.max_print_speed_mms && <span>{printer.max_print_speed_mms}mm/s</span>}
-          </p>
+          {/* Compact Spec Grid */}
+          <PrinterSpecGrid
+            buildVolume={{
+              x: printer.build_volume_x_mm,
+              y: printer.build_volume_y_mm,
+              z: printer.build_volume_z_mm,
+            }}
+            maxSpeed={printer.max_print_speed_mms}
+            hotendTemp={printer.max_nozzle_temp_c}
+            motionSystem={printer.motion_system_notes || printer.machine_style}
+            className="mb-3"
+            variant="compact"
+          />
 
           {/* Price - Muted */}
           <div className="mb-3">
+            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground/60">
+              Last Price:{" "}
+            </span>
             {printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd ? (
-              <span className="text-lg font-semibold text-muted-foreground">
+              <span className="font-mono text-sm font-semibold text-muted-foreground/80">
                 {formatPrice(printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd || 0)}
               </span>
             ) : (
-              <span className="text-sm text-muted-foreground/60">Price TBD</span>
+              <span className="font-mono text-xs text-muted-foreground/50">N/A</span>
             )}
           </div>
 
           {/* Status Message & CTA */}
-          <div className="mt-auto">
-            <div className="text-[13px] text-destructive mb-2 text-center py-1.5 bg-destructive/10 rounded-md">
-              {printer.discontinued ? 'This model has been discontinued' : 'Currently unavailable'}
+          <div className="mt-auto space-y-2">
+            <div className="flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-destructive/70 py-1.5 bg-destructive/5 border border-destructive/10 rounded-md">
+              <Ban className="h-3 w-3" />
+              {printer.discontinued ? 'End of Life' : 'Unavailable'}
             </div>
             
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm"
-              className="w-full text-[13px] border-muted-foreground/30 text-muted-foreground hover:bg-muted"
+              className="w-full font-mono text-[10px] uppercase tracking-[0.1em] border border-white/5 text-muted-foreground/60 hover:bg-white/5 hover:text-muted-foreground h-8"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Future: implement notify me
               }}
             >
               <Bell className="h-3 w-3 mr-1.5" />
@@ -167,13 +175,13 @@ export default function SmallDeemphasizedPrinterCard({
             </Button>
           </div>
 
-          {/* Brand Logo - Bottom Right, Very Subtle */}
+          {/* Brand Logo */}
           {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="absolute bottom-4 right-4">
+            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-20 transition-opacity">
               <img 
                 src={getBrandLogo(printer.brand?.brand || null)!} 
                 alt={`${printer.brand?.brand} logo`}
-                className="h-auto max-w-[30px] object-contain opacity-30"
+                className="h-auto max-w-[24px] object-contain"
               />
             </div>
           )}

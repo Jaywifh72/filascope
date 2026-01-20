@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Loader2, X, Printer } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2, X, Database as DatabaseIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
@@ -25,7 +25,7 @@ import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
-import SectionSeparator from "@/components/SectionSeparator";
+import { TechFooter } from "@/components/TechFooter";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -518,7 +518,7 @@ export default function Printers() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}
       <PrintersHeroSection
         searchTerm={searchTerm}
@@ -548,205 +548,31 @@ export default function Printers() {
         />
       )}
 
-      {/* Visual Section Separator */}
-      <SectionSeparator />
-
-      {/* Results Header with Context */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 hover:border-primary/20 transition-colors duration-300">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
-              <span className="text-primary font-black">{filteredPrinters?.length.toLocaleString() || 0}</span>
-              {" "}
-              <span className="font-light">printers found</span>
+      {/* Results Header - Industrial style */}
+      <div className="w-full max-w-[1800px] mx-auto px-6 mb-6 mt-8 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-6 py-4">
+          <div className="flex items-center gap-3">
+            <DatabaseIcon className="w-5 h-5 text-primary" />
+            <h2 className="font-mono text-sm uppercase tracking-[0.2em] text-foreground">
+              Hardware Registry{" "}
+              <span className="text-primary font-bold">//</span>{" "}
+              <span className="text-primary font-bold">{filteredPrinters?.length.toLocaleString() || 0}</span>
+              <span className="text-muted-foreground font-light ml-1">Units Indexed</span>
             </h2>
-            <p className="text-sm text-muted-foreground font-light flex items-center gap-1.5">
-              <Printer className="w-3.5 h-3.5" />
-              System Registry Active
-            </p>
           </div>
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClearAllFilters}
-              className="text-muted-foreground hover:text-foreground self-start sm:self-auto"
+              className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive"
             >
-              <X className="w-4 h-4 mr-1.5" />
-              Clear all filters
+              <X className="w-3.5 h-3.5 mr-1.5" />
+              Clear Filters
             </Button>
           )}
         </div>
       </div>
-
-      {/* Filter Bar */}
-      <PrintersFilterBar
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-        categoryCounts={categoryCounts}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        priceRange={priceRangeFilter}
-        onPriceChange={setPriceRangeFilter}
-        buildVolume={buildVolumeFilter}
-        onBuildVolumeChange={setBuildVolumeFilter}
-        onMoreFiltersClick={() => setMoreFiltersOpen(true)}
-        advancedFilterCount={advancedFilterCount}
-        hasActiveFilters={hasActiveFilters}
-        onClearFilters={handleClearAllFilters}
-      />
-
-      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
-        {/* Results Section */}
-        <section className="space-y-6">
-
-          {/* Printer Grid */}
-          {isLoading ? (
-            <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
-          ) : filteredPrinters.length === 0 ? (
-            <PrintersEmptyState
-              searchQuery={searchTerm}
-              activeFiltersCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0) + activeQuickFilters.length}
-              onResetFilters={handleClearAllFilters}
-              onSearchBrand={(brand) => setSearchTerm(brand)}
-              totalPrinters={printers?.length || 0}
-            />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
-                {displayedPrinters.map((printer, index) => {
-                  const cardInfo = getCardSize(printer, index);
-                  const printerIsSelected = isSelected(printer.id);
-
-                  const handleToggleCompare = () => toggleCompareSelection(printer);
-                  const handleEditImage = (e: React.MouseEvent) => openImageEditDialog(printer, e);
-                  const handleRescrape = (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    rescrapeMutation.mutate(printer.id);
-                  };
-
-                  if (cardInfo.size === 'large') {
-                    return (
-                      <LargeFeaturedPrinterCard
-                        key={printer.id}
-                        printer={printer}
-                        cardInfo={cardInfo}
-                        isSelected={printerIsSelected}
-                        isMaxReached={isMaxReached}
-                        onToggleCompare={handleToggleCompare}
-                        isAdmin={isAdmin}
-                        onEditImage={handleEditImage}
-                        onRescrape={handleRescrape}
-                        isRescraping={rescrapeMutation.isPending}
-                      />
-                    );
-                  }
-
-                  if (cardInfo.size === 'small') {
-                    return (
-                      <SmallDeemphasizedPrinterCard
-                        key={printer.id}
-                        printer={printer}
-                        cardInfo={cardInfo}
-                        isSelected={printerIsSelected}
-                        isMaxReached={isMaxReached}
-                        onToggleCompare={handleToggleCompare}
-                      />
-                    );
-                  }
-
-                  return (
-                    <MediumStandardPrinterCard
-                      key={printer.id}
-                      printer={printer}
-                      isSelected={printerIsSelected}
-                      isMaxReached={isMaxReached}
-                      onToggleCompare={handleToggleCompare}
-                      isAdmin={isAdmin}
-                      onEditImage={handleEditImage}
-                      onRescrape={handleRescrape}
-                      isRescraping={rescrapeMutation.isPending}
-                    />
-                  );
-                })}
-              </div>
-
-              {/* Load More / End State */}
-              {hasMore ? (
-                <div className="flex flex-col items-center gap-4 py-12">
-                  <Button
-                    onClick={loadMore}
-                    disabled={isLoadingMore}
-                    variant="outline"
-                    className="h-14 px-10 bg-primary/10 border-2 border-primary/40 hover:bg-primary/20 hover:border-primary text-primary font-semibold"
-                  >
-                    {isLoadingMore ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Printers
-                        <ArrowDown className="ml-2 h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-sm text-muted-foreground">
-                    Showing {displayedCount} of {filteredPrinters.length} printers
-                  </p>
-                </div>
-              ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
-                <div className="flex flex-col items-center gap-4 py-12">
-                  <div className="w-12 h-12 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
-                    <Check className="h-6 w-6 text-green-500" />
-                  </div>
-                  <p className="text-base font-semibold">
-                    You've viewed all {filteredPrinters.length} printers
-                  </p>
-                  <Button variant="ghost" onClick={scrollToTop} className="text-muted-foreground hover:text-primary">
-                    <ArrowUp className="mr-2 h-4 w-4" />
-                    Back to Top
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {/* Image Edit Dialog */}
-        <Dialog open={!!imageEditPrinter} onOpenChange={(open) => !open && setImageEditPrinter(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Printer Image</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="image-url">Image URL</Label>
-                <Input
-                  id="image-url"
-                  placeholder="https://example.com/image.jpg"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                />
-              </div>
-              {newImageUrl && (
-                <div className="space-y-2">
-                  <Label>Preview</Label>
-                  <div className="border rounded-lg p-2 bg-muted/50">
-                    <img
-                      src={newImageUrl}
-                      alt="Preview"
-                      className="max-h-48 mx-auto object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setImageEditPrinter(null)}>
                 Cancel
@@ -773,6 +599,9 @@ export default function Printers() {
           availableBrands={brands || []}
         />
       </div>
+
+      {/* Tech Footer */}
+      <TechFooter />
     </div>
   );
 }
