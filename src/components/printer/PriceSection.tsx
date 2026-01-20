@@ -25,7 +25,7 @@ export function PriceSection({ price, msrp, trend }: PriceSectionProps) {
   const getTrendColor = () => {
     if (!trend) return "text-muted-foreground";
     if (trend.direction === "down") return "text-green-500";
-    if (trend.direction === "up") return "text-red-500";
+    if (trend.direction === "up") return "text-destructive";
     return "text-muted-foreground";
   };
 
@@ -37,27 +37,42 @@ export function PriceSection({ price, msrp, trend }: PriceSectionProps) {
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline gap-3">
-        <span className="text-3xl md:text-4xl font-bold text-foreground">
+    <div className="space-y-3">
+      {/* Terminal-style price label */}
+      <div className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
+        UNIT_COST:
+      </div>
+      
+      <div className="flex items-baseline gap-4">
+        {/* Main price - amber for industrial look */}
+        <span className="font-mono text-3xl md:text-4xl font-bold text-amber-400">
           {formatPrice(displayPrice!)}
         </span>
+        
         {hasDiscount && (
-          <span className="text-sm font-medium text-green-500">
-            {discountPercent}% off MSRP
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-sm text-muted-foreground line-through">
+              {formatPrice(msrp)}
+            </span>
+            <span className="font-mono text-sm font-bold text-green-500">
+              -{discountPercent}%
+            </span>
+          </div>
         )}
+        
         {!price && msrp && (
-          <span className="text-sm text-muted-foreground">MSRP</span>
+          <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
+            // MSRP
+          </span>
         )}
       </div>
 
       {trend && trend.percentage > 0 && (
-        <div className={`flex items-center gap-1.5 ${getTrendColor()}`}>
+        <div className={`flex items-center gap-2 font-mono text-xs ${getTrendColor()}`}>
           {getTrendIcon()}
-          <span className="text-sm font-medium">
-            {trend.direction === "down" ? "↓" : trend.direction === "up" ? "↑" : ""}
-            {" "}{trend.percentage}% from {trend.period}
+          <span className="uppercase tracking-wider">
+            TREND: {trend.direction === "down" ? "FALLING" : trend.direction === "up" ? "RISING" : "STABLE"}
+            {" "}({trend.percentage}% / {trend.period})
           </span>
         </div>
       )}

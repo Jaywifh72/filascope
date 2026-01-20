@@ -361,38 +361,63 @@ const PrinterDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-primary/5">
-      <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-8">
+    <div className="min-h-screen bg-[#0A0C10] relative">
+      {/* Dot grid overlay */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: 'radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}
+      />
+      
+      {/* Atmospheric glow blobs */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_top_right,rgba(0,207,232,0.05)_0%,transparent_60%)]" />
+        <div className="absolute bottom-0 left-0 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,0,85,0.05)_0%,transparent_60%)]" />
+      </div>
+      
+      <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-8 relative z-10">
         {/* Navigation */}
         <div className="flex items-center gap-4">
           <Link to="/printers">
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <button className="w-10 h-10 flex items-center justify-center border border-primary/30 text-primary hover:bg-primary/10 hover:border-primary transition-all">
               <ArrowLeft className="h-5 w-5" />
-            </Button>
+            </button>
           </Link>
+          <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
+            &lt;&lt; RETURN_TO_REGISTRY
+          </span>
         </div>
 
-        {/* Hero Section - 30%/70% Layout */}
-        <div className="relative bg-[#0A0A0A] rounded-2xl py-10 md:py-14 px-6 md:px-10">
+        {/* Hero Section - Hardware Schematic Layout */}
+        <div className="relative bg-[#0A0C10] border border-primary/20 py-10 md:py-14 px-6 md:px-10">
+          {/* Corner brackets for hero */}
+          <div className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-primary" />
+          <div className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-primary" />
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-primary" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-primary" />
+          
+          {/* HUD Header */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 font-mono text-[10px] text-primary/60 uppercase tracking-[0.3em]">
+            HARDWARE SCHEMATIC // MODEL SPECIFICATIONS
+          </div>
+          
           {/* Admin: Update Image & Refresh Prices Buttons */}
           {isAdmin && (
-            <div className="absolute top-4 right-4 flex gap-2 z-10">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
+            <div className="absolute top-4 right-12 flex gap-2 z-10">
+              <button
+                className="h-8 px-3 bg-transparent border border-white/20 font-mono text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-2 hover:border-primary hover:text-primary transition-all"
                 onClick={(e) => {
                   e.stopPropagation();
                   setImageDialogOpen(true);
                 }}
               >
-                <ImagePlus className="h-4 w-4" />
-                Update Image
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
+                <ImagePlus className="h-3 w-3" />
+                UPDATE_IMG
+              </button>
+              <button
+                className="h-8 px-3 bg-transparent border border-white/20 font-mono text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-2 hover:border-primary hover:text-primary transition-all disabled:opacity-50"
                 disabled={isUpdatingPrices}
                 onClick={async (e) => {
                   e.stopPropagation();
@@ -436,14 +461,14 @@ const PrinterDetail = () => {
                   }
                 }}
               >
-                <RefreshCw className={`h-4 w-4 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
-                {isUpdatingPrices ? 'Updating...' : 'Refresh Prices'}
-              </Button>
+                <RefreshCw className={`h-3 w-3 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                {isUpdatingPrices ? 'SYNCING...' : 'REFRESH_PRICES'}
+              </button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-10 lg:gap-16 items-start">
-            {/* Left Column: Product Image Gallery (30%) */}
+          <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-10 lg:gap-16 items-start mt-8">
+            {/* Left Column: Digital Viewport (30%) */}
             <div className="w-full">
               {(() => {
                 const displayImages = productImages.filter(img => validImages.has(img));
@@ -451,46 +476,71 @@ const PrinterDetail = () => {
                 
                 if (isLoadingImages) {
                   return (
-                    <div className="h-[250px] bg-muted/20 rounded-lg animate-pulse flex items-center justify-center">
-                      <span className="text-muted-foreground">Loading images...</span>
+                    <div className="h-[280px] bg-[#0A0C10] border border-primary/20 flex items-center justify-center">
+                      <span className="font-mono text-xs text-primary/60 uppercase tracking-wider animate-pulse">
+                        LOADING_VISUAL_FEED...
+                      </span>
                     </div>
                   );
                 }
                 
                 if (displayImages.length === 0) {
                   return (
-                    <div className="h-[250px] bg-muted/10 rounded-lg flex items-center justify-center border border-border/20">
+                    <div className="relative h-[280px] bg-[#0A0C10] border border-primary/20 flex items-center justify-center">
+                      <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary" />
+                      <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary" />
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary" />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary" />
                       <Box className="h-20 w-20 text-muted-foreground/30" />
+                      <div className="absolute top-3 left-4 font-mono text-[10px] text-primary/60 uppercase tracking-wider">
+                        IMG_SOURCE: NO_SIGNAL
+                      </div>
                     </div>
                   );
                 }
                 
                 return (
                   <div className="space-y-3">
-                    {/* Main Image */}
+                    {/* Main Viewport */}
                     <div 
-                      className="h-[250px] bg-white/[0.02] border border-white/[0.08] rounded-xl p-5 flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                      className="relative h-[280px] bg-[#0A0C10] border border-primary/30 cursor-pointer group overflow-hidden"
                       onClick={() => openLightbox(0)}
                       role="button"
                       aria-label={`View ${printer.model_name} product image in fullscreen`}
                     >
-                      <img 
-                        src={displayImages[0]} 
-                        alt={`${printer.model_name} product image`}
-                        className="max-w-full max-h-full object-contain"
-                      />
+                      <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary z-10" />
+                      <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary z-10" />
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary z-10" />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary z-10" />
+                      
+                      <div className="absolute top-3 left-4 font-mono text-[10px] text-primary/70 uppercase tracking-wider z-10">
+                        IMG_SOURCE: LIVE_FEED
+                      </div>
+                      <div className="absolute top-3 right-4 font-mono text-[10px] text-primary/70 uppercase tracking-wider z-10">
+                        SCALE: 1:1
+                      </div>
+                      <div className="absolute bottom-3 left-4 font-mono text-[10px] text-primary/70 uppercase tracking-wider z-10">
+                        [01/{String(displayImages.length).padStart(2, '0')}]
+                      </div>
+                      
+                      <div className="absolute inset-8 flex items-center justify-center">
+                        <img 
+                          src={displayImages[0]} 
+                          alt={`${printer.model_name} product image`}
+                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
+                      </div>
                     </div>
                     
-                    {/* Thumbnail Grid */}
                     {displayImages.length > 1 && (
                       <div className="grid grid-cols-4 gap-2">
                         {displayImages.slice(0, 4).map((img: string, idx: number) => (
                           <div 
                             key={idx} 
-                            className={`h-[60px] bg-white/[0.02] border rounded-md p-1.5 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 ${
+                            className={`relative h-[60px] bg-[#0A0C10] border p-1.5 flex items-center justify-center cursor-pointer transition-all duration-200 ${
                               idx === 0 
-                                ? 'border-primary bg-primary/[0.08]' 
-                                : 'border-white/[0.08] hover:border-primary/50'
+                                ? 'border-primary bg-primary/10' 
+                                : 'border-white/10 hover:border-primary/50'
                             }`}
                             onClick={() => openLightbox(idx)}
                             role="button"
@@ -511,20 +561,20 @@ const PrinterDetail = () => {
               })()}
             </div>
 
-            {/* Right Column: Product Info (70%) */}
+            {/* Right Column: Command Panel (70%) */}
             <div className="space-y-6">
-              {/* Brand Name */}
-              <div className="text-[13px] font-bold uppercase tracking-[0.05em] text-primary">
+              {/* Brand Designation */}
+              <div className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
                 {brand}
               </div>
 
-              {/* Product Model */}
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight -mt-4">
+              {/* Model Designation */}
+              <h1 className="font-mono text-3xl md:text-4xl font-bold text-foreground leading-tight uppercase tracking-wide -mt-4">
                 {printer.model_name}
               </h1>
 
-              {/* Product Description */}
-              <p className="text-base font-medium text-muted-foreground -mt-3">
+              {/* System Description */}
+              <p className="text-sm text-muted-foreground leading-relaxed -mt-2">
                 {generatePrinterDescription({
                   ...printer,
                   brand: brand || undefined
@@ -538,13 +588,13 @@ const PrinterDetail = () => {
                 reviewCount={printer.review_count_aggregated}
               />
 
-              {/* Price Section */}
+              {/* Price Section - Terminal Style */}
               <PriceSection
                 price={printer.current_price_usd_store}
                 msrp={printer.msrp_usd}
               />
 
-              {/* Price Insights Widget - Inline */}
+              {/* Price Insights Widget */}
               <PriceInsightsWidget
                 printerId={printer.id}
                 currentPrice={printer.current_price_usd_store}
@@ -556,7 +606,7 @@ const PrinterDetail = () => {
               {/* Value Proposition */}
               <ValueProposition benefits={generatePrinterBenefits(printer)} />
 
-              {/* CTA Buttons */}
+              {/* CTA Buttons - Industrial Style */}
               <CTAButtons
                 printer={{
                   id: printer.id,

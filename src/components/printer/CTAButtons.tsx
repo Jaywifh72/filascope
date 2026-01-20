@@ -1,5 +1,4 @@
-import { ArrowRight, Plus, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Plus, Check, Crosshair, Activity } from "lucide-react";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 
@@ -35,28 +34,7 @@ export function CTAButtons({
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Secondary: Add to Comparison */}
-      <Button
-        variant="outline"
-        size="lg"
-        className="h-[52px] px-6 gap-2 border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary"
-        onClick={handleAddToCompare}
-        disabled={isAlreadySelected || isMaxReached}
-      >
-        {isAlreadySelected ? (
-          <>
-            <Check className="h-5 w-5" />
-            Added to Compare
-          </>
-        ) : (
-          <>
-            <Plus className="h-5 w-5" />
-            Add to Comparison
-          </>
-        )}
-      </Button>
-
-      {/* Primary: View Official Store */}
+      {/* Primary: Initiate Requisition */}
       {affiliateUrl && (
         <a
           href={affiliateUrl}
@@ -64,19 +42,43 @@ export function CTAButtons({
           rel="noopener noreferrer"
           className="inline-flex"
         >
-          <Button
-            size="lg"
-            variant="primary"
-            className="h-[52px] px-8 gap-2 font-bold"
+          <button
+            className="h-[52px] px-8 bg-primary text-primary-foreground font-mono text-sm uppercase tracking-wider font-bold flex items-center gap-3 border-2 border-primary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(0,207,232,0.4)] group"
           >
-            View Official Store
+            <Crosshair className="h-5 w-5" />
+            INITIATE REQUISITION
             {storePrice && (
-              <span className="ml-1">- {formatPrice(storePrice, false)}</span>
+              <span className="ml-1 text-primary-foreground/80">
+                [{formatPrice(storePrice, false)}]
+              </span>
             )}
-            <ArrowRight className="h-5 w-5" />
-          </Button>
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+          </button>
         </a>
       )}
+
+      {/* Secondary: Run Diagnostic Compare */}
+      <button
+        className={`h-[52px] px-6 bg-transparent font-mono text-sm uppercase tracking-wider font-bold flex items-center gap-2 border-2 transition-all duration-200 ${
+          isAlreadySelected || isMaxReached
+            ? 'border-white/20 text-muted-foreground cursor-not-allowed'
+            : 'border-primary/40 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5'
+        }`}
+        onClick={handleAddToCompare}
+        disabled={isAlreadySelected || isMaxReached}
+      >
+        {isAlreadySelected ? (
+          <>
+            <Check className="h-5 w-5" />
+            DIAGNOSTIC_QUEUED
+          </>
+        ) : (
+          <>
+            <Activity className="h-5 w-5" />
+            RUN DIAGNOSTIC COMPARE
+          </>
+        )}
+      </button>
     </div>
   );
 }

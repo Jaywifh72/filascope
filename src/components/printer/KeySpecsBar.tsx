@@ -15,20 +15,25 @@ export function KeySpecsBar({ specs }: KeySpecsBarProps) {
   if (!specs || specs.length === 0) return null;
 
   return (
-    <div className="w-full bg-primary/8 border-y-2 border-primary/20 py-5 px-6 md:px-10">
+    <div className="w-full bg-[#0A0C10] border-y border-primary/30 py-4 px-6 md:px-10">
       <div className="max-w-[1400px] mx-auto">
-        <div className="flex flex-wrap justify-center md:justify-between items-center gap-3 md:gap-4">
+        {/* Terminal header */}
+        <div className="font-mono text-[10px] text-primary/60 uppercase tracking-[0.2em] mb-3">
+          &gt;&gt; QUICK_SPECIFICATIONS
+        </div>
+        
+        <div className="flex flex-wrap justify-start items-center gap-4 md:gap-6">
           {specs.map((spec, index) => (
             <div key={index} className="flex items-center gap-2 min-w-0">
-              <spec.icon className="h-5 w-5 text-primary flex-shrink-0" />
-              <span className="text-xs md:text-sm font-semibold text-foreground">
+              <spec.icon className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="font-mono text-xs text-foreground">
                 {spec.label && (
-                  <span className="text-muted-foreground font-medium">{spec.label}: </span>
+                  <span className="text-muted-foreground">{spec.label.toUpperCase()}: </span>
                 )}
-                <span className="break-all">{spec.value}</span>
+                <span className="font-bold break-all">{spec.value}</span>
               </span>
               {index < specs.length - 1 && (
-                <span className="hidden lg:inline text-muted-foreground/30 ml-2">|</span>
+                <span className="hidden lg:inline text-primary/30 ml-2 font-mono">|</span>
               )}
             </div>
           ))}
