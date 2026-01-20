@@ -138,11 +138,11 @@ export default function MediumStandardPrinterCard({
 
           {/* Brand Logo - Above Image */}
           {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="flex justify-center mt-6 mb-2">
+            <div className="flex justify-center mt-2 mb-1">
               <img 
                 src={getBrandLogo(printer.brand?.brand || null)!} 
                 alt={`${printer.brand?.brand} logo`}
-                className="h-6 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300"
+                className="h-12 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300"
               />
             </div>
           )}
