@@ -101,16 +101,17 @@ export default function MediumStandardPrinterCard({
             </button>
             
             {printer.official_product_url && (
-              <a
-                href={printer.official_product_url}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
                 className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(printer.official_product_url!, '_blank', 'noopener,noreferrer');
+                }}
                 aria-label="View on manufacturer website"
               >
                 <ExternalLink className="h-3.5 w-3.5 text-white/50 hover:text-primary transition-colors" />
-              </a>
+              </button>
             )}
             
             {isAdmin && (
