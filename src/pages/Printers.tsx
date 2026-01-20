@@ -10,20 +10,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Loader2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
 import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components/PrintersAdvancedFiltersModal";
-import { PrinterLabReadoutCard } from "@/components/printers/PrinterLabReadoutCard";
+import LargeFeaturedPrinterCard from "@/components/printers/LargeFeaturedPrinterCard";
+import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
+import SmallDeemphasizedPrinterCard from "@/components/printers/SmallDeemphasizedPrinterCard";
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
-import { DataInventoryControlBar, type SortOption } from "@/components/DataInventoryControlBar";
+import { getCardSize } from "@/lib/printerCardUtils";
 import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
-import { TechnicalControlConsole } from "@/components/TechnicalControlConsole";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -97,13 +98,6 @@ export default function Printers() {
   const [buildVolumeFilter, setBuildVolumeFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
-  
-  // Sidebar filter state
-  const [sidebarMaterials, setSidebarMaterials] = useState<string[]>([]);
-  const [sidebarBrands, setSidebarBrands] = useState<string[]>([]);
-  const [sidebarReinforced, setSidebarReinforced] = useState<string[]>([]);
-  const [sidebarSpoolSize, setSidebarSpoolSize] = useState("any");
-  const [hideDiscontinued, setHideDiscontinued] = useState(false);
   
   // Progressive disclosure state
   const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
@@ -274,9 +268,6 @@ export default function Printers() {
     if (!printers) return [];
 
     const filtered = printers.filter(printer => {
-      // Hide discontinued filter
-      if (hideDiscontinued && printer.discontinued) return false;
-      
       const price = getPrice(printer);
       const maxDimension = Math.max(
         printer.build_volume_x_mm || 0,
@@ -390,45 +381,6 @@ export default function Printers() {
         if (!matchesAny) return false;
       }
 
-      // Sidebar Brand Ecosystem filter (AND logic - must match selected brand)
-      if (sidebarBrands.length > 0) {
-        const printerBrand = printer.brand?.brand?.toLowerCase().replace(/\s+/g, '-') || '';
-        const matchesBrand = sidebarBrands.some(selectedBrand => 
-          printerBrand === selectedBrand.toLowerCase()
-        );
-        if (!matchesBrand) return false;
-      }
-
-      // Sidebar Motion Kinematics filter (OR logic)
-      if (sidebarMaterials.length > 0) {
-        const motion = (printer.motion_system_notes || '').toLowerCase();
-        const style = (printer.machine_style || '').toLowerCase();
-        const matchesKinematics = sidebarMaterials.some(kinematics => {
-          const k = kinematics.toLowerCase();
-          if (k === 'corexy') return motion.includes('corexy') || style.includes('corexy');
-          if (k === 'cartesian') return motion.includes('cartesian') || style.includes('cartesian') || style.includes('bedslinger');
-          if (k === 'delta') return motion.includes('delta') || style.includes('delta');
-          if (k === 'idex') return motion.includes('idex') || (printer.extruder_count || 1) > 1;
-          if (k === 'toolchanger') return motion.includes('toolchanger') || style.includes('toolchanger');
-          if (k === 'infinite-z') return motion.includes('infinite') || style.includes('belt');
-          return false;
-        });
-        if (!matchesKinematics) return false;
-      }
-
-      // Sidebar Quick Filters (AND logic for hardware features)
-      if (sidebarReinforced.length > 0) {
-        const matchesAllQuickFilters = sidebarReinforced.every(filter => {
-          switch (filter) {
-            case 'enclosed': return printer.has_enclosure;
-            case 'multi-material': return printer.multi_material_supported;
-            case 'high-speed': return printerSpeed >= 300;
-            default: return true;
-          }
-        });
-        if (!matchesAllQuickFilters) return false;
-      }
-
       return true;
     });
 
@@ -447,7 +399,7 @@ export default function Printers() {
         default: return 0;
       }
     });
-  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, hideDiscontinued, sidebarBrands, sidebarMaterials, sidebarReinforced]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy]);
 
   const advancedFilterCount = 
     advancedFilters.brands.length +
@@ -565,26 +517,8 @@ export default function Printers() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Atmospheric Glow Blobs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Cyan blob - top right */}
-        <div 
-          className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(0,207,232,0.05) 0%, transparent 70%)',
-            transform: 'translate(30%, -30%)',
-          }}
-        />
-        {/* Magenta blob - bottom left */}
-        <div 
-          className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(255,0,85,0.05) 0%, transparent 70%)',
-            transform: 'translate(-30%, 30%)',
-          }}
-        />
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
       {/* Hero Section */}
       <PrintersHeroSection
         searchTerm={searchTerm}
@@ -614,8 +548,7 @@ export default function Printers() {
         />
       )}
 
-      {/* Filter Bar */}
-      <div className="max-w-[1600px] mx-auto px-4 lg:px-8 mt-6">
+        {/* Filter Bar */}
         <PrintersFilterBar
           activeCategory={activeCategory}
           onCategoryChange={handleCategoryChange}
@@ -631,176 +564,190 @@ export default function Printers() {
           hasActiveFilters={hasActiveFilters}
           onClearFilters={handleClearAllFilters}
         />
-      </div>
 
-      {/* Main Content Area with Sidebar */}
-      <div className="max-w-[1800px] mx-auto px-4 lg:px-8 py-10">
-        <div className="flex gap-8 items-start">
-          {/* Sticky Sidebar - Hardware Registry Mode */}
-          <TechnicalControlConsole
-            mode="printers"
-            selectedOEMs={sidebarBrands}
-            onOEMChange={(oem, checked) => {
-              if (checked) {
-                setSidebarBrands([...sidebarBrands, oem]);
-              } else {
-                setSidebarBrands(sidebarBrands.filter(b => b !== oem));
-              }
-            }}
-            selectedKinematics={sidebarMaterials}
-            onKinematicsChange={(kinematics, checked) => {
-              if (checked) {
-                setSidebarMaterials([...sidebarMaterials, kinematics]);
-              } else {
-                setSidebarMaterials(sidebarMaterials.filter(m => m !== kinematics));
-              }
-            }}
-            selectedQuickFilters={sidebarReinforced}
-            onQuickFilterChange={(filter, checked) => {
-              if (checked) {
-                setSidebarReinforced([...sidebarReinforced, filter]);
-              } else {
-                setSidebarReinforced(sidebarReinforced.filter(r => r !== filter));
-              }
-            }}
-            hideDiscontinued={hideDiscontinued}
-            onHideDiscontinuedChange={setHideDiscontinued}
-          />
-          
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            {/* Data Inventory Control Bar */}
-            <DataInventoryControlBar
-              sortBy={sortBy as SortOption}
-              onSortChange={(val) => setSortBy(val)}
-              resultCount={filteredPrinters?.length || 0}
+
+        {/* Results Section */}
+        <section className="space-y-6 mt-4">
+          {/* Results Count */}
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-2xl font-bold">
+              {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
+            </h2>
+          </div>
+
+          {/* Printer Grid */}
+          {isLoading ? (
+            <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
+          ) : filteredPrinters.length === 0 ? (
+            <PrintersEmptyState
+              searchQuery={searchTerm}
+              activeFiltersCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0) + activeQuickFilters.length}
+              onResetFilters={handleClearAllFilters}
+              onSearchBrand={(brand) => setSearchTerm(brand)}
+              totalPrinters={printers?.length || 0}
             />
-            
-            {/* Printer Grid */}
-            {isLoading ? (
-              <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
-            ) : filteredPrinters.length === 0 ? (
-              <PrintersEmptyState
-                searchQuery={searchTerm}
-                activeFiltersCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0) + activeQuickFilters.length}
-                onResetFilters={handleClearAllFilters}
-                onSearchBrand={(brand) => setSearchTerm(brand)}
-                totalPrinters={printers?.length || 0}
-              />
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                  {displayedPrinters.map((printer, index) => (
-                    <PrinterLabReadoutCard
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
+                {displayedPrinters.map((printer, index) => {
+                  const cardInfo = getCardSize(printer, index);
+                  const printerIsSelected = isSelected(printer.id);
+
+                  const handleToggleCompare = () => toggleCompareSelection(printer);
+                  const handleEditImage = (e: React.MouseEvent) => openImageEditDialog(printer, e);
+                  const handleRescrape = (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    rescrapeMutation.mutate(printer.id);
+                  };
+
+                  if (cardInfo.size === 'large') {
+                    return (
+                      <LargeFeaturedPrinterCard
+                        key={printer.id}
+                        printer={printer}
+                        cardInfo={cardInfo}
+                        isSelected={printerIsSelected}
+                        isMaxReached={isMaxReached}
+                        onToggleCompare={handleToggleCompare}
+                        isAdmin={isAdmin}
+                        onEditImage={handleEditImage}
+                        onRescrape={handleRescrape}
+                        isRescraping={rescrapeMutation.isPending}
+                      />
+                    );
+                  }
+
+                  if (cardInfo.size === 'small') {
+                    return (
+                      <SmallDeemphasizedPrinterCard
+                        key={printer.id}
+                        printer={printer}
+                        cardInfo={cardInfo}
+                        isSelected={printerIsSelected}
+                        isMaxReached={isMaxReached}
+                        onToggleCompare={handleToggleCompare}
+                      />
+                    );
+                  }
+
+                  return (
+                    <MediumStandardPrinterCard
                       key={printer.id}
                       printer={printer}
-                      index={index}
+                      isSelected={printerIsSelected}
+                      isMaxReached={isMaxReached}
+                      onToggleCompare={handleToggleCompare}
+                      isAdmin={isAdmin}
+                      onEditImage={handleEditImage}
+                      onRescrape={handleRescrape}
+                      isRescraping={rescrapeMutation.isPending}
                     />
-                  ))}
-                </div>
-
-                {/* Load More / End State */}
-                {hasMore ? (
-                  <div className="flex flex-col items-center gap-4 py-12">
-                    <Button
-                      onClick={loadMore}
-                      disabled={isLoadingMore}
-                      variant="outline"
-                      className="h-14 px-10 bg-primary/10 border-2 border-primary/40 hover:bg-primary/20 hover:border-primary text-primary font-semibold"
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Printers
-                          <ArrowDown className="ml-2 h-5 w-5" />
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-sm text-muted-foreground">
-                      Showing {displayedCount} of {filteredPrinters.length} printers
-                    </p>
-                  </div>
-                ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
-                  <div className="flex flex-col items-center gap-4 py-12">
-                    <div className="w-12 h-12 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
-                      <Check className="h-6 w-6 text-green-500" />
-                    </div>
-                    <p className="text-base font-semibold">
-                      You've viewed all {filteredPrinters.length} printers
-                    </p>
-                    <Button variant="ghost" onClick={scrollToTop} className="text-muted-foreground hover:text-primary">
-                      <ArrowUp className="mr-2 h-4 w-4" />
-                      Back to Top
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Image Edit Dialog */}
-      <Dialog open={!!imageEditPrinter} onOpenChange={(open) => !open && setImageEditPrinter(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Printer Image</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="image-url">Image URL</Label>
-              <Input
-                id="image-url"
-                placeholder="https://example.com/image.jpg"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-              />
-            </div>
-            {newImageUrl && (
-              <div className="space-y-2">
-                <Label>Preview</Label>
-                <div className="border rounded-lg p-2 bg-muted/50">
-                  <img
-                    src={newImageUrl}
-                    alt="Preview"
-                    className="max-h-48 mx-auto object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder.svg";
-                    }}
-                  />
-                </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImageEditPrinter(null)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => imageEditPrinter && updateImageMutation.mutate({ 
-                printerId: imageEditPrinter.id, 
-                imageUrl: newImageUrl 
-              })}
-              disabled={!newImageUrl || updateImageMutation.isPending}
-            >
-              {updateImageMutation.isPending ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Advanced Filters Modal */}
-      <PrintersAdvancedFiltersModal
-        open={moreFiltersOpen}
-        onOpenChange={setMoreFiltersOpen}
-        filters={advancedFilters}
-        onApply={setAdvancedFilters}
-        availableBrands={brands || []}
-      />
+              {/* Load More / End State */}
+              {hasMore ? (
+                <div className="flex flex-col items-center gap-4 py-12">
+                  <Button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    variant="outline"
+                    className="h-14 px-10 bg-primary/10 border-2 border-primary/40 hover:bg-primary/20 hover:border-primary text-primary font-semibold"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Printers
+                        <ArrowDown className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Showing {displayedCount} of {filteredPrinters.length} printers
+                  </p>
+                </div>
+              ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
+                <div className="flex flex-col items-center gap-4 py-12">
+                  <div className="w-12 h-12 rounded-full bg-green-500/15 border-2 border-green-500/30 flex items-center justify-center">
+                    <Check className="h-6 w-6 text-green-500" />
+                  </div>
+                  <p className="text-base font-semibold">
+                    You've viewed all {filteredPrinters.length} printers
+                  </p>
+                  <Button variant="ghost" onClick={scrollToTop} className="text-muted-foreground hover:text-primary">
+                    <ArrowUp className="mr-2 h-4 w-4" />
+                    Back to Top
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        {/* Image Edit Dialog */}
+        <Dialog open={!!imageEditPrinter} onOpenChange={(open) => !open && setImageEditPrinter(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Printer Image</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="image-url">Image URL</Label>
+                <Input
+                  id="image-url"
+                  placeholder="https://example.com/image.jpg"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                />
+              </div>
+              {newImageUrl && (
+                <div className="space-y-2">
+                  <Label>Preview</Label>
+                  <div className="border rounded-lg p-2 bg-muted/50">
+                    <img
+                      src={newImageUrl}
+                      alt="Preview"
+                      className="max-h-48 mx-auto object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setImageEditPrinter(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => imageEditPrinter && updateImageMutation.mutate({ 
+                  printerId: imageEditPrinter.id, 
+                  imageUrl: newImageUrl 
+                })}
+                disabled={!newImageUrl || updateImageMutation.isPending}
+              >
+                {updateImageMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Advanced Filters Modal */}
+        <PrintersAdvancedFiltersModal
+          open={moreFiltersOpen}
+          onOpenChange={setMoreFiltersOpen}
+          filters={advancedFilters}
+          onApply={setAdvancedFilters}
+          availableBrands={brands || []}
+        />
+      </div>
     </div>
   );
 }

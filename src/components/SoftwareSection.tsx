@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -507,67 +505,62 @@ export const SoftwareSection = ({ printerId, brandName, printerName }: SoftwareS
                       </div>
                     </div>
                     
-                    {/* Older Versions Section - Collapsible */}
+                    {/* Older Versions Section */}
                     {olderReleases.length > 0 && (
-                      <Collapsible defaultOpen={false}>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
-                          <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                            <Layers className="h-4 w-4" />
-                            Older Versions ({olderReleases.length})
-                          </h4>
-                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-3">
-                          <Accordion type="single" collapsible className="space-y-2">
-                            {olderReleases.map((sw) => (
-                              <AccordionItem
-                                key={sw.id}
-                                value={sw.id}
-                                className="border rounded-lg px-4 bg-background hover:bg-muted/30 transition-colors"
-                              >
-                                <AccordionTrigger className="hover:no-underline py-3">
-                                  <div className="flex items-center gap-4 w-full">
-                                    <div className="flex items-center gap-2 min-w-[100px]">
-                                      <span className="font-mono font-bold">v{sw.version}</span>
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                          <Layers className="h-4 w-4" />
+                          Older Versions ({olderReleases.length})
+                        </h4>
+                        <Accordion type="single" collapsible className="space-y-2">
+                          {olderReleases.map((sw) => (
+                            <AccordionItem
+                              key={sw.id}
+                              value={sw.id}
+                              className="border rounded-lg px-4 bg-background hover:bg-muted/30 transition-colors"
+                            >
+                              <AccordionTrigger className="hover:no-underline py-3">
+                                <div className="flex items-center gap-4 w-full">
+                                  <div className="flex items-center gap-2 min-w-[100px]">
+                                    <span className="font-mono font-bold">v{sw.version}</span>
+                                  </div>
+                                  {sw.release_date && (
+                                    <span className="text-sm text-muted-foreground">
+                                      {format(new Date(sw.release_date), "MMM d, yyyy")}
+                                    </span>
+                                  )}
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="pb-4">
+                                <div className="space-y-4 pt-2">
+                                  {sw.release_notes && (
+                                    <div className="space-y-2">
+                                      <h5 className="text-sm font-semibold flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        Release Notes
+                                      </h5>
+                                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none">
+                                        <div dangerouslySetInnerHTML={{ __html: renderReleaseNotes(sw.release_notes) }} />
+                                      </div>
                                     </div>
-                                    {sw.release_date && (
-                                      <span className="text-sm text-muted-foreground">
-                                        {format(new Date(sw.release_date), "MMM d, yyyy")}
-                                      </span>
-                                    )}
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="pb-4">
-                                  <div className="space-y-4 pt-2">
-                                    {sw.release_notes && (
-                                      <div className="space-y-2">
-                                        <h5 className="text-sm font-semibold flex items-center gap-2">
-                                          <FileText className="h-4 w-4 text-primary" />
-                                          Release Notes
-                                        </h5>
-                                        <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg prose prose-sm dark:prose-invert max-w-none">
-                                          <div dangerouslySetInnerHTML={{ __html: renderReleaseNotes(sw.release_notes) }} />
-                                        </div>
-                                      </div>
-                                    )}
+                                  )}
 
-                                    {sw.changelog && (
-                                      <div className="space-y-2">
-                                        <h5 className="text-sm font-semibold">Changelog</h5>
-                                        <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                                          <div dangerouslySetInnerHTML={{ __html: renderReleaseNotes(sw.changelog) }} />
-                                        </div>
+                                  {sw.changelog && (
+                                    <div className="space-y-2">
+                                      <h5 className="text-sm font-semibold">Changelog</h5>
+                                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+                                        <div dangerouslySetInnerHTML={{ __html: renderReleaseNotes(sw.changelog) }} />
                                       </div>
-                                    )}
+                                    </div>
+                                  )}
 
-                                    {/* No download links for older versions - only release notes */}
-                                  </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                            ))}
-                          </Accordion>
-                        </CollapsibleContent>
-                      </Collapsible>
+                                  {/* No download links for older versions - only release notes */}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
                     )}
                   </CardContent>
                 </Card>

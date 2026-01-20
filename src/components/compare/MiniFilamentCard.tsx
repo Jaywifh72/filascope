@@ -152,13 +152,13 @@ export function MiniFilamentCard({
       </button>
 
       <Link to={`/filament/${item.id}`} className="flex flex-col h-full" draggable={false}>
-        {/* Brand Logo - Centered at top */}
-        <div className="flex justify-center mb-1.5">
+        {/* Header: Brand + Material */}
+        <div className="flex items-center gap-2 mb-1.5">
           {brandLogo ? (
             <img 
               src={brandLogo} 
               alt={item.vendor || ''} 
-              className="h-5 max-w-[120px] object-contain"
+              className="w-5 h-5 object-contain rounded"
               draggable={false}
             />
           ) : (
@@ -166,10 +166,6 @@ export function MiniFilamentCard({
               <ImageOff className="w-3 h-3 text-muted-foreground" />
             </div>
           )}
-        </div>
-
-        {/* Material badge + Color swatch */}
-        <div className="flex items-center gap-2 mb-1">
           {item.material && (
             <span className={cn(
               "text-[10px] font-medium px-1.5 py-0.5 rounded",

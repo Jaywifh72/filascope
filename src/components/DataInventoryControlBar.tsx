@@ -10,14 +10,9 @@ import {
 export type SortOption = 
   | "popularity" 
   | "price_asc" 
-  | "price_desc"
   | "rating" 
   | "nozzle_temp" 
-  | "bed_temp"
-  | "name-asc"
-  | "name-desc"
-  | "speed-desc"
-  | "volume-desc";
+  | "bed_temp";
 
 interface DataInventoryControlBarProps {
   sortBy: SortOption;
@@ -28,14 +23,9 @@ interface DataInventoryControlBarProps {
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "popularity", label: "Popularity" },
   { value: "price_asc", label: "Price (Low to High)" },
-  { value: "price_desc", label: "Price (High to Low)" },
   { value: "rating", label: "Rating" },
   { value: "nozzle_temp", label: "Nozzle Temp" },
   { value: "bed_temp", label: "Bed Temp" },
-  { value: "name-asc", label: "Name (A-Z)" },
-  { value: "name-desc", label: "Name (Z-A)" },
-  { value: "speed-desc", label: "Speed (Fastest)" },
-  { value: "volume-desc", label: "Build Volume (Largest)" },
 ];
 
 export function DataInventoryControlBar({ 

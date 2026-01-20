@@ -36,7 +36,7 @@ import HeroSection from "@/components/HeroSection";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
-import { TechnicalControlConsole } from "@/components/TechnicalControlConsole";
+import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
@@ -1377,9 +1377,8 @@ const Finder = () => {
 
       {/* Main Content Area with Technical Console Sidebar */}
       <div className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-10 items-start">
-        {/* Technical Console Sidebar - Materials Mode */}
-        <TechnicalControlConsole
-          mode="materials"
+        {/* Technical Console Sidebar */}
+        <TechnicalConsoleSidebar
           selectedMaterials={selectedMaterials}
           onMaterialChange={(material, checked) => {
             if (checked) {

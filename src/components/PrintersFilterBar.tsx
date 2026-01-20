@@ -32,6 +32,7 @@ interface PrintersFilterBarProps {
 const categories = [
   { id: 'all', label: 'All' },
   { id: 'fdm', label: 'FDM' },
+  { id: 'resin', label: 'Resin' },
   { id: 'corexy', label: 'CoreXY' },
   { id: 'budget', label: 'Budget' },
   { id: 'multicolor', label: 'Multi-Color' },
