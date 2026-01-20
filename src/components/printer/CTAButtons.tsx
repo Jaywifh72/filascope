@@ -1,6 +1,7 @@
 import { ArrowRight, Plus, Check, Crosshair, Activity } from "lucide-react";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useTrackPrinterEvent } from "@/hooks/usePrinterAnalytics";
 
 interface CTAButtonsProps {
   printer: PrinterCompareItem;
@@ -19,13 +20,21 @@ export function CTAButtons({
 }: CTAButtonsProps) {
   const { addPrinter, isSelected, isMaxReached } = usePrinterCompare();
   const { formatPrice } = useCurrency();
+  const { mutate: trackEvent } = useTrackPrinterEvent();
 
   const isAlreadySelected = isSelected(printer.id);
 
   const handleAddToCompare = () => {
     if (!isAlreadySelected) {
       addPrinter(printer);
+      // Track comparison event
+      trackEvent({ printerId: printer.id, eventType: 'comparison' });
     }
+  };
+
+  const handleBuyClick = () => {
+    // Track buy click event
+    trackEvent({ printerId: printer.id, eventType: 'click_buy' });
   };
 
   const affiliateUrl = officialStoreUrl && getAffiliateUrl
@@ -41,6 +50,7 @@ export function CTAButtons({
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex"
+          onClick={handleBuyClick}
         >
           <button
             className="h-[52px] px-8 bg-primary text-primary-foreground font-mono text-sm uppercase tracking-wider font-bold flex items-center gap-3 border-2 border-primary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(0,207,232,0.4)] group"

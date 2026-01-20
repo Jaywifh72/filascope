@@ -2475,33 +2475,80 @@ export type Database = {
           },
         ]
       }
+      printer_analytics: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          printer_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          printer_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          printer_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printer_analytics_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printer_brands: {
         Row: {
           brand: string
           created_at: string | null
+          free_shipping_threshold: number | null
+          has_expert_support: boolean | null
           id: string
           last_discovery_run_at: string | null
           new_models_found_count: number | null
+          return_policy_days: number | null
           scrape_config: Json | null
           updated_at: string | null
+          warranty_years: number | null
         }
         Insert: {
           brand: string
           created_at?: string | null
+          free_shipping_threshold?: number | null
+          has_expert_support?: boolean | null
           id?: string
           last_discovery_run_at?: string | null
           new_models_found_count?: number | null
+          return_policy_days?: number | null
           scrape_config?: Json | null
           updated_at?: string | null
+          warranty_years?: number | null
         }
         Update: {
           brand?: string
           created_at?: string | null
+          free_shipping_threshold?: number | null
+          has_expert_support?: boolean | null
           id?: string
           last_discovery_run_at?: string | null
           new_models_found_count?: number | null
+          return_policy_days?: number | null
           scrape_config?: Json | null
           updated_at?: string | null
+          warranty_years?: number | null
         }
         Relationships: []
       }
@@ -5719,6 +5766,10 @@ export type Database = {
       }
       get_filament_price_stats: {
         Args: { p_filament_id: string }
+        Returns: Json
+      }
+      get_printer_activity_stats: {
+        Args: { p_printer_id: string }
         Returns: Json
       }
       has_role: {

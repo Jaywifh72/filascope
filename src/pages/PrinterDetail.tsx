@@ -38,6 +38,12 @@ import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/Soci
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import { usePrinterInventory, getAggregatedStockStatus } from "@/hooks/usePrinterInventory";
+import { 
+  useTrackPrinterView, 
+  usePrinterActivityStats, 
+  useBrandTrustSignals, 
+  generateTrustSignals 
+} from "@/hooks/usePrinterAnalytics";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -123,6 +129,14 @@ const PrinterDetail = () => {
 
   // Fetch real inventory data
   const { data: inventoryData } = usePrinterInventory(printer?.id);
+
+  // Track page view and fetch real analytics
+  useTrackPrinterView(printer?.id);
+  const { data: activityStats } = usePrinterActivityStats(printer?.id);
+
+  // Get brand ID for trust signals
+  const brandId = printer?.brand_id;
+  const { data: brandTrustData } = useBrandTrustSignals(brandId);
 
   // Extract brand name for accessory query
   const printerBrand = typeof printer?.brand === 'object' && printer?.brand !== null && 'brand' in printer.brand 
@@ -713,11 +727,11 @@ const PrinterDetail = () => {
             staffPickReasons.push("Hobbyists and home users", "Beginner-friendly printing", "Great value for features");
           }
 
-          // Generate mock activity (in production, this would be real analytics)
+          // Use real activity data from analytics
           const activityData = {
-            views: Math.floor(Math.random() * 15) + 3,
-            comparisons: Math.floor(Math.random() * 5) + 1,
-            purchases: Math.floor(Math.random() * 4) + 1,
+            views: activityStats?.views_24h || 0,
+            comparisons: activityStats?.comparisons_7d || 0,
+            purchases: activityStats?.buy_clicks_7d || 0,
           };
 
           // Generate recent reviews (in production, fetch from reviews table)
@@ -745,6 +759,9 @@ const PrinterDetail = () => {
             }
           ] : [];
 
+          // Generate trust signals from brand data
+          const trustSignals = generateTrustSignals(brandTrustData);
+
           const sidebarData = {
             rating: printer.rating_community_overall,
             reviewCount: printer.review_count_aggregated,
@@ -753,12 +770,7 @@ const PrinterDetail = () => {
             staffPickReasons,
             stockStatus: getAggregatedStockStatus(inventoryData || [], printer.discontinued),
             shippingTime: 'Ships within 2-3 business days',
-            trustSignals: [
-              'Free shipping on orders over $500',
-              '30-day return policy',
-              '1-year manufacturer warranty',
-              'Expert customer support'
-            ],
+            trustSignals,
             activity: activityData
           };
 
