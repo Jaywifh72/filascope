@@ -1,7 +1,8 @@
-import { forwardRef } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { forwardRef, useState, useRef, useEffect } from "react";
+import { ChevronDown, SlidersHorizontal, Check, Search, Loader2, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 interface CategoryCount {
@@ -38,6 +39,33 @@ const categories = [
   { id: 'multicolor', label: 'Multi-Color' },
 ];
 
+const sortOptions = [
+  { value: "name-asc", label: "Name (A-Z)" },
+  { value: "name-desc", label: "Name (Z-A)" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "speed-desc", label: "Speed: Fastest" },
+  { value: "volume-desc", label: "Build Volume: Largest" },
+];
+
+const priceRanges = [
+  { value: "all", label: "All Prices" },
+  { value: "0-500", label: "Under $500" },
+  { value: "500-1000", label: "$500 - $1,000" },
+  { value: "1000-2000", label: "$1,000 - $2,000" },
+  { value: "2000-3000", label: "$2,000 - $3,000" },
+  { value: "3000+", label: "Over $3,000" },
+];
+
+const buildVolumes = [
+  { value: "all", label: "All Sizes" },
+  { value: "small", label: "Small (<200mm)" },
+  { value: "medium", label: "Medium (200-300mm)" },
+  { value: "large", label: "Large (300mm+)" },
+];
+
+type DropdownType = 'sort' | 'price' | 'volume' | null;
+
 const PrintersFilterBar = forwardRef<HTMLDivElement, PrintersFilterBarProps>(({
   activeCategory,
   onCategoryChange,
@@ -53,128 +81,242 @@ const PrintersFilterBar = forwardRef<HTMLDivElement, PrintersFilterBarProps>(({
   hasActiveFilters,
   onClearFilters,
 }, ref) => {
+  const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenDropdown(null);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  const toggleDropdown = (dropdown: DropdownType) => {
+    setOpenDropdown(prev => prev === dropdown ? null : dropdown);
+  };
+
+  const getSortLabel = () => sortOptions.find(o => o.value === sortBy)?.label || "Sort";
+  const getPriceLabel = () => priceRanges.find(o => o.value === priceRange)?.label || "Price";
+  const getVolumeLabel = () => buildVolumes.find(o => o.value === buildVolume)?.label || "Build";
+
   return (
     <div
-      ref={ref}
-      className="w-full bg-transparent"
+      ref={(node) => {
+        (dropdownRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (ref && typeof ref === 'function') ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }}
+      className="relative transition-all duration-300 z-30 bg-card/50 border-b border-border"
     >
-      {/* Category Tabs */}
-      <div 
-        className="flex overflow-x-auto scrollbar-hide bg-primary/[0.08] border-b-2 border-primary/30"
-        role="tablist"
-        aria-label="Printer categories"
-      >
-        {categories.map((category) => {
-          const count = categoryCounts[category.id as keyof CategoryCount];
-          const isActive = activeCategory === category.id;
-          
-          return (
-            <button
-              key={category.id}
-              onClick={() => onCategoryChange(category.id)}
-              role="tab"
-              aria-selected={isActive}
+      <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
+        {/* Left side - Category tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+          {categories.map((category) => {
+            const count = categoryCounts[category.id as keyof CategoryCount];
+            const isActive = activeCategory === category.id;
+            
+            return (
+              <button
+                key={category.id}
+                onClick={() => onCategoryChange(category.id)}
+                role="tab"
+                aria-selected={isActive}
+                className={cn(
+                  "h-9 px-4 flex items-center gap-1.5 whitespace-nowrap text-sm font-medium transition-all duration-200 rounded-lg",
+                  isActive
+                    ? "bg-primary/15 text-primary font-semibold"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                )}
+              >
+                <span>{category.label}</span>
+                <span className={cn("text-xs", isActive ? "opacity-90" : "opacity-60")}>
+                  ({count})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right side - Dropdowns & Actions */}
+        <div className="flex items-center gap-2">
+          {/* Sort Dropdown */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleDropdown('sort')}
               className={cn(
-                "h-14 px-6 flex items-center gap-2 whitespace-nowrap font-semibold text-[15px] transition-all duration-200 border-b-[3px]",
-                isActive
-                  ? "bg-primary/15 text-primary border-primary font-bold"
-                  : "text-muted-foreground border-transparent hover:bg-white/5 hover:text-foreground hover:border-primary/30"
+                "h-9 gap-2 min-w-[140px] justify-between",
+                openDropdown === 'sort' && "ring-2 ring-primary/50"
               )}
             >
-              <span>{category.label}</span>
-              <span className={cn("text-sm", isActive ? "opacity-90" : "opacity-70")}>
-                ({count})
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              <span className="truncate">{getSortLabel()}</span>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform shrink-0",
+                openDropdown === 'sort' && "rotate-180"
+              )} />
+            </Button>
 
-      {/* Controls Row */}
-      <div className="flex flex-wrap items-center justify-between gap-4 px-6 lg:px-10 py-4 bg-white/[0.02] border-b border-white/[0.08]">
-        {/* Left Controls */}
-        <div className="flex flex-wrap items-center gap-4 lg:gap-6">
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Sort:</label>
-            <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger className="w-[180px] h-10 bg-white/5 border-white/10 hover:bg-white/8 hover:border-primary/30 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                <SelectItem value="speed-desc">Speed: Fastest</SelectItem>
-                <SelectItem value="volume-desc">Build Volume: Largest</SelectItem>
-              </SelectContent>
-            </Select>
+            {openDropdown === 'sort' && (
+              <div className="absolute top-full right-0 mt-2 w-56 bg-popover border border-border rounded-lg shadow-lg z-50">
+                <div className="p-2">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        onSortChange(option.value);
+                        setOpenDropdown(null);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        sortBy === option.value
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-muted/80"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {sortBy === option.value && <Check className="h-4 w-4" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Price Range Dropdown */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Price:</label>
-            <Select value={priceRange} onValueChange={onPriceChange}>
-              <SelectTrigger className="w-[160px] h-10 bg-white/5 border-white/10 hover:bg-white/8 hover:border-primary/30 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="0-500">Under $500</SelectItem>
-                <SelectItem value="500-1000">$500 - $1,000</SelectItem>
-                <SelectItem value="1000-2000">$1,000 - $2,000</SelectItem>
-                <SelectItem value="2000-3000">$2,000 - $3,000</SelectItem>
-                <SelectItem value="3000+">Over $3,000</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Price Dropdown */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleDropdown('price')}
+              className={cn(
+                "h-9 gap-2 min-w-[130px] justify-between",
+                openDropdown === 'price' && "ring-2 ring-primary/50",
+                priceRange !== 'all' && "border-primary/50 bg-primary/5"
+              )}
+            >
+              <span className="truncate">{getPriceLabel()}</span>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform shrink-0",
+                openDropdown === 'price' && "rotate-180"
+              )} />
+            </Button>
+
+            {openDropdown === 'price' && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-popover border border-border rounded-lg shadow-lg z-50">
+                <div className="p-2">
+                  {priceRanges.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        onPriceChange(option.value);
+                        setOpenDropdown(null);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        priceRange === option.value
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-muted/80"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {priceRange === option.value && <Check className="h-4 w-4" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Build Volume Dropdown */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Build:</label>
-            <Select value={buildVolume} onValueChange={onBuildVolumeChange}>
-              <SelectTrigger className="w-[170px] h-10 bg-white/5 border-white/10 hover:bg-white/8 hover:border-primary/30 transition-colors">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all">All Sizes</SelectItem>
-                <SelectItem value="small">Small (&lt;200mm)</SelectItem>
-                <SelectItem value="medium">Medium (200-300mm)</SelectItem>
-                <SelectItem value="large">Large (300mm+)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleDropdown('volume')}
+              className={cn(
+                "h-9 gap-2 min-w-[130px] justify-between",
+                openDropdown === 'volume' && "ring-2 ring-primary/50",
+                buildVolume !== 'all' && "border-primary/50 bg-primary/5"
+              )}
+            >
+              <span className="truncate">{getVolumeLabel()}</span>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform shrink-0",
+                openDropdown === 'volume' && "rotate-180"
+              )} />
+            </Button>
 
-        {/* Right Controls */}
-        <div className="flex items-center gap-3">
+            {openDropdown === 'volume' && (
+              <div className="absolute top-full right-0 mt-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-50">
+                <div className="p-2">
+                  {buildVolumes.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        onBuildVolumeChange(option.value);
+                        setOpenDropdown(null);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        buildVolume === option.value
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-muted/80"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {buildVolume === option.value && <Check className="h-4 w-4" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* More Filters */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onMoreFiltersClick}
+            className={cn(
+              "relative h-9 gap-2",
+              advancedFilterCount > 0 && "border-primary/50 bg-primary/5"
+            )}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="hidden sm:inline">More Filters</span>
+            {advancedFilterCount > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1.5 bg-primary rounded-full text-[11px] font-bold text-primary-foreground flex items-center justify-center">
+                {advancedFilterCount}
+              </span>
+            )}
+          </Button>
+
+          {/* Clear All */}
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onClearFilters}
-              className="h-10 px-4 text-destructive hover:text-destructive hover:bg-destructive/10 border border-destructive/30"
+              className="h-9 px-3 text-muted-foreground hover:text-foreground"
             >
-              <X className="w-4 h-4 mr-2" />
-              Clear All
+              <X className="w-4 h-4 mr-1" />
+              Clear
             </Button>
           )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onMoreFiltersClick}
-            className="relative h-10 px-4 bg-transparent border-white/15 hover:bg-white/5 hover:border-primary/30"
-          >
-            <SlidersHorizontal className="w-4 h-4 mr-2" />
-            More Filters
-            {advancedFilterCount > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1.5 bg-destructive rounded-full text-[11px] font-bold text-destructive-foreground flex items-center justify-center border-2 border-background">
-                {advancedFilterCount}
-              </span>
-            )}
-          </Button>
         </div>
       </div>
     </div>

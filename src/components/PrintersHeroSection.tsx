@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Printer, Building2, TrendingUp, ArrowRight, Sparkles, DollarSign, Home, Palette, Ruler, FlaskConical, Zap } from "lucide-react";
+import { Search, Sparkles, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PrintersHeroSectionProps {
@@ -13,369 +13,212 @@ interface PrintersHeroSectionProps {
   onOpenQuiz?: () => void;
 }
 
-// Count-up animation hook
-const useCountUp = (end: number, duration: number = 2000) => {
-  const [count, setCount] = useState(0);
-  
-  useEffect(() => {
-    let startTime: number;
-    let animationFrame: number;
-    
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      
-      // Ease-out curve for satisfying slowdown at end
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(easeOut * end));
-      
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-    
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration]);
-  
-  return count;
-};
-
-interface StatBlockProps {
-  icon: React.ElementType;
-  targetNumber: number | null;
-  displayText?: string;
-  suffix?: string;
-  label: string;
-  delay: string;
-  colorVariant: 'cyan' | 'purple' | 'green';
-}
-
-const colorConfig = {
-  cyan: {
-    bg: 'bg-primary/15',
-    text: 'text-primary',
-    glow: 'rgba(0, 217, 217, 0.4)',
-    glowHover: 'rgba(0, 217, 217, 0.6)',
-    borderHover: 'rgba(0, 217, 217, 0.5)',
-    shadowHover: '0 20px 60px rgba(0, 217, 217, 0.3)',
-  },
-  purple: {
-    bg: 'bg-violet-500/15',
-    text: 'text-violet-400',
-    glow: 'rgba(167, 139, 250, 0.4)',
-    glowHover: 'rgba(167, 139, 250, 0.6)',
-    borderHover: 'rgba(167, 139, 250, 0.5)',
-    shadowHover: '0 20px 60px rgba(167, 139, 250, 0.3)',
-  },
-  green: {
-    bg: 'bg-emerald-500/15',
-    text: 'text-emerald-400',
-    glow: 'rgba(34, 197, 94, 0.4)',
-    glowHover: 'rgba(34, 197, 94, 0.6)',
-    borderHover: 'rgba(34, 197, 94, 0.5)',
-    shadowHover: '0 20px 60px rgba(34, 197, 94, 0.3)',
-  },
-};
-
-const StatBlock = ({ icon: Icon, targetNumber, displayText, suffix = '', label, delay, colorVariant }: StatBlockProps) => {
-  const count = useCountUp(targetNumber ?? 0, 2000);
-  const colors = colorConfig[colorVariant];
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    
-    // Calculate tilt (max 8 degrees)
-    const tiltX = ((y - centerY) / centerY) * -8;
-    const tiltY = ((x - centerX) / centerX) * 8;
-    
-    setTilt({ x: tiltX, y: tiltY });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-    setIsHovered(false);
-  };
-
-  return (
-    <div 
-      className="group relative min-w-[200px] w-full sm:w-auto animate-fade-in"
-      style={{ 
-        animationDelay: delay,
-        perspective: '1000px',
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      role="group"
-      aria-label={`${targetNumber ? count.toLocaleString() : displayText} ${label}`}
-    >
-      {/* 3D Card Container */}
-      <div 
-        className="relative flex flex-col items-center gap-4 bg-gradient-to-b from-white/8 to-white/4 border border-white/10 rounded-2xl px-10 py-8 transition-all duration-300 ease-out"
-        style={{
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0) ${isHovered ? 'translateY(-8px)' : ''}`,
-          transformStyle: 'preserve-3d',
-          borderColor: isHovered ? colors.borderHover : 'rgba(255, 255, 255, 0.1)',
-          boxShadow: isHovered 
-            ? `${colors.shadowHover}, inset 0 1px 0 rgba(255,255,255,0.1)` 
-            : 'inset 0 1px 0 rgba(255,255,255,0.05)',
-        }}
-      >
-        {/* Icon with colored glow */}
-        <div className={`relative p-4 rounded-2xl ${colors.bg}`}>
-          {/* Background glow behind icon */}
-          <div 
-            className="absolute inset-0 rounded-2xl blur-2xl transition-opacity duration-300"
-            style={{ 
-              background: isHovered ? colors.glowHover : colors.glow,
-              opacity: isHovered ? 0.8 : 0.5,
-              transform: 'translateZ(-10px) scale(1.2)',
-            }}
-          />
-          <Icon 
-            className={`relative z-10 w-12 h-12 ${colors.text} transition-transform duration-300`}
-            style={{ transform: isHovered ? 'scale(1.1) translateZ(20px)' : 'scale(1)' }}
-          />
-        </div>
-        
-        {/* Number with bold Inter font */}
-        <span 
-          className="text-5xl font-black text-white leading-tight transition-all duration-300"
-          style={{ 
-            fontFamily: 'Inter, system-ui, sans-serif',
-            letterSpacing: '-0.02em',
-            textShadow: isHovered ? '0 4px 12px rgba(0, 217, 217, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.3)',
-            transform: 'translateZ(30px)',
-          }}
-        >
-          {targetNumber !== null ? count.toLocaleString() : displayText}{suffix}
-        </span>
-        
-        {/* Label */}
-        <span 
-          className="text-xs font-semibold text-slate-400 uppercase tracking-[0.2em]"
-          style={{ transform: 'translateZ(15px)' }}
-        >
-          {label}
-        </span>
-
-        {/* Subtle inner highlight for 3D depth */}
-        <div 
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)',
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-// Quick filter chip definitions
-const quickFilters = [
-  { id: 'budget', label: 'Budget', icon: DollarSign, description: 'Under $500' },
-  { id: 'beginner', label: 'Beginner', icon: Home, description: 'Easy to use' },
-  { id: 'multicolor', label: 'Multi-Color', icon: Palette, description: 'AMS/MMU' },
-  { id: 'large', label: 'Large Format', icon: Ruler, description: '300mm+' },
-  { id: 'resin', label: 'Resin', icon: FlaskConical, description: 'SLA/MSLA' },
-  { id: 'speed', label: 'High-Speed', icon: Zap, description: '300mm/s+' },
-];
-
-interface QuickFilterChipProps {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  description: string;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-const QuickFilterChip = ({ id, label, icon: Icon, description, isActive, onClick }: QuickFilterChipProps) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        h-12 px-5 
-        flex items-center gap-2.5
-        rounded-xl
-        border transition-all duration-200
-        cursor-pointer
-        ${isActive 
-          ? 'bg-primary/15 border-primary/50 text-primary font-semibold' 
-          : 'bg-white/5 border-white/15 text-white hover:bg-white/8 hover:border-primary/30 hover:text-primary hover:-translate-y-0.5 hover:shadow-lg'
-        }
-      `}
-      role="button"
-      aria-pressed={isActive}
-      title={description}
-    >
-      <Icon className="w-5 h-5" />
-      <span className="text-sm font-medium">{label}</span>
-    </button>
-  );
-};
-
 const PrintersHeroSection = ({ 
   searchTerm, 
   onSearchChange, 
   printerCount, 
   brandCount,
-  activeQuickFilters,
-  onQuickFilterToggle,
   onOpenQuiz
 }: PrintersHeroSectionProps) => {
   const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-  };
-
   return (
-    <section className="relative overflow-x-clip border-b border-border">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background to-background" />
-      
-      {/* Optional: Subtle geometric background element */}
-      <div 
-        className="absolute -top-24 -right-24 w-[400px] h-[400px] opacity-[0.06] pointer-events-none rotate-[15deg]"
-        style={{
-          background: "conic-gradient(from 0deg, hsl(var(--primary)), hsl(280 70% 60%), hsl(340 75% 55%), hsl(45 90% 55%), hsl(160 80% 45%), hsl(200 80% 50%), hsl(var(--primary)))",
-          borderRadius: "50%",
-        }}
-      />
-      
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-10 py-16 md:py-20 lg:py-24">
-        <div className="flex flex-col items-center text-center">
+    <section className="relative overflow-hidden">
+      {/* Main content - Compact height, no separate background */}
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-12 md:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
-          {/* Headline */}
-          <h1 
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-bold tracking-tight leading-[1.1] mb-4 animate-fade-in"
-            style={{ letterSpacing: "-0.02em" }}
-          >
-            Find Your{" "}
-            <span className="text-primary">Perfect</span>{" "}
-            Printer
-          </h1>
-          
-          {/* Subheadline */}
-          <p 
-            className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl animate-fade-in"
-            style={{ animationDelay: "0.1s" }}
-          >
-            Compare specs, prices, and features in one place
-          </p>
-          
-          {/* Stat Blocks */}
-          <div className="flex flex-col sm:flex-row justify-center items-stretch gap-4 sm:gap-6 lg:gap-12 mb-12 w-full sm:w-auto">
-            <StatBlock 
-              icon={Printer} 
-              targetNumber={printerCount}
-              label="Printers" 
-              delay="0.2s"
-              colorVariant="cyan"
-            />
-            <StatBlock 
-              icon={Building2} 
-              targetNumber={brandCount}
-              suffix="+"
-              label="Brands" 
-              delay="0.3s"
-              colorVariant="purple"
-            />
-            <StatBlock 
-              icon={TrendingUp} 
-              targetNumber={null}
-              displayText="Real-Time"
-              label="Pricing" 
-              delay="0.4s"
-              colorVariant="green"
-            />
-          </div>
-          
-          {/* Search Bar */}
-          <form 
-            onSubmit={handleSearchSubmit}
-            className="w-full max-w-[700px] mb-8 animate-fade-in"
-            style={{ animationDelay: "0.5s" }}
-            role="search"
-          >
-            <div 
-              className={`relative transition-all duration-300 ${
-                isFocused ? "scale-[1.01]" : ""
-              }`}
+          {/* Left: Text Content */}
+          <div className="flex flex-col items-start text-left order-1">
+            {/* Headline - Smaller, more compact */}
+            <h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-light tracking-[0.2em] leading-[1.2] mb-6 animate-fade-in uppercase"
             >
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10" />
-              <input
-                type="text"
-                placeholder="Search by brand, model, or feature..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className={`w-full h-16 pl-14 pr-44 text-lg bg-white text-slate-800 placeholder:text-slate-400 rounded-2xl border-2 transition-all duration-300 outline-none ${
-                  isFocused 
-                    ? "border-primary shadow-[0_0_0_4px_rgba(0,217,217,0.1)]" 
-                    : "border-transparent"
-                }`}
-                aria-label="Search printers by brand, model, or feature"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-40 bg-gradient-to-r from-primary to-[hsl(180_70%_40%)] hover:from-[hsl(180_100%_47%)] hover:to-[hsl(180_70%_45%)] text-slate-900 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_4px_12px_rgba(0,217,217,0.3)]"
-                aria-label="Submit search"
-              >
-                <Search className="w-4 h-4" />
-                Search
-              </button>
-            </div>
-          </form>
-
-          {/* Quick Filter Chips */}
-          <div 
-            className="w-full max-w-[900px] mb-10 animate-fade-in"
-            style={{ animationDelay: "0.55s" }}
-          >
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Quick Filters
+              Precision Hardware.
+              <br />
+              Master The{" "}
+              <span className="font-black italic text-primary">Print.</span>
+            </h1>
+            
+            {/* Sub-text */}
+            <p 
+              className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed mb-12 max-w-[540px] animate-fade-in"
+              style={{ animationDelay: "0.15s" }}
+            >
+              Explore {printerCount.toLocaleString()} printers from {brandCount}+ manufacturers. Compare specs, prices, and features in one unified registry.
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {quickFilters.map((filter) => (
-                <QuickFilterChip
-                  key={filter.id}
-                  {...filter}
-                  isActive={activeQuickFilters.includes(filter.id)}
-                  onClick={() => onQuickFilterToggle(filter.id)}
+            
+            {/* Buttons Row */}
+            <div 
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto animate-fade-in"
+              style={{ animationDelay: "0.3s" }}
+            >
+              {/* Primary Button - Printer Quiz with Cyan Gradient */}
+              <Button 
+                size="lg"
+                onClick={onOpenQuiz}
+                className="h-14 px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
+              >
+                <Sparkles className="mr-2 h-5 w-5" />
+                Printer Quiz
+              </Button>
+              
+              {/* Secondary - Search Input with Glass Background */}
+              <div 
+                className={`relative transition-all duration-300 ${
+                  isFocused ? "scale-[1.01]" : ""
+                }`}
+              >
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                <input
+                  type="text"
+                  placeholder="Search printers..."
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                    isFocused 
+                      ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
+                      : "border-white/10 hover:border-white/20"
+                  }`}
+                  aria-label="Search printers"
                 />
-              ))}
+              </div>
             </div>
           </div>
           
-          {/* Quiz CTA */}
+          {/* Right: Glass Container with 3D Printer Visual */}
           <div 
-            className="flex flex-col items-center gap-3 animate-fade-in"
-            style={{ animationDelay: "0.6s" }}
+            className="hidden lg:flex justify-end items-center animate-fade-in order-2"
+            style={{ animationDelay: "0.4s" }}
           >
-            <p className="text-muted-foreground">Not sure what you need?</p>
-            <Button 
-              variant="outline"
-              onClick={onOpenQuiz}
-              className="h-[52px] px-7 bg-transparent border-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200 font-semibold text-base rounded-xl group"
+            {/* Compact Glass Container */}
+            <div 
+              className="relative p-8 rounded-2xl border border-white/10 shadow-xl overflow-hidden"
+              style={{
+                transform: "rotate(6deg)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                background: "rgba(255, 255, 255, 0.02)",
+              }}
             >
-              <Sparkles className="mr-2 h-5 w-5" />
-              Take Our Printer Quiz
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-            </Button>
+              {/* Horizontal Cyan Scan Line */}
+              <div 
+                className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none"
+                style={{
+                  background: "linear-gradient(90deg, transparent, #00CFE8, transparent)",
+                  boxShadow: "0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)",
+                  animation: "heroScanLine 4s ease-in-out infinite",
+                }}
+              />
+              
+              {/* 3D Isometric Printer */}
+              <div className="relative w-[240px] h-[240px] flex items-center justify-center" style={{ perspective: "1000px" }}>
+                {/* Base Plate - Magenta */}
+                <div 
+                  className="absolute w-32 h-32 rounded-lg"
+                  style={{
+                    transform: "translateY(50px) rotateX(-60deg) rotateZ(45deg)",
+                    transformStyle: "preserve-3d",
+                    border: "2px solid rgba(255, 0, 85, 0.5)",
+                    background: "linear-gradient(135deg, rgba(255, 0, 85, 0.25) 0%, rgba(255, 0, 85, 0.08) 100%)",
+                    boxShadow: "0 20px 40px -12px rgba(255, 0, 85, 0.35)",
+                  }}
+                />
+                
+                {/* Frame - White/Glass */}
+                <div 
+                  className="absolute w-24 h-36 rounded-lg backdrop-blur-sm"
+                  style={{
+                    transform: "translateY(-10px) rotateX(-10deg) rotateY(-5deg)",
+                    transformStyle: "preserve-3d",
+                    border: "2px solid rgba(255, 255, 255, 0.35)",
+                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%)",
+                    boxShadow: "0 20px 40px -12px rgba(255, 255, 255, 0.15)",
+                  }}
+                >
+                  {/* Print Head - Cyan */}
+                  <div 
+                    className="absolute left-1/2 -translate-x-1/2 w-10 h-6 rounded"
+                    style={{
+                      top: "30%",
+                      border: "2px solid rgba(0, 207, 232, 0.8)",
+                      background: "linear-gradient(135deg, rgba(0, 207, 232, 0.4) 0%, rgba(0, 207, 232, 0.15) 100%)",
+                      boxShadow: "0 0 20px rgba(0, 207, 232, 0.5)",
+                      animation: "printHeadMove 3s ease-in-out infinite",
+                    }}
+                  />
+                  {/* Print Object being formed */}
+                  <div 
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded"
+                    style={{
+                      border: "2px solid rgba(0, 207, 232, 0.6)",
+                      background: "linear-gradient(135deg, rgba(0, 207, 232, 0.3) 0%, rgba(0, 207, 232, 0.08) 100%)",
+                      boxShadow: "0 10px 30px -8px rgba(0, 207, 232, 0.45)",
+                    }}
+                  />
+                </div>
+                
+                {/* Decorative grid lines */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                  <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
+                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
+                </div>
+              </div>
+              
+              {/* Corner accents - Cyan */}
+              <div 
+                className="absolute top-4 left-4 w-8 h-8 rounded-tl-lg"
+                style={{ 
+                  borderLeft: "2px solid rgba(0, 207, 232, 0.5)",
+                  borderTop: "2px solid rgba(0, 207, 232, 0.5)",
+                }}
+              />
+              <div 
+                className="absolute bottom-4 right-4 w-8 h-8 rounded-br-lg"
+                style={{ 
+                  borderRight: "2px solid rgba(0, 207, 232, 0.5)",
+                  borderBottom: "2px solid rgba(0, 207, 232, 0.5)",
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
+      
+      {/* Hero scan line keyframes */}
+      <style>{`
+        @keyframes heroScanLine {
+          0% {
+            top: 0%;
+            opacity: 0;
+          }
+          5% {
+            opacity: 1;
+          }
+          45% {
+            opacity: 1;
+          }
+          50% {
+            top: 100%;
+            opacity: 0;
+          }
+          100% {
+            top: 100%;
+            opacity: 0;
+          }
+        }
+        @keyframes printHeadMove {
+          0%, 100% {
+            transform: translateX(-50%) translateX(-8px);
+          }
+          50% {
+            transform: translateX(-50%) translateX(8px);
+          }
+        }
+      `}</style>
     </section>
   );
 };
