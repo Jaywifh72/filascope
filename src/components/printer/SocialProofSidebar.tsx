@@ -28,7 +28,7 @@ interface SidebarData {
   recentReviews: Review[];
   staffPick: boolean;
   staffPickReasons: string[];
-  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock';
+  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
   shippingTime: string;
   trustSignals: string[];
   activity: {
@@ -220,7 +220,7 @@ function StockShippingCard({
   shippingTime, 
   trustSignals 
 }: { 
-  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock';
+  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
   shippingTime: string;
   trustSignals: string[];
 }) {
@@ -236,6 +236,10 @@ function StockShippingCard({
     'out-of-stock': {
       text: 'INVENTORY: DEPLETED',
       className: 'border-red-500/30 text-red-500 bg-red-500/10'
+    },
+    'discontinued': {
+      text: 'INVENTORY: DISCONTINUED',
+      className: 'border-destructive/30 text-destructive bg-destructive/10'
     }
   };
 
@@ -250,7 +254,7 @@ function StockShippingCard({
         <span>{badge.text}</span>
       </div>
 
-      {stockStatus !== 'out-of-stock' && (
+      {stockStatus !== 'out-of-stock' && stockStatus !== 'discontinued' && (
         <div className="font-mono text-xs text-muted-foreground">
           <span className="text-primary/60">&gt;</span> {shippingTime}
         </div>

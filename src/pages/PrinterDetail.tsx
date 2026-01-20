@@ -748,7 +748,7 @@ const PrinterDetail = () => {
             recentReviews,
             staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
             staffPickReasons,
-            stockStatus: 'in-stock' as const,
+            stockStatus: printer.discontinued ? 'discontinued' as const : 'in-stock' as const,
             shippingTime: 'Ships within 2-3 business days',
             trustSignals: [
               'Free shipping on orders over $500',
