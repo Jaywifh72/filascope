@@ -63,9 +63,20 @@ export default function MediumStandardPrinterCard({
             flex flex-col
           "
         >
-          {/* Semantic Badges - Top Left */}
+          {/* Brand Logo - Top of Card */}
+          {getBrandLogo(printer.brand?.brand || null) && (
+            <div className="flex justify-center -mt-1 mb-1">
+              <img 
+                src={getBrandLogo(printer.brand?.brand || null)!} 
+                alt={`${printer.brand?.brand} logo`}
+                className="h-12 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300"
+              />
+            </div>
+          )}
+
+          {/* Semantic Badges - Below Brand Logo */}
           {badges.length > 0 && (
-            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+            <div className="flex flex-wrap gap-1.5 justify-center mb-2">
               {badges.map((badge, idx) => (
                 <PrinterBadge 
                   key={`${badge.type}-${idx}`}
@@ -74,77 +85,6 @@ export default function MediumStandardPrinterCard({
                   compact
                 />
               ))}
-            </div>
-          )}
-
-          {/* Comparison Checkbox - Top Right */}
-          <div className="absolute top-3 right-3 z-10">
-            <ComparisonCheckbox
-              checked={isSelected}
-              disabled={isMaxReached}
-              onChange={onToggleCompare}
-              printerName={`${printer.brand?.brand || ''} ${printer.model_name}`}
-            />
-          </div>
-
-          {/* Action Icons - Below Checkbox */}
-          <div className="absolute top-12 right-3 flex flex-col gap-1.5 z-10">
-            <button 
-              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
-              aria-label="Add to favorites"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <Heart className="h-3.5 w-3.5 text-white/50 hover:text-red-400 transition-colors" />
-            </button>
-            
-            {printer.official_product_url && (
-              <button
-                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.open(printer.official_product_url!, '_blank', 'noopener,noreferrer');
-                }}
-                aria-label="View on manufacturer website"
-              >
-                <ExternalLink className="h-3.5 w-3.5 text-white/50 hover:text-primary transition-colors" />
-              </button>
-            )}
-            
-            {isAdmin && (
-              <>
-                <button 
-                  className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
-                  onClick={onEditImage}
-                  aria-label="Edit printer image"
-                >
-                  <ImageIcon className="h-3.5 w-3.5 text-white/50" />
-                </button>
-                {printer.official_product_url && (
-                  <button 
-                    className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
-                    onClick={onRescrape}
-                    disabled={isRescraping}
-                    aria-label="Re-scrape printer data"
-                  >
-                    <RefreshCw className={`h-3.5 w-3.5 text-white/50 ${isRescraping ? 'animate-spin' : ''}`} />
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Brand Logo - Above Image */}
-          {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="flex justify-center mt-2 mb-1">
-              <img 
-                src={getBrandLogo(printer.brand?.brand || null)!} 
-                alt={`${printer.brand?.brand} logo`}
-                className="h-12 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300"
-              />
             </div>
           )}
 
