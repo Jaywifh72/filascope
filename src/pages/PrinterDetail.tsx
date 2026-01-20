@@ -38,6 +38,7 @@ import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/Soci
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import { usePrinterInventory, getAggregatedStockStatus } from "@/hooks/usePrinterInventory";
+import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { 
   useTrackPrinterView, 
   usePrinterActivityStats, 
@@ -138,7 +139,22 @@ const PrinterDetail = () => {
   const brandId = printer?.brand_id;
   const { data: brandTrustData } = useBrandTrustSignals(brandId);
 
-  // Extract brand name for accessory query
+  // Fetch live price from store
+  const { 
+    currentPrice: livePrice, 
+    compareAtPrice: liveCompareAtPrice,
+    isLoading: priceLoading, 
+    isLivePrice,
+    currency: livePriceCurrency
+  } = usePrinterCurrentPrice(
+    printer?.official_store_url, 
+    printer?.current_price_usd_store ?? null
+  );
+
+  // Use live price if available, otherwise fall back to database price
+  const displayPrice = isLivePrice && livePrice !== null ? livePrice : printer?.current_price_usd_store;
+  const displayMsrp = isLivePrice && liveCompareAtPrice ? liveCompareAtPrice : printer?.msrp_usd;
+
   const printerBrand = typeof printer?.brand === 'object' && printer?.brand !== null && 'brand' in printer.brand 
     ? printer.brand.brand 
     : null;
@@ -665,16 +681,17 @@ const PrinterDetail = () => {
 
               {/* Price Section - Terminal Style */}
               <PriceSection
-                price={printer.current_price_usd_store}
-                msrp={printer.msrp_usd}
+                price={displayPrice}
+                msrp={displayMsrp}
+                trend={isLivePrice ? { direction: 'down' as const, percentage: liveCompareAtPrice && livePrice ? Math.round((1 - livePrice / liveCompareAtPrice) * 100) : undefined, period: 'sale' } : undefined}
               />
 
               {/* Price Insights Widget */}
               <PriceInsightsWidget
                 printerId={printer.id}
-                currentPrice={printer.current_price_usd_store}
+                currentPrice={displayPrice}
                 currentAmazonPrice={printer.current_price_usd_amazon}
-                msrp={printer.msrp_usd}
+                msrp={displayMsrp}
                 onViewFullHistory={() => setShowPriceHistoryModal(true)}
               />
 
@@ -690,7 +707,7 @@ const PrinterDetail = () => {
                   brand: brand,
                 }}
                 officialStoreUrl={printer.official_store_url}
-                storePrice={printer.current_price_usd_store}
+                storePrice={displayPrice}
                 getAffiliateUrl={getAffiliateUrl}
                 brand={brand}
               />

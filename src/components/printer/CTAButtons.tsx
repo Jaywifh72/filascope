@@ -1,8 +1,7 @@
-import { ArrowRight, Plus, Check, Crosshair, Activity, RefreshCw, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Check, Crosshair, Activity } from "lucide-react";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTrackPrinterEvent } from "@/hooks/usePrinterAnalytics";
-import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 
 interface CTAButtonsProps {
   printer: PrinterCompareItem;
@@ -23,13 +22,6 @@ export function CTAButtons({
   const { formatPrice } = useCurrency();
   const { mutate: trackEvent } = useTrackPrinterEvent();
 
-  // Fetch live price from the store
-  const { 
-    currentPrice: livePrice, 
-    isLoading: priceLoading, 
-    isLivePrice 
-  } = usePrinterCurrentPrice(officialStoreUrl, storePrice ?? null);
-
   const isAlreadySelected = isSelected(printer.id);
 
   const handleAddToCompare = () => {
@@ -49,9 +41,6 @@ export function CTAButtons({
     ? getAffiliateUrl(officialStoreUrl, brand)
     : officialStoreUrl;
 
-  // Use live price if available, otherwise fall back to stored price
-  const displayPrice = isLivePrice && livePrice !== null ? livePrice : storePrice;
-
   return (
     <div className="flex flex-wrap gap-3">
       {/* Primary: Initiate Requisition */}
@@ -68,16 +57,11 @@ export function CTAButtons({
           >
             <Crosshair className="h-5 w-5" />
             INITIATE REQUISITION
-            {priceLoading ? (
-              <span className="ml-1 text-primary-foreground/80 flex items-center gap-1">
-                [<RefreshCw className="h-3 w-3 animate-spin" />]
+            {storePrice && (
+              <span className="ml-1 text-primary-foreground/80">
+                [{formatPrice(storePrice, false)}]
               </span>
-            ) : displayPrice ? (
-              <span className="ml-1 text-primary-foreground/80 flex items-center gap-1">
-                [{formatPrice(displayPrice, false)}]
-                {isLivePrice && <CheckCircle2 className="h-3 w-3 text-emerald-300" />}
-              </span>
-            ) : null}
+            )}
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
           </button>
         </a>
