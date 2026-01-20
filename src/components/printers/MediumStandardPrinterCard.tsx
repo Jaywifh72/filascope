@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { Heart, ExternalLink, Printer as PrinterIcon, RefreshCw, ImageIcon } from "lucide-react";
+import { Heart, ExternalLink, Printer as PrinterIcon, RefreshCw, ImageIcon, Crosshair } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
+import PrinterSpecGrid from "./PrinterSpecGrid";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -35,7 +36,9 @@ export default function MediumStandardPrinterCard({
 }: MediumStandardPrinterCardProps) {
   const { formatPrice } = useCurrency();
   const productImage = getPrinterImage(printer);
-  const badges = getPrinterBadges(printer, 3);
+  const badges = getPrinterBadges(printer, 2);
+
+  const price = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd;
 
   return (
     <article 
@@ -47,14 +50,14 @@ export default function MediumStandardPrinterCard({
         <div 
           className="
             relative
-            bg-[hsl(0_0%_10%)] 
+            bg-[hsl(220_15%_6%)] 
             border border-white/10 
             rounded-xl 
             p-5 
             transition-all duration-300 ease-out
-            hover:border-primary 
+            hover:border-primary/50
             hover:-translate-y-1 
-            hover:shadow-[0_8px_30px_rgba(0,212,212,0.15)]
+            hover:shadow-[0_0_30px_rgba(0,207,232,0.12)]
             cursor-pointer
             h-full
             flex flex-col
@@ -74,7 +77,7 @@ export default function MediumStandardPrinterCard({
             </div>
           )}
 
-          {/* Comparison Checkbox - Top Right, Standalone */}
+          {/* Comparison Checkbox - Top Right */}
           <div className="absolute top-3 right-3 z-10">
             <ComparisonCheckbox
               checked={isSelected}
@@ -87,14 +90,14 @@ export default function MediumStandardPrinterCard({
           {/* Action Icons - Below Checkbox */}
           <div className="absolute top-12 right-3 flex flex-col gap-1.5 z-10">
             <button 
-              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+              className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
               aria-label="Add to favorites"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
               }}
             >
-              <Heart className="h-4 w-4 text-white/70 hover:text-red-400 transition-colors" />
+              <Heart className="h-3.5 w-3.5 text-white/50 hover:text-red-400 transition-colors" />
             </button>
             
             {printer.official_product_url && (
@@ -102,31 +105,31 @@ export default function MediumStandardPrinterCard({
                 href={printer.official_product_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
                 onClick={(e) => e.stopPropagation()}
                 aria-label="View on manufacturer website"
               >
-                <ExternalLink className="h-4 w-4 text-white/70 hover:text-primary transition-colors" />
+                <ExternalLink className="h-3.5 w-3.5 text-white/50 hover:text-primary transition-colors" />
               </a>
             )}
             
             {isAdmin && (
               <>
                 <button 
-                  className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                  className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
                   onClick={onEditImage}
                   aria-label="Edit printer image"
                 >
-                  <ImageIcon className="h-4 w-4 text-white/70" />
+                  <ImageIcon className="h-3.5 w-3.5 text-white/50" />
                 </button>
                 {printer.official_product_url && (
                   <button 
-                    className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors"
+                    className="p-1.5 bg-black/60 backdrop-blur-sm rounded-md hover:bg-black/80 transition-colors border border-white/5"
                     onClick={onRescrape}
                     disabled={isRescraping}
                     aria-label="Re-scrape printer data"
                   >
-                    <RefreshCw className={`h-4 w-4 text-white/70 ${isRescraping ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 text-white/50 ${isRescraping ? 'animate-spin' : ''}`} />
                   </button>
                 )}
               </>
@@ -134,7 +137,7 @@ export default function MediumStandardPrinterCard({
           </div>
 
           {/* Printer Image */}
-          <div className="relative aspect-square mb-4 mt-8">
+          <div className="relative aspect-square mb-4 mt-6">
             {productImage ? (
               <img 
                 src={productImage} 
@@ -147,68 +150,67 @@ export default function MediumStandardPrinterCard({
               />
             ) : null}
             <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-              <PrinterIcon className="h-16 w-16 text-white/20" />
+              <PrinterIcon className="h-16 w-16 text-white/15" />
             </div>
           </div>
 
-          {/* Brand Name - Cyan, uppercase */}
-          <p className="text-[13px] font-bold text-primary uppercase tracking-[0.05em] leading-tight mb-1">
+          {/* Brand Name - Cyan, monospace */}
+          <p className="font-mono text-[10px] font-bold text-primary uppercase tracking-[0.15em] leading-tight mb-1">
             {printer.brand?.brand}
           </p>
 
-          {/* Printer Name - Most Prominent */}
-          <h3 className="text-2xl font-bold text-foreground mb-1 leading-snug line-clamp-2">
+          {/* Printer Name */}
+          <h3 className="text-xl font-bold text-foreground mb-1 leading-snug line-clamp-2">
             {printer.model_name}
           </h3>
           {printer.variant_or_bundle_name && (
-            <p className="text-sm text-muted-foreground mb-2">{printer.variant_or_bundle_name}</p>
+            <p className="text-sm text-muted-foreground mb-2 font-mono text-[11px]">{printer.variant_or_bundle_name}</p>
           )}
 
-          {/* Build Volume + Speed - Single Line */}
-          <p className="text-[14px] text-muted-foreground mb-3 leading-relaxed">
-            {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-              <span>{printer.build_volume_x_mm}×{printer.build_volume_y_mm}×{printer.build_volume_z_mm}mm</span>
-            )}
-            {printer.build_volume_x_mm && printer.max_print_speed_mms && <span> • </span>}
-            {printer.max_print_speed_mms && <span>{printer.max_print_speed_mms}mm/s</span>}
-          </p>
+          {/* Tech Spec Grid - 2x2 */}
+          <PrinterSpecGrid
+            buildVolume={{
+              x: printer.build_volume_x_mm,
+              y: printer.build_volume_y_mm,
+              z: printer.build_volume_z_mm,
+            }}
+            maxSpeed={printer.max_print_speed_mms}
+            hotendTemp={printer.max_nozzle_temp_c}
+            motionSystem={printer.motion_system_notes || printer.machine_style}
+            className="mb-4"
+            variant="compact"
+          />
 
-          {/* Price Section */}
-          <div className="mb-4 mt-auto">
-            {printer.current_price_usd_store ? (
-              <>
-                <span className="text-2xl font-bold text-amber-500">
-                  {formatPrice(printer.current_price_usd_store)}
-                </span>
-                {printer.msrp_usd && printer.current_price_usd_store < printer.msrp_usd && (
-                  <div className="text-sm text-muted-foreground">
-                    <span className="line-through">{formatPrice(printer.msrp_usd)}</span>
-                    <span className="ml-2 text-emerald-500">
-                      ({Math.round((1 - printer.current_price_usd_store / printer.msrp_usd) * 100)}% off)
-                    </span>
-                  </div>
-                )}
-              </>
-            ) : printer.current_price_usd_amazon ? (
-              <span className="text-2xl font-bold text-amber-500">
-                {formatPrice(printer.current_price_usd_amazon)}
-              </span>
-            ) : printer.msrp_usd ? (
-              <span className="text-2xl font-bold text-amber-500">
-                {formatPrice(printer.msrp_usd)}
+          {/* Price Section - Terminal style */}
+          <div className="mb-3 mt-auto">
+            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+              Unit Cost:{" "}
+            </span>
+            {price ? (
+              <span className="font-mono text-lg font-bold text-amber-400">
+                {formatPrice(price)}
               </span>
             ) : (
-              <span className="text-lg text-muted-foreground">Price TBD</span>
+              <span className="font-mono text-sm text-muted-foreground">TBD</span>
             )}
           </div>
 
+          {/* Deploy Button - Wireframe style */}
+          <button
+            className="w-full h-10 rounded-lg border-2 border-primary/40 bg-transparent text-primary font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-all duration-200 hover:bg-primary hover:text-background hover:border-primary hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] flex items-center justify-center gap-2"
+            onClick={(e) => e.preventDefault()}
+          >
+            <Crosshair className="h-3.5 w-3.5" />
+            Deploy Unit
+          </button>
+
           {/* Brand Logo - Bottom Right, Subtle */}
           {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="absolute bottom-5 right-5">
+            <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-30 transition-opacity duration-300">
               <img 
                 src={getBrandLogo(printer.brand?.brand || null)!} 
                 alt={`${printer.brand?.brand} logo`}
-                className="h-auto max-w-[40px] object-contain opacity-50"
+                className="h-auto max-w-[32px] object-contain"
               />
             </div>
           )}

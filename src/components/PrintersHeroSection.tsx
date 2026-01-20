@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Sparkles, Printer } from "lucide-react";
+import { Search, Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PrintersHeroSectionProps {
@@ -20,33 +19,45 @@ const PrintersHeroSection = ({
   brandCount,
   onOpenQuiz
 }: PrintersHeroSectionProps) => {
-  const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <section className="relative overflow-hidden">
-      {/* Main content - Compact height, no separate background */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-12 md:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      {/* Main content */}
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-10 pt-28 pb-12 md:pt-32 md:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left order-1">
-            {/* Headline - Smaller, more compact */}
-            <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-light tracking-[0.2em] leading-[1.2] mb-6 animate-fade-in uppercase"
+            {/* System Registry Badge */}
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-6 animate-fade-in"
             >
-              Precision Hardware.
+              <Target className="h-3.5 w-3.5 text-primary" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-primary">
+                Hardware Registry
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light tracking-[0.15em] leading-[1.1] mb-6 animate-fade-in uppercase"
+            >
+              <span className="text-foreground">Deploy</span>
               <br />
-              Master The{" "}
-              <span className="font-black italic text-primary">Print.</span>
+              <span className="text-muted-foreground font-light">Fabrication</span>
+              <br />
+              <span className="font-black italic text-primary">Hardware.</span>
             </h1>
             
             {/* Sub-text */}
             <p 
-              className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed mb-12 max-w-[540px] animate-fade-in"
+              className="text-base md:text-lg text-muted-foreground font-light leading-relaxed mb-10 max-w-[480px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s" }}
             >
-              Explore {printerCount.toLocaleString()} printers from {brandCount}+ manufacturers. Compare specs, prices, and features in one unified registry.
+              <span className="text-primary">{printerCount.toLocaleString()}</span> units indexed from{" "}
+              <span className="text-primary">{brandCount}+</span> manufacturers. 
+              Compare specs, prices, and capabilities in one unified command center.
             </p>
             
             {/* Buttons Row */}
@@ -54,17 +65,17 @@ const PrintersHeroSection = ({
               className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto animate-fade-in"
               style={{ animationDelay: "0.3s" }}
             >
-              {/* Primary Button - Printer Quiz with Cyan Gradient */}
+              {/* Primary Button - Printer Quiz */}
               <Button 
                 size="lg"
                 onClick={onOpenQuiz}
                 className="h-14 px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
               >
                 <Sparkles className="mr-2 h-5 w-5" />
-                Printer Quiz
+                Hardware Quiz
               </Button>
               
-              {/* Secondary - Search Input with Glass Background */}
+              {/* Secondary - Search Input */}
               <div 
                 className={`relative transition-all duration-300 ${
                   isFocused ? "scale-[1.01]" : ""
@@ -73,12 +84,12 @@ const PrintersHeroSection = ({
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
                 <input
                   type="text"
-                  placeholder="Search printers..."
+                  placeholder="Search hardware..."
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
                     isFocused 
                       ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
                       : "border-white/10 hover:border-white/20"
@@ -89,14 +100,14 @@ const PrintersHeroSection = ({
             </div>
           </div>
           
-          {/* Right: Glass Container with 3D Printer Visual */}
+          {/* Right: Calibration Cube Visual */}
           <div 
             className="hidden lg:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Compact Glass Container */}
+            {/* Glass Container with Wireframe Cube */}
             <div 
-              className="relative p-8 rounded-2xl border border-white/10 shadow-xl overflow-hidden"
+              className="relative p-10 rounded-2xl border border-white/10 overflow-hidden"
               style={{
                 transform: "rotate(6deg)",
                 backdropFilter: "blur(20px)",
@@ -104,71 +115,76 @@ const PrintersHeroSection = ({
                 background: "rgba(255, 255, 255, 0.02)",
               }}
             >
-              {/* Horizontal Cyan Scan Line */}
+              {/* Vertical Cyan Laser Scan */}
               <div 
-                className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none"
+                className="absolute top-0 bottom-0 w-[2px] z-30 pointer-events-none"
                 style={{
-                  background: "linear-gradient(90deg, transparent, #00CFE8, transparent)",
+                  background: "linear-gradient(180deg, transparent, #00CFE8, transparent)",
                   boxShadow: "0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)",
-                  animation: "heroScanLine 4s ease-in-out infinite",
+                  animation: "laserScan 4s ease-in-out infinite",
                 }}
               />
               
-              {/* 3D Isometric Printer */}
-              <div className="relative w-[240px] h-[240px] flex items-center justify-center" style={{ perspective: "1000px" }}>
-                {/* Base Plate - Magenta */}
-                <div 
-                  className="absolute w-32 h-32 rounded-lg"
-                  style={{
-                    transform: "translateY(50px) rotateX(-60deg) rotateZ(45deg)",
-                    transformStyle: "preserve-3d",
-                    border: "2px solid rgba(255, 0, 85, 0.5)",
-                    background: "linear-gradient(135deg, rgba(255, 0, 85, 0.25) 0%, rgba(255, 0, 85, 0.08) 100%)",
-                    boxShadow: "0 20px 40px -12px rgba(255, 0, 85, 0.35)",
-                  }}
-                />
-                
-                {/* Frame - White/Glass */}
-                <div 
-                  className="absolute w-24 h-36 rounded-lg backdrop-blur-sm"
-                  style={{
-                    transform: "translateY(-10px) rotateX(-10deg) rotateY(-5deg)",
-                    transformStyle: "preserve-3d",
-                    border: "2px solid rgba(255, 255, 255, 0.35)",
-                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%)",
-                    boxShadow: "0 20px 40px -12px rgba(255, 255, 255, 0.15)",
-                  }}
+              {/* Wireframe Isometric Calibration Cube */}
+              <div className="relative w-[260px] h-[260px] flex items-center justify-center" style={{ perspective: "1000px" }}>
+                <svg 
+                  viewBox="0 0 200 200" 
+                  className="w-full h-full"
+                  style={{ transform: "rotateX(-15deg) rotateY(-15deg)" }}
                 >
-                  {/* Print Head - Cyan */}
-                  <div 
-                    className="absolute left-1/2 -translate-x-1/2 w-10 h-6 rounded"
-                    style={{
-                      top: "30%",
-                      border: "2px solid rgba(0, 207, 232, 0.8)",
-                      background: "linear-gradient(135deg, rgba(0, 207, 232, 0.4) 0%, rgba(0, 207, 232, 0.15) 100%)",
-                      boxShadow: "0 0 20px rgba(0, 207, 232, 0.5)",
-                      animation: "printHeadMove 3s ease-in-out infinite",
-                    }}
+                  {/* Back face - White */}
+                  <polygon 
+                    points="100,30 160,60 160,140 100,170 40,140 40,60" 
+                    fill="none" 
+                    stroke="rgba(255,255,255,0.15)" 
+                    strokeWidth="1"
                   />
-                  {/* Print Object being formed */}
-                  <div 
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded"
-                    style={{
-                      border: "2px solid rgba(0, 207, 232, 0.6)",
-                      background: "linear-gradient(135deg, rgba(0, 207, 232, 0.3) 0%, rgba(0, 207, 232, 0.08) 100%)",
-                      boxShadow: "0 10px 30px -8px rgba(0, 207, 232, 0.45)",
-                    }}
+                  
+                  {/* Top face - Cyan */}
+                  <polygon 
+                    points="100,30 160,60 100,90 40,60" 
+                    fill="rgba(0,207,232,0.05)" 
+                    stroke="rgba(0,207,232,0.6)" 
+                    strokeWidth="1.5"
                   />
-                </div>
+                  
+                  {/* Left face - White */}
+                  <polygon 
+                    points="40,60 100,90 100,170 40,140" 
+                    fill="rgba(255,255,255,0.02)" 
+                    stroke="rgba(255,255,255,0.3)" 
+                    strokeWidth="1"
+                  />
+                  
+                  {/* Right face - Magenta */}
+                  <polygon 
+                    points="160,60 100,90 100,170 160,140" 
+                    fill="rgba(255,0,85,0.05)" 
+                    stroke="rgba(255,0,85,0.5)" 
+                    strokeWidth="1"
+                  />
+                  
+                  {/* Inner edge highlights */}
+                  <line x1="100" y1="90" x2="100" y2="170" stroke="rgba(0,207,232,0.4)" strokeWidth="1" />
+                  
+                  {/* Grid lines on top face */}
+                  <line x1="70" y1="45" x2="70" y2="75" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeDasharray="2,2" />
+                  <line x1="130" y1="45" x2="130" y2="75" stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" strokeDasharray="2,2" />
+                </svg>
                 
-                {/* Decorative grid lines */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none">
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
+                {/* Floating Telemetry Tags */}
+                <div className="absolute top-4 right-0 font-mono text-[9px] uppercase tracking-wider text-primary/70 bg-primary/5 border border-primary/20 px-2 py-1 rounded">
+                  CALIB_STATUS: OK
+                </div>
+                <div className="absolute bottom-8 left-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground bg-white/5 border border-white/10 px-2 py-1 rounded">
+                  Z_OFFSET: -0.42mm
+                </div>
+                <div className="absolute top-1/2 right-0 font-mono text-[9px] uppercase tracking-wider text-[#FF0055]/70 bg-[#FF0055]/5 border border-[#FF0055]/20 px-2 py-1 rounded">
+                  T_DISTANCE: 4.2mm
                 </div>
               </div>
               
-              {/* Corner accents - Cyan */}
+              {/* Corner accents */}
               <div 
                 className="absolute top-4 left-4 w-8 h-8 rounded-tl-lg"
                 style={{ 
@@ -179,8 +195,8 @@ const PrintersHeroSection = ({
               <div 
                 className="absolute bottom-4 right-4 w-8 h-8 rounded-br-lg"
                 style={{ 
-                  borderRight: "2px solid rgba(0, 207, 232, 0.5)",
-                  borderBottom: "2px solid rgba(0, 207, 232, 0.5)",
+                  borderRight: "2px solid rgba(255, 0, 85, 0.5)",
+                  borderBottom: "2px solid rgba(255, 0, 85, 0.5)",
                 }}
               />
             </div>
@@ -188,11 +204,11 @@ const PrintersHeroSection = ({
         </div>
       </div>
       
-      {/* Hero scan line keyframes */}
+      {/* Keyframes */}
       <style>{`
-        @keyframes heroScanLine {
+        @keyframes laserScan {
           0% {
-            top: 0%;
+            left: 0%;
             opacity: 0;
           }
           5% {
@@ -202,20 +218,12 @@ const PrintersHeroSection = ({
             opacity: 1;
           }
           50% {
-            top: 100%;
+            left: 100%;
             opacity: 0;
           }
           100% {
-            top: 100%;
+            left: 100%;
             opacity: 0;
-          }
-        }
-        @keyframes printHeadMove {
-          0%, 100% {
-            transform: translateX(-50%) translateX(-8px);
-          }
-          50% {
-            transform: translateX(-50%) translateX(8px);
           }
         }
       `}</style>
