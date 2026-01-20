@@ -96,6 +96,9 @@ const PrinterDetail = () => {
   const [imagePreviewError, setImagePreviewError] = useState(false);
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const [showPriceHistoryModal, setShowPriceHistoryModal] = useState(false);
+  const [storeImages, setStoreImages] = useState<string[]>([]);
+  const [isLoadingStoreImages, setIsLoadingStoreImages] = useState(false);
+  const [storeImagesError, setStoreImagesError] = useState<string | null>(null);
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
@@ -218,7 +221,62 @@ const PrinterDetail = () => {
     }
   });
 
-  // Extract product images when printer data changes and validate them
+  // Fetch images from store URL
+  const fetchStoreImages = async () => {
+    if (!printer?.official_product_url) {
+      setStoreImagesError("No store URL available");
+      return;
+    }
+    
+    setIsLoadingStoreImages(true);
+    setStoreImagesError(null);
+    setStoreImages([]);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setStoreImagesError("Authentication required");
+        return;
+      }
+      
+      const response = await supabase.functions.invoke("fetch-store-images", {
+        body: { url: printer.official_product_url },
+      });
+      
+      if (response.error) {
+        setStoreImagesError(response.error.message || "Failed to fetch images");
+        return;
+      }
+      
+      if (response.data?.success && response.data?.images) {
+        setStoreImages(response.data.images);
+        if (response.data.images.length === 0) {
+          setStoreImagesError("No images found on the store page");
+        }
+      } else {
+        setStoreImagesError(response.data?.error || "Failed to fetch images");
+      }
+    } catch (error) {
+      console.error("Error fetching store images:", error);
+      setStoreImagesError(error instanceof Error ? error.message : "Unknown error");
+    } finally {
+      setIsLoadingStoreImages(false);
+    }
+  };
+
+  // Fetch store images when dialog opens
+  useEffect(() => {
+    if (imageDialogOpen && printer?.official_product_url) {
+      fetchStoreImages();
+    } else if (!imageDialogOpen) {
+      // Reset state when dialog closes
+      setStoreImages([]);
+      setStoreImagesError(null);
+      setNewImageUrl("");
+    }
+  }, [imageDialogOpen, printer?.official_product_url]);
+
+
   useEffect(() => {
     const validateImages = async (images: string[]) => {
       const valid = new Set<string>();
@@ -954,13 +1012,86 @@ const PrinterDetail = () => {
 
         {/* Admin: Update Image Dialog */}
         <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl bg-[#0A0C10] border-primary/30">
             <DialogHeader>
-              <DialogTitle>Update Product Image</DialogTitle>
+              <DialogTitle className="font-mono text-sm uppercase tracking-wider text-primary">
+                {">> "}SELECT_PRODUCT_IMAGE
+              </DialogTitle>
             </DialogHeader>
+            
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="image-url">Image URL</Label>
+              {/* Store Images Grid */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Images from Store URL
+                  </Label>
+                  <button
+                    onClick={fetchStoreImages}
+                    disabled={isLoadingStoreImages}
+                    className="font-mono text-[10px] uppercase tracking-wider text-primary hover:text-primary/80 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isLoadingStoreImages ? 'animate-spin' : ''}`} />
+                    REFRESH
+                  </button>
+                </div>
+                
+                {isLoadingStoreImages ? (
+                  <div className="grid grid-cols-5 gap-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="aspect-square bg-white/5 border border-white/10 animate-pulse" />
+                    ))}
+                  </div>
+                ) : storeImagesError ? (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 font-mono text-[11px] text-red-400 uppercase tracking-wider">
+                    ERROR: {storeImagesError}
+                  </div>
+                ) : storeImages.length > 0 ? (
+                  <div className="grid grid-cols-5 gap-3">
+                    {storeImages.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setNewImageUrl(img);
+                          setImagePreviewError(false);
+                        }}
+                        className={`relative aspect-square border-2 transition-all overflow-hidden group ${
+                          newImageUrl === img 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-white/10 hover:border-primary/50'
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Store image ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        {newImageUrl === img && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <CheckCircle2 className="w-6 h-6 text-primary" />
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 py-0.5 px-1 font-mono text-[9px] text-white/70 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          IMG_{String(idx + 1).padStart(2, '0')}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-white/5 border border-white/10 font-mono text-[11px] text-muted-foreground uppercase tracking-wider text-center">
+                    NO_IMAGES_LOADED
+                  </div>
+                )}
+              </div>
+              
+              {/* Manual URL Input */}
+              <div className="space-y-2 pt-2 border-t border-white/10">
+                <Label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Or Enter URL Manually
+                </Label>
                 <Input
                   id="image-url"
                   placeholder="https://example.com/image.png"
@@ -969,12 +1100,17 @@ const PrinterDetail = () => {
                     setNewImageUrl(e.target.value);
                     setImagePreviewError(false);
                   }}
+                  className="font-mono text-sm bg-white/5 border-white/10"
                 />
               </div>
+              
+              {/* Selected Image Preview */}
               {newImageUrl && (
                 <div className="space-y-2">
-                  <Label>Preview</Label>
-                  <div className="border rounded-lg p-2 bg-muted/50">
+                  <Label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Selected Image Preview
+                  </Label>
+                  <div className="border border-primary/30 bg-white/[0.02] p-2">
                     {!imagePreviewError ? (
                       <img
                         src={newImageUrl}
@@ -983,23 +1119,29 @@ const PrinterDetail = () => {
                         onError={() => setImagePreviewError(true)}
                       />
                     ) : (
-                      <div className="w-full h-48 flex items-center justify-center text-muted-foreground">
-                        Failed to load image preview
+                      <div className="w-full h-48 flex items-center justify-center font-mono text-[11px] text-red-400 uppercase tracking-wider">
+                        ERROR: FAILED_TO_LOAD_PREVIEW
                       </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setImageDialogOpen(false)}>
+            
+            <DialogFooter className="gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setImageDialogOpen(false)}
+                className="font-mono text-[11px] uppercase tracking-wider"
+              >
                 Cancel
               </Button>
               <Button 
                 onClick={() => updateImageMutation.mutate(newImageUrl)}
                 disabled={!newImageUrl || imagePreviewError || updateImageMutation.isPending}
+                className="font-mono text-[11px] uppercase tracking-wider"
               >
-                {updateImageMutation.isPending ? "Saving..." : "Save Image"}
+                {updateImageMutation.isPending ? "SAVING..." : "CONFIRM_SELECTION"}
               </Button>
             </DialogFooter>
           </DialogContent>
