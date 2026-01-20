@@ -62,44 +62,44 @@ function RatingsReviewsCard({
   const emptyStars = 5 - Math.ceil(rating);
 
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 flex flex-col gap-4">
-      <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
-        Customer Reviews
+    <div className="bg-[#0A0C10] border border-primary/20 p-5 flex flex-col gap-4">
+      <h3 className="font-mono text-xs font-bold text-primary uppercase tracking-[0.15em]">
+        &gt;&gt; OPERATOR_FEEDBACK
       </h3>
 
       <div className="flex justify-center items-center gap-1">
         {Array.from({ length: fullStars }).map((_, i) => (
-          <Star key={`full-${i}`} size={20} fill="#FFD700" color="#FFD700" />
+          <Star key={`full-${i}`} size={18} className="fill-amber-400 text-amber-400" />
         ))}
         {partialStar > 0 && (
           <div className="relative">
-            <Star size={20} fill="rgba(255,255,255,0.2)" color="rgba(255,255,255,0.2)" />
+            <Star size={18} className="text-white/20" />
             <div className="absolute top-0 left-0 overflow-hidden" style={{ width: `${partialStar * 100}%` }}>
-              <Star size={20} fill="#FFD700" color="#FFD700" />
+              <Star size={18} className="fill-amber-400 text-amber-400" />
             </div>
           </div>
         )}
         {Array.from({ length: emptyStars }).map((_, i) => (
-          <Star key={`empty-${i}`} size={20} fill="rgba(255,255,255,0.2)" color="rgba(255,255,255,0.2)" />
+          <Star key={`empty-${i}`} size={18} className="text-white/20" />
         ))}
       </div>
 
-      <div className="text-lg font-bold text-foreground text-center">
-        {rating.toFixed(1)} out of 5
+      <div className="font-mono text-2xl font-bold text-primary text-center">
+        {rating.toFixed(1)}
       </div>
       {reviewCount && (
-        <div className="text-sm font-medium text-muted-foreground text-center -mt-2">
-          Based on {reviewCount} reviews
+        <div className="font-mono text-[10px] text-muted-foreground text-center -mt-2 uppercase tracking-wider">
+          {reviewCount} OPERATOR_SUBMISSIONS
         </div>
       )}
 
       {onReadReviews && (
         <button 
           onClick={onReadReviews}
-          className="w-full h-10 bg-primary/10 border border-primary/30 rounded-lg text-sm font-semibold text-primary flex items-center justify-center gap-2 transition-all hover:bg-primary/15 hover:border-primary/50"
+          className="w-full h-10 bg-transparent border border-primary/30 font-mono text-xs uppercase tracking-wider text-primary flex items-center justify-center gap-2 transition-all hover:bg-primary/10 hover:border-primary/50"
         >
-          Read All Reviews
-          <ArrowRight size={16} />
+          ACCESS_LOGS
+          <ArrowRight size={14} />
         </button>
       )}
     </div>
@@ -124,39 +124,58 @@ function RecentReviewsCard({ reviews }: { reviews: Review[] }) {
   if (reviews.length === 0) return null;
   const currentReview = reviews[currentIndex];
 
+  // Extract initials
+  const initials = currentReview.author
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div 
-      className="bg-white/[0.05] border border-white/10 rounded-xl p-5 flex flex-col gap-3"
+      className="bg-[#0A0C10] border border-white/10 p-4 flex flex-col gap-3 hover:border-primary/20 transition-colors"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="flex gap-0.5">
-        {Array.from({ length: currentReview.rating }).map((_, i) => (
-          <Star key={i} size={14} fill="#FFD700" color="#FFD700" />
-        ))}
+      {/* Header with avatar and rating */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-8 h-8 bg-primary/20 border border-primary/40 flex items-center justify-center font-mono text-[10px] font-bold text-primary"
+            style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}
+          >
+            {initials}
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+            {currentReview.author}
+          </div>
+        </div>
+        <div className="flex gap-0.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} size={10} className={i < currentReview.rating ? "fill-amber-400 text-amber-400" : "text-white/20"} />
+          ))}
+        </div>
       </div>
 
-      <blockquote className="text-sm font-medium text-muted-foreground italic line-clamp-3">
+      <blockquote className="font-mono text-xs text-muted-foreground italic line-clamp-3 pl-3 border-l-2 border-primary/30">
         "{currentReview.text}"
       </blockquote>
 
-      <div className="text-xs font-medium text-muted-foreground flex items-center gap-2 flex-wrap">
-        — {currentReview.author}
-        {currentReview.verified && (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 rounded text-[11px] font-semibold text-green-500">
-            <Check size={12} />
-            Verified Buyer
-          </span>
-        )}
-      </div>
+      {currentReview.verified && (
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-500 font-mono text-[9px] uppercase tracking-wider self-start">
+          <Check size={10} />
+          VERIFIED_BUYER
+        </div>
+      )}
 
       {reviews.length > 1 && (
-        <div className="flex justify-center gap-1.5 mt-2">
+        <div className="flex justify-center gap-2 mt-1">
           {reviews.map((_, index) => (
             <button
               key={index}
               className={cn(
-                "w-1.5 h-1.5 rounded-full transition-all",
+                "w-2 h-2 transition-all",
                 index === currentIndex 
                   ? "bg-primary" 
                   : "bg-white/20 hover:bg-white/40"
@@ -173,20 +192,20 @@ function RecentReviewsCard({ reviews }: { reviews: Review[] }) {
 // Staff Pick Badge Card
 function StaffPickCard({ recommendations }: { recommendations: string[] }) {
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 flex flex-col gap-4">
-      <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-[15px] font-bold text-amber-400 self-start">
-        <Award size={16} />
-        <span>STAFF PICK</span>
+    <div className="bg-[#0A0C10] border border-amber-500/30 p-5 flex flex-col gap-4">
+      <div className="inline-flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 font-mono text-xs font-bold text-amber-400 uppercase tracking-wider self-start">
+        <Award size={14} />
+        <span>UNIT_RECOMMENDED</span>
       </div>
 
-      <p className="text-sm font-medium text-muted-foreground">
-        Our team recommends this for:
-      </p>
+      <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+        RECOMMENDED_FOR:
+      </div>
 
       <ul className="flex flex-col gap-2">
         {recommendations.map((rec, index) => (
-          <li key={index} className="text-sm font-medium text-foreground/90 flex gap-2 items-start">
-            <span className="text-primary flex-shrink-0">•</span>
+          <li key={index} className="font-mono text-xs text-foreground/90 flex gap-2 items-start">
+            <span className="text-primary flex-shrink-0">[+]</span>
             <span>{rec}</span>
           </li>
         ))}
@@ -207,44 +226,40 @@ function StockShippingCard({
 }) {
   const stockConfig = {
     'in-stock': {
-      icon: <Package size={14} />,
-      text: 'IN STOCK',
-      className: 'bg-green-500/10 border-green-500/30 text-green-500'
+      text: 'INVENTORY: AVAILABLE',
+      className: 'border-green-500/30 text-green-500 bg-green-500/10'
     },
     'low-stock': {
-      icon: <Clock size={14} />,
-      text: 'LOW STOCK',
-      className: 'bg-orange-500/10 border-orange-500/30 text-orange-500'
+      text: 'INVENTORY: LIMITED',
+      className: 'border-orange-500/30 text-orange-500 bg-orange-500/10'
     },
     'out-of-stock': {
-      icon: <X size={14} />,
-      text: 'OUT OF STOCK',
-      className: 'bg-red-500/10 border-red-500/30 text-red-500'
+      text: 'INVENTORY: DEPLETED',
+      className: 'border-red-500/30 text-red-500 bg-red-500/10'
     }
   };
 
   const badge = stockConfig[stockStatus];
 
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 flex flex-col gap-4">
+    <div className="bg-[#0A0C10] border border-white/10 p-5 flex flex-col gap-4">
       <div className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-bold border self-start",
+        "inline-flex items-center gap-1.5 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider border self-start",
         badge.className
       )}>
-        {badge.icon}
         <span>{badge.text}</span>
       </div>
 
       {stockStatus !== 'out-of-stock' && (
-        <div className="text-sm font-medium text-muted-foreground">
-          {shippingTime}
+        <div className="font-mono text-xs text-muted-foreground">
+          <span className="text-primary/60">&gt;</span> {shippingTime}
         </div>
       )}
 
-      <ul className="flex flex-col gap-2.5">
+      <ul className="flex flex-col gap-2">
         {trustSignals.map((signal, index) => (
-          <li key={index} className="text-sm font-medium text-foreground/90 flex items-center gap-2.5">
-            <Check size={16} strokeWidth={3} className="text-green-500 flex-shrink-0" />
+          <li key={index} className="font-mono text-xs text-foreground/90 flex items-center gap-2">
+            <span className="text-green-500">[✓]</span>
             <span>{signal}</span>
           </li>
         ))}
@@ -259,33 +274,37 @@ function SocialActivityCard({ activity }: { activity: { views: number; compariso
   if (!hasActivity) return null;
 
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 flex flex-col gap-3">
+    <div className="bg-[#0A0C10] border border-white/10 p-4 flex flex-col gap-2">
+      <div className="font-mono text-[10px] text-primary/60 uppercase tracking-wider mb-1">
+        &gt;&gt; ACTIVITY_METRICS
+      </div>
+      
       {activity.views > 0 && (
-        <div className="text-sm font-medium text-foreground/90 flex items-start gap-2.5">
-          <span className="text-base flex-shrink-0">🔥</span>
+        <div className="font-mono text-xs text-foreground/90 flex items-center gap-2">
+          <span className="text-orange-500">[HOT]</span>
           <span>
             <span className="font-bold text-primary">{activity.views}</span>{' '}
-            {activity.views === 1 ? 'person' : 'people'} viewed in last hour
+            OPERATORS_VIEWING
           </span>
         </div>
       )}
 
       {activity.comparisons > 0 && (
-        <div className="text-sm font-medium text-foreground/90 flex items-start gap-2.5">
-          <span className="text-base flex-shrink-0">👁</span>
+        <div className="font-mono text-xs text-foreground/90 flex items-center gap-2">
+          <span className="text-primary">[CMP]</span>
           <span>
             <span className="font-bold text-primary">{activity.comparisons}</span>{' '}
-            added to comparison today
+            DIAGNOSTIC_QUEUED
           </span>
         </div>
       )}
 
       {activity.purchases > 0 && (
-        <div className="text-sm font-medium text-foreground/90 flex items-start gap-2.5">
-          <span className="text-base flex-shrink-0">🛒</span>
+        <div className="font-mono text-xs text-foreground/90 flex items-center gap-2">
+          <span className="text-green-500">[REQ]</span>
           <span>
             <span className="font-bold text-primary">{activity.purchases}</span>{' '}
-            purchased this week
+            REQUISITIONS_WEEK
           </span>
         </div>
       )}
@@ -302,34 +321,34 @@ function DecisionSupportCard({
   onStartChat?: () => void;
 }) {
   return (
-    <div className="bg-white/[0.05] border border-white/10 rounded-xl p-5 flex flex-col gap-4">
-      <div className="text-sm font-bold text-foreground flex items-center gap-2">
-        <Lightbulb size={16} className="text-amber-400" />
-        <span>NEED HELP DECIDING?</span>
+    <div className="bg-[#0A0C10] border border-white/10 p-5 flex flex-col gap-4">
+      <div className="font-mono text-xs font-bold text-primary uppercase tracking-[0.15em] flex items-center gap-2">
+        <span className="text-primary/60">&gt;&gt;</span>
+        <span>DECISION_SUPPORT</span>
       </div>
 
       {onTakeQuiz && (
         <button 
           onClick={onTakeQuiz}
-          className="w-full h-11 bg-primary border-none rounded-lg text-sm font-semibold text-primary-foreground flex items-center justify-center gap-2 transition-all hover:bg-primary/90 hover:-translate-y-0.5"
+          className="w-full h-10 bg-primary border-none font-mono text-xs font-semibold text-primary-foreground uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:bg-primary/90 hover:-translate-y-0.5"
         >
-          Take Our Printer Quiz
-          <ArrowRight size={16} />
+          RUN_DIAGNOSTIC_MATCH
+          <ArrowRight size={14} />
         </button>
       )}
 
       {onStartChat && (
         <>
-          <div className="text-xs font-medium text-muted-foreground text-center">
-            Or chat with an expert:
+          <div className="font-mono text-[10px] text-muted-foreground text-center uppercase tracking-wider">
+            // ALTERNATE_CHANNEL
           </div>
 
           <button 
             onClick={onStartChat}
-            className="w-full h-11 bg-transparent border border-primary/30 rounded-lg text-sm font-semibold text-primary flex items-center justify-center gap-2 transition-all hover:bg-primary/10 hover:border-primary/50"
+            className="w-full h-10 bg-transparent border border-primary/30 font-mono text-xs uppercase tracking-wider text-primary flex items-center justify-center gap-2 transition-all hover:bg-primary/10 hover:border-primary/50"
           >
-            <MessageCircle size={16} />
-            Start Live Chat
+            <MessageCircle size={14} />
+            INITIATE_COMMS
           </button>
         </>
       )}
@@ -398,16 +417,16 @@ export function MobileSocialProof({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
-        className="w-full h-[60px] px-5 bg-white/[0.05] border border-white/10 rounded-xl flex items-center justify-between cursor-pointer transition-all hover:bg-white/[0.08] hover:border-primary/30"
+        className="w-full h-[56px] px-5 bg-[#0A0C10] border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:border-primary/30"
       >
-        <div className="flex items-center gap-3 text-[15px] font-bold text-foreground">
-          <span className="text-xl">🏆</span>
-          <span>Reviews & Trust Signals</span>
+        <div className="flex items-center gap-3 font-mono text-xs font-bold text-primary uppercase tracking-[0.15em]">
+          <span>&gt;&gt;</span>
+          <span>OPERATOR_SIGNALS</span>
         </div>
         <ChevronDown 
-          size={20} 
+          size={18} 
           className={cn(
-            "text-muted-foreground transition-transform duration-200",
+            "text-primary/60 transition-transform duration-200",
             isExpanded && "rotate-180"
           )}
         />

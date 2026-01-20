@@ -187,12 +187,16 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
   const amsMmu = accessories.filter((a) => a.accessory_type === 'ams_mmu');
 
   return (
-    <section className="max-w-[1400px] mx-auto px-10 py-[60px] md:px-10 px-5 md:py-[60px] py-10">
-      <h2 className="text-xl font-bold text-white text-left mb-8 md:text-xl text-lg">
-        DETAILED SPECIFICATIONS
-      </h2>
+    <section className="max-w-[1400px] mx-auto px-5 md:px-10 py-10 md:py-[60px]">
+      <div className="flex items-center gap-3 mb-8">
+        <span className="font-mono text-xs text-primary/60 uppercase tracking-wider">&gt;&gt;</span>
+        <h2 className="font-mono text-sm md:text-base font-bold text-primary uppercase tracking-[0.2em]">
+          SYSTEM_ARCHITECTURE
+        </h2>
+        <div className="flex-1 h-px bg-primary/20" />
+      </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {/* Drawer 1: Build Volume & Dimensions */}
         <SpecsDrawer
           id="build-volume"
@@ -289,23 +293,21 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
           </ContentSection>
 
           <ContentSection title="Multi-Material System Compatibility">
-            <div className="space-y-3 mb-4">
+            <div className="space-y-2 mb-4">
               {allSystems.map((system) => {
                 const isCompatible = isSystemCompatible(system.key);
                 return (
-                  <div key={system.key} className="flex items-center justify-between py-2 border-b border-white/5">
-                    <span className="text-muted-foreground text-sm">{system.name}</span>
+                  <div key={system.key} className="flex items-center justify-between py-2 px-3 border border-white/5 bg-white/[0.02] hover:border-primary/20 transition-colors">
+                    <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">{system.name}</span>
                     <div className="flex items-center gap-2">
                       {isCompatible ? (
-                        <>
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                          <span className="font-medium text-green-600 text-sm">Compatible</span>
-                        </>
+                        <span className="font-mono text-[10px] text-green-500 uppercase tracking-wider px-2 py-0.5 border border-green-500/30 bg-green-500/10">
+                          COMPATIBLE
+                        </span>
                       ) : (
-                        <>
-                          <XCircle className="h-5 w-5 text-destructive" />
-                          <span className="font-medium text-muted-foreground text-sm">Not Compatible</span>
-                        </>
+                        <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-wider px-2 py-0.5 border border-white/10">
+                          INCOMPATIBLE
+                        </span>
                       )}
                     </div>
                   </div>

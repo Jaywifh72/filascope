@@ -732,80 +732,83 @@ const PrinterDetail = () => {
                     {/* Advantage Callout Cards - Feature Benefits */}
                     <AdvantageCardsSection printer={printer} />
 
-                    {/* Ratings */}
+                    {/* Ratings - Terminal Style */}
                     {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
-                      <Card className="overflow-hidden border-2" data-section="ratings">
-                        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6">
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 rounded-full bg-primary/20">
-                              <Star className="h-6 w-6 text-primary" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold">Community Ratings</h3>
-                              {printer.review_count_aggregated && (
-                                <p className="text-sm text-muted-foreground">Based on {printer.review_count_aggregated} reviews</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                            {printer.rating_community_overall && (
-                              <div className="text-center space-y-2">
-                                <div className="text-4xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
-                                <div className="flex justify-center">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Overall</div>
-                              </div>
-                            )}
-                            {printer.rating_ease_of_use && (
-                              <div className="text-center space-y-2">
-                                <div className="text-4xl font-bold">{printer.rating_ease_of_use.toFixed(1)}</div>
-                                <div className="flex justify-center">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Ease of Use</div>
-                              </div>
-                            )}
-                            {printer.rating_print_quality && (
-                              <div className="text-center space-y-2">
-                                <div className="text-4xl font-bold">{printer.rating_print_quality.toFixed(1)}</div>
-                                <div className="flex justify-center">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Print Quality</div>
-                              </div>
-                            )}
-                            {printer.rating_reliability && (
-                              <div className="text-center space-y-2">
-                                <div className="text-4xl font-bold">{printer.rating_reliability.toFixed(1)}</div>
-                                <div className="flex justify-center">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Reliability</div>
-                              </div>
-                            )}
-                            {printer.rating_value_for_money && (
-                              <div className="text-center space-y-2">
-                                <div className="text-4xl font-bold">{printer.rating_value_for_money.toFixed(1)}</div>
-                                <div className="flex justify-center">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-4 w-4 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-primary text-primary' : 'text-muted'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Value</div>
-                              </div>
-                            )}
-                          </div>
+                      <div className="relative bg-[#0A0C10] border border-primary/20 p-6" data-section="ratings">
+                        {/* Corner brackets */}
+                        <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-primary" />
+                        <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-primary" />
+                        <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-primary" />
+                        <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-primary" />
+                        
+                        <div className="flex items-center gap-3 mb-6">
+                          <span className="font-mono text-xs text-primary/60 uppercase tracking-wider">&gt;&gt;</span>
+                          <h3 className="font-mono text-sm font-bold text-primary uppercase tracking-[0.15em]">OPERATOR_RATINGS</h3>
+                          {printer.review_count_aggregated && (
+                            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider ml-auto">
+                              TOTAL_ENTRIES: {printer.review_count_aggregated}
+                            </span>
+                          )}
                         </div>
-                      </Card>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+                          {printer.rating_community_overall && (
+                            <div className="text-center space-y-2 p-3 border border-primary/20 bg-primary/5">
+                              <div className="font-mono text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
+                                ))}
+                              </div>
+                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">OVERALL</div>
+                            </div>
+                          )}
+                          {printer.rating_ease_of_use && (
+                            <div className="text-center space-y-2 p-3 border border-white/10">
+                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
+                                ))}
+                              </div>
+                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">EASE_OF_USE</div>
+                            </div>
+                          )}
+                          {printer.rating_print_quality && (
+                            <div className="text-center space-y-2 p-3 border border-white/10">
+                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
+                                ))}
+                              </div>
+                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">PRINT_QUALITY</div>
+                            </div>
+                          )}
+                          {printer.rating_reliability && (
+                            <div className="text-center space-y-2 p-3 border border-white/10">
+                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
+                                ))}
+                              </div>
+                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">RELIABILITY</div>
+                            </div>
+                          )}
+                          {printer.rating_value_for_money && (
+                            <div className="text-center space-y-2 p-3 border border-white/10">
+                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
+                                ))}
+                              </div>
+                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">VALUE</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     {/* Detailed Specifications - Expandable Drawers */}
