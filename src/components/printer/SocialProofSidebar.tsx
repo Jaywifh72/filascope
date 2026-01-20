@@ -394,8 +394,6 @@ export function SocialProofSidebar({
           trustSignals={data.trustSignals}
         />
 
-        {/* Card 5: Social Activity */}
-        <SocialActivityCard activity={data.activity} />
 
         {/* Card 6: Decision Support */}
         <DecisionSupportCard
@@ -461,7 +459,7 @@ export function MobileSocialProof({
             trustSignals={data.trustSignals}
           />
 
-          <SocialActivityCard activity={data.activity} />
+          
 
           <DecisionSupportCard
             onTakeQuiz={onTakeQuiz}
