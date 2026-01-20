@@ -1,6 +1,7 @@
 import { ArrowRight, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface CTAButtonsProps {
   printer: PrinterCompareItem;
@@ -18,6 +19,7 @@ export function CTAButtons({
   brand,
 }: CTAButtonsProps) {
   const { addPrinter, isSelected, isMaxReached } = usePrinterCompare();
+  const { formatPrice } = useCurrency();
 
   const isAlreadySelected = isSelected(printer.id);
 
@@ -69,7 +71,7 @@ export function CTAButtons({
           >
             View Official Store
             {storePrice && (
-              <span className="ml-1">- ${storePrice.toLocaleString()}</span>
+              <span className="ml-1">- {formatPrice(storePrice, false)}</span>
             )}
             <ArrowRight className="h-5 w-5" />
           </Button>
