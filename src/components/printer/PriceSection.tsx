@@ -11,10 +11,14 @@ interface PriceSectionProps {
   price: number | null | undefined;
   msrp?: number | null;
   trend?: PriceTrend | null;
+  isDiscontinued?: boolean;
 }
 
-export function PriceSection({ price, msrp, trend }: PriceSectionProps) {
+export function PriceSection({ price, msrp, trend, isDiscontinued }: PriceSectionProps) {
   const { formatPrice } = useCurrency();
+
+  // Never show price for discontinued printers
+  if (isDiscontinued) return null;
 
   if (!price && !msrp) return null;
 

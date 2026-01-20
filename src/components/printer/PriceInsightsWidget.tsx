@@ -26,6 +26,7 @@ interface PriceInsightsWidgetProps {
   currentAmazonPrice?: number | null;
   msrp?: number | null;
   onViewFullHistory: () => void;
+  isDiscontinued?: boolean;
 }
 
 type TimeRange = '1M' | '3M' | '6M' | '1Y' | 'All';
@@ -34,6 +35,7 @@ export function PriceInsightsWidget({
   printerId,
   currentPrice,
   onViewFullHistory,
+  isDiscontinued,
 }: PriceInsightsWidgetProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('6M');
   const { formatPrice, currency } = useCurrency();
@@ -53,7 +55,7 @@ export function PriceInsightsWidget({
         price: Number(d.price),
       }));
     },
-    enabled: !!printerId && !!currentPrice,
+    enabled: !!printerId && !!currentPrice && !isDiscontinued,
   });
 
   // Filter data based on time range - MUST be before any conditional returns
@@ -93,6 +95,7 @@ export function PriceInsightsWidget({
   }, [priceHistory, timeRange]);
 
   // Early return AFTER all hooks have been called
+  if (isDiscontinued) return null;
   if (!currentPrice) return null;
 
   const insights = calculatePriceInsights(currentPrice, priceHistory || []);

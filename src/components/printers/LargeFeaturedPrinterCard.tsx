@@ -198,7 +198,9 @@ export default function LargeFeaturedPrinterCard({
                 <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
                   Unit Cost:{" "}
                 </span>
-                {price ? (
+                {printer.discontinued ? (
+                  <span className="font-mono text-lg text-destructive/70">DISCONTINUED</span>
+                ) : price ? (
                   <span className="font-mono text-2xl font-bold text-amber-400">
                     {formatPrice(price)}
                   </span>
