@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Loader2, X, Database as DatabaseIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Download, Loader2, X, Database as DatabaseIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
@@ -23,6 +23,7 @@ import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
 import { TechFooter } from "@/components/TechFooter";
+import { exportPrinterDatabaseCSV } from "@/lib/printerExportUtils";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -104,6 +105,26 @@ export default function Printers() {
   // Quiz state
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
+  
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const result = await exportPrinterDatabaseCSV();
+      if (result.success) {
+        toast.success(`Exported ${result.count} printers to CSV`);
+      } else {
+        toast.error(result.error || 'Export failed');
+      }
+    } catch (error) {
+      toast.error('Failed to export printers');
+      console.error(error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleQuizComplete = (answers: QuizAnswers) => {
     if (printers) {
@@ -557,17 +578,33 @@ export default function Printers() {
               <span className="text-muted-foreground font-light ml-1">Units Indexed</span>
             </h2>
           </div>
-          {hasActiveFilters && (
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAllFilters}
+                className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-3.5 h-3.5 mr-1.5" />
+                Clear Filters
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleClearAllFilters}
-              className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive"
+              onClick={handleExportCSV}
+              disabled={isExporting}
+              className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-primary"
             >
-              <X className="w-3.5 h-3.5 mr-1.5" />
-              Clear Filters
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              Export CSV
             </Button>
-          )}
+          </div>
         </div>
       </div>
 
