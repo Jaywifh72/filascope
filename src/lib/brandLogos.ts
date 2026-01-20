@@ -87,7 +87,7 @@ export const brandLogos: Record<string, string> = {
   "QIDI Tech": "/images/brands/qidi.webp",
   "QIDI": "/images/brands/qidi.webp",
   "Raise3D": "/images/brands/raise3d.png",
-  "Snapmaker": "/images/brands/snapmaker.png",
+  "Snapmaker": "/images/brands/snapmaker-white.png",
   "Sovol": "/images/brands/sovol-long.webp",
   "UltiMaker": "/images/brands/ultimaker-long-white.png",
   "Voron Design": "/images/brands/voron-design.png",
