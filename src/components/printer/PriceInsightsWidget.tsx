@@ -56,12 +56,7 @@ export function PriceInsightsWidget({
     enabled: !!printerId && !!currentPrice,
   });
 
-  if (!currentPrice) return null;
-
-  const insights = calculatePriceInsights(currentPrice, priceHistory || []);
-  const { trend, priceRange, historicalLow } = insights;
-
-  // Filter data based on time range
+  // Filter data based on time range - MUST be before any conditional returns
   const chartData = useMemo(() => {
     if (!priceHistory) return [];
 
@@ -96,6 +91,12 @@ export function PriceInsightsWidget({
         formattedDate: format(new Date(d.date), 'MMM d'),
       }));
   }, [priceHistory, timeRange]);
+
+  // Early return AFTER all hooks have been called
+  if (!currentPrice) return null;
+
+  const insights = calculatePriceInsights(currentPrice, priceHistory || []);
+  const { trend, priceRange, historicalLow } = insights;
 
   const minPrice = chartData.length > 0 ? Math.min(...chartData.map((d) => d.price)) : 0;
   const maxPrice = chartData.length > 0 ? Math.max(...chartData.map((d) => d.price)) : 0;
