@@ -1,19 +1,24 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from '@/hooks/useCurrency';
-import { calculatePriceInsights, PriceInsight } from '@/lib/priceInsightsCalculator';
+import { calculatePriceInsights } from '@/lib/priceInsightsCalculator';
 import {
   TrendingDown,
   TrendingUp,
   Minus,
-  BarChart2,
-  Calendar,
-  ChevronRight,
-  Target,
-  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { format, subMonths, subYears } from 'date-fns';
 
 interface PriceInsightsWidgetProps {
   printerId: string;
@@ -23,25 +28,24 @@ interface PriceInsightsWidgetProps {
   onViewFullHistory: () => void;
 }
 
+type TimeRange = '1M' | '3M' | '6M' | '1Y' | 'All';
+
 export function PriceInsightsWidget({
   printerId,
   currentPrice,
   onViewFullHistory,
 }: PriceInsightsWidgetProps) {
-  const { formatPrice } = useCurrency();
+  const [timeRange, setTimeRange] = useState<TimeRange>('6M');
+  const { formatPrice, currency } = useCurrency();
 
-  const { data: priceHistory } = useQuery({
-    queryKey: ['printer-price-history', printerId],
+  const { data: priceHistory, isLoading } = useQuery({
+    queryKey: ['printer-price-history-full', printerId],
     queryFn: async () => {
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
       const { data, error } = await supabase
         .from('printer_price_history')
         .select('price, recorded_at')
         .eq('printer_id', printerId)
-        .gte('recorded_at', sixMonthsAgo.toISOString())
-        .order('recorded_at', { ascending: false });
+        .order('recorded_at', { ascending: true });
 
       if (error) throw error;
       return (data || []).map((d) => ({
@@ -55,138 +59,187 @@ export function PriceInsightsWidget({
   if (!currentPrice) return null;
 
   const insights = calculatePriceInsights(currentPrice, priceHistory || []);
-  const { trend, priceRange, historicalLow, trendStatus, dealIndicator } = insights;
+  const { trend, priceRange, historicalLow } = insights;
+
+  // Filter data based on time range
+  const chartData = useMemo(() => {
+    if (!priceHistory) return [];
+
+    const now = new Date();
+    let startDate: Date;
+
+    switch (timeRange) {
+      case '1M':
+        startDate = subMonths(now, 1);
+        break;
+      case '3M':
+        startDate = subMonths(now, 3);
+        break;
+      case '6M':
+        startDate = subMonths(now, 6);
+        break;
+      case '1Y':
+        startDate = subYears(now, 1);
+        break;
+      case 'All':
+      default:
+        return priceHistory.map((d) => ({
+          ...d,
+          formattedDate: format(new Date(d.date), 'MMM d'),
+        }));
+    }
+
+    return priceHistory
+      .filter((d) => new Date(d.date) >= startDate)
+      .map((d) => ({
+        ...d,
+        formattedDate: format(new Date(d.date), 'MMM d'),
+      }));
+  }, [priceHistory, timeRange]);
+
+  const minPrice = chartData.length > 0 ? Math.min(...chartData.map((d) => d.price)) : 0;
+  const maxPrice = chartData.length > 0 ? Math.max(...chartData.map((d) => d.price)) : 0;
 
   const getTrendIcon = () => {
-    if (trend.direction === 'down') return <TrendingDown className="w-[18px] h-[18px]" />;
-    if (trend.direction === 'up') return <TrendingUp className="w-[18px] h-[18px]" />;
-    return <Minus className="w-[18px] h-[18px]" />;
+    if (trend.direction === 'down') return <TrendingDown className="w-4 h-4" />;
+    if (trend.direction === 'up') return <TrendingUp className="w-4 h-4" />;
+    return <Minus className="w-4 h-4" />;
   };
 
   const getTrendText = () => {
-    if (trend.direction === 'down') return `↓ ${trend.percentage}% lower than ${trend.period} ago`;
-    if (trend.direction === 'up') return `↑ ${trend.percentage}% higher than ${trend.period} ago`;
-    return `→ Stable price (no change)`;
+    if (trend.direction === 'down') return `${trend.percentage}% BELOW_AVG`;
+    if (trend.direction === 'up') return `${trend.percentage}% ABOVE_AVG`;
+    return 'STABLE';
   };
 
-  const getTrendStatusText = () => {
-    if (trendStatus === 'rising') return 'Trending: Rising';
-    if (trendStatus === 'falling') return 'Trending: Falling';
-    if (trendStatus === 'volatile') return 'Trending: Volatile';
-    return 'Trending: Stable';
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#0A0C10] border border-primary/30 px-3 py-2 font-mono">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+          <p className="text-sm font-bold text-primary">
+            {formatPrice(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
-
-  const getTrendStatusEmoji = () => {
-    if (trendStatus === 'rising') return '📈';
-    if (trendStatus === 'falling') return '📉';
-    return '📊';
-  };
-
-  const isAtHistoricalLow = historicalLow.date === 'Now';
 
   // Dynamic styling based on trend
-  const cardBgClass = cn(
-    'w-full max-w-[500px] p-5 mt-4 mb-6 rounded-xl flex flex-col gap-0',
-    trend.direction === 'down' && 'bg-green-500/10 border border-green-500/30',
-    trend.direction === 'up' && 'bg-red-500/10 border border-red-500/30',
-    trend.direction === 'stable' && 'bg-muted/30 border border-border/50'
-  );
-
-  const headerColorClass = cn(
-    'text-xs font-bold uppercase tracking-wider',
-    trend.direction === 'down' && 'text-green-500',
-    trend.direction === 'up' && 'text-red-500',
-    trend.direction === 'stable' && 'text-muted-foreground'
-  );
-
-  const trendTextClass = cn(
-    'flex items-center gap-2.5 text-[15px] font-semibold leading-snug',
-    trend.direction === 'down' && 'text-green-500',
-    trend.direction === 'up' && 'text-red-500',
+  const trendColorClass = cn(
+    trend.direction === 'down' && 'text-green-400',
+    trend.direction === 'up' && 'text-red-400',
     trend.direction === 'stable' && 'text-muted-foreground'
   );
 
   return (
-    <div className={cardBgClass}>
-      {/* Header */}
-      <div className={cn(headerColorClass, 'flex items-center gap-1.5 mb-4')}>
-        <span>💰</span>
-        <span>PRICE INSIGHTS</span>
-      </div>
+    <div className="relative w-full max-w-[600px] bg-[#0A0C10] border border-primary/20 p-5 mt-4 mb-6">
+      {/* Corner brackets */}
+      <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-primary/50" />
+      <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-primary/50" />
+      <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-primary/50" />
+      <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-primary/50" />
 
-      {/* Insights Content */}
-      <div className="flex flex-col gap-2.5">
-        {/* Insight 1: Current Trend */}
-        <div className={trendTextClass}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="font-mono text-[11px] text-primary uppercase tracking-[0.15em]">
+          {">> "}PRICE_HISTORY
+        </div>
+        <div className={cn('font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5', trendColorClass)}>
           {getTrendIcon()}
           <span>{getTrendText()}</span>
         </div>
+      </div>
 
-        {/* Insight 2: Price Range */}
-        <div className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground">
-          <BarChart2 className="w-4 h-4 text-muted-foreground/70 flex-shrink-0" />
-          <span>
-            Typical range: {formatPrice(priceRange.low)} - {formatPrice(priceRange.high)}
-          </span>
-        </div>
-
-        {/* Insight 3: Historical Low */}
-        <div className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground">
-          {isAtHistoricalLow ? (
-            <>
-              <Target className="w-4 h-4 text-green-500 flex-shrink-0" />
-              <span className="text-green-500 font-semibold">
-                At all-time low! ({formatPrice(historicalLow.price)})
-              </span>
-            </>
-          ) : (
-            <>
-              <Calendar className="w-4 h-4 text-muted-foreground/70 flex-shrink-0" />
-              <span>
-                Lowest: {formatPrice(historicalLow.price)} ({historicalLow.date})
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Insight 4: Trend Status */}
-        <div className="flex items-center gap-2.5 text-sm font-medium text-muted-foreground">
-          <span className="text-base">{getTrendStatusEmoji()}</span>
-          <span>{getTrendStatusText()}</span>
-        </div>
-
-        {/* Insight 5: Deal Indicator (optional) */}
-        {dealIndicator && (
-          <div
+      {/* Time Range Selector - Terminal Style */}
+      <div className="flex gap-1.5 mb-4">
+        {(['1M', '3M', '6M', '1Y', 'All'] as const).map((range) => (
+          <button
+            key={range}
+            onClick={() => setTimeRange(range)}
             className={cn(
-              'flex items-center gap-2.5 text-sm font-semibold py-2 px-3 rounded-md mt-1',
-              dealIndicator === 'buy' && 'bg-green-500/10 text-green-500',
-              dealIndicator === 'wait' && 'bg-muted/50 text-muted-foreground'
+              'font-mono px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all border',
+              timeRange === range
+                ? 'bg-primary/20 border-primary/50 text-primary'
+                : 'bg-transparent border-white/10 text-muted-foreground hover:border-primary/30 hover:text-primary'
             )}
           >
-            {dealIndicator === 'buy' ? (
-              <>
-                <Target className="w-4 h-4 flex-shrink-0" />
-                <span>Good time to buy</span>
-              </>
-            ) : (
-              <>
-                <Clock className="w-4 h-4 flex-shrink-0" />
-                <span>Consider waiting for price drop</span>
-              </>
-            )}
+            {range}
+          </button>
+        ))}
+      </div>
+
+      {/* Chart Container */}
+      <div className="w-full h-[200px] bg-white/[0.02] border border-white/5">
+        {isLoading ? (
+          <div className="w-full h-full flex items-center justify-center font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
+            LOADING_DATA...
           </div>
+        ) : chartData.length === 0 ? (
+          <div className="w-full h-full flex items-center justify-center font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
+            NO_DATA_AVAILABLE
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 15, right: 15, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis
+                dataKey="formattedDate"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                fontFamily="monospace"
+              />
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `$${value}`}
+                domain={[minPrice * 0.95, maxPrice * 1.05]}
+                fontFamily="monospace"
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke="hsl(var(--primary))"
+                strokeWidth={1.5}
+                dot={false}
+                activeDot={{ r: 4, fill: 'hsl(var(--primary))' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         )}
       </div>
 
-      {/* View Full History Button */}
-      <button
-        onClick={onViewFullHistory}
-        className="flex items-center justify-center gap-1.5 w-full h-9 px-4 mt-4 bg-transparent border border-border/30 rounded-lg text-[13px] font-semibold text-muted-foreground cursor-pointer transition-all hover:bg-primary/10 hover:border-primary/40 hover:text-primary hover:-translate-y-px active:translate-y-0"
-      >
-        View Full Price History
-        <ChevronRight className="w-4 h-4" />
-      </button>
+      {/* Stats Row - Terminal Style */}
+      {chartData.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div className="bg-white/[0.02] border border-white/5 px-3 py-2">
+            <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">LOW</div>
+            <div className="font-mono text-sm font-bold text-green-400">{formatPrice(minPrice)}</div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/5 px-3 py-2">
+            <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">HIGH</div>
+            <div className="font-mono text-sm font-bold text-red-400">{formatPrice(maxPrice)}</div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/5 px-3 py-2">
+            <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">RANGE</div>
+            <div className="font-mono text-sm font-bold text-primary">{formatPrice(priceRange.high - priceRange.low)}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Historical Low Indicator */}
+      {historicalLow.date === 'Now' && (
+        <div className="mt-3 font-mono text-[10px] text-green-400 uppercase tracking-wider flex items-center gap-1.5 px-2 py-1.5 bg-green-500/10 border border-green-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+          STATUS: AT_HISTORICAL_LOW
+        </div>
+      )}
     </div>
   );
 }
