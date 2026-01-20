@@ -15,12 +15,9 @@ import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
 import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components/PrintersAdvancedFiltersModal";
-import LargeFeaturedPrinterCard from "@/components/printers/LargeFeaturedPrinterCard";
 import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
-import SmallDeemphasizedPrinterCard from "@/components/printers/SmallDeemphasizedPrinterCard";
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
-import { getCardSize } from "@/lib/printerCardUtils";
 import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
@@ -609,8 +606,7 @@ export default function Printers() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" style={{ gridAutoFlow: 'dense' }}>
-                {displayedPrinters.map((printer, index) => {
-                  const cardInfo = getCardSize(printer, index);
+                {displayedPrinters.map((printer) => {
                   const printerIsSelected = isSelected(printer.id);
 
                   const handleToggleCompare = () => toggleCompareSelection(printer);
@@ -620,36 +616,6 @@ export default function Printers() {
                     e.stopPropagation();
                     rescrapeMutation.mutate(printer.id);
                   };
-
-                  if (cardInfo.size === 'large') {
-                    return (
-                      <LargeFeaturedPrinterCard
-                        key={printer.id}
-                        printer={printer}
-                        cardInfo={cardInfo}
-                        isSelected={printerIsSelected}
-                        isMaxReached={isMaxReached}
-                        onToggleCompare={handleToggleCompare}
-                        isAdmin={isAdmin}
-                        onEditImage={handleEditImage}
-                        onRescrape={handleRescrape}
-                        isRescraping={rescrapeMutation.isPending}
-                      />
-                    );
-                  }
-
-                  if (cardInfo.size === 'small') {
-                    return (
-                      <SmallDeemphasizedPrinterCard
-                        key={printer.id}
-                        printer={printer}
-                        cardInfo={cardInfo}
-                        isSelected={printerIsSelected}
-                        isMaxReached={isMaxReached}
-                        onToggleCompare={handleToggleCompare}
-                      />
-                    );
-                  }
 
                   return (
                     <MediumStandardPrinterCard
