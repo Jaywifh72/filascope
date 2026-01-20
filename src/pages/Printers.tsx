@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Loader2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Loader2, X, Printer } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersFilterBar from "@/components/PrintersFilterBar";
@@ -25,6 +25,7 @@ import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
+import SectionSeparator from "@/components/SectionSeparator";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -518,12 +519,11 @@ export default function Printers() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
       {/* Hero Section */}
       <PrintersHeroSection
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        printerCount={filteredPrinters?.length || 0}
+        printerCount={printers?.length || 0}
         brandCount={brands?.length || 0}
         activeQuickFilters={activeQuickFilters}
         onQuickFilterToggle={handleQuickFilterToggle}
@@ -548,32 +548,57 @@ export default function Printers() {
         />
       )}
 
-        {/* Filter Bar */}
-        <PrintersFilterBar
-          activeCategory={activeCategory}
-          onCategoryChange={handleCategoryChange}
-          categoryCounts={categoryCounts}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          priceRange={priceRangeFilter}
-          onPriceChange={setPriceRangeFilter}
-          buildVolume={buildVolumeFilter}
-          onBuildVolumeChange={setBuildVolumeFilter}
-          onMoreFiltersClick={() => setMoreFiltersOpen(true)}
-          advancedFilterCount={advancedFilterCount}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearAllFilters}
-        />
+      {/* Visual Section Separator */}
+      <SectionSeparator />
 
-
-        {/* Results Section */}
-        <section className="space-y-6 mt-4">
-          {/* Results Count */}
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-2xl font-bold">
-              {filteredPrinters?.length || 0} <span className="text-muted-foreground font-normal">printers</span>
+      {/* Results Header with Context */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 hover:border-primary/20 transition-colors duration-300">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
+              <span className="text-primary font-black">{filteredPrinters?.length.toLocaleString() || 0}</span>
+              {" "}
+              <span className="font-light">printers found</span>
             </h2>
+            <p className="text-sm text-muted-foreground font-light flex items-center gap-1.5">
+              <Printer className="w-3.5 h-3.5" />
+              System Registry Active
+            </p>
           </div>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearAllFilters}
+              className="text-muted-foreground hover:text-foreground self-start sm:self-auto"
+            >
+              <X className="w-4 h-4 mr-1.5" />
+              Clear all filters
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <PrintersFilterBar
+        activeCategory={activeCategory}
+        onCategoryChange={handleCategoryChange}
+        categoryCounts={categoryCounts}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        priceRange={priceRangeFilter}
+        onPriceChange={setPriceRangeFilter}
+        buildVolume={buildVolumeFilter}
+        onBuildVolumeChange={setBuildVolumeFilter}
+        onMoreFiltersClick={() => setMoreFiltersOpen(true)}
+        advancedFilterCount={advancedFilterCount}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={handleClearAllFilters}
+      />
+
+      <div className="max-w-[1800px] mx-auto p-6 space-y-8">
+        {/* Results Section */}
+        <section className="space-y-6">
 
           {/* Printer Grid */}
           {isLoading ? (
