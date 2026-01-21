@@ -530,63 +530,36 @@ const PrinterDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0C10] relative">
-      {/* Dot grid overlay */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: 'radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
-        }}
-      />
-      
-      {/* Atmospheric glow blobs */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_top_right,rgba(0,207,232,0.05)_0%,transparent_60%)]" />
-        <div className="absolute bottom-0 left-0 w-[60%] h-[60%] bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,0,85,0.05)_0%,transparent_60%)]" />
-      </div>
-      
-      <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-8 relative z-10">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
         {/* Navigation */}
-        <div className="flex items-center gap-4">
-          <Link to="/printers">
-            <button className="w-10 h-10 flex items-center justify-center border border-primary/30 text-primary hover:bg-primary/10 hover:border-primary transition-all">
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          </Link>
-          <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-            &lt;&lt; RETURN_TO_REGISTRY
-          </span>
-        </div>
+        <Button variant="ghost" onClick={() => navigate('/printers')} className="mb-6 hover:bg-accent/50 transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
 
-        {/* Hero Section - Hardware Schematic Layout */}
-        <div className="relative bg-[#0A0C10] border border-primary/20 py-10 md:py-14 px-6 md:px-10">
-          {/* Corner brackets for hero */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-primary" />
-          <div className="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-primary" />
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-primary" />
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-primary" />
-          
-          {/* HUD Header */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 font-mono text-[10px] text-primary/60 uppercase tracking-[0.3em]">
-            HARDWARE SCHEMATIC // MODEL SPECIFICATIONS
-          </div>
+        {/* Hero Section */}
+        <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl py-8 md:py-10 px-6 md:px-10">
           
           {/* Admin: Update Image & Refresh Prices Buttons */}
           {isAdmin && (
-            <div className="absolute top-4 right-12 flex gap-2 z-10">
-              <button
-                className="h-8 px-3 bg-transparent border border-white/20 font-mono text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-2 hover:border-primary hover:text-primary transition-all"
+            <div className="absolute top-4 right-6 flex gap-2 z-10">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   setImageDialogOpen(true);
                 }}
               >
-                <ImagePlus className="h-3 w-3" />
-                UPDATE_IMG
-              </button>
-              <button
-                className="h-8 px-3 bg-transparent border border-white/20 font-mono text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-2 hover:border-primary hover:text-primary transition-all disabled:opacity-50"
+                <ImagePlus className="h-3 w-3 mr-1.5" />
+                Update Image
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
                 disabled={isUpdatingPrices}
                 onClick={async (e) => {
                   e.stopPropagation();
@@ -630,14 +603,14 @@ const PrinterDetail = () => {
                   }
                 }}
               >
-                <RefreshCw className={`h-3 w-3 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
-                {isUpdatingPrices ? 'SYNCING...' : 'REFRESH_PRICES'}
-              </button>
+                <RefreshCw className={`h-3 w-3 mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                {isUpdatingPrices ? 'Syncing...' : 'Refresh Prices'}
+              </Button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-10 lg:gap-16 items-start mt-8">
-            {/* Left Column: Digital Viewport (30%) */}
+          <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-8 lg:gap-12 items-start">
+            {/* Left Column: Product Images */}
             <div className="w-full">
               {(() => {
                 const displayImages = productImages.filter(img => validImages.has(img));
@@ -645,9 +618,9 @@ const PrinterDetail = () => {
                 
                 if (isLoadingImages) {
                   return (
-                    <div className="h-[280px] bg-[#0A0C10] border border-primary/20 flex items-center justify-center">
-                      <span className="font-mono text-xs text-primary/60 uppercase tracking-wider animate-pulse">
-                        LOADING_VISUAL_FEED...
+                    <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
+                      <span className="text-sm text-muted-foreground animate-pulse">
+                        Loading images...
                       </span>
                     </div>
                   );
@@ -655,48 +628,26 @@ const PrinterDetail = () => {
                 
                 if (displayImages.length === 0) {
                   return (
-                    <div className="relative h-[280px] bg-[#0A0C10] border border-primary/20 flex items-center justify-center">
-                      <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary" />
-                      <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary" />
-                      <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary" />
-                      <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary" />
+                    <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
                       <Box className="h-20 w-20 text-muted-foreground/30" />
-                      <div className="absolute top-3 left-4 font-mono text-[10px] text-primary/60 uppercase tracking-wider">
-                        IMG_SOURCE: NO_SIGNAL
-                      </div>
                     </div>
                   );
                 }
                 
                 return (
                   <div className="space-y-3">
-                    {/* Main Viewport */}
+                    {/* Main Image */}
                     <div 
-                      className="relative h-[280px] bg-[#0A0C10] border border-primary/30 cursor-pointer group overflow-hidden"
+                      className="relative aspect-square bg-muted/20 rounded-xl border border-border/50 cursor-pointer group overflow-hidden"
                       onClick={() => openLightbox(0)}
                       role="button"
                       aria-label={`View ${printer.model_name} product image in fullscreen`}
                     >
-                      <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary z-10" />
-                      <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary z-10" />
-                      <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary z-10" />
-                      <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary z-10" />
-                      
-                      <div className="absolute top-3 left-4 font-mono text-[10px] text-primary/70 uppercase tracking-wider z-10">
-                        IMG_SOURCE: LIVE_FEED
-                      </div>
-                      <div className="absolute top-3 right-4 font-mono text-[10px] text-primary/70 uppercase tracking-wider z-10">
-                        SCALE: 1:1
-                      </div>
-                      <div className="absolute bottom-3 left-4 font-mono text-[10px] text-primary/70 uppercase tracking-wider z-10">
-                        [01/{String(displayImages.length).padStart(2, '0')}]
-                      </div>
-                      
-                      <div className="absolute inset-8 flex items-center justify-center">
+                      <div className="absolute inset-4 flex items-center justify-center">
                         <img 
                           src={displayImages[0]} 
                           alt={`${printer.model_name} product image`}
-                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                         />
                       </div>
                     </div>
@@ -706,10 +657,10 @@ const PrinterDetail = () => {
                         {displayImages.slice(0, 4).map((img: string, idx: number) => (
                           <div 
                             key={idx} 
-                            className={`relative h-[60px] bg-[#0A0C10] border p-1.5 flex items-center justify-center cursor-pointer transition-all duration-200 ${
+                            className={`relative aspect-square bg-muted/20 rounded-lg border p-1.5 flex items-center justify-center cursor-pointer transition-all duration-200 ${
                               idx === 0 
-                                ? 'border-primary bg-primary/10' 
-                                : 'border-white/10 hover:border-primary/50'
+                                ? 'border-primary bg-primary/5' 
+                                : 'border-border/50 hover:border-primary/50'
                             }`}
                             onClick={() => openLightbox(idx)}
                             role="button"
@@ -730,20 +681,20 @@ const PrinterDetail = () => {
               })()}
             </div>
 
-            {/* Right Column: Command Panel (70%) */}
-            <div className="space-y-6">
-              {/* Brand Designation */}
-              <div className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
+            {/* Right Column: Product Info */}
+            <div className="space-y-5">
+              {/* Brand */}
+              <div className="text-sm font-medium text-primary uppercase tracking-wide">
                 {brand}
               </div>
 
-              {/* Model Designation */}
-              <h1 className="font-mono text-3xl md:text-4xl font-bold text-foreground leading-tight uppercase tracking-wide -mt-4">
+              {/* Model Name */}
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
                 {printer.model_name}
               </h1>
 
-              {/* System Description */}
-              <p className="text-sm text-muted-foreground leading-relaxed -mt-2">
+              {/* Description */}
+              <p className="text-muted-foreground leading-relaxed">
                 {generatePrinterDescription({
                   ...printer,
                   brand: brand || undefined
@@ -757,7 +708,7 @@ const PrinterDetail = () => {
                 reviewCount={printer.review_count_aggregated}
               />
 
-              {/* Price Section - Terminal Style (hidden for discontinued) */}
+              {/* Price Section */}
               <PriceSection
                 price={displayPrice}
                 msrp={displayMsrp}
@@ -778,7 +729,7 @@ const PrinterDetail = () => {
               {/* Value Proposition */}
               <ValueProposition benefits={generatePrinterBenefits(printer)} />
 
-              {/* CTA Buttons - Industrial Style */}
+              {/* CTA Buttons */}
               <CTAButtons
                 printer={{
                   id: printer.id,
@@ -903,83 +854,79 @@ const PrinterDetail = () => {
                     {/* Advantage Callout Cards - Feature Benefits */}
                     <AdvantageCardsSection printer={printer} />
 
-                    {/* Ratings - Terminal Style */}
+                    {/* Community Ratings */}
                     {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
-                      <div className="relative bg-[#0A0C10] border border-primary/20 p-6" data-section="ratings">
-                        {/* Corner brackets */}
-                        <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-primary" />
-                        <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-primary" />
-                        <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-primary" />
-                        <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-primary" />
-                        
-                        <div className="flex items-center gap-3 mb-6">
-                          <span className="font-mono text-xs text-primary/60 uppercase tracking-wider">&gt;&gt;</span>
-                          <h3 className="font-mono text-sm font-bold text-primary uppercase tracking-[0.15em]">OPERATOR_RATINGS</h3>
-                          {printer.review_count_aggregated && (
-                            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider ml-auto">
-                              TOTAL_ENTRIES: {printer.review_count_aggregated}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
-                          {printer.rating_community_overall && (
-                            <div className="text-center space-y-2 p-3 border border-primary/20 bg-primary/5">
-                              <div className="font-mono text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
-                              <div className="flex justify-center gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
-                                ))}
+                      <Card className="overflow-hidden" data-section="ratings">
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg font-semibold">Community Ratings</CardTitle>
+                            {printer.review_count_aggregated && (
+                              <span className="text-sm text-muted-foreground">
+                                {printer.review_count_aggregated} reviews
+                              </span>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {printer.rating_community_overall && (
+                              <div className="text-center space-y-2 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                                <div className="text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
+                                <div className="flex justify-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                  ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">Overall</div>
                               </div>
-                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">OVERALL</div>
-                            </div>
-                          )}
-                          {printer.rating_ease_of_use && (
-                            <div className="text-center space-y-2 p-3 border border-white/10">
-                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
-                              <div className="flex justify-center gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
-                                ))}
+                            )}
+                            {printer.rating_ease_of_use && (
+                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
+                                <div className="flex justify-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                  ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">Ease of Use</div>
                               </div>
-                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">EASE_OF_USE</div>
-                            </div>
-                          )}
-                          {printer.rating_print_quality && (
-                            <div className="text-center space-y-2 p-3 border border-white/10">
-                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
-                              <div className="flex justify-center gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
-                                ))}
+                            )}
+                            {printer.rating_print_quality && (
+                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
+                                <div className="flex justify-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                  ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">Print Quality</div>
                               </div>
-                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">PRINT_QUALITY</div>
-                            </div>
-                          )}
-                          {printer.rating_reliability && (
-                            <div className="text-center space-y-2 p-3 border border-white/10">
-                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
-                              <div className="flex justify-center gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
-                                ))}
+                            )}
+                            {printer.rating_reliability && (
+                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
+                                <div className="flex justify-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                  ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">Reliability</div>
                               </div>
-                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">RELIABILITY</div>
-                            </div>
-                          )}
-                          {printer.rating_value_for_money && (
-                            <div className="text-center space-y-2 p-3 border border-white/10">
-                              <div className="font-mono text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
-                              <div className="flex justify-center gap-0.5">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-3 w-3 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-white/20'}`} />
-                                ))}
+                            )}
+                            {printer.rating_value_for_money && (
+                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
+                                <div className="flex justify-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                  ))}
+                                </div>
+                                <div className="text-xs text-muted-foreground font-medium">Value</div>
                               </div>
-                              <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">VALUE</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
                     )}
 
                     {/* Detailed Specifications - Expandable Drawers */}
