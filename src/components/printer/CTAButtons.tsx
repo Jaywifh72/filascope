@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Crosshair, Activity } from "lucide-react";
+import { ArrowRight, Check, ShoppingCart, Activity } from "lucide-react";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTrackPrinterEvent } from "@/hooks/usePrinterAnalytics";
@@ -57,8 +57,8 @@ export function CTAButtons({
           <button
             className="h-[52px] px-8 bg-primary text-primary-foreground font-mono text-sm uppercase tracking-wider font-bold flex items-center gap-3 border-2 border-primary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(0,207,232,0.4)] group"
           >
-            <Crosshair className="h-5 w-5" />
-            INITIATE REQUISITION
+            <ShoppingCart className="h-5 w-5" />
+            BUY NOW
             {storePrice && !isDiscontinued && (
               <span className="ml-1 text-primary-foreground/80">
                 [{formatPrice(storePrice, false)}]
