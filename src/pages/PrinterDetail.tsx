@@ -25,7 +25,6 @@ import { FirmwareSection } from "@/components/FirmwareSection";
 import { SoftwareSection } from "@/components/SoftwareSection";
 import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualization";
 import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
-import { ValueProposition } from "@/components/printer/ValueProposition";
 import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
 import { FeatureHighlightCards } from "@/components/printer/FeatureHighlightCards";
 import AdvantageCardsSection from "@/components/printer/AdvantageCardsSection";
@@ -36,7 +35,7 @@ import { PriceHistoryModal } from "@/components/printer/PriceHistoryModal";
 import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSection";
 import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/SocialProofSidebar";
 import { FAQSection } from "@/components/printer/FAQSection";
-import { generatePrinterBenefits, generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
+import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import { usePrinterInventory, getAggregatedStockStatus } from "@/hooks/usePrinterInventory";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { 
@@ -726,9 +725,6 @@ const PrinterDetail = () => {
                 isDiscontinued={printer.discontinued}
               />
 
-              {/* Value Proposition */}
-              <ValueProposition benefits={generatePrinterBenefits(printer)} />
-
               {/* CTA Buttons */}
               <CTAButtons
                 printer={{
@@ -747,8 +743,26 @@ const PrinterDetail = () => {
           </div>
         </div>
 
-        {/* Key Specifications Bar - Full Width Below Hero */}
-        <KeySpecsBar specs={generateKeySpecs(printer)} />
+        {/* Performance Overview Section - Key Specs & Features */}
+        <section className="max-w-[1400px] mx-auto px-4 md:px-10 py-8 space-y-8">
+          {/* Quick Specifications Bar */}
+          <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-xl p-6">
+            <h2 className="text-lg font-semibold mb-4">Quick Specifications</h2>
+            <KeySpecsBar specs={generateKeySpecs(printer)} />
+          </div>
+
+          {/* Performance Analysis Cards */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Performance Analysis</h2>
+            <FeatureHighlightCards printer={printer} />
+          </div>
+
+          {/* System Capabilities */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4">System Capabilities</h2>
+            <AdvantageCardsSection printer={printer} />
+          </div>
+        </section>
 
         {/* Sidebar Data for Social Proof */}
         {(() => {
@@ -848,11 +862,6 @@ const PrinterDetail = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-10 items-start">
                   {/* Main Content Column */}
                   <div className="space-y-8">
-                    {/* Feature Highlight Cards - Decision Matrix */}
-                    <FeatureHighlightCards printer={printer} />
-
-                    {/* Advantage Callout Cards - Feature Benefits */}
-                    <AdvantageCardsSection printer={printer} />
 
                     {/* Community Ratings */}
                     {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
