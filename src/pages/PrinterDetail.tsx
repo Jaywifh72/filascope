@@ -30,8 +30,6 @@ import { FeatureHighlightCards } from "@/components/printer/FeatureHighlightCard
 import AdvantageCardsSection from "@/components/printer/AdvantageCardsSection";
 import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
-import { PriceInsightsWidget } from "@/components/printer/PriceInsightsWidget";
-import { PriceHistoryModal } from "@/components/printer/PriceHistoryModal";
 import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSection";
 import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/SocialProofSidebar";
 import { FAQSection } from "@/components/printer/FAQSection";
@@ -103,7 +101,6 @@ const PrinterDetail = () => {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [imagePreviewError, setImagePreviewError] = useState(false);
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
-  const [showPriceHistoryModal, setShowPriceHistoryModal] = useState(false);
   const [storeImages, setStoreImages] = useState<string[]>([]);
   const [isLoadingStoreImages, setIsLoadingStoreImages] = useState(false);
   const [storeImagesError, setStoreImagesError] = useState<string | null>(null);
@@ -715,15 +712,6 @@ const PrinterDetail = () => {
                 isDiscontinued={printer.discontinued}
               />
 
-              {/* Price Insights Widget (hidden for discontinued) */}
-              <PriceInsightsWidget
-                printerId={printer.id}
-                currentPrice={displayPrice}
-                currentAmazonPrice={printer.current_price_usd_amazon}
-                msrp={displayMsrp}
-                onViewFullHistory={() => setShowPriceHistoryModal(true)}
-                isDiscontinued={printer.discontinued}
-              />
 
               {/* CTA Buttons */}
               <CTAButtons
@@ -1262,13 +1250,6 @@ const PrinterDetail = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Price History Modal */}
-        <PriceHistoryModal
-          isOpen={showPriceHistoryModal}
-          onClose={() => setShowPriceHistoryModal(false)}
-          printerName={printer.model_name}
-          printerId={printer.id}
-        />
       </div>
     </div>
   );
