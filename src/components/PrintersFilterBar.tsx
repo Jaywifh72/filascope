@@ -28,14 +28,7 @@ interface PrintersFilterBarProps {
   onClearFilters: () => void;
 }
 
-const categories = [
-  { id: 'all', label: 'ALL' },
-  { id: 'fdm', label: 'FDM' },
-  { id: 'resin', label: 'RESIN' },
-  { id: 'corexy', label: 'COREXY' },
-  { id: 'budget', label: 'BUDGET' },
-  { id: 'multicolor', label: 'MULTI-MAT' },
-];
+const categories: { id: string; label: string }[] = [];
 
 const sortOptions = [
   { value: "name-asc", label: "Name (A-Z)" },
