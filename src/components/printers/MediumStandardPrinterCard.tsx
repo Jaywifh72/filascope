@@ -39,18 +39,19 @@ export default function MediumStandardPrinterCard({
   const productImage = getPrinterImage(printer);
   const badges = getPrinterBadges(printer, 2);
 
+  // Calculate fallback price from database (store > amazon > msrp)
+  const databasePrice = printer.current_price_usd_store ?? printer.current_price_usd_amazon ?? printer.msrp_usd;
+  
   // Fetch live price from store (uses caching to avoid excessive API calls)
-  const fallbackPrice = printer.current_price_usd_store || printer.current_price_usd_amazon || printer.msrp_usd;
   const { 
     currentPrice: livePrice, 
     isLoading: priceLoading, 
     isLivePrice 
-  } = usePrinterCurrentPrice(printer.official_store_url, fallbackPrice);
+  } = usePrinterCurrentPrice(printer.official_store_url, databasePrice);
 
-  // Use live price if available, otherwise fall back to database price (store > amazon > msrp)
-  const price = isLivePrice && livePrice !== null 
-    ? livePrice 
-    : (fallbackPrice || printer.msrp_usd);
+  // Use live price if available, otherwise use the hook's returned price (which includes fallback)
+  // The hook already handles fallback internally, so we just need to ensure we have a value
+  const price = livePrice ?? databasePrice;
 
   return (
     <article 
