@@ -42,12 +42,33 @@ export default function MediumStandardPrinterCard({
   // Calculate fallback price from database (store > amazon > msrp)
   const databasePrice = printer.current_price_usd_store ?? printer.current_price_usd_amazon ?? printer.msrp_usd;
   
+  // Debug logging for K2 pricing issue
+  if (printer.model_name === 'K2') {
+    console.log('[K2 Pricing Debug]', {
+      model: printer.model_name,
+      store: printer.current_price_usd_store,
+      amazon: printer.current_price_usd_amazon,
+      msrp: printer.msrp_usd,
+      databasePrice,
+    });
+  }
+  
   // Fetch live price from store (uses caching to avoid excessive API calls)
   const { 
     currentPrice: livePrice, 
     isLoading: priceLoading, 
     isLivePrice 
   } = usePrinterCurrentPrice(printer.official_store_url, databasePrice);
+
+  // Debug logging for K2 pricing issue - after hook
+  if (printer.model_name === 'K2') {
+    console.log('[K2 Pricing Debug - After Hook]', {
+      livePrice,
+      priceLoading,
+      isLivePrice,
+      finalPrice: livePrice ?? databasePrice,
+    });
+  }
 
   // Use live price if available, otherwise use the hook's returned price (which includes fallback)
   // The hook already handles fallback internally, so we just need to ensure we have a value
