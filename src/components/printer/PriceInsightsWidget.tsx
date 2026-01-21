@@ -237,8 +237,8 @@ export function PriceInsightsWidget({
         </div>
       )}
 
-      {/* Historical Low Indicator */}
-      {historicalLow.date === 'Now' && (
+      {/* Historical Low Indicator - Only show when we have actual price history data */}
+      {chartData.length > 0 && historicalLow.date === 'Now' && (
         <div className="mt-3 font-mono text-[10px] text-green-400 uppercase tracking-wider flex items-center gap-1.5 px-2 py-1.5 bg-green-500/10 border border-green-500/20">
           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
           STATUS: AT_HISTORICAL_LOW
