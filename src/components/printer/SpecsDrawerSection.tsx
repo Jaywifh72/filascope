@@ -188,20 +188,16 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
 
   return (
     <section className="max-w-[1400px] mx-auto px-5 md:px-10 py-10 md:py-[60px]">
-      <div className="flex items-center gap-3 mb-8">
-        <span className="font-mono text-xs text-primary/60 uppercase tracking-wider">&gt;&gt;</span>
-        <h2 className="font-mono text-sm md:text-base font-bold text-primary uppercase tracking-[0.2em]">
-          SYSTEM_ARCHITECTURE
-        </h2>
-        <div className="flex-1 h-px bg-primary/20" />
-      </div>
+      <h2 className="text-lg font-semibold text-foreground mb-6">
+        System Architecture
+      </h2>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {/* Drawer 1: Build Volume & Dimensions */}
         <SpecsDrawer
           id="build-volume"
           icon={<Box className="w-5 h-5" />}
-          title="BUILD VOLUME & DIMENSIONS"
+          title="Build Volume & Dimensions"
           preview={generateBuildVolumePreview(printer)}
           isExpanded={expandedDrawers.has('build-volume')}
           onToggle={() => toggleDrawer('build-volume')}
@@ -224,7 +220,7 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
         <SpecsDrawer
           id="print-capabilities"
           icon={<Zap className="w-5 h-5" />}
-          title="PRINT CAPABILITIES"
+          title="Print Capabilities"
           preview={generatePrintCapabilitiesPreview(printer)}
           isExpanded={expandedDrawers.has('print-capabilities')}
           onToggle={() => toggleDrawer('print-capabilities')}
@@ -278,7 +274,7 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
         <SpecsDrawer
           id="materials-features"
           icon={<Palette className="w-5 h-5" />}
-          title="MATERIALS & FEATURES"
+          title="Materials & Features"
           preview={generateMaterialsFeaturesPreview(printer)}
           isExpanded={expandedDrawers.has('materials-features')}
           onToggle={() => toggleDrawer('materials-features')}
@@ -297,16 +293,16 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
               {allSystems.map((system) => {
                 const isCompatible = isSystemCompatible(system.key);
                 return (
-                  <div key={system.key} className="flex items-center justify-between py-2 px-3 border border-white/5 bg-white/[0.02] hover:border-primary/20 transition-colors">
-                    <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">{system.name}</span>
+                  <div key={system.key} className="flex items-center justify-between py-2.5 px-3 border border-border/30 bg-muted/20 rounded-lg hover:bg-muted/30 transition-colors">
+                    <span className="text-sm text-muted-foreground">{system.name}</span>
                     <div className="flex items-center gap-2">
                       {isCompatible ? (
-                        <span className="font-mono text-[10px] text-green-500 uppercase tracking-wider px-2 py-0.5 border border-green-500/30 bg-green-500/10">
-                          COMPATIBLE
+                        <span className="text-xs text-green-500 font-medium px-2 py-0.5 rounded-full border border-green-500/30 bg-green-500/10">
+                          Compatible
                         </span>
                       ) : (
-                        <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-wider px-2 py-0.5 border border-white/10">
-                          INCOMPATIBLE
+                        <span className="text-xs text-muted-foreground/60 font-medium px-2 py-0.5 rounded-full border border-border/40 bg-muted/30">
+                          Incompatible
                         </span>
                       )}
                     </div>
@@ -329,7 +325,7 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
         <SpecsDrawer
           id="connectivity"
           icon={<Wifi className="w-5 h-5" />}
-          title="CONNECTIVITY & CONTROL"
+          title="Connectivity & Control"
           preview={generateConnectivityPreview(printer)}
           isExpanded={expandedDrawers.has('connectivity')}
           onToggle={() => toggleDrawer('connectivity')}
@@ -365,7 +361,7 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
         <SpecsDrawer
           id="power-construction"
           icon={<Battery className="w-5 h-5" />}
-          title="POWER & CONSTRUCTION"
+          title="Power & Construction"
           preview={generatePowerConstructionPreview(printer)}
           isExpanded={expandedDrawers.has('power-construction')}
           onToggle={() => toggleDrawer('power-construction')}
@@ -430,7 +426,7 @@ const SpecsDrawerSection: React.FC<SpecsDrawerSectionProps> = ({
         <SpecsDrawer
           id="accessories"
           icon={<Package className="w-5 h-5" />}
-          title="ACCESSORIES"
+          title="Accessories"
           preview={generateAccessoriesPreview(accessories)}
           isExpanded={expandedDrawers.has('accessories')}
           onToggle={() => toggleDrawer('accessories')}
