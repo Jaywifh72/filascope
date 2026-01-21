@@ -26,7 +26,6 @@ import { SoftwareSection } from "@/components/SoftwareSection";
 import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualization";
 import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
 import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
-import { FeatureHighlightCards } from "@/components/printer/FeatureHighlightCards";
 import AdvantageCardsSection from "@/components/printer/AdvantageCardsSection";
 import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
@@ -710,10 +709,10 @@ const PrinterDetail = () => {
                 <KeySpecsBar specs={generateKeySpecs(printer)} />
               </div>
 
-              {/* Performance Analysis */}
+              {/* System Capabilities */}
               <div className="pt-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Performance Analysis</h3>
-                <FeatureHighlightCards printer={printer} />
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">System Capabilities</h3>
+                <AdvantageCardsSection printer={printer} />
               </div>
 
               {/* Price Section */}
@@ -741,12 +740,6 @@ const PrinterDetail = () => {
             </div>
           </div>
         </div>
-
-        {/* System Capabilities Section */}
-        <section className="max-w-[1400px] mx-auto px-4 md:px-10 py-8">
-          <h2 className="text-lg font-semibold mb-4">System Capabilities</h2>
-          <AdvantageCardsSection printer={printer} />
-        </section>
 
         {/* Sidebar Data for Social Proof */}
         {(() => {
