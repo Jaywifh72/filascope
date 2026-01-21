@@ -2883,6 +2883,7 @@ export type Database = {
           abl_technique: string | null
           abrasive_filament_support: boolean | null
           abrasive_materials_supported: boolean | null
+          ai_camera_features: string | null
           ai_spaghetti_detection: boolean | null
           amazon_url_au: string | null
           amazon_url_ca: string | null
@@ -2907,6 +2908,9 @@ export type Database = {
           build_volume_x_mm: number | null
           build_volume_y_mm: number | null
           build_volume_z_mm: number | null
+          camera_count: number | null
+          camera_resolution: string | null
+          camera_type: string | null
           cloud_platforms: string | null
           coming_soon: boolean | null
           common_failure_points: string | null
@@ -2968,6 +2972,9 @@ export type Database = {
           input_shaping_supported: boolean | null
           internal_lighting: boolean | null
           last_verified_utc: string | null
+          layer_height_default_um: number | null
+          layer_height_max_um: number | null
+          layer_height_min_um: number | null
           linear_rails_on_axes: string | null
           machine_depth_mm: number | null
           machine_height_mm: number | null
@@ -3037,6 +3044,7 @@ export type Database = {
           release_date: string | null
           remote_control_supported: boolean | null
           remote_monitoring_supported: boolean | null
+          repeatability_um: number | null
           review_count_aggregated: number | null
           safety_certifications: string | null
           safety_notes: string | null
@@ -3059,17 +3067,21 @@ export type Database = {
           target_user_segment: string | null
           temperature_sensors: string | null
           thermal_runaway_protection: boolean | null
+          timelapse_supported: boolean | null
           typical_power_abs_w: number | null
           typical_power_pla_w: number | null
           ui_language_options: string | null
           updated_at: string | null
           variant_or_bundle_name: string | null
+          xy_positioning_accuracy_um: number | null
           z_offset_supported: boolean | null
+          z_positioning_accuracy_um: number | null
         }
         Insert: {
           abl_technique?: string | null
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
+          ai_camera_features?: string | null
           ai_spaghetti_detection?: boolean | null
           amazon_url_au?: string | null
           amazon_url_ca?: string | null
@@ -3094,6 +3106,9 @@ export type Database = {
           build_volume_x_mm?: number | null
           build_volume_y_mm?: number | null
           build_volume_z_mm?: number | null
+          camera_count?: number | null
+          camera_resolution?: string | null
+          camera_type?: string | null
           cloud_platforms?: string | null
           coming_soon?: boolean | null
           common_failure_points?: string | null
@@ -3155,6 +3170,9 @@ export type Database = {
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
           last_verified_utc?: string | null
+          layer_height_default_um?: number | null
+          layer_height_max_um?: number | null
+          layer_height_min_um?: number | null
           linear_rails_on_axes?: string | null
           machine_depth_mm?: number | null
           machine_height_mm?: number | null
@@ -3224,6 +3242,7 @@ export type Database = {
           release_date?: string | null
           remote_control_supported?: boolean | null
           remote_monitoring_supported?: boolean | null
+          repeatability_um?: number | null
           review_count_aggregated?: number | null
           safety_certifications?: string | null
           safety_notes?: string | null
@@ -3246,17 +3265,21 @@ export type Database = {
           target_user_segment?: string | null
           temperature_sensors?: string | null
           thermal_runaway_protection?: boolean | null
+          timelapse_supported?: boolean | null
           typical_power_abs_w?: number | null
           typical_power_pla_w?: number | null
           ui_language_options?: string | null
           updated_at?: string | null
           variant_or_bundle_name?: string | null
+          xy_positioning_accuracy_um?: number | null
           z_offset_supported?: boolean | null
+          z_positioning_accuracy_um?: number | null
         }
         Update: {
           abl_technique?: string | null
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
+          ai_camera_features?: string | null
           ai_spaghetti_detection?: boolean | null
           amazon_url_au?: string | null
           amazon_url_ca?: string | null
@@ -3281,6 +3304,9 @@ export type Database = {
           build_volume_x_mm?: number | null
           build_volume_y_mm?: number | null
           build_volume_z_mm?: number | null
+          camera_count?: number | null
+          camera_resolution?: string | null
+          camera_type?: string | null
           cloud_platforms?: string | null
           coming_soon?: boolean | null
           common_failure_points?: string | null
@@ -3342,6 +3368,9 @@ export type Database = {
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
           last_verified_utc?: string | null
+          layer_height_default_um?: number | null
+          layer_height_max_um?: number | null
+          layer_height_min_um?: number | null
           linear_rails_on_axes?: string | null
           machine_depth_mm?: number | null
           machine_height_mm?: number | null
@@ -3411,6 +3440,7 @@ export type Database = {
           release_date?: string | null
           remote_control_supported?: boolean | null
           remote_monitoring_supported?: boolean | null
+          repeatability_um?: number | null
           review_count_aggregated?: number | null
           safety_certifications?: string | null
           safety_notes?: string | null
@@ -3433,12 +3463,15 @@ export type Database = {
           target_user_segment?: string | null
           temperature_sensors?: string | null
           thermal_runaway_protection?: boolean | null
+          timelapse_supported?: boolean | null
           typical_power_abs_w?: number | null
           typical_power_pla_w?: number | null
           ui_language_options?: string | null
           updated_at?: string | null
           variant_or_bundle_name?: string | null
+          xy_positioning_accuracy_um?: number | null
           z_offset_supported?: boolean | null
+          z_positioning_accuracy_um?: number | null
         }
         Relationships: [
           {
