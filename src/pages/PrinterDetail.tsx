@@ -82,6 +82,7 @@ import {
   RefreshCw,
   Calendar,
   AlertTriangle,
+  Upload,
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 
@@ -107,6 +108,8 @@ const PrinterDetail = () => {
   const [storeImages, setStoreImages] = useState<string[]>([]);
   const [isLoadingStoreImages, setIsLoadingStoreImages] = useState(false);
   const [storeImagesError, setStoreImagesError] = useState<string | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [uploadedFilePreview, setUploadedFilePreview] = useState<string | null>(null);
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
@@ -244,6 +247,7 @@ const PrinterDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
       setImageDialogOpen(false);
       setNewImageUrl("");
+      setUploadedFilePreview(null);
     },
     onError: (error) => {
       toast({ 
@@ -253,6 +257,80 @@ const PrinterDetail = () => {
       });
     }
   });
+
+  // Handle file upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !printer) return;
+
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PNG, JPEG, WebP, or GIF image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingFile(true);
+    try {
+      // Generate a unique filename
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const sanitizedModelName = printer.model_name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      const timestamp = Date.now();
+      const fileName = `${sanitizedModelName}-${timestamp}.${ext}`;
+      const filePath = `printers/${fileName}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('printer-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('printer-images')
+        .getPublicUrl(filePath);
+
+      // Set the URL for preview and selection
+      setNewImageUrl(publicUrl);
+      setUploadedFilePreview(publicUrl);
+      setImagePreviewError(false);
+      
+      toast({
+        title: "Upload complete",
+        description: "Image uploaded. Click CONFIRM to save."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload image",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
 
   // Fetch images from store URL
   const fetchStoreImages = async () => {
@@ -1122,6 +1200,51 @@ const PrinterDetail = () => {
                 )}
               </div>
               
+              {/* File Upload Section */}
+              <div className="space-y-2 pt-2 border-t border-white/10">
+                <Label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Or Upload Image File
+                </Label>
+                <div className="flex items-center gap-3">
+                  <label className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleFileUpload}
+                      disabled={isUploadingFile}
+                      className="hidden"
+                    />
+                    <div className={`
+                      flex items-center justify-center gap-2 px-4 py-3
+                      border-2 border-dashed border-white/20 rounded-lg
+                      cursor-pointer transition-all
+                      hover:border-primary/50 hover:bg-white/[0.02]
+                      ${isUploadingFile ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}>
+                      <Upload className={`h-4 w-4 text-muted-foreground ${isUploadingFile ? 'animate-pulse' : ''}`} />
+                      <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {isUploadingFile ? "UPLOADING..." : "CLICK_TO_UPLOAD"}
+                      </span>
+                    </div>
+                  </label>
+                  {uploadedFilePreview && (
+                    <div className="relative w-14 h-14 border border-primary/30 rounded overflow-hidden">
+                      <img 
+                        src={uploadedFilePreview} 
+                        alt="Uploaded" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-wider">
+                  MAX 5MB · PNG, JPEG, WEBP, GIF
+                </p>
+              </div>
+              
               {/* Manual URL Input */}
               <div className="space-y-2 pt-2 border-t border-white/10">
                 <Label className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -1134,6 +1257,7 @@ const PrinterDetail = () => {
                   onChange={(e) => {
                     setNewImageUrl(e.target.value);
                     setImagePreviewError(false);
+                    setUploadedFilePreview(null);
                   }}
                   className="font-mono text-sm bg-white/5 border-white/10"
                 />
