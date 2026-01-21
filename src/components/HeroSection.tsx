@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
@@ -17,28 +17,41 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
 
   return (
     <section className="relative overflow-hidden">
-      {/* Main content - Compact height, no separate background */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-10 py-12 md:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      {/* Main content */}
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-10 pt-28 pb-12 md:pt-32 md:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left order-1">
-            {/* Headline - Smaller, more compact */}
-            <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-light tracking-[0.2em] leading-[1.2] mb-6 animate-fade-in uppercase"
+            {/* Material Registry Badge */}
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-6 animate-fade-in"
             >
-              Measure Material.
+              <FlaskConical className="h-3.5 w-3.5 text-primary" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-primary">
+                Material Registry
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light tracking-[0.15em] leading-[1.1] mb-6 animate-fade-in uppercase"
+            >
+              <span className="text-foreground">Measure</span>
               <br />
-              Master The{" "}
+              <span className="text-muted-foreground font-light">Material.</span>
+              <br />
               <span className="font-black italic text-primary">Print.</span>
             </h1>
             
             {/* Sub-text */}
             <p 
-              className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed mb-12 max-w-[540px] animate-fade-in"
+              className="text-base md:text-lg text-muted-foreground font-light leading-relaxed mb-10 max-w-[480px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s" }}
             >
-              The future of filament is loading. We are indexing thousands of materials to provide the most accurate 3D printing data hub ever built.
+              <span className="text-primary">{filamentCount.toLocaleString()}</span> materials indexed from{" "}
+              <span className="text-primary">{brandCount}+</span> manufacturers. 
+              Compare properties, specs, and pricing in one unified data hub.
             </p>
             
             {/* Buttons Row */}
@@ -56,7 +69,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 Material Wizard
               </Button>
               
-              {/* Secondary - Search Input with Glass Background */}
+              {/* Secondary - Search Input */}
               <div 
                 className={`relative transition-all duration-300 ${
                   isFocused ? "scale-[1.01]" : ""
@@ -70,7 +83,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                   onChange={(e) => onSearchChange(e.target.value)}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
                     isFocused 
                       ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
                       : "border-white/10 hover:border-white/20"
@@ -81,14 +94,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             </div>
           </div>
           
-          {/* Right: Glass Container with 3D Box Visual */}
+          {/* Right: Glass Container with 3D Filament Spool Visual */}
           <div 
             className="hidden lg:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Compact Glass Container */}
+            {/* Glass Container with Spool Visualization */}
             <div 
-              className="relative p-8 rounded-2xl border border-white/10 shadow-xl overflow-hidden"
+              className="relative p-10 rounded-2xl border border-white/10 overflow-hidden"
               style={{
                 transform: "rotate(6deg)",
                 backdropFilter: "blur(20px)",
@@ -106,8 +119,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 }}
               />
               
-              {/* 3D Stacked Boxes - Compact */}
-              <div className="relative w-[240px] h-[240px] flex items-center justify-center" style={{ perspective: "1000px" }}>
+              {/* 3D Stacked Boxes */}
+              <div className="relative w-[260px] h-[260px] flex items-center justify-center" style={{ perspective: "1000px" }}>
                 {/* Bottom Box - Magenta */}
                 <div 
                   className="absolute w-28 h-28 rounded-xl"
@@ -150,14 +163,19 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                   />
                 </div>
                 
-                {/* Decorative grid lines */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none">
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
-                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white to-transparent" />
+                {/* Floating Telemetry Tags */}
+                <div className="absolute top-4 right-0 font-mono text-[9px] uppercase tracking-wider text-primary/70 bg-primary/5 border border-primary/20 px-2 py-1 rounded">
+                  MATERIAL_DB: ACTIVE
+                </div>
+                <div className="absolute bottom-8 left-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground bg-white/5 border border-white/10 px-2 py-1 rounded">
+                  T_NOZZLE: 215°C
+                </div>
+                <div className="absolute top-1/2 right-0 font-mono text-[9px] uppercase tracking-wider text-[#FF0055]/70 bg-[#FF0055]/5 border border-[#FF0055]/20 px-2 py-1 rounded">
+                  DENSITY: 1.24g/cm³
                 </div>
               </div>
               
-              {/* Corner accents - Cyan */}
+              {/* Corner accents */}
               <div 
                 className="absolute top-4 left-4 w-8 h-8 rounded-tl-lg"
                 style={{ 
@@ -168,8 +186,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               <div 
                 className="absolute bottom-4 right-4 w-8 h-8 rounded-br-lg"
                 style={{ 
-                  borderRight: "2px solid rgba(0, 207, 232, 0.5)",
-                  borderBottom: "2px solid rgba(0, 207, 232, 0.5)",
+                  borderRight: "2px solid rgba(255, 0, 85, 0.5)",
+                  borderBottom: "2px solid rgba(255, 0, 85, 0.5)",
                 }}
               />
             </div>
