@@ -47,8 +47,10 @@ export default function MediumStandardPrinterCard({
     isLivePrice 
   } = usePrinterCurrentPrice(printer.official_store_url, fallbackPrice);
 
-  // Use live price if available, otherwise fall back to database price
-  const price = isLivePrice && livePrice !== null ? livePrice : fallbackPrice;
+  // Use live price if available, otherwise fall back to database price (store > amazon > msrp)
+  const price = isLivePrice && livePrice !== null 
+    ? livePrice 
+    : (fallbackPrice || printer.msrp_usd);
 
   return (
     <article 
