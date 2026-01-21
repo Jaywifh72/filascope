@@ -13,8 +13,7 @@ import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Check, Download, Loader2, X, Database as DatabaseIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
-import PrintersLeftSidebar from "@/components/printers/PrintersLeftSidebar";
-import PrintersAdvancedFiltersModal, { type AdvancedFilters } from "@/components/PrintersAdvancedFiltersModal";
+import PrintersLeftSidebar, { type AdvancedFilters } from "@/components/printers/PrintersLeftSidebar";
 import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
@@ -96,7 +95,7 @@ export default function Printers() {
   const [priceRangeFilter, setPriceRangeFilter] = useState("all");
   const [buildVolumeFilter, setBuildVolumeFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  
   
   // Progressive disclosure state
   const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
@@ -619,8 +618,9 @@ export default function Printers() {
             onPriceChange={setPriceRangeFilter}
             buildVolume={buildVolumeFilter}
             onBuildVolumeChange={setBuildVolumeFilter}
-            onMoreFiltersClick={() => setMoreFiltersOpen(true)}
-            advancedFilterCount={advancedFilterCount}
+            advancedFilters={advancedFilters}
+            onAdvancedFiltersChange={setAdvancedFilters}
+            availableBrands={brands || []}
             hasActiveFilters={hasActiveFilters}
             onClearFilters={handleClearAllFilters}
           />
@@ -761,14 +761,6 @@ export default function Printers() {
           </DialogContent>
         </Dialog>
 
-        {/* Advanced Filters Modal */}
-        <PrintersAdvancedFiltersModal
-          open={moreFiltersOpen}
-          onOpenChange={setMoreFiltersOpen}
-          filters={advancedFilters}
-          onApply={setAdvancedFilters}
-          availableBrands={brands || []}
-        />
       </div>
 
       {/* Tech Footer */}

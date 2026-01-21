@@ -1,7 +1,21 @@
 import { forwardRef, useState } from "react";
-import { ChevronDown, SlidersHorizontal, Check, X } from "lucide-react";
+import { ChevronDown, Check, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+
+export interface AdvancedFilters {
+  brands: string[];
+  motionSystem: string;
+  minSpeed: number;
+  maxSpeed: number;
+  features: string[];
+}
 
 interface PrintersLeftSidebarProps {
   sortBy: string;
@@ -10,8 +24,9 @@ interface PrintersLeftSidebarProps {
   onPriceChange: (range: string) => void;
   buildVolume: string;
   onBuildVolumeChange: (volume: string) => void;
-  onMoreFiltersClick: () => void;
-  advancedFilterCount: number;
+  advancedFilters: AdvancedFilters;
+  onAdvancedFiltersChange: (filters: AdvancedFilters) => void;
+  availableBrands: string[];
   hasActiveFilters: boolean;
   onClearFilters: () => void;
 }
@@ -41,7 +56,24 @@ const buildVolumes = [
   { value: "large", label: "Large (300mm+)" },
 ];
 
-type ExpandedSection = 'sort' | 'price' | 'volume' | null;
+const motionOptions = [
+  { value: "any", label: "Any" },
+  { value: "cartesian", label: "Cartesian" },
+  { value: "corexy", label: "CoreXY" },
+  { value: "delta", label: "Delta" },
+];
+
+const featureOptions = [
+  { id: "auto_bed_leveling", label: "Auto Bed Leveling" },
+  { id: "heated_bed", label: "Heated Bed" },
+  { id: "enclosed", label: "Enclosed" },
+  { id: "camera", label: "Camera" },
+  { id: "wifi", label: "Wi-Fi / Network" },
+  { id: "filament_sensor", label: "Filament Sensor" },
+  { id: "dual_extruder", label: "Dual Extruder" },
+];
+
+type ExpandedSection = 'sort' | 'price' | 'volume' | 'brands' | 'motion' | 'speed' | 'features' | null;
 
 const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>(({
   sortBy,
@@ -50,190 +82,401 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
   onPriceChange,
   buildVolume,
   onBuildVolumeChange,
-  onMoreFiltersClick,
-  advancedFilterCount,
+  advancedFilters,
+  onAdvancedFiltersChange,
+  availableBrands,
   hasActiveFilters,
   onClearFilters,
 }, ref) => {
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>('sort');
+  const [brandSearch, setBrandSearch] = useState("");
 
   const toggleSection = (section: ExpandedSection) => {
     setExpandedSection(prev => prev === section ? null : section);
+  };
+
+  const handleBrandToggle = (brand: string) => {
+    const newBrands = advancedFilters.brands.includes(brand)
+      ? advancedFilters.brands.filter(b => b !== brand)
+      : [...advancedFilters.brands, brand];
+    onAdvancedFiltersChange({ ...advancedFilters, brands: newBrands });
+  };
+
+  const handleFeatureToggle = (feature: string) => {
+    const newFeatures = advancedFilters.features.includes(feature)
+      ? advancedFilters.features.filter(f => f !== feature)
+      : [...advancedFilters.features, feature];
+    onAdvancedFiltersChange({ ...advancedFilters, features: newFeatures });
+  };
+
+  const handleMotionChange = (value: string) => {
+    onAdvancedFiltersChange({ ...advancedFilters, motionSystem: value });
+  };
+
+  const handleSpeedChange = ([min, max]: number[]) => {
+    onAdvancedFiltersChange({ ...advancedFilters, minSpeed: min, maxSpeed: max });
   };
 
   const getSortLabel = () => sortOptions.find(o => o.value === sortBy)?.label || "Sort";
   const getPriceLabel = () => priceRanges.find(o => o.value === priceRange)?.label || "Price";
   const getVolumeLabel = () => buildVolumes.find(o => o.value === buildVolume)?.label || "Size";
 
+  const filteredBrands = availableBrands.filter(brand =>
+    brand.toLowerCase().includes(brandSearch.toLowerCase())
+  );
+
+  const activeAdvancedCount = 
+    advancedFilters.brands.length +
+    (advancedFilters.motionSystem !== "any" ? 1 : 0) +
+    (advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000 ? 1 : 0) +
+    advancedFilters.features.length;
+
   return (
     <div
       ref={ref}
       className="w-72 shrink-0 sticky top-20 self-start hidden lg:block"
     >
-      <div className="bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden">
+      <div className="bg-[hsl(220_20%_8%)] border border-white/10 rounded-xl overflow-hidden shadow-xl">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+        <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
           <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Filter Parameters
           </h3>
         </div>
 
-        {/* Sort Section */}
-        <div className="border-b border-white/5">
-          <button
-            onClick={() => toggleSection('sort')}
-            className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
-                Sort By
-              </span>
-              <span className="font-mono text-[10px] text-primary">
-                {getSortLabel()}
-              </span>
-            </div>
-            <ChevronDown className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform",
-              expandedSection === 'sort' && "rotate-180"
-            )} />
-          </button>
-          
-          {expandedSection === 'sort' && (
-            <div className="px-2 pb-3 space-y-0.5">
-              {sortOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => onSortChange(option.value)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
-                    sortBy === option.value
-                      ? "bg-primary/15 text-primary"
-                      : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
-                  )}
-                >
-                  <span>{option.label}</span>
-                  {sortBy === option.value && <Check className="h-3.5 w-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Price Range Section */}
-        <div className="border-b border-white/5">
-          <button
-            onClick={() => toggleSection('price')}
-            className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
-                Price Range
-              </span>
-              {priceRange !== 'all' && (
-                <span className="font-mono text-[10px] text-primary">
-                  {getPriceLabel()}
-                </span>
+        <ScrollArea className="max-h-[calc(100vh-180px)]">
+          <div className="divide-y divide-white/5">
+            {/* Sort Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('sort')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Sort By
+                  </span>
+                  <span className="font-mono text-[10px] text-primary truncate max-w-[100px]">
+                    {getSortLabel()}
+                  </span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'sort' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'sort' && (
+                <div className="px-2 pb-3 space-y-0.5">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => onSortChange(option.value)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
+                        sortBy === option.value
+                          ? "bg-primary/15 text-primary"
+                          : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {sortBy === option.value && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-            <ChevronDown className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform",
-              expandedSection === 'price' && "rotate-180"
-            )} />
-          </button>
-          
-          {expandedSection === 'price' && (
-            <div className="px-2 pb-3 space-y-0.5">
-              {priceRanges.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => onPriceChange(option.value)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
-                    priceRange === option.value
-                      ? "bg-primary/15 text-primary"
-                      : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
-                  )}
-                >
-                  <span>{option.label}</span>
-                  {priceRange === option.value && <Check className="h-3.5 w-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Build Volume Section */}
-        <div className="border-b border-white/5">
-          <button
-            onClick={() => toggleSection('volume')}
-            className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
-                Build Size
-              </span>
-              {buildVolume !== 'all' && (
-                <span className="font-mono text-[10px] text-primary">
-                  {getVolumeLabel()}
-                </span>
+            {/* Price Range Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('price')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Price Range
+                  </span>
+                  {priceRange !== 'all' && (
+                    <span className="font-mono text-[10px] text-primary truncate max-w-[80px]">
+                      {getPriceLabel()}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'price' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'price' && (
+                <div className="px-2 pb-3 space-y-0.5">
+                  {priceRanges.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => onPriceChange(option.value)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
+                        priceRange === option.value
+                          ? "bg-primary/15 text-primary"
+                          : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {priceRange === option.value && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-            <ChevronDown className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform",
-              expandedSection === 'volume' && "rotate-180"
-            )} />
-          </button>
-          
-          {expandedSection === 'volume' && (
-            <div className="px-2 pb-3 space-y-0.5">
-              {buildVolumes.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => onBuildVolumeChange(option.value)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
-                    buildVolume === option.value
-                      ? "bg-primary/15 text-primary"
-                      : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
-                  )}
-                >
-                  <span>{option.label}</span>
-                  {buildVolume === option.value && <Check className="h-3.5 w-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Advanced Filters Button */}
-        <div className="p-3">
-          <Button
-            variant="ghost"
-            onClick={onMoreFiltersClick}
-            className={cn(
-              "relative w-full h-10 gap-2 font-mono text-[10px] uppercase tracking-[0.1em] border transition-all duration-200 justify-start",
-              advancedFilterCount > 0 
-                ? "border-primary/50 bg-primary/5 text-primary hover:bg-primary/10" 
-                : "border-white/10 hover:border-primary/30 hover:bg-white/5"
-            )}
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span>Advanced Parameters</span>
-            {advancedFilterCount > 0 && (
-              <span className="absolute top-1 right-2 min-w-5 h-5 px-1.5 bg-primary rounded-full text-[10px] font-bold text-background flex items-center justify-center">
-                {advancedFilterCount}
-              </span>
-            )}
-          </Button>
-        </div>
+            {/* Build Volume Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('volume')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Build Size
+                  </span>
+                  {buildVolume !== 'all' && (
+                    <span className="font-mono text-[10px] text-primary truncate max-w-[80px]">
+                      {getVolumeLabel()}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'volume' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'volume' && (
+                <div className="px-2 pb-3 space-y-0.5">
+                  {buildVolumes.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => onBuildVolumeChange(option.value)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
+                        buildVolume === option.value
+                          ? "bg-primary/15 text-primary"
+                          : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {buildVolume === option.value && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Brand Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('brands')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Brand
+                  </span>
+                  {advancedFilters.brands.length > 0 && (
+                    <span className="min-w-5 h-5 px-1.5 bg-primary rounded-full text-[10px] font-bold text-background flex items-center justify-center">
+                      {advancedFilters.brands.length}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'brands' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'brands' && (
+                <div className="px-2 pb-3 space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search brands..."
+                      value={brandSearch}
+                      onChange={(e) => setBrandSearch(e.target.value)}
+                      className="pl-8 h-8 bg-white/5 border-white/10 font-mono text-[10px]"
+                    />
+                  </div>
+                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                    {filteredBrands.map(brand => (
+                      <label
+                        key={brand}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
+                          advancedFilters.brands.includes(brand)
+                            ? "bg-primary/15 text-primary"
+                            : "hover:bg-white/5"
+                        )}
+                      >
+                        <Checkbox
+                          checked={advancedFilters.brands.includes(brand)}
+                          onCheckedChange={() => handleBrandToggle(brand)}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span className="font-mono text-[10px] uppercase tracking-[0.05em]">{brand}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Motion System Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('motion')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Motion System
+                  </span>
+                  {advancedFilters.motionSystem !== 'any' && (
+                    <span className="font-mono text-[10px] text-primary">
+                      {motionOptions.find(o => o.value === advancedFilters.motionSystem)?.label}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'motion' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'motion' && (
+                <div className="px-2 pb-3">
+                  <RadioGroup
+                    value={advancedFilters.motionSystem}
+                    onValueChange={handleMotionChange}
+                    className="space-y-0.5"
+                  >
+                    {motionOptions.map(option => (
+                      <Label
+                        key={option.value}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
+                          advancedFilters.motionSystem === option.value
+                            ? "bg-primary/15 text-primary"
+                            : "hover:bg-white/5"
+                        )}
+                      >
+                        <RadioGroupItem value={option.value} className="h-3.5 w-3.5" />
+                        <span className="font-mono text-[10px] uppercase tracking-[0.05em]">{option.label}</span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </div>
+              )}
+            </div>
+
+            {/* Print Speed Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('speed')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Print Speed
+                  </span>
+                  {(advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000) && (
+                    <span className="font-mono text-[10px] text-primary">
+                      {advancedFilters.minSpeed}-{advancedFilters.maxSpeed}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'speed' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'speed' && (
+                <div className="px-4 pb-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {advancedFilters.minSpeed} mm/s
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground">
+                      {advancedFilters.maxSpeed} mm/s
+                    </span>
+                  </div>
+                  <Slider
+                    value={[advancedFilters.minSpeed, advancedFilters.maxSpeed]}
+                    min={0}
+                    max={1000}
+                    step={50}
+                    onValueChange={handleSpeedChange}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Features Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('features')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                    Features
+                  </span>
+                  {advancedFilters.features.length > 0 && (
+                    <span className="min-w-5 h-5 px-1.5 bg-primary rounded-full text-[10px] font-bold text-background flex items-center justify-center">
+                      {advancedFilters.features.length}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  expandedSection === 'features' && "rotate-180"
+                )} />
+              </button>
+              
+              {expandedSection === 'features' && (
+                <div className="px-2 pb-3 space-y-0.5">
+                  {featureOptions.map(feature => (
+                    <label
+                      key={feature.id}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
+                        advancedFilters.features.includes(feature.id)
+                          ? "bg-primary/15 text-primary"
+                          : "hover:bg-white/5"
+                      )}
+                    >
+                      <Checkbox
+                        checked={advancedFilters.features.includes(feature.id)}
+                        onCheckedChange={() => handleFeatureToggle(feature.id)}
+                        className="h-3.5 w-3.5"
+                      />
+                      <span className="font-mono text-[10px] uppercase tracking-[0.05em]">{feature.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </ScrollArea>
 
         {/* Clear All Button */}
         {hasActiveFilters && (
-          <div className="px-3 pb-3">
+          <div className="p-3 border-t border-white/10">
             <Button
               variant="ghost"
               onClick={onClearFilters}
-              className="w-full h-9 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-white/5 hover:border-destructive/20"
+              className="w-full h-9 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-white/10 hover:border-destructive/20"
             >
               <X className="w-3.5 h-3.5 mr-2" />
               Reset All Filters
