@@ -704,6 +704,18 @@ const PrinterDetail = () => {
                 reviewCount={printer.review_count_aggregated}
               />
 
+              {/* Quick Specifications */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Specifications</h3>
+                <KeySpecsBar specs={generateKeySpecs(printer)} />
+              </div>
+
+              {/* Performance Analysis */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Performance Analysis</h3>
+                <FeatureHighlightCards printer={printer} />
+              </div>
+
               {/* Price Section */}
               <PriceSection
                 price={displayPrice}
@@ -711,7 +723,6 @@ const PrinterDetail = () => {
                 trend={isLivePrice ? { direction: 'down' as const, percentage: liveCompareAtPrice && livePrice ? Math.round((1 - livePrice / liveCompareAtPrice) * 100) : undefined, period: 'sale' } : undefined}
                 isDiscontinued={printer.discontinued}
               />
-
 
               {/* CTA Buttons */}
               <CTAButtons
@@ -731,25 +742,10 @@ const PrinterDetail = () => {
           </div>
         </div>
 
-        {/* Performance Overview Section - Key Specs & Features */}
-        <section className="max-w-[1400px] mx-auto px-4 md:px-10 py-8 space-y-8">
-          {/* Quick Specifications Bar */}
-          <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Quick Specifications</h2>
-            <KeySpecsBar specs={generateKeySpecs(printer)} />
-          </div>
-
-          {/* Performance Analysis Cards */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4">Performance Analysis</h2>
-            <FeatureHighlightCards printer={printer} />
-          </div>
-
-          {/* System Capabilities */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4">System Capabilities</h2>
-            <AdvantageCardsSection printer={printer} />
-          </div>
+        {/* System Capabilities Section */}
+        <section className="max-w-[1400px] mx-auto px-4 md:px-10 py-8">
+          <h2 className="text-lg font-semibold mb-4">System Capabilities</h2>
+          <AdvantageCardsSection printer={printer} />
         </section>
 
         {/* Sidebar Data for Social Proof */}
