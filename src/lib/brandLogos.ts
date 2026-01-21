@@ -80,7 +80,7 @@ export const brandLogos: Record<string, string> = {
   "Creality": "/images/brands/creality-long.png",
   "Elegoo": "/images/brands/elegoo-long.webp",
   "FlashForge": "/images/brands/flashforge-new.png",
-  "FLSUN": "/images/brands/flsun.png",
+  "FLSUN": "/images/brands/flsun.webp",
   "LDO Motors": "/images/brands/ldo-motors.png",
   "Markforged": "/images/brands/markforged.png",
   "Prusa Research": "/images/brands/prusa-research-new.jpg",
