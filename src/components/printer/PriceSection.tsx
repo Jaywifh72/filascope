@@ -42,9 +42,8 @@ export function PriceSection({ price, msrp, trend, isDiscontinued }: PriceSectio
 
   return (
     <div className="space-y-3">
-      {/* Terminal-style price label */}
-      <div className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-        UNIT_COST:
+      <div className="text-sm font-medium text-muted-foreground">
+        Current Price
       </div>
       
       <div className="flex items-baseline gap-4">
