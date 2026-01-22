@@ -709,6 +709,7 @@ const FilamentDetail = () => {
         productUrl={selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
         originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
         hasActualRegionalPrice={hasActualRegionalPrice}
+        onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
 
       {/* Admin Edit Image Dialog */}
@@ -798,10 +799,6 @@ const FilamentDetail = () => {
       {/* Smart Print Calculator */}
       {filament && (
         <>
-          <FloatingCalculatorButton
-            onClick={() => setIsCalculatorOpen(true)}
-            pulseOnMount={true}
-          />
           <CalculatorTabs
             filament={{
               id: filament.id,

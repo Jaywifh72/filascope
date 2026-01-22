@@ -1,4 +1,4 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCompare } from "@/hooks/useCompare";
@@ -14,6 +14,7 @@ interface FilamentMobileBottomBarProps {
   originalUsUrl?: string;
   hasActualRegionalPrice?: boolean;
   priceCurrency?: string;
+  onOpenCalculator?: () => void;
 }
 
 export function FilamentMobileBottomBar({
@@ -26,6 +27,7 @@ export function FilamentMobileBottomBar({
   originalUsUrl,
   hasActualRegionalPrice = false,
   priceCurrency,
+  onOpenCalculator,
 }: FilamentMobileBottomBarProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
   const { count: compareCount } = useCompare();
@@ -109,22 +111,38 @@ export function FilamentMobileBottomBar({
           )}
         </div>
 
-        {/* Buy button */}
-        {affiliateUrl ? (
-          <Button 
-            size="lg" 
-            onClick={handleBuyClick}
-            className="gap-2 px-6 flex-shrink-0"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            <span>Buy Now</span>
-          </Button>
-        ) : (
-          <Button size="lg" disabled className="gap-2 px-6 opacity-50 flex-shrink-0">
-            <ShoppingCart className="h-4 w-4" />
-            <span>Unavailable</span>
-          </Button>
-        )}
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Calculator button */}
+          {onOpenCalculator && (
+            <Button 
+              size="lg"
+              variant="outline"
+              onClick={onOpenCalculator}
+              className="px-3 border-border/60"
+              aria-label="Open print calculator"
+            >
+              <Calculator className="h-5 w-5" />
+            </Button>
+          )}
+          
+          {/* Buy button */}
+          {affiliateUrl ? (
+            <Button 
+              size="lg" 
+              onClick={handleBuyClick}
+              className="gap-2 px-6"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span>Buy Now</span>
+            </Button>
+          ) : (
+            <Button size="lg" disabled className="gap-2 px-6 opacity-50">
+              <ShoppingCart className="h-4 w-4" />
+              <span>Unavailable</span>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
