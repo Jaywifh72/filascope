@@ -300,6 +300,15 @@ All colors MUST be HSL.
   .stat-card {
     @apply bg-card/80 border border-border/60 rounded-xl p-6 flex items-start gap-4 transition-all hover:border-primary/30;
   }
+
+  /* Hide scrollbar utility for touch-scroll elements */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer components {

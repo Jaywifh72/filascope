@@ -60,7 +60,8 @@ export function PrinterTabNav({ activeTab, onTabChange }: PrinterTabNavProps) {
         isSticky && "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
       )}
     >
-      <div className="overflow-x-auto scrollbar-hide">
+      {/* Horizontal scroll container for mobile */}
+      <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
         <nav
           className="flex gap-1 min-w-max py-3"
           role="tablist"
@@ -74,8 +75,9 @@ export function PrinterTabNav({ activeTab, onTabChange }: PrinterTabNavProps) {
               aria-controls={`tabpanel-${tab.id}`}
               onClick={() => handleTabClick(tab)}
               className={cn(
-                "relative px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-colors",
+                "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation",
                 "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "active:scale-95 transition-transform",
                 activeTab === tab.id
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"

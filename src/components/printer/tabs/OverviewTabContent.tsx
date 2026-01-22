@@ -174,10 +174,10 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
   return (
     <div className="tab-content">
-      {/* Key Specifications - 2x3 Grid */}
+      {/* Key Specifications - Responsive grid: 1 col mobile, 2 col sm, 3 col lg */}
       <section>
         <SectionHeader icon={Box} title="Key Specifications" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <StatCard
             icon={Box}
             label="Build Volume"
@@ -215,21 +215,21 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         </div>
       </section>
 
-      {/* System Capabilities - 2 Column Grid */}
+      {/* System Capabilities - Responsive grid */}
       <section>
         <SectionHeader icon={CheckCircle2} title="System Capabilities" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {sortedCapabilities.map((cap) => (
             <CapabilityItem key={cap.label} label={cap.label} available={cap.available} />
           ))}
         </div>
       </section>
 
-      {/* What's in the Box / Accessories */}
+      {/* What's in the Box / Accessories - Responsive grid */}
       <section>
         <SectionHeader icon={Package} title="What's in the Box" />
         {includedAccessories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               {includedAccessories.map((acc, idx) => (
               <div 
                 key={acc.id || idx}

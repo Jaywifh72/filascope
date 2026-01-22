@@ -45,6 +45,7 @@ import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import { PrinterHeroSection } from "@/components/printer/PrinterHeroSection";
 import { PurchaseSidebar } from "@/components/printer/PurchaseSidebar";
+import { MobileBottomBar } from "@/components/printer/MobileBottomBar";
 import { usePrinterInventory } from "@/hooks/usePrinterInventory";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { 
@@ -539,20 +540,20 @@ const PrinterDetail = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20 lg:pb-0">
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
         {/* Navigation */}
-        <Button variant="ghost" onClick={() => navigate('/printers')} className="mb-6 hover:bg-accent/50 transition-colors">
+        <Button variant="ghost" onClick={() => navigate('/printers')} className="mb-4 sm:mb-6 hover:bg-accent/50 transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
         {/* Main Content with Sticky Sidebar Container - spans full page */}
-        <div className="flex gap-8 items-start">
+        <div className="flex gap-6 lg:gap-8 items-start">
           {/* Main Content Column */}
-          <div className="flex-1 min-w-0 space-y-8">
+          <div className="flex-1 min-w-0 space-y-6 lg:space-y-8">
             {/* Hero Section */}
-            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl py-8 md:py-10 px-6 md:px-10">
+            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl lg:rounded-2xl py-6 md:py-8 lg:py-10 px-4 md:px-6 lg:px-10">
               
               {/* Admin: Update Image & Refresh Prices Buttons */}
               {isAdmin && (
@@ -892,6 +893,22 @@ const PrinterDetail = () => {
             );
           })()}
         </div>
+
+        {/* Mobile Bottom Bar - Fixed price/buy button on mobile */}
+        {(() => {
+          return (
+            <MobileBottomBar
+              price={displayPrice}
+              msrp={displayMsrp}
+              officialStoreUrl={printer.official_store_url}
+              getAffiliateUrl={getAffiliateUrl}
+              brand={brand}
+              isDiscontinued={printer.discontinued}
+              priceCurrency={livePriceCurrency}
+              isLivePrice={isLivePrice}
+            />
+          );
+        })()}
 
         {/* Similar Printers Comparison Section */}
         <SimilarPrintersSection

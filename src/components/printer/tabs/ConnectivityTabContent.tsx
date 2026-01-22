@@ -131,10 +131,10 @@ function InfoRow({
 export function ConnectivityTabContent({ printer, brand }: ConnectivityTabContentProps) {
   return (
     <div className="tab-content">
-      {/* Connection Options Grid */}
+      {/* Connection Options Grid - Responsive */}
       <section className="section-card">
         <SectionHeader icon={Wifi} title="Connection Options" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <ConnectionCard icon={Wifi} label="Wi-Fi" available={printer.has_wifi} />
           <ConnectionCard icon={Cable} label="Ethernet" available={printer.has_ethernet} />
           <ConnectionCard icon={Usb} label="USB-A" available={printer.has_usb_a_port} />
@@ -144,7 +144,7 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
         </div>
         
         {/* Additional connectivity info */}
-        <div className="mt-6 pt-6 border-t border-border/30 grid grid-cols-2 gap-4">
+        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/30 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex items-center gap-4">
             <div className={cn(
               "p-2.5 rounded-lg",
@@ -194,7 +194,7 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
       {/* Camera & Monitoring */}
       <section className="section-card">
         <SectionHeader icon={Camera} title="Camera & Monitoring" />
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           {/* Camera Info */}
           <div className="space-y-0">
             <InfoRow label="Built-in Camera" value={printer.has_camera} />
@@ -213,7 +213,7 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
       {/* Remote & Cloud Features */}
       <section className="section-card">
         <SectionHeader icon={Cloud} title="Remote & Cloud Features" />
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <div className="space-y-0">
             <InfoRow label="Cloud Platforms" value={printer.cloud_platforms} />
             <InfoRow label="Remote Monitoring" value={printer.remote_monitoring_supported} />
