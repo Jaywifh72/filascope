@@ -14,6 +14,7 @@ import { ArrowDown, ArrowUp, Check, Download, Loader2, X, Database as DatabaseIc
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersLeftSidebar, { type AdvancedFilters } from "@/components/printers/PrintersLeftSidebar";
+import { MobileFilterDrawer } from "@/components/printers/MobileFilterDrawer";
 import MediumStandardPrinterCard from "@/components/printers/MediumStandardPrinterCard";
 import { PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 import { PrintersEmptyState } from "@/components/printers/PrintersEmptyState";
@@ -568,16 +569,30 @@ export default function Printers() {
       )}
 
       {/* Results Header - Industrial style */}
-      <div className="w-full max-w-[1800px] mx-auto px-6 mb-6 mt-8 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-6 py-4">
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 mb-4 sm:mb-6 mt-6 sm:mt-8 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center gap-3">
-            <DatabaseIcon className="w-5 h-5 text-primary" />
-            <h2 className="font-mono text-sm uppercase tracking-[0.2em] text-foreground">
-              Hardware Registry{" "}
-              <span className="text-primary font-bold">//</span>{" "}
+            {/* Mobile Filter Button */}
+            <MobileFilterDrawer
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              priceRange={priceRangeFilter}
+              onPriceChange={setPriceRangeFilter}
+              buildVolume={buildVolumeFilter}
+              onBuildVolumeChange={setBuildVolumeFilter}
+              advancedFilters={advancedFilters}
+              onAdvancedFiltersChange={setAdvancedFilters}
+              availableBrands={brands || []}
+              hasActiveFilters={hasActiveFilters}
+              activeFilterCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0)}
+              onClearFilters={handleClearAllFilters}
+            />
+            <DatabaseIcon className="w-5 h-5 text-primary hidden sm:block" />
+            <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-foreground">
+              <span className="hidden sm:inline">Hardware Registry </span>
               <span className="text-primary font-bold">{filteredPrinters?.length.toLocaleString() || 0}</span>
-              <span className="text-muted-foreground font-light ml-1">
-                {hasActiveFilters ? "Units Matching Filters" : "Units Indexed"}
+              <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
+                {hasActiveFilters ? "Matching" : "Units"}
               </span>
             </h2>
           </div>
@@ -626,10 +641,11 @@ export default function Printers() {
       </div>
 
       {/* Main Content with Sidebar */}
-      <div className="max-w-[1800px] mx-auto px-6 py-6">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex gap-6">
-          {/* Left Sidebar - Filters */}
+          {/* Left Sidebar - Filters (Desktop Only) */}
           <PrintersLeftSidebar
+            className="hidden lg:block"
             sortBy={sortBy}
             onSortChange={setSortBy}
             priceRange={priceRangeFilter}
@@ -705,7 +721,7 @@ export default function Printers() {
               />
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6" style={{ gridAutoFlow: 'dense' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6" style={{ gridAutoFlow: 'dense' }}>
                   {displayedPrinters.map((printer) => {
                     const printerIsSelected = isSelected(printer.id);
 

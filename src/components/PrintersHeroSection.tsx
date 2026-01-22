@@ -24,24 +24,24 @@ const PrintersHeroSection = ({
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-10 pt-28 pb-12 md:pt-32 md:pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-20 pb-8 sm:pt-24 sm:pb-10 md:pt-28 md:pb-12 lg:pt-32 lg:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left order-1">
             {/* System Registry Badge */}
             <div 
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-6 animate-fade-in"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-4 sm:mb-6 animate-fade-in"
             >
-              <Target className="h-3.5 w-3.5 text-primary" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-primary">
+              <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+              <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.15em] text-primary">
                 Hardware Registry
               </span>
             </div>
 
-            {/* Headline */}
+            {/* Headline - Responsive sizing */}
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light tracking-[0.15em] leading-[1.1] mb-6 animate-fade-in uppercase"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-light tracking-[0.1em] sm:tracking-[0.15em] leading-[1.15] mb-4 sm:mb-6 animate-fade-in uppercase"
             >
               <span className="text-foreground">Deploy</span>
               <br />
@@ -52,36 +52,36 @@ const PrintersHeroSection = ({
             
             {/* Sub-text */}
             <p 
-              className="text-base md:text-lg text-muted-foreground font-light leading-relaxed mb-10 max-w-[480px] animate-fade-in font-mono"
+              className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed mb-6 sm:mb-8 md:mb-10 max-w-[480px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s" }}
             >
               <span className="text-primary">{printerCount.toLocaleString()}</span> units indexed from{" "}
               <span className="text-primary">{brandCount}+</span> manufacturers. 
-              Compare specs, prices, and capabilities in one unified command center.
+              <span className="hidden sm:inline"> Compare specs, prices, and capabilities in one unified command center.</span>
             </p>
             
-            {/* Buttons Row */}
+            {/* Buttons Row - Stack on mobile */}
             <div 
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto animate-fade-in"
+              className="flex flex-col w-full gap-3 sm:flex-row sm:items-center sm:gap-4 sm:w-auto animate-fade-in"
               style={{ animationDelay: "0.3s" }}
             >
               {/* Primary Button - Printer Quiz */}
               <Button 
                 size="lg"
                 onClick={onOpenQuiz}
-                className="h-14 px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
+                className="h-12 sm:h-14 px-6 sm:px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-sm sm:text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)] w-full sm:w-auto"
               >
-                <Sparkles className="mr-2 h-5 w-5" />
+                <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Hardware Quiz
               </Button>
               
               {/* Secondary - Search Input */}
               <div 
-                className={`relative transition-all duration-300 ${
+                className={`relative transition-all duration-300 w-full sm:w-auto ${
                   isFocused ? "scale-[1.01]" : ""
                 }`}
               >
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground z-10" />
                 <input
                   type="text"
                   placeholder="Search hardware..."
@@ -89,7 +89,7 @@ const PrintersHeroSection = ({
                   onChange={(e) => onSearchChange(e.target.value)}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                  className={`w-full sm:w-[240px] md:w-[280px] h-12 sm:h-14 pl-11 sm:pl-12 pr-4 sm:pr-5 text-sm sm:text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
                     isFocused 
                       ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
                       : "border-white/10 hover:border-white/20"
