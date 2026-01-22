@@ -16,7 +16,18 @@ export interface SimilarPrinter {
   multiMaterialSupported: boolean;
   multiMaterialMaxSpools: number | null;
   priceTier: string | null;
+  // New: similarity reasons for badges
+  similarityReasons: SimilarityReason[];
 }
+
+export type SimilarityReason = 
+  | 'similar_price' 
+  | 'same_size' 
+  | 'same_features' 
+  | 'highly_rated' 
+  | 'budget_option' 
+  | 'upgrade_pick'
+  | 'same_brand';
 
 interface UseSimilarPrintersResult {
   similarPrinters: SimilarPrinter[];
@@ -29,6 +40,69 @@ const calculateBuildVolume = (x: number | null, y: number | null, z: number | nu
   return (x * y * z) / 1000000; // mm³ to liters
 };
 
+interface CurrentPrinterContext {
+  price: number | null | undefined;
+  buildVolume: number | null;
+  hasEnclosure: boolean | undefined;
+  multiMaterialSupported: boolean | undefined;
+  brand: string | null | undefined;
+}
+
+// Determine similarity reasons for a printer
+const getSimilarityReasons = (
+  printer: {
+    price: number | null;
+    buildVolume: number | null;
+    rating: number | null;
+    hasEnclosure: boolean;
+    multiMaterialSupported: boolean;
+    brand: string;
+  },
+  context: CurrentPrinterContext
+): SimilarityReason[] => {
+  const reasons: SimilarityReason[] = [];
+
+  // Similar price (within 15%)
+  if (context.price && printer.price) {
+    const priceDiff = Math.abs(printer.price - context.price) / context.price;
+    if (priceDiff <= 0.15) {
+      reasons.push('similar_price');
+    } else if (printer.price < context.price * 0.85) {
+      reasons.push('budget_option');
+    } else if (printer.price > context.price * 1.15) {
+      reasons.push('upgrade_pick');
+    }
+  }
+
+  // Same build size (within 20%)
+  if (context.buildVolume && printer.buildVolume) {
+    const volumeDiff = Math.abs(printer.buildVolume - context.buildVolume) / context.buildVolume;
+    if (volumeDiff <= 0.20) {
+      reasons.push('same_size');
+    }
+  }
+
+  // Same features (enclosure + multi-material match)
+  const enclosureMatch = printer.hasEnclosure === !!context.hasEnclosure;
+  const multiMaterialMatch = printer.multiMaterialSupported === !!context.multiMaterialSupported;
+  if (enclosureMatch && multiMaterialMatch) {
+    reasons.push('same_features');
+  }
+
+  // Highly rated (4.5+)
+  if (printer.rating && printer.rating >= 4.5) {
+    reasons.push('highly_rated');
+  }
+
+  // Same brand
+  if (context.brand && printer.brand && 
+      printer.brand.toLowerCase() === context.brand.toLowerCase()) {
+    reasons.push('same_brand');
+  }
+
+  return reasons;
+};
+
 export function useSimilarPrinters(
   printerId: string,
   priceTier: string | null | undefined,
@@ -36,7 +110,9 @@ export function useSimilarPrinters(
   buildVolumeX: number | null | undefined,
   buildVolumeY: number | null | undefined,
   buildVolumeZ: number | null | undefined,
-  brand: string | null | undefined
+  brand: string | null | undefined,
+  hasEnclosure?: boolean,
+  multiMaterialSupported?: boolean
 ): UseSimilarPrintersResult {
   const [data, setData] = useState<UseSimilarPrintersResult>({
     similarPrinters: [],
@@ -56,6 +132,14 @@ export function useSimilarPrinters(
           buildVolumeY ?? null, 
           buildVolumeZ ?? null
         );
+
+        const context: CurrentPrinterContext = {
+          price,
+          buildVolume: currentBuildVolume,
+          hasEnclosure,
+          multiMaterialSupported,
+          brand,
+        };
 
         // Build query for similar printers
         let query = supabase
@@ -94,7 +178,7 @@ export function useSimilarPrinters(
             .lte("current_price_usd_store", price * 1.5);
         }
 
-        query = query.limit(20);
+        query = query.limit(30); // Increased from 20 to get more candidates
 
         const { data: printers, error } = await query;
 
@@ -127,6 +211,7 @@ export function useSimilarPrinters(
             printer.build_volume_y_mm,
             printer.build_volume_z_mm
           );
+          const printerBrand = brandsMap[printer.brand_id || ""] || "";
 
           // Price similarity (0-40 points)
           if (price && printer.current_price_usd_store) {
@@ -149,8 +234,21 @@ export function useSimilarPrinters(
             score += (printer.rating_community_overall - 3.5) * 13.3;
           }
 
-          // Different brand bonus (encourage variety)
-          const printerBrand = brandsMap[printer.brand_id || ""] || "";
+          // Enclosure match bonus (0-15 points)
+          if (hasEnclosure !== undefined) {
+            if (printer.has_enclosure === hasEnclosure) {
+              score += 15;
+            }
+          }
+
+          // Multi-material match bonus (0-15 points)
+          if (multiMaterialSupported !== undefined) {
+            if (printer.multi_material_supported === multiMaterialSupported) {
+              score += 15;
+            }
+          }
+
+          // Different brand bonus (encourage variety, but not for same brand)
           if (printerBrand && brand && printerBrand.toLowerCase() !== brand.toLowerCase()) {
             score += 10;
           }
@@ -161,6 +259,19 @@ export function useSimilarPrinters(
             const scrapedData = printer.scraped_data as Record<string, any>;
             imageUrl = scrapedData.image_url || scrapedData.imageUrl || null;
           }
+
+          // Calculate similarity reasons
+          const similarityReasons = getSimilarityReasons(
+            {
+              price: printer.current_price_usd_store,
+              buildVolume: printerBuildVolume,
+              rating: printer.rating_community_overall,
+              hasEnclosure: printer.has_enclosure || false,
+              multiMaterialSupported: printer.multi_material_supported || false,
+              brand: printerBrand,
+            },
+            context
+          );
 
           return {
             printer: {
@@ -178,6 +289,7 @@ export function useSimilarPrinters(
               multiMaterialSupported: printer.multi_material_supported || false,
               multiMaterialMaxSpools: printer.multi_material_max_spools,
               priceTier: printer.price_tier,
+              similarityReasons,
             } as SimilarPrinter,
             score,
           };
@@ -187,13 +299,15 @@ export function useSimilarPrinters(
         scored.sort((a, b) => b.score - a.score);
 
         const selected: SimilarPrinter[] = [];
+        const usedBrands = new Set<string>();
 
-        // Try to get one cheaper option
+        // Try to get one cheaper option (budget pick)
         const cheaper = scored.find(s => 
           price && s.printer.price && s.printer.price < price * 0.85
         );
         if (cheaper) {
           selected.push(cheaper.printer);
+          if (cheaper.printer.brand) usedBrands.add(cheaper.printer.brand.toLowerCase());
         }
 
         // Try to get one similar price option
@@ -204,19 +318,32 @@ export function useSimilarPrinters(
         );
         if (similar) {
           selected.push(similar.printer);
+          if (similar.printer.brand) usedBrands.add(similar.printer.brand.toLowerCase());
         }
 
-        // Try to get one more expensive option
+        // Try to get one more expensive option (upgrade pick)
         const expensive = scored.find(s =>
           !selected.some(sel => sel.id === s.printer.id) &&
           price && s.printer.price && s.printer.price > price * 1.15
         );
         if (expensive) {
           selected.push(expensive.printer);
+          if (expensive.printer.brand) usedBrands.add(expensive.printer.brand.toLowerCase());
         }
 
-        // Fill remaining slots with highest scoring
-        while (selected.length < 3) {
+        // Try to add a highly-rated option from a different brand
+        const highlyRated = scored.find(s =>
+          !selected.some(sel => sel.id === s.printer.id) &&
+          s.printer.rating && s.printer.rating >= 4.5 &&
+          s.printer.brand && !usedBrands.has(s.printer.brand.toLowerCase())
+        );
+        if (highlyRated && selected.length < 5) {
+          selected.push(highlyRated.printer);
+          if (highlyRated.printer.brand) usedBrands.add(highlyRated.printer.brand.toLowerCase());
+        }
+
+        // Fill remaining slots with highest scoring (up to 5 total)
+        while (selected.length < 5) {
           const next = scored.find(s => !selected.some(sel => sel.id === s.printer.id));
           if (!next) break;
           selected.push(next.printer);
@@ -233,7 +360,7 @@ export function useSimilarPrinters(
     };
 
     fetchSimilar();
-  }, [printerId, priceTier, price, buildVolumeX, buildVolumeY, buildVolumeZ, brand]);
+  }, [printerId, priceTier, price, buildVolumeX, buildVolumeY, buildVolumeZ, brand, hasEnclosure, multiMaterialSupported]);
 
   return data;
 }
