@@ -241,44 +241,44 @@ All colors MUST be HSL.
      For consistent visual hierarchy across detail pages
      ================================================ */
 
-  /* Section Title - 20px, semibold, tight tracking */
+  /* Section Title - text-xl font-semibold */
   .section-title {
-    @apply text-xl font-semibold tracking-tight text-foreground;
+    @apply text-xl font-semibold text-foreground;
   }
 
-  /* Subsection Title - 13px, uppercase, wide tracking */
+  /* Subsection Title - text-lg font-medium */
   .subsection-title {
-    @apply text-[13px] font-medium uppercase tracking-wide text-muted-foreground;
+    @apply text-lg font-medium text-foreground;
   }
 
-  /* Data Labels - 13px muted */
+  /* Data Labels - text-sm text-gray-400 */
   .data-label {
-    @apply text-[13px] text-muted-foreground;
+    @apply text-sm text-gray-400;
   }
 
-  /* Data Values - 15px semibold */
+  /* Data Values - text-base font-medium text-white */
   .data-value {
-    @apply text-[15px] font-semibold text-foreground;
+    @apply text-base font-medium text-white;
   }
 
-  /* Large Data Values - 18px bold */
+  /* Large Data Values - text-lg font-bold */
   .data-value-large {
     @apply text-lg font-bold text-foreground;
   }
 
-  /* Tab Content Container - 40px section spacing */
+  /* Tab Content Container - mb-8 between major sections */
   .tab-content {
-    @apply space-y-10;
+    @apply space-y-8;
   }
 
-  /* Section Card - Consistent card styling */
+  /* Section Card - p-6 padding */
   .section-card {
-    @apply bg-card/50 border border-border/40 rounded-xl p-6 lg:p-8;
+    @apply bg-card/50 border border-border/40 rounded-xl p-6;
   }
 
-  /* Section Header Container */
+  /* Section Header Container - mb-6 after header */
   .section-header {
-    @apply flex items-center gap-3 mb-5 pb-3 border-b border-border/30;
+    @apply flex items-center gap-3 mb-6 pb-3 border-b border-border/30;
   }
 
   /* Section Header Icon Container */
@@ -286,19 +286,19 @@ All colors MUST be HSL.
     @apply p-2.5 bg-primary/10 rounded-lg;
   }
 
-  /* Spec Row - Enhanced padding and hover */
+  /* Spec Row - py-3 table row padding */
   .spec-row {
-    @apply flex items-center justify-between py-3.5 px-4 -mx-4 border-b border-border/20 last:border-b-0 hover:bg-muted/20 rounded-lg transition-colors;
+    @apply flex items-center justify-between py-3 px-4 -mx-4 border-b border-border/20 last:border-b-0 hover:bg-muted/20 rounded-lg transition-colors;
   }
 
-  /* Subsection Divider */
+  /* Subsection Divider - mb-6 between subsections */
   .subsection-divider {
-    @apply mb-8 last:mb-0;
+    @apply mb-6 last:mb-0;
   }
 
   /* Stat Card Enhanced */
   .stat-card {
-    @apply bg-card/80 border border-border/60 rounded-xl p-5 flex items-start gap-4 transition-all hover:border-primary/30;
+    @apply bg-card/80 border border-border/60 rounded-xl p-6 flex items-start gap-4 transition-all hover:border-primary/30;
   }
 }
 

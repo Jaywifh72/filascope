@@ -52,10 +52,10 @@ function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
         <Icon className="h-5 w-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="subsection-title">{label}</span>
-        <div className="data-value-large leading-tight mt-1">{value}</div>
+        <span className="text-sm text-gray-400">{label}</span>
+        <div className="text-base font-medium text-white leading-tight mt-1">{value}</div>
         {subValue && (
-          <span className="text-xs text-muted-foreground mt-0.5 block">{subValue}</span>
+          <span className="text-xs text-gray-500 mt-0.5 block">{subValue}</span>
         )}
       </div>
     </div>
@@ -88,8 +88,8 @@ function CapabilityItem({ label, available }: CapabilityItemProps) {
         available ? "text-primary" : "text-muted-foreground/40"
       )} />
       <span className={cn(
-        "data-label",
-        available ? "text-foreground" : "text-muted-foreground/60"
+        "text-sm",
+        available ? "text-white font-medium" : "text-gray-500"
       )}>
         {label}
       </span>
@@ -230,14 +230,14 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         <SectionHeader icon={Package} title="What's in the Box" />
         {includedAccessories.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {includedAccessories.map((acc, idx) => (
+              {includedAccessories.map((acc, idx) => (
               <div 
                 key={acc.id || idx}
-                className="flex items-center gap-3 p-4 bg-muted/30 border border-border/50 rounded-lg"
+                className="flex items-center gap-3 p-6 bg-muted/30 border border-border/50 rounded-lg"
               >
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="data-label text-foreground font-medium">{acc.name || acc.accessory_name}</span>
+                  <span className="text-base font-medium text-white">{acc.name || acc.accessory_name}</span>
                   {acc.quantity && acc.quantity > 1 && (
                     <Badge variant="secondary" className="ml-2 text-xs">×{acc.quantity}</Badge>
                   )}
@@ -249,8 +249,8 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
           <Card className="bg-muted/20 border-dashed">
             <CardContent className="py-10 text-center">
               <AlertCircle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
-              <p className="data-label">No accessories data available</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
+              <p className="text-sm text-gray-400">No accessories data available</p>
+              <p className="text-xs text-gray-500 mt-1">
                 Check the manufacturer's website for included items
               </p>
             </CardContent>

@@ -20,13 +20,13 @@ interface QuickSpecCardProps {
 
 function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
   return (
-    <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3">
+    <div className="bg-muted/40 border border-border rounded-lg p-6 flex items-start gap-3">
       <div className="p-2 rounded-lg bg-primary/10">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
-        <span className="text-base font-semibold text-foreground truncate">{value}</span>
+      <div className="flex flex-col min-w-0 gap-1">
+        <span className="text-sm text-gray-400">{label}</span>
+        <span className="text-base font-medium text-white truncate">{value}</span>
       </div>
     </div>
   );
@@ -117,14 +117,14 @@ export function PrinterHeroSection({
         </div>
 
         {/* Right Column: Product Info */}
-        <div className="space-y-5">
+        <div className="space-y-6">
           {/* Brand */}
-          <div className="text-sm font-medium text-primary uppercase tracking-wide">
+          <div className="text-sm text-gray-400 uppercase tracking-wide">
             {brand}
           </div>
 
           {/* Model Name */}
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
+          <h1 className="text-3xl font-bold text-foreground leading-tight">
             {printer.model_name}
           </h1>
 

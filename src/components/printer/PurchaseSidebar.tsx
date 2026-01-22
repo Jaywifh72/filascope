@@ -44,7 +44,7 @@ export function PurchaseSidebar({
   return (
     <aside className="hidden lg:block w-[280px] flex-shrink-0">
       <div 
-        className="sticky top-20 w-[280px] rounded-xl border border-border/60 p-4 space-y-5"
+        className="sticky top-20 w-[280px] rounded-xl border border-border/60 p-6 space-y-6"
         style={{ backgroundColor: 'hsl(var(--card))' }}
       >
         {/* Price Section */}
@@ -85,22 +85,22 @@ export function PurchaseSidebar({
 
         {/* Warranty Summary */}
         {warrantyYears && (
-          <div className="pt-2 border-t border-border/40">
+          <div className="pt-3 border-t border-border/40">
             <div className="flex items-center gap-3 py-3">
               <div className="p-2 rounded-lg bg-primary/10">
                 <Shield className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground">
+              <div className="flex flex-col gap-1">
+                <span className="text-base font-medium text-white">
                   {warrantyYears} Year{warrantyYears > 1 ? 's' : ''} Warranty
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-gray-500">
                   From {brand || 'manufacturer'}
                 </span>
               </div>
             </div>
             {warrantyCoverage && (
-              <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+              <p className="text-xs text-gray-500 leading-relaxed mt-1">
                 {warrantyCoverage}
               </p>
             )}
