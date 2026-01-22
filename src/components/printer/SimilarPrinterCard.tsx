@@ -58,7 +58,7 @@ const reasonBadges: Record<SimilarityReason, {
     label: "Top Rated",
     icon: <Award className="h-3 w-3" />,
     className: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    tooltip: "Community rating of 4.5 or higher"
+    tooltip: "Community rating of 4.0 or higher"
   },
   budget_option: {
     label: "Budget Pick",
@@ -77,6 +77,18 @@ const reasonBadges: Record<SimilarityReason, {
     icon: null,
     className: "bg-slate-500/20 text-slate-400 border-slate-500/30",
     tooltip: "From the same manufacturer"
+  },
+  same_motion: {
+    label: "Same Motion",
+    icon: <Zap className="h-3 w-3" />,
+    className: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+    tooltip: "Same motion system type (CoreXY, Bed-slinger, etc.)"
+  },
+  high_speed: {
+    label: "High Speed",
+    icon: <Zap className="h-3 w-3" />,
+    className: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+    tooltip: "Both printers support 300+ mm/s speeds"
   },
 };
 
