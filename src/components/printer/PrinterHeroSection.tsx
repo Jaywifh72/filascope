@@ -20,7 +20,7 @@ interface QuickSpecCardProps {
 
 function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
   return (
-    <div className="bg-muted/40 border border-border/60 rounded-lg p-4 flex items-start gap-3">
+    <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3">
       <div className="p-2 rounded-lg bg-primary/10">
         <Icon className="h-5 w-5 text-primary" />
       </div>
@@ -59,8 +59,8 @@ export function PrinterHeroSection({
   // Connectivity
   const hasWifi = printer.has_wifi;
 
-  // Placeholder slots for thumbnails (always show 5 slots)
-  const thumbnailSlots = Array(5).fill(null).map((_, idx) => displayImages[idx] || null);
+  // Only show thumbnails if there are 2+ images
+  const showThumbnails = displayImages.length >= 2;
 
   return (
     <div className="space-y-6">
@@ -90,35 +90,30 @@ export function PrinterHeroSection({
             </div>
           )}
 
-          {/* Thumbnail Gallery - 5 slots */}
-          <div className="grid grid-cols-5 gap-2">
-            {thumbnailSlots.map((img, idx) => (
-              <button
-                key={idx}
-                className={`relative aspect-square bg-muted/20 rounded-lg border p-1 flex items-center justify-center transition-all duration-200 ${
-                  img
-                    ? idx === selectedImageIndex
+          {/* Thumbnail Gallery - Only show if 2+ images available */}
+          {showThumbnails && (
+            <div className="grid grid-cols-5 gap-2">
+              {displayImages.slice(0, 5).map((img, idx) => (
+                <button
+                  key={idx}
+                  className={`relative aspect-square bg-muted/20 rounded-lg border p-1 flex items-center justify-center transition-all duration-200 ${
+                    idx === selectedImageIndex
                       ? 'border-primary bg-primary/10 cursor-pointer'
                       : 'border-border/50 hover:border-primary/50 cursor-pointer'
-                    : 'border-dashed border-border/30 cursor-default'
-                }`}
-                onClick={() => img && setSelectedImageIndex(idx)}
-                disabled={!img}
-                aria-label={img ? `View image ${idx + 1}` : `Empty slot ${idx + 1}`}
-              >
-                {img ? (
+                  }`}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  aria-label={`View image ${idx + 1}`}
+                >
                   <img 
                     src={img} 
                     alt={`${printer.model_name} view ${idx + 1}`}
                     className="max-w-full max-h-full object-contain"
                     loading="lazy"
                   />
-                ) : (
-                  <Box className="h-4 w-4 text-muted-foreground/20" />
-                )}
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Product Info */}
@@ -149,7 +144,7 @@ export function PrinterHeroSection({
           />
 
           {/* Quick Specs Grid - 2x2 */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mb-4">
             <QuickSpecCard 
               icon={Box} 
               label="Build Volume" 
