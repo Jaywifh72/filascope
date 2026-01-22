@@ -45,7 +45,7 @@ export function CTAButtons({
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Primary: Initiate Requisition */}
+      {/* Primary: Buy Now */}
       {affiliateUrl && (
         <a
           href={affiliateUrl}
@@ -55,25 +55,25 @@ export function CTAButtons({
           onClick={handleBuyClick}
         >
           <button
-            className="h-[52px] px-8 bg-primary text-primary-foreground font-mono text-sm uppercase tracking-wider font-bold flex items-center gap-3 border-2 border-primary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(0,207,232,0.4)] group"
+            className="h-12 px-6 bg-primary text-primary-foreground text-sm font-semibold rounded-lg flex items-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group"
           >
-            <ShoppingCart className="h-5 w-5" />
-            BUY NOW
+            <ShoppingCart className="h-4 w-4" />
+            Buy Now
             {storePrice && !isDiscontinued && (
-              <span className="ml-1 text-primary-foreground/80">
-                [{formatPrice(storePrice, false)}]
+              <span className="text-primary-foreground/80">
+                ({formatPrice(storePrice, false)})
               </span>
             )}
-            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </button>
         </a>
       )}
 
-      {/* Secondary: Run Diagnostic Compare */}
+      {/* Secondary: Compare */}
       <button
-        className={`h-[52px] px-6 bg-transparent font-mono text-sm uppercase tracking-wider font-bold flex items-center gap-2 border-2 transition-all duration-200 ${
+        className={`h-12 px-5 text-sm font-semibold rounded-lg flex items-center gap-2 border transition-all duration-200 ${
           isAlreadySelected || isMaxReached
-            ? 'border-white/20 text-muted-foreground cursor-not-allowed'
+            ? 'border-border text-muted-foreground cursor-not-allowed bg-muted/30'
             : 'border-primary/40 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5'
         }`}
         onClick={handleAddToCompare}
@@ -81,13 +81,13 @@ export function CTAButtons({
       >
         {isAlreadySelected ? (
           <>
-            <Check className="h-5 w-5" />
-            DIAGNOSTIC_QUEUED
+            <Check className="h-4 w-4" />
+            Added to Compare
           </>
         ) : (
           <>
-            <Activity className="h-5 w-5" />
-            RUN DIAGNOSTIC COMPARE
+            <Activity className="h-4 w-4" />
+            Compare
           </>
         )}
       </button>

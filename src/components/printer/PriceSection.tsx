@@ -66,34 +66,32 @@ export function PriceSection({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="text-sm font-medium text-muted-foreground">
         Current Price
       </div>
       
-      <div className="flex items-baseline gap-4">
-        {/* Main price - amber for industrial look */}
-        <span className="font-mono text-3xl md:text-4xl font-bold text-amber-400 inline-flex items-center gap-3">
+      <div className="flex items-baseline gap-3">
+        <span className="text-3xl md:text-4xl font-bold text-foreground inline-flex items-center gap-2">
           {formatDisplayPrice(displayPrice!)}
           {hasDiscount && (
-            <span className="text-base font-medium text-emerald-400">
+            <span className="text-base font-semibold text-emerald-500">
               -{discountPercent}%
             </span>
           )}
         </span>
         
         {!price && msrp && (
-          <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-            // MSRP
+          <span className="text-xs text-muted-foreground">
+            MSRP
           </span>
         )}
       </div>
 
       {msrp && price && price !== msrp && (
-        <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-          <span className="uppercase tracking-wider">
-            MSRP: {formatDisplayPrice(msrp)}
-          </span>
+        <div className="text-sm text-muted-foreground">
+          <span className="line-through">{formatDisplayPrice(msrp)}</span>
+          <span className="ml-2">MSRP</span>
         </div>
       )}
     </div>
