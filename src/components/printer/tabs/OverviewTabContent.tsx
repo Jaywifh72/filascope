@@ -8,11 +8,13 @@ import {
   Scale,
   CheckCircle2,
   Package,
-  AlertCircle
+  AlertCircle,
+  Ruler
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { BuildVolumeCard } from '@/components/printer/BuildVolumeCard';
 
 interface OverviewTabContentProps {
   printer: any;
@@ -174,16 +176,20 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
   return (
     <div className="tab-content">
+      {/* Build Volume Visualization - Featured at top */}
+      <section>
+        <SectionHeader icon={Ruler} title="Build Volume & Dimensions" />
+        <BuildVolumeCard
+          width={printer.build_volume_x_mm}
+          depth={printer.build_volume_y_mm}
+          height={printer.build_volume_z_mm}
+        />
+      </section>
+
       {/* Key Specifications - Responsive grid: 1 col mobile, 2 col sm, 3 col lg */}
       <section>
         <SectionHeader icon={Box} title="Key Specifications" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <StatCard
-            icon={Box}
-            label="Build Volume"
-            value={volumeLiters ? `${volumeLiters} L` : 'N/A'}
-            subValue={volumeDimensions}
-          />
           <StatCard
             icon={Gauge}
             label="Print Speed"
