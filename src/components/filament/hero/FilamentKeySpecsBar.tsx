@@ -45,35 +45,8 @@ export function FilamentKeySpecsBar({
 }: FilamentKeySpecsBarProps) {
   const specs: SpecItem[] = [];
 
-  // Nozzle Temperature
-  if (nozzleTempMin || nozzleTempMax) {
-    const tempRange = nozzleTempMin && nozzleTempMax
-      ? `${nozzleTempMin}-${nozzleTempMax}°C`
-      : nozzleTempMin
-        ? `${nozzleTempMin}°C+`
-        : `≤${nozzleTempMax}°C`;
-    specs.push({
-      icon: <Thermometer className="w-4 h-4" />,
-      label: 'Nozzle',
-      value: tempRange,
-      tooltip: 'Recommended nozzle temperature range',
-    });
-  }
-
-  // Bed Temperature
-  if (bedTempMin || bedTempMax) {
-    const tempRange = bedTempMin && bedTempMax
-      ? `${bedTempMin}-${bedTempMax}°C`
-      : bedTempMin
-        ? `${bedTempMin}°C+`
-        : `≤${bedTempMax}°C`;
-    specs.push({
-      icon: <Flame className="w-4 h-4" />,
-      label: 'Bed',
-      value: tempRange,
-      tooltip: 'Recommended bed temperature range',
-    });
-  }
+  // Note: Nozzle and Bed temps are now shown in the Quick Specs Grid above,
+  // so they are removed from this bar to avoid duplication
 
   // Print Speed
   if (printSpeedMax) {
