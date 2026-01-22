@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Cpu, Settings2, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
+import { Cpu, SlidersHorizontal, ChevronDown, DollarSign, Box, Layers, Tag, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
@@ -20,16 +20,22 @@ function IndustrialToggle({
   return (
     <label 
       className={cn(
-        "flex items-center justify-between gap-3 py-2 px-3 rounded-lg cursor-pointer transition-all duration-200 border",
+        "flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg cursor-pointer transition-all duration-200",
         checked 
-          ? "border-primary/40 bg-primary/10" 
-          : "border-transparent hover:bg-white/5",
+          ? "bg-primary/10" 
+          : "hover:bg-white/5",
         disabled && "opacity-50 cursor-not-allowed"
       )}
     >
-      <span className="text-sm text-gray-300">
-        {label}
-      </span>
+      <div className="flex items-center gap-2">
+        {checked && <Check className="h-3.5 w-3.5 text-primary" />}
+        <span className={cn(
+          "text-sm transition-colors",
+          checked ? "text-primary font-medium" : "text-gray-300"
+        )}>
+          {label}
+        </span>
+      </div>
       <Switch 
         checked={checked} 
         onCheckedChange={onChange}
@@ -55,24 +61,31 @@ function SidebarSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-white/5 pb-4 last:border-0">
+    <div className="py-3 border-b border-white/5 last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-2 group"
+        className={cn(
+          "w-full flex items-center justify-between py-2 px-1 rounded-md group transition-colors",
+          isOpen && "bg-white/[0.02]"
+        )}
       >
-        <div className="flex items-center gap-2">
-          <Icon className="h-3.5 w-3.5 text-primary" />
-          <span className="text-sm font-medium text-white">
+        <div className="flex items-center gap-2.5">
+          <Icon className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold text-white">
             {title}
           </span>
         </div>
-        {isOpen ? (
-          <ChevronUp className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
-        ) : (
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
-        )}
+        <ChevronDown className={cn(
+          "h-4 w-4 text-muted-foreground group-hover:text-foreground transition-all duration-200",
+          isOpen && "rotate-180"
+        )} />
       </button>
-      {isOpen && <div className="mt-2 space-y-1">{children}</div>}
+      <div className={cn(
+        "overflow-hidden transition-all duration-200",
+        isOpen ? "mt-3 opacity-100" : "h-0 opacity-0"
+      )}>
+        <div className="space-y-1">{children}</div>
+      </div>
     </div>
   );
 }
@@ -247,12 +260,14 @@ export default function PrintersSidebar({
   };
 
   return (
-    <aside className="w-72 shrink-0 sticky top-24 self-start">
-      <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
+    <aside className="w-72 shrink-0 sticky top-24 self-start max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
+      <div className="bg-[#0D0F14] border-r border-white/5 rounded-xl overflow-hidden shadow-xl">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2">
-            <Settings2 className="h-4 w-4 text-primary" />
+        <div className="px-4 py-4 border-b border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-md bg-primary/10">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+            </div>
             <h2 className="text-sm font-semibold text-white">
               Filter Parameters
             </h2>
@@ -260,9 +275,9 @@ export default function PrintersSidebar({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
+        <div className="px-4 pb-4">
           {/* Quick Toggle: Hide Discontinued */}
-          <div className="bg-white/5 rounded-lg p-3 border border-white/5">
+          <div className="py-3 border-b border-white/5">
             <IndustrialToggle
               checked={hideDiscontinued}
               onChange={onHideDiscontinuedChange}
@@ -271,7 +286,7 @@ export default function PrintersSidebar({
           </div>
 
           {/* Budget Allocation */}
-          <SidebarSection title="Budget Allocation" icon={DollarSign}>
+          <SidebarSection title="Price Range" icon={DollarSign}>
             <BudgetHistogram
               selectedRange={priceRange}
               onRangeChange={onPriceRangeChange}
@@ -280,7 +295,7 @@ export default function PrintersSidebar({
           </SidebarSection>
 
           {/* Kinematics */}
-          <SidebarSection title="Motion Kinematics" icon={Cpu}>
+          <SidebarSection title="Motion System" icon={Cpu}>
             {kinematicsOptions.map((option) => (
               <IndustrialToggle
                 key={option.id}
@@ -292,25 +307,26 @@ export default function PrintersSidebar({
           </SidebarSection>
 
           {/* Build Volume */}
-          <SidebarSection title="Build Volume" icon={Settings2} defaultOpen={false}>
+          <SidebarSection title="Build Size" icon={Box} defaultOpen={false}>
             {buildVolumeOptions.map((option) => (
               <button
                 key={option.id}
                 onClick={() => onBuildVolumeChange(selectedBuildVolume === option.id ? "all" : option.id)}
                 className={cn(
-                  "w-full text-left py-2 px-3 rounded-lg transition-all duration-200 border text-sm",
+                  "w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-all duration-200 text-sm",
                   selectedBuildVolume === option.id
-                    ? "border-primary/40 bg-primary/10 text-foreground"
-                    : "border-transparent text-foreground/70 hover:bg-white/5"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-gray-300 hover:bg-white/5"
                 )}
               >
-                {option.label}
+                <span>{option.label}</span>
+                {selectedBuildVolume === option.id && <Check className="h-4 w-4 text-primary" />}
               </button>
             ))}
           </SidebarSection>
 
           {/* Enclosure */}
-          <SidebarSection title="Enclosure Type" icon={Settings2} defaultOpen={false}>
+          <SidebarSection title="Enclosure Type" icon={Layers} defaultOpen={false}>
             {enclosureOptions.map((option) => (
               <IndustrialToggle
                 key={option.id}
@@ -321,21 +337,22 @@ export default function PrintersSidebar({
             ))}
           </SidebarSection>
 
-          {/* Brand Ecosystem */}
-          <SidebarSection title="Brand Ecosystem" icon={Settings2} defaultOpen={false}>
+          {/* Brand */}
+          <SidebarSection title="Brand" icon={Tag} defaultOpen={false}>
             <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 space-y-0.5 pr-1">
               {sortedBrands.map((brand) => (
                 <button
                   key={brand}
                   onClick={() => toggleBrand(brand)}
                   className={cn(
-                    "w-full text-left py-1.5 px-3 rounded-md transition-all duration-200 text-sm",
+                    "w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 text-sm",
                     selectedBrands.includes(brand)
-                      ? "bg-primary/15 text-primary border-l-2 border-primary"
-                      : "text-foreground/60 hover:bg-white/5 hover:text-foreground/80"
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
                   )}
                 >
-                  {brand}
+                  <span>{brand}</span>
+                  {selectedBrands.includes(brand) && <Check className="h-4 w-4 text-primary" />}
                 </button>
               ))}
             </div>
