@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { BuildVolumeCard } from '@/components/printer/BuildVolumeCard';
 import { SpeedGauge } from '@/components/printer/SpeedGauge';
+import { TemperatureGauge } from '@/components/printer/TemperatureGauge';
 
 interface OverviewTabContentProps {
   printer: any;
@@ -188,22 +189,30 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         />
       </section>
 
-      {/* Print Speed Visualization */}
+      {/* Speed and Temperature side by side on larger screens */}
       <section>
-        <SectionHeader icon={Zap} title="Print Speed" />
-        <SpeedGauge speed={maxSpeed} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Print Speed Visualization */}
+          <div>
+            <SectionHeader icon={Zap} title="Print Speed" />
+            <SpeedGauge speed={maxSpeed} />
+          </div>
+          
+          {/* Temperature Visualization */}
+          <div>
+            <SectionHeader icon={Thermometer} title="Temperature Range" />
+            <TemperatureGauge 
+              maxNozzleTemp={nozzleMax} 
+              maxBedTemp={bedMax} 
+            />
+          </div>
+        </div>
       </section>
 
       {/* Key Specifications - Responsive grid: 1 col mobile, 2 col sm, 3 col lg */}
       <section>
         <SectionHeader icon={Box} title="Key Specifications" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <StatCard
-            icon={Thermometer}
-            label="Temperature Range"
-            value={tempRange}
-            subValue="Nozzle / Bed max"
-          />
           <StatCard
             icon={Scale}
             label="Machine Size"
