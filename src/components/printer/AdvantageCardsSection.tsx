@@ -142,28 +142,19 @@ const AdvantageCardsSection: React.FC<AdvantageCardsSectionProps> = ({ printer }
   if (cardsToDisplay.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="flex flex-col gap-2">
       {cardsToDisplay.map((card) => {
         const IconComponent = card.Icon;
         return (
           <div
             key={card.key}
-            className="bg-muted/30 border border-border/50 rounded-lg p-4 flex flex-col items-center text-center gap-2 transition-all duration-200 hover:border-primary/30 hover:bg-muted/50"
+            className="bg-muted/40 border border-border/60 rounded-lg px-4 py-2.5 flex items-center gap-3 transition-all duration-200 hover:border-primary/30 hover:bg-muted/50"
             aria-label={`${card.name}: ${card.benefit}`}
           >
-            {/* Icon */}
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <IconComponent className="w-5 h-5 text-primary" strokeWidth={1.5} />
-            </div>
-            
-            {/* Feature Name */}
-            <span className="text-sm font-medium text-foreground">
-              {card.name}
-            </span>
-            
-            {/* Benefit Text */}
-            <span className="text-xs text-muted-foreground leading-relaxed">
-              {card.benefit}
+            <IconComponent className="w-4 h-4 text-primary flex-shrink-0" strokeWidth={1.5} />
+            <span className="text-sm text-foreground">
+              <span className="font-medium">{card.name}</span>
+              <span className="text-muted-foreground ml-1.5">— {card.benefit}</span>
             </span>
           </div>
         );

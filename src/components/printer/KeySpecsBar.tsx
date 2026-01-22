@@ -15,20 +15,18 @@ export function KeySpecsBar({ specs }: KeySpecsBarProps) {
   if (!specs || specs.length === 0) return null;
 
   return (
-    <div className="w-full">
-      <div className="flex flex-wrap justify-start items-center gap-3 md:gap-4">
-        {specs.map((spec, index) => (
-          <div key={index} className="flex items-center gap-2.5 min-w-0 bg-muted/40 px-4 py-3 rounded-xl border border-border/60">
-            <spec.icon className="h-5 w-5 text-primary flex-shrink-0" />
-            <span className="text-sm text-foreground">
-              {spec.label && (
-                <span className="text-muted-foreground mr-1.5">{spec.label}:</span>
-              )}
-              <span className="font-bold">{spec.value}</span>
-            </span>
-          </div>
-        ))}
-      </div>
+    <div className="flex flex-col gap-2">
+      {specs.map((spec, index) => (
+        <div key={index} className="flex items-center gap-3 bg-muted/40 px-4 py-2.5 rounded-lg border border-border/60">
+          <spec.icon className="h-4 w-4 text-primary flex-shrink-0" />
+          <span className="text-sm text-foreground">
+            {spec.label && (
+              <span className="text-muted-foreground mr-1.5">{spec.label}:</span>
+            )}
+            <span className="font-medium">{spec.value}</span>
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

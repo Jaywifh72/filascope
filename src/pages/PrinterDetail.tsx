@@ -704,9 +704,9 @@ const PrinterDetail = () => {
                 reviewCount={printer.review_count_aggregated}
               />
 
-              {/* Quick Specifications */}
+              {/* Specifications */}
               <div className="pt-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Quick Specifications</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Specifications</h3>
                 <KeySpecsBar specs={generateKeySpecs(printer)} />
               </div>
 
