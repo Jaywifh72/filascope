@@ -12,7 +12,17 @@ import { AccessoryPriceChart } from "@/components/AccessoryPriceChart";
 import { PrinterPriceChart } from "@/components/PrinterPriceChart";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { 
+  PrinterTabNav, 
+  PrinterTabContent,
+  OverviewTabContent,
+  SpecificationsTabContent,
+  MaterialsTabContent,
+  ConnectivityTabContent,
+  PricingTabContent,
+  type PrinterTab 
+} from "@/components/printer/PrinterTabNav";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { 
@@ -105,6 +115,13 @@ const PrinterDetail = () => {
   const [storeImagesError, setStoreImagesError] = useState<string | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadedFilePreview, setUploadedFilePreview] = useState<string | null>(null);
+  
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState<PrinterTab>("overview");
+  const handleTabChange = useCallback((tab: PrinterTab) => {
+    setActiveTab(tab);
+  }, []);
+
   const { data: printer, isLoading } = useQuery({
     queryKey: ["printer-detail", id],
     queryFn: async () => {
@@ -639,188 +656,217 @@ const PrinterDetail = () => {
               })()}
             </div>
 
-            {/* Mobile Social Proof Accordion - Shows on smaller screens */}
-            {(() => {
-              // Generate staff pick reasons based on printer features
-              const staffPickReasons: string[] = [];
-              if (printer.max_print_speed_mms && printer.max_print_speed_mms >= 500) {
-                staffPickReasons.push("High-speed printing professionals");
-              }
-              if (printer.multi_material_supported) {
-                staffPickReasons.push("Multi-color and multi-material projects");
-              }
-              if (printer.has_enclosure) {
-                staffPickReasons.push("Engineering materials and enclosed printing");
-              }
-              if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
-                const volumeLiters = (printer.build_volume_x_mm * printer.build_volume_y_mm * printer.build_volume_z_mm) / 1000000;
-                if (volumeLiters > 20) {
-                  staffPickReasons.push("Large format printing needs");
-                }
-              }
-              if (printer.auto_bed_leveling) {
-                staffPickReasons.push("Hassle-free setup and maintenance");
-              }
-              if (staffPickReasons.length === 0) {
-                staffPickReasons.push("Hobbyists and home users", "Beginner-friendly printing", "Great value for features");
-              }
+            {/* Tab Navigation - Sticky below hero */}
+            <PrinterTabNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-              // Use real activity data from analytics
-              const activityData = {
-                views: activityStats?.views_24h || 0,
-                comparisons: activityStats?.comparisons_7d || 0,
-                purchases: activityStats?.buy_clicks_7d || 0,
-              };
+            {/* Tab Content Area */}
+            <PrinterTabContent activeTab={activeTab}>
+              {activeTab === "overview" && (
+                <>
+                  {/* Mobile Social Proof Accordion - Shows on smaller screens */}
+                  {(() => {
+                    // Generate staff pick reasons based on printer features
+                    const staffPickReasons: string[] = [];
+                    if (printer.max_print_speed_mms && printer.max_print_speed_mms >= 500) {
+                      staffPickReasons.push("High-speed printing professionals");
+                    }
+                    if (printer.multi_material_supported) {
+                      staffPickReasons.push("Multi-color and multi-material projects");
+                    }
+                    if (printer.has_enclosure) {
+                      staffPickReasons.push("Engineering materials and enclosed printing");
+                    }
+                    if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
+                      const volumeLiters = (printer.build_volume_x_mm * printer.build_volume_y_mm * printer.build_volume_z_mm) / 1000000;
+                      if (volumeLiters > 20) {
+                        staffPickReasons.push("Large format printing needs");
+                      }
+                    }
+                    if (printer.auto_bed_leveling) {
+                      staffPickReasons.push("Hassle-free setup and maintenance");
+                    }
+                    if (staffPickReasons.length === 0) {
+                      staffPickReasons.push("Hobbyists and home users", "Beginner-friendly printing", "Great value for features");
+                    }
 
-              // Generate recent reviews (in production, fetch from reviews table)
-              const recentReviews = printer.rating_community_overall ? [
-                {
-                  id: '1',
-                  rating: 5,
-                  text: 'Amazing print quality and speed. The setup was incredibly easy and I was printing within an hour of unboxing.',
-                  author: 'Mike T.',
-                  verified: true
-                },
-                {
-                  id: '2',
-                  rating: 5,
-                  text: 'Best printer I\'ve owned. Worth every penny for the features and reliability.',
-                  author: 'Sarah M.',
-                  verified: true
-                },
-                {
-                  id: '3',
-                  rating: 4,
-                  text: 'Great machine with excellent support. Would recommend to anyone looking for quality prints.',
-                  author: 'Alex K.',
-                  verified: true
-                }
-              ] : [];
+                    // Use real activity data from analytics
+                    const activityData = {
+                      views: activityStats?.views_24h || 0,
+                      comparisons: activityStats?.comparisons_7d || 0,
+                      purchases: activityStats?.buy_clicks_7d || 0,
+                    };
 
-              // Use printer-level warranty if set, otherwise fall back to brand-level warranty
-              const brandData = printer.brand as { brand?: string; warranty_years?: number; warranty_coverage?: string } | null;
-              const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
-              const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
-              
-              const sidebarData = {
-                rating: printer.rating_community_overall,
-                reviewCount: printer.review_count_aggregated,
-                recentReviews,
-                staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
-                staffPickReasons,
-                warrantyYears,
-                warrantyCoverage,
-                brandName: brandData?.brand || null,
-                activity: activityData
-              };
+                    // Generate recent reviews (in production, fetch from reviews table)
+                    const recentReviews = printer.rating_community_overall ? [
+                      {
+                        id: '1',
+                        rating: 5,
+                        text: 'Amazing print quality and speed. The setup was incredibly easy and I was printing within an hour of unboxing.',
+                        author: 'Mike T.',
+                        verified: true
+                      },
+                      {
+                        id: '2',
+                        rating: 5,
+                        text: 'Best printer I\'ve owned. Worth every penny for the features and reliability.',
+                        author: 'Sarah M.',
+                        verified: true
+                      },
+                      {
+                        id: '3',
+                        rating: 4,
+                        text: 'Great machine with excellent support. Would recommend to anyone looking for quality prints.',
+                        author: 'Alex K.',
+                        verified: true
+                      }
+                    ] : [];
 
-              const handleTakeQuiz = () => {
-                navigate('/printers');
-              };
+                    // Use printer-level warranty if set, otherwise fall back to brand-level warranty
+                    const brandData = printer.brand as { brand?: string; warranty_years?: number; warranty_coverage?: string } | null;
+                    const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
+                    const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
+                    
+                    const sidebarData = {
+                      rating: printer.rating_community_overall,
+                      reviewCount: printer.review_count_aggregated,
+                      recentReviews,
+                      staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
+                      staffPickReasons,
+                      warrantyYears,
+                      warrantyCoverage,
+                      brandName: brandData?.brand || null,
+                      activity: activityData
+                    };
 
-              const scrollToRatings = () => {
-                const ratingsSection = document.querySelector('[data-section="ratings"]');
-                ratingsSection?.scrollIntoView({ behavior: 'smooth' });
-              };
+                    const handleTakeQuiz = () => {
+                      navigate('/printers');
+                    };
 
-              return (
-                <div className="lg:hidden mt-6">
-                  <MobileSocialProof
-                    data={sidebarData}
-                    onReadReviews={scrollToRatings}
-                    onTakeQuiz={handleTakeQuiz}
+                    const scrollToRatings = () => {
+                      const ratingsSection = document.querySelector('[data-section="ratings"]');
+                      ratingsSection?.scrollIntoView({ behavior: 'smooth' });
+                    };
+
+                    return (
+                      <div className="lg:hidden mt-6">
+                        <MobileSocialProof
+                          data={sidebarData}
+                          onReadReviews={scrollToRatings}
+                          onTakeQuiz={handleTakeQuiz}
+                        />
+                      </div>
+                    );
+                  })()}
+
+                  {/* Community Ratings */}
+                  {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
+                    <Card className="overflow-hidden" data-section="ratings">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg font-semibold">Community Ratings</CardTitle>
+                          {printer.review_count_aggregated && (
+                            <span className="text-sm text-muted-foreground">
+                              {printer.review_count_aggregated} reviews
+                            </span>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          {printer.rating_community_overall && (
+                            <div className="text-center space-y-2 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                              <div className="text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                ))}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-medium">Overall</div>
+                            </div>
+                          )}
+                          {printer.rating_ease_of_use && (
+                            <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                              <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                ))}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-medium">Ease of Use</div>
+                            </div>
+                          )}
+                          {printer.rating_print_quality && (
+                            <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                              <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                ))}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-medium">Print Quality</div>
+                            </div>
+                          )}
+                          {printer.rating_reliability && (
+                            <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                              <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                ))}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-medium">Reliability</div>
+                            </div>
+                          )}
+                          {printer.rating_value_for_money && (
+                            <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                              <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
+                              <div className="flex justify-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                                ))}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-medium">Value</div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  {/* Placeholder for other overview content */}
+                  <OverviewTabContent />
+                </>
+              )}
+
+              {activeTab === "specifications" && (
+                <>
+                  {/* Detailed Specifications - Expandable Drawers */}
+                  <SpecsDrawerSection 
+                    printer={printer} 
+                    accessories={accessories || []}
+                    brand={brand}
                   />
-                </div>
-              );
-            })()}
+                </>
+              )}
 
-            {/* Community Ratings */}
-            {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
-              <Card className="overflow-hidden" data-section="ratings">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold">Community Ratings</CardTitle>
-                    {printer.review_count_aggregated && (
-                      <span className="text-sm text-muted-foreground">
-                        {printer.review_count_aggregated} reviews
-                      </span>
-                    )}
+              {activeTab === "materials" && (
+                <MaterialsTabContent />
+              )}
+
+              {activeTab === "connectivity" && (
+                <>
+                  {/* Firmware & Software Sections */}
+                  <div className="space-y-6">
+                    <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
+                    <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {printer.rating_community_overall && (
-                      <div className="text-center space-y-2 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                        <div className="text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
-                        <div className="flex justify-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-medium">Overall</div>
-                      </div>
-                    )}
-                    {printer.rating_ease_of_use && (
-                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
-                        <div className="flex justify-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-medium">Ease of Use</div>
-                      </div>
-                    )}
-                    {printer.rating_print_quality && (
-                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
-                        <div className="flex justify-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-medium">Print Quality</div>
-                      </div>
-                    )}
-                    {printer.rating_reliability && (
-                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
-                        <div className="flex justify-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-medium">Reliability</div>
-                      </div>
-                    )}
-                    {printer.rating_value_for_money && (
-                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
-                        <div className="flex justify-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground font-medium">Value</div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                </>
+              )}
 
-            {/* Detailed Specifications - Expandable Drawers */}
-            <SpecsDrawerSection 
-              printer={printer} 
-              accessories={accessories || []}
-              brand={brand}
-            />
-
-            {/* Firmware & Software Sections */}
-            <div className="space-y-6">
-              <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
-              <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
-            </div>
+              {activeTab === "pricing" && (
+                <PricingTabContent />
+              )}
+            </PrinterTabContent>
           </div>
 
           {/* Sticky Purchase Sidebar - Desktop Only */}
