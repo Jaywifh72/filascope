@@ -170,20 +170,18 @@ export function TechnicalConsoleSidebar({
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
-      {/* ═══════════════════════════════════════════════════════════════
-          PRINTER HUB - System Config Header
-          ═══════════════════════════════════════════════════════════════ */}
-      <div className="p-4 border-b border-white/10">
+    <aside className="hidden lg:flex flex-col w-72 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border-r border-gray-800 bg-gray-900/60">
+      {/* System Config Header */}
+      <div className="p-4 border-b border-gray-800">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded bg-primary/10 border border-primary/20">
+          <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20">
             <Printer className="w-4 h-4 text-primary" />
           </div>
           <div className="flex flex-col">
-            <span className="font-mono text-[11px] font-bold text-foreground uppercase tracking-[0.15em]">
+            <span className="text-sm font-semibold text-gray-300">
               System Config
             </span>
-            <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs text-gray-500">
               Printer Hub
             </span>
           </div>
@@ -191,7 +189,7 @@ export function TechnicalConsoleSidebar({
       </div>
 
       {/* Printer Selection + Live Specs */}
-      <div className="p-4 border-b border-white/10 space-y-4">
+      <div className="p-4 border-b border-gray-800 space-y-4">
         {/* Printer Selector Dropdowns */}
         <div className="space-y-2">
           <Select
@@ -201,12 +199,12 @@ export function TechnicalConsoleSidebar({
               setSelectedPrinterId("");
             }}
           >
-            <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 font-mono text-xs">
+            <SelectTrigger className="w-full h-9 bg-gray-800 border-gray-700 text-white text-sm hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
               <SelectValue placeholder="Select brand..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-800 border-gray-700">
               {brands?.map((brand) => (
-                <SelectItem key={brand.id} value={brand.brand} className="font-mono text-xs">
+                <SelectItem key={brand.id} value={brand.brand} className="text-sm text-white hover:bg-gray-700">
                   {brand.brand}
                 </SelectItem>
               ))}
@@ -218,12 +216,12 @@ export function TechnicalConsoleSidebar({
               value={selectedPrinterId || ""}
               onValueChange={setSelectedPrinterId}
             >
-              <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 font-mono text-xs">
+              <SelectTrigger className="w-full h-9 bg-gray-800 border-gray-700 text-white text-sm hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
                 <SelectValue placeholder="Select model..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gray-800 border-gray-700">
                 {models?.map((model) => (
-                  <SelectItem key={model.printer_id} value={model.printer_id} className="font-mono text-xs">
+                  <SelectItem key={model.printer_id} value={model.printer_id} className="text-sm text-white hover:bg-gray-700">
                     {model.model_name}
                   </SelectItem>
                 ))}
@@ -233,12 +231,11 @@ export function TechnicalConsoleSidebar({
         </div>
 
         {/* Live Specs Header */}
-        <div className="flex items-center gap-2 pt-2">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.2em]">
+        <div className="flex items-center gap-2 pt-3 border-t border-gray-800/50">
+          <Settings2 className="w-3.5 h-3.5 text-primary" />
+          <span className="text-sm font-semibold text-gray-300">
             Live Specs
           </span>
-          <div className="h-px flex-1 bg-white/10" />
         </div>
 
         {/* 2x3 Live Specs Grid */}
@@ -277,23 +274,23 @@ export function TechnicalConsoleSidebar({
       </div>
 
       {/* Spool Configuration Section */}
-      <div className="p-4 border-b border-white/10 space-y-3">
+      <div className="p-4 border-b border-gray-800 space-y-3">
         <div className="flex items-center gap-2">
           <Package className="w-3.5 h-3.5 text-primary" />
-          <span className="font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">
+          <span className="text-sm font-semibold text-gray-300">
             Spool Config
           </span>
         </div>
 
         <Select value={localSpoolSize} onValueChange={handleSpoolSizeChange}>
-          <SelectTrigger className="w-full h-9 bg-white/5 border-white/10 font-mono text-xs">
+          <SelectTrigger className="w-full h-9 bg-gray-800 border-gray-700 text-white text-sm hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-800 border-gray-700">
             {SPOOL_SIZES.map((size) => (
-              <SelectItem key={size.id} value={size.id} className="font-mono text-xs">
+              <SelectItem key={size.id} value={size.id} className="text-sm text-white hover:bg-gray-700">
                 <span>{size.label}</span>
-                <span className="ml-2 text-muted-foreground">({size.description})</span>
+                <span className="ml-2 text-gray-400">({size.description})</span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -301,7 +298,7 @@ export function TechnicalConsoleSidebar({
       </div>
 
       {/* Filter Clusters Section */}
-      <div className="p-4 space-y-5 flex-1">
+      <div className="p-4 space-y-1 flex-1 divide-y divide-gray-800/50">
         {/* Material Base */}
         <FilterCluster 
           title="Material Base"
@@ -333,9 +330,7 @@ export function TechnicalConsoleSidebar({
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LIVE SPEC CELL - Compact monospace readout for raw machine data
-   ═══════════════════════════════════════════════════════════════ */
+/* Live Spec Cell - Compact readout for machine data */
 interface LiveSpecCellProps {
   label: string;
   value: string;
@@ -344,17 +339,14 @@ interface LiveSpecCellProps {
 
 function LiveSpecCell({ label, value, isLoading }: LiveSpecCellProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-1.5 rounded bg-white/5 border border-white/10">
-      <span className="font-mono text-[8px] text-muted-foreground uppercase tracking-wider text-center leading-tight">
+    <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-800/50 border border-gray-700">
+      <span className="text-[10px] text-gray-500 uppercase text-center leading-tight">
         {label}
       </span>
       {isLoading ? (
-        <div className="h-3.5 w-8 bg-muted/50 rounded animate-pulse mt-0.5" />
+        <div className="h-4 w-10 bg-gray-700 rounded animate-pulse mt-0.5" />
       ) : (
-        <span 
-          className="font-mono text-[10px] font-bold text-foreground tabular-nums"
-          style={{ fontFamily: "'JetBrains Mono', monospace" }}
-        >
+        <span className="text-sm font-semibold text-white tabular-nums">
           {value}
         </span>
       )}
@@ -372,23 +364,23 @@ interface FilterClusterProps {
 
 function FilterCluster({ title, icon: Icon, options, selected, onToggle }: FilterClusterProps) {
   return (
-    <div className="space-y-2">
+    <div className="py-4 first:pt-0 last:pb-0 space-y-3">
       <div className="flex items-center gap-2">
-        <Icon className="w-3 h-3 text-primary" />
-        <span className="font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+        <span className="text-sm font-medium text-white">
           {title}
         </span>
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
             key={option.id}
             onClick={() => onToggle(option.id)}
             className={cn(
-              "px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-wider rounded-sm border transition-all duration-150",
+              "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
               selected.includes(option.id)
-                ? "bg-primary/20 border-primary/50 text-primary"
-                : "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                ? "bg-primary/20 border-primary text-primary"
+                : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600"
             )}
           >
             {option.label}
