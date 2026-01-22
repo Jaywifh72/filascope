@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,24 +16,29 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { useAchievements } from "@/hooks/useAchievements";
-import { SimilarMaterialsModule } from "@/components/filament/similar/SimilarMaterialsModule";
 import { validateFilamentPrice } from "@/lib/priceValidation";
 import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
-import { SimplifiedCompatibility } from "@/components/filament/hero/SimplifiedCompatibility";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { FilamentHeroSection } from "@/components/filament/hero/FilamentHeroSection";
 import { FilamentPurchaseSidebar, FilamentMobileBottomBar } from "@/components/filament/sidebar";
+import { 
+  FilamentTabNav, 
+  FilamentTabContent, 
+  OverviewTabContent,
+  SpecificationsTabContent,
+  CompatibilityTabContent,
+  PricingTabContent,
+  type FilamentTab 
+} from "@/components/filament/tabs";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { TechnicalDetailsAccordion } from "@/components/filament/TechnicalDetailsAccordion";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore, getRegionDisplayName } from "@/hooks/useRegionalStore";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
-import { useFilamentColorVariants, getBaseProductName, getColorFromTitle } from "@/hooks/useFilamentColorVariants";
+import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
-import { AdvancedTdsSection } from "@/components/filament/sections/AdvancedTdsSection";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -58,6 +63,7 @@ const FilamentDetail = () => {
   const [stickyBarVisible, setStickyBarVisible] = useState(false);
   const [retailersModalOpen, setRetailersModalOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<FilamentTab>("overview");
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice, formatRegionalPrice } = useCurrency();
@@ -604,46 +610,44 @@ const FilamentDetail = () => {
             {/* Sentinel for sticky buy bar trigger */}
             <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
-            {/* Technical Details Accordion */}
-            <TechnicalDetailsAccordion filament={displayFilament} className="mb-8" />
+            {/* Tab Navigation */}
+            <FilamentTabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-            {/* Simplified Printer Compatibility */}
-            {selectedPrinter && compatibility && (
-              <SimplifiedCompatibility
-                printer={selectedPrinter}
-                compatibility={{
-                  overallRating: compatibility.is_supported ? (compatibility.ease_rating === 'Easy' ? 'green' : 'orange') : 'red',
-                  summary: compatibility.is_supported ? 'Compatible' : 'Limited compatibility',
-                  limitations: compatibility.limitations,
-                  recommendations: compatibility.recommendations,
-                }}
-                className="mb-8"
-              />
-            )}
+            {/* Tab Content */}
+            <FilamentTabContent activeTab={activeTab}>
+              {activeTab === "overview" && (
+                <OverviewTabContent filament={displayFilament} />
+              )}
 
-            {/* Prompt to select printer if none selected */}
-            {!printerLoading && !selectedPrinter && (
-              <Card className="bg-gradient-to-br from-muted/30 to-muted/10 border-dashed border-2 border-border mb-8 animate-fade-in hover:border-primary/30 transition-colors">
-                <CardContent className="p-8 text-center">
-                  <div className="p-4 bg-primary/10 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                    <Printer className="w-10 h-10 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Select Your Printer for Custom Settings</h3>
-                  <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                    Get personalized temperature ranges, nozzle recommendations, and build plate suggestions specifically for this filament
-                  </p>
-                  <Button size="lg" asChild className="hover:scale-105 transition-transform">
-                    <Link to="/">
-                      <Printer className="w-4 h-4 mr-2" />
-                      Select Your Printer
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+              {activeTab === "specifications" && (
+                <SpecificationsTabContent filament={displayFilament} />
+              )}
 
-            {/* Advanced Details (TDS) Section */}
-            <AdvancedTdsSection filament={displayFilament} className="mb-8" />
+              {activeTab === "compatibility" && (
+                <CompatibilityTabContent
+                  filament={displayFilament}
+                  selectedPrinter={selectedPrinter}
+                  compatibility={compatibility}
+                  printerLoading={printerLoading}
+                />
+              )}
+
+              {activeTab === "pricing" && (
+                <PricingTabContent
+                  filament={displayFilament}
+                  retailers={retailers}
+                  pricePerKg={rawPricePerKg}
+                  pricePerSpool={rawPricePerSpool}
+                  affiliateUrl={getAffiliateUrl(
+                    selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || '', 
+                    pricingFilament.vendor
+                  )}
+                  hasActualRegionalPrice={hasActualRegionalPrice}
+                  onViewRetailers={handleViewRetailers}
+                  onRetailerClick={handleRetailerClick}
+                />
+              )}
+            </FilamentTabContent>
           </div>
 
           {/* Sticky Sidebar - Desktop Only */}
