@@ -9,6 +9,7 @@ import { FilamentHeroGallery } from './FilamentHeroGallery';
 import { FilamentHeroPurchaseCard } from './FilamentHeroPurchaseCard';
 import { LargeColorSwatchGrid } from './LargeColorSwatchGrid';
 import { FilamentKeySpecsBar } from './FilamentKeySpecsBar';
+import { FilamentQuickSpecsGrid } from './FilamentQuickSpecsGrid';
 import { normalizeColorHex } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
 import type { Retailer } from './RetailersModal';
@@ -276,6 +277,17 @@ export function FilamentHeroSection({
                 className="pt-2"
               />
             )}
+
+            {/* Quick Specs Grid - Matches Printer detail page style */}
+            <FilamentQuickSpecsGrid
+              nozzleTempMin={displayFilament.nozzle_temp_min_c}
+              nozzleTempMax={displayFilament.nozzle_temp_max_c}
+              bedTempMin={displayFilament.bed_temp_min_c}
+              bedTempMax={displayFilament.bed_temp_max_c}
+              diameter={displayFilament.diameter_nominal_mm}
+              netWeight={displayFilament.net_weight_g}
+              className="pt-1"
+            />
 
             {/* Purchase Card */}
             <FilamentHeroPurchaseCard
