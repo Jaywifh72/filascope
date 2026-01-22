@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { 
   Tooltip, 
   TooltipContent, 
@@ -12,13 +12,23 @@ import {
   CollapsibleContent, 
   CollapsibleTrigger 
 } from '@/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   CheckCircle2, 
   AlertTriangle, 
   XCircle, 
   ChevronDown, 
   Clock,
-  Database
+  Database,
+  Info,
+  HelpCircle,
+  ExternalLink
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -81,24 +91,42 @@ interface DataQualityIndicatorProps {
   className?: string;
 }
 
-function calculateCategoryScore(printer: Record<string, any>, fields: string[]): { filled: number; total: number } {
+function calculateCategoryScore(printer: Record<string, any>, fields: string[]): { filled: number; total: number; missingFields: string[] } {
   let filled = 0;
   const total = fields.length;
+  const missingFields: string[] = [];
   
   for (const field of fields) {
     const value = printer[field];
     if (value !== null && value !== undefined && value !== '' && value !== false) {
       filled++;
+    } else {
+      missingFields.push(field);
     }
   }
   
-  return { filled, total };
+  return { filled, total, missingFields };
 }
 
-function getOverallScore(printer: Record<string, any>): { percentage: number; categoryScores: Record<string, { filled: number; total: number; percentage: number }> } {
+interface CategoryScore {
+  filled: number;
+  total: number;
+  percentage: number;
+  missingFields: string[];
+}
+
+function getOverallScore(printer: Record<string, any>): { 
+  percentage: number; 
+  categoryScores: Record<string, CategoryScore>;
+  totalFilled: number;
+  totalFields: number;
+  totalMissing: number;
+} {
   let totalWeightedFilled = 0;
   let totalWeightedPossible = 0;
-  const categoryScores: Record<string, { filled: number; total: number; percentage: number }> = {};
+  let totalFilled = 0;
+  let totalFields = 0;
+  const categoryScores: Record<string, CategoryScore> = {};
   
   for (const [key, category] of Object.entries(FIELD_CATEGORIES)) {
     const score = calculateCategoryScore(printer, category.fields);
@@ -107,33 +135,103 @@ function getOverallScore(printer: Record<string, any>): { percentage: number; ca
     
     totalWeightedFilled += score.filled * category.weight;
     totalWeightedPossible += score.total * category.weight;
+    totalFilled += score.filled;
+    totalFields += score.total;
   }
   
   const percentage = totalWeightedPossible > 0 
     ? Math.round((totalWeightedFilled / totalWeightedPossible) * 100) 
     : 0;
   
-  return { percentage, categoryScores };
+  return { percentage, categoryScores, totalFilled, totalFields, totalMissing: totalFields - totalFilled };
 }
 
-function getQualityLevel(percentage: number): { label: string; color: string; icon: typeof CheckCircle2 } {
+function getQualityLevel(percentage: number): { label: string; color: string; ringColor: string; icon: typeof CheckCircle2 } {
   if (percentage >= 80) {
-    return { label: 'Excellent', color: 'text-green-500', icon: CheckCircle2 };
+    return { label: 'Excellent', color: 'text-success', ringColor: 'stroke-success', icon: CheckCircle2 };
   } else if (percentage >= 60) {
-    return { label: 'Good', color: 'text-yellow-500', icon: AlertTriangle };
+    return { label: 'Good', color: 'text-amber-500', ringColor: 'stroke-amber-500', icon: AlertTriangle };
   } else if (percentage >= 40) {
-    return { label: 'Partial', color: 'text-orange-500', icon: AlertTriangle };
+    return { label: 'Partial', color: 'text-amber-500', ringColor: 'stroke-amber-500', icon: AlertTriangle };
   } else {
-    return { label: 'Incomplete', color: 'text-red-500', icon: XCircle };
+    return { label: 'Incomplete', color: 'text-error', ringColor: 'stroke-error', icon: XCircle };
   }
+}
+
+// Format field name for display
+function formatFieldName(field: string): string {
+  return field
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+    .replace(/Mm$/, ' (mm)')
+    .replace(/Mms$/, ' (mm/s)')
+    .replace(/Um$/, ' (μm)')
+    .replace(/Mmss$/, ' (mm/s²)')
+    .replace(/Mm3s$/, ' (mm³/s)')
+    .replace(/Usd$/, ' (USD)')
+    .replace(/Kg$/, ' (kg)');
+}
+
+// Circular Progress Ring Component
+function CircularProgress({ 
+  percentage, 
+  size = 48, 
+  strokeWidth = 4,
+  className = ''
+}: { 
+  percentage: number; 
+  size?: number; 
+  strokeWidth?: number;
+  className?: string;
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+  const qualityLevel = getQualityLevel(percentage);
+
+  return (
+    <div className={`relative inline-flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          className="text-muted/30"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className={`transition-all duration-500 ease-out ${qualityLevel.ringColor}`}
+        />
+      </svg>
+      {/* Percentage text in center */}
+      <span className={`absolute text-xs font-bold ${qualityLevel.color}`}>
+        {percentage}%
+      </span>
+    </div>
+  );
 }
 
 export function DataQualityIndicator({ printer, className = '' }: DataQualityIndicatorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   
-  const { percentage, categoryScores } = getOverallScore(printer);
+  const { percentage, categoryScores, totalFilled, totalFields, totalMissing } = useMemo(
+    () => getOverallScore(printer), 
+    [printer]
+  );
   const qualityLevel = getQualityLevel(percentage);
-  const QualityIcon = qualityLevel.icon;
   
   const lastVerified = printer.last_verified_utc;
   const verificationStatus = lastVerified 
@@ -143,39 +241,198 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
   const isRecentlyVerified = lastVerified && 
     (Date.now() - new Date(lastVerified).getTime()) < 30 * 24 * 60 * 60 * 1000; // 30 days
 
+  // Count verified vs unverified fields
+  const verifiedFields = isRecentlyVerified ? totalFilled : 0;
+  const unverifiedFields = isRecentlyVerified ? 0 : totalFilled;
+
+  // Get top missing categories for tooltip
+  const topMissingCategories = useMemo(() => {
+    return Object.entries(categoryScores)
+      .filter(([_, score]) => score.missingFields.length > 0)
+      .sort((a, b) => {
+        // Sort by weight * missing count
+        const aWeight = FIELD_CATEGORIES[a[0] as keyof typeof FIELD_CATEGORIES].weight;
+        const bWeight = FIELD_CATEGORIES[b[0] as keyof typeof FIELD_CATEGORIES].weight;
+        return (b[1].missingFields.length * bWeight) - (a[1].missingFields.length * aWeight);
+      })
+      .slice(0, 3);
+  }, [categoryScores]);
+
   return (
     <div className={`bg-card border border-border rounded-lg p-3 ${className}`}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="w-full">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Data Quality</span>
-            </div>
-            
             <div className="flex items-center gap-3">
+              {/* Circular Progress Ring */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5">
-                      <QualityIcon className={`h-4 w-4 ${qualityLevel.color}`} />
-                      <span className={`text-sm font-bold ${qualityLevel.color}`}>
-                        {percentage}%
-                      </span>
+                    <div>
+                      <CircularProgress percentage={percentage} size={44} strokeWidth={4} />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{qualityLevel.label} data completeness</p>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <div className="space-y-2">
+                      <p className="font-medium">{qualityLevel.label} Data Quality</p>
+                      <p className="text-xs text-muted-foreground">
+                        {totalFilled} of {totalFields} fields populated
+                      </p>
+                      {topMissingCategories.length > 0 && (
+                        <div className="text-xs">
+                          <p className="text-muted-foreground mb-1">Missing data in:</p>
+                          <ul className="space-y-0.5">
+                            {topMissingCategories.map(([key, score]) => (
+                              <li key={key} className="text-amber-500">
+                                • {FIELD_CATEGORIES[key as keyof typeof FIELD_CATEGORIES].label} ({score.missingFields.length} fields)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="text-sm font-medium">Data Quality</span>
+                <span className={`text-xs ${qualityLevel.color}`}>{qualityLevel.label}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {/* Info button for details modal */}
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full hover:bg-muted"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Database className="h-5 w-5 text-primary" />
+                      Data Quality Details
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    {/* Summary Stats */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="text-center p-3 bg-success/10 border border-success/20 rounded-lg">
+                        <div className="text-2xl font-bold text-success">{verifiedFields}</div>
+                        <div className="text-xs text-muted-foreground">Verified</div>
+                      </div>
+                      <div className="text-center p-3 bg-error/10 border border-error/20 rounded-lg">
+                        <div className="text-2xl font-bold text-error">{totalMissing}</div>
+                        <div className="text-xs text-muted-foreground">Missing</div>
+                      </div>
+                      <div className="text-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <div className="text-2xl font-bold text-amber-500">{unverifiedFields}</div>
+                        <div className="text-xs text-muted-foreground">Unverified</div>
+                      </div>
+                    </div>
+
+                    {/* Category Breakdown */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">Category Breakdown</h4>
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                        {Object.entries(FIELD_CATEGORIES).map(([key, category]) => {
+                          const score = categoryScores[key];
+                          const catLevel = getQualityLevel(score.percentage);
+                          
+                          return (
+                            <div 
+                              key={key}
+                              className="flex items-center justify-between text-sm p-2 bg-muted/30 rounded-lg"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className={`w-2 h-2 rounded-full ${
+                                    score.percentage >= 80 ? 'bg-success' :
+                                    score.percentage >= 50 ? 'bg-amber-500' :
+                                    'bg-error'
+                                  }`} 
+                                />
+                                <span className="text-foreground">{category.label}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-medium ${catLevel.color}`}>
+                                  {score.percentage}%
+                                </span>
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${
+                                    score.percentage >= 80 ? 'border-success/50 text-success' :
+                                    score.percentage >= 50 ? 'border-amber-500/50 text-amber-500' :
+                                    'border-error/50 text-error'
+                                  }`}
+                                >
+                                  {score.filled}/{score.total}
+                                </Badge>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Missing Fields Preview */}
+                    {totalMissing > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Missing Fields Preview</h4>
+                        <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
+                          {Object.entries(categoryScores)
+                            .flatMap(([_, score]) => score.missingFields)
+                            .slice(0, 12)
+                            .map((field) => (
+                              <Badge 
+                                key={field} 
+                                variant="outline" 
+                                className="text-xs border-border text-muted-foreground"
+                              >
+                                {formatFieldName(field)}
+                              </Badge>
+                            ))}
+                          {totalMissing > 12 && (
+                            <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                              +{totalMissing - 12} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Help Link */}
+                    <div className="pt-2 border-t border-border">
+                      <a 
+                        href="/contact?subject=data-improvement" 
+                        className="flex items-center gap-2 text-sm text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Help improve this data
+                      </a>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Verification Status */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5">
-                      <Clock className={`h-3.5 w-3.5 ${isRecentlyVerified ? 'text-green-500' : 'text-muted-foreground'}`} />
-                      <span className={`text-xs ${isRecentlyVerified ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/30">
+                      <Clock className={`h-3.5 w-3.5 ${isRecentlyVerified ? 'text-success' : 'text-muted-foreground'}`} />
+                      <span className={`text-xs ${isRecentlyVerified ? 'text-success' : 'text-muted-foreground'}`}>
                         {lastVerified ? 'Verified' : 'Unverified'}
                       </span>
                     </div>
@@ -189,10 +446,6 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
           </div>
-          
-          <div className="mt-2">
-            <Progress value={percentage} className="h-1.5" />
-          </div>
         </CollapsibleTrigger>
         
         <CollapsibleContent>
@@ -201,7 +454,6 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(FIELD_CATEGORIES).map(([key, category]) => {
                 const score = categoryScores[key];
-                const catLevel = getQualityLevel(score.percentage);
                 
                 return (
                   <div 
@@ -212,9 +464,9 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
                     <Badge 
                       variant="outline" 
                       className={`text-xs ${
-                        score.percentage >= 80 ? 'border-green-500/50 text-green-500' :
-                        score.percentage >= 50 ? 'border-yellow-500/50 text-yellow-500' :
-                        'border-red-500/50 text-red-500'
+                        score.percentage >= 80 ? 'border-success/50 text-success' :
+                        score.percentage >= 50 ? 'border-amber-500/50 text-amber-500' :
+                        'border-error/50 text-error'
                       }`}
                     >
                       {score.filled}/{score.total}
@@ -228,7 +480,7 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
             <div className="pt-2 border-t border-border">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Last Verified</span>
-                <span className={isRecentlyVerified ? 'text-green-500' : 'text-muted-foreground'}>
+                <span className={isRecentlyVerified ? 'text-success' : 'text-muted-foreground'}>
                   {verificationStatus}
                 </span>
               </div>
