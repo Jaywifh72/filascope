@@ -3073,6 +3073,7 @@ export type Database = {
           ui_language_options: string | null
           updated_at: string | null
           variant_or_bundle_name: string | null
+          warranty_years: number | null
           xy_positioning_accuracy_um: number | null
           z_offset_supported: boolean | null
           z_positioning_accuracy_um: number | null
@@ -3271,6 +3272,7 @@ export type Database = {
           ui_language_options?: string | null
           updated_at?: string | null
           variant_or_bundle_name?: string | null
+          warranty_years?: number | null
           xy_positioning_accuracy_um?: number | null
           z_offset_supported?: boolean | null
           z_positioning_accuracy_um?: number | null
@@ -3469,6 +3471,7 @@ export type Database = {
           ui_language_options?: string | null
           updated_at?: string | null
           variant_or_bundle_name?: string | null
+          warranty_years?: number | null
           xy_positioning_accuracy_um?: number | null
           z_offset_supported?: boolean | null
           z_positioning_accuracy_um?: number | null
