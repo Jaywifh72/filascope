@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Heart, ExternalLink, Printer as PrinterIcon, RefreshCw, ImageIcon, Crosshair, CheckCircle2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useCurrency, CurrencyCode } from "@/hooks/useCurrency";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
@@ -35,7 +35,7 @@ export default function MediumStandardPrinterCard({
   onRescrape,
   isRescraping
 }: MediumStandardPrinterCardProps) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
   const productImage = getPrinterImage(printer);
   const badges = getPrinterBadges(printer, 2);
 
@@ -57,7 +57,8 @@ export default function MediumStandardPrinterCard({
   const { 
     currentPrice: livePrice, 
     isLoading: priceLoading, 
-    isLivePrice 
+    isLivePrice,
+    currency: livePriceCurrency
   } = usePrinterCurrentPrice(printer.official_store_url, databasePrice);
 
   // Debug logging for K2 pricing issue - after hook
@@ -73,6 +74,17 @@ export default function MediumStandardPrinterCard({
   // Use live price if available, otherwise use the hook's returned price (which includes fallback)
   // The hook already handles fallback internally, so we just need to ensure we have a value
   const price = livePrice ?? databasePrice;
+  
+  // Determine if live price is already in user's currency (no conversion needed)
+  const isLivePriceInUserCurrency = isLivePrice && livePriceCurrency === userCurrency;
+  
+  // Format price correctly based on whether conversion is needed
+  const formatDisplayPrice = (priceValue: number): string => {
+    if (isLivePriceInUserCurrency) {
+      return formatRegionalPrice(priceValue);
+    }
+    return formatPrice(priceValue);
+  };
 
   return (
     <article 
@@ -178,7 +190,7 @@ export default function MediumStandardPrinterCard({
               <span className="font-mono text-sm text-muted-foreground animate-pulse">Loading...</span>
             ) : price ? (
               <span className="font-mono text-lg font-bold text-amber-400 inline-flex items-center gap-1.5">
-                {formatPrice(price)}
+                {formatDisplayPrice(price)}
                 {isLivePrice && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
                 {printer.msrp_usd && price < printer.msrp_usd && (
                   <span className="text-xs font-medium text-emerald-400 ml-1">

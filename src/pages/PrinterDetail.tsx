@@ -727,6 +727,7 @@ const PrinterDetail = () => {
                 msrp={displayMsrp}
                 trend={isLivePrice ? { direction: 'down' as const, percentage: liveCompareAtPrice && livePrice ? Math.round((1 - livePrice / liveCompareAtPrice) * 100) : undefined, period: 'sale' } : undefined}
                 isDiscontinued={printer.discontinued}
+                priceCurrency={isLivePrice ? livePriceCurrency : 'USD'}
               />
 
               {/* CTA Buttons */}
