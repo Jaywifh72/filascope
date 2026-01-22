@@ -25,7 +25,6 @@ import { FirmwareSection } from "@/components/FirmwareSection";
 import { SoftwareSection } from "@/components/SoftwareSection";
 import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualization";
 import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
-import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
 import { DataQualityIndicator } from "@/components/printer/DataQualityIndicator";
 import AdvantageCardsSection from "@/components/printer/AdvantageCardsSection";
 import { PriceSection } from "@/components/printer/PriceSection";
@@ -34,6 +33,7 @@ import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSect
 import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/SocialProofSidebar";
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
+import { PrinterHeroSection } from "@/components/printer/PrinterHeroSection";
 import { usePrinterInventory } from "@/hooks/usePrinterInventory";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { 
@@ -600,147 +600,44 @@ const PrinterDetail = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-8 lg:gap-12 items-start">
-            {/* Left Column: Product Images */}
-            <div className="w-full">
-              {(() => {
-                const displayImages = productImages.filter(img => validImages.has(img));
-                const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
-                
-                if (isLoadingImages) {
-                  return (
-                    <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
-                      <span className="text-sm text-muted-foreground animate-pulse">
-                        Loading images...
-                      </span>
-                    </div>
-                  );
-                }
-                
-                if (displayImages.length === 0) {
-                  return (
-                    <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
-                      <Box className="h-20 w-20 text-muted-foreground/30" />
-                    </div>
-                  );
-                }
-                
-                return (
-                  <div className="space-y-3">
-                    {/* Main Image */}
-                    <div 
-                      className="relative aspect-square bg-muted/20 rounded-xl border border-border/50 cursor-pointer group overflow-hidden"
-                      onClick={() => openLightbox(0)}
-                      role="button"
-                      aria-label={`View ${printer.model_name} product image in fullscreen`}
-                    >
-                      <div className="absolute inset-4 flex items-center justify-center">
-                        <img 
-                          src={displayImages[0]} 
-                          alt={`${printer.model_name} product image`}
-                          className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
-                        />
-                      </div>
-                    </div>
-                    
-                    {displayImages.length > 1 && (
-                      <div className="grid grid-cols-4 gap-2">
-                        {displayImages.slice(0, 4).map((img: string, idx: number) => (
-                          <div 
-                            key={idx} 
-                            className={`relative aspect-square bg-muted/20 rounded-lg border p-1.5 flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                              idx === 0 
-                                ? 'border-primary bg-primary/5' 
-                                : 'border-border/50 hover:border-primary/50'
-                            }`}
-                            onClick={() => openLightbox(idx)}
-                            role="button"
-                            aria-label={`View ${printer.model_name} image ${idx + 1}`}
-                          >
-                            <img 
-                              src={img} 
-                              alt={`${printer.model_name} view ${idx + 1}`}
-                              className="max-w-full max-h-full object-contain"
-                              loading="lazy"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
+          {/* Hero Section with new layout */}
+          {(() => {
+            const heroDisplayImages = productImages.filter(img => validImages.has(img));
+            const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
+            
+            if (isLoadingImages) {
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-8 lg:gap-12 items-start">
+                  <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
+                    <span className="text-sm text-muted-foreground animate-pulse">
+                      Loading images...
+                    </span>
                   </div>
-                );
-              })()}
-            </div>
-
-            {/* Right Column: Product Info */}
-            <div className="space-y-5">
-              {/* Brand */}
-              <div className="text-sm font-medium text-primary uppercase tracking-wide">
-                {brand}
-              </div>
-
-              {/* Model Name */}
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-                {printer.model_name}
-              </h1>
-
-              {/* Description */}
-              <p className="text-muted-foreground leading-relaxed">
-                {generatePrinterDescription({
-                  ...printer,
-                  brand: brand || undefined
-                })}
-              </p>
-
-              {/* Social Proof Badges */}
-              <SocialProofBadges
-                isStaffPick={false}
-                rating={printer.rating_community_overall}
-                reviewCount={printer.review_count_aggregated}
-              />
-
-              {/* Specifications */}
-              <div className="pt-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Specifications</h3>
-                <KeySpecsBar specs={generateKeySpecs(printer)} />
-              </div>
-
-              {/* System Capabilities */}
-              <div className="pt-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">System Capabilities</h3>
-                <AdvantageCardsSection printer={printer} />
-              </div>
-
-              {/* Admin: Data Quality Indicator */}
-              {isAdmin && (
-                <DataQualityIndicator printer={printer} className="mt-4" />
-              )}
-
-              {/* Price Section */}
-              <PriceSection
-                price={displayPrice}
-                msrp={displayMsrp}
-                trend={isLivePrice ? { direction: 'down' as const, percentage: liveCompareAtPrice && livePrice ? Math.round((1 - livePrice / liveCompareAtPrice) * 100) : undefined, period: 'sale' } : undefined}
-                isDiscontinued={printer.discontinued}
-                priceCurrency={isLivePrice ? livePriceCurrency : 'USD'}
-              />
-
-              {/* CTA Buttons */}
-              <CTAButtons
-                printer={{
-                  id: printer.id,
-                  name: printer.model_name,
-                  imageUrl: displayImages[0] || null,
-                  brand: brand,
-                }}
-                officialStoreUrl={printer.official_store_url}
-                storePrice={displayPrice}
-                getAffiliateUrl={getAffiliateUrl}
+                  <div className="space-y-4">
+                    <div className="h-6 bg-muted/30 rounded w-1/4 animate-pulse" />
+                    <div className="h-10 bg-muted/30 rounded w-3/4 animate-pulse" />
+                    <div className="h-20 bg-muted/30 rounded animate-pulse" />
+                  </div>
+                </div>
+              );
+            }
+            
+            return (
+              <PrinterHeroSection
+                printer={printer}
                 brand={brand}
-                isDiscontinued={printer.discontinued}
+                displayImages={heroDisplayImages}
+                displayPrice={displayPrice}
+                displayMsrp={displayMsrp}
+                isLivePrice={isLivePrice}
+                livePriceCurrency={livePriceCurrency}
+                liveCompareAtPrice={liveCompareAtPrice}
+                getAffiliateUrl={getAffiliateUrl}
+                isAdmin={isAdmin}
+                onOpenLightbox={openLightbox}
               />
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* Sidebar Data for Social Proof */}
