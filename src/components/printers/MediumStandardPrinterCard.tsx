@@ -1,14 +1,11 @@
 import { Link } from "react-router-dom";
-import { Heart, ExternalLink, Printer as PrinterIcon, RefreshCw, ImageIcon, Crosshair, CheckCircle2 } from "lucide-react";
+import { Printer as PrinterIcon, CheckCircle2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
-import { useCurrency, CurrencyCode } from "@/hooks/useCurrency";
+import { useCurrency } from "@/hooks/useCurrency";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
-import ComparisonCheckbox from "./ComparisonCheckbox";
-import PrinterSpecGrid from "./PrinterSpecGrid";
-
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
   series: { series_name: string } | null;
@@ -86,6 +83,38 @@ export default function MediumStandardPrinterCard({
     return formatPrice(priceValue);
   };
 
+  // Format simplified specs: "256×256×256mm • 500mm/s • 300°C"
+  const formatSimplifiedSpecs = () => {
+    const parts: string[] = [];
+    
+    // Build Volume
+    if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
+      const { build_volume_x_mm: x, build_volume_y_mm: y, build_volume_z_mm: z } = printer;
+      if (x === y && y === z) {
+        parts.push(`${x}³mm`);
+      } else {
+        parts.push(`${x}×${y}×${z}mm`);
+      }
+    }
+    
+    // Speed
+    if (printer.max_print_speed_mms) {
+      parts.push(`${printer.max_print_speed_mms}mm/s`);
+    }
+    
+    // Hotend Temp
+    if (printer.max_nozzle_temp_c) {
+      parts.push(`${printer.max_nozzle_temp_c}°C`);
+    }
+    
+    return parts.join(' • ');
+  };
+
+  // Calculate discount percentage
+  const discountPercent = printer.msrp_usd && price && price < printer.msrp_usd
+    ? Math.round((1 - price / printer.msrp_usd) * 100)
+    : null;
+
   return (
     <article 
       className="group relative"
@@ -96,10 +125,10 @@ export default function MediumStandardPrinterCard({
         <div 
           className="
             relative
-            bg-[hsl(220_15%_6%)] 
+            bg-card/80 
             border border-white/10 
             rounded-xl 
-            p-5 
+            p-6 
             transition-all duration-300 ease-out
             hover:border-primary/50
             hover:-translate-y-1 
@@ -107,11 +136,12 @@ export default function MediumStandardPrinterCard({
             cursor-pointer
             h-full
             flex flex-col
+            gap-3
           "
         >
-          {/* Brand Logo - Top of Card */}
+          {/* Brand Logo - Top of Card (PROMINENT) */}
           {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="flex justify-center -mt-1 mb-1">
+            <div className="flex justify-center">
               <img 
                 src={getBrandLogo(printer.brand?.brand || null)!} 
                 alt={`${printer.brand?.brand} logo`}
@@ -120,9 +150,9 @@ export default function MediumStandardPrinterCard({
             </div>
           )}
 
-          {/* Semantic Badges - Below Brand Logo */}
+          {/* Feature Badges - Directly under logo */}
           {badges.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 justify-center mb-2">
+            <div className="flex flex-wrap gap-1.5 justify-center">
               {badges.map((badge, idx) => (
                 <PrinterBadge 
                   key={`${badge.type}-${idx}`}
@@ -134,82 +164,73 @@ export default function MediumStandardPrinterCard({
             </div>
           )}
 
-          {/* Printer Image */}
-          <div className={`relative aspect-square mb-4 ${!getBrandLogo(printer.brand?.brand || null) ? 'mt-6' : ''}`}>
+          {/* Printer Image - Slightly larger */}
+          <div className={`relative h-[200px] flex items-center justify-center ${!getBrandLogo(printer.brand?.brand || null) ? 'mt-4' : ''}`}>
             {productImage ? (
               <img 
                 src={productImage} 
                 alt={`${printer.brand?.brand} ${printer.model_name}`}
-                className="w-full h-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                className="max-h-full max-w-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                 }}
               />
             ) : null}
-            <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-              <PrinterIcon className="h-16 w-16 text-white/15" />
+            <div className={`flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
+              <PrinterIcon className="h-20 w-20 text-white/15" />
             </div>
           </div>
 
-          {/* Brand Name - Cyan, monospace */}
-          <p className="font-mono text-[10px] font-bold text-primary uppercase tracking-[0.15em] leading-tight mb-1">
-            {printer.brand?.brand}
-          </p>
-
-          {/* Printer Name */}
-          <h3 className="text-xl font-bold text-foreground mb-1 leading-snug line-clamp-2">
-            {printer.model_name}
-          </h3>
-          {printer.variant_or_bundle_name && (
-            <p className="text-sm text-muted-foreground mb-2 font-mono text-[11px]">{printer.variant_or_bundle_name}</p>
-          )}
-
-          {/* Tech Spec Grid - 2x2 */}
-          <PrinterSpecGrid
-            buildVolume={{
-              x: printer.build_volume_x_mm,
-              y: printer.build_volume_y_mm,
-              z: printer.build_volume_z_mm,
-            }}
-            maxSpeed={printer.max_print_speed_mms}
-            hotendTemp={printer.max_nozzle_temp_c}
-            motionSystem={printer.motion_system_notes || printer.machine_style}
-            className="mb-4"
-            variant="compact"
-          />
-
-          {/* Price Section - Terminal style */}
-          <div className="mb-3 mt-auto">
-            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-              Unit Cost:{" "}
-            </span>
-            {printer.discontinued ? (
-              <span className="font-mono text-sm text-destructive/70">DISCONTINUED</span>
-            ) : priceLoading ? (
-              <span className="font-mono text-sm text-muted-foreground animate-pulse">Loading...</span>
-            ) : price ? (
-              <span className="font-mono text-lg font-bold text-amber-400 inline-flex items-center gap-1.5">
-                {formatDisplayPrice(price)}
-                {isLivePrice && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
-                {printer.msrp_usd && price < printer.msrp_usd && (
-                  <span className="text-xs font-medium text-emerald-400 ml-1">
-                    -{Math.round((1 - price / printer.msrp_usd) * 100)}%
-                  </span>
-                )}
-              </span>
-            ) : (
-              <span className="font-mono text-sm text-muted-foreground">TBD</span>
+          {/* Printer Name - Larger, bolder */}
+          <div className="mt-auto">
+            <h3 className="text-lg font-semibold text-foreground leading-snug line-clamp-2">
+              {printer.model_name}
+            </h3>
+            {printer.variant_or_bundle_name && (
+              <p className="text-sm text-muted-foreground mt-0.5">{printer.variant_or_bundle_name}</p>
             )}
           </div>
 
-          {/* Deploy Button - Wireframe style */}
+          {/* Price Section - Clean, no label */}
+          <div className="flex items-baseline gap-2 flex-wrap">
+            {printer.discontinued ? (
+              <span className="text-sm font-medium text-destructive/70">DISCONTINUED</span>
+            ) : priceLoading ? (
+              <span className="text-sm text-muted-foreground animate-pulse">Loading...</span>
+            ) : price ? (
+              <>
+                <span className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">
+                  {formatDisplayPrice(price)}
+                  {isLivePrice && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                </span>
+                {printer.msrp_usd && price < printer.msrp_usd && (
+                  <>
+                    <span className="text-sm text-muted-foreground line-through">
+                      {formatDisplayPrice(printer.msrp_usd)}
+                    </span>
+                    <span className="text-xs font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
+                      -{discountPercent}%
+                    </span>
+                  </>
+                )}
+              </>
+            ) : (
+              <span className="text-sm text-muted-foreground">Price TBD</span>
+            )}
+          </div>
+
+          {/* Simplified Specs Row */}
+          <p className="text-sm text-muted-foreground">
+            {formatSimplifiedSpecs() || "Specs unavailable"}
+          </p>
+
+          {/* CTA Button - Full width */}
           <button
-            className="w-full h-10 rounded-lg border-2 border-primary/40 bg-transparent text-primary font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-all duration-200 hover:bg-primary hover:text-background hover:border-primary hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] flex items-center justify-center gap-2 mt-1"
             onClick={(e) => e.preventDefault()}
           >
-            <Crosshair className="h-3.5 w-3.5" />
-            Deploy Unit
+            View Details
           </button>
 
         </div>
