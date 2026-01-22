@@ -55,29 +55,42 @@ function PolishedAccordionItem({
     >
       <AccordionTrigger 
         className={cn(
-          "group p-4 rounded-lg border border-gray-700 bg-gray-800/30 hover:bg-gray-800/50",
-          "transition-all duration-200 hover:no-underline",
+          "group p-4 rounded-lg border border-gray-700 bg-gray-800/30",
+          "hover:bg-gray-800/50 hover:border-gray-600",
+          "transition-all duration-200 cursor-pointer hover:no-underline",
           "data-[state=open]:rounded-b-none data-[state=open]:border-b-0",
+          "data-[state=open]:border-primary/30",
           "[&>svg]:hidden" // Hide default chevron
         )}
       >
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-lg", iconColor)}>
-              {icon}
+            <div className={cn(
+              "p-2 rounded-lg transition-colors duration-200",
+              iconColor,
+              "group-hover:bg-primary/20"
+            )}>
+              <div className="transition-colors duration-200 group-hover:text-primary">
+                {icon}
+              </div>
             </div>
             <div className="text-left">
               <h3 className="text-base font-semibold text-white">{title}</h3>
               <p className="text-sm text-gray-400">{subtitle}</p>
             </div>
           </div>
-          <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          <ChevronDown className={cn(
+            "w-5 h-5 text-gray-400 transition-all duration-200",
+            "group-hover:text-gray-300",
+            "group-data-[state=open]:rotate-180 group-data-[state=open]:text-primary"
+          )} />
         </div>
       </AccordionTrigger>
       <AccordionContent 
         className={cn(
           "p-4 bg-gray-900/30 border-x border-b border-gray-700 rounded-b-lg",
-          "data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up"
+          "data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up",
+          "data-[state=open]:border-primary/30"
         )}
       >
         {children}
