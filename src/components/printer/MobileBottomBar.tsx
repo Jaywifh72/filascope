@@ -63,12 +63,15 @@ export function MobileBottomBar({
         <div className="flex-1 min-w-0">
           {formattedPrice ? (
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-xl font-bold text-primary">{formattedPrice}</span>
+              {/* Price - WHITE for consistency */}
+              <span className="text-xl font-bold text-white">{formattedPrice}</span>
               {formattedMsrp && (
                 <>
+                  {/* Original Price - gray strikethrough */}
                   <span className="text-sm text-gray-500 line-through">{formattedMsrp}</span>
+                  {/* Discount Badge - GREEN filled */}
                   {discountPercent && (
-                    <span className="text-xs font-medium text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">
+                    <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
                       -{discountPercent}%
                     </span>
                   )}

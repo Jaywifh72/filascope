@@ -70,31 +70,37 @@ export function PriceSection({
 
   return (
     <div className={compact ? "space-y-1" : "space-y-2"}>
-      <div className={`font-medium text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
+      <div className={`font-medium text-gray-400 ${compact ? 'text-xs' : 'text-sm'}`}>
         Current Price
       </div>
       
       <div className="flex items-baseline gap-2 flex-wrap">
-        <span className={`font-bold text-foreground inline-flex items-center gap-2 ${compact ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
+        {/* Price - WHITE for consistency */}
+        <span className={`font-bold text-white ${compact ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
           {formatDisplayPrice(displayPrice!)}
-          {hasDiscount && (
-            <span className={`font-semibold text-emerald-500 ${compact ? 'text-sm' : 'text-base'}`}>
-              -{discountPercent}%
-            </span>
-          )}
         </span>
         
+        {/* Discount Badge - GREEN filled badge */}
+        {hasDiscount && (
+          <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
+            -{discountPercent}%
+          </span>
+        )}
+        
         {!price && msrp && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-gray-400">
             MSRP
           </span>
         )}
       </div>
 
+      {/* Original Price - gray strikethrough */}
       {msrp && price && price !== msrp && (
-        <div className={`text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
-          <span className="line-through">{formatDisplayPrice(msrp)}</span>
-          <span className="ml-2">MSRP</span>
+        <div className="flex items-center gap-2">
+          <span className={`text-gray-500 line-through ${compact ? 'text-xs' : 'text-sm'}`}>
+            {formatDisplayPrice(msrp)}
+          </span>
+          <span className={`text-gray-500 ${compact ? 'text-xs' : 'text-sm'}`}>MSRP</span>
         </div>
       )}
     </div>
