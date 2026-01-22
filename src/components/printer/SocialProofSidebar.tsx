@@ -3,11 +3,7 @@ import {
   Star, 
   ArrowRight, 
   Check, 
-  Package, 
-  Clock, 
-  X, 
   Award, 
-  Lightbulb, 
   MessageCircle,
   ChevronDown
 } from "lucide-react";
@@ -28,9 +24,8 @@ interface SidebarData {
   recentReviews: Review[];
   staffPick: boolean;
   staffPickReasons: string[];
-  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
-  shippingTime: string;
-  trustSignals: string[];
+  warrantyYears: number | null;
+  brandName: string | null;
   activity: {
     views: number;
     comparisons: number;
@@ -214,67 +209,33 @@ function StaffPickCard({ recommendations }: { recommendations: string[] }) {
 }
 
 // Stock & Shipping Info Card
-function StockShippingCard({ 
-  stockStatus, 
-  shippingTime, 
-  trustSignals 
+// Warranty & Support Card
+function WarrantySupportCard({ 
+  warrantyYears,
+  brandName
 }: { 
-  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock' | 'discontinued';
-  shippingTime: string;
-  trustSignals: string[];
+  warrantyYears: number | null;
+  brandName: string | null;
 }) {
-  const stockConfig = {
-    'in-stock': {
-      text: 'INVENTORY: AVAILABLE',
-      className: 'border-green-500/30 text-green-500 bg-green-500/10'
-    },
-    'low-stock': {
-      text: 'INVENTORY: LIMITED',
-      className: 'border-orange-500/30 text-orange-500 bg-orange-500/10'
-    },
-    'out-of-stock': {
-      text: 'INVENTORY: DEPLETED',
-      className: 'border-red-500/30 text-red-500 bg-red-500/10'
-    },
-    'discontinued': {
-      text: 'INVENTORY: DISCONTINUED',
-      className: 'border-destructive/30 text-destructive bg-destructive/10'
-    }
-  };
-
-  const badge = stockConfig[stockStatus];
-
-  const stockLabels = {
-    'in-stock': 'In Stock',
-    'low-stock': 'Low Stock',
-    'out-of-stock': 'Out of Stock',
-    'discontinued': 'Discontinued'
-  };
-
   return (
     <div className="bg-card border border-border rounded-lg p-5 flex flex-col gap-4">
-      <h3 className="text-sm font-semibold text-foreground">Inventory</h3>
+      <h3 className="text-sm font-semibold text-foreground">Warranty & Support</h3>
       
-      <div className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border self-start",
-        badge.className
-      )}>
-        <span>{stockLabels[stockStatus]}</span>
-      </div>
-
-      {stockStatus !== 'out-of-stock' && stockStatus !== 'discontinued' && (
-        <div className="text-sm text-muted-foreground">
-          {shippingTime}
-        </div>
-      )}
-
       <ul className="flex flex-col gap-2">
-        {trustSignals.map((signal, index) => (
-          <li key={index} className="text-sm text-foreground/90 flex items-center gap-2">
+        {warrantyYears && (
+          <li className="text-sm text-foreground/90 flex items-center gap-2">
             <Check size={14} className="text-green-500 flex-shrink-0" />
-            <span>{signal}</span>
+            <span>{warrantyYears}-year manufacturer warranty</span>
           </li>
-        ))}
+        )}
+        <li className="text-sm text-foreground/90 flex items-center gap-2">
+          <Check size={14} className="text-green-500 flex-shrink-0" />
+          <span>Official {brandName || 'manufacturer'} support</span>
+        </li>
+        <li className="text-sm text-foreground/90 flex items-center gap-2">
+          <Check size={14} className="text-green-500 flex-shrink-0" />
+          <span>Replacement parts available</span>
+        </li>
       </ul>
     </div>
   );
@@ -389,11 +350,10 @@ export function SocialProofSidebar({
           <StaffPickCard recommendations={data.staffPickReasons} />
         )}
 
-        {/* Card 4: Stock & Shipping */}
-        <StockShippingCard
-          stockStatus={data.stockStatus}
-          shippingTime={data.shippingTime}
-          trustSignals={data.trustSignals}
+        {/* Card 4: Warranty & Support */}
+        <WarrantySupportCard
+          warrantyYears={data.warrantyYears}
+          brandName={data.brandName}
         />
 
 
@@ -454,10 +414,9 @@ export function MobileSocialProof({
             <StaffPickCard recommendations={data.staffPickReasons} />
           )}
 
-          <StockShippingCard
-            stockStatus={data.stockStatus}
-            shippingTime={data.shippingTime}
-            trustSignals={data.trustSignals}
+          <WarrantySupportCard
+            warrantyYears={data.warrantyYears}
+            brandName={data.brandName}
           />
 
           

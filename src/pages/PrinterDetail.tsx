@@ -34,13 +34,11 @@ import { SimilarPrintersSection } from "@/components/printer/SimilarPrintersSect
 import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/SocialProofSidebar";
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
-import { usePrinterInventory, getAggregatedStockStatus } from "@/hooks/usePrinterInventory";
+import { usePrinterInventory } from "@/hooks/usePrinterInventory";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { 
   useTrackPrinterView, 
-  usePrinterActivityStats, 
-  useBrandTrustSignals, 
-  generateTrustSignals 
+  usePrinterActivityStats
 } from "@/hooks/usePrinterAnalytics";
 import { useNavigate } from "react-router-dom";
 import {
@@ -134,9 +132,6 @@ const PrinterDetail = () => {
   useTrackPrinterView(printer?.id);
   const { data: activityStats } = usePrinterActivityStats(printer?.id);
 
-  // Get brand ID for trust signals
-  const brandId = printer?.brand_id;
-  const { data: brandTrustData } = useBrandTrustSignals(brandId);
 
   // Fetch live price from store
   const { 
@@ -806,8 +801,6 @@ const PrinterDetail = () => {
             }
           ] : [];
 
-          // Generate trust signals from brand data
-          const trustSignals = generateTrustSignals(brandTrustData);
 
           const sidebarData = {
             rating: printer.rating_community_overall,
@@ -815,9 +808,8 @@ const PrinterDetail = () => {
             recentReviews,
             staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
             staffPickReasons,
-            stockStatus: getAggregatedStockStatus(inventoryData || [], printer.discontinued),
-            shippingTime: 'Ships within 2-3 business days',
-            trustSignals,
+            warrantyYears: (printer as any).warranty_years || null,
+            brandName: printer.brand?.brand || null,
             activity: activityData
           };
 
