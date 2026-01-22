@@ -226,20 +226,20 @@ export default function MediumStandardPrinterCard({
                 <span className="text-xs sm:text-sm text-muted-foreground animate-pulse">Loading...</span>
               ) : price ? (
                 <>
-                  {/* Current Price - Prominent */}
+                  {/* Current Price - WHITE for consistency */}
                   <span className="text-base sm:text-xl font-bold text-white inline-flex items-center gap-1">
                     <Tag className="h-3 w-3 sm:h-4 sm:w-4 text-primary opacity-70" />
                     {formatDisplayPrice(price)}
                     {isLivePrice && <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" />}
                   </span>
                   
-                  {/* Original Price & Discount Badge */}
+                  {/* Original Price & Discount Badge - GREEN filled */}
                   {printer.msrp_usd && price < printer.msrp_usd && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-xs text-gray-500 line-through hidden sm:inline">
                         {formatDisplayPrice(printer.msrp_usd)}
                       </span>
-                      <span className="text-[10px] sm:text-xs font-semibold bg-emerald-500/90 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] sm:text-xs font-semibold bg-green-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
                         -{discountPercent}%
                       </span>
                     </div>

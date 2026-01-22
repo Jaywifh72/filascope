@@ -25,8 +25,10 @@ function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
         <Icon className="h-5 w-5 text-primary" />
       </div>
       <div className="flex flex-col gap-1">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-sm font-medium text-foreground break-words">{value}</span>
+        {/* Labels: text-xs text-gray-400 */}
+        <span className="text-xs text-gray-400">{label}</span>
+        {/* Values: text-base font-semibold text-white */}
+        <span className="text-base font-semibold text-white break-words">{value}</span>
       </div>
     </div>
   );
@@ -118,8 +120,8 @@ export function PrinterHeroSection({
 
         {/* Right Column: Product Info */}
         <div className="space-y-6">
-          {/* Brand */}
-          <div className="text-sm text-gray-400 uppercase tracking-wide">
+          {/* Brand - Not uppercase, consistent with listing cards */}
+          <div className="text-sm text-gray-400 font-medium">
             {brand}
           </div>
 
