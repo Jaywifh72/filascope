@@ -146,12 +146,12 @@ export function AccessoriesEmptyState({
   return (
     <EmptyState
       icon={Package}
-      title="No accessories data yet"
-      message="We're still gathering compatible accessories for this printer. Help us improve this listing."
+      title="Compatible Accessories"
+      message="Compatible filaments and accessories will be listed here as we gather data for this printer."
       action={{
-        label: 'Suggest an edit',
+        label: 'Suggest compatible materials',
         icon: Pencil,
-        href: `mailto:feedback@filascope.com?subject=Accessory%20suggestion%20for%20${encodeURIComponent(printerSlug || 'printer')}`,
+        href: `mailto:feedback@filascope.com?subject=Material%20suggestion%20for%20${encodeURIComponent(printerSlug || 'printer')}&body=I%20would%20like%20to%20suggest%20compatible%20materials%20or%20accessories%20for%20this%20printer.`,
         variant: 'outline',
       }}
       size="md"

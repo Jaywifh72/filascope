@@ -74,14 +74,67 @@ function parseMaterials(materialsStr: string | null | undefined): Map<string, st
   return result;
 }
 
+// Infer materials based on temperature capability
+function inferMaterialsFromTemp(maxNozzleTemp: number | null, maxBedTemp: number | null): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  if (!maxNozzleTemp) return result;
+
+  // Standard materials (typically 180-230°C nozzle)
+  if (maxNozzleTemp >= 200) {
+    result.set('Standard', ['PLA', 'PLA+']);
+  }
+
+  // PETG and similar (230-260°C)
+  if (maxNozzleTemp >= 240) {
+    const existing = result.get('Standard') || [];
+    result.set('Standard', [...existing, 'PETG']);
+  }
+
+  // Engineering materials (250-300°C)
+  if (maxNozzleTemp >= 250) {
+    const engineering: string[] = [];
+    if (maxNozzleTemp >= 250) engineering.push('ABS', 'ASA');
+    if (maxNozzleTemp >= 260) engineering.push('Nylon', 'PA');
+    if (maxNozzleTemp >= 280) engineering.push('PC');
+    if (engineering.length > 0) {
+      result.set('Engineering', engineering);
+    }
+  }
+
+  // Flexible materials (typically 220-250°C)
+  if (maxNozzleTemp >= 220) {
+    result.set('Flexible', ['TPU']);
+  }
+
+  return result;
+}
+
+// Get material temperature hints
+function getMaterialTempHints(maxNozzleTemp: number | null): { material: string; temp: number; color: string }[] {
+  if (!maxNozzleTemp) return [];
+  
+  const hints = [
+    { material: 'PLA', temp: 200, color: 'text-green-400' },
+    { material: 'PETG', temp: 240, color: 'text-green-400' },
+    { material: 'TPU', temp: 230, color: 'text-purple-400' },
+    { material: 'ABS', temp: 250, color: 'text-blue-400' },
+    { material: 'ASA', temp: 250, color: 'text-blue-400' },
+    { material: 'Nylon', temp: 260, color: 'text-blue-400' },
+    { material: 'PC', temp: 280, color: 'text-orange-400' },
+    { material: 'PEEK', temp: 380, color: 'text-red-400' },
+  ];
+
+  return hints.filter(h => h.temp <= maxNozzleTemp);
+}
+
 // Get color for material category
 function getCategoryColor(category: string): string {
   switch (category) {
     case 'Standard': return 'bg-green-500/20 text-green-400 border-green-500/30';
-    case 'Engineering': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+    case 'Engineering': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
     case 'Flexible': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
     case 'Specialty': return 'bg-red-500/20 text-red-400 border-red-500/30';
-    case 'Support': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    case 'Support': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
     default: return 'bg-muted text-muted-foreground border-border/50';
   }
 }
@@ -161,6 +214,22 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
     [printer.official_supported_materials]
   );
 
+  // Infer materials from temperature if no official data
+  const inferredMaterials = useMemo(
+    () => inferMaterialsFromTemp(printer.max_nozzle_temp_c, printer.bed_max_temp_c),
+    [printer.max_nozzle_temp_c, printer.bed_max_temp_c]
+  );
+
+  // Use official materials if available, otherwise use inferred
+  const displayMaterials = categorizedMaterials.size > 0 ? categorizedMaterials : inferredMaterials;
+  const isInferred = categorizedMaterials.size === 0 && inferredMaterials.size > 0;
+
+  // Get temperature-based material hints
+  const materialTempHints = useMemo(
+    () => getMaterialTempHints(printer.max_nozzle_temp_c),
+    [printer.max_nozzle_temp_c]
+  );
+
   // Parse recommended materials
   const recommendedMaterials = useMemo(() => {
     if (!printer.recommended_materials) return [];
@@ -191,40 +260,21 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
 
   return (
     <div className="tab-content">
-      {/* Temperature Capability Visual */}
-      <section className="section-card">
-        <SectionHeader icon={Thermometer} title="Temperature Capability" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <TemperatureBar
-            label="Max Nozzle Temperature" 
-            maxTemp={printer.max_nozzle_temp_c} 
-            icon={Thermometer}
-            colorClass="bg-gradient-to-r from-orange-500 to-red-500"
-          />
-          <TemperatureBar 
-            label="Max Bed Temperature" 
-            maxTemp={printer.bed_max_temp_c} 
-            icon={Layers}
-            colorClass="bg-gradient-to-r from-blue-500 to-cyan-500"
-          />
-        </div>
-        {printer.max_recommended_material_temp_c && (
-          <div className="mt-4 pt-4 border-t border-border/30 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">
-              Max recommended material temperature: <strong className="text-foreground">{printer.max_recommended_material_temp_c}°C</strong>
-            </span>
-          </div>
-        )}
-      </section>
-
-      {/* Supported Materials */}
+      {/* Supported Materials - Now at top with fallback logic */}
       <section className="section-card">
         <SectionHeader icon={Palette} title="Supported Materials" />
         
-        {categorizedMaterials.size > 0 ? (
+        {displayMaterials.size > 0 ? (
           <div className="space-y-4">
-            {Array.from(categorizedMaterials.entries()).map(([category, materials]) => (
+            {isInferred && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg text-sm text-muted-foreground mb-4">
+                <AlertCircle className="w-4 h-4 text-primary shrink-0" />
+                <span>
+                  Based on max nozzle temperature of <strong className="text-foreground">{printer.max_nozzle_temp_c}°C</strong>
+                </span>
+              </div>
+            )}
+            {Array.from(displayMaterials.entries()).map(([category, materials]) => (
               <div key={category}>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-lg font-medium text-foreground">{category}</span>
@@ -248,7 +298,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground border border-dashed border-border/50 rounded-lg">
-            No supported materials data available
+            No temperature data available to infer compatible materials
           </div>
         )}
 
@@ -257,6 +307,56 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
             <CheckCircle2 className="w-4 h-4 text-primary" />
             <span className="text-sm text-muted-foreground">
               <strong className="text-foreground">Abrasive materials supported</strong> — Carbon fiber, glass fiber, and metal-filled filaments
+            </span>
+          </div>
+        )}
+      </section>
+
+      {/* Temperature Capability Visual with Material Hints */}
+      <section className="section-card">
+        <SectionHeader icon={Thermometer} title="Temperature Capability" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <TemperatureBar
+            label="Max Nozzle Temperature" 
+            maxTemp={printer.max_nozzle_temp_c} 
+            icon={Thermometer}
+            colorClass="bg-gradient-to-r from-orange-500 to-red-500"
+          />
+          <TemperatureBar 
+            label="Max Bed Temperature" 
+            maxTemp={printer.bed_max_temp_c} 
+            icon={Layers}
+            colorClass="bg-gradient-to-r from-blue-500 to-cyan-500"
+          />
+        </div>
+        
+        {/* Material compatibility hints */}
+        {materialTempHints.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border/30">
+            <p className="text-sm text-muted-foreground mb-3">Materials printable at this temperature:</p>
+            <div className="flex flex-wrap gap-2">
+              {materialTempHints.map((hint) => (
+                <span 
+                  key={hint.material}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border border-border/40 bg-muted/30",
+                    hint.color
+                  )}
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  {hint.material}
+                  <span className="text-muted-foreground/60">({hint.temp}°C)</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {printer.max_recommended_material_temp_c && (
+          <div className="mt-4 pt-4 border-t border-border/30 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-primary" />
+            <span className="text-sm text-muted-foreground">
+              Max recommended material temperature: <strong className="text-foreground">{printer.max_recommended_material_temp_c}°C</strong>
             </span>
           </div>
         )}
