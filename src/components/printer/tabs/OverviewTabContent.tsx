@@ -9,12 +9,14 @@ import {
   CheckCircle2,
   Package,
   AlertCircle,
-  Ruler
+  Ruler,
+  Zap
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { BuildVolumeCard } from '@/components/printer/BuildVolumeCard';
+import { SpeedGauge } from '@/components/printer/SpeedGauge';
 
 interface OverviewTabContentProps {
   printer: any;
@@ -186,16 +188,16 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         />
       </section>
 
+      {/* Print Speed Visualization */}
+      <section>
+        <SectionHeader icon={Zap} title="Print Speed" />
+        <SpeedGauge speed={maxSpeed} />
+      </section>
+
       {/* Key Specifications - Responsive grid: 1 col mobile, 2 col sm, 3 col lg */}
       <section>
         <SectionHeader icon={Box} title="Key Specifications" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <StatCard
-            icon={Gauge}
-            label="Print Speed"
-            value={speedValue}
-            subValue={speedLabel}
-          />
           <StatCard
             icon={Thermometer}
             label="Temperature Range"
