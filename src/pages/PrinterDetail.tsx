@@ -809,6 +809,7 @@ const PrinterDetail = () => {
             staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
             staffPickReasons,
             warrantyYears: (printer as any).warranty_years || null,
+            warrantyCoverage: (printer as any).warranty_coverage || null,
             brandName: printer.brand?.brand || null,
             activity: activityData
           };
