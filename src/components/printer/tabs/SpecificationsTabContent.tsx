@@ -100,7 +100,7 @@ const SpecSection: React.FC<{
 const SubSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="subsection-divider">
     <div className="flex items-center gap-3 mb-4">
-      <span className="subsection-title">{title}</span>
+      <span className="text-lg font-medium text-foreground">{title}</span>
       <div className="flex-1 h-px bg-border/30" />
     </div>
     {children}
@@ -125,7 +125,7 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
       {/* Left Sidebar Navigation */}
       <nav className="hidden lg:block w-56 flex-shrink-0">
         <div className="sticky top-24 space-y-1">
-          <div className="subsection-title mb-4 px-3">
+          <div className="text-sm text-gray-400 mb-4 px-3">
             Categories
           </div>
           {CATEGORIES.map((cat) => {

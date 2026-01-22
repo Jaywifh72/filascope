@@ -60,10 +60,10 @@ function ConnectionCard({
         )} />
       </div>
       <span className={cn(
-        "data-label text-center font-medium",
-        isAvailable && "text-foreground",
-        isUnavailable && "text-muted-foreground/60",
-        isUnknown && "text-muted-foreground/50"
+        "text-sm text-center font-medium",
+        isAvailable && "text-white",
+        isUnavailable && "text-gray-500",
+        isUnknown && "text-gray-500"
       )}>
         {label}
       </span>
@@ -156,10 +156,10 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
               )} />
             </div>
             <div>
-              <span className="data-label block">Bluetooth</span>
+              <span className="text-sm text-gray-400 block mb-1">Bluetooth</span>
               <p className={cn(
-                "data-value",
-                printer.has_bluetooth ? "text-foreground" : "text-muted-foreground/60"
+                "text-base font-medium",
+                printer.has_bluetooth ? "text-white" : "text-gray-500"
               )}>
                 {printer.has_bluetooth ? 'Supported' : 'Not available'}
               </p>
@@ -171,8 +171,8 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
                 <HardDrive className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <span className="data-label block">Onboard Storage</span>
-                <p className="data-value">{printer.onboard_storage_gb} GB</p>
+                <span className="text-sm text-gray-400 block mb-1">Onboard Storage</span>
+                <p className="text-base font-medium text-white">{printer.onboard_storage_gb} GB</p>
               </div>
             </div>
           )}

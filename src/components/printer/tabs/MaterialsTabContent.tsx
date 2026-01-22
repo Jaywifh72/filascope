@@ -105,10 +105,10 @@ function TemperatureBar({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">{label}</span>
+          <Icon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-400">{label}</span>
         </div>
-        <span className={cn("text-sm font-bold", temp > 0 ? "text-foreground" : "text-muted-foreground/50")}>
+        <span className={cn("text-base font-medium", temp > 0 ? "text-white" : "text-gray-500")}>
           {temp > 0 ? `${temp}°C` : 'N/A'}
         </span>
       </div>
@@ -226,7 +226,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
             {Array.from(categorizedMaterials.entries()).map(([category, materials]) => (
               <div key={category}>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="subsection-title">{category}</span>
+                  <span className="text-lg font-medium text-foreground">{category}</span>
                   <div className="flex-1 h-px bg-border/30" />
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -381,7 +381,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
             {hotends.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="subsection-title">
+                  <span className="text-lg font-medium text-foreground">
                     Hotends ({hotends.length})
                   </span>
                   <div className="flex-1 h-px bg-border/30" />

@@ -147,30 +147,30 @@ export function PricingTabContent({
 
           {/* Price Sources Grid */}
           <div className="grid grid-cols-3 gap-4 lg:w-[400px]">
-            <div className="p-5 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Store className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
-              <div className="subsection-title mb-2">Store</div>
-              <div className="data-value-large">
+            <div className="p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
+              <Store className="h-5 w-5 text-gray-400 mx-auto mb-3" />
+              <div className="text-sm text-gray-400 mb-1">Store</div>
+              <div className="text-lg font-bold text-foreground">
                 {printer.current_price_usd_store 
                   ? formatPrice(printer.current_price_usd_store)
                   : '—'
                 }
               </div>
             </div>
-            <div className="p-5 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Tag className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
-              <div className="subsection-title mb-2">Amazon</div>
-              <div className="data-value-large">
+            <div className="p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
+              <Tag className="h-5 w-5 text-gray-400 mx-auto mb-3" />
+              <div className="text-sm text-gray-400 mb-1">Amazon</div>
+              <div className="text-lg font-bold text-foreground">
                 {printer.current_price_usd_amazon 
                   ? formatPrice(printer.current_price_usd_amazon)
                   : '—'
                 }
               </div>
             </div>
-            <div className="p-5 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Globe className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
-              <div className="subsection-title mb-2">MSRP</div>
-              <div className="data-value-large">
+            <div className="p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
+              <Globe className="h-5 w-5 text-gray-400 mx-auto mb-3" />
+              <div className="text-sm text-gray-400 mb-1">MSRP</div>
+              <div className="text-lg font-bold text-foreground">
                 {printer.msrp_usd 
                   ? formatPrice(printer.msrp_usd)
                   : '—'
@@ -203,8 +203,8 @@ export function PricingTabContent({
               </Button>
             </a>
           ) : (
-            <div className="flex items-center justify-center p-5 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
-              <span className="data-label">No official store link</span>
+            <div className="flex items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
+              <span className="text-sm text-gray-400">No official store link</span>
             </div>
           )}
 
@@ -226,14 +226,14 @@ export function PricingTabContent({
               </Button>
             </a>
           ) : (
-            <div className="flex items-center justify-center p-5 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
-              <span className="data-label">Not available on Amazon</span>
+            <div className="flex items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
+              <span className="text-sm text-gray-400">Not available on Amazon</span>
             </div>
           )}
 
           {/* Other Retailers Placeholder */}
-          <div className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
-            <span className="data-label">More retailers coming soon</span>
+          <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
+            <span className="text-sm text-gray-400">More retailers coming soon</span>
           </div>
         </div>
 
@@ -270,46 +270,46 @@ export function PricingTabContent({
       <section className="section-card">
         <SectionHeader icon={Globe} title="Price by Region (MSRP)" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="subsection-title">🇺🇸 USD</span>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm text-gray-400">🇺🇸 USD</span>
             </div>
             <div className={cn(
-              "data-value-large",
-              !printer.msrp_usd && "text-muted-foreground/50"
+              "text-lg font-bold",
+              !printer.msrp_usd ? "text-gray-500" : "text-foreground"
             )}>
               {printer.msrp_usd ? `$${printer.msrp_usd}` : 'Not available'}
             </div>
           </div>
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="subsection-title">🇨🇦 CAD</span>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm text-gray-400">🇨🇦 CAD</span>
             </div>
             <div className={cn(
-              "data-value-large",
-              !printer.msrp_cad && "text-muted-foreground/50"
+              "text-lg font-bold",
+              !printer.msrp_cad ? "text-gray-500" : "text-foreground"
             )}>
               {printer.msrp_cad ? `C$${printer.msrp_cad}` : 'Not available'}
             </div>
           </div>
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="subsection-title">🇪🇺 EUR</span>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm text-gray-400">🇪🇺 EUR</span>
             </div>
             <div className={cn(
-              "data-value-large",
-              !printer.msrp_eur && "text-muted-foreground/50"
+              "text-lg font-bold",
+              !printer.msrp_eur ? "text-gray-500" : "text-foreground"
             )}>
               {printer.msrp_eur ? `€${printer.msrp_eur}` : 'Not available'}
             </div>
           </div>
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="subsection-title">🇬🇧 GBP</span>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm text-gray-400">🇬🇧 GBP</span>
             </div>
             <div className={cn(
-              "data-value-large",
-              !printer.msrp_gbp && "text-muted-foreground/50"
+              "text-lg font-bold",
+              !printer.msrp_gbp ? "text-gray-500" : "text-foreground"
             )}>
               {printer.msrp_gbp ? `£${printer.msrp_gbp}` : 'Not available'}
             </div>
@@ -332,8 +332,8 @@ export function PricingTabContent({
       <section className="section-card">
         <SectionHeader icon={Clock} title="Availability & Status" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="subsection-title mb-3">Status</div>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="text-sm text-gray-400 mb-1">Status</div>
             {printer.discontinued ? (
               <Badge variant="destructive" className="text-sm">Discontinued</Badge>
             ) : (
@@ -342,29 +342,29 @@ export function PricingTabContent({
               </Badge>
             )}
           </div>
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="subsection-title mb-3">Release Date</div>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="text-sm text-gray-400 mb-1">Release Date</div>
             <div className={cn(
-              "data-value",
-              !printer.release_date && "text-muted-foreground/50"
+              "text-base font-medium",
+              !printer.release_date ? "text-gray-500" : "text-white"
             )}>
               {printer.release_date || '—'}
             </div>
           </div>
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="subsection-title mb-3">Price Tier</div>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="text-sm text-gray-400 mb-1">Price Tier</div>
             {printer.price_tier ? (
               <Badge variant="secondary" className="capitalize text-sm">{printer.price_tier}</Badge>
             ) : (
-              <span className="data-value text-muted-foreground/50">—</span>
+              <span className="text-base font-medium text-gray-500">—</span>
             )}
           </div>
-          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
-            <div className="subsection-title mb-3">Target User</div>
+          <div className="p-6 rounded-xl bg-muted/30 border border-border/40">
+            <div className="text-sm text-gray-400 mb-1">Target User</div>
             {printer.target_user_segment ? (
               <Badge variant="secondary" className="text-sm">{printer.target_user_segment}</Badge>
             ) : (
-              <span className="data-value text-muted-foreground/50">—</span>
+              <span className="text-base font-medium text-gray-500">—</span>
             )}
           </div>
         </div>
