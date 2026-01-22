@@ -141,7 +141,7 @@ export function useSimilarPrinters(
           brand,
         };
 
-        // Build query for similar printers
+        // Build query for similar printers - relaxed filters to get more results
         let query = supabase
           .from("printers")
           .select(`
@@ -163,22 +163,16 @@ export function useSimilarPrinters(
             brand_id
           `)
           .neq("id", printerId)
-          .not("current_price_usd_store", "is", null)
-          .gte("rating_community_overall", 3.5);
+          .not("current_price_usd_store", "is", null);
 
-        // Filter by price tier if available
-        if (priceTier) {
-          query = query.eq("price_tier", priceTier);
-        }
-
-        // Filter by price range (±50%) if available
+        // Only filter by price range if available - wider range (±100%)
         if (price && price > 0) {
           query = query
-            .gte("current_price_usd_store", price * 0.5)
-            .lte("current_price_usd_store", price * 1.5);
+            .gte("current_price_usd_store", price * 0.25)
+            .lte("current_price_usd_store", price * 3);
         }
 
-        query = query.limit(30); // Increased from 20 to get more candidates
+        query = query.limit(50); // Increased to get more candidates for scoring
 
         const { data: printers, error } = await query;
 
