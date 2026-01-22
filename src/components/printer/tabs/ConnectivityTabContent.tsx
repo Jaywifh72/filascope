@@ -7,6 +7,12 @@ import {
 import { cn } from '@/lib/utils';
 import { FirmwareSection } from '@/components/FirmwareSection';
 import { SoftwareSection } from '@/components/SoftwareSection';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface ConnectivityTabContentProps {
   printer: any;
@@ -25,67 +31,87 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
   );
 }
 
-// Connection option card component
+// Connection option card component with enhanced visuals and tooltip
 function ConnectionCard({ 
   icon: Icon, 
   label, 
-  available 
+  available,
+  tooltip
 }: { 
   icon: React.ElementType; 
   label: string; 
   available: boolean | null | undefined;
+  tooltip?: string;
 }) {
   const isAvailable = available === true;
   const isUnavailable = available === false;
   const isUnknown = available === null || available === undefined;
 
-  return (
+  const card = (
     <div className={cn(
-      "flex flex-col items-center justify-center p-5 rounded-xl border transition-all",
-      isAvailable && "bg-green-500/10 border-green-500/30",
-      isUnavailable && "bg-muted/30 border-border/40",
-      isUnknown && "bg-muted/20 border-border/30"
+      "flex flex-col items-center justify-center p-4 sm:p-5 rounded-xl border-2 transition-all cursor-default group",
+      isAvailable && "bg-green-500/10 border-green-500/40 shadow-[0_0_15px_-3px] shadow-green-500/20",
+      isUnavailable && "bg-muted/20 border-border/40",
+      isUnknown && "bg-muted/10 border-border/30 border-dashed"
     )}>
+      {/* Icon container with glow effect for available */}
       <div className={cn(
-        "p-3 rounded-full mb-3",
-        isAvailable && "bg-green-500/20",
-        isUnavailable && "bg-muted/50",
-        isUnknown && "bg-muted/40"
+        "p-3 sm:p-4 rounded-full mb-2 sm:mb-3 transition-all",
+        isAvailable && "bg-green-500/20 ring-2 ring-green-500/30",
+        isUnavailable && "bg-muted/40",
+        isUnknown && "bg-muted/30"
       )}>
         <Icon className={cn(
-          "w-5 h-5",
+          "w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:scale-110",
           isAvailable && "text-green-400",
-          isUnavailable && "text-muted-foreground/50",
-          isUnknown && "text-muted-foreground/40"
+          isUnavailable && "text-muted-foreground/40",
+          isUnknown && "text-muted-foreground/30"
         )} />
       </div>
+      
+      {/* Label */}
       <span className={cn(
-        "text-sm text-center font-medium",
+        "text-xs sm:text-sm text-center font-medium mb-1",
         isAvailable && "text-white",
         isUnavailable && "text-gray-500",
         isUnknown && "text-gray-500"
       )}>
         {label}
       </span>
-      <div className="flex items-center gap-1.5 mt-2">
+      
+      {/* Status indicator */}
+      <div className="flex items-center gap-1.5 mt-1">
         {isAvailable && (
-          <>
-            <Check className="w-3.5 h-3.5 text-green-400" />
-            <span className="text-xs text-green-400 font-medium">Yes</span>
-          </>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-[10px] sm:text-xs text-green-400 font-medium">
+            <Check className="w-3 h-3" />
+            Yes
+          </span>
         )}
         {isUnavailable && (
-          <>
-            <X className="w-3.5 h-3.5 text-muted-foreground/50" />
-            <span className="text-xs text-muted-foreground/50">No</span>
-          </>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/30 text-[10px] sm:text-xs text-muted-foreground/50">
+            <X className="w-3 h-3" />
+            No
+          </span>
         )}
         {isUnknown && (
-          <span className="text-xs text-muted-foreground/40">Unknown</span>
+          <span className="text-[10px] sm:text-xs text-muted-foreground/40 italic">Unknown</span>
         )}
       </div>
     </div>
   );
+
+  if (tooltip) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{card}</TooltipTrigger>
+        <TooltipContent>
+          <p className="text-sm">{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return card;
 }
 
 // Info row component with enhanced spacing and improved boolean icons
@@ -129,55 +155,69 @@ function InfoRow({
 }
 
 export function ConnectivityTabContent({ printer, brand }: ConnectivityTabContentProps) {
+  // Determine cloud connectivity based on cloud_platforms or remote features
+  const hasCloudConnectivity = !!(printer.cloud_platforms || printer.remote_monitoring_supported);
+
   return (
-    <div className="tab-content">
-      {/* Connection Options Grid - Responsive */}
-      <section className="section-card">
-        <SectionHeader icon={Wifi} title="Connection Options" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <ConnectionCard icon={Wifi} label="Wi-Fi" available={printer.has_wifi} />
-          <ConnectionCard icon={Cable} label="Ethernet" available={printer.has_ethernet} />
-          <ConnectionCard icon={Usb} label="USB-A" available={printer.has_usb_a_port} />
-          <ConnectionCard icon={Usb} label="USB-C" available={printer.has_usb_c_port} />
-          <ConnectionCard icon={CreditCard} label="SD Card" available={printer.has_sd_card} />
-          <ConnectionCard icon={CreditCard} label="Micro SD" available={printer.has_micro_sd_card} />
-        </div>
-        
-        {/* Additional connectivity info */}
-        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/30 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "p-2.5 rounded-lg",
-              printer.has_bluetooth ? "bg-blue-500/10" : "bg-muted/30"
-            )}>
-              <Bluetooth className={cn(
-                "w-5 h-5",
-                printer.has_bluetooth ? "text-blue-400" : "text-muted-foreground/50"
-              )} />
-            </div>
-            <div>
-              <span className="text-sm text-gray-400 block mb-1">Bluetooth</span>
-              <p className={cn(
-                "text-base font-medium",
-                printer.has_bluetooth ? "text-white" : "text-gray-500"
-              )}>
-                {printer.has_bluetooth ? 'Supported' : 'Not available'}
-              </p>
-            </div>
+    <TooltipProvider>
+      <div className="tab-content">
+        {/* Connection Options Grid - 2x3 layout */}
+        <section className="section-card">
+          <SectionHeader icon={Wifi} title="Connection Options" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            <ConnectionCard 
+              icon={Wifi} 
+              label="Wi-Fi" 
+              available={printer.has_wifi}
+              tooltip="Wireless network connectivity for remote printing and monitoring"
+            />
+            <ConnectionCard 
+              icon={Cable} 
+              label="Ethernet" 
+              available={printer.has_ethernet}
+              tooltip="Wired network connection for stable, high-speed data transfer"
+            />
+            <ConnectionCard 
+              icon={Bluetooth} 
+              label="Bluetooth" 
+              available={printer.has_bluetooth}
+              tooltip="Short-range wireless for mobile device connectivity"
+            />
+            <ConnectionCard 
+              icon={Usb} 
+              label="USB" 
+              available={printer.has_usb_a_port || printer.has_usb_c_port || printer.has_usb}
+              tooltip={`${printer.has_usb_a_port ? 'USB-A port available. ' : ''}${printer.has_usb_c_port ? 'USB-C port available.' : ''}`}
+            />
+            <ConnectionCard 
+              icon={CreditCard} 
+              label="SD Card" 
+              available={printer.has_sd_card || printer.has_micro_sd_card}
+              tooltip={`${printer.has_sd_card ? 'Standard SD card slot. ' : ''}${printer.has_micro_sd_card ? 'Micro SD card slot.' : ''}`}
+            />
+            <ConnectionCard 
+              icon={Cloud} 
+              label="Cloud" 
+              available={hasCloudConnectivity}
+              tooltip={printer.cloud_platforms || "Cloud printing and remote monitoring capabilities"}
+            />
           </div>
+          
+          {/* Onboard storage info if available */}
           {printer.onboard_storage_gb && (
-            <div className="flex items-center gap-4">
-              <div className="section-header-icon">
-                <HardDrive className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <span className="text-sm text-gray-400 block mb-1">Onboard Storage</span>
-                <p className="text-base font-medium text-white">{printer.onboard_storage_gb} GB</p>
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/30">
+              <div className="flex items-center gap-4">
+                <div className="section-header-icon">
+                  <HardDrive className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <span className="text-sm text-gray-400 block mb-1">Onboard Storage</span>
+                  <p className="text-base font-medium text-white">{printer.onboard_storage_gb} GB</p>
+                </div>
               </div>
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
       {/* Display & Controls */}
       <section className="section-card">
@@ -250,6 +290,7 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
         brandName={brand} 
         printerName={printer.model_name} 
       />
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
