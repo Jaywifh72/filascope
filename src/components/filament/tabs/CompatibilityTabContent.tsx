@@ -253,19 +253,22 @@ export function CompatibilityTabContent({
               <Printer className="w-4 h-4 text-primary" />
               <span>Check compatibility with:</span>
             </div>
-            <Select value={comparePrinterId} onValueChange={setComparePrinterId}>
+            <Select 
+              value={comparePrinterId || "__current__"} 
+              onValueChange={(val) => setComparePrinterId(val === "__current__" ? "" : val)}
+            >
               <SelectTrigger className="w-full sm:w-[280px] bg-gray-800/50 border-gray-700">
                 <SelectValue placeholder={selectedPrinter?.model_name || "Select a printer..."} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gray-900 border-gray-700 z-50">
                 {selectedPrinter && (
-                  <SelectItem value="">
+                  <SelectItem value="__current__">
                     {selectedPrinter.model_name} (Your printer)
                   </SelectItem>
                 )}
                 {popularPrinters?.map(printer => (
                   <SelectItem key={printer.id} value={printer.id}>
-                    {(printer.brand as any)?.brand} {printer.model_name}
+                    {printer.brand?.brand} {printer.model_name}
                   </SelectItem>
                 ))}
               </SelectContent>
