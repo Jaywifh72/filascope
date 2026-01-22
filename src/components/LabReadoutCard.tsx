@@ -194,10 +194,10 @@ export function LabReadoutCard({
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-3xl transition-all duration-300 overflow-hidden",
-        "border border-white/10",
+        "group relative rounded-2xl transition-all duration-200 overflow-hidden",
+        "border border-gray-700",
+        "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-        isHovered && !isOutOfStock && "border-[#00CFE8]/60 shadow-[0_0_30px_rgba(0,207,232,0.3)]",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
         isOutOfStock && "opacity-70"
@@ -217,20 +217,20 @@ export function LabReadoutCard({
 
       {/* Out of Stock Overlay */}
       {isOutOfStock && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none rounded-3xl">
-          <span className="text-xs font-mono uppercase tracking-wider text-white/80 bg-black/70 px-3 py-1.5 rounded">
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none rounded-2xl">
+          <span className="text-xs font-semibold uppercase tracking-wider text-white/80 bg-black/70 px-3 py-1.5 rounded">
             Out of Stock
           </span>
         </div>
       )}
 
       {/* ═══════════════════════════════════════════════════════════════
-          HEADER: Dark header area with material name + price
+          HEADER: Dark header area with brand logo
           ═══════════════════════════════════════════════════════════════ */}
       <div className="relative bg-[#14171C] px-4 pt-4 pb-4 h-[72px]">
-        {/* Checkbox positioned in header */}
+        {/* Checkbox positioned in TOP-RIGHT corner */}
         <div 
-          className="absolute top-3 left-3 z-10"
+          className="absolute top-3 right-3 z-10"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
@@ -241,20 +241,20 @@ export function LabReadoutCard({
             aria-checked={isSelected}
             role="checkbox"
             className={cn(
-              "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
+              "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
               isSelected || isPendingSelection
-                ? "bg-primary border-primary"
-                : "bg-black/40 border-white/30 hover:border-primary hover:bg-primary/10",
+                ? "bg-primary border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
+                : "bg-transparent border-gray-600 hover:border-primary/60 hover:bg-primary/10 hover:scale-105",
               isCompareDisabled && "opacity-50 cursor-not-allowed"
             )}
           >
             {(isSelected || isPendingSelection) && (
-              <Check className="w-3 h-3 text-background" strokeWidth={3} />
+              <Check className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />
             )}
           </button>
           
           {showTooltip && !isSelected && !isCompareDisabled && (
-            <div className="absolute top-full left-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20">
+            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20">
               Add to compare
             </div>
           )}
@@ -263,15 +263,13 @@ export function LabReadoutCard({
         <div className="flex items-center justify-center gap-3 h-full">
           {/* Center: Brand Logo */}
           <div className="h-full flex items-center justify-center">
-            {/* Brand Logo */}
             <div className="h-[90%] flex items-center justify-center">
               {filament.vendor ? (
                 <img 
                   src={getBrandLogo(filament.vendor)} 
                   alt={filament.vendor}
-                  className="h-full w-auto max-w-[240px] object-contain opacity-70"
+                  className="h-full w-auto max-w-[200px] object-contain opacity-70"
                   onError={(e) => {
-                    // Fallback to text if logo fails
                     e.currentTarget.style.display = 'none';
                     e.currentTarget.nextElementSibling?.classList.remove('hidden');
                   }}
@@ -287,26 +285,16 @@ export function LabReadoutCard({
           </div>
         </div>
         
-        {/* Cyan Scan Line at bottom of header */}
-        <div 
-          className={cn(
-            "absolute bottom-0 left-0 right-0 h-[2px] transition-all duration-300",
-            isHovered && !isOutOfStock 
-              ? "bg-[#00CFE8] shadow-[0_0_12px_#00CFE8,0_0_24px_rgba(0,207,232,0.5)]" 
-              : "bg-[#00CFE8]/30"
-          )}
-          style={{
-            animation: isHovered && !isOutOfStock ? 'scanPulse 1.5s ease-in-out infinite' : 'none',
-          }}
-        />
+        {/* Subtle bottom border instead of scan line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          BODY: 2-Column Technical Grid - Nozzle Temp & Flow Rate
+          BODY: Material Name, Badge, Price, Temp
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-4 bg-black/20">
         {/* Material Name */}
-        <h3 className="text-sm font-semibold text-foreground truncate leading-tight mb-3">
+        <h3 className="text-lg font-semibold text-foreground truncate leading-tight mb-3">
           {getDisplayTitle()}
         </h3>
         
@@ -314,24 +302,24 @@ export function LabReadoutCard({
         <div className="flex items-center justify-between mb-3">
           {/* Material Type Badge */}
           {filament.material && (
-            <span className="inline-flex items-center px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
+            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
               {filament.material}
             </span>
           )}
           
-          {/* Price */}
+          {/* Price - text-xl font-bold matching Printers */}
           <div className="text-right flex-shrink-0">
             {isValidPrice && pricePerKg ? (
               <div className="flex items-baseline gap-1">
-                <span className="text-xl font-bold text-foreground font-mono">
+                <span className="text-xl font-bold text-foreground">
                   {formatRegionalPrice(pricePerKg, false, userCurrency)}
                 </span>
-                <span className="text-[10px] text-muted-foreground font-mono">
+                <span className="text-sm text-muted-foreground">
                   /kg
                 </span>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground font-mono">
+              <span className="text-sm text-muted-foreground">
                 —
               </span>
             )}
@@ -341,58 +329,50 @@ export function LabReadoutCard({
         {/* Nozzle Temp */}
         <div className="space-y-1">
           <div className="flex items-center gap-1.5">
-            <Thermometer className="w-3 h-3 text-[#00CFE8]" />
-            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">
+            <Thermometer className="w-3 h-3 text-primary" />
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
               Nozzle Temp
             </span>
           </div>
-          <span className="font-mono text-base font-bold text-foreground block">
+          <span className="text-sm font-semibold text-foreground block">
             {nozzleTemp}
           </span>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          FOOTER: Rating + View Details CTA
+          FOOTER: Rating + View Details Button
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-4 py-3 flex items-center justify-between border-t border-white/[0.05]">
-        {/* Star Rating */}
-        <div className="flex items-center gap-1">
+      <div className="px-4 py-3 border-t border-white/[0.05]">
+        {/* Star Rating - left aligned */}
+        <div className="flex items-center gap-1 mb-3">
           {[...Array(5)].map((_, i) => (
             <Star 
               key={i}
               className={cn(
-                "w-3 h-3",
+                "w-3.5 h-3.5",
                 i < starCount 
-                  ? "fill-amber-400 text-amber-400" 
-                  : "fill-transparent text-white/20"
+                  ? "fill-yellow-400 text-yellow-400" 
+                  : "fill-transparent text-gray-600"
               )}
             />
           ))}
           {overallScore && (
-            <span className="ml-1 text-[10px] font-mono text-muted-foreground">
+            <span className="ml-1 text-sm text-muted-foreground">
               {overallScore.toFixed(1)}
             </span>
           )}
         </div>
 
-        {/* View Details Link */}
+        {/* View Details Button - Full width, solid bg-primary */}
         <Link
           to={`/filament/${filament.id}`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#00CFE8] hover:text-[#00CFE8]/80 transition-colors group/link"
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all duration-200"
         >
-          <span>Details</span>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/link:translate-x-0.5" />
+          <span>View Details</span>
+          <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
-      
-      {/* Scan pulse animation keyframes */}
-      <style>{`
-        @keyframes scanPulse {
-          0%, 100% { opacity: 1; box-shadow: 0 0 12px #00CFE8, 0 0 24px rgba(0,207,232,0.5); }
-          50% { opacity: 0.7; box-shadow: 0 0 6px #00CFE8, 0 0 12px rgba(0,207,232,0.3); }
-        }
-      `}</style>
     </div>
   );
 }
