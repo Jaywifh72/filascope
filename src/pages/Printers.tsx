@@ -23,6 +23,7 @@ import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService"
 import { QuizAnswers } from "@/lib/printerQuizData";
 import { TechFooter } from "@/components/TechFooter";
 import { exportPrinterDatabaseCSV } from "@/lib/printerExportUtils";
+import ActiveFilterChips from "@/components/printers/ActiveFilterChips";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -575,7 +576,9 @@ export default function Printers() {
               Hardware Registry{" "}
               <span className="text-primary font-bold">//</span>{" "}
               <span className="text-primary font-bold">{filteredPrinters?.length.toLocaleString() || 0}</span>
-              <span className="text-muted-foreground font-light ml-1">Units Indexed</span>
+              <span className="text-muted-foreground font-light ml-1">
+                {hasActiveFilters ? "Units Matching Filters" : "Units Indexed"}
+              </span>
             </h2>
           </div>
           <div className="flex items-center gap-2">
@@ -642,6 +645,53 @@ export default function Printers() {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
+            {/* Active Filter Chips */}
+            {hasActiveFilters && (
+              <div className="mb-4">
+                <ActiveFilterChips
+                  activeCategory={activeCategory}
+                  priceRange={priceRangeFilter}
+                  buildVolume={buildVolumeFilter}
+                  advancedFilters={advancedFilters}
+                  activeQuickFilters={activeQuickFilters}
+                  searchTerm={searchTerm}
+                  onRemoveCategory={() => setActiveCategory("all")}
+                  onRemovePriceRange={() => setPriceRangeFilter("all")}
+                  onRemoveBuildVolume={() => setBuildVolumeFilter("all")}
+                  onRemoveBrand={(brand) => {
+                    setAdvancedFilters(prev => ({
+                      ...prev,
+                      brands: prev.brands.filter(b => b !== brand)
+                    }));
+                  }}
+                  onRemoveMotionSystem={() => {
+                    setAdvancedFilters(prev => ({
+                      ...prev,
+                      motionSystem: "any"
+                    }));
+                  }}
+                  onRemoveSpeedFilter={() => {
+                    setAdvancedFilters(prev => ({
+                      ...prev,
+                      minSpeed: 0,
+                      maxSpeed: 1000
+                    }));
+                  }}
+                  onRemoveFeature={(feature) => {
+                    setAdvancedFilters(prev => ({
+                      ...prev,
+                      features: prev.features.filter(f => f !== feature)
+                    }));
+                  }}
+                  onRemoveQuickFilter={(filter) => {
+                    setActiveQuickFilters(prev => prev.filter(f => f !== filter));
+                  }}
+                  onRemoveSearch={() => setSearchTerm("")}
+                  onClearAll={handleClearAllFilters}
+                />
+              </div>
+            )}
+
             {/* Printer Grid */}
             {isLoading ? (
               <PrinterCardSkeletonGrid count={PRINTERS_PER_PAGE} />
