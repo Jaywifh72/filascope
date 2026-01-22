@@ -22,6 +22,7 @@ import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
 import { SimplifiedCompatibility } from "@/components/filament/hero/SimplifiedCompatibility";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { FilamentHeroSection } from "@/components/filament/hero/FilamentHeroSection";
+import { FilamentPurchaseSidebar, FilamentMobileBottomBar } from "@/components/filament/sidebar";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { TechnicalDetailsAccordion } from "@/components/filament/TechnicalDetailsAccordion";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
@@ -550,114 +551,142 @@ const FilamentDetail = () => {
           Back
         </Button>
 
-        {/* New Hero Section */}
-        <FilamentHeroSection
-          displayFilament={displayFilament}
-          pricingFilament={pricingFilament}
-          baseProductName={baseProductName}
-          colorVariants={colorVariants.map(v => ({
-            id: v.id,
-            color_hex: v.color_hex,
-            color_family: v.color_family,
-            product_title: v.product_title,
-            net_weight_g: v.net_weight_g,
-            product_url: v.product_url,
-          }))}
-          onSelectColor={(variant) => {
-            const fullVariant = colorVariants.find(v => v.id === variant.id);
-            if (fullVariant) handleColorVariantSelect(fullVariant);
-          }}
-          getColorFromTitle={(title) => getColorName(title, baseProductName)}
-          rawPricePerKg={rawPricePerKg}
-          rawPricePerSpool={rawPricePerSpool}
-          hasActualRegionalPrice={hasActualRegionalPrice}
-          affiliateUrl={getAffiliateUrl(
-            selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || '', 
-            pricingFilament.vendor
-          )}
-          productUrl={selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
-          originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
-          retailerName={pricingFilament.vendor || undefined}
-          retailerCount={retailers.length}
-          onViewRetailers={handleViewRetailers}
-          isUsingFallbackRegion={regionalPriceData.isUsingFallbackRegion}
-          actualUrlCurrency={regionalPriceData.actualUrlCurrency}
-          isAvailableInUserRegion={regionalPriceData.isAvailableInUserRegion}
-          isRegionalBrand={regionalPriceData.isRegionalBrand}
-          priceValidation={priceValidation}
-          isMultiPack={isMultiPack}
-          packQuantity={packQuantity}
-          totalPackPrice={totalPackPrice}
-          isAdmin={isAdmin}
-          rescrapingImage={rescrapingImage}
-          scrapingData={scrapingData}
-          scrapingColors={scrapingColors}
-          onEditImage={() => {
-            setNewImageUrl(filament.featured_image || "");
-            setEditImageOpen(true);
-          }}
-          onRescrapeImage={handleRescrapeImage}
-          onEditUrl={() => {
-            setNewProductUrl(filament.product_url || "");
-            setEditUrlOpen(true);
-          }}
-          onScrapeData={handleScrapeData}
-          onScrapeColors={handleScrapeColors}
-        />
+        {/* Main Layout: Content + Sidebar */}
+        <div className="flex gap-8">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            {/* Hero Section */}
+            <FilamentHeroSection
+              displayFilament={displayFilament}
+              pricingFilament={pricingFilament}
+              baseProductName={baseProductName}
+              colorVariants={colorVariants.map(v => ({
+                id: v.id,
+                color_hex: v.color_hex,
+                color_family: v.color_family,
+                product_title: v.product_title,
+                net_weight_g: v.net_weight_g,
+                product_url: v.product_url,
+              }))}
+              onSelectColor={(variant) => {
+                const fullVariant = colorVariants.find(v => v.id === variant.id);
+                if (fullVariant) handleColorVariantSelect(fullVariant);
+              }}
+              getColorFromTitle={(title) => getColorName(title, baseProductName)}
+              isMultiPack={isMultiPack}
+              packQuantity={packQuantity}
+              isAdmin={isAdmin}
+              rescrapingImage={rescrapingImage}
+              scrapingData={scrapingData}
+              scrapingColors={scrapingColors}
+              onEditImage={() => {
+                setNewImageUrl(filament.featured_image || "");
+                setEditImageOpen(true);
+              }}
+              onRescrapeImage={handleRescrapeImage}
+              onEditUrl={() => {
+                setNewProductUrl(filament.product_url || "");
+                setEditUrlOpen(true);
+              }}
+              onScrapeData={handleScrapeData}
+              onScrapeColors={handleScrapeColors}
+            />
 
-        {/* Retailers Modal */}
-        <RetailersModal
-          open={retailersModalOpen}
-          onOpenChange={setRetailersModalOpen}
-          productName={displayFilament.product_title}
-          retailers={retailers}
-          onRetailerClick={handleRetailerClick}
-        />
+            {/* Retailers Modal */}
+            <RetailersModal
+              open={retailersModalOpen}
+              onOpenChange={setRetailersModalOpen}
+              productName={displayFilament.product_title}
+              retailers={retailers}
+              onRetailerClick={handleRetailerClick}
+            />
 
-        {/* Sentinel for sticky buy bar trigger */}
-        <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
+            {/* Sentinel for sticky buy bar trigger */}
+            <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
-        {/* Technical Details Accordion */}
-        <TechnicalDetailsAccordion filament={displayFilament} className="mb-8" />
+            {/* Technical Details Accordion */}
+            <TechnicalDetailsAccordion filament={displayFilament} className="mb-8" />
 
-        {/* Simplified Printer Compatibility */}
-        {selectedPrinter && compatibility && (
-          <SimplifiedCompatibility
-            printer={selectedPrinter}
-            compatibility={{
-              overallRating: compatibility.is_supported ? (compatibility.ease_rating === 'Easy' ? 'green' : 'orange') : 'red',
-              summary: compatibility.is_supported ? 'Compatible' : 'Limited compatibility',
-              limitations: compatibility.limitations,
-              recommendations: compatibility.recommendations,
-            }}
-            className="mb-8"
+            {/* Simplified Printer Compatibility */}
+            {selectedPrinter && compatibility && (
+              <SimplifiedCompatibility
+                printer={selectedPrinter}
+                compatibility={{
+                  overallRating: compatibility.is_supported ? (compatibility.ease_rating === 'Easy' ? 'green' : 'orange') : 'red',
+                  summary: compatibility.is_supported ? 'Compatible' : 'Limited compatibility',
+                  limitations: compatibility.limitations,
+                  recommendations: compatibility.recommendations,
+                }}
+                className="mb-8"
+              />
+            )}
+
+            {/* Prompt to select printer if none selected */}
+            {!printerLoading && !selectedPrinter && (
+              <Card className="bg-gradient-to-br from-muted/30 to-muted/10 border-dashed border-2 border-border mb-8 animate-fade-in hover:border-primary/30 transition-colors">
+                <CardContent className="p-8 text-center">
+                  <div className="p-4 bg-primary/10 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                    <Printer className="w-10 h-10 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">Select Your Printer for Custom Settings</h3>
+                  <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                    Get personalized temperature ranges, nozzle recommendations, and build plate suggestions specifically for this filament
+                  </p>
+                  <Button size="lg" asChild className="hover:scale-105 transition-transform">
+                    <Link to="/">
+                      <Printer className="w-4 h-4 mr-2" />
+                      Select Your Printer
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Advanced Details (TDS) Section */}
+            <AdvancedTdsSection filament={displayFilament} className="mb-8" />
+          </div>
+
+          {/* Sticky Sidebar - Desktop Only */}
+          <FilamentPurchaseSidebar
+            filamentId={displayFilament.id}
+            vendor={pricingFilament.vendor}
+            material={pricingFilament.material}
+            pricePerKg={rawPricePerKg}
+            pricePerSpool={rawPricePerSpool}
+            weightGrams={pricingFilament.net_weight_g}
+            affiliateUrl={getAffiliateUrl(
+              selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || '', 
+              pricingFilament.vendor
+            )}
+            productUrl={selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
+            originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
+            retailerName={pricingFilament.vendor || undefined}
+            retailerCount={retailers.length}
+            onViewRetailers={handleViewRetailers}
+            hasActualRegionalPrice={hasActualRegionalPrice}
+            isUsingFallbackRegion={regionalPriceData.isUsingFallbackRegion}
+            actualUrlCurrency={regionalPriceData.actualUrlCurrency}
+            isAvailableInUserRegion={regionalPriceData.isAvailableInUserRegion}
+            isRegionalBrand={regionalPriceData.isRegionalBrand}
+            onOpenCalculator={() => setIsCalculatorOpen(true)}
           />
-        )}
-
-        {/* Prompt to select printer if none selected */}
-        {!printerLoading && !selectedPrinter && (
-          <Card className="bg-gradient-to-br from-muted/30 to-muted/10 border-dashed border-2 border-border mb-8 animate-fade-in hover:border-primary/30 transition-colors">
-            <CardContent className="p-8 text-center">
-              <div className="p-4 bg-primary/10 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <Printer className="w-10 h-10 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Select Your Printer for Custom Settings</h3>
-              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                Get personalized temperature ranges, nozzle recommendations, and build plate suggestions specifically for this filament
-              </p>
-              <Button size="lg" asChild className="hover:scale-105 transition-transform">
-                <Link to="/">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Select Your Printer
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Advanced Details (TDS) Section */}
-        <AdvancedTdsSection filament={displayFilament} className="mb-8" />
+        </div>
       </div>
+
+      {/* Mobile Bottom Bar */}
+      <FilamentMobileBottomBar
+        filamentId={displayFilament.id}
+        pricePerKg={rawPricePerKg}
+        pricePerSpool={rawPricePerSpool}
+        weightGrams={pricingFilament.net_weight_g}
+        affiliateUrl={getAffiliateUrl(
+          selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || '', 
+          pricingFilament.vendor
+        )}
+        productUrl={selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
+        originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
+        hasActualRegionalPrice={hasActualRegionalPrice}
+      />
 
       {/* Admin Edit Image Dialog */}
       <Dialog open={editImageOpen} onOpenChange={setEditImageOpen}>

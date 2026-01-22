@@ -1,18 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, AlertTriangle } from 'lucide-react';
+import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MaterialBadge } from '@/components/MaterialBadge';
-import { CurrencyCode } from '@/hooks/useCurrency';
 import { FilamentHeroGallery } from './FilamentHeroGallery';
-import { FilamentHeroPurchaseCard } from './FilamentHeroPurchaseCard';
 import { LargeColorSwatchGrid } from './LargeColorSwatchGrid';
 import { FilamentKeySpecsBar } from './FilamentKeySpecsBar';
 import { FilamentQuickSpecsGrid } from './FilamentQuickSpecsGrid';
 import { normalizeColorHex } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
-import type { Retailer } from './RetailersModal';
 import { cleanFilamentDisplayName } from '@/lib/productNameUtils';
 import { getBrandLogo } from '@/lib/brandLogos';
 
@@ -33,33 +30,9 @@ interface FilamentHeroSectionProps {
   onSelectColor: (variant: any) => void;
   getColorFromTitle: (title: string, baseName: string) => string | null;
   
-  // Pricing
-  rawPricePerKg: number | null;
-  rawPricePerSpool: number | null;
-  hasActualRegionalPrice: boolean;
-  affiliateUrl: string;
-  productUrl: string;
-  originalUsUrl?: string;
-  retailerName?: string;
-  retailerCount: number;
-  onViewRetailers: () => void;
-  isUsingFallbackRegion?: boolean;
-  actualUrlCurrency?: CurrencyCode | null;
-  isAvailableInUserRegion?: boolean;
-  isRegionalBrand?: boolean;
-  
-  // Price validation
-  priceValidation?: {
-    isSuspicious: boolean;
-    detectedPattern?: string | null;
-    rawPricePerKg: number;
-    estimatedTruePricePerKg?: number | null;
-  };
-  
   // Multi-pack info
   isMultiPack: boolean;
   packQuantity: number;
-  totalPackPrice: string | null;
   
   // Admin controls
   isAdmin?: boolean;
@@ -80,23 +53,8 @@ export function FilamentHeroSection({
   colorVariants,
   onSelectColor,
   getColorFromTitle,
-  rawPricePerKg,
-  rawPricePerSpool,
-  hasActualRegionalPrice,
-  affiliateUrl,
-  productUrl,
-  originalUsUrl,
-  retailerName,
-  retailerCount,
-  onViewRetailers,
-  isUsingFallbackRegion,
-  actualUrlCurrency,
-  isAvailableInUserRegion,
-  isRegionalBrand,
-  priceValidation,
   isMultiPack,
   packQuantity,
-  totalPackPrice,
   isAdmin,
   rescrapingImage,
   scrapingData,
@@ -288,49 +246,6 @@ export function FilamentHeroSection({
               netWeight={displayFilament.net_weight_g}
               className="pt-1"
             />
-
-            {/* Purchase Card */}
-            <FilamentHeroPurchaseCard
-              filamentId={displayFilament.id}
-              vendor={pricingFilament.vendor}
-              pricePerKg={rawPricePerKg}
-              pricePerSpool={rawPricePerSpool}
-              weightGrams={pricingFilament.net_weight_g}
-              affiliateUrl={affiliateUrl}
-              productUrl={productUrl}
-              originalUsUrl={originalUsUrl}
-              retailerName={retailerName}
-              retailerCount={retailerCount}
-              onViewRetailers={onViewRetailers}
-              hasActualRegionalPrice={hasActualRegionalPrice}
-              isUsingFallbackRegion={isUsingFallbackRegion}
-              actualUrlCurrency={actualUrlCurrency}
-              isAvailableInUserRegion={isAvailableInUserRegion}
-              isRegionalBrand={isRegionalBrand}
-            />
-
-            {/* Suspicious price warning */}
-            {priceValidation?.isSuspicious && (
-              <div className="bg-warning/10 border border-warning/30 rounded-xl p-3">
-                <div className="flex items-center gap-2 text-warning">
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-sm font-semibold">Price may be incorrect</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                  {priceValidation.detectedPattern === 'moq' 
-                    ? 'This appears to be an MOQ (minimum order) listing where weight was miscalculated.'
-                    : priceValidation.detectedPattern === 'bundle' || priceValidation.detectedPattern === 'pack'
-                      ? 'This appears to be a bundle/pack listing.'
-                      : `Price/kg ($${priceValidation.rawPricePerKg.toFixed(2)}) is below realistic market rates.`
-                  }
-                </p>
-                {priceValidation.estimatedTruePricePerKg && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Estimated true price: ~${priceValidation.estimatedTruePricePerKg.toFixed(2)}/kg
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
