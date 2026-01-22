@@ -62,9 +62,9 @@ function RatingsReviewsCard({
   const emptyStars = 5 - Math.ceil(rating);
 
   return (
-    <div className="bg-[#0A0C10] border border-primary/20 p-5 flex flex-col gap-4">
-      <h3 className="font-mono text-xs font-bold text-primary uppercase tracking-[0.15em]">
-        &gt;&gt; OPERATOR_FEEDBACK
+    <div className="bg-card border border-border rounded-lg p-5 flex flex-col gap-4">
+      <h3 className="text-sm font-semibold text-foreground">
+        Customer Reviews
       </h3>
 
       <div className="flex justify-center items-center gap-1">
@@ -73,32 +73,32 @@ function RatingsReviewsCard({
         ))}
         {partialStar > 0 && (
           <div className="relative">
-            <Star size={18} className="text-white/20" />
+            <Star size={18} className="text-muted-foreground/30" />
             <div className="absolute top-0 left-0 overflow-hidden" style={{ width: `${partialStar * 100}%` }}>
               <Star size={18} className="fill-amber-400 text-amber-400" />
             </div>
           </div>
         )}
         {Array.from({ length: emptyStars }).map((_, i) => (
-          <Star key={`empty-${i}`} size={18} className="text-white/20" />
+          <Star key={`empty-${i}`} size={18} className="text-muted-foreground/30" />
         ))}
       </div>
 
-      <div className="font-mono text-2xl font-bold text-primary text-center">
+      <div className="text-2xl font-bold text-foreground text-center">
         {rating.toFixed(1)}
       </div>
       {reviewCount && (
-        <div className="font-mono text-[10px] text-muted-foreground text-center -mt-2 uppercase tracking-wider">
-          {reviewCount} OPERATOR_SUBMISSIONS
+        <div className="text-xs text-muted-foreground text-center -mt-2">
+          {reviewCount} reviews
         </div>
       )}
 
       {onReadReviews && (
         <button 
           onClick={onReadReviews}
-          className="w-full h-10 bg-transparent border border-primary/30 font-mono text-xs uppercase tracking-wider text-primary flex items-center justify-center gap-2 transition-all hover:bg-primary/10 hover:border-primary/50"
+          className="w-full h-10 bg-transparent border border-border rounded-lg text-sm font-medium text-foreground flex items-center justify-center gap-2 transition-all hover:bg-muted/50"
         >
-          ACCESS_LOGS
+          Read Reviews
           <ArrowRight size={14} />
         </button>
       )}
@@ -134,7 +134,7 @@ function RecentReviewsCard({ reviews }: { reviews: Review[] }) {
 
   return (
     <div 
-      className="bg-[#0A0C10] border border-white/10 p-4 flex flex-col gap-3 hover:border-primary/20 transition-colors"
+      className="bg-card border border-border rounded-lg p-4 flex flex-col gap-3 hover:border-primary/20 transition-colors"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -142,30 +142,29 @@ function RecentReviewsCard({ reviews }: { reviews: Review[] }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div 
-            className="w-8 h-8 bg-primary/20 border border-primary/40 flex items-center justify-center font-mono text-[10px] font-bold text-primary"
-            style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}
+            className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-xs font-semibold text-primary"
           >
             {initials}
           </div>
-          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+          <div className="text-sm text-muted-foreground">
             {currentReview.author}
           </div>
         </div>
         <div className="flex gap-0.5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} size={10} className={i < currentReview.rating ? "fill-amber-400 text-amber-400" : "text-white/20"} />
+            <Star key={i} size={10} className={i < currentReview.rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"} />
           ))}
         </div>
       </div>
 
-      <blockquote className="font-mono text-xs text-muted-foreground italic line-clamp-3 pl-3 border-l-2 border-primary/30">
+      <blockquote className="text-sm text-muted-foreground italic line-clamp-3 pl-3 border-l-2 border-primary/30">
         "{currentReview.text}"
       </blockquote>
 
       {currentReview.verified && (
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-500 font-mono text-[9px] uppercase tracking-wider self-start">
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-medium rounded self-start">
           <Check size={10} />
-          VERIFIED_BUYER
+          Verified
         </div>
       )}
 
@@ -175,10 +174,10 @@ function RecentReviewsCard({ reviews }: { reviews: Review[] }) {
             <button
               key={index}
               className={cn(
-                "w-2 h-2 transition-all",
+                "w-2 h-2 rounded-full transition-all",
                 index === currentIndex 
                   ? "bg-primary" 
-                  : "bg-white/20 hover:bg-white/40"
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
               )}
               onClick={() => setCurrentIndex(index)}
             />
@@ -192,20 +191,20 @@ function RecentReviewsCard({ reviews }: { reviews: Review[] }) {
 // Staff Pick Badge Card
 function StaffPickCard({ recommendations }: { recommendations: string[] }) {
   return (
-    <div className="bg-[#0A0C10] border border-amber-500/30 p-5 flex flex-col gap-4">
-      <div className="inline-flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 font-mono text-xs font-bold text-amber-400 uppercase tracking-wider self-start">
+    <div className="bg-card border border-amber-500/30 rounded-lg p-5 flex flex-col gap-4">
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-sm font-semibold text-amber-400 rounded-md self-start">
         <Award size={14} />
-        <span>UNIT_RECOMMENDED</span>
+        <span>Staff Pick</span>
       </div>
 
-      <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-        RECOMMENDED_FOR:
+      <div className="text-xs text-muted-foreground">
+        Recommended for:
       </div>
 
       <ul className="flex flex-col gap-2">
         {recommendations.map((rec, index) => (
-          <li key={index} className="font-mono text-xs text-foreground/90 flex gap-2 items-start">
-            <span className="text-primary flex-shrink-0">[+]</span>
+          <li key={index} className="text-sm text-foreground/90 flex gap-2 items-start">
+            <Check size={14} className="text-primary flex-shrink-0 mt-0.5" />
             <span>{rec}</span>
           </li>
         ))}
@@ -245,25 +244,34 @@ function StockShippingCard({
 
   const badge = stockConfig[stockStatus];
 
+  const stockLabels = {
+    'in-stock': 'In Stock',
+    'low-stock': 'Low Stock',
+    'out-of-stock': 'Out of Stock',
+    'discontinued': 'Discontinued'
+  };
+
   return (
-    <div className="bg-[#0A0C10] border border-white/10 p-5 flex flex-col gap-4">
+    <div className="bg-card border border-border rounded-lg p-5 flex flex-col gap-4">
+      <h3 className="text-sm font-semibold text-foreground">Inventory</h3>
+      
       <div className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider border self-start",
+        "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border self-start",
         badge.className
       )}>
-        <span>{badge.text}</span>
+        <span>{stockLabels[stockStatus]}</span>
       </div>
 
       {stockStatus !== 'out-of-stock' && stockStatus !== 'discontinued' && (
-        <div className="font-mono text-xs text-muted-foreground">
-          <span className="text-primary/60">&gt;</span> {shippingTime}
+        <div className="text-sm text-muted-foreground">
+          {shippingTime}
         </div>
       )}
 
       <ul className="flex flex-col gap-2">
         {trustSignals.map((signal, index) => (
-          <li key={index} className="font-mono text-xs text-foreground/90 flex items-center gap-2">
-            <span className="text-green-500">[✓]</span>
+          <li key={index} className="text-sm text-foreground/90 flex items-center gap-2">
+            <Check size={14} className="text-green-500 flex-shrink-0" />
             <span>{signal}</span>
           </li>
         ))}
@@ -278,37 +286,32 @@ function SocialActivityCard({ activity }: { activity: { views: number; compariso
   if (!hasActivity) return null;
 
   return (
-    <div className="bg-[#0A0C10] border border-white/10 p-4 flex flex-col gap-2">
-      <div className="font-mono text-[10px] text-primary/60 uppercase tracking-wider mb-1">
-        &gt;&gt; ACTIVITY_METRICS
-      </div>
+    <div className="bg-card border border-border rounded-lg p-4 flex flex-col gap-2">
+      <h3 className="text-sm font-semibold text-foreground mb-1">
+        Activity
+      </h3>
       
       {activity.views > 0 && (
-        <div className="font-mono text-xs text-foreground/90 flex items-center gap-2">
-          <span className="text-orange-500">[HOT]</span>
+        <div className="text-sm text-foreground/90 flex items-center gap-2">
+          <span className="text-orange-500 text-xs font-medium">Popular</span>
           <span>
-            <span className="font-bold text-primary">{activity.views}</span>{' '}
-            OPERATORS_VIEWING
+            <span className="font-semibold">{activity.views}</span> people viewing
           </span>
         </div>
       )}
 
       {activity.comparisons > 0 && (
-        <div className="font-mono text-xs text-foreground/90 flex items-center gap-2">
-          <span className="text-primary">[CMP]</span>
+        <div className="text-sm text-foreground/90 flex items-center gap-2">
           <span>
-            <span className="font-bold text-primary">{activity.comparisons}</span>{' '}
-            DIAGNOSTIC_QUEUED
+            <span className="font-semibold">{activity.comparisons}</span> comparing
           </span>
         </div>
       )}
 
       {activity.purchases > 0 && (
-        <div className="font-mono text-xs text-foreground/90 flex items-center gap-2">
-          <span className="text-green-500">[REQ]</span>
+        <div className="text-sm text-foreground/90 flex items-center gap-2">
           <span>
-            <span className="font-bold text-primary">{activity.purchases}</span>{' '}
-            REQUISITIONS_WEEK
+            <span className="font-semibold">{activity.purchases}</span> bought this week
           </span>
         </div>
       )}
@@ -325,34 +328,33 @@ function DecisionSupportCard({
   onStartChat?: () => void;
 }) {
   return (
-    <div className="bg-[#0A0C10] border border-white/10 p-5 flex flex-col gap-4">
-      <div className="font-mono text-xs font-bold text-primary uppercase tracking-[0.15em] flex items-center gap-2">
-        <span className="text-primary/60">&gt;&gt;</span>
-        <span>DECISION_SUPPORT</span>
-      </div>
+    <div className="bg-card border border-border rounded-lg p-5 flex flex-col gap-4">
+      <h3 className="text-sm font-semibold text-foreground">
+        Need Help Deciding?
+      </h3>
 
       {onTakeQuiz && (
         <button 
           onClick={onTakeQuiz}
-          className="w-full h-10 bg-primary border-none font-mono text-xs font-semibold text-primary-foreground uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:bg-primary/90 hover:-translate-y-0.5"
+          className="w-full h-10 bg-primary rounded-lg text-sm font-semibold text-primary-foreground flex items-center justify-center gap-2 transition-all hover:bg-primary/90 hover:-translate-y-0.5"
         >
-          RUN_DIAGNOSTIC_MATCH
+          Take the Quiz
           <ArrowRight size={14} />
         </button>
       )}
 
       {onStartChat && (
         <>
-          <div className="font-mono text-[10px] text-muted-foreground text-center uppercase tracking-wider">
-            // ALTERNATE_CHANNEL
+          <div className="text-xs text-muted-foreground text-center">
+            or
           </div>
 
           <button 
             onClick={onStartChat}
-            className="w-full h-10 bg-transparent border border-primary/30 font-mono text-xs uppercase tracking-wider text-primary flex items-center justify-center gap-2 transition-all hover:bg-primary/10 hover:border-primary/50"
+            className="w-full h-10 bg-transparent border border-border rounded-lg text-sm font-medium text-foreground flex items-center justify-center gap-2 transition-all hover:bg-muted/50"
           >
             <MessageCircle size={14} />
-            INITIATE_COMMS
+            Chat with Us
           </button>
         </>
       )}
@@ -419,16 +421,15 @@ export function MobileSocialProof({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
-        className="w-full h-[56px] px-5 bg-[#0A0C10] border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:border-primary/30"
+        className="w-full h-14 px-5 bg-card border border-border rounded-lg flex items-center justify-between cursor-pointer transition-all hover:border-primary/30"
       >
-        <div className="flex items-center gap-3 font-mono text-xs font-bold text-primary uppercase tracking-[0.15em]">
-          <span>&gt;&gt;</span>
-          <span>OPERATOR_SIGNALS</span>
-        </div>
+        <span className="text-sm font-semibold text-foreground">
+          Reviews & More
+        </span>
         <ChevronDown 
           size={18} 
           className={cn(
-            "text-primary/60 transition-transform duration-200",
+            "text-muted-foreground transition-transform duration-200",
             isExpanded && "rotate-180"
           )}
         />
