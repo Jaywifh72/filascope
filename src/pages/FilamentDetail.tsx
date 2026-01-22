@@ -643,6 +643,8 @@ const FilamentDetail = () => {
                     selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || '', 
                     pricingFilament.vendor
                   )}
+                  productUrl={selectedVariant?.product_url || regionalPriceData.regionalUrl || pricingFilament.product_url || ''}
+                  originalUsUrl={regionalPriceData.fallbackUrl || pricingFilament.product_url || undefined}
                   hasActualRegionalPrice={hasActualRegionalPrice}
                   onViewRetailers={handleViewRetailers}
                   onRetailerClick={handleRetailerClick}
