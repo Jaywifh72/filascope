@@ -57,12 +57,12 @@ export function PriceSection({
           </span>}
       </div>
 
-      {trend && trend.percentage > 0 && <div className={`flex items-center gap-2 font-mono text-xs ${getTrendColor()}`}>
-          {getTrendIcon()}
+      {msrp && price && price !== msrp && (
+        <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
           <span className="uppercase tracking-wider">
-            TREND: {trend.direction === "down" ? "FALLING" : trend.direction === "up" ? "RISING" : "STABLE"}
-            {" "}({trend.percentage}% / {trend.period})
+            MSRP: {formatPrice(msrp)}
           </span>
-        </div>}
+        </div>
+      )}
     </div>;
 }
