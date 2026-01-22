@@ -82,27 +82,17 @@ export const getPrimaryCategoryBadge = (printer: Printer): BadgeType | null => {
     return 'resin';
   }
   
-  // 3. Beginner Friendly (auto-level + enclosure + good rating)
-  if (isBeginnerFriendly(printer)) {
-    return 'beginner';
-  }
-  
-  // 4. Multi-Color capable
+  // 3. Multi-Color capable
   if (printer.multi_material_supported) {
     return 'multiColor';
   }
   
-  // 5. Large Format (300mm+)
+  // 4. Large Format (300mm+)
   if (isLargeFormat(printer)) {
     return 'largeFormat';
   }
   
-  // 6. CoreXY motion system
-  if (isCoreXYPrinter(printer)) {
-    return 'corexy';
-  }
-  
-  // 7. No primary badge for standard printers
+  // 5. No primary badge for standard printers
   return null;
 };
 
@@ -115,24 +105,14 @@ export const getSecondaryBadges = (printer: Printer, primaryBadge: BadgeType | n
     return badges;
   }
   
-  // High-Speed (300mm/s+)
-  if ((printer.max_print_speed_mms || 0) >= 300) {
-    badges.push('highSpeed');
-  }
-  
-  // Enclosed (if not already shown as beginner reason)
-  if (printer.has_enclosure && primaryBadge !== 'beginner') {
+  // Enclosed
+  if (printer.has_enclosure) {
     badges.push('enclosed');
   }
   
   // Multi-color as secondary if not primary
   if (printer.multi_material_supported && primaryBadge !== 'multiColor') {
     badges.push('multiColor');
-  }
-  
-  // CoreXY as secondary if not primary
-  if (isCoreXYPrinter(printer) && primaryBadge !== 'corexy') {
-    badges.push('corexy');
   }
   
   // Large format as secondary if not primary
