@@ -27,7 +27,7 @@ const CATEGORIES: SpecCategory[] = [
   { id: 'general', label: 'General', icon: Info },
 ];
 
-// Enhanced SpecRow with Yes/No styling
+// Enhanced SpecRow with improved spacing
 const SpecRow: React.FC<{
   label: string;
   value: any;
@@ -64,11 +64,11 @@ const SpecRow: React.FC<{
   }
 
   return (
-    <div className="flex flex-col md:flex-row md:justify-between md:items-center py-3 border-b border-border/20 last:border-b-0 gap-1 md:gap-4 hover:bg-muted/20 px-3 -mx-3 rounded-lg transition-colors">
-      <div className="text-sm text-muted-foreground">{label}</div>
+    <div className="spec-row">
+      <div className="data-label">{label}</div>
       <div className={cn(
-        "text-sm font-medium md:text-right",
-        !isBoolean && !isEmpty && "text-foreground"
+        "data-value text-right",
+        isBoolean && !isYes && "text-muted-foreground/60"
       )}>
         {displayValue}
       </div>
@@ -76,7 +76,7 @@ const SpecRow: React.FC<{
   );
 };
 
-// Section component
+// Section component with enhanced styling
 const SpecSection: React.FC<{
   id: string;
   title: string;
@@ -84,23 +84,23 @@ const SpecSection: React.FC<{
   children: React.ReactNode;
 }> = ({ id, title, icon: Icon, children }) => (
   <section id={`spec-${id}`} className="scroll-mt-24">
-    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border/40">
-      <div className="p-2 bg-primary/10 rounded-lg">
+    <div className="section-header">
+      <div className="section-header-icon">
         <Icon className="w-5 h-5 text-primary" />
       </div>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="section-title">{title}</h3>
     </div>
-    <div className="bg-card/50 border border-border/40 rounded-xl p-4">
+    <div className="section-card p-5 lg:p-6">
       {children}
     </div>
   </section>
 );
 
-// Subsection divider
+// Subsection divider with improved spacing
 const SubSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="mb-6 last:mb-0">
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{title}</span>
+  <div className="subsection-divider">
+    <div className="flex items-center gap-3 mb-4">
+      <span className="subsection-title">{title}</span>
       <div className="flex-1 h-px bg-border/30" />
     </div>
     {children}
@@ -121,11 +121,11 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
   }, []);
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-8">
       {/* Left Sidebar Navigation */}
       <nav className="hidden lg:block w-56 flex-shrink-0">
         <div className="sticky top-24 space-y-1">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 px-3">
+          <div className="subsection-title mb-4 px-3">
             Categories
           </div>
           {CATEGORIES.map((cat) => {
@@ -136,7 +136,7 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
                 key={cat.id}
                 onClick={() => scrollToSection(cat.id)}
                 className={cn(
-                  "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all text-left",
+                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-all text-left",
                   isActive
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -152,16 +152,16 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
       </nav>
 
       {/* Main Content */}
-      <div ref={containerRef} className="flex-1 min-w-0 space-y-8">
+      <div ref={containerRef} className="flex-1 min-w-0 tab-content">
         {/* Toggle Header */}
         <div className="flex items-center justify-between p-4 bg-muted/30 border border-border/40 rounded-xl">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {showAllFields ? (
               <Eye className="w-4 h-4 text-muted-foreground" />
             ) : (
               <EyeOff className="w-4 h-4 text-muted-foreground" />
             )}
-            <Label htmlFor="show-all" className="text-sm text-muted-foreground cursor-pointer">
+            <Label htmlFor="show-all" className="data-label cursor-pointer">
               Show all fields (including empty)
             </Label>
           </div>

@@ -4,16 +4,15 @@ import {
   Thermometer, 
   Gauge, 
   Wifi, 
-  Usb, 
-  HardDrive,
   Layers,
   Scale,
   CheckCircle2,
   Package,
   AlertCircle
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface OverviewTabContentProps {
   printer: any;
@@ -26,6 +25,18 @@ interface OverviewTabContentProps {
   };
 }
 
+// Section header with icon and border
+function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+  return (
+    <div className="section-header">
+      <div className="section-header-icon">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <h3 className="section-title">{title}</h3>
+    </div>
+  );
+}
+
 // Stat card component for Key Specifications
 interface StatCardProps {
   icon: React.ElementType;
@@ -36,15 +47,15 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
   return (
-    <div className="bg-card/80 border border-border/60 rounded-xl p-4 flex items-start gap-3 transition-all hover:border-primary/30">
-      <div className="p-2 bg-primary/10 rounded-lg">
+    <div className="stat-card">
+      <div className="section-header-icon">
         <Icon className="h-5 w-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
-        <div className="text-lg font-bold text-foreground leading-tight mt-0.5">{value}</div>
+        <span className="subsection-title">{label}</span>
+        <div className="data-value-large leading-tight mt-1">{value}</div>
         {subValue && (
-          <span className="text-xs text-muted-foreground">{subValue}</span>
+          <span className="text-xs text-muted-foreground mt-0.5 block">{subValue}</span>
         )}
       </div>
     </div>
@@ -66,11 +77,20 @@ interface CapabilityItemProps {
 
 function CapabilityItem({ label, available }: CapabilityItemProps) {
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-      available ? 'bg-primary/10 border border-primary/20' : 'bg-muted/30 border border-border/40'
-    }`}>
-      <CheckCircle2 className={`h-4 w-4 ${available ? 'text-primary' : 'text-muted-foreground/40'}`} />
-      <span className={`text-sm ${available ? 'text-foreground' : 'text-muted-foreground/60'}`}>
+    <div className={cn(
+      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+      available 
+        ? "bg-primary/10 border border-primary/20" 
+        : "bg-muted/30 border border-border/40"
+    )}>
+      <CheckCircle2 className={cn(
+        "h-4 w-4 flex-shrink-0",
+        available ? "text-primary" : "text-muted-foreground/40"
+      )} />
+      <span className={cn(
+        "data-label",
+        available ? "text-foreground" : "text-muted-foreground/60"
+      )}>
         {label}
       </span>
     </div>
@@ -153,12 +173,10 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
   ).slice(0, 4) || [];
 
   return (
-    <div className="space-y-8">
+    <div className="tab-content">
       {/* Key Specifications - 2x3 Grid */}
       <section>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          Key Specifications
-        </h3>
+        <SectionHeader icon={Box} title="Key Specifications" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatCard
             icon={Box}
@@ -199,10 +217,8 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* System Capabilities - 2 Column Grid */}
       <section>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          System Capabilities
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <SectionHeader icon={CheckCircle2} title="System Capabilities" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {sortedCapabilities.map((cap) => (
             <CapabilityItem key={cap.label} label={cap.label} available={cap.available} />
           ))}
@@ -211,20 +227,17 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* What's in the Box / Accessories */}
       <section>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Package className="h-5 w-5 text-primary" />
-          What's in the Box
-        </h3>
+        <SectionHeader icon={Package} title="What's in the Box" />
         {includedAccessories.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {includedAccessories.map((acc, idx) => (
               <div 
                 key={acc.id || idx}
-                className="flex items-center gap-3 p-3 bg-muted/30 border border-border/50 rounded-lg"
+                className="flex items-center gap-3 p-4 bg-muted/30 border border-border/50 rounded-lg"
               >
                 <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-foreground">{acc.name || acc.accessory_name}</span>
+                  <span className="data-label text-foreground font-medium">{acc.name || acc.accessory_name}</span>
                   {acc.quantity && acc.quantity > 1 && (
                     <Badge variant="secondary" className="ml-2 text-xs">×{acc.quantity}</Badge>
                   )}
@@ -234,9 +247,9 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
           </div>
         ) : (
           <Card className="bg-muted/20 border-dashed">
-            <CardContent className="py-8 text-center">
-              <AlertCircle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No accessories data available</p>
+            <CardContent className="py-10 text-center">
+              <AlertCircle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
+              <p className="data-label">No accessories data available</p>
               <p className="text-xs text-muted-foreground/70 mt-1">
                 Check the manufacturer's website for included items
               </p>
