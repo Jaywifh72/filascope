@@ -39,6 +39,7 @@ import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -648,6 +649,24 @@ const FilamentDetail = () => {
                 />
               )}
             </FilamentTabContent>
+
+            {/* Similar Filaments Section - Below tabs, visible on all tabs */}
+            <SimilarFilamentsSection
+              currentFilament={{
+                id: displayFilament.id,
+                product_title: displayFilament.product_title,
+                vendor: displayFilament.vendor,
+                material: displayFilament.material,
+                variant_price: pricingFilament.variant_price,
+                net_weight_g: pricingFilament.net_weight_g,
+                color_family: displayFilament.color_family,
+                color_hex: displayFilament.color_hex,
+                featured_image: displayFilament.featured_image,
+                nozzle_temp_min_c: displayFilament.nozzle_temp_min_c,
+                nozzle_temp_max_c: displayFilament.nozzle_temp_max_c,
+                ease_of_printing_score: displayFilament.ease_of_printing_score,
+              }}
+            />
           </div>
 
           {/* Sticky Sidebar - Desktop Only */}
