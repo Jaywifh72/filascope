@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -6,11 +6,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export type SortOption = 
   | "popularity" 
   | "price_asc" 
+  | "price_desc"
   | "rating" 
+  | "name_asc"
   | "nozzle_temp" 
   | "bed_temp";
 
@@ -21,11 +24,11 @@ interface DataInventoryControlBarProps {
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "popularity", label: "Popularity" },
-  { value: "price_asc", label: "Price (Low to High)" },
+  { value: "price_asc", label: "True Cost: Low to High" },
+  { value: "price_desc", label: "True Cost: High to Low" },
   { value: "rating", label: "Rating" },
-  { value: "nozzle_temp", label: "Nozzle Temp" },
-  { value: "bed_temp", label: "Bed Temp" },
+  { value: "name_asc", label: "Name A-Z" },
+  { value: "popularity", label: "Popularity" },
 ];
 
 export function DataInventoryControlBar({ 
@@ -33,38 +36,50 @@ export function DataInventoryControlBar({
   onSortChange, 
   resultCount 
 }: DataInventoryControlBarProps) {
+  const selectedLabel = SORT_OPTIONS.find(opt => opt.value === sortBy)?.label || "Sort";
+  
   return (
-    <div className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-4 py-3 mb-6 backdrop-blur-sm">
+    <div className="w-full bg-gray-800/30 border border-gray-700 rounded-lg px-4 py-3 mb-6">
       <div className="flex items-center justify-between gap-4">
         {/* Left: Result count */}
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400 font-medium">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">
             Results
           </span>
-          <div className="h-4 w-px bg-white/10" />
-          <span className="text-sm text-primary font-bold">
+          <span className="text-sm font-semibold text-primary">
             {resultCount.toLocaleString()}
           </span>
-          <span className="text-xs text-muted-foreground">entries</span>
+          <span className="text-sm text-gray-500">entries</span>
         </div>
 
         {/* Right: Sort control */}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400 hidden sm:inline">
+          <span className="text-sm text-gray-500 hidden sm:inline">
             Sort By
           </span>
           <Select value={sortBy} onValueChange={(val) => onSortChange(val as SortOption)}>
-            <SelectTrigger className="w-[180px] h-9 bg-white/[0.03] border-white/10 text-sm hover:border-primary/50 transition-colors">
-              <SelectValue />
+            <SelectTrigger className={cn(
+              "w-[200px] h-9 text-sm rounded-lg border transition-all duration-200",
+              "bg-gray-800/50 border-gray-700 text-gray-300",
+              "hover:bg-gray-800 hover:border-gray-600"
+            )}>
+              <SelectValue>{selectedLabel}</SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10">
+            <SelectContent className="bg-gray-800 border-gray-700 z-50">
               {SORT_OPTIONS.map((option) => (
                 <SelectItem 
                   key={option.value} 
                   value={option.value}
-                  className="text-sm cursor-pointer hover:bg-primary/10"
+                  className="text-sm cursor-pointer text-gray-300 hover:bg-primary/10 focus:bg-primary/10 focus:text-primary"
                 >
-                  {option.label}
+                  <div className="flex items-center gap-2">
+                    {sortBy === option.value && (
+                      <Check className="w-3.5 h-3.5 text-primary" />
+                    )}
+                    <span className={sortBy === option.value ? "text-primary font-medium" : ""}>
+                      {option.label}
+                    </span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
