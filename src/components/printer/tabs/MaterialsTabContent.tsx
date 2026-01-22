@@ -193,8 +193,8 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
       {/* Temperature Capability Visual */}
       <section className="section-card">
         <SectionHeader icon={Thermometer} title="Temperature Capability" />
-        <div className="grid md:grid-cols-2 gap-6">
-          <TemperatureBar 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <TemperatureBar
             label="Max Nozzle Temperature" 
             maxTemp={printer.max_nozzle_temp_c} 
             icon={Thermometer}
@@ -341,7 +341,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         <SectionHeader icon={CheckCircle2} title="Material Recommendations" />
         
         {recommendedMaterials.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {recommendedMaterials.slice(0, 6).map((material: string, index: number) => (
               <Card key={index} className="bg-card/80 border-border/40">
                 <CardContent className="p-4">
@@ -386,7 +386,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                   </span>
                   <div className="flex-1 h-px bg-border/30" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {hotends.slice(0, 6).map((acc) => {
                     const specs = acc.specs as any;
                     const compatibility = checkHotendPrinterCompatibility(acc, printer);

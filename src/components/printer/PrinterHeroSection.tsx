@@ -64,8 +64,8 @@ export function PrinterHeroSection({
 
   return (
     <div className="space-y-6">
-      {/* Image and Info Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 lg:gap-10 items-start">
+      {/* Image and Info Grid - Stack on mobile, side-by-side on lg */}
+      <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-6 lg:gap-10 items-start">
         {/* Left Column: Product Images */}
         <div className="w-full space-y-4">
           {/* Main Image */}
@@ -143,9 +143,9 @@ export function PrinterHeroSection({
             reviewCount={printer.review_count_aggregated}
           />
 
-          {/* Quick Specs Grid - 2x2 */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <QuickSpecCard 
+          {/* Quick Specs Grid - 2x2 on mobile, 4 columns on larger screens */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <QuickSpecCard
               icon={Box} 
               label="Build Volume" 
               value={buildVolume} 

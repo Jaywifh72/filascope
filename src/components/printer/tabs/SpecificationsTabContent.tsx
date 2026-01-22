@@ -1,11 +1,18 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { 
   Box, Zap, Thermometer, Layers, Shield, Battery, Info, 
-  Check, X, Eye, EyeOff, ChevronRight 
+  Check, X, Eye, EyeOff, ChevronRight, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SpecificationsTabContentProps {
   printer: any;
@@ -65,10 +72,10 @@ const SpecRow: React.FC<{
 
   return (
     <div className="spec-row">
-      <div className="data-label">{label}</div>
+      <div className="text-sm text-gray-400">{label}</div>
       <div className={cn(
-        "data-value text-right",
-        isBoolean && !isYes && "text-muted-foreground/60"
+        "text-sm sm:text-base font-medium text-right",
+        isBoolean && !isYes && "text-gray-500"
       )}>
         {displayValue}
       </div>
@@ -120,9 +127,37 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
     }
   }, []);
 
+  // Find current category for mobile dropdown
+  const currentCategory = CATEGORIES.find(c => c.id === activeCategory);
+
   return (
-    <div className="flex gap-8">
-      {/* Left Sidebar Navigation */}
+    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+      {/* Mobile Category Dropdown */}
+      <div className="lg:hidden">
+        <Select value={activeCategory} onValueChange={scrollToSection}>
+          <SelectTrigger className="w-full bg-card/50 border-border/50">
+            <div className="flex items-center gap-2">
+              {currentCategory && <currentCategory.icon className="w-4 h-4 text-primary" />}
+              <SelectValue placeholder="Select category" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <SelectItem key={cat.id} value={cat.id}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    <span>{cat.label}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Desktop Left Sidebar Navigation */}
       <nav className="hidden lg:block w-56 flex-shrink-0">
         <div className="sticky top-24 space-y-1">
           <div className="text-sm text-gray-400 mb-4 px-3">
@@ -154,15 +189,16 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
       {/* Main Content */}
       <div ref={containerRef} className="flex-1 min-w-0 tab-content">
         {/* Toggle Header */}
-        <div className="flex items-center justify-between p-4 bg-muted/30 border border-border/40 rounded-xl">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between p-3 sm:p-4 bg-muted/30 border border-border/40 rounded-xl">
+          <div className="flex items-center gap-2 sm:gap-3">
             {showAllFields ? (
               <Eye className="w-4 h-4 text-muted-foreground" />
             ) : (
               <EyeOff className="w-4 h-4 text-muted-foreground" />
             )}
-            <Label htmlFor="show-all" className="data-label cursor-pointer">
-              Show all fields (including empty)
+            <Label htmlFor="show-all" className="text-sm text-gray-400 cursor-pointer">
+              <span className="hidden sm:inline">Show all fields (including empty)</span>
+              <span className="sm:hidden">Show empty fields</span>
             </Label>
           </div>
           <Switch
