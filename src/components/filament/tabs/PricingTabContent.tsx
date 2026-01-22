@@ -7,10 +7,12 @@ import {
   Store, 
   ShoppingCart,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
 import type { Retailer } from '../hero/RetailersModal';
 
@@ -23,6 +25,8 @@ interface PricingTabContentProps {
   pricePerSpool: number | null;
   affiliateUrl: string | null;
   hasActualRegionalPrice: boolean;
+  productUrl?: string | null;
+  originalUsUrl?: string | null;
   onViewRetailers: () => void;
   onRetailerClick: (retailer: Retailer) => void;
 }
@@ -34,14 +38,54 @@ export function PricingTabContent({
   pricePerSpool,
   affiliateUrl,
   hasActualRegionalPrice,
+  productUrl,
+  originalUsUrl,
   onViewRetailers,
   onRetailerClick,
 }: PricingTabContentProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
 
-  const formatDisplayPrice = (price: number | null) => {
+  // Fetch live price to match the sidebar
+  const { 
+    currentPrice: livePrice, 
+    weightGrams: liveWeightGrams,
+    isLoading: priceLoading, 
+    isLivePrice,
+    currency: livePriceCurrency
+  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
+
+  // Calculate live price per kg
+  const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
+  const fallbackWeightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : 1;
+
+  let displayPricePerKg: number | null = null;
+  let displayPricePerSpool: number | null = null;
+
+  if (isLivePrice && livePrice !== null) {
+    displayPricePerSpool = livePrice;
+    displayPricePerKg = liveWeightKg 
+      ? livePrice / liveWeightKg 
+      : livePrice / fallbackWeightKg;
+  } else {
+    displayPricePerKg = pricePerKg;
+    displayPricePerSpool = pricePerSpool;
+  }
+
+  // Format live prices in their original currency
+  const formatLivePrice = (price: number): string => {
+    const symbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
+    const symbol = symbols[livePriceCurrency] || '$';
+    return `${symbol}${price.toFixed(2)}`;
+  };
+
+  const formatDisplayPrice = (price: number | null, forceNoSuffix = true) => {
     if (!price) return null;
-    return hasActualRegionalPrice ? formatRegionalPrice(price) : formatPrice(price);
+    if (isLivePrice) {
+      return formatLivePrice(price);
+    }
+    return hasActualRegionalPrice 
+      ? formatRegionalPrice(price, !forceNoSuffix) 
+      : formatPrice(price, !forceNoSuffix);
   };
 
   return (
@@ -54,16 +98,19 @@ export function PricingTabContent({
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                 <span className="text-sm font-medium text-emerald-400">Best Price Available</span>
+                {priceLoading && (
+                  <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                )}
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-white">
-                  {formatDisplayPrice(pricePerKg) || 'N/A'}
+                  {formatDisplayPrice(displayPricePerKg) || 'N/A'}
                 </span>
                 <span className="text-lg text-muted-foreground">/kg</span>
               </div>
-              {pricePerSpool && (
+              {displayPricePerSpool && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  {formatDisplayPrice(pricePerSpool)} per spool ({filament.net_weight_g}g)
+                  {formatDisplayPrice(displayPricePerSpool)} per spool ({filament.net_weight_g}g)
                 </p>
               )}
             </div>
@@ -99,44 +146,54 @@ export function PricingTabContent({
           </div>
 
           <div className="space-y-3">
-            {retailers.slice(0, 5).map((retailer, idx) => (
-              <div 
-                key={retailer.id}
-                className={cn(
-                  "flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer",
-                  idx === 0 
-                    ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
-                    : "bg-muted/20 border-border hover:bg-muted/40"
-                )}
-                onClick={() => {
-                  onRetailerClick(retailer);
-                  if (retailer.url) window.open(retailer.url, '_blank');
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    retailer.inStock ? "bg-emerald-500" : "bg-red-500"
-                  )} />
-                  <div>
-                    <div className="font-medium">{retailer.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {retailer.inStock ? retailer.shippingEstimate : 'Out of stock'}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  {retailer.price && (
-                    <div className="text-right">
-                      <div className="font-bold">
-                        {formatDisplayPrice(retailer.price)}
+            {retailers.map((retailer, idx) => {
+              // For the primary store retailer, use the live price if available
+              const retailerPrice = (idx === 0 && retailer.id === 'store' && isLivePrice && livePrice !== null)
+                ? livePrice
+                : retailer.price;
+              
+              return (
+                <div 
+                  key={retailer.id}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer",
+                    idx === 0 
+                      ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
+                      : "bg-muted/20 border-border hover:bg-muted/40"
+                  )}
+                  onClick={() => {
+                    onRetailerClick(retailer);
+                    if (retailer.url) window.open(retailer.url, '_blank');
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-2 h-2 rounded-full",
+                      retailer.inStock ? "bg-emerald-500" : "bg-red-500"
+                    )} />
+                    <div>
+                      <div className="font-medium">{retailer.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {retailer.inStock ? retailer.shippingEstimate : 'Out of stock'}
                       </div>
                     </div>
-                  )}
-                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {retailerPrice && (
+                      <div className="text-right">
+                        <div className="font-bold">
+                          {idx === 0 && retailer.id === 'store' && isLivePrice
+                            ? formatLivePrice(retailerPrice)
+                            : formatDisplayPrice(retailerPrice)
+                          }
+                        </div>
+                      </div>
+                    )}
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {retailers.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
