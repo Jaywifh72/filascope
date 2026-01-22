@@ -87,7 +87,7 @@ export default function ComparisonCheckbox({
             side="top"
             className="bg-card border-border text-xs font-medium"
           >
-            Maximum 5 printers
+            Maximum 4 printers
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

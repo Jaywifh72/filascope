@@ -21,7 +21,7 @@ interface PrinterCompareContextType {
 }
 
 const STORAGE_KEY = "filascope_printer_compare";
-const MAX_PRINTERS = 5;
+const MAX_PRINTERS = 4;
 
 const PrinterCompareContext = createContext<PrinterCompareContextType | undefined>(undefined);
 
@@ -61,7 +61,7 @@ export function PrinterCompareProvider({ children }: { children: ReactNode }) {
   const addPrinter = useCallback((printer: PrinterCompareItem) => {
     setSelectedPrinters((prev) => {
       if (prev.length >= MAX_PRINTERS) {
-        toast.warning("Maximum 5 printers can be compared at once");
+        toast.warning("Maximum 4 printers can be compared");
         return prev;
       }
       if (prev.some((p) => p.id === printer.id)) {
