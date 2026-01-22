@@ -1,54 +1,92 @@
-import { X, Printer } from "lucide-react";
+import { X, Printer, Database, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface ResultsHeaderProps {
   count: number;
   selectedPrinter?: { model_name: string; printer_brands?: { brand: string } | null } | null;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onExportCSV?: () => void;
+  isExporting?: boolean;
 }
 
 const ResultsHeader = ({ 
   count, 
   selectedPrinter, 
   hasActiveFilters, 
-  onClearFilters 
+  onClearFilters,
+  onExportCSV,
+  isExporting = false
 }: ResultsHeaderProps) => {
   const printerBrand = selectedPrinter?.printer_brands?.brand || "";
   const printerName = selectedPrinter?.model_name || "";
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 animate-fade-in bg-white/[0.03] border border-white/10 rounded-xl py-5 hover:border-primary/20 transition-colors duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        {/* Results Count */}
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground uppercase tracking-[0.2em]">
-            <span className="text-primary font-black">{count.toLocaleString()}</span>
-            {" "}
-            <span className="font-light">filaments found</span>
-          </h2>
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* Left Side: Registry Title + Count */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <Database className="w-5 h-5 text-primary hidden sm:block" />
+            <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-foreground">
+              <span className="hidden sm:inline text-muted-foreground">Material Registry </span>
+              <span className="text-muted-foreground sm:hidden">// </span>
+              <span className="text-primary font-bold">{count.toLocaleString()}</span>
+              <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
+                {hasActiveFilters ? "Matching" : "Materials"}
+              </span>
+            </h2>
+          </div>
           
-          {/* Printer Context */}
+          {/* Printer Context Subtitle */}
           {selectedPrinter && (
-            <p className="text-sm text-muted-foreground font-light flex items-center gap-1.5">
-              <Printer className="w-3.5 h-3.5" />
-              Compatible with {printerBrand} {printerName}
-            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Printer className="w-3 h-3" />
+              <span>Compatible with {printerBrand} {printerName}</span>
+              <Link 
+                to="/materials" 
+                className="text-primary hover:text-primary/80 transition-colors ml-1"
+              >
+                Change printer
+              </Link>
+            </div>
           )}
         </div>
 
-        {/* Clear Filters Button */}
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClearFilters}
-            className="text-muted-foreground hover:text-foreground self-start sm:self-auto"
-          >
-            <X className="w-4 h-4 mr-1.5" />
-            Clear all filters
-          </Button>
-        )}
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearFilters}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-3.5 h-3.5 mr-1.5" />
+              Clear filters
+            </Button>
+          )}
+
+          {/* Export CSV */}
+          {onExportCSV && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onExportCSV}
+              disabled={isExporting}
+              className="text-xs text-muted-foreground hover:text-primary"
+            >
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              Export CSV
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
