@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Cpu, SlidersHorizontal, ChevronDown, DollarSign, Box, Layers, Tag, Check } from "lucide-react";
+import { Cpu, SlidersHorizontal, ChevronDown, DollarSign, Box, Layers, Tag, Check, Gauge, Zap } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,7 @@ function IndustrialToggle({
   return (
     <label 
       className={cn(
-        "flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg cursor-pointer transition-all duration-200",
+        "flex items-center justify-between gap-3 py-2 px-3 rounded-lg cursor-pointer transition-all duration-200",
         checked 
           ? "bg-primary/10" 
           : "hover:bg-white/5",
@@ -31,7 +31,7 @@ function IndustrialToggle({
         {checked && <Check className="h-3.5 w-3.5 text-primary" />}
         <span className={cn(
           "text-sm transition-colors",
-          checked ? "text-primary font-medium" : "text-gray-300"
+          checked ? "text-primary font-medium" : "text-gray-400"
         )}>
           {label}
         </span>
@@ -61,30 +61,30 @@ function SidebarSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="py-3 border-b border-white/5 last:border-0">
+    <div className="border-t border-gray-800/50 first:border-t-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex items-center justify-between py-2 px-1 rounded-md group transition-colors",
+          "w-full flex items-center justify-between py-3 px-1 group transition-colors",
           isOpen && "bg-white/[0.02]"
         )}
       >
         <div className="flex items-center gap-2.5">
           <Icon className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-medium text-white">
             {title}
           </span>
         </div>
         <ChevronDown className={cn(
-          "h-4 w-4 text-muted-foreground group-hover:text-foreground transition-all duration-200",
+          "h-4 w-4 text-gray-500 group-hover:text-gray-300 transition-all duration-200",
           isOpen && "rotate-180"
         )} />
       </button>
       <div className={cn(
         "overflow-hidden transition-all duration-200",
-        isOpen ? "mt-3 opacity-100" : "h-0 opacity-0"
+        isOpen ? "pb-3 opacity-100" : "h-0 opacity-0"
       )}>
-        <div className="space-y-1">{children}</div>
+        <div className="space-y-0.5">{children}</div>
       </div>
     </div>
   );
@@ -111,7 +111,7 @@ function BudgetHistogram({
   const maxCount = Math.max(...Object.values(printerCounts), 1);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 px-1">
       <div className="flex gap-1 h-16 items-end">
         {ranges.map((range) => {
           const count = printerCounts[range.id] || 0;
@@ -131,7 +131,7 @@ function BudgetHistogram({
               style={{ height: `${height}%` }}
               title={`${count} printers`}
             >
-              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-mono text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-mono text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                 {count}
               </span>
             </button>
@@ -144,7 +144,7 @@ function BudgetHistogram({
             key={range.id}
             className={cn(
               "flex-1 text-center text-[10px]",
-              selectedRange === range.id ? "text-primary" : "text-muted-foreground"
+              selectedRange === range.id ? "text-primary" : "text-gray-500"
             )}
           >
             {range.label}
@@ -261,14 +261,12 @@ export default function PrintersSidebar({
 
   return (
     <aside className="w-72 shrink-0 sticky top-24 self-start max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
-      <div className="bg-[#0D0F14] border-r border-white/5 rounded-xl overflow-hidden shadow-xl">
+      <div className="bg-gray-900/60 border-r border-gray-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
         {/* Header */}
-        <div className="px-4 py-4 border-b border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent">
+        <div className="px-4 py-3 border-b border-gray-800 bg-gradient-to-b from-white/[0.03] to-transparent">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-md bg-primary/10">
-              <SlidersHorizontal className="h-4 w-4 text-primary" />
-            </div>
-            <h2 className="text-sm font-semibold text-white">
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-gray-300">
               Filter Parameters
             </h2>
           </div>
@@ -277,7 +275,7 @@ export default function PrintersSidebar({
         {/* Content */}
         <div className="px-4 pb-4">
           {/* Quick Toggle: Hide Discontinued */}
-          <div className="py-3 border-b border-white/5">
+          <div className="py-3 border-b border-gray-800/50">
             <IndustrialToggle
               checked={hideDiscontinued}
               onChange={onHideDiscontinuedChange}
@@ -285,7 +283,7 @@ export default function PrintersSidebar({
             />
           </div>
 
-          {/* Budget Allocation */}
+          {/* Price Range */}
           <SidebarSection title="Price Range" icon={DollarSign}>
             <BudgetHistogram
               selectedRange={priceRange}
@@ -294,7 +292,7 @@ export default function PrintersSidebar({
             />
           </SidebarSection>
 
-          {/* Kinematics */}
+          {/* Motion System */}
           <SidebarSection title="Motion System" icon={Cpu}>
             {kinematicsOptions.map((option) => (
               <IndustrialToggle
@@ -306,17 +304,17 @@ export default function PrintersSidebar({
             ))}
           </SidebarSection>
 
-          {/* Build Volume */}
+          {/* Build Size */}
           <SidebarSection title="Build Size" icon={Box} defaultOpen={false}>
             {buildVolumeOptions.map((option) => (
               <button
                 key={option.id}
                 onClick={() => onBuildVolumeChange(selectedBuildVolume === option.id ? "all" : option.id)}
                 className={cn(
-                  "w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-all duration-200 text-sm",
+                  "w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 text-sm",
                   selectedBuildVolume === option.id
                     ? "bg-primary/10 text-primary font-medium"
-                    : "text-gray-300 hover:bg-white/5"
+                    : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                 )}
               >
                 <span>{option.label}</span>
@@ -325,7 +323,7 @@ export default function PrintersSidebar({
             ))}
           </SidebarSection>
 
-          {/* Enclosure */}
+          {/* Enclosure Type */}
           <SidebarSection title="Enclosure Type" icon={Layers} defaultOpen={false}>
             {enclosureOptions.map((option) => (
               <IndustrialToggle
@@ -348,7 +346,7 @@ export default function PrintersSidebar({
                     "w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 text-sm",
                     selectedBrands.includes(brand)
                       ? "bg-primary/10 text-primary font-medium"
-                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                      : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                   )}
                 >
                   <span>{brand}</span>

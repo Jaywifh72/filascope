@@ -138,16 +138,16 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
       ref={ref}
       className={cn("w-72 shrink-0 sticky top-20 self-start", className)}
     >
-      <div className="bg-[hsl(220_20%_8%)] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+      <div className="bg-gray-900/60 border-r border-gray-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
-          <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="px-4 py-3 border-b border-gray-800 bg-gradient-to-b from-white/[0.03] to-transparent">
+          <h3 className="text-sm font-semibold text-gray-300">
             Filter Parameters
           </h3>
         </div>
 
         <ScrollArea className="max-h-[calc(100vh-180px)]">
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-gray-800/50">
             {/* Sort Section */}
             <div>
               <button
@@ -155,15 +155,15 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Sort By
                   </span>
-                  <span className="font-mono text-[10px] text-primary truncate max-w-[100px]">
+                  <span className="text-xs text-primary truncate max-w-[100px]">
                     {getSortLabel()}
                   </span>
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'sort' && "rotate-180"
                 )} />
               </button>
@@ -175,10 +175,10 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                       key={option.value}
                       onClick={() => onSortChange(option.value)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                         sortBy === option.value
                           ? "bg-primary/15 text-primary"
-                          : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                       )}
                     >
                       <span>{option.label}</span>
@@ -196,17 +196,17 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Price Range
                   </span>
                   {priceRange !== 'all' && (
-                    <span className="font-mono text-[10px] text-primary truncate max-w-[80px]">
+                    <span className="text-xs text-primary truncate max-w-[80px]">
                       {getPriceLabel()}
                     </span>
                   )}
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'price' && "rotate-180"
                 )} />
               </button>
@@ -218,10 +218,10 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                       key={option.value}
                       onClick={() => onPriceChange(option.value)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                         priceRange === option.value
                           ? "bg-primary/15 text-primary"
-                          : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                       )}
                     >
                       <span>{option.label}</span>
@@ -239,17 +239,17 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Build Size
                   </span>
                   {buildVolume !== 'all' && (
-                    <span className="font-mono text-[10px] text-primary truncate max-w-[80px]">
+                    <span className="text-xs text-primary truncate max-w-[80px]">
                       {getVolumeLabel()}
                     </span>
                   )}
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'volume' && "rotate-180"
                 )} />
               </button>
@@ -261,10 +261,10 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                       key={option.value}
                       onClick={() => onBuildVolumeChange(option.value)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md font-mono text-[10px] uppercase tracking-[0.05em] transition-colors",
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                         buildVolume === option.value
                           ? "bg-primary/15 text-primary"
-                          : "text-foreground/70 hover:bg-white/5 hover:text-foreground"
+                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                       )}
                     >
                       <span>{option.label}</span>
@@ -282,7 +282,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Brand
                   </span>
                   {advancedFilters.brands.length > 0 && (
@@ -292,7 +292,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                   )}
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'brands' && "rotate-180"
                 )} />
               </button>
@@ -300,12 +300,12 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
               {expandedSection === 'brands' && (
                 <div className="px-2 pb-3 space-y-2">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                     <Input
                       placeholder="Search brands..."
                       value={brandSearch}
                       onChange={(e) => setBrandSearch(e.target.value)}
-                      className="pl-8 h-8 bg-white/5 border-white/10 font-mono text-[10px]"
+                      className="pl-8 h-8 bg-white/5 border-gray-800 text-sm"
                     />
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-0.5">
@@ -316,7 +316,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                           "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
                           advancedFilters.brands.includes(brand)
                             ? "bg-primary/15 text-primary"
-                            : "hover:bg-white/5"
+                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                         )}
                       >
                         <Checkbox
@@ -324,7 +324,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                           onCheckedChange={() => handleBrandToggle(brand)}
                           className="h-3.5 w-3.5"
                         />
-                        <span className="font-mono text-[10px] uppercase tracking-[0.05em]">{brand}</span>
+                        <span className="text-sm">{brand}</span>
                       </label>
                     ))}
                   </div>
@@ -339,17 +339,17 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Motion System
                   </span>
                   {advancedFilters.motionSystem !== 'any' && (
-                    <span className="font-mono text-[10px] text-primary">
+                    <span className="text-xs text-primary">
                       {motionOptions.find(o => o.value === advancedFilters.motionSystem)?.label}
                     </span>
                   )}
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'motion' && "rotate-180"
                 )} />
               </button>
@@ -368,11 +368,11 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                           "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
                           advancedFilters.motionSystem === option.value
                             ? "bg-primary/15 text-primary"
-                            : "hover:bg-white/5"
+                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                         )}
                       >
                         <RadioGroupItem value={option.value} className="h-3.5 w-3.5" />
-                        <span className="font-mono text-[10px] uppercase tracking-[0.05em]">{option.label}</span>
+                        <span className="text-sm">{option.label}</span>
                       </Label>
                     ))}
                   </RadioGroup>
@@ -387,17 +387,17 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Print Speed
                   </span>
                   {(advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000) && (
-                    <span className="font-mono text-[10px] text-primary">
+                    <span className="text-xs text-primary">
                       {advancedFilters.minSpeed}-{advancedFilters.maxSpeed}
                     </span>
                   )}
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'speed' && "rotate-180"
                 )} />
               </button>
@@ -405,10 +405,10 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
               {expandedSection === 'speed' && (
                 <div className="px-4 pb-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-mono text-[10px] text-muted-foreground">
+                    <span className="text-xs text-gray-500">
                       {advancedFilters.minSpeed} mm/s
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
+                    <span className="text-xs text-gray-500">
                       {advancedFilters.maxSpeed} mm/s
                     </span>
                   </div>
@@ -431,7 +431,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground">
+                  <span className="text-sm font-medium text-white">
                     Features
                   </span>
                   {advancedFilters.features.length > 0 && (
@@ -441,7 +441,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                   )}
                 </div>
                 <ChevronDown className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform shrink-0",
+                  "h-4 w-4 text-gray-500 transition-transform shrink-0",
                   expandedSection === 'features' && "rotate-180"
                 )} />
               </button>
@@ -455,7 +455,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                         "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
                         advancedFilters.features.includes(feature.id)
                           ? "bg-primary/15 text-primary"
-                          : "hover:bg-white/5"
+                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                       )}
                     >
                       <Checkbox
@@ -463,7 +463,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                         onCheckedChange={() => handleFeatureToggle(feature.id)}
                         className="h-3.5 w-3.5"
                       />
-                      <span className="font-mono text-[10px] uppercase tracking-[0.05em]">{feature.label}</span>
+                      <span className="text-sm">{feature.label}</span>
                     </label>
                   ))}
                 </div>
@@ -474,11 +474,11 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
 
         {/* Clear All Button */}
         {hasActiveFilters && (
-          <div className="p-3 border-t border-white/10">
+          <div className="p-3 border-t border-gray-800">
             <Button
               variant="ghost"
               onClick={onClearFilters}
-              className="w-full h-9 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-white/10 hover:border-destructive/20"
+              className="w-full h-9 text-sm text-gray-400 hover:text-destructive hover:bg-destructive/10 border border-gray-800 hover:border-destructive/20"
             >
               <X className="w-3.5 h-3.5 mr-2" />
               Reset All Filters

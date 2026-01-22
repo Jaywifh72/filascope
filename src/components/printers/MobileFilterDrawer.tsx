@@ -128,14 +128,12 @@ export function MobileFilterDrawer({
           </Button>
         </SheetTrigger>
 
-        <SheetContent side="left" className="w-[320px] sm:w-[380px] p-0 bg-[#0D0F14] border-r border-white/5">
-          <SheetHeader className="px-4 py-4 border-b border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent">
+        <SheetContent side="left" className="w-[320px] sm:w-[380px] p-0 bg-gray-900/95 border-r border-gray-800 backdrop-blur-sm">
+          <SheetHeader className="px-4 py-4 border-b border-gray-800 bg-gradient-to-b from-white/[0.03] to-transparent">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-md bg-primary/10">
-                  <SlidersHorizontal className="h-4 w-4 text-primary" />
-                </div>
-                <SheetTitle className="text-base font-semibold text-white">
+                <SlidersHorizontal className="h-4 w-4 text-primary" />
+                <SheetTitle className="text-sm font-semibold text-gray-300">
                   Filter Parameters
                 </SheetTitle>
               </div>
@@ -156,7 +154,7 @@ export function MobileFilterDrawer({
           </SheetHeader>
 
           <ScrollArea className="h-[calc(100vh-120px)]">
-            <div className="divide-y divide-border/30">
+            <div className="divide-y divide-gray-800/50">
               {/* Sort Section */}
               <div className="px-4 py-3">
                 <button
@@ -166,9 +164,9 @@ export function MobileFilterDrawer({
                     expandedSection === 'sort' && "bg-white/[0.02]"
                   )}
                 >
-                  <span className="text-sm font-semibold text-white">Sort By</span>
+                  <span className="text-sm font-medium text-white">Sort By</span>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'sort' && "rotate-180"
                   )} />
                 </button>
@@ -182,7 +180,7 @@ export function MobileFilterDrawer({
                           "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
                           sortBy === option.value
                             ? "bg-primary/10 text-primary font-medium"
-                            : "text-gray-300 hover:bg-white/5"
+                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                         )}
                       >
                         <span>{option.label}</span>
@@ -202,9 +200,9 @@ export function MobileFilterDrawer({
                     expandedSection === 'price' && "bg-white/[0.02]"
                   )}
                 >
-                  <span className="text-sm font-semibold text-white">Price Range</span>
+                  <span className="text-sm font-medium text-white">Price Range</span>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'price' && "rotate-180"
                   )} />
                 </button>
@@ -218,7 +216,7 @@ export function MobileFilterDrawer({
                           "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
                           priceRange === option.value
                             ? "bg-primary/10 text-primary font-medium"
-                            : "text-gray-300 hover:bg-white/5"
+                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                         )}
                       >
                         <span>{option.label}</span>
@@ -238,9 +236,9 @@ export function MobileFilterDrawer({
                     expandedSection === 'volume' && "bg-white/[0.02]"
                   )}
                 >
-                  <span className="text-sm font-semibold text-white">Build Size</span>
+                  <span className="text-sm font-medium text-white">Build Size</span>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'volume' && "rotate-180"
                   )} />
                 </button>
@@ -254,7 +252,7 @@ export function MobileFilterDrawer({
                           "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
                           buildVolume === option.value
                             ? "bg-primary/10 text-primary font-medium"
-                            : "text-gray-300 hover:bg-white/5"
+                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                         )}
                       >
                         <span>{option.label}</span>
@@ -275,7 +273,7 @@ export function MobileFilterDrawer({
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-white">Brand</span>
+                    <span className="text-sm font-medium text-white">Brand</span>
                     {advancedFilters.brands.length > 0 && (
                       <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
                         {advancedFilters.brands.length}
@@ -283,19 +281,19 @@ export function MobileFilterDrawer({
                     )}
                   </div>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'brands' && "rotate-180"
                   )} />
                 </button>
                 {expandedSection === 'brands' && (
                   <div className="mt-3 space-y-2">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                       <Input
                         placeholder="Search brands..."
                         value={brandSearch}
                         onChange={(e) => setBrandSearch(e.target.value)}
-                        className="pl-9 h-10 bg-white/5 border-white/10"
+                        className="pl-9 h-10 bg-white/5 border-gray-800 text-sm"
                       />
                     </div>
                     <div className="max-h-48 overflow-y-auto space-y-1">
@@ -306,7 +304,7 @@ export function MobileFilterDrawer({
                             "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
                             advancedFilters.brands.includes(brand)
                               ? "bg-primary/10"
-                              : "hover:bg-white/5"
+                              : "hover:bg-gray-800/50"
                           )}
                         >
                           <Checkbox
@@ -316,7 +314,7 @@ export function MobileFilterDrawer({
                           />
                           <span className={cn(
                             "text-sm",
-                            advancedFilters.brands.includes(brand) ? "text-primary font-medium" : "text-gray-300"
+                            advancedFilters.brands.includes(brand) ? "text-primary font-medium" : "text-gray-400"
                           )}>{brand}</span>
                         </label>
                       ))}
@@ -334,9 +332,9 @@ export function MobileFilterDrawer({
                     expandedSection === 'motion' && "bg-white/[0.02]"
                   )}
                 >
-                  <span className="text-sm font-semibold text-white">Motion System</span>
+                  <span className="text-sm font-medium text-white">Motion System</span>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'motion' && "rotate-180"
                   )} />
                 </button>
@@ -350,7 +348,7 @@ export function MobileFilterDrawer({
                           "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors",
                           advancedFilters.motionSystem === option.value
                             ? "bg-primary/10 text-primary font-medium"
-                            : "text-gray-300 hover:bg-white/5"
+                            : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
                         )}
                       >
                         <span>{option.label}</span>
@@ -371,7 +369,7 @@ export function MobileFilterDrawer({
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-white">Features</span>
+                    <span className="text-sm font-medium text-white">Features</span>
                     {advancedFilters.features.length > 0 && (
                       <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
                         {advancedFilters.features.length}
@@ -379,7 +377,7 @@ export function MobileFilterDrawer({
                     )}
                   </div>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'features' && "rotate-180"
                   )} />
                 </button>
@@ -392,7 +390,7 @@ export function MobileFilterDrawer({
                           "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
                           advancedFilters.features.includes(feature.value)
                             ? "bg-primary/10"
-                            : "hover:bg-white/5"
+                            : "hover:bg-gray-800/50"
                         )}
                       >
                         <Checkbox
@@ -402,7 +400,7 @@ export function MobileFilterDrawer({
                         />
                         <span className={cn(
                           "text-sm",
-                          advancedFilters.features.includes(feature.value) ? "text-primary font-medium" : "text-gray-300"
+                          advancedFilters.features.includes(feature.value) ? "text-primary font-medium" : "text-gray-400"
                         )}>{feature.label}</span>
                       </label>
                     ))}
@@ -419,9 +417,9 @@ export function MobileFilterDrawer({
                     expandedSection === 'speed' && "bg-white/[0.02]"
                   )}
                 >
-                  <span className="text-sm font-semibold text-white">Print Speed</span>
+                  <span className="text-sm font-medium text-white">Print Speed</span>
                   <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-all duration-200",
+                    "h-4 w-4 text-gray-500 transition-all duration-200",
                     expandedSection === 'speed' && "rotate-180"
                   )} />
                 </button>
@@ -438,7 +436,7 @@ export function MobileFilterDrawer({
                       step={50}
                       className="w-full"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground">
+                    <div className="flex justify-between text-xs text-gray-500">
                       <span>{advancedFilters.minSpeed} mm/s</span>
                       <span>{advancedFilters.maxSpeed} mm/s</span>
                     </div>
@@ -449,7 +447,7 @@ export function MobileFilterDrawer({
           </ScrollArea>
 
           {/* Apply Button */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50 bg-background">
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-gray-900/95">
             <Button 
               className="w-full"
               onClick={() => setIsOpen(false)}
