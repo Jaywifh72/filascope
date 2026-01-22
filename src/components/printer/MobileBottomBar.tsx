@@ -1,6 +1,7 @@
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
+import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 
 interface MobileBottomBarProps {
   price: number | null | undefined;
@@ -24,9 +25,10 @@ export function MobileBottomBar({
   isLivePrice,
 }: MobileBottomBarProps) {
   const { formatPrice, formatRegionalPrice, currency } = useCurrency();
+  const { count: compareCount } = usePrinterCompare();
 
-  // Don't show if discontinued
-  if (isDiscontinued) return null;
+  // Don't show if discontinued or if compare bar is active
+  if (isDiscontinued || compareCount > 0) return null;
 
   // Format price
   const formatDisplayPrice = (p: number | null | undefined) => {
