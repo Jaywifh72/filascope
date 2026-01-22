@@ -53,10 +53,11 @@ export function PrinterCompareBar() {
   return (
     <div
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50",
+        "fixed bottom-0 left-0 right-0 z-[70]",
         "transition-transform duration-300 ease-out",
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       role="region"
       aria-label={`Printer comparison bar with ${count} printers selected`}
     >
