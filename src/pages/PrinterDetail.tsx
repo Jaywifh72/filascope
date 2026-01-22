@@ -530,111 +530,297 @@ const PrinterDetail = () => {
           Back
         </Button>
 
-        {/* Hero Section with Sticky Sidebar */}
+        {/* Main Content with Sticky Sidebar Container - spans full page */}
         <div className="flex gap-8 items-start">
-          {/* Main Hero Content */}
-          <div className="flex-1 min-w-0 relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl py-8 md:py-10 px-6 md:px-10">
-            
-            {/* Admin: Update Image & Refresh Prices Buttons */}
-            {isAdmin && (
-              <div className="absolute top-4 right-6 flex gap-2 z-10">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setImageDialogOpen(true);
-                  }}
-                >
-                  <ImagePlus className="h-3 w-3 mr-1.5" />
-                  Update Image
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs"
-                  disabled={isUpdatingPrices}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    setIsUpdatingPrices(true);
-                    try {
-                      const response = await supabase.functions.invoke('fetch-printer-prices', {
-                        body: { printerIds: [printer.id] }
-                      });
-                      
-                      if (response.error) {
-                        throw new Error(response.error.message || 'Failed to fetch prices');
-                      }
-                      
-                      const result = response.data;
-                      if (result?.results?.[0]) {
-                        const printerResult = result.results[0];
-                        if (printerResult.success && printerResult.prices) {
-                          const { msrp_usd, current_price_usd_store } = printerResult.prices;
-                          toast({
-                            title: "Prices Updated",
-                            description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
-                          });
-                        } else {
-                          toast({
-                            title: "No Prices Found",
-                            description: printerResult.error || "Could not extract prices from the product page",
-                            variant: "destructive"
-                          });
+          {/* Main Content Column */}
+          <div className="flex-1 min-w-0 space-y-8">
+            {/* Hero Section */}
+            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl py-8 md:py-10 px-6 md:px-10">
+              
+              {/* Admin: Update Image & Refresh Prices Buttons */}
+              {isAdmin && (
+                <div className="absolute top-4 right-6 flex gap-2 z-10">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setImageDialogOpen(true);
+                    }}
+                  >
+                    <ImagePlus className="h-3 w-3 mr-1.5" />
+                    Update Image
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={isUpdatingPrices}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      setIsUpdatingPrices(true);
+                      try {
+                        const response = await supabase.functions.invoke('fetch-printer-prices', {
+                          body: { printerIds: [printer.id] }
+                        });
+                        
+                        if (response.error) {
+                          throw new Error(response.error.message || 'Failed to fetch prices');
                         }
+                        
+                        const result = response.data;
+                        if (result?.results?.[0]) {
+                          const printerResult = result.results[0];
+                          if (printerResult.success && printerResult.prices) {
+                            const { msrp_usd, current_price_usd_store } = printerResult.prices;
+                            toast({
+                              title: "Prices Updated",
+                              description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
+                            });
+                          } else {
+                            toast({
+                              title: "No Prices Found",
+                              description: printerResult.error || "Could not extract prices from the product page",
+                              variant: "destructive"
+                            });
+                          }
+                        }
+                        
+                        queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
+                      } catch (error: any) {
+                        toast({
+                          title: "Error",
+                          description: error.message || "Failed to update prices",
+                          variant: "destructive"
+                        });
+                      } finally {
+                        setIsUpdatingPrices(false);
                       }
-                      
-                      queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
-                    } catch (error: any) {
-                      toast({
-                        title: "Error",
-                        description: error.message || "Failed to update prices",
-                        variant: "destructive"
-                      });
-                    } finally {
-                      setIsUpdatingPrices(false);
-                    }
-                  }}
-                >
-                  <RefreshCw className={`h-3 w-3 mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
-                  {isUpdatingPrices ? 'Syncing...' : 'Refresh Prices'}
-                </Button>
-              </div>
-            )}
+                    }}
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                    {isUpdatingPrices ? 'Syncing...' : 'Refresh Prices'}
+                  </Button>
+                </div>
+              )}
 
-            {/* Hero Section Content */}
-            {(() => {
-              const heroDisplayImages = productImages.filter(img => validImages.has(img));
-              const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
-              
-              if (isLoadingImages) {
+              {/* Hero Section Content */}
+              {(() => {
+                const heroDisplayImages = productImages.filter(img => validImages.has(img));
+                const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
+                
+                if (isLoadingImages) {
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 lg:gap-10 items-start">
+                      <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground animate-pulse">
+                          Loading images...
+                        </span>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="h-6 bg-muted/30 rounded w-1/4 animate-pulse" />
+                        <div className="h-10 bg-muted/30 rounded w-3/4 animate-pulse" />
+                        <div className="h-20 bg-muted/30 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  );
+                }
+                
                 return (
-                  <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 lg:gap-10 items-start">
-                    <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
-                      <span className="text-sm text-muted-foreground animate-pulse">
-                        Loading images...
-                      </span>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="h-6 bg-muted/30 rounded w-1/4 animate-pulse" />
-                      <div className="h-10 bg-muted/30 rounded w-3/4 animate-pulse" />
-                      <div className="h-20 bg-muted/30 rounded animate-pulse" />
-                    </div>
-                  </div>
+                  <PrinterHeroSection
+                    printer={printer}
+                    brand={brand}
+                    displayImages={heroDisplayImages}
+                    isAdmin={isAdmin}
+                    onOpenLightbox={openLightbox}
+                  />
                 );
+              })()}
+            </div>
+
+            {/* Mobile Social Proof Accordion - Shows on smaller screens */}
+            {(() => {
+              // Generate staff pick reasons based on printer features
+              const staffPickReasons: string[] = [];
+              if (printer.max_print_speed_mms && printer.max_print_speed_mms >= 500) {
+                staffPickReasons.push("High-speed printing professionals");
               }
+              if (printer.multi_material_supported) {
+                staffPickReasons.push("Multi-color and multi-material projects");
+              }
+              if (printer.has_enclosure) {
+                staffPickReasons.push("Engineering materials and enclosed printing");
+              }
+              if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
+                const volumeLiters = (printer.build_volume_x_mm * printer.build_volume_y_mm * printer.build_volume_z_mm) / 1000000;
+                if (volumeLiters > 20) {
+                  staffPickReasons.push("Large format printing needs");
+                }
+              }
+              if (printer.auto_bed_leveling) {
+                staffPickReasons.push("Hassle-free setup and maintenance");
+              }
+              if (staffPickReasons.length === 0) {
+                staffPickReasons.push("Hobbyists and home users", "Beginner-friendly printing", "Great value for features");
+              }
+
+              // Use real activity data from analytics
+              const activityData = {
+                views: activityStats?.views_24h || 0,
+                comparisons: activityStats?.comparisons_7d || 0,
+                purchases: activityStats?.buy_clicks_7d || 0,
+              };
+
+              // Generate recent reviews (in production, fetch from reviews table)
+              const recentReviews = printer.rating_community_overall ? [
+                {
+                  id: '1',
+                  rating: 5,
+                  text: 'Amazing print quality and speed. The setup was incredibly easy and I was printing within an hour of unboxing.',
+                  author: 'Mike T.',
+                  verified: true
+                },
+                {
+                  id: '2',
+                  rating: 5,
+                  text: 'Best printer I\'ve owned. Worth every penny for the features and reliability.',
+                  author: 'Sarah M.',
+                  verified: true
+                },
+                {
+                  id: '3',
+                  rating: 4,
+                  text: 'Great machine with excellent support. Would recommend to anyone looking for quality prints.',
+                  author: 'Alex K.',
+                  verified: true
+                }
+              ] : [];
+
+              // Use printer-level warranty if set, otherwise fall back to brand-level warranty
+              const brandData = printer.brand as { brand?: string; warranty_years?: number; warranty_coverage?: string } | null;
+              const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
+              const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
               
+              const sidebarData = {
+                rating: printer.rating_community_overall,
+                reviewCount: printer.review_count_aggregated,
+                recentReviews,
+                staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
+                staffPickReasons,
+                warrantyYears,
+                warrantyCoverage,
+                brandName: brandData?.brand || null,
+                activity: activityData
+              };
+
+              const handleTakeQuiz = () => {
+                navigate('/printers');
+              };
+
+              const scrollToRatings = () => {
+                const ratingsSection = document.querySelector('[data-section="ratings"]');
+                ratingsSection?.scrollIntoView({ behavior: 'smooth' });
+              };
+
               return (
-                <PrinterHeroSection
-                  printer={printer}
-                  brand={brand}
-                  displayImages={heroDisplayImages}
-                  isAdmin={isAdmin}
-                  onOpenLightbox={openLightbox}
-                />
+                <div className="lg:hidden mt-6">
+                  <MobileSocialProof
+                    data={sidebarData}
+                    onReadReviews={scrollToRatings}
+                    onTakeQuiz={handleTakeQuiz}
+                  />
+                </div>
               );
             })()}
+
+            {/* Community Ratings */}
+            {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
+              <Card className="overflow-hidden" data-section="ratings">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold">Community Ratings</CardTitle>
+                    {printer.review_count_aggregated && (
+                      <span className="text-sm text-muted-foreground">
+                        {printer.review_count_aggregated} reviews
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    {printer.rating_community_overall && (
+                      <div className="text-center space-y-2 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                        <div className="text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
+                        <div className="flex justify-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                          ))}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">Overall</div>
+                      </div>
+                    )}
+                    {printer.rating_ease_of_use && (
+                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
+                        <div className="flex justify-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                          ))}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">Ease of Use</div>
+                      </div>
+                    )}
+                    {printer.rating_print_quality && (
+                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
+                        <div className="flex justify-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                          ))}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">Print Quality</div>
+                      </div>
+                    )}
+                    {printer.rating_reliability && (
+                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
+                        <div className="flex justify-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                          ))}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">Reliability</div>
+                      </div>
+                    )}
+                    {printer.rating_value_for_money && (
+                      <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+                        <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
+                        <div className="flex justify-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
+                          ))}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">Value</div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Detailed Specifications - Expandable Drawers */}
+            <SpecsDrawerSection 
+              printer={printer} 
+              accessories={accessories || []}
+              brand={brand}
+            />
+
+            {/* Firmware & Software Sections */}
+            <div className="space-y-6">
+              <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
+              <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
+            </div>
           </div>
 
           {/* Sticky Purchase Sidebar - Desktop Only */}
@@ -665,209 +851,6 @@ const PrinterDetail = () => {
               />
             );
           })()}
-        </div>
-
-        {/* Sidebar Data for Social Proof */}
-        {(() => {
-          // Generate staff pick reasons based on printer features
-          const staffPickReasons: string[] = [];
-          if (printer.max_print_speed_mms && printer.max_print_speed_mms >= 500) {
-            staffPickReasons.push("High-speed printing professionals");
-          }
-          if (printer.multi_material_supported) {
-            staffPickReasons.push("Multi-color and multi-material projects");
-          }
-          if (printer.has_enclosure) {
-            staffPickReasons.push("Engineering materials and enclosed printing");
-          }
-          if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
-            const volumeLiters = (printer.build_volume_x_mm * printer.build_volume_y_mm * printer.build_volume_z_mm) / 1000000;
-            if (volumeLiters > 20) {
-              staffPickReasons.push("Large format printing needs");
-            }
-          }
-          if (printer.auto_bed_leveling) {
-            staffPickReasons.push("Hassle-free setup and maintenance");
-          }
-          if (staffPickReasons.length === 0) {
-            staffPickReasons.push("Hobbyists and home users", "Beginner-friendly printing", "Great value for features");
-          }
-
-          // Use real activity data from analytics
-          const activityData = {
-            views: activityStats?.views_24h || 0,
-            comparisons: activityStats?.comparisons_7d || 0,
-            purchases: activityStats?.buy_clicks_7d || 0,
-          };
-
-          // Generate recent reviews (in production, fetch from reviews table)
-          const recentReviews = printer.rating_community_overall ? [
-            {
-              id: '1',
-              rating: 5,
-              text: 'Amazing print quality and speed. The setup was incredibly easy and I was printing within an hour of unboxing.',
-              author: 'Mike T.',
-              verified: true
-            },
-            {
-              id: '2',
-              rating: 5,
-              text: 'Best printer I\'ve owned. Worth every penny for the features and reliability.',
-              author: 'Sarah M.',
-              verified: true
-            },
-            {
-              id: '3',
-              rating: 4,
-              text: 'Great machine with excellent support. Would recommend to anyone looking for quality prints.',
-              author: 'Alex K.',
-              verified: true
-            }
-          ] : [];
-
-
-          // Use printer-level warranty if set, otherwise fall back to brand-level warranty
-          const brandData = printer.brand as { brand?: string; warranty_years?: number; warranty_coverage?: string } | null;
-          const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
-          const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
-          
-          const sidebarData = {
-            rating: printer.rating_community_overall,
-            reviewCount: printer.review_count_aggregated,
-            recentReviews,
-            staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
-            staffPickReasons,
-            warrantyYears,
-            warrantyCoverage,
-            brandName: brandData?.brand || null,
-            activity: activityData
-          };
-
-          const handleTakeQuiz = () => {
-            navigate('/printers');
-          };
-
-          const scrollToRatings = () => {
-            const ratingsSection = document.querySelector('[data-section="ratings"]');
-            ratingsSection?.scrollIntoView({ behavior: 'smooth' });
-          };
-
-          return (
-            <>
-              {/* Mobile Social Proof Accordion - Shows on smaller screens */}
-              <div className="max-w-[1400px] mx-auto px-5 md:px-10">
-                <MobileSocialProof
-                  data={sidebarData}
-                  onReadReviews={scrollToRatings}
-                  onTakeQuiz={handleTakeQuiz}
-                />
-              </div>
-
-              {/* Desktop Layout: Main Content + Sidebar */}
-              <div className="max-w-[1400px] mx-auto px-5 md:px-10">
-                <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-10 items-start">
-                  {/* Main Content Column */}
-                  <div className="space-y-8">
-
-                    {/* Community Ratings */}
-                    {(printer.rating_community_overall || printer.rating_ease_of_use || printer.rating_print_quality) && (
-                      <Card className="overflow-hidden" data-section="ratings">
-                        <CardHeader className="pb-4">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg font-semibold">Community Ratings</CardTitle>
-                            {printer.review_count_aggregated && (
-                              <span className="text-sm text-muted-foreground">
-                                {printer.review_count_aggregated} reviews
-                              </span>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            {printer.rating_community_overall && (
-                              <div className="text-center space-y-2 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                                <div className="text-2xl md:text-3xl font-bold text-primary">{printer.rating_community_overall.toFixed(1)}</div>
-                                <div className="flex justify-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_community_overall || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium">Overall</div>
-                              </div>
-                            )}
-                            {printer.rating_ease_of_use && (
-                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_ease_of_use.toFixed(1)}</div>
-                                <div className="flex justify-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_ease_of_use || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium">Ease of Use</div>
-                              </div>
-                            )}
-                            {printer.rating_print_quality && (
-                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_print_quality.toFixed(1)}</div>
-                                <div className="flex justify-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_print_quality || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium">Print Quality</div>
-                              </div>
-                            )}
-                            {printer.rating_reliability && (
-                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_reliability.toFixed(1)}</div>
-                                <div className="flex justify-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_reliability || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium">Reliability</div>
-                              </div>
-                            )}
-                            {printer.rating_value_for_money && (
-                              <div className="text-center space-y-2 p-4 bg-muted/30 rounded-xl border border-border/50">
-                                <div className="text-2xl md:text-3xl font-bold text-foreground">{printer.rating_value_for_money.toFixed(1)}</div>
-                                <div className="flex justify-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(printer.rating_value_for_money || 0) ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`} />
-                                  ))}
-                                </div>
-                                <div className="text-xs text-muted-foreground font-medium">Value</div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Detailed Specifications - Expandable Drawers */}
-                    <SpecsDrawerSection 
-                      printer={printer} 
-                      accessories={accessories || []}
-                      brand={brand}
-                    />
-                  </div>
-
-                  {/* Desktop Sidebar */}
-                  <SocialProofSidebar
-                    data={sidebarData}
-                    onReadReviews={scrollToRatings}
-                    onTakeQuiz={handleTakeQuiz}
-                  />
-                </div>
-              </div>
-            </>
-          );
-        })()}
-
-        {/* Firmware & Software Sections */}
-        <div className="max-w-[1400px] mx-auto px-10 md:px-10 px-5 space-y-6">
-          <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
-          <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
         </div>
 
         {/* Similar Printers Comparison Section */}
