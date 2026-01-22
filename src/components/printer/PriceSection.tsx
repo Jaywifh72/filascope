@@ -14,6 +14,8 @@ interface PriceSectionProps {
   isDiscontinued?: boolean;
   /** Currency of the price. If matches user's currency, no conversion is applied. If 'USD' or undefined, price is converted. */
   priceCurrency?: CurrencyCode | string | null;
+  /** Compact mode for sidebar display */
+  compact?: boolean;
 }
 
 export function PriceSection({
@@ -21,7 +23,8 @@ export function PriceSection({
   msrp,
   trend,
   isDiscontinued,
-  priceCurrency
+  priceCurrency,
+  compact = false
 }: PriceSectionProps) {
   const {
     formatPrice,
@@ -66,16 +69,16 @@ export function PriceSection({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="text-sm font-medium text-muted-foreground">
+    <div className={compact ? "space-y-1" : "space-y-2"}>
+      <div className={`font-medium text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
         Current Price
       </div>
       
-      <div className="flex items-baseline gap-3">
-        <span className="text-3xl md:text-4xl font-bold text-foreground inline-flex items-center gap-2">
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span className={`font-bold text-foreground inline-flex items-center gap-2 ${compact ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
           {formatDisplayPrice(displayPrice!)}
           {hasDiscount && (
-            <span className="text-base font-semibold text-emerald-500">
+            <span className={`font-semibold text-emerald-500 ${compact ? 'text-sm' : 'text-base'}`}>
               -{discountPercent}%
             </span>
           )}
@@ -89,7 +92,7 @@ export function PriceSection({
       </div>
 
       {msrp && price && price !== msrp && (
-        <div className="text-sm text-muted-foreground">
+        <div className={`text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>
           <span className="line-through">{formatDisplayPrice(msrp)}</span>
           <span className="ml-2">MSRP</span>
         </div>

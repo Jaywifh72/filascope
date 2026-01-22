@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Box, Gauge, Thermometer, Wifi, WifiOff } from "lucide-react";
 import { SocialProofBadges } from "./SocialProofBadges";
-import { PriceSection } from "./PriceSection";
-import { CTAButtons } from "./CTAButtons";
 import { DataQualityIndicator } from "./DataQualityIndicator";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 
@@ -10,12 +8,6 @@ interface PrinterHeroSectionProps {
   printer: any;
   brand: string | null;
   displayImages: string[];
-  displayPrice: number | null | undefined;
-  displayMsrp: number | null | undefined;
-  isLivePrice: boolean;
-  livePriceCurrency?: string;
-  liveCompareAtPrice?: number | null;
-  getAffiliateUrl: (url: string | null | undefined, vendor?: string | null) => string | null;
   isAdmin?: boolean;
   onOpenLightbox: (index: number) => void;
 }
@@ -44,12 +36,6 @@ export function PrinterHeroSection({
   printer,
   brand,
   displayImages,
-  displayPrice,
-  displayMsrp,
-  isLivePrice,
-  livePriceCurrency,
-  liveCompareAtPrice,
-  getAffiliateUrl,
   isAdmin,
   onOpenLightbox,
 }: PrinterHeroSectionProps) {
@@ -77,146 +63,120 @@ export function PrinterHeroSection({
   const thumbnailSlots = Array(5).fill(null).map((_, idx) => displayImages[idx] || null);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-8 lg:gap-12 items-start">
-      {/* Left Column: Product Images - 40% width */}
-      <div className="w-full space-y-4">
-        {/* Main Image */}
-        {displayImages.length > 0 ? (
-          <div 
-            className="relative aspect-square bg-muted/20 rounded-xl border border-border/50 cursor-pointer group overflow-hidden"
-            onClick={() => onOpenLightbox(selectedImageIndex)}
-            role="button"
-            aria-label={`View ${printer.model_name} product image in fullscreen`}
-          >
-            <div className="absolute inset-4 flex items-center justify-center">
-              <img 
-                src={displayImages[selectedImageIndex] || displayImages[0]} 
-                alt={`${printer.model_name} product image`}
-                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
-            <Box className="h-20 w-20 text-muted-foreground/30" />
-          </div>
-        )}
-
-        {/* Thumbnail Gallery - 5 slots */}
-        <div className="grid grid-cols-5 gap-2">
-          {thumbnailSlots.map((img, idx) => (
-            <button
-              key={idx}
-              className={`relative aspect-square bg-muted/20 rounded-lg border p-1 flex items-center justify-center transition-all duration-200 ${
-                img
-                  ? idx === selectedImageIndex
-                    ? 'border-primary bg-primary/10 cursor-pointer'
-                    : 'border-border/50 hover:border-primary/50 cursor-pointer'
-                  : 'border-dashed border-border/30 cursor-default'
-              }`}
-              onClick={() => img && setSelectedImageIndex(idx)}
-              disabled={!img}
-              aria-label={img ? `View image ${idx + 1}` : `Empty slot ${idx + 1}`}
+    <div className="space-y-6">
+      {/* Image and Info Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 lg:gap-10 items-start">
+        {/* Left Column: Product Images */}
+        <div className="w-full space-y-4">
+          {/* Main Image */}
+          {displayImages.length > 0 ? (
+            <div 
+              className="relative aspect-square bg-muted/20 rounded-xl border border-border/50 cursor-pointer group overflow-hidden"
+              onClick={() => onOpenLightbox(selectedImageIndex)}
+              role="button"
+              aria-label={`View ${printer.model_name} product image in fullscreen`}
             >
-              {img ? (
+              <div className="absolute inset-4 flex items-center justify-center">
                 <img 
-                  src={img} 
-                  alt={`${printer.model_name} view ${idx + 1}`}
-                  className="max-w-full max-h-full object-contain"
-                  loading="lazy"
+                  src={displayImages[selectedImageIndex] || displayImages[0]} 
+                  alt={`${printer.model_name} product image`}
+                  className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                 />
-              ) : (
-                <Box className="h-4 w-4 text-muted-foreground/20" />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+              </div>
+            </div>
+          ) : (
+            <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
+              <Box className="h-20 w-20 text-muted-foreground/30" />
+            </div>
+          )}
 
-      {/* Right Column: Product Info - 60% width */}
-      <div className="space-y-6">
-        {/* Brand */}
-        <div className="text-sm font-medium text-primary uppercase tracking-wide">
-          {brand}
-        </div>
-
-        {/* Model Name */}
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-          {printer.model_name}
-        </h1>
-
-        {/* Description */}
-        <p className="text-muted-foreground leading-relaxed">
-          {generatePrinterDescription({
-            ...printer,
-            brand: brand || undefined
-          })}
-        </p>
-
-        {/* Social Proof Badges */}
-        <SocialProofBadges
-          isStaffPick={false}
-          rating={printer.rating_community_overall}
-          reviewCount={printer.review_count_aggregated}
-        />
-
-        {/* Quick Specs Grid - 2x2 */}
-        <div className="grid grid-cols-2 gap-3">
-          <QuickSpecCard 
-            icon={Box} 
-            label="Build Volume" 
-            value={buildVolume} 
-          />
-          <QuickSpecCard 
-            icon={Gauge} 
-            label="Max Speed" 
-            value={maxSpeed} 
-          />
-          <QuickSpecCard 
-            icon={Thermometer} 
-            label="Max Nozzle Temp" 
-            value={maxNozzleTemp} 
-          />
-          <QuickSpecCard 
-            icon={hasWifi ? Wifi : WifiOff} 
-            label="Connectivity" 
-            value={hasWifi ? "Wi-Fi Enabled" : "No Wi-Fi"} 
-          />
+          {/* Thumbnail Gallery - 5 slots */}
+          <div className="grid grid-cols-5 gap-2">
+            {thumbnailSlots.map((img, idx) => (
+              <button
+                key={idx}
+                className={`relative aspect-square bg-muted/20 rounded-lg border p-1 flex items-center justify-center transition-all duration-200 ${
+                  img
+                    ? idx === selectedImageIndex
+                      ? 'border-primary bg-primary/10 cursor-pointer'
+                      : 'border-border/50 hover:border-primary/50 cursor-pointer'
+                    : 'border-dashed border-border/30 cursor-default'
+                }`}
+                onClick={() => img && setSelectedImageIndex(idx)}
+                disabled={!img}
+                aria-label={img ? `View image ${idx + 1}` : `Empty slot ${idx + 1}`}
+              >
+                {img ? (
+                  <img 
+                    src={img} 
+                    alt={`${printer.model_name} view ${idx + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <Box className="h-4 w-4 text-muted-foreground/20" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Price Section - directly under specs */}
-        <div className="pt-2">
-          <PriceSection
-            price={displayPrice}
-            msrp={displayMsrp}
-            trend={isLivePrice ? { direction: 'down' as const, percentage: liveCompareAtPrice && displayPrice ? Math.round((1 - displayPrice / liveCompareAtPrice) * 100) : undefined, period: 'sale' } : undefined}
-            isDiscontinued={printer.discontinued}
-            priceCurrency={isLivePrice ? livePriceCurrency : 'USD'}
-          />
-        </div>
+        {/* Right Column: Product Info */}
+        <div className="space-y-5">
+          {/* Brand */}
+          <div className="text-sm font-medium text-primary uppercase tracking-wide">
+            {brand}
+          </div>
 
-        {/* CTA Buttons - larger, side-by-side */}
-        <div className="pt-2">
-          <CTAButtons
-            printer={{
-              id: printer.id,
-              name: printer.model_name,
-              imageUrl: displayImages[0] || null,
-              brand: brand,
-            }}
-            officialStoreUrl={printer.official_store_url}
-            storePrice={displayPrice}
-            getAffiliateUrl={getAffiliateUrl}
-            brand={brand}
-            isDiscontinued={printer.discontinued}
-            largeButtons
-          />
-        </div>
+          {/* Model Name */}
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
+            {printer.model_name}
+          </h1>
 
-        {/* Admin: Data Quality Indicator */}
-        {isAdmin && (
-          <DataQualityIndicator printer={printer} className="mt-4" />
-        )}
+          {/* Description */}
+          <p className="text-muted-foreground leading-relaxed">
+            {generatePrinterDescription({
+              ...printer,
+              brand: brand || undefined
+            })}
+          </p>
+
+          {/* Social Proof Badges */}
+          <SocialProofBadges
+            isStaffPick={false}
+            rating={printer.rating_community_overall}
+            reviewCount={printer.review_count_aggregated}
+          />
+
+          {/* Quick Specs Grid - 2x2 */}
+          <div className="grid grid-cols-2 gap-3">
+            <QuickSpecCard 
+              icon={Box} 
+              label="Build Volume" 
+              value={buildVolume} 
+            />
+            <QuickSpecCard 
+              icon={Gauge} 
+              label="Max Speed" 
+              value={maxSpeed} 
+            />
+            <QuickSpecCard 
+              icon={Thermometer} 
+              label="Max Nozzle Temp" 
+              value={maxNozzleTemp} 
+            />
+            <QuickSpecCard 
+              icon={hasWifi ? Wifi : WifiOff} 
+              label="Connectivity" 
+              value={hasWifi ? "Wi-Fi Enabled" : "No Wi-Fi"} 
+            />
+          </div>
+
+          {/* Admin: Data Quality Indicator */}
+          {isAdmin && (
+            <DataQualityIndicator printer={printer} className="mt-4" />
+          )}
+        </div>
       </div>
     </div>
   );

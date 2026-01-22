@@ -11,6 +11,8 @@ interface CTAButtonsProps {
   brand?: string | null;
   isDiscontinued?: boolean;
   largeButtons?: boolean;
+  /** Stack buttons vertically for sidebar */
+  stackedButtons?: boolean;
 }
 
 export function CTAButtons({
@@ -21,6 +23,7 @@ export function CTAButtons({
   brand,
   isDiscontinued,
   largeButtons = false,
+  stackedButtons = false,
 }: CTAButtonsProps) {
   const { addPrinter, isSelected, isMaxReached } = usePrinterCompare();
   const { formatPrice } = useCurrency();
@@ -45,20 +48,20 @@ export function CTAButtons({
     ? getAffiliateUrl(officialStoreUrl, brand)
     : officialStoreUrl;
 
-  const buttonHeight = largeButtons ? 'h-14' : 'h-12';
-  const buttonPadding = largeButtons ? 'px-8' : 'px-6';
-  const fontSize = largeButtons ? 'text-base' : 'text-sm';
-  const iconSize = largeButtons ? 'h-5 w-5' : 'h-4 w-4';
+  const buttonHeight = stackedButtons ? 'h-11' : largeButtons ? 'h-14' : 'h-12';
+  const buttonPadding = stackedButtons ? 'px-4' : largeButtons ? 'px-8' : 'px-6';
+  const fontSize = stackedButtons ? 'text-sm' : largeButtons ? 'text-base' : 'text-sm';
+  const iconSize = stackedButtons ? 'h-4 w-4' : largeButtons ? 'h-5 w-5' : 'h-4 w-4';
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className={stackedButtons ? "flex flex-col gap-3" : "flex flex-wrap gap-4"}>
       {/* Primary: Buy Now */}
       {affiliateUrl && (
         <a
           href={affiliateUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex flex-1 min-w-[160px]"
+          className={stackedButtons ? "block w-full" : "inline-flex flex-1 min-w-[160px]"}
           onClick={handleBuyClick}
         >
           <button
@@ -78,7 +81,7 @@ export function CTAButtons({
 
       {/* Secondary: Compare */}
       <button
-        className={`flex-1 min-w-[140px] ${buttonHeight} ${largeButtons ? 'px-6' : 'px-5'} ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 border transition-all duration-200 ${
+        className={`${stackedButtons ? 'w-full' : 'flex-1 min-w-[140px]'} ${buttonHeight} ${stackedButtons ? 'px-4' : largeButtons ? 'px-6' : 'px-5'} ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 border transition-all duration-200 ${
           isAlreadySelected || isMaxReached
             ? 'border-border text-muted-foreground cursor-not-allowed bg-muted/30'
             : 'border-primary/40 text-primary hover:bg-primary/10 hover:border-primary hover:-translate-y-0.5'
