@@ -201,8 +201,13 @@ export default function LargeFeaturedPrinterCard({
                 {printer.discontinued ? (
                   <span className="font-mono text-lg text-destructive/70">DISCONTINUED</span>
                 ) : price ? (
-                  <span className="font-mono text-2xl font-bold text-amber-400">
+                  <span className="font-mono text-2xl font-bold text-amber-400 inline-flex items-center gap-2">
                     {formatPrice(price)}
+                    {printer.msrp_usd && price < printer.msrp_usd && (
+                      <span className="text-sm font-medium text-emerald-400">
+                        -{Math.round((1 - price / printer.msrp_usd) * 100)}%
+                      </span>
+                    )}
                   </span>
                 ) : (
                   <span className="font-mono text-lg text-muted-foreground">TBD</span>
