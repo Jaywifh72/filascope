@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Download, Loader2, X, Database as DatabaseIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersLeftSidebar, { type AdvancedFilters } from "@/components/printers/PrintersLeftSidebar";
@@ -224,7 +224,8 @@ export default function Printers() {
     activeQuickFilters.length > 0;
   
   // Printer compare context
-  const { addPrinter, removePrinter, isSelected, isMaxReached } = usePrinterCompare();
+  // Printer compare context
+  const { addPrinter, removePrinter, isSelected, isMaxReached, selectedPrinters, count: compareCount } = usePrinterCompare();
   
   // Image edit dialog state
   const [imageEditPrinter, setImageEditPrinter] = useState<Printer | null>(null);
@@ -578,6 +579,20 @@ export default function Printers() {
             </h2>
           </div>
           <div className="flex items-center gap-2">
+            {/* Compare Selected Button */}
+            {compareCount > 0 && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  const ids = selectedPrinters.map(p => p.id).join(',');
+                  navigate(`/printers/compare?ids=${ids}`);
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-xs"
+              >
+                <GitCompareArrows className="w-3.5 h-3.5 mr-1.5" />
+                Compare Selected ({compareCount})
+              </Button>
+            )}
             {hasActiveFilters && (
               <Button
                 variant="ghost"

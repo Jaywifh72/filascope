@@ -6,6 +6,8 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
+import ComparisonCheckbox from "./ComparisonCheckbox";
+
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
   series: { series_name: string } | null;
@@ -121,23 +123,36 @@ export default function MediumStandardPrinterCard({
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name}`}
     >
+      {/* Compare Checkbox - Top right corner */}
+      <div className="absolute top-3 right-3 z-10">
+        <ComparisonCheckbox
+          checked={isSelected}
+          disabled={isMaxReached}
+          onChange={onToggleCompare}
+          printerName={printer.model_name}
+        />
+      </div>
+
       <Link to={`/printers/${printer.id}`}>
         <div 
-          className="
+          className={`
             relative
             bg-card/80 
-            border border-white/10 
+            border 
             rounded-xl 
             p-6 
             transition-all duration-300 ease-out
-            hover:border-primary/50
             hover:-translate-y-1 
             hover:shadow-[0_0_30px_rgba(0,207,232,0.12)]
             cursor-pointer
             h-full
             flex flex-col
             gap-3
-          "
+            ${isSelected 
+              ? 'border-primary/60 shadow-[0_0_15px_rgba(0,207,232,0.15)]' 
+              : 'border-white/10 hover:border-primary/50'
+            }
+          `}
         >
           {/* Brand Logo - Top of Card (PROMINENT) */}
           {getBrandLogo(printer.brand?.brand || null) && (
