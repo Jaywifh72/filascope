@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, CheckCircle2 } from "lucide-react";
+import { Printer as PrinterIcon, CheckCircle2, Tag } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -207,27 +207,31 @@ export default function MediumStandardPrinterCard({
             )}
           </div>
 
-          {/* Price Section - Clean, no label */}
-          <div className="flex items-baseline gap-2 flex-wrap">
+          {/* Price Section */}
+          <div className="flex items-center gap-2 flex-wrap">
             {printer.discontinued ? (
               <span className="text-sm font-medium text-destructive/70">DISCONTINUED</span>
             ) : priceLoading ? (
               <span className="text-sm text-muted-foreground animate-pulse">Loading...</span>
             ) : price ? (
               <>
-                <span className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">
+                {/* Current Price - Prominent */}
+                <span className="text-xl font-bold text-white inline-flex items-center gap-1.5">
+                  <Tag className="h-4 w-4 text-primary opacity-70" />
                   {formatDisplayPrice(price)}
                   {isLivePrice && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
                 </span>
+                
+                {/* Original Price & Discount Badge */}
                 {printer.msrp_usd && price < printer.msrp_usd && (
-                  <>
-                    <span className="text-sm text-muted-foreground line-through">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm text-gray-500 line-through">
                       {formatDisplayPrice(printer.msrp_usd)}
                     </span>
-                    <span className="text-xs font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
+                    <span className="text-xs font-semibold bg-emerald-500/90 text-white px-2 py-0.5 rounded-full">
                       -{discountPercent}%
                     </span>
-                  </>
+                  </div>
                 )}
               </>
             ) : (
