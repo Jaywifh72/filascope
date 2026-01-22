@@ -88,7 +88,7 @@ function ConnectionCard({
   );
 }
 
-// Info row component with enhanced spacing
+// Info row component with enhanced spacing and improved boolean icons
 function InfoRow({ 
   label, 
   value, 
@@ -103,7 +103,7 @@ function InfoRow({
 
   let displayValue: React.ReactNode;
   if (isEmpty) {
-    displayValue = <span className="text-muted-foreground/50">—</span>;
+    displayValue = <span className="text-muted-foreground/50 italic">Not specified</span>;
   } else if (isBoolean) {
     displayValue = value ? (
       <span className="inline-flex items-center gap-1.5 text-green-400">
@@ -111,7 +111,7 @@ function InfoRow({
         Yes
       </span>
     ) : (
-      <span className="inline-flex items-center gap-1.5 text-muted-foreground/60">
+      <span className="inline-flex items-center gap-1.5 text-gray-500">
         <X className="w-4 h-4" />
         No
       </span>
@@ -121,7 +121,7 @@ function InfoRow({
   }
 
   return (
-    <div className="spec-row">
+    <div className={cn("spec-row", isEmpty && "opacity-60")}>
       <span className="data-label">{label}</span>
       <span className="data-value">{displayValue}</span>
     </div>

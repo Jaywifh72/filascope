@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AccessoryCompatibilityBadge } from '@/components/AccessoryCompatibilityBadge';
 import { AccessoryPriceChart } from '@/components/AccessoryPriceChart';
+import { AccessoriesEmptyState } from '@/components/ui/empty-state';
 import {
   checkHotendPrinterCompatibility,
   checkBuildPlatePrinterCompatibility,
@@ -372,10 +373,12 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
       </section>
 
       {/* Compatible Accessories */}
-      {accessories && accessories.length > 0 && (
-        <section className="section-card">
-          <SectionHeader icon={Cpu} title="Compatible Accessories" />
-          
+      <section className="section-card">
+        <SectionHeader icon={Cpu} title="Compatible Accessories" />
+        
+        {(!accessories || accessories.length === 0) ? (
+          <AccessoriesEmptyState printerSlug={printer.model_name || printer.id} />
+        ) : (
           <div className="space-y-6">
             {/* Hotends */}
             {hotends.length > 0 && (
@@ -532,8 +535,8 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
               </div>
             )}
           </div>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
 }
