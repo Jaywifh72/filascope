@@ -83,7 +83,7 @@ export const brandLogos: Record<string, string> = {
   "FlashForge": "/images/brands/flashforge-new.png",
   "FLSUN": "/images/brands/flsun.webp",
   "LDO Motors": "/images/brands/ldo-motors.png",
-  "Markforged": "/images/brands/markforged.png",
+  "Markforged": "/images/brands/markforged-new.png",
   "Prusa Research": "/images/brands/prusa-research-new.jpg",
   "QIDI Tech": "/images/brands/qidi.png",
   "QIDI": "/images/brands/qidi.png",
