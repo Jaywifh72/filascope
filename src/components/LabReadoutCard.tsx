@@ -241,15 +241,15 @@ export function LabReadoutCard({
             aria-checked={isSelected}
             role="checkbox"
             className={cn(
-              "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
+              "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer",
               isSelected || isPendingSelection
-                ? "bg-primary border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
-                : "bg-transparent border-gray-600 hover:border-primary/60 hover:bg-primary/10 hover:scale-105",
+                ? "bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
+                : "bg-transparent border-2 border-gray-600 hover:border-gray-500",
               isCompareDisabled && "opacity-50 cursor-not-allowed"
             )}
           >
             {(isSelected || isPendingSelection) && (
-              <Check className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />
+              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
             )}
           </button>
           

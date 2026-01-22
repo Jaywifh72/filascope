@@ -1490,7 +1490,7 @@ const Finder = () => {
               <Button 
                 onClick={() => setDisplayCount(prev => prev + ITEMS_PER_PAGE)}
                 variant="outline"
-                className="px-8"
+                className="px-8 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:border-primary text-white transition-all duration-200"
               >
                 Load More
               </Button>
