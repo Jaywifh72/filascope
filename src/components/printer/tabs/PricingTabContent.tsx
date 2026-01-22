@@ -31,7 +31,7 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: 
   );
 }
 
-// Info row for assembly section
+// Info row for assembly section with improved boolean icons
 function InfoRow({ 
   label, 
   value, 
@@ -46,15 +46,15 @@ function InfoRow({
 
   let displayValue: React.ReactNode;
   if (isEmpty) {
-    displayValue = <span className="text-muted-foreground/50">—</span>;
+    displayValue = <span className="text-muted-foreground/50 italic">Not specified</span>;
   } else if (isBoolean) {
     displayValue = value ? (
-      <span className="inline-flex items-center gap-1.5 text-primary">
+      <span className="inline-flex items-center gap-1.5 text-green-400">
         <Check className="w-4 h-4" />
         Yes
       </span>
     ) : (
-      <span className="inline-flex items-center gap-1.5 text-muted-foreground/60">
+      <span className="inline-flex items-center gap-1.5 text-gray-500">
         <X className="w-4 h-4" />
         No
       </span>
@@ -64,7 +64,7 @@ function InfoRow({
   }
 
   return (
-    <div className="spec-row">
+    <div className={cn("spec-row", isEmpty && "opacity-60")}>
       <span className="data-label">{label}</span>
       <span className="data-value">{displayValue}</span>
     </div>
@@ -153,19 +153,29 @@ export function PricingTabContent({
               <div className="text-sm sm:text-lg font-bold text-foreground">
                 {printer.current_price_usd_store 
                   ? formatPrice(printer.current_price_usd_store)
-                  : '—'
+                  : <span className="text-gray-500 italic text-sm font-normal">Not available</span>
                 }
               </div>
             </div>
             <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
               <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mx-auto mb-2 sm:mb-3" />
               <div className="text-xs sm:text-sm text-gray-400 mb-1">Amazon</div>
-              <div className="text-sm sm:text-lg font-bold text-foreground">
-                {printer.current_price_usd_amazon 
-                  ? formatPrice(printer.current_price_usd_amazon)
-                  : '—'
-                }
-              </div>
+              {printer.current_price_usd_amazon ? (
+                <div className="text-sm sm:text-lg font-bold text-foreground">
+                  {formatPrice(printer.current_price_usd_amazon)}
+                </div>
+              ) : hasAnyAmazonLink ? (
+                <a 
+                  href={getAmazonUrl(printer.amazon_link_us || printer.amazon_link_uk || printer.amazon_link_de) || printer.amazon_link_us}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Check Amazon <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <span className="text-gray-500 italic text-sm font-normal">Not available</span>
+              )}
             </div>
             <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
               <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mx-auto mb-2 sm:mb-3" />
@@ -173,7 +183,7 @@ export function PricingTabContent({
               <div className="text-sm sm:text-lg font-bold text-foreground">
                 {printer.msrp_usd 
                   ? formatPrice(printer.msrp_usd)
-                  : '—'
+                  : <span className="text-gray-500 italic text-sm font-normal">Not set</span>
                 }
               </div>
             </div>
@@ -275,9 +285,9 @@ export function PricingTabContent({
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
-              !printer.msrp_usd ? "text-gray-500" : "text-foreground"
+              !printer.msrp_usd ? "text-gray-500 italic font-normal" : "text-foreground"
             )}>
-              {printer.msrp_usd ? `$${printer.msrp_usd}` : 'N/A'}
+              {printer.msrp_usd ? `$${printer.msrp_usd}` : 'Not set'}
             </div>
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
@@ -286,9 +296,9 @@ export function PricingTabContent({
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
-              !printer.msrp_cad ? "text-gray-500" : "text-foreground"
+              !printer.msrp_cad ? "text-gray-500 italic font-normal" : "text-foreground"
             )}>
-              {printer.msrp_cad ? `C$${printer.msrp_cad}` : 'N/A'}
+              {printer.msrp_cad ? `C$${printer.msrp_cad}` : 'Not set'}
             </div>
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
@@ -297,9 +307,9 @@ export function PricingTabContent({
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
-              !printer.msrp_eur ? "text-gray-500" : "text-foreground"
+              !printer.msrp_eur ? "text-gray-500 italic font-normal" : "text-foreground"
             )}>
-              {printer.msrp_eur ? `€${printer.msrp_eur}` : 'N/A'}
+              {printer.msrp_eur ? `€${printer.msrp_eur}` : 'Not set'}
             </div>
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
@@ -308,9 +318,9 @@ export function PricingTabContent({
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
-              !printer.msrp_gbp ? "text-gray-500" : "text-foreground"
+              !printer.msrp_gbp ? "text-gray-500 italic font-normal" : "text-foreground"
             )}>
-              {printer.msrp_gbp ? `£${printer.msrp_gbp}` : 'N/A'}
+              {printer.msrp_gbp ? `£${printer.msrp_gbp}` : 'Not set'}
             </div>
           </div>
         </div>
@@ -344,9 +354,9 @@ export function PricingTabContent({
             <div className="text-xs sm:text-sm text-gray-400 mb-1">Release Date</div>
             <div className={cn(
               "text-sm sm:text-base font-medium",
-              !printer.release_date ? "text-gray-500" : "text-white"
+              !printer.release_date ? "text-gray-500 italic" : "text-white"
             )}>
-              {printer.release_date || '—'}
+              {printer.release_date || 'Not specified'}
             </div>
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
@@ -354,7 +364,7 @@ export function PricingTabContent({
             {printer.price_tier ? (
               <Badge variant="secondary" className="capitalize text-xs sm:text-sm">{printer.price_tier}</Badge>
             ) : (
-              <span className="text-sm sm:text-base font-medium text-gray-500">—</span>
+              <span className="text-sm sm:text-base text-gray-500 italic">Not set</span>
             )}
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
@@ -362,7 +372,7 @@ export function PricingTabContent({
             {printer.target_user_segment ? (
               <Badge variant="secondary" className="text-xs sm:text-sm">{printer.target_user_segment}</Badge>
             ) : (
-              <span className="text-sm sm:text-base font-medium text-gray-500">—</span>
+              <span className="text-sm sm:text-base text-gray-500 italic">Not set</span>
             )}
           </div>
         </div>

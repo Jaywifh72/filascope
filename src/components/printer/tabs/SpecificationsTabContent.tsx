@@ -1,7 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { 
   Box, Zap, Thermometer, Layers, Shield, Battery, Info, 
-  Check, X, Eye, EyeOff, ChevronRight, ChevronDown
+  Check, X, Eye, EyeOff, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -34,14 +34,19 @@ const CATEGORIES: SpecCategory[] = [
   { id: 'general', label: 'General', icon: Info },
 ];
 
-// Enhanced SpecRow with improved spacing
+// Helper to check if a value is empty
+const isValueEmpty = (value: any): boolean => {
+  return value === null || value === undefined || value === '' || value === '—';
+};
+
+// Enhanced SpecRow with improved spacing and boolean icons
 const SpecRow: React.FC<{
   label: string;
   value: any;
   unit?: string;
   showEmpty?: boolean;
 }> = ({ label, value, unit, showEmpty = false }) => {
-  const isEmpty = value === null || value === undefined || value === '' || value === '—';
+  const isEmpty = isValueEmpty(value);
   
   if (isEmpty && !showEmpty) return null;
 
@@ -51,17 +56,17 @@ const SpecRow: React.FC<{
 
   let displayValue: React.ReactNode;
   if (isEmpty) {
-    displayValue = <span className="text-muted-foreground/50">—</span>;
+    displayValue = <span className="text-muted-foreground/50 italic">Not specified</span>;
   } else if (isYes) {
     displayValue = (
-      <span className="inline-flex items-center gap-1.5 text-primary">
+      <span className="inline-flex items-center gap-1.5 text-green-400">
         <Check className="w-4 h-4" />
         Yes
       </span>
     );
   } else if (isNo) {
     displayValue = (
-      <span className="inline-flex items-center gap-1.5 text-muted-foreground/60">
+      <span className="inline-flex items-center gap-1.5 text-gray-500">
         <X className="w-4 h-4" />
         No
       </span>
@@ -71,11 +76,11 @@ const SpecRow: React.FC<{
   }
 
   return (
-    <div className="spec-row">
+    <div className={cn("spec-row", isEmpty && "opacity-60")}>
       <div className="text-sm text-gray-400">{label}</div>
       <div className={cn(
         "text-sm sm:text-base font-medium text-right",
-        isBoolean && !isYes && "text-gray-500"
+        isEmpty ? "text-gray-500" : isBoolean && !isYes ? "text-gray-500" : "text-white"
       )}>
         {displayValue}
       </div>
@@ -118,6 +123,34 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
   const [activeCategory, setActiveCategory] = useState('dimensions');
   const [showAllFields, setShowAllFields] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Count hidden (empty) fields
+  const hiddenFieldsCount = useMemo(() => {
+    const fieldsToCheck = [
+      printer.build_volume_x_mm, printer.build_volume_y_mm, printer.build_volume_z_mm,
+      printer.layer_height_min_um, printer.layer_height_max_um, printer.layer_height_default_um,
+      printer.xy_positioning_accuracy_um, printer.z_positioning_accuracy_um, printer.repeatability_um,
+      printer.printer_dimensions_mm, printer.printer_weight_kg, printer.package_dimensions_mm, printer.package_weight_kg,
+      printer.max_print_speed_mms, printer.max_travel_speed_xy_mms, printer.recommended_quality_speed_mms,
+      printer.max_acceleration_xy_mmss, printer.max_acceleration_z_mmss,
+      printer.input_shaping_supported, printer.linear_rails_on_axes, printer.kinematics,
+      printer.extruder_count, printer.extruder_type, printer.extruder_drive_type, printer.filament_diameter_mm,
+      printer.hotend_type, printer.hotend_brand_model, printer.max_nozzle_temp_c, printer.sustained_nozzle_temp_c, printer.max_flow_rate_mm3s,
+      printer.stock_nozzle_diameter_mm, printer.supported_nozzle_diameters_mm, printer.nozzle_material, printer.nozzle_change_ease,
+      printer.bed_size_x_mm, printer.bed_size_y_mm, printer.bed_type,
+      printer.bed_heated, printer.bed_max_temp_c, printer.bed_heater_power_w,
+      printer.stock_plate_types, printer.supported_plate_types,
+      printer.auto_bed_leveling, printer.auto_bed_leveling_method,
+      printer.has_enclosure, printer.enclosure_type, printer.enclosure_heated, printer.enclosure_max_temp_c,
+      printer.internal_lighting, printer.door_sensor, printer.filter_type,
+      printer.power_input_voltage, printer.rated_power_w, printer.typical_power_pla_w, printer.typical_power_abs_w, printer.power_supply_type,
+      printer.thermal_runaway_protection, printer.power_loss_recovery, printer.smoke_sensor, printer.safety_certifications, printer.temperature_sensors,
+      printer.frame_material, printer.assembly_required, printer.average_assembly_time_min,
+      printer.printer_id, printer.sku, printer.release_date, printer.discontinued, printer.printer_technology,
+      printer.firmware_family, printer.firmware_open_source, printer.target_user_segment, printer.price_tier, printer.maintenance_interval_hours
+    ];
+    return fieldsToCheck.filter(isValueEmpty).length;
+  }, [printer]);
 
   const scrollToSection = useCallback((categoryId: string) => {
     setActiveCategory(categoryId);
@@ -192,13 +225,19 @@ export function SpecificationsTabContent({ printer }: SpecificationsTabContentPr
         <div className="flex items-center justify-between p-3 sm:p-4 bg-muted/30 border border-border/40 rounded-xl">
           <div className="flex items-center gap-2 sm:gap-3">
             {showAllFields ? (
-              <Eye className="w-4 h-4 text-muted-foreground" />
+              <Eye className="w-4 h-4 text-primary" />
             ) : (
               <EyeOff className="w-4 h-4 text-muted-foreground" />
             )}
             <Label htmlFor="show-all" className="text-sm text-gray-400 cursor-pointer">
-              <span className="hidden sm:inline">Show all fields (including empty)</span>
-              <span className="sm:hidden">Show empty fields</span>
+              {showAllFields ? (
+                <span>Showing all fields</span>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Show all fields ({hiddenFieldsCount} hidden)</span>
+                  <span className="sm:hidden">{hiddenFieldsCount} hidden</span>
+                </>
+              )}
             </Label>
           </div>
           <Switch
