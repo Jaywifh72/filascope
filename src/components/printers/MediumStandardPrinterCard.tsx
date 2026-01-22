@@ -180,6 +180,11 @@ export default function MediumStandardPrinterCard({
               <span className="font-mono text-lg font-bold text-amber-400 inline-flex items-center gap-1.5">
                 {formatPrice(price)}
                 {isLivePrice && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                {printer.msrp_usd && price < printer.msrp_usd && (
+                  <span className="text-xs font-medium text-emerald-400 ml-1">
+                    -{Math.round((1 - price / printer.msrp_usd) * 100)}%
+                  </span>
+                )}
               </span>
             ) : (
               <span className="font-mono text-sm text-muted-foreground">TBD</span>
