@@ -7,32 +7,36 @@ interface FilamentCardSkeletonProps {
 export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
   return (
     <div 
-      className="relative rounded-2xl bg-white/[0.03] border border-white/[0.08] min-h-[380px]"
+      className="relative rounded-2xl bg-white/[0.03] border border-gray-700 min-h-[380px]"
       style={{ 
         animationDelay: `${index * 50}ms`,
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`
       }}
     >
-      {/* Checkbox placeholder */}
-      <div className="absolute top-4 left-4">
-        <Skeleton className="w-6 h-6 rounded-md" />
+      {/* Checkbox placeholder - top right */}
+      <div className="absolute top-4 right-4">
+        <Skeleton className="w-6 h-6 rounded-full" />
       </div>
 
       {/* Header Section */}
       <div className="px-6 pt-6 pb-4 border-b border-white/[0.05]">
-        {/* Brand */}
-        <div className="flex items-center gap-2 mb-2 pl-8">
+        {/* Brand - centered */}
+        <div className="flex items-center justify-center gap-2 mb-2">
           <Skeleton className="w-5 h-5 rounded" />
           <Skeleton className="h-3 w-20" />
         </div>
         
-        {/* Product Name + Color Swatch */}
-        <div className="flex items-start gap-2 pl-8">
-          <div className="flex-1">
-            <Skeleton className="h-5 w-full mb-1.5" />
-            <Skeleton className="h-5 w-3/4" />
-          </div>
-          <Skeleton className="w-4 h-4 rounded-full flex-shrink-0 mt-1" />
+        {/* Color swatches - centered */}
+        <div className="flex items-center justify-center gap-1 mb-2">
+          <Skeleton className="w-3.5 h-3.5 rounded-full" />
+          <Skeleton className="w-3.5 h-3.5 rounded-full" />
+          <Skeleton className="w-3.5 h-3.5 rounded-full" />
+        </div>
+        
+        {/* Product Name - centered */}
+        <div className="text-center">
+          <Skeleton className="h-5 w-full mb-1.5 mx-auto" />
+          <Skeleton className="h-5 w-3/4 mx-auto" />
         </div>
       </div>
 

@@ -308,10 +308,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-2xl transition-all duration-300 min-h-[340px]",
-        "bg-white/[0.03] border border-white/[0.08]",
+        "group relative rounded-2xl transition-all duration-200 min-h-[340px]",
+        "bg-white/[0.03] border border-gray-700",
+        "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-        isHovered && !isOutOfStock && "transform -translate-y-1 shadow-[0_12px_24px_rgba(0,0,0,0.3)] border-primary/30",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
         isOutOfStock && "opacity-70"
@@ -334,21 +334,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         </div>
       )}
 
-      {/* Stock Status Indicator - Hover Only (top-right corner) */}
-      {isHovered && !isOutOfStock && filament.variant_available === true && (
-        <div className="absolute top-4 right-4 z-10 animate-fadeIn">
-          <div className="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/40 rounded-md px-2 py-1">
-            <CheckCircle className="w-3 h-3 text-emerald-400" />
-            <span className="text-[10px] font-semibold text-emerald-400">In Stock</span>
-          </div>
-        </div>
-      )}
-
       {/* ═══════════════════════════════════════════════════════════════
-          CHECKBOX (Top-Left - Not counted in 5 elements)
+          CHECKBOX (Top-Right - Matching Printers page)
           ═══════════════════════════════════════════════════════════════ */}
       <div 
-        className="absolute top-4 left-4 z-10"
+        className="absolute top-4 right-4 z-10"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
@@ -359,21 +349,21 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           aria-checked={isSelected}
           role="checkbox"
           className={cn(
-            "w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
+            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 cursor-pointer",
             isSelected || isPendingSelection
-              ? "bg-primary border-primary"
-              : "bg-black/30 border-white/30 hover:border-primary hover:bg-primary/10",
+              ? "bg-primary border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
+              : "bg-transparent border-gray-600 hover:border-primary/60 hover:bg-primary/10 hover:scale-105",
             isCompareDisabled && "opacity-50 cursor-not-allowed"
           )}
         >
           {(isSelected || isPendingSelection) && (
-            <Check className="w-4 h-4 text-background" strokeWidth={3} />
+            <Check className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3} />
           )}
         </button>
         
         {/* Tooltip */}
         {showTooltip && !isSelected && !isCompareDisabled && (
-          <div className="absolute top-full left-0 mt-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs rounded-md whitespace-nowrap z-20">
+          <div className="absolute top-full right-0 mt-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs rounded-md whitespace-nowrap z-20">
             Add to compare (max 6)
           </div>
         )}
@@ -383,8 +373,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ELEMENT 1: Brand + Product Name
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 pt-6 pb-3 border-b border-white/[0.05]" data-card-element="1">
-        {/* Brand + Vendor Name */}
-        <div className="flex items-center gap-2 mb-1 pl-8">
+        {/* Brand + Vendor Name - centered */}
+        <div className="flex items-center justify-center gap-2 mb-2">
           {brandLogo && !imageError ? (
             <img 
               src={brandLogo} 
@@ -393,13 +383,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               onError={() => setImageError(true)}
             />
           ) : null}
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {filament.vendor || "Unknown"}
           </span>
         </div>
         
-        {/* Color swatches - below brand/vendor with hover stock info */}
-        <div className="flex items-center gap-1 pl-8 mb-2">
+        {/* Color swatches - centered below brand/vendor with hover stock info */}
+        <div className="flex items-center justify-center gap-1 mb-2">
           {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 ? (
             <HoverCard openDelay={200} closeDelay={100}>
               <HoverCardTrigger asChild>
@@ -472,17 +462,17 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ) : null}
         </div>
         
-        {/* Product Name */}
-        <div className="pl-8">
-          <h3 className="text-lg font-semibold text-white leading-tight line-clamp-2">
+        {/* Product Name - centered */}
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-foreground leading-tight line-clamp-2">
             {getDisplayTitle()}
           </h3>
         </div>
         
-        {/* Weight options indicator for grouped products */}
+        {/* Weight options indicator for grouped products - centered */}
         {hasMultipleVariants && variantIndicators?.weights && variantIndicators.weights.length > 1 && (
-          <div className="pl-8 mt-1">
-            <span className="text-[10px] text-slate-400">
+          <div className="text-center mt-1">
+            <span className="text-[10px] text-muted-foreground">
               {variantIndicators.weights.map(w => w >= 1000 ? `${(w/1000).toFixed(1)}kg` : `${w}g`).join(' • ')}
             </span>
           </div>
@@ -510,9 +500,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5 cursor-help">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span className="text-lg font-bold text-white">{overallScore.toFixed(1)}</span>
-                <span className="text-sm font-medium text-slate-400">/10</span>
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="text-lg font-bold text-foreground">{overallScore.toFixed(1)}</span>
+                <span className="text-sm font-medium text-muted-foreground">/10</span>
               </div>
             </HoverCardTrigger>
             <HoverCardContent side="top" className="w-72 p-3 bg-popover border-border">
@@ -525,9 +515,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             </HoverCardContent>
           </HoverCard>
         ) : (
-          <div className="inline-flex items-center gap-1.5 bg-slate-500/15 border border-slate-500/30 rounded-lg px-3 py-1.5">
-            <Star className="w-4 h-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-400">No score</span>
+          <div className="inline-flex items-center gap-1.5 bg-gray-500/15 border border-gray-500/30 rounded-lg px-3 py-1.5">
+            <Star className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-muted-foreground">No score</span>
           </div>
         )}
         
@@ -560,10 +550,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         ) : isValidPrice && pricePerKg ? (
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
-              <span className="text-[28px] font-bold text-white leading-none">
+              <span className="text-xl font-bold text-foreground leading-none">
                 {formatRegionalPrice(pricePerKg, false, userCurrency)}
               </span>
-              <span className="text-sm font-medium text-slate-400">/kg</span>
+              <span className="text-sm font-medium text-muted-foreground">/kg</span>
             </div>
             
             {/* Budget-Friendly Badge (inline with price) */}
@@ -575,7 +565,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             )}
           </div>
         ) : (
-          <span className="text-lg text-slate-500">Price unavailable</span>
+          <span className="text-lg text-muted-foreground">Price unavailable</span>
         )}
       </div>
 
@@ -617,8 +607,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           asChild
           className={cn(
             "w-full h-11 font-semibold transition-all duration-200",
-            "bg-transparent border-2 border-primary/40 text-primary",
-            "hover:bg-primary/[0.12] hover:border-primary hover:translate-x-0.5",
+            "bg-primary hover:bg-primary/90 text-primary-foreground",
             "active:scale-[0.98]"
           )}
         >
