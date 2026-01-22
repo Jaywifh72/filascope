@@ -834,7 +834,7 @@ const PrinterDetail = () => {
                   )}
                   
                   {/* Placeholder for other overview content */}
-                  <OverviewTabContent printer={printer} brand={brand} />
+                  <OverviewTabContent printer={printer} brand={brand} accessories={accessories || []} />
                 </>
               )}
 

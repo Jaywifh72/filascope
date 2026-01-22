@@ -1,14 +1,24 @@
 import React from 'react';
-import { Star, Zap, Box, Thermometer, Layers, Shield, Gauge, CheckCircle2 } from 'lucide-react';
+import { 
+  Box, 
+  Thermometer, 
+  Gauge, 
+  Wifi, 
+  Usb, 
+  HardDrive,
+  Layers,
+  Scale,
+  CheckCircle2,
+  Package,
+  AlertCircle
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import BuildVolumeVisualization from '../BuildVolumeVisualization';
-import { FeatureHighlightCards } from '../FeatureHighlightCards';
-import AdvantageCardsSection from '../AdvantageCardsSection';
 
 interface OverviewTabContentProps {
   printer: any;
   brand: string | null;
+  accessories?: any[];
   activityStats?: {
     views_24h?: number;
     comparisons_7d?: number;
@@ -16,179 +26,224 @@ interface OverviewTabContentProps {
   };
 }
 
-export function OverviewTabContent({ printer, brand, activityStats }: OverviewTabContentProps) {
-  // Generate key highlights based on printer capabilities
-  const highlights: { icon: React.ElementType; label: string; value: string; highlight?: boolean }[] = [];
+// Stat card component for Key Specifications
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  subValue?: string;
+}
 
-  if (printer.max_print_speed_mms) {
-    highlights.push({
-      icon: Gauge,
-      label: "Max Speed",
-      value: `${printer.max_print_speed_mms} mm/s`,
-      highlight: printer.max_print_speed_mms >= 500
-    });
-  }
+function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
+  return (
+    <div className="bg-card/80 border border-border/60 rounded-xl p-4 flex items-start gap-3 transition-all hover:border-primary/30">
+      <div className="p-2 bg-primary/10 rounded-lg">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
+        <div className="text-lg font-bold text-foreground leading-tight mt-0.5">{value}</div>
+        {subValue && (
+          <span className="text-xs text-muted-foreground">{subValue}</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
-  if (printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm) {
-    const volumeLiters = (printer.build_volume_x_mm * printer.build_volume_y_mm * printer.build_volume_z_mm) / 1000000;
-    highlights.push({
-      icon: Box,
-      label: "Build Volume",
-      value: `${volumeLiters.toFixed(1)}L`,
-      highlight: volumeLiters > 20
-    });
-  }
+// Speed label helper
+function getSpeedLabel(speed: number): string {
+  if (speed >= 500) return 'Fast';
+  if (speed >= 200) return 'Medium';
+  return 'Standard';
+}
 
-  if (printer.max_nozzle_temp_c) {
-    highlights.push({
-      icon: Thermometer,
-      label: "Max Nozzle Temp",
-      value: `${printer.max_nozzle_temp_c}°C`,
-      highlight: printer.max_nozzle_temp_c >= 300
-    });
-  }
+// Capability item component
+interface CapabilityItemProps {
+  label: string;
+  available: boolean;
+}
 
-  if (printer.multi_material_max_spools) {
-    highlights.push({
-      icon: Layers,
-      label: "Multi-Material",
-      value: `${printer.multi_material_max_spools} colors`,
-      highlight: true
-    });
-  }
+function CapabilityItem({ label, available }: CapabilityItemProps) {
+  return (
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+      available ? 'bg-primary/10 border border-primary/20' : 'bg-muted/30 border border-border/40'
+    }`}>
+      <CheckCircle2 className={`h-4 w-4 ${available ? 'text-primary' : 'text-muted-foreground/40'}`} />
+      <span className={`text-sm ${available ? 'text-foreground' : 'text-muted-foreground/60'}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
 
-  if (printer.has_enclosure) {
-    highlights.push({
-      icon: Shield,
-      label: "Enclosure",
-      value: printer.enclosure_heated ? "Heated" : "Standard",
-      highlight: printer.enclosure_heated
-    });
-  }
+export function OverviewTabContent({ printer, brand, accessories = [], activityStats }: OverviewTabContentProps) {
+  // Calculate build volume
+  const hasVolume = printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm;
+  const volumeLiters = hasVolume 
+    ? ((printer.build_volume_x_mm * printer.build_volume_y_mm * printer.build_volume_z_mm) / 1000000).toFixed(1)
+    : null;
+  const volumeDimensions = hasVolume
+    ? `${printer.build_volume_x_mm} × ${printer.build_volume_y_mm} × ${printer.build_volume_z_mm} mm`
+    : 'N/A';
 
-  if (printer.input_shaping_supported) {
-    highlights.push({
-      icon: Zap,
-      label: "Input Shaping",
-      value: "Supported",
-      highlight: true
-    });
-  }
+  // Machine size
+  const hasMachineSize = printer.machine_footprint_x_mm && printer.machine_footprint_y_mm && printer.machine_footprint_z_mm;
+  const machineFootprint = hasMachineSize
+    ? `${printer.machine_footprint_x_mm} × ${printer.machine_footprint_y_mm} × ${printer.machine_footprint_z_mm} mm`
+    : 'N/A';
+  const machineWeight = printer.machine_weight_kg ? `${printer.machine_weight_kg} kg` : null;
+
+  // Temperature range
+  const nozzleMax = printer.max_nozzle_temp_c;
+  const bedMax = printer.bed_max_temp_c;
+  const tempRange = nozzleMax && bedMax 
+    ? `${nozzleMax}°C / ${bedMax}°C`
+    : nozzleMax 
+      ? `${nozzleMax}°C nozzle`
+      : 'N/A';
+
+  // Connectivity features
+  const hasWifi = printer.has_wifi;
+  const hasUsb = printer.has_usb;
+  const hasSdCard = printer.has_sd_card;
+  const hasEthernet = printer.has_ethernet;
+  
+  const connectivityItems: string[] = [];
+  if (hasWifi) connectivityItems.push('Wi-Fi');
+  if (hasEthernet) connectivityItems.push('Ethernet');
+  if (hasUsb) connectivityItems.push('USB');
+  if (hasSdCard) connectivityItems.push('SD Card');
+  const connectivityLabel = connectivityItems.length > 0 ? connectivityItems.join(', ') : 'N/A';
+
+  // Multi-material
+  const hasMultiMaterial = printer.multi_material_supported;
+  const multiMaterialValue = hasMultiMaterial 
+    ? `Yes (${printer.multi_material_max_spools || '?'} colors)`
+    : 'No';
+
+  // Speed
+  const maxSpeed = printer.max_print_speed_mms;
+  const speedValue = maxSpeed ? `${maxSpeed} mm/s` : 'N/A';
+  const speedLabel = maxSpeed ? getSpeedLabel(maxSpeed) : undefined;
+
+  // System capabilities list
+  const capabilities = [
+    { label: 'Auto Bed Leveling', available: !!printer.auto_bed_leveling },
+    { label: 'Multi-Color Printing', available: !!printer.multi_material_supported },
+    { label: 'Heated Bed', available: !!printer.bed_heated },
+    { label: 'Wi-Fi Connected', available: !!printer.has_wifi },
+    { label: 'Enclosed Chamber', available: !!printer.has_enclosure },
+    { label: 'Input Shaping', available: !!printer.input_shaping_supported },
+    { label: 'Filament Runout Detection', available: !!printer.filament_runout_detection },
+    { label: 'Power Loss Recovery', available: !!printer.power_loss_recovery },
+    { label: 'AI Monitoring', available: !!printer.ai_spaghetti_detection },
+    { label: 'Remote Monitoring', available: !!printer.remote_monitoring_supported },
+  ];
+
+  // Filter to show only available capabilities first, then unavailable
+  const sortedCapabilities = [...capabilities].sort((a, b) => {
+    if (a.available === b.available) return 0;
+    return a.available ? -1 : 1;
+  });
+
+  // Accessories - filter to key included items
+  const includedAccessories = accessories?.filter(acc => 
+    acc.included_with_printer || acc.category === 'included'
+  ).slice(0, 4) || [];
 
   return (
     <div className="space-y-8">
-      {/* Key Highlights Grid */}
-      {highlights.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {highlights.map((item, idx) => (
-            <div
-              key={idx}
-              className={`
-                p-4 rounded-xl border transition-all
-                ${item.highlight 
-                  ? 'bg-primary/5 border-primary/30 shadow-sm' 
-                  : 'bg-muted/30 border-border/50'
-                }
-              `}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <item.icon className={`h-4 w-4 ${item.highlight ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className="text-xs text-muted-foreground">{item.label}</span>
-              </div>
-              <div className={`text-lg font-bold ${item.highlight ? 'text-primary' : 'text-foreground'}`}>
-                {item.value}
-              </div>
-            </div>
+      {/* Key Specifications - 2x3 Grid */}
+      <section>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          Key Specifications
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard
+            icon={Box}
+            label="Build Volume"
+            value={volumeLiters ? `${volumeLiters} L` : 'N/A'}
+            subValue={volumeDimensions}
+          />
+          <StatCard
+            icon={Gauge}
+            label="Print Speed"
+            value={speedValue}
+            subValue={speedLabel}
+          />
+          <StatCard
+            icon={Thermometer}
+            label="Temperature Range"
+            value={tempRange}
+            subValue="Nozzle / Bed max"
+          />
+          <StatCard
+            icon={Scale}
+            label="Machine Size"
+            value={hasMachineSize ? machineFootprint : 'N/A'}
+            subValue={machineWeight || undefined}
+          />
+          <StatCard
+            icon={Wifi}
+            label="Connectivity"
+            value={connectivityLabel}
+          />
+          <StatCard
+            icon={Layers}
+            label="Multi-Material"
+            value={multiMaterialValue}
+          />
+        </div>
+      </section>
+
+      {/* System Capabilities - 2 Column Grid */}
+      <section>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          System Capabilities
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {sortedCapabilities.map((cap) => (
+            <CapabilityItem key={cap.label} label={cap.label} available={cap.available} />
           ))}
         </div>
-      )}
+      </section>
 
-      {/* Build Volume Visualization */}
-      {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm && (
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Box className="h-5 w-5 text-primary" />
-              Build Volume Visualization
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BuildVolumeVisualization printer={printer} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Feature Highlights */}
-      <FeatureHighlightCards printer={printer} />
-
-      {/* Advantage Cards */}
-      <AdvantageCardsSection printer={printer} />
-
-      {/* Quick Facts */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">Quick Facts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {printer.printer_technology && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm text-muted-foreground">Technology</span>
-                <Badge variant="secondary">{printer.printer_technology}</Badge>
-              </div>
-            )}
-            {printer.target_user_segment && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm text-muted-foreground">Target User</span>
-                <Badge variant="secondary">{printer.target_user_segment}</Badge>
-              </div>
-            )}
-            {printer.price_tier && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm text-muted-foreground">Price Tier</span>
-                <Badge variant="secondary" className="capitalize">{printer.price_tier}</Badge>
-              </div>
-            )}
-            {printer.assembly_required !== null && printer.assembly_required !== undefined && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm text-muted-foreground">Assembly</span>
-                <div className="flex items-center gap-2">
-                  {printer.assembly_required ? (
-                    <>
-                      <span className="text-sm font-medium">Required</span>
-                      {printer.average_assembly_time_min && (
-                        <Badge variant="outline">{printer.average_assembly_time_min} min</Badge>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-sm font-medium flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Pre-assembled
-                    </span>
+      {/* What's in the Box / Accessories */}
+      <section>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Package className="h-5 w-5 text-primary" />
+          What's in the Box
+        </h3>
+        {includedAccessories.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {includedAccessories.map((acc, idx) => (
+              <div 
+                key={acc.id || idx}
+                className="flex items-center gap-3 p-3 bg-muted/30 border border-border/50 rounded-lg"
+              >
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-foreground">{acc.name || acc.accessory_name}</span>
+                  {acc.quantity && acc.quantity > 1 && (
+                    <Badge variant="secondary" className="ml-2 text-xs">×{acc.quantity}</Badge>
                   )}
                 </div>
               </div>
-            )}
-            {printer.release_date && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm text-muted-foreground">Release Date</span>
-                <span className="text-sm font-medium">{printer.release_date}</span>
-              </div>
-            )}
-            {printer.firmware_family && (
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <span className="text-sm text-muted-foreground">Firmware</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{printer.firmware_family}</span>
-                  {printer.firmware_open_source && (
-                    <Badge variant="outline" className="text-xs">Open Source</Badge>
-                  )}
-                </div>
-              </div>
-            )}
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <Card className="bg-muted/20 border-dashed">
+            <CardContent className="py-8 text-center">
+              <AlertCircle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No accessories data available</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                Check the manufacturer's website for included items
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </section>
     </div>
   );
 }
