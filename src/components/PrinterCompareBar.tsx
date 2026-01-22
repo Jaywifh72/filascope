@@ -91,9 +91,9 @@ export function PrinterCompareBar() {
               </span>
             </div>
 
-            {/* Center: Printer Thumbnails */}
+            {/* Center: Printer Thumbnails - Hidden on small mobile */}
             <TooltipProvider delayDuration={200}>
-              <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto flex-1 justify-center px-2">
+              <div className="hidden sm:flex items-center gap-1.5 md:gap-2 overflow-x-auto flex-1 justify-center px-2">
                 {visiblePrinters.map((printer) => (
                   <Tooltip key={printer.id}>
                     <TooltipTrigger asChild>

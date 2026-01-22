@@ -18,6 +18,7 @@ export interface AdvancedFilters {
 }
 
 interface PrintersLeftSidebarProps {
+  className?: string;
   sortBy: string;
   onSortChange: (sort: string) => void;
   priceRange: string;
@@ -76,6 +77,7 @@ const featureOptions = [
 type ExpandedSection = 'sort' | 'price' | 'volume' | 'brands' | 'motion' | 'speed' | 'features' | null;
 
 const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>(({
+  className,
   sortBy,
   onSortChange,
   priceRange,
@@ -134,7 +136,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
   return (
     <div
       ref={ref}
-      className="w-72 shrink-0 sticky top-20 self-start hidden lg:block"
+      className={cn("w-72 shrink-0 sticky top-20 self-start", className)}
     >
       <div className="bg-[hsl(220_20%_8%)] border border-white/10 rounded-xl overflow-hidden shadow-xl">
         {/* Header */}
