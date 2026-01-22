@@ -113,11 +113,12 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
   const cardContent = (
     <div
       className={cn(
-        "group relative w-[240px] flex-shrink-0 rounded-xl border bg-card/80 backdrop-blur-sm p-4 transition-all duration-200",
-        "hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10",
+        "group relative w-[240px] flex-shrink-0 rounded-xl border bg-card/80 backdrop-blur-sm p-4",
+        "transition-all duration-200",
+        "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10",
         filament.isCurrent
-          ? "border-primary ring-2 ring-primary/30"
-          : "border-border/50 hover:border-primary/40"
+          ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30"
+          : "border-border/50 hover:border-primary/50"
       )}
     >
       {/* Compare Checkbox */}
@@ -246,7 +247,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
       <Button
         variant="default"
         size="sm"
-        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+        className="w-full bg-primary hover:bg-primary/80 text-primary-foreground transition-colors duration-200"
       >
         View Details
       </Button>
