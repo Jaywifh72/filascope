@@ -139,14 +139,14 @@ function TemperatureBar({
   );
 }
 
-// Section header component
+// Section header component with consistent styling
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 bg-primary/10 rounded-lg">
+    <div className="section-header">
+      <div className="section-header-icon">
         <Icon className="w-5 h-5 text-primary" />
       </div>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="section-title">{title}</h3>
     </div>
   );
 }
@@ -189,9 +189,9 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
   const amsMmu = accessories.filter((a) => a.accessory_type === 'ams_mmu');
 
   return (
-    <div className="space-y-8">
+    <div className="tab-content">
       {/* Temperature Capability Visual */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Thermometer} title="Temperature Capability" />
         <div className="grid md:grid-cols-2 gap-6">
           <TemperatureBar 
@@ -218,15 +218,15 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
       </section>
 
       {/* Supported Materials */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Palette} title="Supported Materials" />
         
         {categorizedMaterials.size > 0 ? (
           <div className="space-y-4">
             {Array.from(categorizedMaterials.entries()).map(([category, materials]) => (
               <div key={category}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{category}</span>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="subsection-title">{category}</span>
                   <div className="flex-1 h-px bg-border/30" />
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -262,7 +262,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
       </section>
 
       {/* Multi-Material System Compatibility */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Package} title="Multi-Material System Compatibility" />
         
         {/* Compatible Systems */}
@@ -337,7 +337,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
       </section>
 
       {/* Material Recommendations */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={CheckCircle2} title="Material Recommendations" />
         
         {recommendedMaterials.length > 0 ? (
@@ -373,15 +373,15 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
 
       {/* Compatible Accessories */}
       {accessories && accessories.length > 0 && (
-        <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+        <section className="section-card">
           <SectionHeader icon={Cpu} title="Compatible Accessories" />
           
           <div className="space-y-6">
             {/* Hotends */}
             {hotends.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="subsection-title">
                     Hotends ({hotends.length})
                   </span>
                   <div className="flex-1 h-px bg-border/30" />

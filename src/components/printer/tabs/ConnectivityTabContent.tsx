@@ -1,8 +1,8 @@
 import React from 'react';
 import { 
-  Wifi, Monitor, Cloud, Smartphone, Check, X, 
+  Wifi, Monitor, Cloud, Check, X, 
   Usb, HardDrive, CreditCard, Cable, Bluetooth, 
-  Camera, Video, Brain, Settings, Globe
+  Camera, Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FirmwareSection } from '@/components/FirmwareSection';
@@ -11,6 +11,18 @@ import { SoftwareSection } from '@/components/SoftwareSection';
 interface ConnectivityTabContentProps {
   printer: any;
   brand: string | null;
+}
+
+// Section header with icon and border
+function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+  return (
+    <div className="section-header">
+      <div className="section-header-icon">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <h3 className="section-title">{title}</h3>
+    </div>
+  );
 }
 
 // Connection option card component
@@ -29,13 +41,13 @@ function ConnectionCard({
 
   return (
     <div className={cn(
-      "flex flex-col items-center justify-center p-4 rounded-xl border transition-all",
+      "flex flex-col items-center justify-center p-5 rounded-xl border transition-all",
       isAvailable && "bg-green-500/10 border-green-500/30",
       isUnavailable && "bg-muted/30 border-border/40",
       isUnknown && "bg-muted/20 border-border/30"
     )}>
       <div className={cn(
-        "p-3 rounded-full mb-2",
+        "p-3 rounded-full mb-3",
         isAvailable && "bg-green-500/20",
         isUnavailable && "bg-muted/50",
         isUnknown && "bg-muted/40"
@@ -48,14 +60,14 @@ function ConnectionCard({
         )} />
       </div>
       <span className={cn(
-        "text-sm font-medium text-center",
+        "data-label text-center font-medium",
         isAvailable && "text-foreground",
         isUnavailable && "text-muted-foreground/60",
         isUnknown && "text-muted-foreground/50"
       )}>
         {label}
       </span>
-      <div className="flex items-center gap-1 mt-1.5">
+      <div className="flex items-center gap-1.5 mt-2">
         {isAvailable && (
           <>
             <Check className="w-3.5 h-3.5 text-green-400" />
@@ -76,19 +88,7 @@ function ConnectionCard({
   );
 }
 
-// Section header component
-function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 bg-primary/10 rounded-lg">
-        <Icon className="w-5 h-5 text-primary" />
-      </div>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
-    </div>
-  );
-}
-
-// Info row component
+// Info row component with enhanced spacing
 function InfoRow({ 
   label, 
   value, 
@@ -121,20 +121,20 @@ function InfoRow({
   }
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-border/20 last:border-b-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium">{displayValue}</span>
+    <div className="spec-row">
+      <span className="data-label">{label}</span>
+      <span className="data-value">{displayValue}</span>
     </div>
   );
 }
 
 export function ConnectivityTabContent({ printer, brand }: ConnectivityTabContentProps) {
   return (
-    <div className="space-y-8">
+    <div className="tab-content">
       {/* Connection Options Grid */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Wifi} title="Connection Options" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <ConnectionCard icon={Wifi} label="Wi-Fi" available={printer.has_wifi} />
           <ConnectionCard icon={Cable} label="Ethernet" available={printer.has_ethernet} />
           <ConnectionCard icon={Usb} label="USB-A" available={printer.has_usb_a_port} />
@@ -144,21 +144,21 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
         </div>
         
         {/* Additional connectivity info */}
-        <div className="mt-4 pt-4 border-t border-border/30 grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-3">
+        <div className="mt-6 pt-6 border-t border-border/30 grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-4">
             <div className={cn(
-              "p-2 rounded-lg",
+              "p-2.5 rounded-lg",
               printer.has_bluetooth ? "bg-blue-500/10" : "bg-muted/30"
             )}>
               <Bluetooth className={cn(
-                "w-4 h-4",
+                "w-5 h-5",
                 printer.has_bluetooth ? "text-blue-400" : "text-muted-foreground/50"
               )} />
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Bluetooth</span>
+              <span className="data-label block">Bluetooth</span>
               <p className={cn(
-                "text-sm font-medium",
+                "data-value",
                 printer.has_bluetooth ? "text-foreground" : "text-muted-foreground/60"
               )}>
                 {printer.has_bluetooth ? 'Supported' : 'Not available'}
@@ -166,13 +166,13 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
             </div>
           </div>
           {printer.onboard_storage_gb && (
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <HardDrive className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="section-header-icon">
+                <HardDrive className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Onboard Storage</span>
-                <p className="text-sm font-medium text-foreground">{printer.onboard_storage_gb} GB</p>
+                <span className="data-label block">Onboard Storage</span>
+                <p className="data-value">{printer.onboard_storage_gb} GB</p>
               </div>
             </div>
           )}
@@ -180,7 +180,7 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
       </section>
 
       {/* Display & Controls */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Monitor} title="Display & Controls" />
         <div className="space-y-0">
           <InfoRow label="Screen Type" value={printer.screen_type} />
@@ -192,9 +192,9 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
       </section>
 
       {/* Camera & Monitoring */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Camera} title="Camera & Monitoring" />
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Camera Info */}
           <div className="space-y-0">
             <InfoRow label="Built-in Camera" value={printer.has_camera} />
@@ -211,9 +211,9 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
       </section>
 
       {/* Remote & Cloud Features */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Cloud} title="Remote & Cloud Features" />
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-0">
             <InfoRow label="Cloud Platforms" value={printer.cloud_platforms} />
             <InfoRow label="Remote Monitoring" value={printer.remote_monitoring_supported} />
@@ -228,7 +228,7 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
       </section>
 
       {/* Software Compatibility */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Settings} title="Software Compatibility" />
         <div className="space-y-0">
           <InfoRow label="Slicer Software" value={printer.slicer_software} />

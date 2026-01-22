@@ -4,7 +4,6 @@ import {
   Wrench, BookOpen, ChartLine, ShoppingCart, Check, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PrinterPriceChart } from '@/components/PrinterPriceChart';
@@ -20,14 +19,14 @@ interface PricingTabContentProps {
   livePriceCurrency?: string;
 }
 
-// Section header component
+// Section header with icon and border
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 bg-primary/10 rounded-lg">
+    <div className="section-header">
+      <div className="section-header-icon">
         <Icon className="w-5 h-5 text-primary" />
       </div>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="section-title">{title}</h3>
     </div>
   );
 }
@@ -65,9 +64,9 @@ function InfoRow({
   }
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-border/20 last:border-b-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium">{displayValue}</span>
+    <div className="spec-row">
+      <span className="data-label">{label}</span>
+      <span className="data-value">{displayValue}</span>
     </div>
   );
 }
@@ -101,9 +100,9 @@ export function PricingTabContent({
   const hasAnyAmazonLink = printer.amazon_link_us || printer.amazon_link_uk || printer.amazon_link_de;
 
   return (
-    <div className="space-y-8">
+    <div className="tab-content">
       {/* Current Prices Comparison Card */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <div className="flex items-center justify-between mb-6">
           <SectionHeader icon={DollarSign} title="Current Price" />
           {isLivePrice && (
@@ -114,16 +113,16 @@ export function PricingTabContent({
           )}
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Price Display */}
           <div className="flex-1">
             {displayPrice ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="text-5xl font-bold text-primary tracking-tight">
                   {formatDisplayPrice(displayPrice)}
                 </div>
                 {displayMsrp && displayMsrp > displayPrice && (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <span className="text-xl text-muted-foreground line-through">
                       {formatDisplayPrice(displayMsrp)}
                     </span>
@@ -136,7 +135,7 @@ export function PricingTabContent({
                   </div>
                 )}
                 {displayMsrp && displayMsrp <= displayPrice && (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="data-label">
                     MSRP: {formatDisplayPrice(displayMsrp)}
                   </div>
                 )}
@@ -147,31 +146,31 @@ export function PricingTabContent({
           </div>
 
           {/* Price Sources Grid */}
-          <div className="grid grid-cols-3 gap-3 lg:w-[400px]">
-            <div className="p-4 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Store className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-              <div className="text-xs text-muted-foreground mb-1">Store</div>
-              <div className="text-lg font-bold">
+          <div className="grid grid-cols-3 gap-4 lg:w-[400px]">
+            <div className="p-5 rounded-xl bg-muted/30 border border-border/40 text-center">
+              <Store className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
+              <div className="subsection-title mb-2">Store</div>
+              <div className="data-value-large">
                 {printer.current_price_usd_store 
                   ? formatPrice(printer.current_price_usd_store)
                   : '—'
                 }
               </div>
             </div>
-            <div className="p-4 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Tag className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-              <div className="text-xs text-muted-foreground mb-1">Amazon</div>
-              <div className="text-lg font-bold">
+            <div className="p-5 rounded-xl bg-muted/30 border border-border/40 text-center">
+              <Tag className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
+              <div className="subsection-title mb-2">Amazon</div>
+              <div className="data-value-large">
                 {printer.current_price_usd_amazon 
                   ? formatPrice(printer.current_price_usd_amazon)
                   : '—'
                 }
               </div>
             </div>
-            <div className="p-4 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Globe className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-              <div className="text-xs text-muted-foreground mb-1">MSRP</div>
-              <div className="text-lg font-bold">
+            <div className="p-5 rounded-xl bg-muted/30 border border-border/40 text-center">
+              <Globe className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
+              <div className="subsection-title mb-2">MSRP</div>
+              <div className="data-value-large">
                 {printer.msrp_usd 
                   ? formatPrice(printer.msrp_usd)
                   : '—'
@@ -183,7 +182,7 @@ export function PricingTabContent({
       </section>
 
       {/* Where to Buy - Prominent CTAs */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={ShoppingCart} title="Where to Buy" />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Official Store - Primary CTA */}
@@ -194,7 +193,7 @@ export function PricingTabContent({
               rel="noopener noreferrer"
               className="block"
             >
-              <Button size="lg" className="w-full h-auto py-4 gap-3 text-base">
+              <Button size="lg" className="w-full h-auto py-5 gap-4 text-base">
                 <Store className="h-5 w-5" />
                 <div className="flex flex-col items-start">
                   <span className="font-semibold">Official {brand || 'Store'}</span>
@@ -204,8 +203,8 @@ export function PricingTabContent({
               </Button>
             </a>
           ) : (
-            <div className="flex items-center justify-center p-4 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
-              <span className="text-sm">No official store link</span>
+            <div className="flex items-center justify-center p-5 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
+              <span className="data-label">No official store link</span>
             </div>
           )}
 
@@ -217,7 +216,7 @@ export function PricingTabContent({
               rel="noopener noreferrer"
               className="block"
             >
-              <Button size="lg" variant="amazon" className="w-full h-auto py-4 gap-3 text-base">
+              <Button size="lg" variant="amazon" className="w-full h-auto py-5 gap-4 text-base">
                 <Tag className="h-5 w-5" />
                 <div className="flex flex-col items-start">
                   <span className="font-semibold">Amazon</span>
@@ -227,20 +226,20 @@ export function PricingTabContent({
               </Button>
             </a>
           ) : (
-            <div className="flex items-center justify-center p-4 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
-              <span className="text-sm">Not available on Amazon</span>
+            <div className="flex items-center justify-center p-5 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
+              <span className="data-label">Not available on Amazon</span>
             </div>
           )}
 
           {/* Other Retailers Placeholder */}
-          <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
-            <span className="text-sm">More retailers coming soon</span>
+          <div className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground/60">
+            <span className="data-label">More retailers coming soon</span>
           </div>
         </div>
 
         {/* Additional Amazon Links */}
         {(printer.amazon_link_uk || printer.amazon_link_de) && (
-          <div className="mt-4 pt-4 border-t border-border/30 flex flex-wrap gap-2">
+          <div className="mt-6 pt-6 border-t border-border/30 flex flex-wrap gap-3">
             {printer.amazon_link_uk && (
               <a 
                 href={getAmazonUrl(printer.amazon_link_uk) || printer.amazon_link_uk}
@@ -268,49 +267,49 @@ export function PricingTabContent({
       </section>
 
       {/* Price by Region Table */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Globe} title="Price by Region (MSRP)" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-muted-foreground">🇺🇸 USD</span>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="subsection-title">🇺🇸 USD</span>
             </div>
             <div className={cn(
-              "text-xl font-bold",
-              printer.msrp_usd ? "text-foreground" : "text-muted-foreground/50"
+              "data-value-large",
+              !printer.msrp_usd && "text-muted-foreground/50"
             )}>
               {printer.msrp_usd ? `$${printer.msrp_usd}` : 'Not available'}
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-muted-foreground">🇨🇦 CAD</span>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="subsection-title">🇨🇦 CAD</span>
             </div>
             <div className={cn(
-              "text-xl font-bold",
-              printer.msrp_cad ? "text-foreground" : "text-muted-foreground/50"
+              "data-value-large",
+              !printer.msrp_cad && "text-muted-foreground/50"
             )}>
               {printer.msrp_cad ? `C$${printer.msrp_cad}` : 'Not available'}
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-muted-foreground">🇪🇺 EUR</span>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="subsection-title">🇪🇺 EUR</span>
             </div>
             <div className={cn(
-              "text-xl font-bold",
-              printer.msrp_eur ? "text-foreground" : "text-muted-foreground/50"
+              "data-value-large",
+              !printer.msrp_eur && "text-muted-foreground/50"
             )}>
               {printer.msrp_eur ? `€${printer.msrp_eur}` : 'Not available'}
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-muted-foreground">🇬🇧 GBP</span>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="subsection-title">🇬🇧 GBP</span>
             </div>
             <div className={cn(
-              "text-xl font-bold",
-              printer.msrp_gbp ? "text-foreground" : "text-muted-foreground/50"
+              "data-value-large",
+              !printer.msrp_gbp && "text-muted-foreground/50"
             )}>
               {printer.msrp_gbp ? `£${printer.msrp_gbp}` : 'Not available'}
             </div>
@@ -319,7 +318,7 @@ export function PricingTabContent({
       </section>
 
       {/* Price History */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={ChartLine} title="Price History" />
         <PrinterPriceChart
           printerId={printer.id}
@@ -330,11 +329,11 @@ export function PricingTabContent({
       </section>
 
       {/* Availability & Status */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Clock} title="Availability & Status" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs text-muted-foreground mb-2">Status</div>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="subsection-title mb-3">Status</div>
             {printer.discontinued ? (
               <Badge variant="destructive" className="text-sm">Discontinued</Badge>
             ) : (
@@ -343,36 +342,36 @@ export function PricingTabContent({
               </Badge>
             )}
           </div>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs text-muted-foreground mb-2">Release Date</div>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="subsection-title mb-3">Release Date</div>
             <div className={cn(
-              "text-sm font-medium",
-              printer.release_date ? "text-foreground" : "text-muted-foreground/50"
+              "data-value",
+              !printer.release_date && "text-muted-foreground/50"
             )}>
               {printer.release_date || '—'}
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs text-muted-foreground mb-2">Price Tier</div>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="subsection-title mb-3">Price Tier</div>
             {printer.price_tier ? (
               <Badge variant="secondary" className="capitalize text-sm">{printer.price_tier}</Badge>
             ) : (
-              <span className="text-sm text-muted-foreground/50">—</span>
+              <span className="data-value text-muted-foreground/50">—</span>
             )}
           </div>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs text-muted-foreground mb-2">Target User</div>
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/40">
+            <div className="subsection-title mb-3">Target User</div>
             {printer.target_user_segment ? (
               <Badge variant="secondary" className="text-sm">{printer.target_user_segment}</Badge>
             ) : (
-              <span className="text-sm text-muted-foreground/50">—</span>
+              <span className="data-value text-muted-foreground/50">—</span>
             )}
           </div>
         </div>
       </section>
 
       {/* Assembly Info */}
-      <section className="bg-card/50 border border-border/40 rounded-xl p-6">
+      <section className="section-card">
         <SectionHeader icon={Wrench} title="Assembly Information" />
         <div className="space-y-0">
           <InfoRow label="Assembly Required" value={printer.assembly_required} />
@@ -380,13 +379,13 @@ export function PricingTabContent({
         </div>
         
         {printer.assembly_guide_url && (
-          <div className="mt-4 pt-4 border-t border-border/30">
+          <div className="mt-6 pt-6 border-t border-border/30">
             <a 
               href={printer.assembly_guide_url}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-3">
                 <BookOpen className="h-4 w-4" />
                 View Assembly Guide
                 <ExternalLink className="h-3 w-3" />

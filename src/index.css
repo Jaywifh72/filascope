@@ -235,6 +235,71 @@ All colors MUST be HSL.
     @apply text-xs uppercase font-bold tracking-[0.2em];
     font-family: 'Inter', sans-serif;
   }
+
+  /* ================================================
+     TYPOGRAPHY & SPACING SYSTEM
+     For consistent visual hierarchy across detail pages
+     ================================================ */
+
+  /* Section Title - 20px, semibold, tight tracking */
+  .section-title {
+    @apply text-xl font-semibold tracking-tight text-foreground;
+  }
+
+  /* Subsection Title - 13px, uppercase, wide tracking */
+  .subsection-title {
+    @apply text-[13px] font-medium uppercase tracking-wide text-muted-foreground;
+  }
+
+  /* Data Labels - 13px muted */
+  .data-label {
+    @apply text-[13px] text-muted-foreground;
+  }
+
+  /* Data Values - 15px semibold */
+  .data-value {
+    @apply text-[15px] font-semibold text-foreground;
+  }
+
+  /* Large Data Values - 18px bold */
+  .data-value-large {
+    @apply text-lg font-bold text-foreground;
+  }
+
+  /* Tab Content Container - 40px section spacing */
+  .tab-content {
+    @apply space-y-10;
+  }
+
+  /* Section Card - Consistent card styling */
+  .section-card {
+    @apply bg-card/50 border border-border/40 rounded-xl p-6 lg:p-8;
+  }
+
+  /* Section Header Container */
+  .section-header {
+    @apply flex items-center gap-3 mb-5 pb-3 border-b border-border/30;
+  }
+
+  /* Section Header Icon Container */
+  .section-header-icon {
+    @apply p-2.5 bg-primary/10 rounded-lg;
+  }
+
+  /* Spec Row - Enhanced padding and hover */
+  .spec-row {
+    @apply flex items-center justify-between py-3.5 px-4 -mx-4 border-b border-border/20 last:border-b-0 hover:bg-muted/20 rounded-lg transition-colors;
+  }
+
+  /* Subsection Divider */
+  .subsection-divider {
+    @apply mb-8 last:mb-0;
+  }
+
+  /* Stat Card Enhanced */
+  .stat-card {
+    @apply bg-card/80 border border-border/60 rounded-xl p-5 flex items-start gap-4 transition-all hover:border-primary/30;
+  }
 }
 
 @layer components {
