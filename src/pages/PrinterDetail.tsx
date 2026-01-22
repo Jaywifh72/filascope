@@ -836,6 +836,19 @@ const PrinterDetail = () => {
                   
                   {/* Placeholder for other overview content */}
                   <OverviewTabContent printer={printer} brand={brand} accessories={accessories || []} />
+                  
+                  {/* FAQ Section - Only on Overview tab */}
+                  <FAQSection
+                    printerModel={printer.model_name}
+                    printerBrand={brand}
+                    buildVolume={printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
+                      ? `${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}mm`
+                      : undefined}
+                    maxSpeed={printer.max_print_speed_mms || undefined}
+                    maxNozzleTemp={printer.max_nozzle_temp_c || undefined}
+                    maxColors={printer.multi_material_max_spools || undefined}
+                    hasEnclosure={printer.has_enclosure || undefined}
+                  />
                 </>
               )}
 
@@ -933,18 +946,6 @@ const PrinterDetail = () => {
           }}
         />
 
-        {/* FAQ Section */}
-        <FAQSection
-          printerModel={printer.model_name}
-          printerBrand={brand}
-          buildVolume={printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
-            ? `${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}mm`
-            : undefined}
-          maxSpeed={printer.max_print_speed_mms || undefined}
-          maxNozzleTemp={printer.max_nozzle_temp_c || undefined}
-          maxColors={printer.multi_material_max_spools || undefined}
-          hasEnclosure={printer.has_enclosure || undefined}
-        />
 
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
           <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-black/95 border-none">
