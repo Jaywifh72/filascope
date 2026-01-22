@@ -1,6 +1,6 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { GitCompare, Grid, ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { GitCompare, Grid, ChevronRight, Clock } from "lucide-react";
 import { SimilarPrinterCard } from "./SimilarPrinterCard";
 import { useSimilarPrinters, SimilarPrinter } from "@/hooks/useSimilarPrinters";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
@@ -62,10 +62,8 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
     currentPrinter.multiMaterialSupported
   );
 
-  // Don't render if no similar printers found
-  if (!isLoading && similarPrinters.length === 0) {
-    return null;
-  }
+  // Show empty state if no similar printers found (after loading)
+  const showEmptyState = !isLoading && similarPrinters.length === 0;
 
   // Create current printer card data
   const currentPrinterCard: SimilarPrinter = {
@@ -121,35 +119,52 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
   };
 
   return (
-    <section className="max-w-[1400px] mx-auto py-16 md:py-20 px-4 md:px-10 bg-white/[0.02]">
+    <section className="max-w-[1400px] mx-auto py-12 md:py-16 px-4 md:px-10">
       {/* Section Header */}
-      <h2 className="text-xl md:text-2xl font-bold text-white text-center mb-2 md:mb-3">
-        COMPARE SIMILAR PRINTERS
-      </h2>
-      <p className="text-sm md:text-[15px] font-medium text-slate-400 text-center max-w-[600px] mx-auto mb-8 md:mb-10 px-4">
-        See how the {currentPrinter.model} stacks up against other {getCategoryName()} printers
-      </p>
+      <div className="flex items-center justify-between mb-6 md:mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground">
+          Compare Similar Printers
+        </h2>
+        <Link 
+          to="/printers" 
+          className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 transition-colors"
+        >
+          View All
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Empty State */}
+      {showEmptyState && (
+        <div className="flex flex-col items-center justify-center py-12 px-4 rounded-xl border border-dashed border-border/50 bg-muted/10">
+          <Clock className="h-10 w-10 text-muted-foreground/40 mb-3" />
+          <p className="text-muted-foreground text-center">
+            Similar printers coming soon. Check back later!
+          </p>
+        </div>
+      )}
 
       {/* Carousel Container */}
-      {isLoading ? (
-        <div className="flex gap-4 overflow-hidden px-4">
+      {isLoading && (
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="w-[220px] md:w-[260px] h-[380px] md:h-[420px] flex-shrink-0 rounded-xl p-4 md:p-5 bg-white/5 border border-white/10">
-              <Skeleton className="w-full h-6 mb-3" />
-              <Skeleton className="w-[100px] md:w-[120px] h-[100px] md:h-[120px] mx-auto mb-3" />
-              <Skeleton className="w-20 h-4 mx-auto mb-2" />
-              <Skeleton className="w-32 h-5 mx-auto mb-3" />
-              <Skeleton className="w-24 h-6 mx-auto mb-2" />
-              <Skeleton className="w-20 h-4 mx-auto mb-4" />
-              <div className="space-y-2">
-                <Skeleton className="w-full h-4" />
-                <Skeleton className="w-full h-4" />
-                <Skeleton className="w-full h-4" />
+            <div key={i} className="w-[240px] h-[340px] flex-shrink-0 rounded-xl p-4 bg-card/50 border border-border/50">
+              <Skeleton className="w-full h-5 mb-3" />
+              <Skeleton className="w-[120px] h-[100px] mx-auto mb-3" />
+              <Skeleton className="w-16 h-3 mb-2" />
+              <Skeleton className="w-28 h-5 mb-3" />
+              <Skeleton className="w-20 h-5 mb-4" />
+              <div className="flex gap-2 mb-3">
+                <Skeleton className="w-16 h-5 rounded-full" />
+                <Skeleton className="w-14 h-5 rounded-full" />
               </div>
+              <Skeleton className="w-full h-8 rounded-lg" />
             </div>
           ))}
         </div>
-      ) : (
+      )}
+      
+      {!isLoading && !showEmptyState && (
         <Carousel
           opts={{
             align: "start",
@@ -157,11 +172,11 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-2 md:-ml-4">
+          <CarouselContent className="-ml-3 md:-ml-4">
             {allPrinters.map((printer, index) => (
               <CarouselItem 
                 key={printer.id} 
-                className="pl-2 md:pl-4 basis-auto"
+                className="pl-3 md:pl-4 basis-auto"
               >
                 <SimilarPrinterCard
                   printer={printer}
@@ -186,9 +201,9 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
           {count >= 2 && (
             <Button
               onClick={handleCompareSelected}
-              className="h-11 md:h-12 px-6 md:px-8 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg"
+              className="h-10 md:h-11 px-5 md:px-6 bg-green-600 hover:bg-green-500 text-white font-semibold rounded-lg"
             >
-              <GitCompare className="h-4 md:h-[18px] w-4 md:w-[18px] mr-2" />
+              <GitCompare className="h-4 w-4 mr-2" />
               <span>Compare Selected ({count})</span>
             </Button>
           )}
@@ -196,18 +211,18 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
           <Button
             onClick={handleCompareAll}
             variant="default"
-            className="h-11 md:h-12 px-6 md:px-8 font-bold rounded-lg"
+            className="h-10 md:h-11 px-5 md:px-6 font-semibold rounded-lg"
           >
-            <GitCompare className="h-4 md:h-[18px] w-4 md:w-[18px] mr-2" />
+            <GitCompare className="h-4 w-4 mr-2" />
             <span>Compare All {allPrinters.length}</span>
           </Button>
 
           <Button
             onClick={handleSeeAllPrinters}
             variant="outline"
-            className="h-11 md:h-12 px-5 md:px-7 font-semibold rounded-lg border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+            className="h-10 md:h-11 px-5 md:px-6 font-medium rounded-lg border-border hover:bg-muted/50"
           >
-            <Grid className="h-4 md:h-[18px] w-4 md:w-[18px] mr-2" />
+            <Grid className="h-4 w-4 mr-2" />
             <span>See All Printers</span>
           </Button>
         </div>
