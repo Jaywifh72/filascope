@@ -76,6 +76,12 @@ interface HorizontalFilterBarProps {
 
 type DropdownType = 'material' | 'brand' | 'price' | null;
 
+// Shared filter button styles
+const filterButtonBase = "h-9 px-4 py-2 gap-2 min-w-[120px] justify-between text-sm rounded-lg border transition-all duration-200";
+const filterButtonDefault = "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600";
+const filterButtonActive = "border-primary bg-primary/10 text-primary";
+const filterButtonOpen = "ring-2 ring-primary/50";
+
 export function HorizontalFilterBar({
   materialCategories,
   selectedMaterial,
@@ -197,6 +203,11 @@ export function HorizontalFilterBar({
     return `$${priceRange[0]}-$${priceRange[1]}/kg`;
   };
 
+  // Check if filters are active
+  const isMaterialActive = selectedMaterial !== "All";
+  const isBrandActive = selectedBrands.length > 0;
+  const isPriceActive = priceRange[0] > 0 || priceRange[1] < maxPriceLimit;
+
   // Brand row component for reuse
   const BrandRow = ({ brand }: { brand: Brand }) => {
     const isSelected = tempSelectedBrands.includes(brand.name);
@@ -251,26 +262,26 @@ export function HorizontalFilterBar({
         <div className="flex items-center gap-2">
           {/* Material Type Dropdown */}
           <div className="relative">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => toggleDropdown('material')}
               className={cn(
-                "h-9 gap-2 min-w-[140px] justify-between filter-btn-hover",
-                openDropdown === 'material' && "ring-2 ring-primary/50",
-                selectedMaterial !== "All" && "border-primary/50 bg-primary/5"
+                filterButtonBase,
+                filterButtonDefault,
+                openDropdown === 'material' && filterButtonOpen,
+                isMaterialActive && filterButtonActive,
+                "flex items-center min-w-[140px]"
               )}
             >
               <span className="truncate">{getSelectedMaterialLabel()}</span>
               <ChevronDown className={cn(
-                "h-4 w-4 transition-transform shrink-0",
+                "h-4 w-4 transition-transform shrink-0 text-gray-500",
                 openDropdown === 'material' && "rotate-180"
               )} />
-            </Button>
+            </button>
 
             {/* Material Dropdown Panel */}
             {openDropdown === 'material' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 dropdown-panel">
+              <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
                 <div className="p-2 max-h-[400px] overflow-y-auto">
                   {materialCategories.map((category) => (
                     <button
@@ -283,7 +294,7 @@ export function HorizontalFilterBar({
                         "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-colors group",
                         selectedMaterial === category.name
                           ? "bg-primary/10 text-primary"
-                          : "hover:bg-muted/80"
+                          : "text-gray-300 hover:bg-gray-700"
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -300,7 +311,7 @@ export function HorizontalFilterBar({
                         )}
                         <span>{category.name}</span>
                       </div>
-                      <span className="text-muted-foreground text-xs tabular-nums">
+                      <span className="text-gray-500 text-xs tabular-nums">
                         {category.count.toLocaleString()}
                       </span>
                     </button>
@@ -312,36 +323,36 @@ export function HorizontalFilterBar({
 
           {/* Brand Dropdown */}
           <div className="relative">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => toggleDropdown('brand')}
               className={cn(
-                "h-9 gap-2 min-w-[120px] justify-between filter-btn-hover",
-                openDropdown === 'brand' && "ring-2 ring-primary/50",
-                selectedBrands.length > 0 && "border-primary/50 bg-primary/5"
+                filterButtonBase,
+                filterButtonDefault,
+                openDropdown === 'brand' && filterButtonOpen,
+                isBrandActive && filterButtonActive,
+                "flex items-center"
               )}
             >
               <span className="truncate">{getSelectedBrandsLabel()}</span>
               <ChevronDown className={cn(
-                "h-4 w-4 transition-transform shrink-0",
+                "h-4 w-4 transition-transform shrink-0 text-gray-500",
                 openDropdown === 'brand' && "rotate-180"
               )} />
-            </Button>
+            </button>
 
             {/* Brand Dropdown Panel */}
             {openDropdown === 'brand' && (
-              <div className="absolute top-full left-0 mt-2 w-80 bg-popover border border-border rounded-lg shadow-lg z-50 dropdown-panel">
+              <div className="absolute top-full left-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
                 {/* Search */}
-                <div className="p-3 border-b border-border">
+                <div className="p-3 border-b border-gray-700">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
                       ref={brandSearchRef}
                       placeholder="Search brands..."
                       value={brandSearch}
                       onChange={(e) => setBrandSearch(e.target.value)}
-                      className="pl-9 h-9"
+                      className="pl-9 h-9 bg-gray-900 border-gray-600 text-white placeholder:text-gray-500"
                     />
                   </div>
                 </div>
@@ -349,7 +360,7 @@ export function HorizontalFilterBar({
                 {/* Brand List */}
                 <div className="max-h-[350px] overflow-y-auto">
                   {filteredBrands.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
+                    <p className="text-sm text-gray-500 text-center py-4">
                       No brands found
                     </p>
                   ) : (
@@ -377,12 +388,12 @@ export function HorizontalFilterBar({
                 </div>
 
                 {/* Actions */}
-                <div className="p-3 border-t border-border flex items-center justify-between">
+                <div className="p-3 border-t border-gray-700 flex items-center justify-between">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setTempSelectedBrands([])}
-                    className="text-muted-foreground"
+                    className="text-gray-400 hover:text-white"
                   >
                     Clear
                   </Button>
@@ -390,7 +401,7 @@ export function HorizontalFilterBar({
                     size="sm"
                     onClick={applyBrandFilter}
                     disabled={isApplying === 'brand'}
-                    className="min-w-[70px]"
+                    className="min-w-[70px] bg-primary hover:bg-primary/90"
                   >
                     {isApplying === 'brand' ? (
                       <Loader2 className="h-4 w-4 filter-spinner" />
@@ -407,28 +418,28 @@ export function HorizontalFilterBar({
 
           {/* Price Range Dropdown */}
           <div className="relative">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => toggleDropdown('price')}
               className={cn(
-                "h-9 gap-2 min-w-[130px] justify-between filter-btn-hover",
-                openDropdown === 'price' && "ring-2 ring-primary/50",
-                (priceRange[0] > 0 || priceRange[1] < maxPriceLimit) && "border-primary/50 bg-primary/5"
+                filterButtonBase,
+                filterButtonDefault,
+                openDropdown === 'price' && filterButtonOpen,
+                isPriceActive && filterButtonActive,
+                "flex items-center min-w-[130px]"
               )}
             >
               <span className="truncate">{getPriceLabel()}</span>
               <ChevronDown className={cn(
-                "h-4 w-4 transition-transform shrink-0",
+                "h-4 w-4 transition-transform shrink-0 text-gray-500",
                 openDropdown === 'price' && "rotate-180"
               )} />
-            </Button>
+            </button>
 
             {/* Price Dropdown Panel */}
             {openDropdown === 'price' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-popover border border-border rounded-lg shadow-lg z-50 dropdown-panel">
+              <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
                 <div className="p-4 space-y-4">
-                  <div className="text-sm font-medium">Price per kg (USD)</div>
+                  <div className="text-sm font-medium text-white">Price per kg (USD)</div>
                   
                   {/* Slider */}
                   <div className="pt-2">
@@ -440,7 +451,7 @@ export function HorizontalFilterBar({
                       step={5}
                       className="w-full"
                     />
-                    <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                    <div className="flex justify-between mt-2 text-sm text-gray-400">
                       <span>${tempPriceRange[0]}</span>
                       <span>${tempPriceRange[1]}{tempPriceRange[1] >= maxPriceLimit ? '+' : ''}</span>
                     </div>
@@ -448,43 +459,37 @@ export function HorizontalFilterBar({
 
                   {/* Presets */}
                   <div className="space-y-2">
-                    <div className="text-xs text-muted-foreground">Quick Presets:</div>
+                    <div className="text-xs text-gray-500">Quick Presets:</div>
                     <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
+                      <button
+                        className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors"
                         onClick={() => setTempPriceRange([0, 15])}
                       >
                         Budget (&lt;$15)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
+                      </button>
+                      <button
+                        className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors"
                         onClick={() => setTempPriceRange([15, 25])}
                       >
                         Mid ($15-25)
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
+                      </button>
+                      <button
+                        className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors"
                         onClick={() => setTempPriceRange([25, maxPriceLimit])}
                       >
                         Premium (&gt;$25)
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="p-3 border-t border-border flex items-center justify-between">
+                <div className="p-3 border-t border-gray-700 flex items-center justify-between">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setTempPriceRange([0, maxPriceLimit])}
-                    className="text-muted-foreground"
+                    className="text-gray-400 hover:text-white"
                   >
                     Clear
                   </Button>
@@ -492,7 +497,7 @@ export function HorizontalFilterBar({
                     size="sm"
                     onClick={applyPriceFilter}
                     disabled={isApplying === 'price'}
-                    className="min-w-[70px]"
+                    className="min-w-[70px] bg-primary hover:bg-primary/90"
                   >
                     {isApplying === 'price' ? (
                       <Loader2 className="h-4 w-4 filter-spinner" />
@@ -508,32 +513,32 @@ export function HorizontalFilterBar({
           </div>
 
           {/* More Filters Button */}
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={onOpenMoreFilters}
             className={cn(
-              "h-9 gap-2 filter-btn-hover",
-              moreFiltersCount > 0 && "border-primary/50 bg-primary/5"
+              filterButtonBase,
+              filterButtonDefault,
+              moreFiltersCount > 0 && filterButtonActive,
+              "flex items-center min-w-[130px]"
             )}
           >
             <SlidersHorizontal className="h-4 w-4" />
             <span>More Filters</span>
             {moreFiltersCount > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs">
+              <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium">
                 {moreFiltersCount}
               </span>
             )}
-          </Button>
+          </button>
         </div>
 
         {/* Right side - Sort */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground hidden sm:inline">Sort:</span>
+          <span className="text-sm text-gray-500 hidden sm:inline">Sort:</span>
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="h-9 px-3 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="h-9 px-3 rounded-lg border border-gray-700 bg-gray-800 text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
           >
             <option value="truecost-asc">True Cost: Low to High</option>
             <option value="truecost-desc">True Cost: High to Low</option>
