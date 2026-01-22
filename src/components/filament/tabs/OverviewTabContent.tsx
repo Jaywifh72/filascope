@@ -1,6 +1,5 @@
 import React from 'react';
 import { Database } from '@/integrations/supabase/types';
-import { FilamentQuickSpecsGrid } from '../hero/FilamentQuickSpecsGrid';
 import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,16 +50,6 @@ export function OverviewTabContent({ filament }: OverviewTabContentProps) {
 
   return (
     <div className="space-y-6">
-      {/* Quick Specs Grid */}
-      <FilamentQuickSpecsGrid
-        nozzleTempMin={filament.nozzle_temp_min_c}
-        nozzleTempMax={filament.nozzle_temp_max_c}
-        bedTempMin={filament.bed_temp_min_c}
-        bedTempMax={filament.bed_temp_max_c}
-        diameter={filament.diameter_nominal_mm}
-        netWeight={filament.net_weight_g}
-      />
-
       {/* Key Features */}
       {features.length > 0 && (
         <Card className="bg-card/50 border-border">
