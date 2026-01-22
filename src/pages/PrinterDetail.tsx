@@ -26,6 +26,7 @@ import { SoftwareSection } from "@/components/SoftwareSection";
 import BuildVolumeVisualization from "@/components/printer/BuildVolumeVisualization";
 import { SocialProofBadges } from "@/components/printer/SocialProofBadges";
 import { KeySpecsBar, generateKeySpecs } from "@/components/printer/KeySpecsBar";
+import { DataQualityIndicator } from "@/components/printer/DataQualityIndicator";
 import AdvantageCardsSection from "@/components/printer/AdvantageCardsSection";
 import { PriceSection } from "@/components/printer/PriceSection";
 import { CTAButtons } from "@/components/printer/CTAButtons";
@@ -714,6 +715,11 @@ const PrinterDetail = () => {
                 <h3 className="text-sm font-medium text-muted-foreground mb-3">System Capabilities</h3>
                 <AdvantageCardsSection printer={printer} />
               </div>
+
+              {/* Admin: Data Quality Indicator */}
+              {isAdmin && (
+                <DataQualityIndicator printer={printer} className="mt-4" />
+              )}
 
               {/* Price Section */}
               <PriceSection
