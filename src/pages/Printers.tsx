@@ -616,7 +616,7 @@ export default function Printers() {
                 variant="ghost"
                 size="sm"
                 onClick={handleClearAllFilters}
-                className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive"
+                className="text-xs text-gray-400 hover:text-destructive"
               >
                 <X className="w-3.5 h-3.5 mr-1.5" />
                 Clear Filters
@@ -627,7 +627,7 @@ export default function Printers() {
               size="sm"
               onClick={handleExportCSV}
               disabled={isExporting}
-              className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-primary"
+              className="text-xs text-gray-400 hover:text-primary"
             >
               {isExporting ? (
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />

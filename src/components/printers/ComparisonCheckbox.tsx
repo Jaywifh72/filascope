@@ -52,27 +52,28 @@ export default function ComparisonCheckbox({
       aria-label={`${checked ? "Remove" : "Add"} ${printerName} ${checked ? "from" : "to"} comparison`}
       tabIndex={0}
       className={cn(
-        "w-7 h-7 rounded-md flex items-center justify-center transition-all duration-200 cursor-pointer",
+        "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer",
         // Unchecked state
         !checked && !isDisabledNotChecked && [
-          "bg-white/5 border-2 border-primary/40",
-          "hover:bg-primary/12 hover:border-primary/60 hover:scale-105",
+          "bg-transparent border-2 border-gray-600",
+          "hover:bg-primary/10 hover:border-primary/60 hover:scale-105",
         ],
         // Checked state
         checked && [
           "bg-primary border-2 border-primary",
-          "hover:scale-105 hover:shadow-[0_2px_8px_hsl(var(--primary)/0.4)]",
+          "shadow-[0_0_12px_rgba(0,207,232,0.4)]",
+          "hover:scale-105",
         ],
         // Disabled state
         isDisabledNotChecked && [
-          "bg-muted/5 border-2 border-muted/20",
+          "bg-transparent border-2 border-gray-700",
           "cursor-not-allowed opacity-50",
         ],
         className
       )}
     >
       {checked && (
-        <Check className="h-4 w-4 text-primary-foreground" strokeWidth={3} />
+        <Check className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={3} />
       )}
     </div>
   );
