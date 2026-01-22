@@ -20,13 +20,13 @@ interface QuickSpecCardProps {
 
 function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
   return (
-    <div className="bg-muted/40 border border-border rounded-lg p-6 flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-primary/10">
+    <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3">
+      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <div className="flex flex-col min-w-0 gap-1">
-        <span className="text-sm text-gray-400">{label}</span>
-        <span className="text-base font-medium text-white truncate">{value}</span>
+      <div className="flex flex-col gap-1">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="text-sm font-medium text-foreground break-words">{value}</span>
       </div>
     </div>
   );
