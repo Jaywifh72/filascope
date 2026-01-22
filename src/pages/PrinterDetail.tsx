@@ -834,37 +834,31 @@ const PrinterDetail = () => {
                   )}
                   
                   {/* Placeholder for other overview content */}
-                  <OverviewTabContent />
+                  <OverviewTabContent printer={printer} brand={brand} />
                 </>
               )}
 
               {activeTab === "specifications" && (
-                <>
-                  {/* Detailed Specifications - Expandable Drawers */}
-                  <SpecsDrawerSection 
-                    printer={printer} 
-                    accessories={accessories || []}
-                    brand={brand}
-                  />
-                </>
+                <SpecificationsTabContent printer={printer} />
               )}
 
               {activeTab === "materials" && (
-                <MaterialsTabContent />
+                <MaterialsTabContent printer={printer} accessories={accessories || []} />
               )}
 
               {activeTab === "connectivity" && (
-                <>
-                  {/* Firmware & Software Sections */}
-                  <div className="space-y-6">
-                    <FirmwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
-                    <SoftwareSection printerId={printer.id} brandName={brand} printerName={printer.model_name} />
-                  </div>
-                </>
+                <ConnectivityTabContent printer={printer} brand={brand} />
               )}
 
               {activeTab === "pricing" && (
-                <PricingTabContent />
+                <PricingTabContent 
+                  printer={printer} 
+                  brand={brand} 
+                  displayPrice={displayPrice}
+                  displayMsrp={displayMsrp}
+                  isLivePrice={isLivePrice}
+                  livePriceCurrency={livePriceCurrency}
+                />
               )}
             </PrinterTabContent>
           </div>

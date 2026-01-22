@@ -112,68 +112,9 @@ export function PrinterTabContent({ activeTab, children }: PrinterTabContentProp
   );
 }
 
-// Placeholder components for each tab - to be replaced with actual content
-export function OverviewTabContent() {
-  return (
-    <div className="space-y-6">
-      <div className="p-8 bg-muted/30 border border-border/50 rounded-xl text-center">
-        <h3 className="text-lg font-semibold text-foreground mb-2">Overview</h3>
-        <p className="text-muted-foreground">
-          Overview content will be displayed here. This includes community ratings, advantages, and general information.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export function SpecificationsTabContent() {
-  return (
-    <div className="space-y-6">
-      <div className="p-8 bg-muted/30 border border-border/50 rounded-xl text-center">
-        <h3 className="text-lg font-semibold text-foreground mb-2">Specifications</h3>
-        <p className="text-muted-foreground">
-          Detailed specifications will be displayed here. This includes build volume, print speed, temperatures, and technical details.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export function MaterialsTabContent() {
-  return (
-    <div className="space-y-6">
-      <div className="p-8 bg-muted/30 border border-border/50 rounded-xl text-center">
-        <h3 className="text-lg font-semibold text-foreground mb-2">Materials</h3>
-        <p className="text-muted-foreground">
-          Material compatibility information will be displayed here. This includes supported filaments and material recommendations.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export function ConnectivityTabContent() {
-  return (
-    <div className="space-y-6">
-      <div className="p-8 bg-muted/30 border border-border/50 rounded-xl text-center">
-        <h3 className="text-lg font-semibold text-foreground mb-2">Connectivity</h3>
-        <p className="text-muted-foreground">
-          Connectivity and software information will be displayed here. This includes firmware, software, and network features.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export function PricingTabContent() {
-  return (
-    <div className="space-y-6">
-      <div className="p-8 bg-muted/30 border border-border/50 rounded-xl text-center">
-        <h3 className="text-lg font-semibold text-foreground mb-2">Pricing & Availability</h3>
-        <p className="text-muted-foreground">
-          Pricing history, deals, and availability information will be displayed here.
-        </p>
-      </div>
-    </div>
-  );
-}
+// Re-export tab content components from tabs folder
+export { OverviewTabContent } from './tabs/OverviewTabContent';
+export { SpecificationsTabContent } from './tabs/SpecificationsTabContent';
+export { MaterialsTabContent } from './tabs/MaterialsTabContent';
+export { ConnectivityTabContent } from './tabs/ConnectivityTabContent';
+export { PricingTabContent } from './tabs/PricingTabContent';
