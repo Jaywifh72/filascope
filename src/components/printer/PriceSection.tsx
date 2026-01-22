@@ -46,11 +46,14 @@ export function PriceSection({
       
       <div className="flex items-baseline gap-4">
         {/* Main price - amber for industrial look */}
-        <span className="font-mono text-3xl md:text-4xl font-bold text-amber-400">
+        <span className="font-mono text-3xl md:text-4xl font-bold text-amber-400 inline-flex items-center gap-3">
           {formatPrice(displayPrice!)}
+          {hasDiscount && (
+            <span className="text-base font-medium text-emerald-400">
+              -{discountPercent}%
+            </span>
+          )}
         </span>
-        
-        {hasDiscount}
         
         {!price && msrp && <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
             // MSRP
