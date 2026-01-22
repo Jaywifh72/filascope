@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
-import { CheckSquare, X, ArrowRight, Printer as PrinterIcon, Loader2, Check } from "lucide-react";
+import { GitCompare, X, ArrowRight, Printer as PrinterIcon, Loader2, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -11,14 +11,29 @@ export function PrinterCompareBar() {
   const location = useLocation();
   const { selectedPrinters, removePrinter, clearAll, count, recentlyAdded } = usePrinterCompare();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Hide on compare page
-  if (location.pathname === "/printers/compare") {
-    return null;
-  }
+  // Handle animation timing
+  useEffect(() => {
+    if (count > 0 && location.pathname !== "/printers/compare") {
+      setShouldRender(true);
+      // Small delay to trigger animation
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    } else {
+      setIsVisible(false);
+      // Wait for exit animation to complete before unmounting
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [count, location.pathname]);
 
-  // Hide when no printers selected
-  if (count === 0) {
+  // Don't render when not needed
+  if (!shouldRender) {
     return null;
   }
 
@@ -30,158 +45,188 @@ export function PrinterCompareBar() {
     }, 150);
   };
 
-  // Show max 5 thumbnails, with "+X more" indicator if needed
-  const visiblePrinters = selectedPrinters.slice(0, 5);
-  const overflowCount = selectedPrinters.length - 5;
+  // Show max 4 thumbnails on mobile, 5 on desktop
+  const maxVisible = 4;
+  const visiblePrinters = selectedPrinters.slice(0, maxVisible);
+  const overflowCount = Math.max(0, selectedPrinters.length - maxVisible);
 
   return (
     <div
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50",
-        "md:left-1/2 md:-translate-x-1/2 md:max-w-[1200px] md:bottom-4",
-        "bg-[hsl(0_0%_10%/0.95)] backdrop-blur-lg",
-        "border-t-2 border-[hsl(180_100%_41%/0.4)]",
-        "md:rounded-t-2xl md:border md:border-[hsl(180_100%_41%/0.4)]",
-        "shadow-[0_-4px_20px_rgba(0,0,0,0.5)]",
-        "animate-slide-up-bounce"
+        "transition-transform duration-300 ease-out",
+        isVisible ? "translate-y-0" : "translate-y-full"
       )}
       role="region"
       aria-label={`Printer comparison bar with ${count} printers selected`}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 md:px-8 md:py-5">
-        {/* Left: Selection Counter */}
-        <div className="flex items-center gap-3">
-          <CheckSquare className="h-5 w-5 text-[hsl(180_100%_41%)]" />
-          <div>
-            <span className="text-sm md:text-base font-semibold text-white">
-              {count} printer{count !== 1 ? "s" : ""} selected
-            </span>
-            {count >= 5 && (
-              <span className="block text-xs text-muted-foreground">Maximum reached</span>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Printer Thumbnails */}
-        <TooltipProvider delayDuration={200}>
-          <div className="flex items-center gap-2 overflow-x-auto max-w-full md:max-w-none pb-2 md:pb-0">
-            {visiblePrinters.map((printer) => (
-              <Tooltip key={printer.id}>
-                <TooltipTrigger asChild>
-                  <div className="relative flex-shrink-0 group">
-                    <div
-                      className={cn(
-                        "w-[50px] h-[50px] md:w-[60px] md:h-[60px]",
-                        "rounded-lg border-2 border-[hsl(180_100%_41%/0.5)]",
-                        "bg-[hsl(0_0%_10%)] overflow-hidden",
-                        "flex items-center justify-center"
-                      )}
-                    >
-                      {printer.imageUrl ? (
-                        <img
-                          src={printer.imageUrl}
-                          alt={printer.name}
-                          className="w-full h-full object-contain p-1"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                          }}
-                        />
-                      ) : null}
-                      <PrinterIcon
-                        className={cn(
-                          "h-6 w-6 text-muted-foreground",
-                          printer.imageUrl ? "hidden" : ""
-                        )}
-                      />
-                    </div>
-                    {/* Success checkmark overlay */}
-                    {recentlyAdded.has(printer.id) && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-green-500/80 rounded-lg animate-success-check">
-                        <Check className="h-6 w-6 text-white" />
-                      </div>
-                    )}
-                    {/* Remove button */}
-                    <button
-                      onClick={() => removePrinter(printer.id)}
-                      className={cn(
-                        "absolute -top-2 -right-2",
-                        "w-5 h-5 rounded-full",
-                        "bg-destructive hover:bg-destructive/80",
-                        "flex items-center justify-center",
-                        "transition-colors duration-200",
-                        "opacity-0 group-hover:opacity-100 md:opacity-100"
-                      )}
-                      aria-label={`Remove ${printer.name} from comparison`}
-                    >
-                      <X className="h-3 w-3 text-white" />
-                    </button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="bg-card border-primary/30">
-                  <p className="font-medium text-foreground">{printer.name}</p>
-                  {printer.brand && (
-                    <p className="text-xs text-muted-foreground">{printer.brand}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-            {overflowCount > 0 && (
-              <div
-                className={cn(
-                  "w-[50px] h-[50px] md:w-[60px] md:h-[60px]",
-                  "rounded-lg border-2 border-[hsl(180_100%_41%/0.3)]",
-                  "bg-[hsl(0_0%_10%)]",
-                  "flex items-center justify-center"
-                )}
-              >
-                <span className="text-sm font-medium text-[hsl(180_100%_41%)]">
-                  +{overflowCount}
+      {/* Gradient fade above bar */}
+      <div className="h-6 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+      
+      <div
+        className={cn(
+          "bg-card/95 backdrop-blur-xl",
+          "border-t border-primary/40",
+          "shadow-[0_-8px_30px_rgba(0,0,0,0.5)]"
+        )}
+      >
+        <div className="max-w-[1200px] mx-auto">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4">
+            {/* Left: Icon and Count */}
+            <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <GitCompare className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              </div>
+              <div className="hidden sm:block">
+                <span className="text-sm md:text-base font-semibold text-foreground">
+                  {count} Printer{count !== 1 ? "s" : ""}
+                </span>
+                <span className="block text-[10px] md:text-xs text-muted-foreground">
+                  {count < 2 ? "Add 1 more to compare" : "Ready to compare"}
                 </span>
               </div>
-            )}
-          </div>
-        </TooltipProvider>
+              <span className="sm:hidden text-sm font-semibold text-foreground">
+                {count}
+              </span>
+            </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearAll}
-            className="text-muted-foreground hover:text-white"
-          >
-            Clear
-          </Button>
-          <Button
-            onClick={handleCompare}
-            disabled={isNavigating}
-            className={cn(
-              "h-11 md:h-12 px-6 md:px-8",
-              "bg-gradient-to-r from-[hsl(180_100%_41%)] to-[hsl(180_100%_33%)]",
-              "text-black font-bold text-sm md:text-base",
-              "rounded-lg",
-              "hover:scale-105 hover:brightness-110",
-              "active:scale-98",
-              "transition-all duration-200",
-              !isNavigating && "animate-pulse-subtle",
-              isNavigating && "opacity-80 cursor-not-allowed"
-            )}
-            aria-label={isNavigating ? "Loading comparison page" : `Compare ${count} selected printers`}
-          >
-            {isNavigating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                <span>Loading...</span>
-              </>
-            ) : (
-              <>
-                <span className="hidden md:inline">Compare Now</span>
-                <span className="md:hidden">Compare</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </Button>
+            {/* Center: Printer Thumbnails */}
+            <TooltipProvider delayDuration={200}>
+              <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto flex-1 justify-center px-2">
+                {visiblePrinters.map((printer) => (
+                  <Tooltip key={printer.id}>
+                    <TooltipTrigger asChild>
+                      <div className="relative flex-shrink-0 group">
+                        <div
+                          className={cn(
+                            "w-11 h-11 md:w-14 md:h-14",
+                            "rounded-lg border-2",
+                            recentlyAdded.has(printer.id)
+                              ? "border-green-500 bg-green-500/10"
+                              : "border-primary/40 bg-background/80",
+                            "overflow-hidden",
+                            "flex items-center justify-center",
+                            "transition-all duration-300"
+                          )}
+                        >
+                          {printer.imageUrl ? (
+                            <img
+                              src={printer.imageUrl}
+                              alt={printer.name}
+                              className="w-full h-full object-contain p-1"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                              }}
+                            />
+                          ) : null}
+                          <PrinterIcon
+                            className={cn(
+                              "h-5 w-5 md:h-6 md:w-6 text-muted-foreground",
+                              printer.imageUrl ? "hidden" : ""
+                            )}
+                          />
+                        </div>
+                        
+                        {/* Success checkmark overlay */}
+                        {recentlyAdded.has(printer.id) && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 rounded-lg animate-fade-in">
+                            <Check className="h-5 w-5 md:h-6 md:w-6 text-white" />
+                          </div>
+                        )}
+                        
+                        {/* Remove button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removePrinter(printer.id);
+                          }}
+                          className={cn(
+                            "absolute -top-1.5 -right-1.5",
+                            "w-5 h-5 rounded-full",
+                            "bg-destructive hover:bg-destructive/80",
+                            "flex items-center justify-center",
+                            "transition-all duration-200",
+                            "opacity-70 hover:opacity-100 md:opacity-0 md:group-hover:opacity-100",
+                            "shadow-md"
+                          )}
+                          aria-label={`Remove ${printer.name} from comparison`}
+                        >
+                          <X className="h-3 w-3 text-white" />
+                        </button>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-card border-border">
+                      <p className="font-medium text-foreground text-sm">{printer.name}</p>
+                      {printer.brand && (
+                        <p className="text-xs text-muted-foreground">{printer.brand}</p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+                
+                {/* Overflow indicator */}
+                {overflowCount > 0 && (
+                  <div
+                    className={cn(
+                      "w-11 h-11 md:w-14 md:h-14",
+                      "rounded-lg border-2 border-dashed border-primary/30",
+                      "bg-primary/5",
+                      "flex items-center justify-center",
+                      "flex-shrink-0"
+                    )}
+                  >
+                    <span className="text-xs md:text-sm font-semibold text-primary">
+                      +{overflowCount}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </TooltipProvider>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+              {/* Clear button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearAll}
+                className="h-9 w-9 md:h-10 md:w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                aria-label="Clear all printers from comparison"
+              >
+                <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+              
+              {/* Compare button */}
+              <Button
+                onClick={handleCompare}
+                disabled={isNavigating || count < 2}
+                className={cn(
+                  "h-10 md:h-11 px-4 md:px-6",
+                  "bg-primary hover:bg-primary/90",
+                  "text-primary-foreground font-bold text-sm",
+                  "rounded-lg",
+                  "transition-all duration-200",
+                  count >= 2 && !isNavigating && "shadow-[0_0_20px_-5px] shadow-primary/50",
+                  (isNavigating || count < 2) && "opacity-60 cursor-not-allowed"
+                )}
+                aria-label={isNavigating ? "Loading comparison page" : `Compare ${count} selected printers`}
+              >
+                {isNavigating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <span className="hidden sm:inline">Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Compare {count}</span>
+                    <span className="sm:hidden">Compare</span>
+                    <ArrowRight className="h-4 w-4 ml-1.5" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
