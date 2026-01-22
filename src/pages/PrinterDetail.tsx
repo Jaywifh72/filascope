@@ -34,6 +34,7 @@ import { SocialProofSidebar, MobileSocialProof } from "@/components/printer/Soci
 import { FAQSection } from "@/components/printer/FAQSection";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import { PrinterHeroSection } from "@/components/printer/PrinterHeroSection";
+import { PurchaseSidebar } from "@/components/printer/PurchaseSidebar";
 import { usePrinterInventory } from "@/hooks/usePrinterInventory";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { 
@@ -529,112 +530,138 @@ const PrinterDetail = () => {
           Back
         </Button>
 
-        {/* Hero Section */}
-        <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl py-8 md:py-10 px-6 md:px-10">
-          
-          {/* Admin: Update Image & Refresh Prices Buttons */}
-          {isAdmin && (
-            <div className="absolute top-4 right-6 flex gap-2 z-10">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setImageDialogOpen(true);
-                }}
-              >
-                <ImagePlus className="h-3 w-3 mr-1.5" />
-                Update Image
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                disabled={isUpdatingPrices}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setIsUpdatingPrices(true);
-                  try {
-                    const response = await supabase.functions.invoke('fetch-printer-prices', {
-                      body: { printerIds: [printer.id] }
-                    });
-                    
-                    if (response.error) {
-                      throw new Error(response.error.message || 'Failed to fetch prices');
-                    }
-                    
-                    const result = response.data;
-                    if (result?.results?.[0]) {
-                      const printerResult = result.results[0];
-                      if (printerResult.success && printerResult.prices) {
-                        const { msrp_usd, current_price_usd_store } = printerResult.prices;
-                        toast({
-                          title: "Prices Updated",
-                          description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
-                        });
-                      } else {
-                        toast({
-                          title: "No Prices Found",
-                          description: printerResult.error || "Could not extract prices from the product page",
-                          variant: "destructive"
-                        });
+        {/* Hero Section with Sticky Sidebar */}
+        <div className="flex gap-8 items-start">
+          {/* Main Hero Content */}
+          <div className="flex-1 min-w-0 relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl py-8 md:py-10 px-6 md:px-10">
+            
+            {/* Admin: Update Image & Refresh Prices Buttons */}
+            {isAdmin && (
+              <div className="absolute top-4 right-6 flex gap-2 z-10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageDialogOpen(true);
+                  }}
+                >
+                  <ImagePlus className="h-3 w-3 mr-1.5" />
+                  Update Image
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  disabled={isUpdatingPrices}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setIsUpdatingPrices(true);
+                    try {
+                      const response = await supabase.functions.invoke('fetch-printer-prices', {
+                        body: { printerIds: [printer.id] }
+                      });
+                      
+                      if (response.error) {
+                        throw new Error(response.error.message || 'Failed to fetch prices');
                       }
+                      
+                      const result = response.data;
+                      if (result?.results?.[0]) {
+                        const printerResult = result.results[0];
+                        if (printerResult.success && printerResult.prices) {
+                          const { msrp_usd, current_price_usd_store } = printerResult.prices;
+                          toast({
+                            title: "Prices Updated",
+                            description: `MSRP: ${msrp_usd ? `$${msrp_usd}` : 'N/A'}, Store: ${current_price_usd_store ? `$${current_price_usd_store}` : 'N/A'}`
+                          });
+                        } else {
+                          toast({
+                            title: "No Prices Found",
+                            description: printerResult.error || "Could not extract prices from the product page",
+                            variant: "destructive"
+                          });
+                        }
+                      }
+                      
+                      queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
+                    } catch (error: any) {
+                      toast({
+                        title: "Error",
+                        description: error.message || "Failed to update prices",
+                        variant: "destructive"
+                      });
+                    } finally {
+                      setIsUpdatingPrices(false);
                     }
-                    
-                    queryClient.invalidateQueries({ queryKey: ["printer-detail", id] });
-                  } catch (error: any) {
-                    toast({
-                      title: "Error",
-                      description: error.message || "Failed to update prices",
-                      variant: "destructive"
-                    });
-                  } finally {
-                    setIsUpdatingPrices(false);
-                  }
-                }}
-              >
-                <RefreshCw className={`h-3 w-3 mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
-                {isUpdatingPrices ? 'Syncing...' : 'Refresh Prices'}
-              </Button>
-            </div>
-          )}
+                  }}
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                  {isUpdatingPrices ? 'Syncing...' : 'Refresh Prices'}
+                </Button>
+              </div>
+            )}
 
-          {/* Hero Section with new layout */}
+            {/* Hero Section Content */}
+            {(() => {
+              const heroDisplayImages = productImages.filter(img => validImages.has(img));
+              const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
+              
+              if (isLoadingImages) {
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-8 lg:gap-10 items-start">
+                    <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
+                      <span className="text-sm text-muted-foreground animate-pulse">
+                        Loading images...
+                      </span>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="h-6 bg-muted/30 rounded w-1/4 animate-pulse" />
+                      <div className="h-10 bg-muted/30 rounded w-3/4 animate-pulse" />
+                      <div className="h-20 bg-muted/30 rounded animate-pulse" />
+                    </div>
+                  </div>
+                );
+              }
+              
+              return (
+                <PrinterHeroSection
+                  printer={printer}
+                  brand={brand}
+                  displayImages={heroDisplayImages}
+                  isAdmin={isAdmin}
+                  onOpenLightbox={openLightbox}
+                />
+              );
+            })()}
+          </div>
+
+          {/* Sticky Purchase Sidebar - Desktop Only */}
           {(() => {
             const heroDisplayImages = productImages.filter(img => validImages.has(img));
-            const isLoadingImages = productImages.length > 0 && checkedImages.size < productImages.length;
-            
-            if (isLoadingImages) {
-              return (
-                <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-8 lg:gap-12 items-start">
-                  <div className="aspect-square bg-muted/30 rounded-xl border border-border/50 flex items-center justify-center">
-                    <span className="text-sm text-muted-foreground animate-pulse">
-                      Loading images...
-                    </span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="h-6 bg-muted/30 rounded w-1/4 animate-pulse" />
-                    <div className="h-10 bg-muted/30 rounded w-3/4 animate-pulse" />
-                    <div className="h-20 bg-muted/30 rounded animate-pulse" />
-                  </div>
-                </div>
-              );
-            }
+            const brandData = printer.brand as { brand?: string; warranty_years?: number; warranty_coverage?: string } | null;
+            const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
+            const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
             
             return (
-              <PrinterHeroSection
-                printer={printer}
+              <PurchaseSidebar
+                printer={{
+                  id: printer.id,
+                  model_name: printer.model_name,
+                  official_store_url: printer.official_store_url,
+                  discontinued: printer.discontinued,
+                }}
                 brand={brand}
-                displayImages={heroDisplayImages}
                 displayPrice={displayPrice}
                 displayMsrp={displayMsrp}
+                displayImageUrl={heroDisplayImages[0] || null}
                 isLivePrice={isLivePrice}
                 livePriceCurrency={livePriceCurrency}
                 liveCompareAtPrice={liveCompareAtPrice}
+                warrantyYears={warrantyYears}
+                warrantyCoverage={warrantyCoverage}
                 getAffiliateUrl={getAffiliateUrl}
-                isAdmin={isAdmin}
-                onOpenLightbox={openLightbox}
               />
             );
           })()}
