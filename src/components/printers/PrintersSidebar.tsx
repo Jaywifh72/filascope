@@ -27,7 +27,7 @@ function IndustrialToggle({
         disabled && "opacity-50 cursor-not-allowed"
       )}
     >
-      <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-foreground/80">
+      <span className="text-sm text-gray-300">
         {label}
       </span>
       <Switch 
@@ -62,7 +62,7 @@ function SidebarSection({
       >
         <div className="flex items-center gap-2">
           <Icon className="h-3.5 w-3.5 text-primary" />
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/90">
+          <span className="text-sm font-medium text-white">
             {title}
           </span>
         </div>
@@ -130,7 +130,7 @@ function BudgetHistogram({
           <span
             key={range.id}
             className={cn(
-              "flex-1 text-center font-mono text-[9px] uppercase tracking-wider",
+              "flex-1 text-center text-[10px]",
               selectedRange === range.id ? "text-primary" : "text-muted-foreground"
             )}
           >
@@ -253,8 +253,8 @@ export default function PrintersSidebar({
         <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-2">
             <Settings2 className="h-4 w-4 text-primary" />
-            <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
-              Hardware Parameters
+            <h2 className="text-sm font-semibold text-white">
+              Filter Parameters
             </h2>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function PrintersSidebar({
                 key={option.id}
                 onClick={() => onBuildVolumeChange(selectedBuildVolume === option.id ? "all" : option.id)}
                 className={cn(
-                  "w-full text-left py-2 px-3 rounded-lg transition-all duration-200 border font-mono text-[11px] uppercase tracking-[0.1em]",
+                  "w-full text-left py-2 px-3 rounded-lg transition-all duration-200 border text-sm",
                   selectedBuildVolume === option.id
                     ? "border-primary/40 bg-primary/10 text-foreground"
                     : "border-transparent text-foreground/70 hover:bg-white/5"
@@ -329,7 +329,7 @@ export default function PrintersSidebar({
                   key={brand}
                   onClick={() => toggleBrand(brand)}
                   className={cn(
-                    "w-full text-left py-1.5 px-3 rounded-md transition-all duration-200 font-mono text-[10px] uppercase tracking-[0.05em]",
+                    "w-full text-left py-1.5 px-3 rounded-md transition-all duration-200 text-sm",
                     selectedBrands.includes(brand)
                       ? "bg-primary/15 text-primary border-l-2 border-primary"
                       : "text-foreground/60 hover:bg-white/5 hover:text-foreground/80"

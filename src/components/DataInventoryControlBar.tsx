@@ -38,11 +38,11 @@ export function DataInventoryControlBar({
       <div className="flex items-center justify-between gap-4">
         {/* Left: Result count */}
         <div className="flex items-center gap-3">
-          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">
-            Data Inventory
+          <span className="text-sm text-gray-400 font-medium">
+            Results
           </span>
           <div className="h-4 w-px bg-white/10" />
-          <span className="font-mono text-sm text-primary font-bold">
+          <span className="text-sm text-primary font-bold">
             {resultCount.toLocaleString()}
           </span>
           <span className="text-xs text-muted-foreground">entries</span>
@@ -50,11 +50,11 @@ export function DataInventoryControlBar({
 
         {/* Right: Sort control */}
         <div className="flex items-center gap-3">
-          <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground hidden sm:inline">
+          <span className="text-sm text-gray-400 hidden sm:inline">
             Sort By
           </span>
           <Select value={sortBy} onValueChange={(val) => onSortChange(val as SortOption)}>
-            <SelectTrigger className="w-[180px] h-9 bg-white/[0.03] border-white/10 text-sm font-mono hover:border-primary/50 transition-colors">
+            <SelectTrigger className="w-[180px] h-9 bg-white/[0.03] border-white/10 text-sm hover:border-primary/50 transition-colors">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-card border-white/10">
@@ -62,7 +62,7 @@ export function DataInventoryControlBar({
                 <SelectItem 
                   key={option.value} 
                   value={option.value}
-                  className="font-mono text-sm cursor-pointer hover:bg-primary/10"
+                  className="text-sm cursor-pointer hover:bg-primary/10"
                 >
                   {option.label}
                 </SelectItem>

@@ -131,7 +131,7 @@ export function MobileFilterDrawer({
         <SheetContent side="left" className="w-[320px] sm:w-[380px] p-0 bg-background border-r border-border/50">
           <SheetHeader className="px-4 py-4 border-b border-border/50">
             <div className="flex items-center justify-between">
-              <SheetTitle className="font-mono text-sm uppercase tracking-wider">
+              <SheetTitle className="text-base font-semibold text-white">
                 Filter Parameters
               </SheetTitle>
               <SheetClose className="rounded-full p-1.5 hover:bg-white/10 transition-colors">
@@ -158,7 +158,7 @@ export function MobileFilterDrawer({
                   onClick={() => toggleSection('sort')}
                   className="w-full flex items-center justify-between py-2"
                 >
-                  <span className="font-mono text-xs uppercase tracking-wide text-foreground">Sort By</span>
+                  <span className="text-sm font-medium text-white">Sort By</span>
                   <ChevronDown className={cn(
                     "h-4 w-4 text-muted-foreground transition-transform",
                     expandedSection === 'sort' && "rotate-180"
@@ -191,7 +191,7 @@ export function MobileFilterDrawer({
                   onClick={() => toggleSection('price')}
                   className="w-full flex items-center justify-between py-2"
                 >
-                  <span className="font-mono text-xs uppercase tracking-wide text-foreground">Price Range</span>
+                  <span className="text-sm font-medium text-white">Price Range</span>
                   <ChevronDown className={cn(
                     "h-4 w-4 text-muted-foreground transition-transform",
                     expandedSection === 'price' && "rotate-180"
@@ -224,7 +224,7 @@ export function MobileFilterDrawer({
                   onClick={() => toggleSection('volume')}
                   className="w-full flex items-center justify-between py-2"
                 >
-                  <span className="font-mono text-xs uppercase tracking-wide text-foreground">Build Volume</span>
+                  <span className="text-sm font-medium text-white">Build Size</span>
                   <ChevronDown className={cn(
                     "h-4 w-4 text-muted-foreground transition-transform",
                     expandedSection === 'volume' && "rotate-180"
@@ -258,7 +258,7 @@ export function MobileFilterDrawer({
                   className="w-full flex items-center justify-between py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs uppercase tracking-wide text-foreground">Brands</span>
+                    <span className="text-sm font-medium text-white">Brand</span>
                     {advancedFilters.brands.length > 0 && (
                       <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded">
                         {advancedFilters.brands.length}
@@ -305,7 +305,7 @@ export function MobileFilterDrawer({
                   onClick={() => toggleSection('motion')}
                   className="w-full flex items-center justify-between py-2"
                 >
-                  <span className="font-mono text-xs uppercase tracking-wide text-foreground">Motion System</span>
+                  <span className="text-sm font-medium text-white">Motion System</span>
                   <ChevronDown className={cn(
                     "h-4 w-4 text-muted-foreground transition-transform",
                     expandedSection === 'motion' && "rotate-180"
@@ -339,7 +339,7 @@ export function MobileFilterDrawer({
                   className="w-full flex items-center justify-between py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs uppercase tracking-wide text-foreground">Features</span>
+                    <span className="text-sm font-medium text-white">Features</span>
                     {advancedFilters.features.length > 0 && (
                       <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded">
                         {advancedFilters.features.length}
@@ -375,7 +375,7 @@ export function MobileFilterDrawer({
                   onClick={() => toggleSection('speed')}
                   className="w-full flex items-center justify-between py-2"
                 >
-                  <span className="font-mono text-xs uppercase tracking-wide text-foreground">Print Speed</span>
+                  <span className="text-sm font-medium text-white">Print Speed</span>
                   <ChevronDown className={cn(
                     "h-4 w-4 text-muted-foreground transition-transform",
                     expandedSection === 'speed' && "rotate-180"
