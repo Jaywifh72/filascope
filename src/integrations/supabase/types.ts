@@ -2522,6 +2522,7 @@ export type Database = {
           return_policy_days: number | null
           scrape_config: Json | null
           updated_at: string | null
+          warranty_coverage: string | null
           warranty_years: number | null
         }
         Insert: {
@@ -2535,6 +2536,7 @@ export type Database = {
           return_policy_days?: number | null
           scrape_config?: Json | null
           updated_at?: string | null
+          warranty_coverage?: string | null
           warranty_years?: number | null
         }
         Update: {
@@ -2548,6 +2550,7 @@ export type Database = {
           return_policy_days?: number | null
           scrape_config?: Json | null
           updated_at?: string | null
+          warranty_coverage?: string | null
           warranty_years?: number | null
         }
         Relationships: []

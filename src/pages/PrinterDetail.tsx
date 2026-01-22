@@ -114,7 +114,7 @@ const PrinterDetail = () => {
         .from("printers")
         .select(`
           *,
-          brand:printer_brands!brand_id(brand),
+          brand:printer_brands!brand_id(brand, warranty_years, warranty_coverage),
           series:printer_series!series_id(series_name)
         `)
         .eq(isUUID ? "id" : "printer_id", id)
@@ -802,15 +802,20 @@ const PrinterDetail = () => {
           ] : [];
 
 
+          // Use printer-level warranty if set, otherwise fall back to brand-level warranty
+          const brandData = printer.brand as { brand?: string; warranty_years?: number; warranty_coverage?: string } | null;
+          const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
+          const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
+          
           const sidebarData = {
             rating: printer.rating_community_overall,
             reviewCount: printer.review_count_aggregated,
             recentReviews,
             staffPick: (printer.rating_community_overall || 0) >= 4.5 || (printer.current_price_usd_store || 0) > 1000,
             staffPickReasons,
-            warrantyYears: (printer as any).warranty_years || null,
-            warrantyCoverage: (printer as any).warranty_coverage || null,
-            brandName: printer.brand?.brand || null,
+            warrantyYears,
+            warrantyCoverage,
+            brandName: brandData?.brand || null,
             activity: activityData
           };
 
