@@ -110,8 +110,8 @@ function SortableHeader({ column, label, sortConfig, onSort, className, highligh
   return (
     <th 
       className={cn(
-        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group transition-colors hover:bg-slate-800/50",
-        isActive ? "text-primary" : highlightColor || "text-muted-foreground",
+        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group transition-colors hover:bg-gray-800/30",
+        isActive ? "text-primary" : highlightColor || "text-gray-500",
         className
       )}
       onClick={() => onSort(column)}
@@ -169,20 +169,20 @@ export function FilamentTableView({
   return (
     <div className="overflow-x-auto rounded-lg border border-border/50" role="region" aria-label="Filament comparison table">
       <table className="w-full" id="filament-table">
-        <thead className="bg-slate-900/50">
+        <thead className="bg-gray-800/50 sticky top-0 z-10">
           <tr className="border-b border-border">
             <th className="py-3 px-2 w-8" aria-label="Selection"></th>
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Color</th>
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Color</th>
             <SortableHeader 
               column="brand" 
               label="Brand" 
               sortConfig={sortConfig} 
               onSort={handleSort}
             />
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Product</th>
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Product</th>
             <SortableHeader 
               column="material" 
-              label="Material" 
+              label="Type" 
               sortConfig={sortConfig} 
               onSort={handleSort}
             />
@@ -196,20 +196,20 @@ export function FilamentTableView({
             />
             <SortableHeader 
               column="price" 
-              label="List Price" 
+              label="Price" 
               sortConfig={sortConfig} 
               onSort={handleSort}
               className="text-right"
             />
-            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Stock</th>
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Stock</th>
             <SortableHeader 
               column="score" 
-              label="Score" 
+              label="Rating" 
               sortConfig={sortConfig} 
               onSort={handleSort}
               className="text-right"
             />
-            <th className="py-3 px-3" aria-label="Actions"></th>
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -242,7 +242,7 @@ export function FilamentTableView({
                   "border-b border-border/50 transition-colors cursor-pointer",
                   isInCompare(filament.id) 
                     ? "bg-primary/5 hover:bg-primary/10" 
-                    : "hover:bg-slate-800/50"
+                    : "hover:bg-gray-800/30 even:bg-gray-900/20"
                 )}
                 onClick={() => navigate(`/filaments/${filament.id}`)}
               >
@@ -355,43 +355,15 @@ export function FilamentTableView({
                     {overallScore.toFixed(1)}
                   </span>
                 </td>
-                <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center gap-2">
+                <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-end gap-2">
                     <LikeButton filamentId={filament.id} size="sm" />
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="h-6 text-[10px] w-full justify-center"
-                        asChild
-                      >
-                        <Link to={`/filament/${filament.id}`}>View</Link>
-                      </Button>
-                      {filament.product_url && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 text-[10px] w-full justify-center border-primary/30 text-primary hover:bg-primary/10"
-                          asChild
-                        >
-                          <a href={getAffiliateUrl(filament.product_url, filament.vendor) || filament.product_url} target="_blank" rel="noopener noreferrer">
-                            Store
-                          </a>
-                        </Button>
-                      )}
-                      {filament.amazon_link_us && (
-                        <Button
-                          size="sm"
-                          variant="amazon"
-                          className="h-6 text-[10px] w-full justify-center"
-                          asChild
-                        >
-                          <a href={getAffiliateUrl(filament.amazon_link_us, "Amazon") || filament.amazon_link_us} target="_blank" rel="noopener noreferrer">
-                            Amazon
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+                    <Link 
+                      to={`/filament/${filament.id}`}
+                      className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Details
+                    </Link>
                   </div>
                 </td>
               </tr>
