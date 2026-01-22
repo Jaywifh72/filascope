@@ -145,9 +145,6 @@ export function FilamentPurchaseSidebar({
         : hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
     : null;
 
-  const showCurrencyNote = isLivePrice && priceCurrency && priceCurrency !== currency;
-  const currencyNote = showCurrencyNote ? `(${priceCurrency})` : null;
-
   // Get vendor-specific shipping rules
   const shippingRule = getShippingRule(vendor || 'default');
 
@@ -183,9 +180,6 @@ export function FilamentPurchaseSidebar({
                   {formattedPricePerKg}
                 </span>
                 <span className="text-sm text-muted-foreground font-medium">/kg</span>
-                {currencyNote && (
-                  <span className="text-xs text-muted-foreground">{currencyNote}</span>
-                )}
               </div>
               
               {/* Compare at price (sale indicator) */}

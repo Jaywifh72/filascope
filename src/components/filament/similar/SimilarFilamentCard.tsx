@@ -218,7 +218,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
       {pricePerKg && (
         <div className="mb-2">
           <span className="text-lg font-bold text-white">
-            {formatPrice(pricePerKg)}
+            {formatPrice(pricePerKg, false)}
           </span>
           <span className="text-xs text-muted-foreground">/kg</span>
         </div>
