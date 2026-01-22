@@ -217,24 +217,37 @@ function WarrantySupportCard({
   warrantyYears: number | null;
   brandName: string | null;
 }) {
+  const displayYears = warrantyYears || 1; // Default to 1 year if not specified
+  
   return (
-    <div className="bg-card border border-border rounded-lg p-5 flex flex-col gap-4">
+    <div className="bg-card border border-border rounded-lg p-5 flex flex-col gap-3">
       <h3 className="text-sm font-semibold text-foreground">Warranty & Support</h3>
       
-      <ul className="flex flex-col gap-2">
-        {warrantyYears && (
-          <li className="text-sm text-foreground/90 flex items-center gap-2">
-            <Check size={14} className="text-green-500 flex-shrink-0" />
-            <span>{warrantyYears}-year manufacturer warranty</span>
-          </li>
-        )}
+      {/* Warranty duration - prominent display */}
+      <div className="flex items-center gap-3 py-2 px-3 bg-primary/10 rounded-lg border border-primary/20">
+        <span className="text-2xl font-bold text-primary">{displayYears}</span>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-foreground">
+            Year{displayYears > 1 ? 's' : ''} Warranty
+          </span>
+          <span className="text-xs text-muted-foreground">Manufacturer coverage</span>
+        </div>
+      </div>
+      
+      {/* What's covered */}
+      <div className="text-xs text-muted-foreground mb-1">Coverage includes:</div>
+      <ul className="flex flex-col gap-1.5">
         <li className="text-sm text-foreground/90 flex items-center gap-2">
-          <Check size={14} className="text-green-500 flex-shrink-0" />
-          <span>Official {brandName || 'manufacturer'} support</span>
+          <Check size={12} className="text-green-500 flex-shrink-0" />
+          <span>Manufacturing defects</span>
         </li>
         <li className="text-sm text-foreground/90 flex items-center gap-2">
-          <Check size={14} className="text-green-500 flex-shrink-0" />
-          <span>Replacement parts available</span>
+          <Check size={12} className="text-green-500 flex-shrink-0" />
+          <span>Component failures</span>
+        </li>
+        <li className="text-sm text-foreground/90 flex items-center gap-2">
+          <Check size={12} className="text-green-500 flex-shrink-0" />
+          <span>Official {brandName || 'manufacturer'} support</span>
         </li>
       </ul>
     </div>
