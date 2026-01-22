@@ -27,7 +27,9 @@ export type SimilarityReason =
   | 'highly_rated' 
   | 'budget_option' 
   | 'upgrade_pick'
-  | 'same_brand';
+  | 'same_brand'
+  | 'same_motion'
+  | 'high_speed';
 
 interface UseSimilarPrintersResult {
   similarPrinters: SimilarPrinter[];
@@ -46,7 +48,24 @@ interface CurrentPrinterContext {
   hasEnclosure: boolean | undefined;
   multiMaterialSupported: boolean | undefined;
   brand: string | null | undefined;
+  motionSystem: string | null | undefined;
+  maxSpeed: number | null | undefined;
 }
+
+// Determine if a printer is "high-speed" (≥300mm/s)
+const isHighSpeed = (speed: number | null | undefined): boolean => {
+  return !!speed && speed >= 300;
+};
+
+// Normalize motion system types for comparison
+const normalizeMotionSystem = (motion: string | null | undefined): string | null => {
+  if (!motion) return null;
+  const lower = motion.toLowerCase();
+  if (lower.includes('corexy') || lower.includes('core xy')) return 'corexy';
+  if (lower.includes('delta')) return 'delta';
+  if (lower.includes('bedslinger') || lower.includes('bed-slinger') || lower.includes('cartesian')) return 'bedslinger';
+  return lower;
+};
 
 // Determine similarity reasons for a printer
 const getSimilarityReasons = (
@@ -57,6 +76,8 @@ const getSimilarityReasons = (
     hasEnclosure: boolean;
     multiMaterialSupported: boolean;
     brand: string;
+    motionSystem: string | null;
+    maxSpeed: number | null;
   },
   context: CurrentPrinterContext
 ): SimilarityReason[] => {
@@ -89,8 +110,8 @@ const getSimilarityReasons = (
     reasons.push('same_features');
   }
 
-  // Highly rated (4.5+)
-  if (printer.rating && printer.rating >= 4.5) {
+  // Highly rated (4.0+ with new threshold)
+  if (printer.rating && printer.rating >= 4.0) {
     reasons.push('highly_rated');
   }
 
@@ -98,6 +119,18 @@ const getSimilarityReasons = (
   if (context.brand && printer.brand && 
       printer.brand.toLowerCase() === context.brand.toLowerCase()) {
     reasons.push('same_brand');
+  }
+
+  // Same motion system
+  const contextMotion = normalizeMotionSystem(context.motionSystem);
+  const printerMotion = normalizeMotionSystem(printer.motionSystem);
+  if (contextMotion && printerMotion && contextMotion === printerMotion) {
+    reasons.push('same_motion');
+  }
+
+  // Both high-speed printers
+  if (isHighSpeed(context.maxSpeed) && isHighSpeed(printer.maxSpeed)) {
+    reasons.push('high_speed');
   }
 
   return reasons;
@@ -112,7 +145,9 @@ export function useSimilarPrinters(
   buildVolumeZ: number | null | undefined,
   brand: string | null | undefined,
   hasEnclosure?: boolean,
-  multiMaterialSupported?: boolean
+  multiMaterialSupported?: boolean,
+  motionSystem?: string | null,
+  maxSpeed?: number | null
 ): UseSimilarPrintersResult {
   const [data, setData] = useState<UseSimilarPrintersResult>({
     similarPrinters: [],
@@ -139,6 +174,8 @@ export function useSimilarPrinters(
           hasEnclosure,
           multiMaterialSupported,
           brand,
+          motionSystem,
+          maxSpeed,
         };
 
         // Build query for similar printers - relaxed filters to get more results
@@ -198,6 +235,9 @@ export function useSimilarPrinters(
         }
 
         // Score and sort printers
+        // Max possible score: ~100-110 points
+        // - Price: 35pts, Volume: 30pts, Rating: 10pts, Enclosure: 12pts, 
+        // - Multi-material: 8pts, Different brand: 10pts, Motion: 5pts, Speed: 5pts
         const scored = (printers || []).map(printer => {
           let score = 0;
           const printerBuildVolume = calculateBuildVolume(
@@ -207,15 +247,16 @@ export function useSimilarPrinters(
           );
           const printerBrand = brandsMap[printer.brand_id || ""] || "";
 
-          // Price similarity (0-40 points)
+          // Price similarity (0-35 points) - refined tiers
           if (price && printer.current_price_usd_store) {
             const priceDiff = Math.abs(printer.current_price_usd_store - price) / price;
-            if (priceDiff <= 0.15) score += 40;
-            else if (priceDiff <= 0.30) score += 25;
-            else if (priceDiff <= 0.50) score += 10;
+            if (priceDiff <= 0.15) score += 35;
+            else if (priceDiff <= 0.25) score += 25;
+            else if (priceDiff <= 0.40) score += 15;
+            // >40% difference: 0 points
           }
 
-          // Build volume similarity (0-30 points)
+          // Build volume similarity (0-30 points) - unchanged
           if (currentBuildVolume && printerBuildVolume) {
             const volumeDiff = Math.abs(printerBuildVolume - currentBuildVolume) / currentBuildVolume;
             if (volumeDiff <= 0.20) score += 30;
@@ -223,28 +264,48 @@ export function useSimilarPrinters(
             else if (volumeDiff <= 0.60) score += 10;
           }
 
-          // Rating bonus (0-20 points)
-          if (printer.rating_community_overall) {
-            score += (printer.rating_community_overall - 3.5) * 13.3;
+          // Rating bonus (0-10 points) - new threshold at 4.0
+          // Formula: (rating - 4.0) * 10 for ratings >= 4.0
+          // Max ~10 points for 5-star rated printers
+          if (printer.rating_community_overall && printer.rating_community_overall >= 4.0) {
+            score += Math.min(10, (printer.rating_community_overall - 4.0) * 10);
           }
 
-          // Enclosure match bonus (0-15 points)
+          // Enclosure match bonus (0-12 points) - reduced from 15
           if (hasEnclosure !== undefined) {
             if (printer.has_enclosure === hasEnclosure) {
-              score += 15;
+              score += 12;
             }
           }
 
-          // Multi-material match bonus (0-15 points)
+          // Multi-material match bonus (0-8 points) - reduced from 15
           if (multiMaterialSupported !== undefined) {
             if (printer.multi_material_supported === multiMaterialSupported) {
-              score += 15;
+              score += 8;
             }
           }
 
-          // Different brand bonus (encourage variety, but not for same brand)
+          // Different brand bonus (10 points) - unchanged
           if (printerBrand && brand && printerBrand.toLowerCase() !== brand.toLowerCase()) {
             score += 10;
+          }
+
+          // Motion system match bonus (0-5 points) - NEW
+          // Note: motion_system column not available yet, using motionSystem param if provided
+          const contextMotion = normalizeMotionSystem(motionSystem);
+          // For now, skip motion matching since column doesn't exist
+          // TODO: Enable when motion_system column is added to printers table
+          // const printerMotion = normalizeMotionSystem(printer.motion_system);
+          // if (contextMotion && printerMotion && contextMotion === printerMotion) {
+          //   score += 5;
+          // }
+
+          // Speed tier match bonus (0-5 points) - NEW
+          // Both high-speed (≥300mm/s) or both standard
+          const contextIsHighSpeed = isHighSpeed(maxSpeed);
+          const printerIsHighSpeed = isHighSpeed(printer.max_print_speed_mms);
+          if (contextIsHighSpeed === printerIsHighSpeed) {
+            score += 5;
           }
 
           // Get image from scraped_data
@@ -263,6 +324,8 @@ export function useSimilarPrinters(
               hasEnclosure: printer.has_enclosure || false,
               multiMaterialSupported: printer.multi_material_supported || false,
               brand: printerBrand,
+              motionSystem: null, // Column not available yet
+              maxSpeed: printer.max_print_speed_mms,
             },
             context
           );
@@ -354,7 +417,7 @@ export function useSimilarPrinters(
     };
 
     fetchSimilar();
-  }, [printerId, priceTier, price, buildVolumeX, buildVolumeY, buildVolumeZ, brand, hasEnclosure, multiMaterialSupported]);
+  }, [printerId, priceTier, price, buildVolumeX, buildVolumeY, buildVolumeZ, brand, hasEnclosure, multiMaterialSupported, motionSystem, maxSpeed]);
 
   return data;
 }
