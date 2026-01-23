@@ -195,11 +195,12 @@ export function CADStaffPickCard({ pick, onViewDetails }: CADStaffPickCardProps)
     <div className={cn(
       "relative min-w-[320px] flex-1 p-6 rounded-2xl overflow-hidden",
       "bg-card/50 border-2 flex flex-col transition-all duration-300",
-      "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl",
+      "hover:scale-[1.02] hover:-translate-y-1",
+      "hover:shadow-lg hover:shadow-primary/10",
       "before:absolute before:top-0 before:left-0 before:right-0 before:h-1",
       colors.border,
       colors.accent,
-      colors.shadow
+      "hover:border-primary/50"
     )}>
       {/* Badge */}
       <div className={cn(

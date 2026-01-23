@@ -28,6 +28,7 @@ import { CADStaffPickCard, staffPicks } from "@/components/reference/CADStaffPic
 import { CADRecommendationsSidebar } from "@/components/reference/CADRecommendationsSidebar";
 import { CADProfileFilterPills, ProfileFilter } from "@/components/reference/CADProfileFilterPills";
 import { CADProfileAccordion } from "@/components/reference/CADProfileAccordion";
+import { CADCompareTray } from "@/components/reference/CADCompareTray";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -145,8 +146,8 @@ const ReferenceCAD = () => {
                     aria-selected={activeTab === tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex items-center gap-2 px-5 py-4 text-sm font-medium transition-all relative",
-                      "border-b-2 -mb-[1px]",
+                      "flex items-center gap-2 px-5 py-4 text-sm font-medium relative",
+                      "border-b-2 -mb-[1px] transition-all duration-300",
                       activeTab === tab.id
                         ? "border-primary text-primary"
                         : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
@@ -156,7 +157,7 @@ const ReferenceCAD = () => {
                     {tab.label}
                     {tab.count && (
                       <span className={cn(
-                        "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                        "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-colors duration-300",
                         activeTab === tab.id
                           ? "bg-primary/20 text-primary"
                           : "bg-muted text-muted-foreground"
@@ -353,7 +354,7 @@ const ReferenceCAD = () => {
           <div className="h-20 lg:hidden" />
 
           {/* Comparison Components */}
-          <CADComparisonSidebar />
+          <CADCompareTray />
           <CADComparisonMobile />
           <CADComparisonModal onViewDetails={handleLearnMore} />
         </div>

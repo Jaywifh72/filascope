@@ -164,10 +164,10 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
     <div 
       id={`accordion-${software.id}`}
       className={cn(
-        "border rounded-xl overflow-hidden transition-all duration-200",
+        "border rounded-xl overflow-hidden transition-all duration-300",
         isExpanded 
-          ? "border-primary/50 bg-card" 
-          : "border-gray-700 bg-gray-800/30 hover:bg-gray-800/50 hover:border-gray-600"
+          ? "border-primary/50 bg-card shadow-lg shadow-primary/5" 
+          : "border-gray-700 bg-gray-800/30 hover:bg-gray-800/50 hover:border-gray-600 hover:scale-[1.005] hover:shadow-lg hover:shadow-primary/10"
       )}
     >
       {/* Header */}
