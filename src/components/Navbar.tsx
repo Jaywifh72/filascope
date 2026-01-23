@@ -178,13 +178,6 @@ const Navbar = () => {
 
           {/* User Actions */}
           <div className="flex items-center gap-3 shrink-0">
-            {/* Lab Access Button */}
-            <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2 border-foreground/30 bg-transparent hover:bg-foreground/5 hover:border-foreground/50 text-xs uppercase font-bold tracking-[0.15em] px-4" onClick={() => navigate('/auth')}>
-              <FlaskConical className="w-3.5 h-3.5" />
-              Lab Access
-            </Button>
-            
-            <TrendingTriggerButton onClick={trendingPanel.openPanel} newTrendCount={trendingPanel.newTrendCount} isOpen={trendingPanel.isOpen} />
             <WishlistButton />
             <CurrencySelector />
             {user ? <DropdownMenu>
