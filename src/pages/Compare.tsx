@@ -10,8 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, RefreshCcw, BookOpen, ShoppingCart, ExternalLink, Lightbulb } from "lucide-react";
+import { AlertTriangle, RefreshCcw, BookOpen, ShoppingCart, ExternalLink, Lightbulb, X, Eye } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
+import { FilamentComparisonEmptyState } from "@/components/compare/FilamentComparisonEmptyState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import MaterialReference from "@/components/MaterialReference";
@@ -161,24 +162,21 @@ const Compare = () => {
 
   // Render empty comparison state
   const renderComparisonEmpty = () => (
-    <Card className="bg-card border-border">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-3">
-          <GitCompare className="w-6 h-6 text-primary" />
-          Select Filaments to Compare
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-12 text-muted-foreground">
-          <p>No filaments selected for comparison</p>
-          <p className="text-sm mt-2">Select filaments from the Materials page to compare their properties</p>
-          <Button onClick={handleBack} className="mt-4">
-            Browse Materials
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <FilamentComparisonEmptyState onBrowseMaterials={handleBack} />
   );
+
+  // Handle removing a filament from comparison
+  const handleRemoveFilament = (id: string) => {
+    const currentIds = searchParams.get("ids")?.split(",") || [];
+    const newIds = currentIds.filter(fid => fid !== id);
+    const newParams = new URLSearchParams(searchParams);
+    if (newIds.length > 0) {
+      newParams.set("ids", newIds.join(","));
+    } else {
+      newParams.delete("ids");
+    }
+    setSearchParams(newParams);
+  };
 
   const getPricePerKg = (price: number | null, weight: number | null): number | null => {
     if (!price || !weight) return null;
@@ -541,12 +539,22 @@ const Compare = () => {
               const affiliateUrl = getAffiliateUrl(filament.product_url, filament.vendor);
               const inStock = filament.variant_available !== false;
               const isWinner = overallWinnerIndices.includes(idx);
+              const filamentSlug = filament.product_handle || filament.id;
               
               return (
                 <Card key={filament.id} className={cn(
-                  "bg-card border-border shadow-md",
+                  "bg-card border-border shadow-md relative group",
                   isWinner && "border-amber-500/50 bg-gradient-to-b from-amber-500/5 to-transparent"
                 )}>
+                  {/* Remove button */}
+                  <button
+                    onClick={() => handleRemoveFilament(filament.id)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-gray-800 hover:bg-destructive border border-gray-700 hover:border-destructive rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10"
+                    aria-label="Remove from comparison"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       {/* Winner badge */}
@@ -557,22 +565,46 @@ const Compare = () => {
                         </div>
                       )}
                       
-                      <div className="flex items-center gap-3">
-                        {filament.color_hex && (
-                          <div 
-                            className="w-8 h-8 rounded-full border border-border shrink-0"
-                            style={{ backgroundColor: filament.color_hex }}
-                          />
-                        )}
-                        {filament.vendor && getBrandLogo(filament.vendor) && (
-                          <img
-                            src={getBrandLogo(filament.vendor)!}
-                            alt={filament.vendor}
-                            className="h-6 object-contain shrink-0"
-                          />
-                        )}
+                      {/* Image and brand row */}
+                      <div className="flex items-start gap-3">
+                        {/* Filament image or color swatch */}
+                        <div className="shrink-0">
+                          {filament.featured_image ? (
+                            <img
+                              src={filament.featured_image}
+                              alt={filament.product_title}
+                              className="w-14 h-14 rounded-lg object-cover border border-border"
+                            />
+                          ) : filament.color_hex ? (
+                            <div 
+                              className="w-14 h-14 rounded-lg border border-border"
+                              style={{ backgroundColor: filament.color_hex }}
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-lg bg-muted border border-border flex items-center justify-center">
+                              <span className="text-xs text-muted-foreground">No img</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Brand logo */}
+                        <div className="flex-1 min-w-0">
+                          {filament.vendor && getBrandLogo(filament.vendor) ? (
+                            <img
+                              src={getBrandLogo(filament.vendor)!}
+                              alt={filament.vendor}
+                              className="h-5 object-contain mb-1"
+                            />
+                          ) : filament.vendor && (
+                            <span className="text-xs text-muted-foreground">{filament.vendor}</span>
+                          )}
+                        </div>
                       </div>
+                      
+                      {/* Title */}
                       <h3 className="font-semibold text-sm line-clamp-2">{filament.product_title}</h3>
+                      
+                      {/* Material badge and price */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex gap-1 flex-wrap">
                           {filament.material && <Badge variant="outline" className="text-xs">{filament.material}</Badge>}
@@ -589,32 +621,48 @@ const Compare = () => {
                         )}
                       </div>
                       
-                      {/* Buy button in header */}
-                      {affiliateUrl && (
+                      {/* Action buttons row */}
+                      <div className="flex gap-2">
+                        {/* View Details link */}
                         <Button
                           asChild
+                          variant="ghost"
                           size="sm"
-                          disabled={!inStock}
-                          className={cn(
-                            "w-full gap-1.5 font-semibold",
-                            isWinner && "bg-amber-500 hover:bg-amber-400 text-amber-950",
-                            !inStock && "opacity-50"
-                          )}
+                          className="flex-1 gap-1.5 text-muted-foreground hover:text-primary"
                         >
-                          <a 
-                            href={affiliateUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              if (!inStock) e.preventDefault();
-                            }}
-                          >
-                            <ShoppingCart className="w-3.5 h-3.5" />
-                            {inStock ? "Buy Now" : "Out of Stock"}
-                            <ExternalLink className="w-3 h-3 opacity-60" />
+                          <a href={`/filaments/${filamentSlug}`}>
+                            <Eye className="w-3.5 h-3.5" />
+                            View Details
                           </a>
                         </Button>
-                      )}
+                        
+                        {/* Buy button */}
+                        {affiliateUrl && (
+                          <Button
+                            asChild
+                            size="sm"
+                            disabled={!inStock}
+                            className={cn(
+                              "flex-1 gap-1.5 font-semibold",
+                              isWinner && "bg-amber-500 hover:bg-amber-400 text-amber-950",
+                              !inStock && "opacity-50"
+                            )}
+                          >
+                            <a 
+                              href={affiliateUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                if (!inStock) e.preventDefault();
+                              }}
+                            >
+                              <ShoppingCart className="w-3.5 h-3.5" />
+                              {inStock ? "Buy" : "Out"}
+                              <ExternalLink className="w-3 h-3 opacity-60" />
+                            </a>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -627,7 +675,7 @@ const Compare = () => {
                 className="bg-card/50 border-dashed border-border cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={handleAddMore}
               >
-                <CardContent className="p-4 flex flex-col items-center justify-center h-full min-h-[120px] text-muted-foreground">
+                <CardContent className="p-4 flex flex-col items-center justify-center h-full min-h-[140px] text-muted-foreground">
                   <Plus className="w-6 h-6 mb-2" />
                   <span className="text-sm">Add Material</span>
                 </CardContent>
