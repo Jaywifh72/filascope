@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Star, Table, FileText, List, LayoutGrid } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Star, Table, FileText, List, LayoutGrid, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -83,6 +83,44 @@ const ReferenceCAD = () => {
   const [expandedAccordion, setExpandedAccordion] = useState<string[]>([]);
   const [profileFilter, setProfileFilter] = useState<ProfileFilter>('all');
   const [isDetailedView, setIsDetailedView] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const tabIndicatorRef = useRef<HTMLDivElement>(null);
+  const tabButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  // Scroll listener for sticky shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Update underline indicator position
+  useEffect(() => {
+    const activeButton = tabButtonRefs.current.get(activeTab);
+    const indicator = tabIndicatorRef.current;
+    if (activeButton && indicator) {
+      const { offsetLeft, offsetWidth } = activeButton;
+      indicator.style.left = `${offsetLeft}px`;
+      indicator.style.width = `${offsetWidth}px`;
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (tabId: CADTab) => {
+    setActiveTab(tabId);
+    // Smooth scroll to content
+    setTimeout(() => {
+      const contentSection = document.getElementById('cad-content-section');
+      if (contentSection) {
+        const headerOffset = 80;
+        const elementPosition = contentSection.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      }
+    }, 50);
+  };
 
   const handleScrollToComparison = () => {
     setActiveTab("comparison");
@@ -135,26 +173,35 @@ const ReferenceCAD = () => {
             onScrollToComparison={handleScrollToComparison}
           />
 
-          {/* Sticky Tab Navigation */}
-          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+          {/* Sticky Tab Navigation with scroll shadow */}
+          <div 
+            ref={tabsRef}
+            className={cn(
+              "sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border transition-shadow duration-300",
+              isScrolled && "shadow-md shadow-black/10"
+            )}
+          >
             <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
-              <nav className="flex gap-1" role="tablist">
+              {/* Desktop Tabs */}
+              <nav className="hidden sm:flex relative" role="tablist">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
+                    ref={(el) => el && tabButtonRefs.current.set(tab.id, el)}
                     role="tab"
                     aria-selected={activeTab === tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                     className={cn(
-                      "flex items-center gap-2 px-5 py-4 text-sm font-medium relative",
-                      "border-b-2 -mb-[1px] transition-all duration-300",
+                      "flex items-center gap-2 px-5 py-4 text-sm font-medium relative z-10",
+                      "transition-colors duration-200",
                       activeTab === tab.id
-                        ? "border-primary text-primary"
-                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <tab.icon className="w-4 h-4" />
-                    {tab.label}
+                    <span className="hidden md:inline">{tab.label}</span>
+                    <span className="md:hidden">{tab.label.split(' ')[0]}</span>
                     {tab.count && (
                       <span className={cn(
                         "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-colors duration-300",
@@ -167,12 +214,40 @@ const ReferenceCAD = () => {
                     )}
                   </button>
                 ))}
+                {/* Sliding underline indicator */}
+                <div 
+                  ref={tabIndicatorRef}
+                  className="absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-out"
+                  style={{ left: 0, width: 0 }}
+                />
               </nav>
+
+              {/* Mobile Dropdown */}
+              <div className="sm:hidden py-2">
+                <div className="relative">
+                  <select
+                    value={activeTab}
+                    onChange={(e) => handleTabChange(e.target.value as CADTab)}
+                    className={cn(
+                      "w-full appearance-none bg-gray-800 border border-gray-700 rounded-lg",
+                      "px-4 py-3 pr-10 text-sm font-medium text-foreground",
+                      "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    )}
+                  >
+                    {tabs.map((tab) => (
+                      <option key={tab.id} value={tab.id}>
+                        {tab.label} {tab.count ? `(${tab.count})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
+          <div id="cad-content-section" className="max-w-[1600px] mx-auto px-6 lg:px-10">
             {/* Back Button */}
             <div className="py-4">
               <Button variant="ghost" size="sm" asChild>
