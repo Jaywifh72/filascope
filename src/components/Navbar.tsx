@@ -336,7 +336,8 @@ const Navbar = () => {
           </nav>
 
           {/* Right-side utilities */}
-          <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-auto">
+          <div className="hidden md:block h-6 w-px bg-gray-700" />
+          <div className="flex items-center gap-4 shrink-0 ml-auto">
             <WishlistButton />
             <CurrencySelector />
             
@@ -345,9 +346,9 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
-                    <Avatar className="w-8 h-8 border border-gray-700 hover:border-primary/50 transition-colors cursor-pointer">
+                    <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-                      <AvatarFallback className="text-xs font-medium bg-gray-800 text-white">
+                      <AvatarFallback className="text-sm font-medium bg-gray-800 text-white">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -410,7 +411,7 @@ const Navbar = () => {
                 onClick={() => navigate('/auth')}
                 className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
               >
-                <Avatar className="w-8 h-8 border border-gray-700 hover:border-primary/50 transition-colors cursor-pointer">
+                <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
                   <AvatarFallback className="bg-gray-800">
                     <User className="w-4 h-4 text-gray-400" />
                   </AvatarFallback>
