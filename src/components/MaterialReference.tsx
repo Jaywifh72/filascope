@@ -108,14 +108,17 @@ const AccordionSection = ({
   iconColor?: string;
   children: React.ReactNode;
 }) => (
-  <AccordionItem value={value} className="border border-gray-700 rounded-lg px-4 bg-gray-900/30 data-[state=open]:border-primary/30">
-    <AccordionTrigger className="hover:no-underline hover:bg-gray-800/30 -mx-4 px-4 rounded-lg transition-colors group">
+  <AccordionItem 
+    value={value} 
+    className="border border-gray-700 rounded-lg px-4 bg-gray-800/50 data-[state=open]:border-primary/30 transition-all duration-200"
+  >
+    <AccordionTrigger className="hover:no-underline hover:bg-gray-800/30 -mx-4 px-4 rounded-lg transition-colors duration-150 group py-4">
       <div className="flex items-center gap-3">
-        <Icon className={cn("w-5 h-5 transition-colors", iconColor)} />
+        <Icon className={cn("w-5 h-5 transition-colors duration-150", iconColor)} />
         <span className="text-base font-semibold text-foreground">{title}</span>
       </div>
     </AccordionTrigger>
-    <AccordionContent className="pt-4 pb-2 space-y-4">
+    <AccordionContent className="pt-4 pb-4 space-y-4 animate-accordion-down">
       {children}
     </AccordionContent>
   </AccordionItem>
@@ -859,15 +862,15 @@ const MaterialReference = () => {
   const categoriesWithData = Object.keys(groupedMaterials).length;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
       {/* Material List Panel */}
-      <div className="h-fit lg:sticky lg:top-24 bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
+      <div className="h-fit lg:sticky lg:top-24 bg-gray-800/30 border-r border-gray-700 rounded-lg overflow-hidden">
         {/* Panel Header */}
-        <div className="px-4 py-3 border-b border-gray-800 bg-gray-900/80">
+        <div className="px-4 py-4 border-b border-gray-700 bg-gray-900/60">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-foreground">Materials</h3>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Filter className="w-3 h-3" />
+              <Filter className="w-3 h-3 text-primary" />
               <span>{totalMaterials} types</span>
             </div>
           </div>
@@ -892,19 +895,19 @@ const MaterialReference = () => {
               const categoryCount = materials.length;
               
               return (
-                <div key={category} className={cn(categoryIndex > 0 && "border-t border-gray-800/50 mt-2 pt-2")}>
+                <div key={category} className={cn(categoryIndex > 0 && "border-t border-gray-700/50 mt-3 pt-3")}>
                   {/* Collapsible Category Header */}
                   <button
                     onClick={() => toggleCategory(category)}
-                    className="w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md hover:bg-gray-800/30 transition-colors group"
+                    className="w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md hover:bg-gray-800/50 transition-colors duration-150 group"
                   >
                     <div className="flex items-center gap-2">
                       {isCollapsed ? (
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors duration-150" />
                       ) : (
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <ChevronDown className="w-3.5 h-3.5 text-primary transition-colors duration-150" />
                       )}
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide group-hover:text-foreground transition-colors">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide group-hover:text-foreground transition-colors duration-150">
                         {category}
                       </span>
                     </div>
@@ -921,14 +924,14 @@ const MaterialReference = () => {
                           key={name}
                           onClick={() => setSelectedMaterial(name)}
                           className={cn(
-                            "w-full flex items-center justify-between gap-2 py-2 px-3 rounded-md cursor-pointer transition-all text-left",
+                            "w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-md cursor-pointer transition-all duration-150 text-left",
                             selectedMaterial === name
                               ? "bg-primary/10 border-l-2 border-primary"
                               : "hover:bg-gray-800/50 border-l-2 border-transparent"
                           )}
                         >
                           <span className={cn(
-                            "text-sm",
+                            "text-sm transition-colors duration-150",
                             selectedMaterial === name ? "text-primary font-medium" : "text-foreground"
                           )}>
                             {name}
@@ -949,13 +952,13 @@ const MaterialReference = () => {
         </ScrollArea>
       </div>
 
-      {/* Material Detail */}
-      <div>
+      {/* Material Detail Panel */}
+      <div className="min-h-[600px]">
         {!selectedMaterial ? (
-          <Card className="p-12 text-center">
+          <Card className="p-12 text-center bg-gray-800/50 border-gray-700">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <Layers className="w-8 h-8 text-muted-foreground" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Layers className="w-8 h-8 text-primary" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">Select a Material</h3>
@@ -966,11 +969,11 @@ const MaterialReference = () => {
             </div>
           </Card>
         ) : selectedReference ? (
-          <Card className="p-6">
+          <Card className="p-6 bg-gray-800/50 border-gray-700">
             <MaterialDetailView reference={selectedReference} basicInfo={selectedBasicInfo} />
           </Card>
         ) : (
-          <Card className="p-6">
+          <Card className="p-6 bg-gray-800/50 border-gray-700">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-foreground">{selectedMaterial}</h2>
