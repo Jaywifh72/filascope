@@ -9,10 +9,10 @@ interface SlicerPopularCardProps {
   onLearnMore: () => void;
 }
 
-const priceTypeConfig: Record<PriceType, string> = {
-  free: 'text-green-500',
-  freemium: 'text-orange-400',
-  paid: 'text-pink-400',
+const priceTypeConfig: Record<PriceType, { className: string; badge?: boolean }> = {
+  free: { className: 'bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-medium', badge: true },
+  freemium: { className: 'bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-xs font-medium', badge: true },
+  paid: { className: 'text-gray-400', badge: false },
 };
 
 export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCardProps) {
@@ -35,10 +35,10 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
   };
 
   return (
-    <div className="w-full h-[280px] bg-card/50 border border-border rounded-xl p-5 grid grid-cols-[80px_1fr] gap-5 transition-all duration-200 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md max-lg:h-auto max-lg:min-h-[260px] max-md:grid-cols-1 max-md:text-center">
+    <div className="w-full h-full bg-gray-800 border border-gray-700 rounded-xl p-4 grid grid-cols-[80px_1fr] gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 max-md:grid-cols-1 max-md:text-center">
       {/* Logo Column */}
       <div className="flex flex-col items-center max-md:items-center">
-        <div className="w-[60px] h-[60px] bg-muted/30 rounded-lg p-2.5 flex items-center justify-center">
+        <div className="w-[60px] h-[60px] bg-gray-900/50 rounded-lg p-2.5 flex items-center justify-center">
           {logo ? (
             <img src={logo} alt={`${slicer.name} logo`} className="max-w-full max-h-full object-contain" />
           ) : (
@@ -51,17 +51,17 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
       <div className="flex flex-col gap-3">
         {/* Header */}
         <div className="flex flex-col gap-2">
-          <h3 className="text-base font-bold text-foreground">{slicer.name}</h3>
-          <div className="text-[13px] font-medium text-muted-foreground flex items-center gap-2 flex-wrap max-md:justify-center">
+          <h3 className="text-base font-bold text-white">{slicer.name}</h3>
+          <div className="text-sm text-gray-400 flex items-center gap-2 flex-wrap max-md:justify-center">
             <span>{slicer.brand}</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className={priceTypeConfig[slicer.priceType]}>
+            <span className="text-gray-600">•</span>
+            <span className={priceTypeConfig[slicer.priceType].className}>
               {slicer.priceType === 'paid' && slicer.priceValue 
                 ? slicer.priceValue 
                 : slicer.priceType.charAt(0).toUpperCase() + slicer.priceType.slice(1)}
             </span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className={cn('inline-flex items-center gap-1', scoreColor)}>
+            <span className="text-gray-600">•</span>
+            <span className="inline-flex items-center gap-1 text-primary font-semibold">
               {slicer.overallScore}/10 <Star size={12} fill="currentColor" />
             </span>
           </div>
@@ -70,8 +70,8 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
         {/* Features (show 3) */}
         <ul className="flex flex-col gap-1.5 flex-1">
           {slicer.topFeatures.slice(0, 3).map((feature, index) => (
-            <li key={index} className="flex items-center gap-2 text-[13px] font-medium text-foreground/80 max-md:justify-center">
-              <Check size={14} strokeWidth={3} className="text-green-500 flex-shrink-0" />
+            <li key={index} className="flex items-center gap-2 text-sm text-gray-300 max-md:justify-center">
+              <Check size={14} strokeWidth={3} className="text-primary flex-shrink-0" />
               <span>{feature}</span>
             </li>
           ))}
@@ -92,8 +92,8 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
             className={cn(
               "h-9 w-9 rounded-lg inline-flex items-center justify-center transition-all",
               inComparison
-                ? "bg-green-500/15 border border-green-500/30 text-green-500"
-                : "bg-transparent border border-primary/30 hover:border-primary/50 hover:bg-primary/10 text-primary"
+                ? "bg-primary/20 border border-primary text-primary"
+                : "bg-transparent border border-gray-600 hover:border-primary text-gray-400 hover:text-primary"
             )}
             title={inComparison ? "Remove from Compare" : "Add to Compare"}
           >
