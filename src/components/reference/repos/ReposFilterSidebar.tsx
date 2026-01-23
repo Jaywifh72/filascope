@@ -203,30 +203,38 @@ export const ReposFilterSidebar: React.FC = () => {
   );
 };
 
-// Mobile Filter Sheet
-export const ReposMobileFilterSheet: React.FC = () => {
+// Mobile Filter Sheet - Wrap hook in a child component to ensure context is available
+const MobileFilterButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   const { hasActiveFilters, filteredCount, totalCount } = useFilters();
+  
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className={cn(
+        "lg:hidden gap-2",
+        hasActiveFilters && "border-primary text-primary"
+      )}
+    >
+      <SlidersHorizontal size={16} />
+      <span>Filters</span>
+      {hasActiveFilters && (
+        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+          {totalCount - filteredCount > 0 ? filteredCount : 'All'}
+        </span>
+      )}
+    </Button>
+  );
+};
+
+export const ReposMobileFilterSheet: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            "lg:hidden gap-2",
-            hasActiveFilters && "border-primary text-primary"
-          )}
-        >
-          <SlidersHorizontal size={16} />
-          <span>Filters</span>
-          {hasActiveFilters && (
-            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
-              {totalCount - filteredCount > 0 ? filteredCount : 'All'}
-            </span>
-          )}
-        </Button>
+        <MobileFilterButton onClick={() => setIsOpen(true)} />
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] sm:w-[350px] overflow-y-auto">
         <SheetHeader className="mb-6">
