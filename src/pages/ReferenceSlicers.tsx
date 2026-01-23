@@ -325,7 +325,7 @@ const ReferenceSlicers = () => {
               </p>
               
               {topPickSlicers.length > 0 ? (
-                <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible">
+                <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
                   {topPickSlicers.map((slicer) => (
                     <SlicerTopPickCard
                       key={slicer.name}
