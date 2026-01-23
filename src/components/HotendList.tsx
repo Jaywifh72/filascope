@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Thermometer, Package, Trash2, ImageIcon, X, Download, Loader2 } from "lucide-react";
+import { Thermometer, Package, Trash2, ImageIcon, X, Download, Loader2, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -89,6 +90,7 @@ export default function HotendList() {
   // Sort state
   const [sortBy, setSortBy] = useState("alphabetical");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [collapsedBrands, setCollapsedBrands] = useState<Set<string>>(new Set());
   const [editingHotend, setEditingHotend] = useState<Accessory | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [isScraping, setIsScraping] = useState(false);
@@ -244,6 +246,17 @@ export default function HotendList() {
   // Count unique grouped hotends
   const groupedCount = Object.keys(groupedHotends).length;
 
+  const toggleBrandCollapse = (brand: string) => {
+    setCollapsedBrands(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(brand)) {
+        newSet.delete(brand);
+      } else {
+        newSet.add(brand);
+      }
+      return newSet;
+    });
+  };
 
   const selectAll = () => {
     if (selectedIds.size === filteredNozzles.length) {
@@ -494,114 +507,137 @@ export default function HotendList() {
           <p className="text-muted-foreground">No hotends found matching your criteria</p>
         </div>
       ) : (
-        <div className="space-y-8">
-          {sortedBrands.map(brand => (
-            <div key={brand} className="space-y-4">
-              {/* Brand Header */}
-              <div className="flex items-center gap-4 border-b pb-2">
-                {getBrandLogo(brand) && (
-                  <img
-                    src={getBrandLogo(brand)!}
-                    alt={`${brand} logo`}
-                    className="h-8 w-auto object-contain"
-                  />
+        <div className="space-y-0">
+          {sortedBrands.map((brand, index) => {
+            const isCollapsed = collapsedBrands.has(brand);
+            
+            return (
+              <div 
+                key={brand} 
+                className={cn(
+                  "space-y-4",
+                  index > 0 && "border-t border-gray-700/50 pt-6 mt-6"
                 )}
-                <h3 className="text-xl font-semibold">{brand}</h3>
-                <Badge variant="secondary">{groupedByBrand[brand].length}</Badge>
-              </div>
-
-              {/* Hotend Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {groupedByBrand[brand].map(group => {
-                  const nozzle = group.primaryVariant;
-                  const specs = nozzle.specs as Record<string, unknown> | null;
-                  const isSelected = group.variants.some(v => selectedIds.has(v.id));
-                  
-                  // Get price range
-                  const prices = group.variants.filter(v => v.price).map(v => v.price!);
-                  const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-                  const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
-                  
-                  // Build badges
-                  const badges: { label: string }[] = [];
-                  group.diameters.slice(0, 4).forEach(d => {
-                    badges.push({ label: `${d}mm` });
-                  });
-                  if (group.diameters.length > 4) {
-                    badges.push({ label: `+${group.diameters.length - 4}` });
-                  }
-                  if (specs?.hardened) {
-                    badges.push({ label: "Hardened" });
-                  }
-                  
-                  const priceLabel = minPrice !== null 
-                    ? (minPrice === maxPrice ? `$${minPrice.toFixed(2)}` : `$${minPrice.toFixed(2)}+`)
-                    : null;
-                  
-                  return (
-                    <AccessoryCard
-                      key={`${group.brand}::${group.baseName}`}
-                      id={nozzle.id}
-                      name={group.baseName}
-                      subtitle={nozzle.model || undefined}
-                      brand={group.brand}
-                      price={null}
-                      priceLabel={priceLabel || undefined}
-                      imageUrl={nozzle.image_url}
-                      href={`/hotends/${nozzle.id}`}
-                      type="hotend"
-                      isSelected={isSelected}
-                      badges={badges}
-                      specs={
-                        <>
-                          {specs?.material && (
-                            <div className="flex items-center gap-1">
-                              <Package className="h-3 w-3" />
-                              <span>{String(specs.material)}</span>
-                            </div>
-                          )}
-                          {specs?.max_temp && (
-                            <div className="flex items-center gap-1">
-                              <Thermometer className="h-3 w-3" />
-                              <span>Up to {String(specs.max_temp)}°C</span>
-                            </div>
-                          )}
-                        </>
-                      }
-                      topRightContent={
-                        isAdmin ? (
-                          <div className="flex gap-0.5">
-                            <Button
-                              variant="secondary"
-                              size="icon"
-                              className="h-6 w-6 bg-background/80 backdrop-blur-sm"
-                              onClick={(e) => openImageEditor(nozzle, e)}
-                            >
-                              <ImageIcon className="h-3 w-3" />
-                            </Button>
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => {
-                                const newSet = new Set(selectedIds);
-                                if (isSelected) {
-                                  group.variants.forEach(v => newSet.delete(v.id));
-                                } else {
-                                  group.variants.forEach(v => newSet.add(v.id));
-                                }
-                                setSelectedIds(newSet);
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              className="bg-background/80 backdrop-blur-sm h-5 w-5"
-                            />
-                          </div>
-                        ) : undefined
-                      }
+              >
+                {/* Brand Header */}
+                <button
+                  onClick={() => toggleBrandCollapse(brand)}
+                  className="flex items-center gap-3 w-full text-left group hover:opacity-80 transition-opacity"
+                >
+                  {getBrandLogo(brand) && (
+                    <img
+                      src={getBrandLogo(brand)!}
+                      alt={`${brand} logo`}
+                      className="h-6 w-auto object-contain"
                     />
-                  );
-                })}
+                  )}
+                  <h3 className="text-lg font-bold text-white">{brand}</h3>
+                  <span className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-sm">
+                    {groupedByBrand[brand].length}
+                  </span>
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground ml-auto transition-transform duration-200",
+                      isCollapsed && "-rotate-90"
+                    )} 
+                  />
+                </button>
+
+                {/* Hotend Grid */}
+                {!isCollapsed && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {groupedByBrand[brand].map(group => {
+                      const nozzle = group.primaryVariant;
+                      const specs = nozzle.specs as Record<string, unknown> | null;
+                      const isSelected = group.variants.some(v => selectedIds.has(v.id));
+                      
+                      // Get price range
+                      const prices = group.variants.filter(v => v.price).map(v => v.price!);
+                      const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+                      const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+                      
+                      // Build badges
+                      const badges: { label: string }[] = [];
+                      group.diameters.slice(0, 4).forEach(d => {
+                        badges.push({ label: `${d}mm` });
+                      });
+                      if (group.diameters.length > 4) {
+                        badges.push({ label: `+${group.diameters.length - 4}` });
+                      }
+                      if (specs?.hardened) {
+                        badges.push({ label: "Hardened" });
+                      }
+                      
+                      const priceLabel = minPrice !== null 
+                        ? (minPrice === maxPrice ? `$${minPrice.toFixed(2)}` : `$${minPrice.toFixed(2)}+`)
+                        : null;
+                      
+                      return (
+                        <AccessoryCard
+                          key={`${group.brand}::${group.baseName}`}
+                          id={nozzle.id}
+                          name={group.baseName}
+                          subtitle={nozzle.model || undefined}
+                          brand={group.brand}
+                          price={null}
+                          priceLabel={priceLabel || undefined}
+                          imageUrl={nozzle.image_url}
+                          href={`/hotends/${nozzle.id}`}
+                          type="hotend"
+                          isSelected={isSelected}
+                          badges={badges}
+                          specs={
+                            <>
+                              {specs?.material && (
+                                <div className="flex items-center gap-1">
+                                  <Package className="h-3 w-3" />
+                                  <span>{String(specs.material)}</span>
+                                </div>
+                              )}
+                              {specs?.max_temp && (
+                                <div className="flex items-center gap-1">
+                                  <Thermometer className="h-3 w-3" />
+                                  <span>Up to {String(specs.max_temp)}°C</span>
+                                </div>
+                              )}
+                            </>
+                          }
+                          topRightContent={
+                            isAdmin ? (
+                              <div className="flex gap-0.5">
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-6 w-6 bg-background/80 backdrop-blur-sm"
+                                  onClick={(e) => openImageEditor(nozzle, e)}
+                                >
+                                  <ImageIcon className="h-3 w-3" />
+                                </Button>
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={() => {
+                                    const newSet = new Set(selectedIds);
+                                    if (isSelected) {
+                                      group.variants.forEach(v => newSet.delete(v.id));
+                                    } else {
+                                      group.variants.forEach(v => newSet.add(v.id));
+                                    }
+                                    setSelectedIds(newSet);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="bg-background/80 backdrop-blur-sm h-5 w-5"
+                                />
+                              </div>
+                            ) : undefined
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
