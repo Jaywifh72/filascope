@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Square, Thermometer } from "lucide-react";
+import { Thermometer } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import AccessoryCard from "@/components/AccessoryCard";
 
 interface BuildPlate {
   id: string;
@@ -175,84 +175,31 @@ export default function BuildPlateList() {
                   const isMagnetic = specs?.magnetic as boolean | undefined;
                   const maxTemp = specs?.max_temp_c as number | undefined;
                   
+                  const badges: { label: string }[] = [];
+                  if (isMagnetic) badges.push({ label: "Magnetic" });
+                  if (surface) badges.push({ label: surface });
+                  
                   return (
-                    <Link key={plate.id} to={`/build-plates/${plate.id}`}>
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="flex">
-                          {/* Product Image - Left Side */}
-                          <div className="relative w-28 h-28 shrink-0 bg-muted/30">
-                            {plate.image_url ? (
-                              <img
-                                src={plate.image_url}
-                                alt={plate.name}
-                                className="w-full h-full object-contain p-2"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Square className="h-10 w-10 text-muted-foreground/30" />
-                              </div>
-                            )}
+                    <AccessoryCard
+                      key={plate.id}
+                      id={plate.id}
+                      name={plate.name}
+                      brand={plate.brand || "Unknown"}
+                      price={plate.price}
+                      imageUrl={plate.image_url}
+                      href={`/build-plates/${plate.id}`}
+                      type="build_plate"
+                      discontinued={plate.product_url === 'DISCONTINUED'}
+                      badges={badges}
+                      specs={
+                        maxTemp ? (
+                          <div className="flex items-center gap-1">
+                            <Thermometer className="h-3 w-3" />
+                            <span>Up to {maxTemp}°C</span>
                           </div>
-
-                          {/* Card Content - Right Side */}
-                          <div className="flex-1 p-3 min-w-0 flex flex-col">
-                            {/* Header with Name and Price */}
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <h4 className="text-sm font-bold line-clamp-1">{plate.name}</h4>
-                                {surface && (
-                                  <span className="text-xs text-muted-foreground line-clamp-1">{surface}</span>
-                                )}
-                              </div>
-                              {/* Price or Discontinued */}
-                              <div className="shrink-0 text-right">
-                                {plate.product_url === 'DISCONTINUED' ? (
-                                  <div className="text-sm font-semibold text-orange-500">
-                                    Discontinued
-                                  </div>
-                                ) : plate.price ? (
-                                  <div className="text-sm font-bold text-primary">
-                                    ${plate.price.toFixed(2)}
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-
-                            {/* Quick Specs - Compact */}
-                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
-                              {maxTemp && (
-                                <div className="flex items-center gap-1">
-                                  <Thermometer className="h-3 w-3" />
-                                  <span>Up to {maxTemp}°C</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Badges and Brand Logo Row */}
-                            <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
-                              <div className="flex flex-wrap gap-1">
-                                {isMagnetic && (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Magnetic</Badge>
-                                )}
-                              </div>
-                              {/* Brand Logo - Bottom Right */}
-                              {brandLogo && (
-                                <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
-                                  <img 
-                                    src={brandLogo} 
-                                    alt={`${brand} logo`}
-                                    className="h-10 w-auto object-contain max-w-[120px]"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
+                        ) : null
+                      }
+                    />
                   );
                 })}
               </div>

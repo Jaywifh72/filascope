@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Thermometer, CircleDot, Package, Trash2, ImageIcon, X, Download, Loader2 } from "lucide-react";
+import { Thermometer, Package, Trash2, ImageIcon, X, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useAuth } from "@/hooks/useAuth";
+import AccessoryCard from "@/components/AccessoryCard";
 
 type Accessory = Database["public"]["Tables"]["printer_accessories"]["Row"];
 
@@ -242,15 +241,6 @@ export default function HotendList() {
   // Count unique grouped hotends
   const groupedCount = Object.keys(groupedHotends).length;
 
-  const toggleSelection = (id: string) => {
-    const newSet = new Set(selectedIds);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    setSelectedIds(newSet);
-  };
 
   const selectAll = () => {
     if (selectedIds.size === filteredNozzles.length) {
@@ -512,132 +502,81 @@ export default function HotendList() {
                   const minPrice = prices.length > 0 ? Math.min(...prices) : null;
                   const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
                   
+                  // Build badges
+                  const badges: { label: string }[] = [];
+                  group.diameters.slice(0, 4).forEach(d => {
+                    badges.push({ label: `${d}mm` });
+                  });
+                  if (group.diameters.length > 4) {
+                    badges.push({ label: `+${group.diameters.length - 4}` });
+                  }
+                  if (specs?.hardened) {
+                    badges.push({ label: "Hardened" });
+                  }
+                  
+                  const priceLabel = minPrice !== null 
+                    ? (minPrice === maxPrice ? `$${minPrice.toFixed(2)}` : `$${minPrice.toFixed(2)}+`)
+                    : null;
+                  
                   return (
-                    <div key={`${group.brand}::${group.baseName}`} className="relative">
-                      {/* Admin Controls - Top Right */}
-                      {isAdmin && (
-                        <div className="absolute top-1 right-1 flex gap-0.5 z-10">
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="h-6 w-6 bg-background/80 backdrop-blur-sm"
-                            onClick={(e) => openImageEditor(nozzle, e)}
-                          >
-                            <ImageIcon className="h-3 w-3" />
-                          </Button>
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => {
-                              const newSet = new Set(selectedIds);
-                              if (isSelected) {
-                                group.variants.forEach(v => newSet.delete(v.id));
-                              } else {
-                                group.variants.forEach(v => newSet.add(v.id));
-                              }
-                              setSelectedIds(newSet);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-background/80 backdrop-blur-sm h-5 w-5"
-                          />
-                        </div>
-                      )}
-
-                      <Link to={`/hotends/${nozzle.id}`}>
-                        <Card className={`overflow-hidden hover:shadow-lg transition-shadow cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}>
-                          <div className="flex">
-                            {/* Product Image - Left Side */}
-                            <div className="relative w-28 h-28 shrink-0 bg-muted/30">
-                              {nozzle.image_url ? (
-                                <img
-                                  src={nozzle.image_url}
-                                  alt={nozzle.name}
-                                  className="w-full h-full object-contain p-2"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <CircleDot className="h-10 w-10 text-muted-foreground/30" />
-                                </div>
-                              )}
+                    <AccessoryCard
+                      key={`${group.brand}::${group.baseName}`}
+                      id={nozzle.id}
+                      name={group.baseName}
+                      subtitle={nozzle.model || undefined}
+                      brand={group.brand}
+                      price={null}
+                      priceLabel={priceLabel || undefined}
+                      imageUrl={nozzle.image_url}
+                      href={`/hotends/${nozzle.id}`}
+                      type="hotend"
+                      isSelected={isSelected}
+                      badges={badges}
+                      specs={
+                        <>
+                          {specs?.material && (
+                            <div className="flex items-center gap-1">
+                              <Package className="h-3 w-3" />
+                              <span>{String(specs.material)}</span>
                             </div>
-
-                            {/* Card Content - Right Side */}
-                            <div className="flex-1 p-3 min-w-0 flex flex-col">
-                              {/* Header with Name and Price */}
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <h4 className="text-sm font-bold line-clamp-1">{group.baseName}</h4>
-                                  {nozzle.model && (
-                                    <span className="text-xs text-muted-foreground line-clamp-1">{nozzle.model}</span>
-                                  )}
-                                </div>
-                                {/* Price */}
-                                <div className={`shrink-0 text-right ${isAdmin ? 'mr-10' : ''}`}>
-                                  {minPrice !== null && (
-                                    <div className="text-sm font-bold text-primary">
-                                      {minPrice === maxPrice 
-                                        ? `$${minPrice.toFixed(2)}` 
-                                        : `$${minPrice.toFixed(2)}+`}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Quick Specs - Compact */}
-                              <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
-                                {specs?.material && (
-                                  <div className="flex items-center gap-1">
-                                    <Package className="h-3 w-3" />
-                                    <span>{String(specs.material)}</span>
-                                  </div>
-                                )}
-                                {specs?.max_temp && (
-                                  <div className="flex items-center gap-1">
-                                    <Thermometer className="h-3 w-3" />
-                                    <span>Up to {String(specs.max_temp)}°C</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Diameters and Brand Logo Row */}
-                              <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
-                                <div className="flex flex-wrap gap-1">
-                                  {group.diameters.slice(0, 4).map(d => (
-                                    <Badge 
-                                      key={d} 
-                                      variant="outline" 
-                                      className="text-[10px] px-1.5 py-0 h-4"
-                                    >
-                                      {d}mm
-                                    </Badge>
-                                  ))}
-                                  {group.diameters.length > 4 && (
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                                      +{group.diameters.length - 4}
-                                    </Badge>
-                                  )}
-                                  {specs?.hardened && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Hardened</Badge>
-                                  )}
-                                </div>
-                                {/* Brand Logo - Bottom Right */}
-                                {getBrandLogo(group.brand) && (
-                                  <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
-                                    <img 
-                                      src={getBrandLogo(group.brand)!} 
-                                      alt={`${group.brand} logo`}
-                                      className="h-10 w-auto object-contain max-w-[120px]"
-                                    />
-                                  </div>
-                                )}
-                              </div>
+                          )}
+                          {specs?.max_temp && (
+                            <div className="flex items-center gap-1">
+                              <Thermometer className="h-3 w-3" />
+                              <span>Up to {String(specs.max_temp)}°C</span>
                             </div>
+                          )}
+                        </>
+                      }
+                      topRightContent={
+                        isAdmin ? (
+                          <div className="flex gap-0.5">
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="h-6 w-6 bg-background/80 backdrop-blur-sm"
+                              onClick={(e) => openImageEditor(nozzle, e)}
+                            >
+                              <ImageIcon className="h-3 w-3" />
+                            </Button>
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => {
+                                const newSet = new Set(selectedIds);
+                                if (isSelected) {
+                                  group.variants.forEach(v => newSet.delete(v.id));
+                                } else {
+                                  group.variants.forEach(v => newSet.add(v.id));
+                                }
+                                setSelectedIds(newSet);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-background/80 backdrop-blur-sm h-5 w-5"
+                            />
                           </div>
-                        </Card>
-                      </Link>
-                    </div>
+                        ) : undefined
+                      }
+                    />
                   );
                 })}
               </div>
