@@ -167,7 +167,7 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
         "border rounded-xl overflow-hidden transition-all duration-300",
         isExpanded 
           ? "border-primary/50 bg-card shadow-lg shadow-primary/5" 
-          : "border-gray-700 bg-gray-800/30 hover:bg-gray-800/50 hover:border-gray-600 hover:scale-[1.005] hover:shadow-lg hover:shadow-primary/10"
+          : "border-gray-700 bg-gray-800/30 hover:bg-gray-800 hover:border-gray-600 hover:shadow-lg hover:shadow-teal-500/10"
       )}
     >
       {/* Header */}
@@ -296,8 +296,10 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
               onClick={handleCompareToggle}
               disabled={!inComparison && !canAddMore}
               className={cn(
-                "flex items-center gap-2",
-                inComparison && "bg-primary/20 text-primary border-primary/50"
+                "flex items-center gap-2 transition-all duration-200",
+                inComparison 
+                  ? "bg-teal-500/20 text-teal-400 border-teal-500/50 hover:bg-teal-500/30" 
+                  : "hover:bg-teal-500/20 hover:border-teal-500 hover:text-teal-400"
               )}
             >
               {inComparison ? (

@@ -438,11 +438,12 @@ export function CADComparisonTable({ onViewDetails, isDetailedView }: CADCompari
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCompareToggle(sw)}
+                      disabled={!inComparison && !canAddMore}
                       className={cn(
-                        "text-xs h-8 px-3",
+                        "text-xs h-8 px-3 transition-all duration-200",
                         inComparison 
-                          ? "bg-primary/20 text-primary hover:bg-primary/30" 
-                          : "text-muted-foreground hover:text-foreground"
+                          ? "bg-teal-500/20 text-teal-400 border border-teal-500/50 hover:bg-teal-500/30" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-teal-500/20 hover:border-teal-500 border border-transparent"
                       )}
                     >
                       {inComparison ? "✓ Added" : "+ Compare"}
