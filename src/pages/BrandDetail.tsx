@@ -559,71 +559,7 @@ const BrandDetail = () => {
           rating={null}
         />
 
-        {/* Admin: Scraping Status Card */}
-        {isAdmin && adminBrandData && (
-          <Card className="mb-8">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <RefreshCw className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Scraping Status</span>
-                {adminBrandData.scraping_active && (
-                  <Badge className="bg-primary/20 text-primary text-xs">
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                    Running
-                  </Badge>
-                )}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</div>
-                  <div className="flex items-center gap-1.5">
-                    {adminBrandData.scraping_enabled ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                        <span className="text-green-500 font-medium">Enabled</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-amber-500 font-medium">Disabled</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Last Sync</div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span>
-                      {adminBrandData.last_scrape_at 
-                        ? new Date(adminBrandData.last_scrape_at).toLocaleDateString()
-                        : "Never"}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Success Rate</div>
-                  <div className="font-medium">
-                    {adminBrandData.total_scrapes && adminBrandData.total_scrapes > 0
-                      ? `${Math.round((adminBrandData.successful_scrapes || 0) / adminBrandData.total_scrapes * 100)}%`
-                      : "N/A"}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Products with URLs</div>
-                  <div className="font-medium">
-                    {adminBrandData.products_with_urls || 0} / {adminBrandData.product_count || 0}
-                  </div>
-                </div>
-              </div>
-              {adminBrandData.last_error && (
-                <div className="mt-3 p-2 bg-destructive/10 rounded border border-destructive/20 text-xs text-destructive">
-                  <span className="font-medium">Last Error:</span> {adminBrandData.last_error}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* Admin Scraping Status - Removed from user-facing page */}
 
         {/* Tab Navigation */}
         <BrandTabNav 

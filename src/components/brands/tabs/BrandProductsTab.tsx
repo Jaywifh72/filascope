@@ -357,7 +357,7 @@ export function BrandProductsTab({
             {sortedProducts.map((product) => (
               <Card
                 key={product.baseName}
-                className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group"
+                className="bg-card border-border hover:border-primary/50 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group"
                 onClick={() => navigate(`/filament/${product.variants[0].id}`)}
               >
                 <CardContent className="p-6">
@@ -415,17 +415,17 @@ export function BrandProductsTab({
                         )}
                       </div>
 
-                      {/* Color Swatches */}
+                      {/* Color Swatches - Max 6 */}
                       {product.variants.length > 1 && (
-                        <div className="flex flex-wrap gap-1">
-                          {product.variants.slice(0, 10).map((variant, idx) => {
+                        <div className="flex items-center gap-0.5">
+                          {product.variants.slice(0, 6).map((variant, idx) => {
                             const colorHex = variant.color_hex
                               ? normalizeColorHex(variant.color_hex)
                               : null;
                             return colorHex ? (
                               <div
                                 key={idx}
-                                className="w-4 h-4 rounded-full border border-border"
+                                className="w-4 h-4 rounded-full border border-border flex-shrink-0"
                                 style={{ backgroundColor: colorHex }}
                                 title={
                                   variant.color_family || variant.product_title
@@ -433,10 +433,10 @@ export function BrandProductsTab({
                               />
                             ) : null;
                           })}
-                          {product.variants.length > 10 && (
-                            <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[8px] text-muted-foreground">
-                              +{product.variants.length - 10}
-                            </div>
+                          {product.variants.length > 6 && (
+                            <span className="text-xs text-muted-foreground ml-1.5">
+                              +{product.variants.length - 6} more
+                            </span>
                           )}
                         </div>
                       )}
@@ -471,7 +471,7 @@ export function BrandProductsTab({
                               navigate(`/filament/${product.variants[0].id}`);
                             }}
                           >
-                            View Colors
+                            View Details
                           </Button>
 
                           {product.categoryUrl && (
