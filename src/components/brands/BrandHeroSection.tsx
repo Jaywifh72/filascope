@@ -1,4 +1,4 @@
-import { Package, Layers, Tag, Star, Globe, ExternalLink, MapPin, Calendar, BadgeCheck, Heart } from 'lucide-react';
+import { Package, Layers, Tag, Star, Globe, ExternalLink, MapPin, Calendar, BadgeCheck, Heart, ShieldCheck, TrendingUp, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -30,8 +30,17 @@ function SpecCard({ icon, label, value }: SpecCardProps) {
       </div>
       <div className="min-w-0">
         <p className="text-xs text-gray-400 mb-1">{label}</p>
-        <p className="text-lg font-semibold text-white leading-tight">{value}</p>
+        <p className="text-base font-semibold text-white leading-tight truncate">{value}</p>
       </div>
+    </div>
+  );
+}
+
+function TrustIndicator({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-gray-400">
+      <Icon className="w-4 h-4 text-green-500" />
+      <span>{label}</span>
     </div>
   );
 }
@@ -55,10 +64,11 @@ export function BrandHeroSection({
 
   return (
     <div className={cn("mb-8", className)}>
-      <div className="flex flex-col lg:flex-row gap-8">
+      {/* Main Hero Layout */}
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Left: Brand Logo */}
-        <div className="flex-shrink-0">
-          <div className="relative w-[150px] h-[150px] flex items-center justify-center bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+        <div className="flex-shrink-0 flex justify-center lg:justify-start">
+          <div className="relative w-[120px] h-[120px] lg:w-[150px] lg:h-[150px] flex items-center justify-center bg-gray-800/50 border border-gray-700 rounded-lg p-4">
             {brandLogo ? (
               <img
                 src={brandLogo}
@@ -79,12 +89,12 @@ export function BrandHeroSection({
         </div>
 
         {/* Right: Brand Info */}
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-4 text-center lg:text-left">
           {/* Row 1: Brand Name + Verified */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-white">{brandName}</h1>
+          <div className="flex flex-col sm:flex-row items-center lg:items-start gap-2 sm:gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">{brandName}</h1>
             {isVerified && (
-              <span className="flex items-center gap-1 text-sm text-primary">
+              <span className="flex items-center gap-1 text-sm text-primary bg-primary/10 px-2 py-1 rounded-full">
                 <BadgeCheck className="w-4 h-4" />
                 Verified
               </span>
@@ -92,7 +102,7 @@ export function BrandHeroSection({
           </div>
 
           {/* Row 2: Location, Founded, Website */}
-          <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+          <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-sm text-gray-400">
             {location && (
               <span className="flex items-center gap-1.5">
                 <MapPin className="w-4 h-4" />
@@ -120,7 +130,7 @@ export function BrandHeroSection({
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
             <SpecCard
               icon={<Package className="w-5 h-5" />}
               label="Products"
@@ -139,14 +149,14 @@ export function BrandHeroSection({
             <SpecCard
               icon={<Star className="w-5 h-5" />}
               label="Rating"
-              value={rating ? rating.toFixed(1) : 'No ratings yet'}
+              value={rating ? rating.toFixed(1) : 'No ratings'}
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 mt-6">
+          <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 pt-2">
             {website && (
-              <Button asChild variant="primary" size="lg">
+              <Button asChild size="lg" className="w-full sm:w-auto">
                 <a href={website} target="_blank" rel="noopener noreferrer">
                   <Globe className="w-4 h-4 mr-2" />
                   Visit Website
@@ -154,10 +164,19 @@ export function BrandHeroSection({
                 </a>
               </Button>
             )}
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
               <Heart className="w-4 h-4 mr-2" />
               Save Brand
             </Button>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2 pt-2">
+            {isVerified && (
+              <TrustIndicator icon={ShieldCheck} label="Verified Brand" />
+            )}
+            <TrustIndicator icon={TrendingUp} label="Live Price Tracking" />
+            <TrustIndicator icon={Database} label="Complete Catalog" />
           </div>
         </div>
       </div>
