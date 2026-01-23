@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, User, GitCompareArrows, Menu, X, MoreHorizontal } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -26,7 +26,7 @@ const Navbar = () => {
   const trendingPanel = useTrendingPanel();
 
   // Check if Resources dropdown should be active
-  const isResourcesActive = ['/accessories', '/reference', '/wizard'].some(path => location.pathname.startsWith(path));
+  const isResourcesActive = ['/accessories', '/reference', '/wizard', '/learn'].some(path => location.pathname.startsWith(path));
 
   // Check active nav link
   const isActive = (path: string) => {
@@ -111,6 +111,10 @@ const Navbar = () => {
 
   // Resources menu items (shared between desktop and mobile)
   const resourcesItems = [{
+    to: '/learn',
+    label: 'Guides & Tutorials',
+    icon: BookOpen
+  }, {
     to: '/accessories',
     label: 'Accessories',
     icon: Puzzle
