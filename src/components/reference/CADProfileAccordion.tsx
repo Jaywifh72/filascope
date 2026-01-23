@@ -164,7 +164,7 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
     <div 
       id={`accordion-${software.id}`}
       className={cn(
-        "border rounded-xl overflow-hidden transition-all duration-300",
+        "border rounded-xl overflow-hidden transition-all duration-300 ease-in-out",
         isExpanded 
           ? "border-primary/50 bg-card shadow-lg shadow-primary/5" 
           : "border-gray-700 bg-gray-800/30 hover:bg-gray-800 hover:border-gray-600 hover:shadow-lg hover:shadow-teal-500/10"
@@ -173,11 +173,19 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 text-left"
+        className={cn(
+          "w-full flex items-center gap-4 p-4 text-left transition-colors duration-200",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-inset",
+          "rounded-xl"
+        )}
         aria-expanded={isExpanded}
+        aria-controls={`content-${software.id}`}
       >
         {/* Number Badge */}
-        <span className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary flex-shrink-0">
+        <span className={cn(
+          "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors duration-300",
+          isExpanded ? "bg-primary text-primary-foreground" : "bg-primary/20 text-primary"
+        )}>
           {index + 1}
         </span>
         
@@ -204,20 +212,25 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
           <p className="text-sm text-muted-foreground line-clamp-1">{tagline}</p>
         </div>
         
-        {/* Chevron */}
+        {/* Chevron with smooth rotation */}
         <ChevronDown 
           className={cn(
-            "w-5 h-5 text-muted-foreground transition-transform duration-300 flex-shrink-0",
-            isExpanded && "rotate-180"
+            "w-5 h-5 text-muted-foreground flex-shrink-0",
+            "transition-transform duration-300 ease-in-out",
+            isExpanded && "rotate-180 text-primary"
           )} 
         />
       </button>
       
-      {/* Expanded Content */}
-      <div className={cn(
-        "overflow-hidden transition-all duration-300",
-        isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
-      )}>
+      {/* Expanded Content with grid animation for smooth height */}
+      <div 
+        id={`content-${software.id}`}
+        className={cn(
+          "grid transition-all duration-300 ease-in-out",
+          isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
         <div className="px-4 pb-6 pt-2 space-y-6 border-t border-border/50">
           {/* Summary */}
           <div>
@@ -315,6 +328,7 @@ export function CADProfileAccordion({ software, index, isExpanded, onToggle }: C
               )}
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>
