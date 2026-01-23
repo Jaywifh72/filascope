@@ -297,14 +297,30 @@ const ReferenceRepos = () => {
             {/* Full Comparison Tab */}
             {activeTab === "comparison" && (
               <div key="comparison" className="animate-fade-in">
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <ReposComparisonTable data={repoComparison} logos={repoLogos} />
+                {/* Mobile Filter Button */}
+                <div className="lg:hidden mb-6">
+                  <ReposMobileFilterSheet />
+                </div>
+
+                {/* Desktop: Sidebar + Content Layout */}
+                <div className="hidden lg:flex gap-8">
+                  {/* Left Sidebar */}
+                  <ReposFilterSidebar />
+
+                  {/* Main Content */}
+                  <div className="flex-1 min-w-0">
+                    <ReposComparisonTable data={repoComparison} logos={repoLogos} />
+                  </div>
                 </div>
 
                 {/* Mobile View */}
-                <div className="md:hidden">
-                  <MobileComparisonView platforms={mobilePlatforms} />
+                <div className="lg:hidden">
+                  <div className="hidden md:block">
+                    <ReposComparisonTable data={repoComparison} logos={repoLogos} />
+                  </div>
+                  <div className="md:hidden">
+                    <MobileComparisonView platforms={mobilePlatforms} />
+                  </div>
                 </div>
               </div>
             )}
