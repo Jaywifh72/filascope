@@ -11,7 +11,6 @@ import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
 const Navbar = () => {
   const {
     user,
@@ -39,7 +38,6 @@ const Navbar = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
-
   useEffect(() => {
     if (!user) {
       setAvatarUrl(null);
@@ -57,12 +55,10 @@ const Navbar = () => {
     };
     loadProfile();
   }, [user]);
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
-
   const getInitials = () => {
     if (displayName) {
       return displayName.slice(0, 2).toUpperCase();
@@ -86,24 +82,10 @@ const Navbar = () => {
     onClick?: () => void;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
-    return (
-      <Link 
-        to={to} 
-        onClick={onClick}
-        className={cn(
-          "relative py-3 px-3 transition-colors duration-200",
-          "text-xs font-bold uppercase tracking-widest",
-          "hover:text-white",
-          active ? "text-primary" : "text-gray-400"
-        )}
-      >
+    return <Link to={to} onClick={onClick} className={cn("relative py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "hover:text-white", active ? "text-primary" : "text-gray-400")}>
         {children}
-        <span className={cn(
-          "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300",
-          active ? "w-full" : "w-0"
-        )} />
-      </Link>
-    );
+        <span className={cn("absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300", active ? "w-full" : "w-0")} />
+      </Link>;
   };
 
   // Mobile nav link component
@@ -115,72 +97,63 @@ const Navbar = () => {
   }: {
     to: string;
     children: React.ReactNode;
-    icon?: React.ComponentType<{ className?: string }>;
+    icon?: React.ComponentType<{
+      className?: string;
+    }>;
     end?: boolean;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
-    return (
-      <Link 
-        to={to} 
-        onClick={() => setMobileMenuOpen(false)}
-        className={cn(
-          "flex items-center gap-3 px-4 py-3 transition-colors duration-200",
-          "text-sm font-medium",
-          "hover:bg-gray-800/50",
-          active ? "text-primary bg-primary/10" : "text-gray-300"
-        )}
-      >
+    return <Link to={to} onClick={() => setMobileMenuOpen(false)} className={cn("flex items-center gap-3 px-4 py-3 transition-colors duration-200", "text-sm font-medium", "hover:bg-gray-800/50", active ? "text-primary bg-primary/10" : "text-gray-300")}>
         {Icon && <Icon className="w-4 h-4" />}
         {children}
-      </Link>
-    );
+      </Link>;
   };
 
   // Resources menu items (shared between desktop and mobile)
-  const resourcesItems = [
-    { to: '/accessories', label: 'Accessories', icon: Puzzle },
-    { to: '/reference/slicers', label: 'Slicers', icon: Scissors },
-    { to: '/reference/cad', label: '3D Modeling / CAD', icon: Box },
-    { to: '/reference/repos', label: '3D Print Repos', icon: FolderGit2 },
-    { to: '/reference/influencers', label: 'YouTube Influencers', icon: Youtube },
-    { to: '/reference/specialty', label: 'Specialty Tools', icon: Sparkles },
-    { to: '/wizard', label: 'Material Wizard', icon: Wand2 },
-  ];
-
-  return (
-    <>
-      <nav 
-        className="sticky top-0 z-50 bg-gray-950 shadow-lg"
-      >
+  const resourcesItems = [{
+    to: '/accessories',
+    label: 'Accessories',
+    icon: Puzzle
+  }, {
+    to: '/reference/slicers',
+    label: 'Slicers',
+    icon: Scissors
+  }, {
+    to: '/reference/cad',
+    label: '3D Modeling / CAD',
+    icon: Box
+  }, {
+    to: '/reference/repos',
+    label: '3D Print Repos',
+    icon: FolderGit2
+  }, {
+    to: '/reference/influencers',
+    label: 'YouTube Influencers',
+    icon: Youtube
+  }, {
+    to: '/reference/specialty',
+    label: 'Specialty Tools',
+    icon: Sparkles
+  }, {
+    to: '/wizard',
+    label: 'Material Wizard',
+    icon: Wand2
+  }];
+  return <>
+      <nav className="sticky top-0 z-50 bg-gray-950 shadow-lg">
         {/* Bottom border for depth */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent"
-        />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
         <div className="py-4 flex items-center px-4 md:px-6 gap-4 md:gap-6">
           {/* Mobile hamburger button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors" aria-label="Toggle menu">
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
           {/* Logo - Only icon and wordmark */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <img 
-              src={filascopeLogo} 
-              alt="FilaScope" 
-              className="h-8 md:h-9 w-auto object-contain"
-            />
-            <span className="text-sm md:text-base font-bold tracking-widest text-foreground">
-              FILASCOPE
-            </span>
+            <img src={filascopeLogo} alt="FilaScope" className="h-8 md:h-9 w-auto object-contain" />
+            
           </Link>
 
           {/* Desktop Navigation Links (lg and up) */}
@@ -192,23 +165,12 @@ const Navbar = () => {
             {/* Resources Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button 
-                  className={cn(
-                    "relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200",
-                    "text-xs font-bold uppercase tracking-widest",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-white",
-                    isResourcesActive ? 'text-primary' : 'text-gray-400'
-                  )}
-                >
+                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isResourcesActive ? 'text-primary' : 'text-gray-400')}>
                   Resources
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="center" 
-                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2"
-              >
+              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
                 <DropdownMenuItem asChild className="rounded-lg">
                   <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                     <Puzzle className="w-4 h-4 text-muted-foreground" />
@@ -260,17 +222,7 @@ const Navbar = () => {
             <div className="h-5 w-px bg-border/50 mx-2" />
 
             {/* Compare Button - Ghost with teal border */}
-            <button
-              onClick={() => navigate('/compare')}
-              className={cn(
-                "border border-teal-500 bg-transparent hover:bg-teal-500/10",
-                "rounded-lg px-4 py-2",
-                "text-xs font-bold uppercase tracking-widest",
-                "flex items-center gap-2",
-                "transition-all duration-200",
-                isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400"
-              )}
-            >
+            <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
               <GitCompareArrows className="w-3.5 h-3.5" />
               Compare
             </button>
@@ -285,46 +237,23 @@ const Navbar = () => {
             {/* More Dropdown (Resources collapsed) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button 
-                  className={cn(
-                    "relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200",
-                    "text-xs font-bold uppercase tracking-widest",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-white",
-                    isResourcesActive ? 'text-primary' : 'text-gray-400'
-                  )}
-                >
+                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isResourcesActive ? 'text-primary' : 'text-gray-400')}>
                   <MoreHorizontal className="w-4 h-4" />
                   More
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="center" 
-                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2"
-              >
-                {resourcesItems.map((item) => (
-                  <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
+                {resourcesItems.map(item => <DropdownMenuItem key={item.to} asChild className="rounded-lg">
                     <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                       <item.icon className="w-4 h-4 text-muted-foreground" />
                       {item.label}
                     </Link>
-                  </DropdownMenuItem>
-                ))}
+                  </DropdownMenuItem>)}
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Compare Button - Tablet */}
-            <button
-              onClick={() => navigate('/compare')}
-              className={cn(
-                "border border-teal-500 bg-transparent hover:bg-teal-500/10",
-                "rounded-lg px-3 py-1.5",
-                "text-xs font-bold uppercase tracking-widest",
-                "flex items-center gap-2",
-                "transition-all duration-200",
-                isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400"
-              )}
-            >
+            <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
               <GitCompareArrows className="w-3.5 h-3.5" />
               Compare
             </button>
@@ -337,8 +266,7 @@ const Navbar = () => {
             <CurrencySelector />
             
             {/* User Avatar / Login */}
-            {user ? (
-              <DropdownMenu>
+            {user ? <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
                     <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
@@ -378,8 +306,7 @@ const Navbar = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border" />
-                  {isAdmin && (
-                    <>
+                  {isAdmin && <>
                       <DropdownMenuItem asChild>
                         <Link to="/admin/dashboard" className="flex items-center text-sm">
                           <Shield className="w-4 h-4 mr-2" />
@@ -393,56 +320,33 @@ const Navbar = () => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-border" />
-                    </>
-                  )}
+                    </>}
                   <DropdownMenuItem onClick={handleSignOut} className="text-sm">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <button 
-                onClick={() => navigate('/auth')}
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
-              >
+              </DropdownMenu> : <button onClick={() => navigate('/auth')} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
                 <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
                   <AvatarFallback className="bg-gray-800">
                     <User className="w-4 h-4 text-gray-400" />
                   </AvatarFallback>
                 </Avatar>
-              </button>
-            )}
+              </button>}
           </div>
         </div>
 
         {/* Mobile Menu - Slide down animation */}
-        <div 
-          className={cn(
-            "md:hidden overflow-hidden transition-all duration-300 ease-out",
-            mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0"
-          )}
-          style={{
-            background: 'hsla(220, 20%, 4%, 0.98)',
-          }}
-        >
+        <div className={cn("md:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} style={{
+        background: 'hsla(220, 20%, 4%, 0.98)'
+      }}>
           <div className="py-4 border-t border-border/30">
             {/* Compare Button - Prominent at top */}
             <div className="px-4 pb-4">
-              <button
-                onClick={() => {
-                  navigate('/compare');
-                  setMobileMenuOpen(false);
-                }}
-                className={cn(
-                  "w-full border border-teal-500 bg-transparent hover:bg-teal-500/10",
-                  "rounded-lg px-4 py-3",
-                  "text-sm font-bold uppercase tracking-widest",
-                  "flex items-center justify-center gap-2",
-                  "transition-all duration-200",
-                  "text-teal-400"
-                )}
-              >
+              <button onClick={() => {
+              navigate('/compare');
+              setMobileMenuOpen(false);
+            }} className={cn("w-full border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-3", "text-sm font-bold uppercase tracking-widest", "flex items-center justify-center gap-2", "transition-all duration-200", "text-teal-400")}>
                 <GitCompareArrows className="w-4 h-4" />
                 Compare Filaments
               </button>
@@ -463,29 +367,15 @@ const Navbar = () => {
                 Resources
               </span>
             </div>
-            {resourcesItems.map((item) => (
-              <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
+            {resourcesItems.map(item => <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
                 {item.label}
-              </MobileNavLink>
-            ))}
+              </MobileNavLink>)}
           </div>
         </div>
       </nav>
       
       {/* Trending Panel */}
-      <TrendingPanel 
-        isOpen={trendingPanel.isOpen} 
-        onClose={trendingPanel.closePanel} 
-        selectedTab={trendingPanel.selectedTab} 
-        onTabChange={trendingPanel.setSelectedTab} 
-        activeTrends={trendingPanel.activeTrends} 
-        predictions={trendingPanel.predictions} 
-        isLoading={trendingPanel.isLoading} 
-        error={trendingPanel.error} 
-        viewedTrendIds={trendingPanel.viewedTrendIds} 
-      />
-    </>
-  );
+      <TrendingPanel isOpen={trendingPanel.isOpen} onClose={trendingPanel.closePanel} selectedTab={trendingPanel.selectedTab} onTabChange={trendingPanel.setSelectedTab} activeTrends={trendingPanel.activeTrends} predictions={trendingPanel.predictions} isLoading={trendingPanel.isLoading} error={trendingPanel.error} viewedTrendIds={trendingPanel.viewedTrendIds} />
+    </>;
 };
-
 export default Navbar;
