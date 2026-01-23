@@ -64,7 +64,7 @@ interface FilterSectionProps {
 const FilterSection = ({ category, activeValues, counts, onToggle }: FilterSectionProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wide">
+      <div className="flex items-center gap-1.5 text-sm font-medium text-white">
         <span>{category.icon}</span>
         <span>{category.title}</span>
       </div>
@@ -109,14 +109,14 @@ export function SlicerFilterPanel({
       role="complementary"
       aria-label="Filter slicers by criteria"
     >
-      <div className="bg-card/50 border border-border rounded-xl p-5 flex flex-col gap-6">
+      <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-5 flex flex-col gap-6">
         {/* Header */}
-        <div className="flex flex-col gap-2 pb-4 border-b border-border">
-          <div className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wide">
+        <div className="flex flex-col gap-2 pb-4 border-b border-gray-700">
+          <div className="flex items-center gap-2 text-base font-semibold text-white">
             <Filter className="w-4 h-4 text-primary" />
             <span>Filter Slicers</span>
           </div>
-          <div className="text-[13px] font-medium text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             Showing {filteredCount} of {totalCount} slicers
           </div>
         </div>
@@ -137,18 +137,15 @@ export function SlicerFilterPanel({
           onClick={onClearAll}
           disabled={activeFilterCount === 0}
           className={`
-            w-full h-10 px-4 mt-2 rounded-lg text-[13px] font-semibold
-            flex items-center justify-center gap-2
-            border-[1.5px] transition-all
+            w-full py-2 text-sm font-medium transition-colors
             ${activeFilterCount === 0
-              ? 'opacity-50 cursor-not-allowed border-destructive/30 text-destructive/50'
-              : 'border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50'
+              ? 'opacity-50 cursor-not-allowed text-primary/50'
+              : 'text-primary hover:text-primary/80'
             }
           `}
           aria-label="Clear all active filters"
         >
-          <X className="w-3.5 h-3.5" />
-          <span>Clear All Filters</span>
+          Clear All Filters
         </button>
       </div>
     </aside>

@@ -32,7 +32,7 @@ export const INITIAL_FILTER_STATE: SlicerFilterState = {
 export const SLICER_FILTER_CATEGORIES: FilterCategory[] = [
   {
     id: 'price',
-    title: 'PRICE',
+    title: 'Price',
     icon: '💰',
     options: [
       { id: 'price-free', label: 'Free', value: 'free' },
@@ -42,7 +42,7 @@ export const SLICER_FILTER_CATEGORIES: FilterCategory[] = [
   },
   {
     id: 'platform',
-    title: 'PLATFORM',
+    title: 'Platform',
     icon: '🖥️',
     options: [
       { id: 'platform-windows', label: 'Windows', value: 'Windows' },
@@ -53,7 +53,7 @@ export const SLICER_FILTER_CATEGORIES: FilterCategory[] = [
   },
   {
     id: 'features',
-    title: 'FEATURES',
+    title: 'Features',
     icon: '🎨',
     options: [
       { id: 'feature-multi-material', label: 'Multi-Material', value: 'multiMaterial' },
@@ -61,7 +61,7 @@ export const SLICER_FILTER_CATEGORIES: FilterCategory[] = [
   },
   {
     id: 'focus',
-    title: 'PRINTER TYPE',
+    title: 'Printer Type',
     icon: '🖨️',
     options: [
       { id: 'focus-fdm', label: 'FDM', value: 'FDM' },
