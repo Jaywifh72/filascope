@@ -17,6 +17,9 @@ import { BrandTabNav, BrandTabContent, type BrandTab } from "@/components/brands
 import { BrandOverviewTab } from "@/components/brands/tabs/BrandOverviewTab";
 import { BrandAboutTab } from "@/components/brands/tabs/BrandAboutTab";
 import { BrandProductsTab } from "@/components/brands/tabs/BrandProductsTab";
+import { BrandSEO } from "@/components/seo/BrandSEO";
+import { BrandBadgesDisplay, getBrandBadges } from "@/components/brands/BrandBadges";
+import { BrandFAQSection } from "@/components/brands/BrandFAQSection";
 
 type Filament = Tables<"filaments">;
 
@@ -528,8 +531,23 @@ const BrandDetail = () => {
     }
   };
 
+  const hasHighSpeedProducts = filaments?.some(f => f.high_speed_capable) ?? false;
+  const brandBadges = getBrandBadges(decodedBrand, hasHighSpeedProducts);
+  const isPremium = brandBadges.includes('premium');
+  const isBudgetFriendly = brandBadges.includes('budget-friendly');
+
   return (
     <div className="min-h-screen p-8">
+      {/* Brand SEO */}
+      <BrandSEO
+        brandName={decodedBrand}
+        description={brandInfo?.summary?.slice(0, 160)}
+        canonicalUrl={`/brands/${encodeURIComponent(decodedBrand)}`}
+        image={brandLogo}
+        productCount={filaments?.length}
+        materials={availableMaterials}
+      />
+
       <div className="max-w-7xl mx-auto">
         <Button variant="ghost" onClick={() => navigate("/brands")} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -558,6 +576,17 @@ const BrandDetail = () => {
           })()}
           rating={null}
         />
+
+        {/* Brand Badges */}
+        {brandBadges.length > 0 && (
+          <div className="mb-6">
+            <BrandBadgesDisplay 
+              brandName={decodedBrand} 
+              hasHighSpeedProducts={hasHighSpeedProducts}
+              size="md"
+            />
+          </div>
+        )}
 
         {/* Admin Scraping Status - Removed from user-facing page */}
 
@@ -602,12 +631,23 @@ const BrandDetail = () => {
 
           {/* About Tab */}
           {activeTab === "about" && (
+            <>
             <BrandAboutTab
               brandName={decodedBrand}
               brandInfo={brandInfo}
               productCount={groupedProducts.length}
               materialsCount={availableMaterials.length}
             />
+            {/* FAQ Section for SEO */}
+            <BrandFAQSection
+              brandName={decodedBrand}
+              productCount={filaments?.length ?? 0}
+              materials={availableMaterials}
+              isVerified={automatedBrand?.is_visible ?? false}
+              isPremium={isPremium}
+              isBudgetFriendly={isBudgetFriendly}
+            />
+            </>
           )}
         </BrandTabContent>
       </div>

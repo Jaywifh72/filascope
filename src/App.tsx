@@ -12,6 +12,8 @@ import { CompareProvider } from "./hooks/useCompare";
 import { CompareTray } from "./components/CompareTray";
 import { PrinterCompareProvider } from "./hooks/usePrinterCompare";
 import { PrinterCompareBar } from "./components/PrinterCompareBar";
+import { BrandCompareProvider } from "./hooks/useBrandCompare";
+import { BrandCompareBar } from "./components/brands/BrandCompare";
 import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatibleCount";
 import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 // Lazy load route components for better performance
@@ -74,6 +76,7 @@ const TDDatabase = lazy(() => import("./pages/TDDatabase"));
 const QuizScoringTest = lazy(() => import("./components/reference/repos/quiz/QuizScoringTest"));
 const LearningCenter = lazy(() => import("./pages/LearningCenter"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
+const BrandComparePage = lazy(() => import("./pages/BrandComparePage"));
 
 const queryClient = new QueryClient();
 
@@ -86,6 +89,7 @@ const App = () => (
         <CompatibleCountProvider>
           <CompareProvider>
             <PrinterCompareProvider>
+              <BrandCompareProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
@@ -96,6 +100,7 @@ const App = () => (
                   <Routes>
                   <Route path="/" element={<Finder />} />
                   <Route path="/brands" element={<Brands />} />
+                  <Route path="/brands/compare" element={<BrandComparePage />} />
                   <Route path="/brands/:brand" element={<BrandDetail />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/materials/compare" element={<MaterialCompare />} />
@@ -158,10 +163,12 @@ const App = () => (
               </Suspense>
               <CompareTray />
                 <PrinterCompareBar />
+                <BrandCompareBar />
                 <TechFooter />
                 </MaintenanceModeWrapper>
               </BrowserRouter>
             </TooltipProvider>
+              </BrandCompareProvider>
           </PrinterCompareProvider>
         </CompareProvider>
       </CompatibleCountProvider>
