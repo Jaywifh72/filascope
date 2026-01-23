@@ -8,7 +8,7 @@ import { FilterProvider } from "@/contexts/PlatformFilterContext";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
 import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
-import PlatformFilterBar from "@/components/reference/repos/PlatformFilterBar";
+import { ReposFilterSidebar, ReposMobileFilterSheet } from "@/components/reference/repos/ReposFilterSidebar";
 import NoResultsEmpty from "@/components/reference/repos/NoResultsEmpty";
 import MobileComparisonView from "@/components/reference/repos/mobile/MobileComparisonView";
 import ReposComparisonTable from "@/components/reference/repos/ReposComparisonTable";
@@ -262,25 +262,35 @@ const ReferenceRepos = () => {
             {/* Recommendations Tab */}
             {activeTab === "recommendations" && (
               <div key="recommendations" className="animate-fade-in">
-                {/* Platform Filter Bar - Desktop Only */}
-                <div className="hidden md:block mb-6">
-                  <PlatformFilterBar />
+                {/* Mobile Filter Button */}
+                <div className="lg:hidden mb-6">
+                  <ReposMobileFilterSheet />
                 </div>
 
-                {/* Desktop View */}
-                <div className="hidden md:block">
-                  {/* Staff Picks */}
+                {/* Desktop: Sidebar + Content Layout */}
+                <div className="hidden lg:flex gap-8">
+                  {/* Left Sidebar */}
+                  <ReposFilterSidebar />
+
+                  {/* Main Content */}
+                  <div className="flex-1 min-w-0">
+                    {/* Staff Picks */}
+                    <StaffPicksSection />
+
+                    {/* Specialized Options */}
+                    <SpecializedSection />
+
+                    {/* Empty State */}
+                    <NoResultsEmpty />
+                  </div>
+                </div>
+
+                {/* Mobile View - Full Width */}
+                <div className="lg:hidden">
                   <StaffPicksSection />
-
-                  {/* Specialized Options */}
                   <SpecializedSection />
-
-                  {/* Empty State */}
                   <NoResultsEmpty />
                 </div>
-
-                {/* Mobile View */}
-                <MobileComparisonView platforms={mobilePlatforms} />
               </div>
             )}
 
