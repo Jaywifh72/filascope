@@ -159,7 +159,7 @@ export function BrandOverviewTab({
           {highlights.map((highlight, idx) => (
             <div
               key={idx}
-              className="bg-gray-800/30 border border-gray-700 rounded-lg p-4"
+              className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:border-primary/30 hover:bg-gray-800/50 transition-all duration-200"
             >
               <div className="text-primary mb-3">
                 {highlight.icon}
@@ -222,7 +222,7 @@ export function BrandOverviewTab({
               {popularProducts.map((product) => (
                 <Card
                   key={product.baseName}
-                  className="flex-shrink-0 w-[200px] bg-gray-800/30 border-gray-700 hover:border-primary/50 transition-all cursor-pointer group/card"
+                  className="flex-shrink-0 w-[200px] bg-gray-800/30 border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 cursor-pointer group/card"
                   onClick={() => navigate(`/filament/${product.variants[0].id}`)}
                 >
                   <CardContent className="p-4">
