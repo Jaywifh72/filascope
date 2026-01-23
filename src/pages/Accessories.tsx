@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CircleDot, Square, Layers, Wrench } from "lucide-react";
 import HotendList from "@/components/HotendList";
 import BuildPlateList from "@/components/BuildPlateList";
@@ -65,22 +65,48 @@ export default function Accessories() {
           )}
         </div>
 
-        {/* Tabs */}
+        {/* Underline Tab Navigation */}
+        <div className="flex gap-8 border-b border-gray-700">
+          <button
+            onClick={() => handleTabChange("hotends")}
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative ${
+              activeTab === "hotends" ? "text-white" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <CircleDot className="w-4 h-4" />
+            Hotends
+            {activeTab === "hotends" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => handleTabChange("build-plates")}
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative ${
+              activeTab === "build-plates" ? "text-white" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <Square className="w-4 h-4" />
+            Build Plates
+            {activeTab === "build-plates" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => handleTabChange("ams")}
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative ${
+              activeTab === "ams" ? "text-white" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            AMS/MMU
+            {activeTab === "ams" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
+          </button>
+        </div>
+
+        {/* Tab Content */}
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
-            <TabsTrigger value="hotends" className="gap-2">
-              <CircleDot className="h-4 w-4" />
-              Hotends
-            </TabsTrigger>
-            <TabsTrigger value="build-plates" className="gap-2">
-              <Square className="h-4 w-4" />
-              Build Plates
-            </TabsTrigger>
-            <TabsTrigger value="ams" className="gap-2">
-              <Layers className="h-4 w-4" />
-              AMS/MMU
-            </TabsTrigger>
-          </TabsList>
 
           <TabsContent value="hotends" className="mt-6">
             <HotendList />
