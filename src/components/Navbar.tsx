@@ -85,8 +85,8 @@ const Navbar = () => {
         className={cn(
           "relative py-3 px-3 transition-colors duration-200",
           "text-xs font-bold uppercase tracking-widest",
-          "hover:text-primary",
-          active ? "text-primary" : "text-foreground/80"
+          "hover:text-white",
+          active ? "text-primary" : "text-gray-400"
         )}
       >
         {children}
@@ -101,17 +101,16 @@ const Navbar = () => {
   return (
     <>
       <nav 
-        className="sticky top-0 z-50 transition-all duration-300"
+        className="sticky top-0 z-50 transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
         style={{
           background: 'hsla(220, 20%, 4%, 0.9)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
       >
-        {/* Bottom border with subtle shadow for depth */}
+        {/* Bottom border for depth */}
         <div 
           className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent"
-          style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
         />
         
         <div className="h-16 flex items-center px-6 gap-6">
@@ -141,8 +140,8 @@ const Navbar = () => {
                     "relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200",
                     "text-xs font-bold uppercase tracking-widest",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-primary",
-                    isResourcesActive ? 'text-primary' : 'text-foreground/80'
+                    "hover:text-white",
+                    isResourcesActive ? 'text-primary' : 'text-gray-400'
                   )}
                 >
                   Resources
@@ -204,20 +203,20 @@ const Navbar = () => {
             <div className="h-5 w-px bg-border/50 mx-2" />
 
             {/* Compare Button - Ghost with teal border */}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => navigate('/compare')}
               className={cn(
-                "border-primary/50 bg-transparent hover:bg-primary/10 hover:border-primary",
-                "text-xs font-bold uppercase tracking-widest gap-2",
+                "border border-primary bg-transparent hover:bg-primary/10",
+                "rounded-lg px-4 py-2",
+                "text-xs font-bold uppercase tracking-widest",
+                "flex items-center gap-2",
                 "transition-all duration-200",
-                isActive('/compare') && "border-primary bg-primary/10 text-primary"
+                isActive('/compare') ? "bg-primary/10 text-primary" : "text-gray-400 hover:text-white"
               )}
             >
               <GitCompareArrows className="w-3.5 h-3.5" />
               Compare
-            </Button>
+            </button>
           </nav>
 
           {/* Right-side utilities */}
@@ -230,9 +229,9 @@ const Navbar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
-                    <Avatar className="w-8 h-8 border border-border/50 hover:border-primary/50 transition-colors cursor-pointer">
+                    <Avatar className="w-8 h-8 border border-gray-700 hover:border-primary/50 transition-colors cursor-pointer">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-                      <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
+                      <AvatarFallback className="text-xs font-medium bg-gray-800 text-white">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -295,9 +294,9 @@ const Navbar = () => {
                 onClick={() => navigate('/auth')}
                 className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
               >
-                <Avatar className="w-8 h-8 border border-border/50 hover:border-primary/50 transition-colors cursor-pointer">
-                  <AvatarFallback className="bg-muted text-muted-foreground">
-                    <User className="w-4 h-4" />
+                <Avatar className="w-8 h-8 border border-gray-700 hover:border-primary/50 transition-colors cursor-pointer">
+                  <AvatarFallback className="bg-gray-800">
+                    <User className="w-4 h-4 text-gray-400" />
                   </AvatarFallback>
                 </Avatar>
               </button>
