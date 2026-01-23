@@ -6,6 +6,7 @@ import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   Select,
@@ -326,6 +327,16 @@ const Brands = () => {
     });
   };
 
+  // Generate brand suggestions for search dropdown
+  const brandSuggestions = useMemo(() => {
+    if (!searchQuery) return [];
+    return filteredBrands.map(b => ({
+      name: b.name,
+      count: b.count,
+      logoUrl: b.automated?.logo_url
+    }));
+  }, [filteredBrands, searchQuery]);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -335,6 +346,7 @@ const Brands = () => {
         brandCount={brandCount}
         productCount={totalProducts}
         onOpenQuiz={handleOpenQuiz}
+        brandSuggestions={brandSuggestions}
       />
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
@@ -357,7 +369,7 @@ const Brands = () => {
                   <span className="text-muted-foreground sm:hidden">// </span>
                   <span className="text-primary font-bold">{filteredBrands.length.toLocaleString()}</span>
                   <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
-                    {hasActiveFilters ? "Matching" : "Brands"}
+                    {searchQuery ? `results for "${searchQuery}"` : (hasActiveFilters ? "Matching" : "Brands")}
                   </span>
                 </h2>
               </div>
@@ -394,6 +406,33 @@ const Brands = () => {
             {/* Brands Grid */}
             {isLoading ? (
               <div className="text-center py-12 text-muted-foreground">Loading brands...</div>
+            ) : filteredBrands.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <Building2 className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  No brands found{searchQuery ? ` for "${searchQuery}"` : ""}
+                </h3>
+                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                  Try searching for a different name or browse all brands by clearing your filters.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setFilters({
+                      materials: [],
+                      features: [],
+                      verifiedOnly: false,
+                      hasLivePricing: false,
+                      filamentCountRange: null,
+                      sortBy: "count-desc",
+                    });
+                  }}
+                  className="border-primary/50 text-primary hover:bg-primary/10"
+                >
+                  Clear Search & Filters
+                </Button>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredBrands.map((brand) => (
