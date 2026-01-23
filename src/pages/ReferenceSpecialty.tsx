@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 type SpecialtyTab = "recommendations" | "comparison" | "profiles";
 
-function RecommendationsContent({ onOpenQuiz }: { onOpenQuiz: () => void }) {
+function RecommendationsContent({ onOpenQuiz, onScrollToProfiles }: { onOpenQuiz: () => void; onScrollToProfiles: () => void }) {
   const { filteredTools, hasActiveFilters } = useSpecialtyFilters();
   
   const featuredFiltered = filteredTools.filter(t => t.tier === 'featured');
@@ -37,8 +37,8 @@ function RecommendationsContent({ onOpenQuiz }: { onOpenQuiz: () => void }) {
       </div>
       
       {/* Right Sidebar - Quiz Card */}
-      <aside className="hidden xl:block w-[280px] flex-shrink-0">
-        <SpecialtyQuizCard onStartQuiz={onOpenQuiz} />
+      <aside className="hidden xl:block w-[260px] flex-shrink-0">
+        <SpecialtyQuizCard onStartQuiz={onOpenQuiz} onBrowseAll={onScrollToProfiles} />
       </aside>
     </div>
   );
@@ -161,9 +161,22 @@ function ReferenceSpecialtyContent() {
     );
   }
 
+  const handleScrollToProfiles = () => {
+    setActiveTab("profiles");
+    setTimeout(() => {
+      const section = document.getElementById('specialty-content-section');
+      if (section) {
+        const headerOffset = 120;
+        const elementPosition = section.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <SpecialtyToolsHeroSection onScrollToComparison={handleScrollToComparison} />
+      <SpecialtyToolsHeroSection onScrollToComparison={handleScrollToComparison} onOpenQuiz={() => setShowQuiz(true)} />
 
       {/* Sticky Tab Navigation */}
       <div 
@@ -240,7 +253,7 @@ function ReferenceSpecialtyContent() {
       {/* Main Content */}
       <div id="specialty-content-section" className="max-w-[1600px] mx-auto px-6 lg:px-10 py-8">
         {activeTab === "recommendations" && (
-          <RecommendationsContent onOpenQuiz={() => setShowQuiz(true)} />
+          <RecommendationsContent onOpenQuiz={() => setShowQuiz(true)} onScrollToProfiles={handleScrollToProfiles} />
         )}
         {activeTab === "comparison" && (
           <ComparisonContent onLearnMore={handleLearnMore} />

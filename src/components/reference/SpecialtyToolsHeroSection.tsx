@@ -1,11 +1,13 @@
 import React from 'react';
-import { ChevronDown, Wrench } from 'lucide-react';
+import { ChevronDown, Wrench, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface SpecialtyToolsHeroSectionProps {
   onScrollToComparison: () => void;
+  onOpenQuiz?: () => void;
 }
 
-const SpecialtyToolsHeroSection: React.FC<SpecialtyToolsHeroSectionProps> = ({ onScrollToComparison }) => {
+const SpecialtyToolsHeroSection: React.FC<SpecialtyToolsHeroSectionProps> = ({ onScrollToComparison, onOpenQuiz }) => {
   return (
     <section 
       className="w-full py-12 md:py-16 mb-8 border-b border-border/50 relative overflow-hidden"
@@ -59,15 +61,27 @@ const SpecialtyToolsHeroSection: React.FC<SpecialtyToolsHeroSectionProps> = ({ o
             </span>
           </div>
 
-          {/* Scroll CTA */}
-          <button
-            onClick={onScrollToComparison}
-            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group border border-border/50 rounded-lg hover:border-primary/30"
-            aria-label="View full comparison"
-          >
-            <span>View Full Comparison</span>
-            <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
-          </button>
+          {/* CTAs */}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            {onOpenQuiz && (
+              <Button 
+                onClick={onOpenQuiz}
+                size="default"
+                className="gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Take 60-Second Quiz
+              </Button>
+            )}
+            <button
+              onClick={onScrollToComparison}
+              className="inline-flex items-center justify-center gap-2 py-2.5 px-5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group border border-border/50 rounded-lg hover:border-primary/30"
+              aria-label="View full comparison"
+            >
+              <span>View Full Comparison</span>
+              <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+            </button>
+          </div>
         </div>
       </div>
     </section>
