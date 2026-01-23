@@ -1,11 +1,10 @@
 import React from 'react';
-import { Trophy, Printer, Archive, Check, Zap, ExternalLink, Star } from 'lucide-react';
+import { Trophy, Printer, Archive, Check, ExternalLink, Star } from 'lucide-react';
 import { getStaffPicks, PlatformData, metricTooltips } from '@/lib/platformData';
 import { useFilters } from '@/contexts/PlatformFilterContext';
 import { getStandoutForPlatform } from '@/lib/standoutFeatures';
 import RatingValue from './shared/RatingValue';
 import FeatureTag from './shared/FeatureTag';
-import TierHeader from './shared/TierHeader';
 import StandoutBadge from './shared/StandoutBadge';
 
 const getBadgeIcon = (iconName: string, size: number = 14) => {
@@ -19,13 +18,14 @@ const getBadgeIcon = (iconName: string, size: number = 14) => {
 
 interface FeaturedCardProps {
   platform: PlatformData;
+  rank: number;
 }
 
-const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
+const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform, rank }) => {
   return (
     <div 
       id={platform.targetId}
-      className="relative p-6 bg-gradient-to-br from-amber-500/5 via-background to-background border-2 border-amber-500/30 rounded-2xl"
+      className="relative p-6 bg-gradient-to-br from-primary/5 via-background to-background border border-primary/30 rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.01] transition-all duration-200"
     >
       {/* Badge */}
       <div 
@@ -63,7 +63,7 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
         </span>
       </div>
 
-      {/* Standout Feature - Prominently positioned */}
+      {/* Standout Feature */}
       {(() => {
         const standout = getStandoutForPlatform(platform.id);
         return standout ? (
@@ -71,7 +71,7 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
         ) : null;
       })()}
 
-      {/* Ratings */}
+      {/* Ratings - 4 columns */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {(['quality', 'community', 'search', 'ux'] as const).map(key => (
           <div key={key} className="text-center">
@@ -132,78 +132,6 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform }) => {
   );
 };
 
-interface SecondaryCardProps {
-  platform: PlatformData;
-}
-
-const SecondaryCard: React.FC<SecondaryCardProps> = ({ platform }) => {
-  return (
-    <div 
-      id={platform.targetId}
-      className="relative p-5 bg-card/50 border border-border/50 rounded-xl hover:border-primary/30 transition-colors"
-    >
-      {/* Badge */}
-      <div 
-        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-4"
-        style={{ 
-          backgroundColor: `${platform.tierBadgeColor}15`,
-          color: platform.tierBadgeColor,
-          border: `1px solid ${platform.tierBadgeColor}40`
-        }}
-      >
-        {getBadgeIcon(platform.tierBadgeIcon, 14)}
-        <span>{platform.tierBadge}</span>
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <img 
-          src={platform.logo} 
-          alt={platform.name}
-          className="w-12 h-12 object-contain rounded-lg bg-white/5 p-1.5"
-        />
-        <div>
-          <h3 className="text-lg font-bold text-foreground">{platform.name}</h3>
-          <p className="text-sm font-medium text-primary">{platform.tagline}</p>
-        </div>
-      </div>
-
-      {/* Standout Feature - Compact */}
-      {(() => {
-        const standout = getStandoutForPlatform(platform.id);
-        return standout ? (
-          <StandoutBadge standout={standout} variant="compact" className="mb-4" />
-        ) : null;
-      })()}
-
-      {/* Quick Ratings */}
-      <div className="flex items-center gap-4 mb-4 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Quality:</span>
-          <RatingValue rating={platform.ratings.quality} size="small" showTooltip tooltipContent={metricTooltips.quality} />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Community:</span>
-          <RatingValue rating={platform.ratings.community} size="small" showTooltip tooltipContent={metricTooltips.community} />
-        </div>
-      </div>
-
-      {/* Best For */}
-      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{platform.bestFor}</p>
-
-      {/* Action */}
-      <a
-        href={platform.websiteUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-      >
-        Visit Site <ExternalLink size={14} />
-      </a>
-    </div>
-  );
-};
-
 const StaffPicksSection: React.FC = () => {
   const { filteredPlatforms, hasActiveFilters } = useFilters();
   const allStaffPicks = getStaffPicks();
@@ -216,28 +144,35 @@ const StaffPicksSection: React.FC = () => {
   // Hide entire section if no matches
   if (staffPicks.length === 0 && hasActiveFilters) return null;
 
-  const featured = staffPicks[0];
-  const secondary = staffPicks.slice(1);
-
   return (
     <section className="mb-12" role="region" aria-labelledby="staff-picks-title">
-      <TierHeader 
-        id="staff-picks-title"
-        icon="🏆"
-        title="Staff Picks"
-        subtitle="Our top recommendations based on 100+ hours of research"
-        count={`${staffPicks.length} of ${allStaffPicks.length} platforms`}
-      />
-
-      <div className="space-y-6">
-        {featured && <FeaturedCard platform={featured} />}
-        {secondary.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {secondary.map(platform => (
-              <SecondaryCard key={platform.id} platform={platform} />
-            ))}
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20">
+            <Trophy className="w-5 h-5 text-primary" />
           </div>
+          <div>
+            <h2 id="staff-picks-title" className="text-xl md:text-2xl font-bold text-foreground">
+              Our Top Recommendations
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Staff-curated picks based on 100+ hours of research
+            </p>
+          </div>
+        </div>
+        {hasActiveFilters && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Showing {staffPicks.length} of {allStaffPicks.length} platforms
+          </p>
         )}
+      </div>
+
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {staffPicks.map((platform, index) => (
+          <FeaturedCard key={platform.id} platform={platform} rank={index + 1} />
+        ))}
       </div>
     </section>
   );
