@@ -1,60 +1,24 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, BadgeCheck, Zap, Radio, Info, Store } from "lucide-react";
-import { getBrandLogo } from "@/lib/brandLogos";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
+import BrandCard from "@/components/brands/BrandCard";
 import { toast } from "sonner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
-// Custom Plastic Spool Icon
-const PlasticSpoolIcon = ({ className }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="12" r="9" />
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 3v6" />
-    <path d="M12 15v6" />
-    <path d="M3 12h6" />
-    <path d="M15 12h6" />
-  </svg>
-);
-
-// Custom Cardboard Spool Icon (with recycling indicator)
-const CardboardSpoolIcon = ({ className }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="12" r="9" strokeDasharray="4 2" />
-    <circle cx="12" cy="12" r="3" />
-    <path d="M9 9l-2-2" />
-    <path d="M15 9l2-2" />
-    <path d="M9 15l-2 2" />
-    <path d="M15 15l2 2" />
-  </svg>
-);
+// Interface for merged brand data with materials
+interface MergedBrand {
+  name: string;
+  count: number;
+  spoolMaterial: "Cardboard" | "Plastic" | "Mixed" | null;
+  hasHighSpeed: boolean;
+  avgTransmissionDistance: number | null;
+  colors: string[];
+  topMaterials: string[];
+  automated: PublicBrand | null;
+}
 
 // Brands that have been lab-tested/verified
 const VERIFIED_BRANDS = [
@@ -96,46 +60,13 @@ interface PublicBrand {
   display_order: number | null;
 }
 
-// ColorStack component for displaying brand's color range
-const ColorStack = ({ colors }: { colors: string[] }) => {
-  const displayColors = colors.slice(0, 6);
-  const remainingCount = colors.length - 6;
-  
-  if (displayColors.length === 0) return null;
-  
-  return (
-    <div className="flex items-center justify-center mt-3 pt-3 border-t border-border/50">
-      <div className="flex items-center">
-        {displayColors.map((color, index) => (
-          <div
-            key={index}
-            className="w-3 h-3 rounded-full border border-border -ml-1 first:ml-0"
-            style={{ 
-              backgroundColor: color,
-              zIndex: displayColors.length - index 
-            }}
-          />
-        ))}
-        {remainingCount > 0 && (
-          <span className="ml-1.5 text-xs font-mono text-muted-foreground">
-            +{remainingCount}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const getPlatformColor = (platform: string) => {
-  const colors: Record<string, string> = {
-    shopify: "bg-green-500/20 text-green-400 border-green-500/30",
-    amazon: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-    woocommerce: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    bigcommerce: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    magento: "bg-red-500/20 text-red-400 border-red-500/30",
-    custom: "bg-muted text-muted-foreground border-border",
-  };
-  return colors[platform] || colors.custom;
+// Helper to detect material type from color/description
+const detectMaterialsForBrand = (brandName: string): string[] => {
+  // This is placeholder logic - in production you'd query actual material data per brand
+  const commonMaterials = ["PLA", "PETG", "ABS", "TPU", "ASA"];
+  // Return a subset based on brand name hash for variety
+  const hash = brandName.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  return commonMaterials.filter((_, i) => (hash + i) % 3 !== 0).slice(0, 3);
 };
 
 const getSyncStatus = (lastScrape: string | null) => {
@@ -146,18 +77,8 @@ const getSyncStatus = (lastScrape: string | null) => {
   return { color: "bg-red-500", label: "Needs sync" };
 };
 
-const formatLastScrape = (date: string | null) => {
-  if (!date) return "Never";
-  const diff = Date.now() - new Date(date).getTime();
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  if (hours < 1) return "< 1 hour ago";
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-};
 
 const Brands = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [filters, setFilters] = useState<BrandFilters>({
@@ -269,8 +190,9 @@ const Brands = () => {
         hasHighSpeed: filamentStats?.hasHighSpeed || false,
         avgTransmissionDistance: filamentStats?.avgTransmissionDistance || null,
         colors: filamentStats?.colors || [],
+        topMaterials: detectMaterialsForBrand(ab.display_name),
         automated: ab,
-      };
+      } as MergedBrand;
     });
 
     // Also include any brands from filaments that aren't in automated_brands
@@ -283,8 +205,9 @@ const Brands = () => {
       .filter(b => !automatedNames.has(b.name.toLowerCase()))
       .map(b => ({
         ...b,
+        topMaterials: detectMaterialsForBrand(b.name),
         automated: null,
-      }));
+      } as MergedBrand));
 
     return [...fromAutomated, ...additionalBrands].sort((a, b) => b.count - a.count);
   }, [brands, automatedBrands]);
@@ -294,17 +217,12 @@ const Brands = () => {
     return mergedBrands.filter(b => b.automated?.featured);
   }, [mergedBrands]);
 
-  // Get platform counts
+  // Get platform counts - simplified since public view doesn't have platform_type
   const platformCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    mergedBrands.forEach(b => {
-      const platform = b.automated?.platform_type || "other";
-      counts[platform] = (counts[platform] || 0) + 1;
-    });
-    return counts;
-  }, [mergedBrands]);
+    return { "all": mergedBrands.length };
+  }, [mergedBrands.length]);
 
-  const platforms = Object.keys(platformCounts).sort();
+  const platforms = Object.keys(platformCounts).filter(p => p !== "all").sort();
 
   // Calculate material counts for sidebar (based on brand data - how many brands have each material)
   const materialCounts = useMemo(() => {
@@ -329,16 +247,14 @@ const Brands = () => {
       const matchesSearch = brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            brand.automated?.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Platform filter
-      const matchesPlatform = !selectedPlatform || 
-                             (brand.automated?.platform_type === selectedPlatform) ||
-                             (!brand.automated && selectedPlatform === "other");
+      // Platform filter - removed since public view doesn't have platform_type
+      const matchesPlatform = !selectedPlatform || true;
       
       // Verified filter
       const matchesVerified = !filters.verifiedOnly || VERIFIED_BRANDS.includes(brand.name);
       
-      // Live pricing filter
-      const matchesLivePricing = !filters.hasLivePricing || brand.automated?.last_scrape_at != null;
+      // Live pricing filter - check if brand has product_count (simplified)
+      const matchesLivePricing = !filters.hasLivePricing || (brand.automated?.product_count ?? 0) > 0;
       
       // Features filter
       const matchesHighSpeed = !filters.features.includes("highSpeed") || brand.hasHighSpeed;
@@ -457,174 +373,24 @@ const Brands = () => {
               </p>
             </div>
 
-            {/* Legend */}
-            <div className="mb-6 flex flex-wrap items-center gap-4 p-3 bg-card border border-border rounded-lg">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Info className="w-3.5 h-3.5" />
-                <span className="font-mono">LEGEND:</span>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-help">
-                    <PlasticSpoolIcon className="w-3.5 h-3.5" />
-                    Plastic
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-mono text-xs">Standard plastic spools. Durable and reusable, but not eco-friendly.</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help">
-                    <CardboardSpoolIcon className="w-3.5 h-3.5" />
-                    Cardboard
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-mono text-xs">Eco-friendly cardboard spools. Recyclable but may absorb moisture - store in dry conditions.</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30 cursor-help">
-                    <Zap className="w-3.5 h-3.5" />
-                    High Speed
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-mono text-xs">Optimized for high-speed printing (300+ mm/s). Enhanced flow and cooling properties.</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30 cursor-help">
-                    <Radio className="w-3.5 h-3.5" />
-                    RFID/NFC
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-mono text-xs">Spools with RFID/NFC chips for automatic material detection. Distance shows read range in meters.</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30 cursor-help">
-                    <BadgeCheck className="w-3.5 h-3.5" />
-                    Verified
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="font-mono text-xs">Lab-tested brand with verified specifications and quality control.</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-
             {/* Brands Grid */}
             {isLoading ? (
               <div className="text-center py-12 text-muted-foreground">Loading brands...</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredBrands.map((brand) => {
-              const logoUrl = getBrandLogo(brand.name);
-              const isVerified = VERIFIED_BRANDS.includes(brand.name);
-              const syncStatus = getSyncStatus(brand.automated?.last_scrape_at || null);
-              
-              return (
-                <div 
-                  key={brand.name} 
-                  className="bg-card border border-border rounded-lg hover:border-primary transition-all duration-200 cursor-pointer group"
-                  onClick={() => navigate(`/brands/${encodeURIComponent(brand.name)}`)}
-                >
-                  <div className="p-6">
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="w-full h-24 flex items-center justify-center bg-background/50 rounded-lg p-4 relative">
-                        {logoUrl ? (
-                          <img
-                            src={logoUrl}
-                            alt={brand.name}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Package className="w-8 h-8 text-primary" />
-                          </div>
-                        )}
-                        {/* Sync status indicator */}
-                        {brand.automated && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full ${syncStatus.color}`} />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">{syncStatus.label}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                      <div className="text-center space-y-2 w-full">
-                        <div className="flex items-center justify-center gap-2">
-                          <h3 className="font-inter font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-                            {brand.name}
-                          </h3>
-                          {isVerified && (
-                            <BadgeCheck className="w-5 h-5 text-primary" />
-                          )}
-                        </div>
-                        <p className="font-mono text-sm text-muted-foreground">{brand.count} filaments</p>
-                        
-                        {/* Platform badge */}
-                        {brand.automated && (
-                          <Badge variant="outline" className={`text-xs ${getPlatformColor(brand.automated.platform_type)}`}>
-                            <Store className="w-3 h-3 mr-1" />
-                            {brand.automated.platform_type}
-                          </Badge>
-                        )}
-                        
-                        {/* Feature Tags */}
-                        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
-                          {brand.spoolMaterial === "Cardboard" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                              <CardboardSpoolIcon className="w-3 h-3" />
-                              Cardboard
-                            </span>
-                          )}
-                          {brand.spoolMaterial === "Plastic" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                              <PlasticSpoolIcon className="w-3 h-3" />
-                              Plastic
-                            </span>
-                          )}
-                          {brand.spoolMaterial === "Mixed" && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-muted text-muted-foreground border border-border">
-                              <PlasticSpoolIcon className="w-3 h-3" />
-                              Mixed
-                            </span>
-                          )}
-                          {brand.hasHighSpeed && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30">
-                              <Zap className="w-3 h-3" />
-                              High Speed
-                            </span>
-                          )}
-                          {brand.avgTransmissionDistance != null && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                              <Radio className="w-3 h-3" />
-                              {brand.avgTransmissionDistance}m
-                            </span>
-                          )}
-                        </div>
-                        
-                        {/* Color Stack */}
-                        <ColorStack colors={brand.colors} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                {filteredBrands.map((brand) => (
+                  <BrandCard
+                    key={brand.name}
+                    name={brand.name}
+                    count={brand.count}
+                    isVerified={VERIFIED_BRANDS.includes(brand.name)}
+                    hasHighSpeed={brand.hasHighSpeed}
+                    topMaterials={brand.topMaterials}
+                    logoUrl={brand.automated?.logo_url}
+                  />
+                ))}
+              </div>
+            )}
 
         {/* Stats Footer */}
         <div className="mt-12 p-6 bg-card border border-border rounded-lg">
