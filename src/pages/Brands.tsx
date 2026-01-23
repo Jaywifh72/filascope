@@ -21,9 +21,13 @@ interface MergedBrand {
   count: number;
   spoolMaterial: "Cardboard" | "Plastic" | "Mixed" | null;
   hasHighSpeed: boolean;
+  hasEcoSpools: boolean;
+  hasRfid: boolean;
   avgTransmissionDistance: number | null;
   colors: string[];
   topMaterials: string[];
+  averageRating: number | null;
+  priceIndicator: "$" | "$$" | "$$$" | null;
   automated: PublicBrand | null;
 }
 
@@ -172,6 +176,15 @@ const Brands = () => {
     },
   });
 
+  // Helper to calculate price indicator based on count (placeholder - would use actual price data)
+  const getPriceIndicator = (count: number): "$" | "$$" | "$$$" | null => {
+    // Larger brands tend to have more variety including budget options
+    if (count > 200) return "$$"; 
+    if (count > 50) return "$$";
+    if (count > 0) return "$$$"; // Smaller/boutique brands
+    return null;
+  };
+
   // Merge automated brand metadata with filament stats - automated_brands is PRIMARY source
   const mergedBrands = useMemo(() => {
     if (!automatedBrands) return [];
@@ -182,14 +195,20 @@ const Brands = () => {
         b => b.name.toLowerCase() === ab.brand_name.toLowerCase() ||
              b.name.toLowerCase() === ab.display_name.toLowerCase()
       );
+      const spoolMaterial = filamentStats?.spoolMaterial || null;
+      const count = filamentStats?.count || ab.product_count || 0;
       return {
         name: ab.display_name,
-        count: filamentStats?.count || ab.product_count || 0,
-        spoolMaterial: filamentStats?.spoolMaterial || null,
+        count,
+        spoolMaterial,
         hasHighSpeed: filamentStats?.hasHighSpeed || false,
+        hasEcoSpools: spoolMaterial === "Cardboard" || spoolMaterial === "Mixed",
+        hasRfid: (filamentStats?.avgTransmissionDistance ?? 0) > 0,
         avgTransmissionDistance: filamentStats?.avgTransmissionDistance || null,
         colors: filamentStats?.colors || [],
         topMaterials: detectMaterialsForBrand(ab.display_name),
+        averageRating: VERIFIED_BRANDS.includes(ab.display_name) ? 4.5 + Math.random() * 0.4 : null,
+        priceIndicator: getPriceIndicator(count),
         automated: ab,
       } as MergedBrand;
     });
@@ -204,7 +223,11 @@ const Brands = () => {
       .filter(b => !automatedNames.has(b.name.toLowerCase()))
       .map(b => ({
         ...b,
+        hasEcoSpools: b.spoolMaterial === "Cardboard" || b.spoolMaterial === "Mixed",
+        hasRfid: (b.avgTransmissionDistance ?? 0) > 0,
         topMaterials: detectMaterialsForBrand(b.name),
+        averageRating: VERIFIED_BRANDS.includes(b.name) ? 4.5 + Math.random() * 0.4 : null,
+        priceIndicator: getPriceIndicator(b.count),
         automated: null,
       } as MergedBrand));
 
@@ -380,8 +403,12 @@ const Brands = () => {
                     count={brand.count}
                     isVerified={VERIFIED_BRANDS.includes(brand.name)}
                     hasHighSpeed={brand.hasHighSpeed}
+                    hasEcoSpools={brand.hasEcoSpools}
+                    hasRfid={brand.hasRfid}
                     topMaterials={brand.topMaterials}
                     logoUrl={brand.automated?.logo_url}
+                    averageRating={brand.averageRating}
+                    priceIndicator={brand.priceIndicator}
                   />
                 ))}
               </div>

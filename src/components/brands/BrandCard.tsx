@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Package, BadgeCheck, Zap, ArrowRight } from "lucide-react";
+import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { Button } from "@/components/ui/button";
 
@@ -8,8 +8,12 @@ interface BrandCardProps {
   count: number;
   isVerified: boolean;
   hasHighSpeed: boolean;
+  hasEcoSpools: boolean;
+  hasRfid: boolean;
   topMaterials: string[];
   logoUrl?: string | null;
+  averageRating?: number | null;
+  priceIndicator?: "$" | "$$" | "$$$" | null;
 }
 
 const BrandCard = ({
@@ -17,8 +21,12 @@ const BrandCard = ({
   count,
   isVerified,
   hasHighSpeed,
+  hasEcoSpools,
+  hasRfid,
   topMaterials,
   logoUrl,
+  averageRating,
+  priceIndicator,
 }: BrandCardProps) => {
   const navigate = useNavigate();
   const resolvedLogoUrl = logoUrl || getBrandLogo(name);
@@ -26,6 +34,30 @@ const BrandCard = ({
   const handleClick = () => {
     navigate(`/brands/${encodeURIComponent(name)}`);
   };
+
+  // Collect feature badges (max 2)
+  const featureBadges: { icon: React.ReactNode; label: string; color: string }[] = [];
+  if (hasHighSpeed) {
+    featureBadges.push({ 
+      icon: <Zap className="w-3 h-3" />, 
+      label: "High Speed", 
+      color: "border-primary/30 text-primary" 
+    });
+  }
+  if (hasEcoSpools) {
+    featureBadges.push({ 
+      icon: <Leaf className="w-3 h-3" />, 
+      label: "Eco Spools", 
+      color: "border-green-500/30 text-green-400" 
+    });
+  }
+  if (hasRfid && featureBadges.length < 2) {
+    featureBadges.push({ 
+      icon: <Radio className="w-3 h-3" />, 
+      label: "RFID", 
+      color: "border-purple-500/30 text-purple-400" 
+    });
+  }
 
   return (
     <div
@@ -48,47 +80,74 @@ const BrandCard = ({
         
         {/* Verified Badge - Top Right */}
         {isVerified && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3" title="Verified Brand">
             <BadgeCheck className="w-5 h-5 text-primary" />
+          </div>
+        )}
+
+        {/* Price Indicator - Top Left */}
+        {priceIndicator && (
+          <div className="absolute top-3 left-3">
+            <span className="text-xs font-medium text-gray-400 bg-gray-900/80 px-1.5 py-0.5 rounded">
+              {priceIndicator}
+            </span>
           </div>
         )}
       </div>
 
       {/* Bottom Section - Info Area */}
-      <div className="bg-gray-900 p-4 space-y-3">
+      <div className="bg-gray-900 p-4 space-y-2.5">
         {/* Brand Name */}
         <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors">
           {name}
         </h3>
 
-        {/* Filament Count */}
-        <p className="text-sm text-gray-400">{count} filaments</p>
+        {/* Key Stats Row */}
+        <div className="flex items-center gap-3 text-sm text-gray-400">
+          <span>{count} filaments</span>
+          {averageRating && averageRating > 0 && (
+            <span className="flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+              {averageRating.toFixed(1)}
+            </span>
+          )}
+          {isVerified && (
+            <span className="text-primary text-xs">Verified ✓</span>
+          )}
+        </div>
 
         {/* Material Badges */}
         {topMaterials.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {topMaterials.slice(0, 3).map((material) => (
+            {topMaterials.slice(0, 4).map((material) => (
               <span
                 key={material}
-                className="px-2 py-0.5 text-xs rounded bg-gray-800 text-gray-300 border border-gray-700"
+                className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-300"
               >
                 {material}
               </span>
             ))}
-            {topMaterials.length > 3 && (
-              <span className="px-2 py-0.5 text-xs rounded bg-gray-800 text-gray-500">
-                +{topMaterials.length - 3}
+            {topMaterials.length > 4 && (
+              <span className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-500">
+                +{topMaterials.length - 4}
               </span>
             )}
           </div>
         )}
 
-        {/* Feature Badge - High Speed */}
-        {hasHighSpeed && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs border border-primary/30 text-primary bg-transparent">
-            <Zap className="w-3 h-3" />
-            High Speed
-          </span>
+        {/* Feature Badges */}
+        {featureBadges.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {featureBadges.slice(0, 2).map((badge) => (
+              <span
+                key={badge.label}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs border bg-transparent ${badge.color}`}
+              >
+                {badge.icon}
+                {badge.label}
+              </span>
+            ))}
+          </div>
         )}
 
         {/* View Filaments Button */}
