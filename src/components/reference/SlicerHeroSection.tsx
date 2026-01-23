@@ -1,4 +1,4 @@
-import { Target, Compass, ChevronDown, Star } from "lucide-react";
+import { Layers, Compass, ChevronDown, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,10 +42,15 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
       />
       
       <div className="relative z-10 max-w-[900px] w-full flex flex-col items-center gap-0 animate-fade-in">
+        {/* Badge */}
+        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium mb-4">
+          <Layers className="w-4 h-4" />
+          SLICER GUIDE
+        </span>
+
         {/* Main Headline */}
-        <h1 className="flex items-center justify-center gap-3 flex-wrap text-[42px] font-bold text-foreground tracking-tight leading-tight mb-4 md:text-[32px]">
-          <Target className="w-10 h-10 text-primary shrink-0 md:w-8 md:h-8 drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]" />
-          <span>Find Your Perfect 3D Slicer Software</span>
+        <h1 className="text-[42px] font-bold text-foreground tracking-tight leading-tight mb-4 md:text-[32px]">
+          Find Your Perfect 3D Slicer Software
         </h1>
 
         {/* Subheadline */}
