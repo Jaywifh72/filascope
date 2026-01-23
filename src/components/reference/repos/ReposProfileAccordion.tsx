@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ExternalLink, Check, X, Download } from 'lucide-react';
+import { ChevronDown, ExternalLink, Check, X, Download, Plus, FileType, Smartphone, DollarSign, Users, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ interface ReposProfileAccordionProps {
     monetization: number;
     mobile: boolean;
     model: string;
+    fileTypes?: string;
   }>;
 }
 
@@ -29,6 +30,78 @@ const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 3) return 'good';
   if (num >= 2) return 'average';
   return 'limited';
+};
+
+const getPriceType = (model?: string): string => {
+  if (!model) return 'Unknown';
+  if (model === "Loss-Leader" || model === "Ad-Supported" || model === "Lead Gen") return 'Free';
+  if (model === "Hybrid" || model === "Search + Sub" || model === "Mobile Sub") return 'Freemium';
+  if (model === "Premium" || model === "Marketplace") return 'Premium';
+  return 'Paid';
+};
+
+const getPriceBadgeColor = (priceType: string): string => {
+  switch (priceType) {
+    case 'Free': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+    case 'Freemium': return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+    case 'Premium': return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+    default: return 'bg-gray-500/10 text-gray-400 border-gray-500/30';
+  }
+};
+
+const getFileTypes = (name: string): string[] => {
+  const fileTypesMap: Record<string, string[]> = {
+    "MakerWorld": ["3MF", "STL"],
+    "Printables": ["STL", "3MF", "G-code", "STEP"],
+    "Thingiverse": ["STL", "OBJ"],
+    "Cults3D": ["STL", "OBJ", "3MF"],
+    "MyMiniFactory": ["STL", "OBJ"],
+    "Thangs": ["30+ formats", "STL", "STEP"],
+    "Creality Cloud": ["STL", "G-code"],
+    "GrabCAD": ["STEP", "IGES", "CAD"],
+  };
+  return fileTypesMap[name] || ["STL"];
+};
+
+const getPricingDetails = (name: string): { tier: string; features: string }[] => {
+  const pricingMap: Record<string, { tier: string; features: string }[]> = {
+    "MakerWorld": [
+      { tier: "Free", features: "All models free, earn points for hardware rewards" },
+      { tier: "Commercial License", features: "Paid membership for selling printed models" },
+    ],
+    "Printables": [
+      { tier: "Free", features: "Full access to all free models" },
+      { tier: "Clubs", features: "$3-$100/month subscriptions (10% platform fee)" },
+      { tier: "Store", features: "Individual model sales" },
+    ],
+    "Thingiverse": [
+      { tier: "Free", features: "All content free with ads" },
+      { tier: "Tips", features: "Optional creator tip feature" },
+    ],
+    "Cults3D": [
+      { tier: "Free", features: "Access to free models with ads" },
+      { tier: "Paid Models", features: "80/20 commission split on sales" },
+    ],
+    "MyMiniFactory": [
+      { tier: "Free Tier", features: "Limited free models" },
+      { tier: "Tribes", features: "Subscription-based creator support" },
+      { tier: "FronTiers", features: "Crowdfunding for STL collections" },
+      { tier: "Studio/Pro", features: "$25-$99/month for merchants" },
+    ],
+    "Thangs": [
+      { tier: "Free", features: "Search aggregation across platforms" },
+      { tier: "Premium", features: "Ad-free, advanced AI tools" },
+    ],
+    "Creality Cloud": [
+      { tier: "Free", features: "Basic access with mobile app" },
+      { tier: "Subscription", features: "Premium features and cloud storage" },
+    ],
+    "GrabCAD": [
+      { tier: "Free", features: "All engineering CAD files free" },
+      { tier: "Workbench", features: "Team collaboration tools" },
+    ],
+  };
+  return pricingMap[name] || [{ tier: "Free", features: "Basic access" }];
 };
 
 const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
@@ -42,23 +115,15 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getModelColor = (model?: string) => {
-    if (!model) return 'bg-muted/50 text-muted-foreground border-border';
-    if (model === "Loss-Leader" || model === "Ad-Supported" || model === "Lead Gen") {
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-    }
-    if (model === "Hybrid" || model === "Search + Sub") {
-      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-    }
-    return "bg-purple-500/10 text-purple-400 border-purple-500/30";
-  };
-
   return (
     <div className="space-y-3">
       {platforms.map((platform, index) => {
         const isExpanded = expandedId === platform.id;
         const comparison = comparisonData[platform.name];
         const logo = logos[platform.name];
+        const priceType = getPriceType(comparison?.model);
+        const fileTypes = getFileTypes(platform.name);
+        const pricingDetails = getPricingDetails(platform.name);
 
         return (
           <div
@@ -67,7 +132,7 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
               "border rounded-xl overflow-hidden transition-all duration-300 ease-in-out",
               isExpanded
                 ? "border-primary/50 bg-card shadow-lg shadow-primary/5"
-                : "border-border/50 bg-card/50 hover:bg-card hover:border-border hover:shadow-lg hover:shadow-teal-500/10"
+                : "border-gray-700 bg-gray-800/30 hover:bg-gray-800 hover:border-gray-600 hover:shadow-lg hover:shadow-teal-500/10"
             )}
           >
             {/* Header */}
@@ -76,17 +141,17 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
               className="w-full p-4 md:p-5 flex items-center gap-4 text-left focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-inset"
               aria-expanded={isExpanded}
             >
-              {/* Number Badge */}
-              <div
+              {/* Number Badge - Teal Circle */}
+              <span
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors duration-300",
+                  "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors duration-300",
                   isExpanded
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    : "bg-primary/20 text-primary"
                 )}
               >
                 {index + 1}
-              </div>
+              </span>
 
               {/* Logo */}
               {logo && (
@@ -106,14 +171,14 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
                   <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground border-border">
                     {platform.owner}
                   </Badge>
-                  {comparison && (
-                    <Badge variant="outline" className={cn("text-xs", getModelColor(comparison.model))}>
-                      {comparison.model}
-                    </Badge>
-                  )}
                 </div>
                 <p className="text-sm text-primary truncate">{platform.status}</p>
               </div>
+
+              {/* Price Badge */}
+              <Badge variant="outline" className={cn("text-xs hidden sm:flex", getPriceBadgeColor(priceType))}>
+                {priceType}
+              </Badge>
 
               {/* Chevron */}
               <ChevronDown
@@ -132,7 +197,7 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
               )}
             >
               <div className="overflow-hidden">
-                <div className="px-4 md:px-5 pb-5 space-y-5 border-t border-border/30 pt-5">
+                <div className="px-4 md:px-5 pb-5 space-y-6 border-t border-border/30 pt-5">
                   {/* Standout Feature */}
                   {(() => {
                     const standout = getStandoutForPlatform(platform.id);
@@ -141,87 +206,113 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
                     ) : null;
                   })()}
 
-                  {/* Bottom Line */}
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                    <div className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
-                      The Bottom Line
-                    </div>
+                  {/* Full Description */}
+                  <div className="p-4 rounded-xl bg-muted/20 border border-border/50">
                     <p className="text-sm md:text-base text-foreground/90 leading-relaxed">
-                      {platform.bottomLine}
+                      {platform.summary}
                     </p>
                   </div>
 
-                  {/* Quick Stats */}
-                  {comparison && (
-                    <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-                      {(['quality', 'community', 'search', 'ux'] as const).map((key) => (
-                        <div key={key} className="flex flex-col items-center gap-1.5 min-w-[70px] p-2 rounded-lg bg-muted/30">
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide capitalize">
-                            {key}
-                          </span>
-                          <RatingValue
-                            rating={mapNumberToSemantic(comparison[key])}
-                            size="small"
-                            showTooltip
-                            tooltipContent={metricTooltips[key]}
-                          />
-                        </div>
+                  {/* Key Strengths with Checkmarks */}
+                  <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                    <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm mb-3 pb-2 border-b border-emerald-500/20">
+                      <Sparkles className="w-4 h-4" />
+                      Key Strengths
+                    </div>
+                    <ul className="space-y-2">
+                      {platform.strengths.map((strength, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Check className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className="font-medium text-sm text-foreground">{strength.title}</span>
+                            <span className="text-xs text-muted-foreground ml-1">— {strength.description}</span>
+                          </div>
+                        </li>
                       ))}
-                      <div className="flex flex-col items-center gap-1.5 min-w-[70px] p-2 rounded-lg bg-muted/30">
-                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                          Mobile
-                        </span>
-                        <div
-                          className={cn(
-                            "flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold",
-                            comparison.mobile
-                              ? "bg-emerald-500/15 text-emerald-400"
-                              : "bg-muted/50 text-muted-foreground"
-                          )}
-                        >
-                          {comparison.mobile ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                          {comparison.mobile ? "Yes" : "No"}
-                        </div>
+                    </ul>
+                  </div>
+
+                  {/* Ratings Grid */}
+                  {comparison && (
+                    <div className="p-4 rounded-xl bg-muted/20 border border-border/50">
+                      <div className="flex items-center gap-2 text-foreground font-semibold text-sm mb-3 pb-2 border-b border-border/30">
+                        <Star className="w-4 h-4 text-primary" />
+                        Platform Ratings
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {(['quality', 'community', 'search', 'ux'] as const).map((key) => (
+                          <div key={key} className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-background/50">
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide capitalize">
+                              {key}
+                            </span>
+                            <RatingValue
+                              rating={mapNumberToSemantic(comparison[key])}
+                              size="small"
+                              showTooltip
+                              tooltipContent={metricTooltips[key]}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Strengths & Weaknesses */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                      <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm mb-3 pb-2 border-b border-emerald-500/20">
-                        <Check className="w-4 h-4" />
-                        Strengths
-                      </div>
-                      <div className="space-y-3">
-                        {platform.strengths.map((strength, idx) => (
-                          <div key={idx} className="pl-3 border-l-2 border-emerald-500/40">
-                            <div className="font-medium text-sm text-foreground">{strength.title}</div>
-                            <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-                              {strength.description}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                  {/* Best For Section */}
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                    <div className="flex items-center gap-2 text-primary font-semibold text-sm mb-3 pb-2 border-b border-primary/20">
+                      <Users className="w-4 h-4" />
+                      Best For
                     </div>
+                    <ul className="space-y-1.5">
+                      {platform.bestFor.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-foreground/90">
+                          <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                    <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-                      <div className="flex items-center gap-2 text-red-400 font-semibold text-sm mb-3 pb-2 border-b border-red-500/20">
-                        <X className="w-4 h-4" />
-                        Weaknesses
-                      </div>
-                      <div className="space-y-3">
-                        {platform.weaknesses.map((weakness, idx) => (
-                          <div key={idx} className="pl-3 border-l-2 border-red-500/40">
-                            <div className="font-medium text-sm text-foreground">{weakness.title}</div>
-                            <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-                              {weakness.description}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                  {/* Supported File Types */}
+                  <div className="p-4 rounded-xl bg-muted/20 border border-border/50">
+                    <div className="flex items-center gap-2 text-foreground font-semibold text-sm mb-3 pb-2 border-b border-border/30">
+                      <FileType className="w-4 h-4 text-primary" />
+                      Supported File Types
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {fileTypes.map((type) => (
+                        <Badge key={type} variant="outline" className="text-xs bg-muted/50">
+                          {type}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
+
+                  {/* Pricing Details */}
+                  <div className="p-4 rounded-xl bg-muted/20 border border-border/50">
+                    <div className="flex items-center gap-2 text-foreground font-semibold text-sm mb-3 pb-2 border-b border-border/30">
+                      <DollarSign className="w-4 h-4 text-primary" />
+                      Pricing Details
+                    </div>
+                    <div className="space-y-2">
+                      {pricingDetails.map((tier, idx) => (
+                        <div key={idx} className="flex items-start gap-3 text-sm">
+                          <Badge variant="outline" className={cn("text-xs flex-shrink-0", getPriceBadgeColor(tier.tier.includes('Free') ? 'Free' : 'Premium'))}>
+                            {tier.tier}
+                          </Badge>
+                          <span className="text-muted-foreground">{tier.features}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Mobile App Indicator */}
+                  {comparison?.mobile && (
+                    <div className="flex items-center gap-2 text-sm text-emerald-400">
+                      <Smartphone className="w-4 h-4" />
+                      <span>Mobile app available</span>
+                    </div>
+                  )}
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -229,12 +320,20 @@ const ReposProfileAccordion: React.FC<ReposProfileAccordionProps> = ({
                       <Button variant="default" size="sm" asChild className="flex-1 bg-primary hover:bg-primary/90">
                         <a href={platform.links.website} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="w-4 h-4 mr-2" />
-                          Visit {platform.name}
+                          Visit Website
                         </a>
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-primary/30 text-primary hover:bg-primary/10"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add to Compare
+                    </Button>
                     {platform.links.app && (
-                      <Button variant="outline" size="sm" asChild className="flex-1 border-primary/30 text-primary hover:bg-primary/10">
+                      <Button variant="outline" size="sm" asChild className="flex-1 border-border text-muted-foreground hover:text-foreground">
                         <a href={platform.links.app} target="_blank" rel="noopener noreferrer">
                           <Download className="w-4 h-4 mr-2" />
                           Download App

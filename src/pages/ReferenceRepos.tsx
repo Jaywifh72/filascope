@@ -328,18 +328,48 @@ const ReferenceRepos = () => {
             {/* Platform Profiles Tab */}
             {activeTab === "profiles" && (
               <div key="profiles" className="animate-fade-in">
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-foreground mb-2">Detailed Platform Profiles</h2>
-                  <p className="text-sm text-muted-foreground">
-                    In-depth analysis of each platform's strengths, weaknesses, and best use cases
-                  </p>
+                {/* Mobile Filter Button */}
+                <div className="lg:hidden mb-6">
+                  <ReposMobileFilterSheet />
                 </div>
 
-                <ReposProfileAccordion
-                  platforms={repoData}
-                  logos={repoLogos}
-                  comparisonData={comparisonDataMap}
-                />
+                {/* Desktop: Sidebar + Content Layout */}
+                <div className="hidden lg:flex gap-8">
+                  {/* Left Sidebar */}
+                  <ReposFilterSidebar />
+
+                  {/* Main Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="mb-6">
+                      <h2 className="text-xl font-bold text-foreground mb-2">Detailed Platform Profiles</h2>
+                      <p className="text-sm text-muted-foreground">
+                        In-depth analysis of each platform's strengths, weaknesses, and best use cases
+                      </p>
+                    </div>
+
+                    <ReposProfileAccordion
+                      platforms={repoData}
+                      logos={repoLogos}
+                      comparisonData={comparisonDataMap}
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile View */}
+                <div className="lg:hidden">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-bold text-foreground mb-2">Detailed Platform Profiles</h2>
+                    <p className="text-sm text-muted-foreground">
+                      In-depth analysis of each platform's strengths, weaknesses, and best use cases
+                    </p>
+                  </div>
+
+                  <ReposProfileAccordion
+                    platforms={repoData}
+                    logos={repoLogos}
+                    comparisonData={comparisonDataMap}
+                  />
+                </div>
               </div>
             )}
           </div>
