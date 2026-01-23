@@ -1,12 +1,19 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Building2 } from "lucide-react";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Interface for merged brand data with materials
 interface MergedBrand {
@@ -69,18 +76,10 @@ const detectMaterialsForBrand = (brandName: string): string[] => {
   return commonMaterials.filter((_, i) => (hash + i) % 3 !== 0).slice(0, 3);
 };
 
-const getSyncStatus = (lastScrape: string | null) => {
-  if (!lastScrape) return { color: "bg-muted-foreground", label: "Never synced" };
-  const hours = (Date.now() - new Date(lastScrape).getTime()) / (1000 * 60 * 60);
-  if (hours < 24) return { color: "bg-green-500", label: "Synced recently" };
-  if (hours < 72) return { color: "bg-amber-500", label: "Synced 1-3 days ago" };
-  return { color: "bg-red-500", label: "Needs sync" };
-};
 
 
 const Brands = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [filters, setFilters] = useState<BrandFilters>({
     materials: [],
     features: [],
@@ -217,13 +216,6 @@ const Brands = () => {
     return mergedBrands.filter(b => b.automated?.featured);
   }, [mergedBrands]);
 
-  // Get platform counts - simplified since public view doesn't have platform_type
-  const platformCounts = useMemo(() => {
-    return { "all": mergedBrands.length };
-  }, [mergedBrands.length]);
-
-  const platforms = Object.keys(platformCounts).filter(p => p !== "all").sort();
-
   // Calculate material counts for sidebar (based on brand data - how many brands have each material)
   const materialCounts = useMemo(() => {
     // This is a placeholder - in a real app, we'd query which brands have which materials
@@ -247,8 +239,6 @@ const Brands = () => {
       const matchesSearch = brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            brand.automated?.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Platform filter - removed since public view doesn't have platform_type
-      const matchesPlatform = !selectedPlatform || true;
       
       // Verified filter
       const matchesVerified = !filters.verifiedOnly || VERIFIED_BRANDS.includes(brand.name);
@@ -272,7 +262,7 @@ const Brands = () => {
         matchesCount = brand.count > 200;
       }
       
-      return matchesSearch && matchesPlatform && matchesVerified && matchesLivePricing && 
+      return matchesSearch && matchesVerified && matchesLivePricing && 
              matchesHighSpeed && matchesRfid && matchesCardboard && matchesCount;
     });
 
@@ -294,7 +284,7 @@ const Brands = () => {
     }
 
     return result;
-  }, [mergedBrands, searchQuery, selectedPlatform, filters]);
+  }, [mergedBrands, searchQuery, filters]);
 
   // Check if any filters are active (besides default sort)
   const hasActiveFilters = filters.materials.length > 0 || 
@@ -335,26 +325,38 @@ const Brands = () => {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {/* Platform Filter Tabs */}
-            <div className="mb-4 flex flex-wrap gap-2">
-              <Button
-                variant={selectedPlatform === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedPlatform(null)}
-              >
-                All ({mergedBrands.length})
-              </Button>
-              {platforms.map((platform) => (
-                <Button
-                  key={platform}
-                  variant={selectedPlatform === platform ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedPlatform(platform)}
-                  className="capitalize"
+            {/* Results Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-5 h-5 text-primary hidden sm:block" />
+                <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-foreground">
+                  <span className="hidden sm:inline text-muted-foreground">Brand Directory </span>
+                  <span className="text-muted-foreground sm:hidden">// </span>
+                  <span className="text-primary font-bold">{filteredBrands.length.toLocaleString()}</span>
+                  <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
+                    {hasActiveFilters ? "Matching" : "Brands"}
+                  </span>
+                </h2>
+              </div>
+              
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground hidden sm:inline">Sort:</span>
+                <Select
+                  value={filters.sortBy}
+                  onValueChange={(value) => setFilters({ ...filters, sortBy: value as BrandFilters["sortBy"] })}
                 >
-                  {platform} ({platformCounts[platform]})
-                </Button>
-              ))}
+                  <SelectTrigger className="w-[140px] h-8 text-xs bg-gray-800/50 border-gray-700">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="count-desc">Most Filaments</SelectItem>
+                    <SelectItem value="count-asc">Least Filaments</SelectItem>
+                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Active Filter Chips */}
@@ -365,13 +367,6 @@ const Brands = () => {
                 className="mb-4"
               />
             )}
-
-            {/* Results Count */}
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Showing <span className="text-primary font-semibold">{filteredBrands.length}</span> of {mergedBrands.length} brands
-              </p>
-            </div>
 
             {/* Brands Grid */}
             {isLoading ? (
@@ -408,8 +403,8 @@ const Brands = () => {
               <p className="text-sm text-muted-foreground">Tracked Brands</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{platforms.length}</p>
-              <p className="text-sm text-muted-foreground">Platforms</p>
+              <p className="text-3xl font-bold text-primary">{featuredBrands.length}</p>
+              <p className="text-sm text-muted-foreground">Featured Brands</p>
             </div>
           </div>
         </div>
