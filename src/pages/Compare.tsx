@@ -426,16 +426,56 @@ const Compare = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="reference" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Material Reference
-            </TabsTrigger>
-            <TabsTrigger value="comparison" className="flex items-center gap-2">
-              <GitCompare className="w-4 h-4" />
-              Filament Comparison
-            </TabsTrigger>
-          </TabsList>
+          {/* Custom underline-style tabs */}
+          <div className="sticky top-16 z-30 -mx-4 lg:-mx-0 px-4 lg:px-0 bg-background/95 backdrop-blur-md border-b border-border/50 mb-6">
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
+              <nav className="flex gap-1 min-w-max py-3" role="tablist" aria-label="Compare page tabs">
+                <button
+                  role="tab"
+                  aria-selected={activeTab === "reference"}
+                  onClick={() => handleTabChange("reference")}
+                  className={cn(
+                    "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation",
+                    "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    "active:scale-95 transition-transform",
+                    activeTab === "reference"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Material Reference
+                  {activeTab === "reference" && (
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={activeTab === "comparison"}
+                  onClick={() => handleTabChange("comparison")}
+                  className={cn(
+                    "relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation",
+                    "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    "active:scale-95 transition-transform",
+                    activeTab === "comparison"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <GitCompare className="w-4 h-4" />
+                  Filament Comparison
+                  {filaments.length > 0 && (
+                    <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                      {filaments.length}
+                    </span>
+                  )}
+                  {activeTab === "comparison" && (
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              </nav>
+            </div>
+          </div>
 
           <TabsContent value="reference">
             <MaterialReference />
