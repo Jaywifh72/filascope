@@ -1,6 +1,14 @@
-import { useState } from "react";
-import { Search, Sparkles, Building2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, Sparkles, Building2, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { getBrandLogo } from "@/lib/brandLogos";
+
+interface BrandSuggestion {
+  name: string;
+  count: number;
+  logoUrl?: string | null;
+}
 
 interface BrandsHeroSectionProps {
   searchTerm: string;
@@ -8,6 +16,7 @@ interface BrandsHeroSectionProps {
   brandCount: number;
   productCount: number;
   onOpenQuiz?: () => void;
+  brandSuggestions?: BrandSuggestion[];
 }
 
 const BrandsHeroSection = ({ 
@@ -15,9 +24,61 @@ const BrandsHeroSection = ({
   onSearchChange, 
   brandCount,
   productCount,
-  onOpenQuiz
+  onOpenQuiz,
+  brandSuggestions = []
 }: BrandsHeroSectionProps) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Show dropdown when typing
+  useEffect(() => {
+    if (searchTerm.length > 0 && isFocused) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+  }, [searchTerm, isFocused]);
+
+  const handleBrandClick = (brandName: string) => {
+    setShowDropdown(false);
+    navigate(`/brands/${encodeURIComponent(brandName)}`);
+  };
+
+  const handleClearSearch = () => {
+    onSearchChange("");
+    inputRef.current?.focus();
+  };
+
+  // Highlight matching text in brand name
+  const highlightMatch = (name: string, query: string) => {
+    if (!query) return name;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = name.split(regex);
+    return parts.map((part, i) => 
+      regex.test(part) ? <mark key={i} className="bg-primary/30 text-white">{part}</mark> : part
+    );
+  };
+
+  const topSuggestions = brandSuggestions.slice(0, 5);
 
   return (
     <section className="relative overflow-hidden">
@@ -60,7 +121,7 @@ const BrandsHeroSection = ({
             
             {/* Buttons Row - Stack on mobile */}
             <div 
-              className="flex flex-col w-full gap-3 sm:flex-row sm:items-center sm:gap-4 sm:w-auto animate-fade-in"
+              className="flex flex-col w-full gap-3 sm:flex-row sm:items-start sm:gap-4 sm:w-auto animate-fade-in"
               style={{ animationDelay: "0.3s" }}
             >
               {/* Primary Button - Brand Quiz */}
@@ -73,27 +134,84 @@ const BrandsHeroSection = ({
                 Find Your Brand
               </Button>
               
-              {/* Secondary - Search Input */}
-              <div 
-                className={`relative transition-all duration-300 w-full sm:w-auto ${
-                  isFocused ? "scale-[1.01]" : ""
-                }`}
-              >
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground z-10" />
-                <input
-                  type="text"
-                  placeholder="Search brands..."
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  className={`w-full sm:w-[240px] md:w-[280px] h-12 sm:h-14 pl-11 sm:pl-12 pr-4 sm:pr-5 text-sm sm:text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
-                    isFocused 
-                      ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
-                      : "border-white/10 hover:border-white/20"
+              {/* Secondary - Search Input with Dropdown */}
+              <div className="relative w-full sm:w-auto">
+                <div 
+                  className={`relative transition-all duration-300 ${
+                    isFocused ? "scale-[1.01]" : ""
                   }`}
-                  aria-label="Search brands"
-                />
+                >
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground z-10" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Search brands..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+                    className={`w-full sm:w-[280px] md:w-[320px] h-12 sm:h-14 pl-11 sm:pl-12 pr-10 text-sm sm:text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                      isFocused 
+                        ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
+                        : "border-white/10 hover:border-white/20"
+                    }`}
+                    aria-label="Search brands"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={handleClearSearch}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Dropdown */}
+                {showDropdown && topSuggestions.length > 0 && (
+                  <div 
+                    ref={dropdownRef}
+                    className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden"
+                  >
+                    <div className="p-2">
+                      {topSuggestions.map((brand) => {
+                        const logoUrl = brand.logoUrl || getBrandLogo(brand.name);
+                        return (
+                          <button
+                            key={brand.name}
+                            onClick={() => handleBrandClick(brand.name)}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors text-left group"
+                          >
+                            {logoUrl ? (
+                              <img src={logoUrl} alt="" className="w-8 h-8 object-contain" />
+                            ) : (
+                              <div className="w-8 h-8 rounded bg-gray-800 flex items-center justify-center">
+                                <Building2 className="w-4 h-4 text-gray-500" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-white truncate">
+                                {highlightMatch(brand.name, searchTerm)}
+                              </p>
+                              <p className="text-xs text-gray-400">{brand.count} filaments</p>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {brandSuggestions.length > 5 && (
+                      <div className="border-t border-gray-700 p-2">
+                        <button
+                          onClick={() => setShowDropdown(false)}
+                          className="w-full text-center text-sm text-primary hover:text-primary/80 py-2 transition-colors"
+                        >
+                          See all {brandSuggestions.length} results
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
