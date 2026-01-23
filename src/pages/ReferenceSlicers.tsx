@@ -685,7 +685,7 @@ const ReferenceSlicers = () => {
 
           {/* Right Sidebar: Comparison Builder (Desktop) */}
           <aside className="hidden lg:block">
-            <div className="sticky top-5">
+            <div className="sticky top-[100px]">
               <ComparisonBuilderSidebar />
             </div>
           </aside>

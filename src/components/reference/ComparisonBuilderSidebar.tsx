@@ -1,4 +1,4 @@
-import { GitCompare, X, ArrowRight, Trash2 } from 'lucide-react';
+import { GitCompare, X, ArrowRight, Trash2, Layers } from 'lucide-react';
 import { useSlicerComparison } from '@/contexts/SlicerComparisonContext';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ export function ComparisonBuilderSidebar() {
 
   const emptySlots = maxSlicers - selectedSlicers.length;
   const canCompare = selectedSlicers.length >= 2;
+  const hasSlicers = selectedSlicers.length > 0;
 
   const getSubtitle = () => {
     const count = selectedSlicers.length;
@@ -30,14 +31,14 @@ export function ComparisonBuilderSidebar() {
   };
 
   return (
-    <div className="w-[280px] bg-card/50 border border-border rounded-xl p-5 shadow-md">
+    <div className="w-[280px] bg-gray-900/60 border border-gray-700 rounded-xl p-5 shadow-lg">
       {/* Header */}
-      <div className="flex flex-col gap-2 mb-4">
-        <div className="flex items-center gap-2 text-sm font-bold text-foreground uppercase tracking-wide">
+      <div className="flex flex-col gap-2 mb-5 border-l-2 border-primary pl-3">
+        <div className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wide">
           <GitCompare size={16} className="text-primary" />
           Compare Slicers
         </div>
-        <div className="text-xs font-medium text-muted-foreground">
+        <div className="text-xs text-gray-400">
           {getSubtitle()}
         </div>
       </div>
@@ -45,13 +46,13 @@ export function ComparisonBuilderSidebar() {
       {/* Slicers List */}
       <div className="flex flex-col gap-2.5 min-h-[240px] mb-4">
         {selectedSlicers.length === 0 ? (
-          <div className="min-h-[240px] p-6 flex flex-col items-center justify-center gap-3 text-center bg-muted/20 border border-dashed border-border rounded-lg">
-            <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
-              <GitCompare size={24} className="text-primary" />
+          <div className="min-h-[240px] p-6 flex flex-col items-center justify-center gap-3 text-center bg-gray-800/50 border border-dashed border-gray-600 rounded-lg">
+            <div className="w-14 h-14 flex items-center justify-center bg-primary/20 rounded-full">
+              <Layers size={28} className="text-primary" />
             </div>
-            <div className="text-[13px] font-medium text-muted-foreground leading-relaxed">
-              No slicers selected yet.<br />
-              Click "Add to Compare" on any card below.
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-400">No slicers selected yet.</span>
+              <span className="text-xs text-gray-500">Click "Add to Compare" on any card below.</span>
             </div>
           </div>
         ) : (
@@ -59,23 +60,23 @@ export function ComparisonBuilderSidebar() {
             {selectedSlicers.map(slicer => (
               <div
                 key={slicer.id}
-                className="h-[50px] px-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2.5 transition-all hover:bg-primary/15 hover:border-primary/30"
+                className="h-[50px] px-3 bg-gray-800 border border-gray-600 rounded-lg flex items-center gap-2.5 transition-all hover:border-primary/50 hover:bg-gray-800/80"
               >
                 {slicer.logo ? (
                   <img
                     src={slicer.logo}
                     alt={`${slicer.name} logo`}
-                    className="w-8 h-8 object-contain rounded bg-muted/30 p-1 flex-shrink-0"
+                    className="w-8 h-8 object-contain rounded bg-gray-900/50 p-1 flex-shrink-0"
                   />
                 ) : (
                   <div className="w-8 h-8 bg-primary/20 rounded flex-shrink-0" />
                 )}
-                <span className="flex-1 text-[13px] font-semibold text-foreground truncate">
+                <span className="flex-1 text-sm font-semibold text-white truncate">
                   {slicer.name}
                 </span>
                 <button
                   onClick={() => removeSlicer(slicer.id)}
-                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-destructive/15 hover:text-destructive transition-all flex-shrink-0"
+                  className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:bg-red-500/15 hover:text-red-400 transition-all flex-shrink-0"
                   aria-label={`Remove ${slicer.name} from comparison`}
                 >
                   <X size={16} />
@@ -86,9 +87,9 @@ export function ComparisonBuilderSidebar() {
             {Array.from({ length: emptySlots }).map((_, index) => (
               <div
                 key={`empty-${index}`}
-                className="h-[50px] px-3 bg-muted/10 border border-dashed border-border/50 rounded-lg flex items-center justify-center"
+                className="h-[50px] px-3 bg-gray-800/30 border border-dashed border-gray-700 rounded-lg flex items-center justify-center"
               >
-                <span className="text-xs font-medium text-muted-foreground/60">
+                <span className="text-xs text-gray-500">
                   (Empty Slot)
                 </span>
               </div>
@@ -102,10 +103,10 @@ export function ComparisonBuilderSidebar() {
         onClick={() => canCompare && openComparison()}
         disabled={!canCompare}
         className={cn(
-          "w-full h-12 rounded-lg text-[15px] font-bold inline-flex items-center justify-center gap-2.5 transition-all",
+          "w-full h-12 rounded-lg text-sm font-bold inline-flex items-center justify-center gap-2 transition-all",
           canCompare
-            ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg"
-            : "bg-muted/30 border border-border text-muted-foreground cursor-not-allowed"
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/20"
+            : "bg-gray-700 border border-gray-600 text-gray-400 cursor-not-allowed"
         )}
         aria-label={getButtonText()}
       >
@@ -115,11 +116,11 @@ export function ComparisonBuilderSidebar() {
       </button>
 
       {/* Clear All */}
-      {selectedSlicers.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-border flex justify-center">
+      {hasSlicers && (
+        <div className="mt-4 pt-4 border-t border-gray-700 flex justify-center">
           <button
             onClick={clearAll}
-            className="px-4 py-2 text-xs font-semibold text-destructive border border-destructive/30 rounded-md hover:bg-destructive/10 hover:border-destructive/50 transition-all inline-flex items-center gap-2"
+            className="px-4 py-2 text-xs font-medium text-gray-400 hover:text-red-400 transition-colors inline-flex items-center gap-2"
           >
             <Trash2 size={14} />
             Clear All
