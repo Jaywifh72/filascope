@@ -22,19 +22,44 @@ interface SpecializedCardProps {
 }
 
 const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
+  // Badge color mapping for consistent styling
+  const getBadgeColors = (badge: string) => {
+    const badgeLower = badge.toLowerCase();
+    if (badgeLower.includes('overall') || badgeLower.includes('#1')) {
+      return 'bg-teal-500/20 text-teal-400 border-teal-500/40';
+    }
+    if (badgeLower.includes('free')) {
+      return 'bg-green-500/20 text-green-400 border-green-500/40';
+    }
+    if (badgeLower.includes('bambu')) {
+      return 'bg-orange-500/20 text-orange-400 border-orange-500/40';
+    }
+    if (badgeLower.includes('seller')) {
+      return 'bg-purple-500/20 text-purple-400 border-purple-500/40';
+    }
+    if (badgeLower.includes('engineer')) {
+      return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+    }
+    if (badgeLower.includes('tabletop') || badgeLower.includes('miniature')) {
+      return 'bg-pink-500/20 text-pink-400 border-pink-500/40';
+    }
+    if (badgeLower.includes('ai') || badgeLower.includes('search')) {
+      return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40';
+    }
+    if (badgeLower.includes('mobile')) {
+      return 'bg-indigo-500/20 text-indigo-400 border-indigo-500/40';
+    }
+    return 'bg-primary/20 text-primary border-primary/40';
+  };
+
   return (
     <div 
       id={platform.targetId}
-      className="relative p-5 bg-card/50 border border-border/50 rounded-xl hover:border-primary/40 hover:bg-card hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] transition-all duration-200"
+      className="relative p-5 bg-card/50 border border-border/50 rounded-xl hover:border-teal-500/50 hover:bg-card hover:shadow-lg hover:shadow-teal-500/10 hover:scale-[1.02] transition-all duration-300"
     >
       {/* Badge */}
       <div 
-        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-4"
-        style={{ 
-          backgroundColor: `${platform.tierBadgeColor}15`,
-          color: platform.tierBadgeColor,
-          border: `1px solid ${platform.tierBadgeColor}40`
-        }}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mb-4 border ${getBadgeColors(platform.tierBadge)}`}
       >
         {getBadgeIcon(platform.tierBadgeIcon, 14)}
         <span>{platform.tierBadge}</span>
@@ -48,8 +73,8 @@ const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
           className="w-12 h-12 object-contain rounded-lg bg-white/5 p-1.5"
         />
         <div className="min-w-0">
-          <h3 className="text-lg font-bold text-foreground truncate">{platform.name}</h3>
-          <p className="text-xs text-muted-foreground truncate">{platform.owner}</p>
+          <h3 className="text-lg font-semibold text-white truncate">{platform.name}</h3>
+          <p className="text-xs text-gray-400 truncate">{platform.owner}</p>
         </div>
       </div>
 
@@ -78,36 +103,36 @@ const SpecializedCard: React.FC<SpecializedCardProps> = ({ platform }) => {
       {/* Ratings Grid */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Quality:</span>
+          <span className="text-gray-400">Quality:</span>
           <RatingValue rating={platform.ratings.quality} size="small" showTooltip tooltipContent={metricTooltips.quality} />
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Community:</span>
+          <span className="text-gray-400">Community:</span>
           <RatingValue rating={platform.ratings.community} size="small" showTooltip tooltipContent={metricTooltips.community} />
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Search:</span>
+          <span className="text-gray-400">Search:</span>
           <RatingValue rating={platform.ratings.search} size="small" showTooltip tooltipContent={metricTooltips.search} />
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">UX:</span>
+          <span className="text-gray-400">UX:</span>
           <RatingValue rating={platform.ratings.ux} size="small" showTooltip tooltipContent={metricTooltips.ux} />
         </div>
       </div>
 
       {/* Best For */}
-      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{platform.bestFor}</p>
+      <p className="text-sm text-gray-400 mb-4 line-clamp-2">{platform.bestFor}</p>
 
       {/* Features */}
       <div className="flex items-center gap-2 mb-4">
         {platform.features.free && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">Free</span>
+          <span className="px-2 py-0.5 text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30 rounded">Free</span>
         )}
         {platform.features.paid && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded">Paid</span>
+          <span className="px-2 py-0.5 text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded">Paid</span>
         )}
         {platform.features.mobile && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">📱 Mobile</span>
+          <span className="px-2 py-0.5 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded">📱 Mobile</span>
         )}
       </div>
 
@@ -145,23 +170,23 @@ const SpecializedSection: React.FC = () => {
             <Zap className="w-5 h-5 text-amber-400" />
           </div>
           <div>
-            <h2 id="specialized-title" className="text-xl md:text-2xl font-bold text-foreground">
+            <h2 id="specialized-title" className="text-2xl font-bold text-white">
               Specialized Platforms
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               For specific use cases and workflows
             </p>
           </div>
         </div>
         {hasActiveFilters && (
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-gray-400 mt-2">
             Showing {specialized.length} of {allSpecialized.length} platforms
           </p>
         )}
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {specialized.map(platform => (
           <SpecializedCard key={platform.id} platform={platform} />
         ))}
