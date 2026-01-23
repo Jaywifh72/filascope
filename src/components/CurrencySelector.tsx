@@ -6,18 +6,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Globe } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export function CurrencySelector() {
   const { currency, setCurrency } = useCurrency();
+  const currentCurrency = CURRENCIES[currency];
 
   return (
     <Select value={currency} onValueChange={(value) => setCurrency(value as CurrencyCode)}>
-      <SelectTrigger className="w-[100px] h-9 bg-background border-border text-foreground">
-        <Globe className="h-4 w-4 mr-1.5 text-muted-foreground" />
-        <SelectValue />
+      <SelectTrigger className="w-auto h-9 px-2.5 gap-1 bg-transparent border-border/50 hover:border-border text-foreground">
+        <span className="font-medium text-sm">{currentCurrency.symbol}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
       </SelectTrigger>
-      <SelectContent className="bg-popover border-border">
+      <SelectContent className="bg-popover border-border min-w-[120px]">
         {Object.values(CURRENCIES).map((curr) => (
           <SelectItem 
             key={curr.code} 
@@ -25,7 +26,7 @@ export function CurrencySelector() {
             className="text-foreground hover:bg-accent focus:bg-accent"
           >
             <span className="font-medium">{curr.symbol}</span>
-            <span className="ml-1 text-muted-foreground">{curr.code}</span>
+            <span className="ml-2 text-muted-foreground text-xs">{curr.code}</span>
           </SelectItem>
         ))}
       </SelectContent>
