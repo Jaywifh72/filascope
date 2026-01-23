@@ -207,8 +207,8 @@ const ReferenceCAD = () => {
                         />
                       </div>
                       
-                      {/* Filtered Staff Pick Cards */}
-                      <div className="flex gap-5 overflow-x-auto pb-4 items-stretch">
+                      {/* Filtered Staff Pick Cards - Fixed Grid Layout */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {staffPicks
                           .filter(pick => {
                             if (profileFilter === 'all') return true;
