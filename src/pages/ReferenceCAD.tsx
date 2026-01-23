@@ -207,8 +207,11 @@ const ReferenceCAD = () => {
                         />
                       </div>
                       
-                      {/* Filtered Staff Pick Cards - Fixed Grid Layout */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {/* Filtered Staff Pick Cards - Fixed Grid Layout with animation */}
+                      <div 
+                        key={profileFilter} 
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fade-in"
+                      >
                         {staffPicks
                           .filter(pick => {
                             if (profileFilter === 'all') return true;
