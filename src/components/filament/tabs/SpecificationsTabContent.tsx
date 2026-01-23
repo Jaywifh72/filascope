@@ -15,6 +15,7 @@ import {
   FileText,
   ExternalLink
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -26,9 +27,127 @@ interface SpecRow {
   label: string;
   value: string | number | null | undefined;
   unit?: string;
+  comparison?: ComparisonContext | null;
 }
 
-function SpecTable({ title, icon, specs }: { title: string; icon: React.ReactNode; specs: SpecRow[] }) {
+interface ComparisonContext {
+  label: string;
+  status: 'above' | 'standard' | 'below';
+}
+
+// Material averages for comparison context
+const MATERIAL_AVERAGES: Record<string, Record<string, { min: number; max: number; avg: number }>> = {
+  PLA: {
+    nozzle_temp: { min: 190, max: 220, avg: 210 },
+    bed_temp: { min: 50, max: 70, avg: 60 },
+    tensile_strength: { min: 40, max: 60, avg: 50 },
+    print_speed: { min: 40, max: 150, avg: 80 },
+    density: { min: 1.2, max: 1.3, avg: 1.24 },
+    elongation: { min: 2, max: 10, avg: 6 },
+  },
+  PETG: {
+    nozzle_temp: { min: 220, max: 250, avg: 235 },
+    bed_temp: { min: 70, max: 90, avg: 80 },
+    tensile_strength: { min: 45, max: 55, avg: 50 },
+    print_speed: { min: 40, max: 100, avg: 60 },
+    density: { min: 1.23, max: 1.28, avg: 1.27 },
+    elongation: { min: 10, max: 300, avg: 120 },
+  },
+  ABS: {
+    nozzle_temp: { min: 220, max: 260, avg: 240 },
+    bed_temp: { min: 90, max: 110, avg: 100 },
+    tensile_strength: { min: 35, max: 50, avg: 42 },
+    print_speed: { min: 40, max: 100, avg: 60 },
+    density: { min: 1.02, max: 1.08, avg: 1.04 },
+    elongation: { min: 10, max: 50, avg: 25 },
+  },
+  ASA: {
+    nozzle_temp: { min: 230, max: 260, avg: 245 },
+    bed_temp: { min: 90, max: 110, avg: 100 },
+    tensile_strength: { min: 40, max: 55, avg: 47 },
+    print_speed: { min: 40, max: 100, avg: 60 },
+    density: { min: 1.05, max: 1.08, avg: 1.07 },
+    elongation: { min: 20, max: 40, avg: 30 },
+  },
+  TPU: {
+    nozzle_temp: { min: 210, max: 240, avg: 225 },
+    bed_temp: { min: 40, max: 60, avg: 50 },
+    tensile_strength: { min: 20, max: 50, avg: 35 },
+    print_speed: { min: 20, max: 40, avg: 30 },
+    density: { min: 1.15, max: 1.25, avg: 1.2 },
+    elongation: { min: 300, max: 700, avg: 500 },
+  },
+  PA: {
+    nozzle_temp: { min: 240, max: 280, avg: 260 },
+    bed_temp: { min: 70, max: 100, avg: 85 },
+    tensile_strength: { min: 60, max: 90, avg: 75 },
+    print_speed: { min: 40, max: 80, avg: 50 },
+    density: { min: 1.1, max: 1.15, avg: 1.13 },
+    elongation: { min: 20, max: 100, avg: 50 },
+  },
+  PC: {
+    nozzle_temp: { min: 260, max: 300, avg: 280 },
+    bed_temp: { min: 100, max: 120, avg: 110 },
+    tensile_strength: { min: 55, max: 75, avg: 65 },
+    print_speed: { min: 30, max: 60, avg: 45 },
+    density: { min: 1.18, max: 1.22, avg: 1.2 },
+    elongation: { min: 80, max: 120, avg: 100 },
+  },
+};
+
+function getComparisonContext(
+  material: string | null,
+  field: string,
+  value: number | null | undefined
+): ComparisonContext | null {
+  if (!material || value === null || value === undefined) return null;
+  
+  // Normalize material name
+  const normalizedMaterial = material.toUpperCase().replace(/[^A-Z]/g, '');
+  const avgData = MATERIAL_AVERAGES[normalizedMaterial]?.[field];
+  
+  if (!avgData) return null;
+  
+  const { min, max, avg } = avgData;
+  
+  // Determine if value is above, standard, or below average
+  if (value >= max) {
+    return { label: 'Above average', status: 'above' };
+  } else if (value <= min) {
+    return { label: 'Below average', status: 'below' };
+  } else {
+    return { label: 'Standard', status: 'standard' };
+  }
+}
+
+function ComparisonBadge({ comparison }: { comparison: ComparisonContext }) {
+  const statusConfig = {
+    above: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    standard: 'bg-primary/10 text-primary border-primary/20',
+    below: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  };
+  
+  return (
+    <Badge 
+      variant="outline" 
+      className={cn("text-[10px] px-1.5 py-0 h-5 font-normal", statusConfig[comparison.status])}
+    >
+      {comparison.label}
+    </Badge>
+  );
+}
+
+function SpecTable({ 
+  title, 
+  icon, 
+  specs,
+  materialContext 
+}: { 
+  title: string; 
+  icon: React.ReactNode; 
+  specs: SpecRow[];
+  materialContext?: string | null;
+}) {
   const validSpecs = specs.filter(s => s.value !== null && s.value !== undefined && s.value !== '');
   if (validSpecs.length === 0) return null;
 
@@ -39,18 +158,28 @@ function SpecTable({ title, icon, specs }: { title: string; icon: React.ReactNod
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             {icon}
           </div>
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <div>
+            <h3 className="text-lg font-semibold">{title}</h3>
+            {materialContext && (
+              <p className="text-xs text-muted-foreground">
+                Compared to typical {materialContext} values
+              </p>
+            )}
+          </div>
         </div>
         <div className="space-y-2">
           {validSpecs.map((spec, idx) => (
             <div 
               key={idx}
-              className={`flex justify-between py-2 px-3 rounded-lg ${idx % 2 === 0 ? 'bg-muted/20' : ''}`}
+              className={`flex items-center justify-between py-2 px-3 rounded-lg ${idx % 2 === 0 ? 'bg-muted/20' : ''}`}
             >
               <span className="text-sm text-muted-foreground">{spec.label}</span>
-              <span className="text-sm font-medium">
-                {spec.value}{spec.unit ? ` ${spec.unit}` : ''}
-              </span>
+              <div className="flex items-center gap-2">
+                {spec.comparison && <ComparisonBadge comparison={spec.comparison} />}
+                <span className="text-sm font-medium">
+                  {spec.value}{spec.unit ? ` ${spec.unit}` : ''}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -60,19 +189,47 @@ function SpecTable({ title, icon, specs }: { title: string; icon: React.ReactNod
 }
 
 export function SpecificationsTabContent({ filament }: SpecificationsTabContentProps) {
+  const material = filament.material;
+  
   return (
     <div className="space-y-6">
       {/* Print Settings */}
       <SpecTable
         title="Print Settings"
         icon={<ThermometerSun className="w-5 h-5" />}
+        materialContext={material}
         specs={[
-          { label: 'Nozzle Temperature (Min)', value: filament.nozzle_temp_min_c, unit: '°C' },
-          { label: 'Nozzle Temperature (Max)', value: filament.nozzle_temp_max_c, unit: '°C' },
+          { 
+            label: 'Nozzle Temperature (Min)', 
+            value: filament.nozzle_temp_min_c, 
+            unit: '°C',
+            comparison: getComparisonContext(material, 'nozzle_temp', filament.nozzle_temp_min_c)
+          },
+          { 
+            label: 'Nozzle Temperature (Max)', 
+            value: filament.nozzle_temp_max_c, 
+            unit: '°C',
+            comparison: getComparisonContext(material, 'nozzle_temp', filament.nozzle_temp_max_c)
+          },
           { label: 'Nozzle Sweet Spot', value: filament.nozzle_temp_sweetspot_c, unit: '°C' },
-          { label: 'Bed Temperature (Min)', value: filament.bed_temp_min_c, unit: '°C' },
-          { label: 'Bed Temperature (Max)', value: filament.bed_temp_max_c, unit: '°C' },
-          { label: 'Max Print Speed', value: filament.print_speed_max_mms, unit: 'mm/s' },
+          { 
+            label: 'Bed Temperature (Min)', 
+            value: filament.bed_temp_min_c, 
+            unit: '°C',
+            comparison: getComparisonContext(material, 'bed_temp', filament.bed_temp_min_c)
+          },
+          { 
+            label: 'Bed Temperature (Max)', 
+            value: filament.bed_temp_max_c, 
+            unit: '°C',
+            comparison: getComparisonContext(material, 'bed_temp', filament.bed_temp_max_c)
+          },
+          { 
+            label: 'Max Print Speed', 
+            value: filament.print_speed_max_mms, 
+            unit: 'mm/s',
+            comparison: getComparisonContext(material, 'print_speed', filament.print_speed_max_mms)
+          },
           { label: 'Fan Speed (Min)', value: filament.fan_min_percent, unit: '%' },
           { label: 'Fan Speed (Max)', value: filament.fan_max_percent, unit: '%' },
           { label: 'Retraction Length', value: filament.retraction_length_mm, unit: 'mm' },
@@ -84,10 +241,16 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
       <SpecTable
         title="Physical Properties"
         icon={<Ruler className="w-5 h-5" />}
+        materialContext={material}
         specs={[
           { label: 'Diameter', value: filament.diameter_nominal_mm, unit: 'mm' },
           { label: 'Net Weight', value: filament.net_weight_g, unit: 'g' },
-          { label: 'Density', value: filament.density_g_cm3, unit: 'g/cm³' },
+          { 
+            label: 'Density', 
+            value: filament.density_g_cm3, 
+            unit: 'g/cm³',
+            comparison: getComparisonContext(material, 'density', filament.density_g_cm3)
+          },
           { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm, unit: 'mm' },
           { label: 'Spool Width', value: filament.spool_width_mm, unit: 'mm' },
           { label: 'AMS Compatible', value: filament.spool_ams_fit !== null ? (filament.spool_ams_fit ? 'Yes' : 'No') : null },
@@ -99,12 +262,23 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
       <SpecTable
         title="Mechanical Properties"
         icon={<Shield className="w-5 h-5" />}
+        materialContext={material}
         specs={[
-          { label: 'Tensile Strength (XY)', value: filament.tensile_strength_xy_mpa, unit: 'MPa' },
+          { 
+            label: 'Tensile Strength (XY)', 
+            value: filament.tensile_strength_xy_mpa, 
+            unit: 'MPa',
+            comparison: getComparisonContext(material, 'tensile_strength', filament.tensile_strength_xy_mpa)
+          },
           { label: 'Tensile Strength (Z)', value: filament.tensile_strength_z_mpa, unit: 'MPa' },
           { label: 'Tensile Modulus (XY)', value: filament.tensile_modulus_xy_mpa, unit: 'MPa' },
           { label: 'Tensile Modulus (Z)', value: filament.tensile_modulus_z_mpa, unit: 'MPa' },
-          { label: 'Elongation at Break (XY)', value: filament.elongation_break_xy_percent, unit: '%' },
+          { 
+            label: 'Elongation at Break (XY)', 
+            value: filament.elongation_break_xy_percent, 
+            unit: '%',
+            comparison: getComparisonContext(material, 'elongation', filament.elongation_break_xy_percent)
+          },
           { label: 'Elongation at Break (Z)', value: filament.elongation_break_z_percent, unit: '%' },
           { label: 'Flexural Strength', value: filament.flexural_strength_mpa, unit: 'MPa' },
           { label: 'Bending Strength', value: filament.bending_strength_mpa, unit: 'MPa' },

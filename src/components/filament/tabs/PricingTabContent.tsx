@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   ExternalLink, 
   TrendingDown, 
@@ -8,13 +9,21 @@ import {
   ShoppingCart,
   ChevronRight,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Bell,
+  ArrowDown,
+  Clock
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
+import { usePriceHistory } from '@/hooks/usePriceHistory';
+import { usePriceAlerts } from '@/hooks/usePriceAlerts';
 import { cn } from '@/lib/utils';
+import { format, parseISO } from 'date-fns';
 import type { Retailer } from '../hero/RetailersModal';
+import { PriceHistoryChart } from '../PriceHistoryChart';
+import { PriceAlertModal } from '../PriceAlertModal';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -44,6 +53,8 @@ export function PricingTabContent({
   onRetailerClick,
 }: PricingTabContentProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { hasAlert, getAlert } = usePriceAlerts();
+  const [priceAlertModalOpen, setPriceAlertModalOpen] = useState(false);
 
   // Fetch live price to match the sidebar
   const { 
@@ -53,6 +64,13 @@ export function PricingTabContent({
     isLivePrice,
     currency: livePriceCurrency
   } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
+
+  // Get price history data
+  const { 
+    min: historicalLow,
+    isBestIn6Months,
+    isLoading: historyLoading
+  } = usePriceHistory(filament.id, pricePerKg, 180);
 
   // Calculate live price per kg
   const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
@@ -71,6 +89,10 @@ export function PricingTabContent({
     displayPricePerSpool = pricePerSpool;
   }
 
+  // Check for existing alert
+  const existingAlert = getAlert(filament.id);
+  const alertExists = hasAlert(filament.id);
+
   // Format live prices in their original currency
   const formatLivePrice = (price: number): string => {
     const symbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
@@ -87,6 +109,16 @@ export function PricingTabContent({
       ? formatRegionalPrice(price, !forceNoSuffix) 
       : formatPrice(price, !forceNoSuffix);
   };
+
+  // Get currency symbol for charts
+  const currencySymbol = isLivePrice 
+    ? ({ 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' }[livePriceCurrency] || '$')
+    : '$';
+
+  // Calculate % above historical low
+  const percentAboveLow = displayPricePerKg && historicalLow && historicalLow > 0
+    ? Math.round(((displayPricePerKg - historicalLow) / historicalLow) * 100)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -113,17 +145,100 @@ export function PricingTabContent({
                   {formatDisplayPrice(displayPricePerSpool)} per spool ({filament.net_weight_g}g)
                 </p>
               )}
+              
+              {/* Price badges */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {isBestIn6Months && (
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1">
+                    <ArrowDown className="w-3 h-3" />
+                    Best in 6 months
+                  </Badge>
+                )}
+                {alertExists && existingAlert && (
+                  <Badge variant="outline" className="gap-1">
+                    <Bell className="w-3 h-3" />
+                    Alert: {currencySymbol}{existingAlert.targetPrice.toFixed(2)}/kg
+                  </Badge>
+                )}
+              </div>
             </div>
-            {affiliateUrl && (
+            <div className="flex flex-col gap-2">
+              {affiliateUrl && (
+                <Button
+                  onClick={() => window.open(affiliateUrl, '_blank')}
+                  className="gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Buy Now
+                </Button>
+              )}
               <Button
-                onClick={() => window.open(affiliateUrl, '_blank')}
-                className="gap-2"
+                variant="outline"
+                onClick={() => setPriceAlertModalOpen(true)}
+                className={cn(
+                  "gap-2",
+                  alertExists && "border-primary/50 text-primary"
+                )}
               >
-                <ShoppingCart className="w-4 h-4" />
-                Buy Now
+                <Bell className="w-4 h-4" />
+                {alertExists ? 'Edit Alert' : 'Set Alert'}
               </Button>
-            )}
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Historical Low Indicator */}
+      {historicalLow && historicalLow > 0 && !historyLoading && (
+        <Card className="bg-card/50 border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                  <TrendingDown className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium">Historical Low Price</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Lowest recorded in the past 6 months
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-emerald-400">
+                  {currencySymbol}{historicalLow.toFixed(2)}/kg
+                </div>
+                {percentAboveLow !== null && percentAboveLow > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    Current is {percentAboveLow}% above low
+                  </div>
+                )}
+                {percentAboveLow !== null && percentAboveLow <= 0 && (
+                  <div className="text-xs text-emerald-400">
+                    At or below historical low!
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Price History Chart */}
+      <Card className="bg-card/50 border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <TrendingDown className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-semibold">Price History</h3>
+          </div>
+          <PriceHistoryChart
+            filamentId={filament.id}
+            currentPrice={displayPricePerKg}
+            currencySymbol={currencySymbol}
+          />
         </CardContent>
       </Card>
 
@@ -205,22 +320,15 @@ export function PricingTabContent({
         </CardContent>
       </Card>
 
-      {/* Price History Placeholder */}
-      <Card className="bg-card/50 border-border">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <TrendingDown className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-semibold">Price History</h3>
-          </div>
-          <div className="h-48 flex items-center justify-center bg-muted/20 rounded-lg border border-dashed border-border">
-            <p className="text-muted-foreground text-sm">
-              Price history chart coming soon
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Price Alert Modal */}
+      <PriceAlertModal
+        filamentId={filament.id}
+        filamentName={filament.product_title}
+        currentPrice={displayPricePerKg}
+        isOpen={priceAlertModalOpen}
+        onClose={() => setPriceAlertModalOpen(false)}
+        currencySymbol={currencySymbol}
+      />
     </div>
   );
 }
