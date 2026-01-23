@@ -319,8 +319,8 @@ const ReferenceSlicers = () => {
 
             {/* TIER 1: Top Picks */}
             <section className="py-[60px] max-md:py-10">
-              <h2 className="text-xl font-bold text-foreground max-md:text-lg mb-2">Our Top Picks</h2>
-              <p className="text-[15px] font-medium text-muted-foreground mb-8">
+              <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Top Picks</h2>
+              <p className="text-gray-400 mb-6">
                 Staff-curated recommendations based on use case and performance
               </p>
               
@@ -552,7 +552,8 @@ const ReferenceSlicers = () => {
 
             {/* Slicer Profiles Accordion */}
             <div className="py-8">
-              <h2 className="text-xl font-bold text-foreground mb-6">Detailed Slicer Profiles</h2>
+              <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Detailed Slicer Profiles ({slicerData.length})</h2>
+              <p className="text-gray-400 mb-6">In-depth analysis of each slicer's features and capabilities</p>
               <Accordion type="single" collapsible className="space-y-3">
                 {slicerData.map((slicer, index) => (
                   <AccordionItem 
