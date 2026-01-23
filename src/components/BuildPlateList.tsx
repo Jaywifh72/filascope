@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,9 @@ export default function BuildPlateList() {
   // Get filter values from URL params
   const searchTerm = searchParams.get("search") || "";
   const selectedBrand = searchParams.get("brand") || "all";
+  
+  // Sort state
+  const [sortBy, setSortBy] = useState("alphabetical");
   
   // Update URL params when filters change
   const setSearchTerm = (value: string) => {
@@ -88,11 +91,25 @@ export default function BuildPlateList() {
     });
   }, [buildPlates, searchTerm, selectedBrand]);
 
+  // Sort filtered plates
+  const sortedBuildPlates = useMemo(() => {
+    const sorted = [...filteredBuildPlates];
+    switch (sortBy) {
+      case "price-low":
+        return sorted.sort((a, b) => (a.price || 999999) - (b.price || 999999));
+      case "price-high":
+        return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case "alphabetical":
+      default:
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }, [filteredBuildPlates, sortBy]);
+
   // Group by brand
   const groupedBuildPlates = useMemo(() => {
     const groups: Record<string, BuildPlate[]> = {};
     
-    filteredBuildPlates.forEach(bp => {
+    sortedBuildPlates.forEach(bp => {
       const brand = bp.brand || "Unknown";
       if (!groups[brand]) {
         groups[brand] = [];
@@ -101,14 +118,17 @@ export default function BuildPlateList() {
     });
     
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredBuildPlates]);
+  }, [sortedBuildPlates]);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-10" />
-          <Skeleton className="h-10" />
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-48" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-40" />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -121,96 +141,113 @@ export default function BuildPlateList() {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          type="text"
-          placeholder="Search build plates..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by brand" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Brands</SelectItem>
-            {brands.map(brand => (
-              <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Results Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left: Results Count */}
+        <h2 className="text-2xl font-semibold">
+          <span className="text-primary">{filteredBuildPlates.length}</span>{" "}
+          <span className="text-foreground">build plates</span>
+        </h2>
 
-      {/* Results count */}
-      <p className="text-muted-foreground">
-        <span className="font-semibold text-foreground">{filteredBuildPlates.length}</span> build plates
-      </p>
+        {/* Right: Filters */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Input
+            type="text"
+            placeholder="Search build plates..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-64 bg-gray-800 border-gray-700"
+          />
+
+          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {brands.map(brand => (
+                <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alphabetical">Alphabetical</SelectItem>
+              <SelectItem value="price-low">Price: Low to High</SelectItem>
+              <SelectItem value="price-high">Price: High to Low</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Grouped list */}
-      <div className="space-y-8">
-        {groupedBuildPlates.map(([brand, plates]) => {
-          const brandLogo = getBrandLogo(brand);
-          
-          return (
-            <div key={brand} className="space-y-4">
-              {/* Brand header */}
-              <div className="flex items-center gap-3 border-b pb-2">
-                {brandLogo && (
-                  <img
-                    src={brandLogo}
-                    alt={brand}
-                    className="h-6 w-auto object-contain"
-                  />
-                )}
-                <h3 className="text-lg font-semibold">{brand}</h3>
-                <Badge variant="secondary">{plates.length}</Badge>
-              </div>
-
-              {/* Build plate grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {plates.map((plate) => {
-                  const specs = plate.specs as Record<string, unknown> | null;
-                  const surface = specs?.surface as string | undefined;
-                  const isMagnetic = specs?.magnetic as boolean | undefined;
-                  const maxTemp = specs?.max_temp_c as number | undefined;
-                  
-                  const badges: { label: string }[] = [];
-                  if (isMagnetic) badges.push({ label: "Magnetic" });
-                  if (surface) badges.push({ label: surface });
-                  
-                  return (
-                    <AccessoryCard
-                      key={plate.id}
-                      id={plate.id}
-                      name={plate.name}
-                      brand={plate.brand || "Unknown"}
-                      price={plate.price}
-                      imageUrl={plate.image_url}
-                      href={`/build-plates/${plate.id}`}
-                      type="build_plate"
-                      discontinued={plate.product_url === 'DISCONTINUED'}
-                      badges={badges}
-                      specs={
-                        maxTemp ? (
-                          <div className="flex items-center gap-1">
-                            <Thermometer className="h-3 w-3" />
-                            <span>Up to {maxTemp}°C</span>
-                          </div>
-                        ) : null
-                      }
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filteredBuildPlates.length === 0 && (
+      {filteredBuildPlates.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           No build plates found matching your criteria
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {groupedBuildPlates.map(([brand, plates]) => {
+            const brandLogo = getBrandLogo(brand);
+            
+            return (
+              <div key={brand} className="space-y-4">
+                {/* Brand header */}
+                <div className="flex items-center gap-3 border-b border-gray-700 pb-2">
+                  {brandLogo && (
+                    <img
+                      src={brandLogo}
+                      alt={brand}
+                      className="h-6 w-auto object-contain"
+                    />
+                  )}
+                  <h3 className="text-lg font-semibold">{brand}</h3>
+                  <Badge variant="secondary" className="bg-gray-700">{plates.length}</Badge>
+                </div>
+
+                {/* Build plate grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {plates.map((plate) => {
+                    const specs = plate.specs as Record<string, unknown> | null;
+                    const surface = specs?.surface as string | undefined;
+                    const isMagnetic = specs?.magnetic as boolean | undefined;
+                    const maxTemp = specs?.max_temp_c as number | undefined;
+                    
+                    const badges: { label: string }[] = [];
+                    if (isMagnetic) badges.push({ label: "Magnetic" });
+                    if (surface) badges.push({ label: surface });
+                    
+                    return (
+                      <AccessoryCard
+                        key={plate.id}
+                        id={plate.id}
+                        name={plate.name}
+                        brand={plate.brand || "Unknown"}
+                        price={plate.price}
+                        imageUrl={plate.image_url}
+                        href={`/build-plates/${plate.id}`}
+                        type="build_plate"
+                        discontinued={plate.product_url === 'DISCONTINUED'}
+                        badges={badges}
+                        specs={
+                          maxTemp ? (
+                            <div className="flex items-center gap-1">
+                              <Thermometer className="h-3 w-3" />
+                              <span>Up to {maxTemp}°C</span>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,9 @@ export default function AMSList() {
   // Get filter values from URL params
   const searchTerm = searchParams.get("search") || "";
   const selectedBrand = searchParams.get("brand") || "all";
+  
+  // Sort state
+  const [sortBy, setSortBy] = useState("alphabetical");
   
   // Update URL params when filters change
   const setSearchTerm = (value: string) => {
@@ -98,22 +101,41 @@ export default function AMSList() {
     });
   }, [amsSystems, searchTerm, selectedBrand]);
 
+  // Sort filtered AMS
+  const sortedAMS = useMemo(() => {
+    const sorted = [...filteredAMS];
+    switch (sortBy) {
+      case "price-low":
+        return sorted.sort((a, b) => (a.price || 999999) - (b.price || 999999));
+      case "price-high":
+        return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case "spools":
+        return sorted.sort((a, b) => (b.specs?.max_spools || 0) - (a.specs?.max_spools || 0));
+      case "alphabetical":
+      default:
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }, [filteredAMS, sortBy]);
+
   const groupedAMS = useMemo(() => {
     const groups: Record<string, AMS[]> = {};
-    filteredAMS.forEach(ams => {
+    sortedAMS.forEach(ams => {
       const brand = ams.brand || "Other";
       if (!groups[brand]) groups[brand] = [];
       groups[brand].push(ams);
     });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredAMS]);
+  }, [sortedAMS]);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-10" />
-          <Skeleton className="h-10" />
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-48" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-40" />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
@@ -126,30 +148,48 @@ export default function AMSList() {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          type="text"
-          placeholder="Search AMS/MMU systems..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-          <SelectTrigger>
-            <SelectValue placeholder="All Brands" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Brands</SelectItem>
-            {brands.map(brand => (
-              <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Results Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left: Results Count */}
+        <h2 className="text-2xl font-semibold">
+          <span className="text-primary">{filteredAMS.length}</span>{" "}
+          <span className="text-foreground">AMS/MMU systems</span>
+        </h2>
 
-      {/* Results count */}
-      <div className="text-sm text-muted-foreground">
-        <span className="font-bold text-foreground">{filteredAMS.length}</span> multi-material systems
+        {/* Right: Filters */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Input
+            type="text"
+            placeholder="Search AMS/MMU..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-64 bg-gray-800 border-gray-700"
+          />
+
+          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {brands.map(brand => (
+                <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alphabetical">Alphabetical</SelectItem>
+              <SelectItem value="price-low">Price: Low to High</SelectItem>
+              <SelectItem value="price-high">Price: High to Low</SelectItem>
+              <SelectItem value="spools">Most Spools</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* AMS Grid grouped by brand */}
@@ -166,7 +206,7 @@ export default function AMSList() {
             return (
               <div key={brand} className="space-y-4">
                 {/* Brand header */}
-                <div className="flex items-center gap-3 border-b pb-2">
+                <div className="flex items-center gap-3 border-b border-gray-700 pb-2">
                   {brandLogo && (
                     <img
                       src={brandLogo}
@@ -175,7 +215,7 @@ export default function AMSList() {
                     />
                   )}
                   <h3 className="text-lg font-semibold">{brand}</h3>
-                  <Badge variant="secondary">{systems.length}</Badge>
+                  <Badge variant="secondary" className="bg-gray-700">{systems.length}</Badge>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
