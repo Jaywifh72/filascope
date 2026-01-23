@@ -2323,6 +2323,84 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          created_at: string
+          current_price_when_set: number | null
+          email_notifications: boolean | null
+          filament_id: string
+          id: string
+          is_active: boolean | null
+          target_price: number
+          triggered_at: string | null
+          triggered_price: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_price_when_set?: number | null
+          email_notifications?: boolean | null
+          filament_id: string
+          id?: string
+          is_active?: boolean | null
+          target_price: number
+          triggered_at?: string | null
+          triggered_price?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_price_when_set?: number | null
+          email_notifications?: boolean | null
+          filament_id?: string
+          id?: string
+          is_active?: boolean | null
+          target_price?: number
+          triggered_at?: string | null
+          triggered_price?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           available: boolean | null
@@ -4872,6 +4950,7 @@ export type Database = {
           created_at: string | null
           filament_id: string | null
           id: string
+          last_notified_at: string | null
           notes: string | null
           price_when_added: number | null
           tags: string[] | null
@@ -4882,6 +4961,7 @@ export type Database = {
           created_at?: string | null
           filament_id?: string | null
           id?: string
+          last_notified_at?: string | null
           notes?: string | null
           price_when_added?: number | null
           tags?: string[] | null
@@ -4892,6 +4972,7 @@ export type Database = {
           created_at?: string | null
           filament_id?: string | null
           id?: string
+          last_notified_at?: string | null
           notes?: string | null
           price_when_added?: number | null
           tags?: string[] | null
@@ -4975,6 +5056,53 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      user_printer_preferences: {
+        Row: {
+          auto_filter: boolean | null
+          bed_temp_max: number | null
+          created_at: string
+          has_enclosure: boolean | null
+          id: string
+          nozzle_temp_max: number | null
+          printer_id: string | null
+          printer_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_filter?: boolean | null
+          bed_temp_max?: number | null
+          created_at?: string
+          has_enclosure?: boolean | null
+          id?: string
+          nozzle_temp_max?: number | null
+          printer_id?: string | null
+          printer_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_filter?: boolean | null
+          bed_temp_max?: number | null
+          created_at?: string
+          has_enclosure?: boolean | null
+          id?: string
+          nozzle_temp_max?: number | null
+          printer_id?: string | null
+          printer_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_printer_preferences_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_printers: {
         Row: {
