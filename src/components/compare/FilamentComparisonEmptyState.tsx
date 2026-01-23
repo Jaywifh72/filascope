@@ -48,18 +48,18 @@ export function FilamentComparisonEmptyState({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
+    <div className="flex flex-col items-center justify-center py-16 px-4 animate-in fade-in-0 duration-300">
       {/* Main Illustration */}
       <div className="relative mb-8">
         {/* Glowing background effect */}
         <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl scale-150 opacity-40" />
         
         {/* Main icon container */}
-        <div className="relative bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-2xl p-8">
+        <div className="relative bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 rounded-2xl p-8 transition-transform duration-300 hover:scale-105">
           <Scale className="w-16 h-16 text-primary" strokeWidth={1.5} />
           
           {/* Decorative dots */}
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-pulse" />
           <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary/60 rounded-full" />
         </div>
       </div>
@@ -77,7 +77,7 @@ export function FilamentComparisonEmptyState({
       <Button 
         onClick={onBrowseMaterials} 
         size="lg"
-        className="gap-2 mb-12"
+        className="gap-2 mb-12 transition-all duration-150 hover:scale-105"
       >
         Browse Materials
         <ArrowRight className="w-4 h-4" />
@@ -87,7 +87,7 @@ export function FilamentComparisonEmptyState({
       <div className="w-full max-w-2xl">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Popular Comparisons
           </h3>
         </div>
@@ -100,7 +100,7 @@ export function FilamentComparisonEmptyState({
               className={cn(
                 "group flex items-center justify-between",
                 "bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-primary/50",
-                "rounded-lg p-4 transition-all duration-200",
+                "rounded-lg p-4 transition-all duration-150",
                 "text-left"
               )}
             >
@@ -118,7 +118,7 @@ export function FilamentComparisonEmptyState({
                   {comparison.description}
                 </p>
               </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-3" />
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150 shrink-0 ml-3" />
             </button>
           ))}
         </div>

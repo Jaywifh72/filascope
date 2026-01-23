@@ -375,11 +375,15 @@ const Compare = () => {
   const emptySlots = maxSlots - filaments.length;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background relative">
+      {/* Subtle background pattern matching site design */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,232,0.03)_0%,_transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_rgba(255,0,85,0.02)_0%,_transparent_40%)] pointer-events-none" />
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50 transition-colors duration-150">
             <a href="/">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Materials
@@ -475,11 +479,11 @@ const Compare = () => {
             </div>
           </div>
 
-          <TabsContent value="reference">
+          <TabsContent value="reference" className="animate-in fade-in-0 duration-200">
             <MaterialReference />
           </TabsContent>
 
-          <TabsContent value="comparison">
+          <TabsContent value="comparison" className="animate-in fade-in-0 duration-200">
             {loading ? renderComparisonLoading() : 
              error && filaments.length === 0 ? renderComparisonError() :
              filaments.length === 0 ? renderComparisonEmpty() : (
