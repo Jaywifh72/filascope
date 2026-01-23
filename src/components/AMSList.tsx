@@ -3,12 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Layers } from "lucide-react";
+import { Layers, ChevronDown } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import AccessoryCard from "@/components/AccessoryCard";
+import { cn } from "@/lib/utils";
 
 interface AMS {
   id: string;
@@ -42,6 +42,21 @@ export default function AMSList() {
   
   // Sort state
   const [sortBy, setSortBy] = useState("alphabetical");
+  
+  // Collapsed brand sections
+  const [collapsedBrands, setCollapsedBrands] = useState<Set<string>>(new Set());
+  
+  const toggleBrandCollapse = (brand: string) => {
+    setCollapsedBrands(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(brand)) {
+        newSet.delete(brand);
+      } else {
+        newSet.add(brand);
+      }
+      return newSet;
+    });
+  };
   
   // Update URL params when filters change
   const setSearchTerm = (value: string) => {
@@ -199,14 +214,24 @@ export default function AMSList() {
           <p className="text-muted-foreground">No AMS/MMU systems found</p>
         </div>
       ) : (
-        <div className="space-y-8">
-          {groupedAMS.map(([brand, systems]) => {
+        <div className="space-y-0">
+          {groupedAMS.map(([brand, systems], index) => {
             const brandLogo = getBrandLogo(brand);
+            const isCollapsed = collapsedBrands.has(brand);
             
             return (
-              <div key={brand} className="space-y-4">
+              <div 
+                key={brand} 
+                className={cn(
+                  "space-y-4",
+                  index > 0 && "border-t border-gray-700/50 pt-6 mt-6"
+                )}
+              >
                 {/* Brand header */}
-                <div className="flex items-center gap-3 border-b border-gray-700 pb-2">
+                <button
+                  onClick={() => toggleBrandCollapse(brand)}
+                  className="flex items-center gap-3 w-full text-left group hover:opacity-80 transition-opacity"
+                >
                   {brandLogo && (
                     <img
                       src={brandLogo}
@@ -214,38 +239,49 @@ export default function AMSList() {
                       className="h-6 w-auto object-contain"
                     />
                   )}
-                  <h3 className="text-lg font-semibold">{brand}</h3>
-                  <Badge variant="secondary" className="bg-gray-700">{systems.length}</Badge>
-                </div>
+                  <h3 className="text-lg font-bold text-white">{brand}</h3>
+                  <span className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-sm">
+                    {systems.length}
+                  </span>
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground ml-auto transition-transform duration-200",
+                      isCollapsed && "-rotate-90"
+                    )} 
+                  />
+                </button>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {systems.map(ams => {
-                    const badges: { label: string }[] = [];
-                    if (ams.specs?.drying_capability) badges.push({ label: "Drying" });
-                    if (ams.specs?.humidity_control) badges.push({ label: "Humidity" });
-                    if (ams.specs?.color_mixing) badges.push({ label: "Color Mix" });
-                    
-                    return (
-                      <AccessoryCard
-                        key={ams.id}
-                        id={ams.id}
-                        name={ams.name}
-                        subtitle={ams.specs?.max_spools ? `${ams.specs.max_spools} Spools` : undefined}
-                        brand={ams.brand || "Unknown"}
-                        price={ams.price}
-                        imageUrl={ams.image_url}
-                        href={`/ams/${ams.id}`}
-                        type="ams_mmu"
-                        badges={badges}
-                        specs={
-                          ams.specs?.filament_types ? (
-                            <div className="line-clamp-1">{ams.specs.filament_types}</div>
-                          ) : null
-                        }
-                      />
-                    );
-                  })}
-                </div>
+                {/* AMS grid */}
+                {!isCollapsed && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {systems.map(ams => {
+                      const badges: { label: string }[] = [];
+                      if (ams.specs?.drying_capability) badges.push({ label: "Drying" });
+                      if (ams.specs?.humidity_control) badges.push({ label: "Humidity" });
+                      if (ams.specs?.color_mixing) badges.push({ label: "Color Mix" });
+                      
+                      return (
+                        <AccessoryCard
+                          key={ams.id}
+                          id={ams.id}
+                          name={ams.name}
+                          subtitle={ams.specs?.max_spools ? `${ams.specs.max_spools} Spools` : undefined}
+                          brand={ams.brand || "Unknown"}
+                          price={ams.price}
+                          imageUrl={ams.image_url}
+                          href={`/ams/${ams.id}`}
+                          type="ams_mmu"
+                          badges={badges}
+                          specs={
+                            ams.specs?.filament_types ? (
+                              <div className="line-clamp-1">{ams.specs.filament_types}</div>
+                            ) : null
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}

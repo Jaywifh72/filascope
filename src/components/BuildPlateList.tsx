@@ -3,12 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Thermometer } from "lucide-react";
+import { Thermometer, ChevronDown } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import AccessoryCard from "@/components/AccessoryCard";
+import { cn } from "@/lib/utils";
 
 interface BuildPlate {
   id: string;
@@ -30,6 +30,21 @@ export default function BuildPlateList() {
   
   // Sort state
   const [sortBy, setSortBy] = useState("alphabetical");
+  
+  // Collapsed brand sections
+  const [collapsedBrands, setCollapsedBrands] = useState<Set<string>>(new Set());
+  
+  const toggleBrandCollapse = (brand: string) => {
+    setCollapsedBrands(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(brand)) {
+        newSet.delete(brand);
+      } else {
+        newSet.add(brand);
+      }
+      return newSet;
+    });
+  };
   
   // Update URL params when filters change
   const setSearchTerm = (value: string) => {
@@ -190,14 +205,24 @@ export default function BuildPlateList() {
           No build plates found matching your criteria
         </div>
       ) : (
-        <div className="space-y-8">
-          {groupedBuildPlates.map(([brand, plates]) => {
+        <div className="space-y-0">
+          {groupedBuildPlates.map(([brand, plates], index) => {
             const brandLogo = getBrandLogo(brand);
+            const isCollapsed = collapsedBrands.has(brand);
             
             return (
-              <div key={brand} className="space-y-4">
+              <div 
+                key={brand} 
+                className={cn(
+                  "space-y-4",
+                  index > 0 && "border-t border-gray-700/50 pt-6 mt-6"
+                )}
+              >
                 {/* Brand header */}
-                <div className="flex items-center gap-3 border-b border-gray-700 pb-2">
+                <button
+                  onClick={() => toggleBrandCollapse(brand)}
+                  className="flex items-center gap-3 w-full text-left group hover:opacity-80 transition-opacity"
+                >
                   {brandLogo && (
                     <img
                       src={brandLogo}
@@ -205,46 +230,56 @@ export default function BuildPlateList() {
                       className="h-6 w-auto object-contain"
                     />
                   )}
-                  <h3 className="text-lg font-semibold">{brand}</h3>
-                  <Badge variant="secondary" className="bg-gray-700">{plates.length}</Badge>
-                </div>
+                  <h3 className="text-lg font-bold text-white">{brand}</h3>
+                  <span className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-sm">
+                    {plates.length}
+                  </span>
+                  <ChevronDown 
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground ml-auto transition-transform duration-200",
+                      isCollapsed && "-rotate-90"
+                    )} 
+                  />
+                </button>
 
                 {/* Build plate grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {plates.map((plate) => {
-                    const specs = plate.specs as Record<string, unknown> | null;
-                    const surface = specs?.surface as string | undefined;
-                    const isMagnetic = specs?.magnetic as boolean | undefined;
-                    const maxTemp = specs?.max_temp_c as number | undefined;
-                    
-                    const badges: { label: string }[] = [];
-                    if (isMagnetic) badges.push({ label: "Magnetic" });
-                    if (surface) badges.push({ label: surface });
-                    
-                    return (
-                      <AccessoryCard
-                        key={plate.id}
-                        id={plate.id}
-                        name={plate.name}
-                        brand={plate.brand || "Unknown"}
-                        price={plate.price}
-                        imageUrl={plate.image_url}
-                        href={`/build-plates/${plate.id}`}
-                        type="build_plate"
-                        discontinued={plate.product_url === 'DISCONTINUED'}
-                        badges={badges}
-                        specs={
-                          maxTemp ? (
-                            <div className="flex items-center gap-1">
-                              <Thermometer className="h-3 w-3" />
-                              <span>Up to {maxTemp}°C</span>
-                            </div>
-                          ) : null
-                        }
-                      />
-                    );
-                  })}
-                </div>
+                {!isCollapsed && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {plates.map((plate) => {
+                      const specs = plate.specs as Record<string, unknown> | null;
+                      const surface = specs?.surface as string | undefined;
+                      const isMagnetic = specs?.magnetic as boolean | undefined;
+                      const maxTemp = specs?.max_temp_c as number | undefined;
+                      
+                      const badges: { label: string }[] = [];
+                      if (isMagnetic) badges.push({ label: "Magnetic" });
+                      if (surface) badges.push({ label: surface });
+                      
+                      return (
+                        <AccessoryCard
+                          key={plate.id}
+                          id={plate.id}
+                          name={plate.name}
+                          brand={plate.brand || "Unknown"}
+                          price={plate.price}
+                          imageUrl={plate.image_url}
+                          href={`/build-plates/${plate.id}`}
+                          type="build_plate"
+                          discontinued={plate.product_url === 'DISCONTINUED'}
+                          badges={badges}
+                          specs={
+                            maxTemp ? (
+                              <div className="flex items-center gap-1">
+                                <Thermometer className="h-3 w-3" />
+                                <span>Up to {maxTemp}°C</span>
+                              </div>
+                            ) : null
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
