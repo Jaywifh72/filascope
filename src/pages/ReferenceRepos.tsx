@@ -1,40 +1,20 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FolderGit2, Check, X, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, Filter, HelpCircle, Zap } from "lucide-react";
+import { ArrowLeft, FolderGit2, Star, Table, FileText, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { repoData } from "@/lib/repoData";
-import { RatingLevel, metricTooltips } from "@/lib/platformData";
 import { FilterProvider } from "@/contexts/PlatformFilterContext";
-import { getStandoutByName } from "@/lib/standoutFeatures";
 import ReposHeroSection from "@/components/reference/ReposHeroSection";
 import StaffPicksSection from "@/components/reference/repos/StaffPicksSection";
 import SpecializedSection from "@/components/reference/repos/SpecializedSection";
-import RatingValue from "@/components/reference/repos/shared/RatingValue";
-import RatingScaleLegend from "@/components/reference/repos/shared/RatingScaleLegend";
-import ExpandedPlatformCard from "@/components/reference/repos/ExpandedPlatformCard";
 import PlatformFilterBar from "@/components/reference/repos/PlatformFilterBar";
 import NoResultsEmpty from "@/components/reference/repos/NoResultsEmpty";
-import StandoutBadge from "@/components/reference/repos/shared/StandoutBadge";
 import MobileComparisonView from "@/components/reference/repos/mobile/MobileComparisonView";
+import ReposComparisonTable from "@/components/reference/repos/ReposComparisonTable";
+import ReposProfileAccordion from "@/components/reference/repos/ReposProfileAccordion";
+import { RatingLevel } from "@/lib/platformData";
+
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 5) return 'excellent';
@@ -67,144 +47,55 @@ const repoComparison = [
   { name: "GrabCAD", owner: "Stratasys", model: "Lead Gen", free: true, paid: false, quality: 5, community: 4, monetization: 1, search: 4, ux: 4, mobile: false, fileTypes: "STEP/IGES/CAD", standout: "Engineering CAD Files" },
 ];
 
-const businessModels = ["All", "Loss-Leader", "Hybrid", "Ad-Supported", "Marketplace", "Premium", "Search + Sub", "Mobile Sub", "Lead Gen"];
-const fileFormats = ["All", "STL", "3MF", "OBJ", "G-code", "CAD/STEP"];
+type ReposTab = "recommendations" | "comparison" | "profiles";
 
-type SortKey = "name" | "owner" | "model" | "quality" | "community" | "monetization" | "search" | "ux";
-type SortDir = "asc" | "desc";
-
-const modelOrder = { "Loss-Leader": 0, "Hybrid": 1, "Ad-Supported": 2, "Marketplace": 3, "Premium": 4, "Search + Sub": 5, "Mobile Sub": 6, "Lead Gen": 7 };
-
-// RatingDots removed - now using semantic RatingValue component
-
-const BoolBadge = ({ value }: { value: boolean }) => {
-  return value ? <Check className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-muted-foreground" />;
-};
-
-const SortHeader = ({ 
-  label, 
-  sortKey, 
-  currentSort, 
-  currentDir, 
-  onSort,
-  center = false,
-  tooltip
-}: { 
-  label: string; 
-  sortKey: SortKey; 
-  currentSort: SortKey | null; 
-  currentDir: SortDir;
-  onSort: (key: SortKey) => void;
-  center?: boolean;
-  tooltip?: string;
-}) => {
-  const isActive = currentSort === sortKey;
-  return (
-    <th 
-      className={`py-2 px-3 font-semibold text-foreground cursor-pointer hover:bg-muted/50 transition-colors select-none ${center ? "text-center" : "text-left"}`}
-      onClick={() => onSort(sortKey)}
-    >
-      <div className={`flex items-center gap-1 ${center ? "justify-center" : ""}`}>
-        <span>{label}</span>
-        {tooltip && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <HelpCircle className="w-3 h-3 text-muted-foreground/60 hover:text-primary cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p className="text-xs">{tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        {isActive ? (
-          currentDir === "asc" ? <ChevronUp className="w-3 h-3 text-purple-400" /> : <ChevronDown className="w-3 h-3 text-purple-400" />
-        ) : (
-          <ChevronsUpDown className="w-3 h-3 text-muted-foreground/50" />
-        )}
-      </div>
-    </th>
-  );
-};
+const tabs = [
+  { id: "recommendations" as ReposTab, label: "Recommendations", icon: Star },
+  { id: "comparison" as ReposTab, label: "Full Comparison", icon: Table },
+  { id: "profiles" as ReposTab, label: "Platform Profiles", icon: FileText, count: repoData.length },
+];
 
 const ReferenceRepos = () => {
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [modelFilter, setModelFilter] = useState<string>("All");
-  const [formatFilter, setFormatFilter] = useState<string>("All");
-  const [isTableExpanded, setIsTableExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<ReposTab>("recommendations");
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortKey(key);
-      setSortDir("desc");
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const tabIndicatorRef = useRef<HTMLDivElement>(null);
+  const tabButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  // Scroll listener for sticky shadow
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Update underline indicator position
+  useEffect(() => {
+    const activeButton = tabButtonRefs.current.get(activeTab);
+    const indicator = tabIndicatorRef.current;
+    if (activeButton && indicator) {
+      const { offsetLeft, offsetWidth } = activeButton;
+      indicator.style.left = `${offsetLeft}px`;
+      indicator.style.width = `${offsetWidth}px`;
+    }
+  }, [activeTab]);
+
+  const handleTabChange = (tabId: ReposTab) => {
+    setActiveTab(tabId);
+    // Smooth scroll to content
+    const contentSection = document.getElementById('repos-content-section');
+    if (contentSection) {
+      const offsetTop = contentSection.offsetTop - 80;
+      window.scrollTo({ top: offsetTop, behavior: 'smooth' });
     }
   };
-
-  const filteredAndSortedRepos = useMemo(() => {
-    let result = [...repoComparison];
-    
-    // Apply model filter
-    if (modelFilter !== "All") {
-      result = result.filter(repo => repo.model === modelFilter);
-    }
-    
-    // Apply format filter
-    if (formatFilter !== "All") {
-      result = result.filter(repo => {
-        const fileTypes = repo.fileTypes.toLowerCase();
-        switch (formatFilter) {
-          case "STL":
-            return fileTypes.includes("stl");
-          case "3MF":
-            return fileTypes.includes("3mf");
-          case "OBJ":
-            return fileTypes.includes("obj");
-          case "G-code":
-            return fileTypes.includes("g-code") || fileTypes.includes("gcode");
-          case "CAD/STEP":
-            return fileTypes.includes("step") || fileTypes.includes("iges") || fileTypes.includes("cad") || fileTypes.includes("30+");
-          default:
-            return true;
-        }
-      });
-    }
-    
-    // Apply sorting
-    if (!sortKey) return result;
-    
-    return result.sort((a, b) => {
-      let aVal: number | string = a[sortKey];
-      let bVal: number | string = b[sortKey];
-      
-      if (sortKey === "model") {
-        aVal = modelOrder[a.model as keyof typeof modelOrder] ?? 99;
-        bVal = modelOrder[b.model as keyof typeof modelOrder] ?? 99;
-      }
-      
-      if (typeof aVal === "number" && typeof bVal === "number") {
-        return sortDir === "asc" ? aVal - bVal : bVal - aVal;
-      }
-      
-      return sortDir === "asc" 
-        ? String(aVal).localeCompare(String(bVal))
-        : String(bVal).localeCompare(String(aVal));
-    });
-  }, [sortKey, sortDir, modelFilter, formatFilter]);
-
-  const clearFilters = () => {
-    setModelFilter("All");
-    setFormatFilter("All");
-  };
-
-  const hasActiveFilters = modelFilter !== "All" || formatFilter !== "All";
 
   // Prepare mobile platforms data
   const mobilePlatforms = useMemo(() => {
-    return repoData.map((repo, index) => {
+    return repoData.map((repo) => {
       const comparison = repoComparison.find(r => r.name === repo.name);
       return {
         id: repo.id,
@@ -231,11 +122,40 @@ const ReferenceRepos = () => {
     });
   }, []);
 
+  // Prepare comparison data for accordion
+  const comparisonDataMap = useMemo(() => {
+    const map: Record<string, {
+      quality: number;
+      community: number;
+      search: number;
+      ux: number;
+      monetization: number;
+      mobile: boolean;
+      model: string;
+    }> = {};
+    repoComparison.forEach(repo => {
+      map[repo.name] = {
+        quality: repo.quality,
+        community: repo.community,
+        search: repo.search,
+        ux: repo.ux,
+        monetization: repo.monetization,
+        mobile: repo.mobile,
+        model: repo.model,
+      };
+    });
+    return map;
+  }, []);
+
   const scrollToComparison = useCallback(() => {
-    const element = document.getElementById('comparison-matrix');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    setActiveTab("comparison");
+    setTimeout(() => {
+      const contentSection = document.getElementById('repos-content-section');
+      if (contentSection) {
+        const offsetTop = contentSection.offsetTop - 80;
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+      }
+    }, 100);
   }, []);
 
   return (
@@ -252,25 +172,13 @@ const ReferenceRepos = () => {
             </Button>
             
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-lg bg-purple-500/20 border border-purple-500/30">
-                <FolderGit2 className="w-8 h-8 text-purple-400" />
+              <div className="p-3 rounded-lg bg-primary/20 border border-primary/30">
+                <FolderGit2 className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground font-mono">3D Model Repositories</h1>
+                <h1 className="text-3xl font-bold text-foreground">3D Model Repositories</h1>
                 <p className="text-muted-foreground">Complete reference guide to 3D print file platforms & marketplaces</p>
               </div>
-            </div>
-            
-            <div className="flex gap-2 flex-wrap">
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30">
-                {repoData.length} Platforms
-              </Badge>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-                Free & Premium
-              </Badge>
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
-                Marketplaces & Archives
-              </Badge>
             </div>
           </div>
 
@@ -280,208 +188,135 @@ const ReferenceRepos = () => {
             onScrollToComparison={scrollToComparison} 
           />
 
-          {/* Platform Filter Bar - Desktop Only */}
-          <div className="hidden md:block">
-            <PlatformFilterBar />
-          </div>
-
-          {/* Desktop View - Hidden on Mobile */}
-          <div className="hidden md:block">
-            {/* Tier 1: Staff Picks */}
-            <StaffPicksSection />
-
-            {/* Tier 2: Specialized Options */}
-            <SpecializedSection />
-
-            {/* Empty State */}
-            <NoResultsEmpty />
-          </div>
-
-          {/* Mobile View - Shown only on Mobile */}
-          <MobileComparisonView platforms={mobilePlatforms} />
-
-        {/* Tier 3: Collapsible Comparative Features Table - Desktop Only */}
-        <div className="hidden md:block">
-        <Collapsible
-          open={isTableExpanded}
-          onOpenChange={setIsTableExpanded}
-          className="mb-8"
-        >
-          <div 
-            id="comparison-matrix" 
-            className="border border-border rounded-lg bg-card scroll-mt-4"
-            role="region"
-            aria-labelledby="comparison-matrix-title"
+          {/* Sticky Tab Navigation */}
+          <div
+            ref={tabsRef}
+            className={cn(
+              "sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border transition-shadow duration-300",
+              isScrolled && "shadow-md shadow-black/10"
+            )}
           >
-            <CollapsibleTrigger asChild>
-              <button 
-                className="w-full p-6 flex items-center justify-between hover:bg-muted/20 transition-all duration-200 rounded-lg"
-                aria-expanded={isTableExpanded}
-                aria-controls="comparison-table-content"
-              >
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="w-6 h-6 text-purple-400" />
-                  <div className="text-left">
-                    <h2 id="comparison-matrix-title" className="text-xl font-bold font-mono text-foreground">Full Comparison Matrix</h2>
-                    <p className="text-sm text-muted-foreground">
-                      All 8 platforms with detailed metrics and ratings
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-primary">
-                  <span className="text-sm font-medium">
-                    {isTableExpanded ? 'Collapse' : 'Expand'}
-                  </span>
-                  <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isTableExpanded ? 'rotate-180' : ''}`} />
-                </div>
-              </button>
-            </CollapsibleTrigger>
+            <div className="max-w-[1600px] mx-auto px-4 lg:px-6">
+              {/* Desktop Tabs */}
+              <nav className="hidden sm:flex relative" role="tablist">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    ref={(el) => el && tabButtonRefs.current.set(tab.id, el)}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn(
+                      "flex items-center gap-2 px-5 py-4 text-sm font-medium relative z-10",
+                      "transition-colors duration-200",
+                      activeTab === tab.id
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    <span className="hidden md:inline">{tab.label}</span>
+                    <span className="md:hidden">{tab.label.split(' ')[0]}</span>
+                    {tab.count && (
+                      <span className={cn(
+                        "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-colors duration-300",
+                        activeTab === tab.id
+                          ? "bg-primary/20 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {/* Sliding underline indicator */}
+                <div
+                  ref={tabIndicatorRef}
+                  className="absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-out"
+                  style={{ left: 0, width: 0 }}
+                />
+              </nav>
 
-            <CollapsibleContent id="comparison-table-content" className="animate-accordion-down">
-              <div className="px-6 pb-6 border-t border-border/50">
-
-                {/* Filter Controls */}
-                <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Filters:</span>
-                  </div>
-                  <Select value={modelFilter} onValueChange={setModelFilter}>
-                    <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border">
-                      <SelectValue placeholder="Business Model" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border z-50">
-                      {businessModels.map((model) => (
-                        <SelectItem key={model} value={model} className="text-xs">
-                          {model === "All" ? "All Models" : model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={formatFilter} onValueChange={setFormatFilter}>
-                    <SelectTrigger className="w-[140px] h-8 text-xs bg-background border-border">
-                      <SelectValue placeholder="File Format" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border z-50">
-                      {fileFormats.map((format) => (
-                        <SelectItem key={format} value={format} className="text-xs">
-                          {format === "All" ? "All Formats" : format}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
-                      Clear filters
-                    </Button>
-                  )}
-                  <span className="text-xs text-muted-foreground ml-auto">
-                    Showing {filteredAndSortedRepos.length} of {repoComparison.length} platforms
-                  </span>
-                </div>
-
-                {/* Rating Scale Legend */}
-                <div className="mb-4">
-                  <RatingScaleLegend />
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <SortHeader label="Platform" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                        <th className="text-left py-2 px-3 font-semibold text-amber-400 bg-amber-500/5">
-                          <div className="flex items-center gap-1.5">
-                            <Zap size={14} />
-                            <span>Standout Feature</span>
-                          </div>
-                        </th>
-                        <SortHeader label="Model" sortKey="model" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                        <th className="text-center py-2 px-3 font-semibold text-foreground">Free</th>
-                        <th className="text-center py-2 px-3 font-semibold text-foreground">Paid</th>
-                        <SortHeader label="Quality" sortKey="quality" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.quality} />
-                        <SortHeader label="Community" sortKey="community" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.community} />
-                        <SortHeader label="Monetize" sortKey="monetization" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.monetize} />
-                        <SortHeader label="Search" sortKey="search" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.search} />
-                        <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.ux} />
-                        <th className="text-center py-2 px-3 font-semibold text-foreground">Mobile</th>
-                        <th className="text-left py-2 px-3 font-semibold text-foreground">File Types</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAndSortedRepos.map((repo, index) => (
-                        <tr 
-                          key={index} 
-                          className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-                        >
-                          <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              {repoLogos[repo.name] && (
-                                <img 
-                                  src={repoLogos[repo.name]} 
-                                  alt={`${repo.name} logo`}
-                                  className="w-5 h-5 rounded object-contain"
-                                />
-                              )}
-                              {repo.name}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3 bg-amber-500/3">
-                            {(() => {
-                              const standout = getStandoutByName(repo.name);
-                              return standout ? (
-                                <StandoutBadge standout={standout} variant="compact" />
-                              ) : (
-                                <span className="text-amber-400 text-xs">{repo.standout}</span>
-                              );
-                            })()}
-                          </td>
-                          <td className="py-2 px-3">
-                            <Badge 
-                              variant="outline" 
-                              className={
-                                repo.model === "Loss-Leader" || repo.model === "Ad-Supported" || repo.model === "Lead Gen"
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-                                  : repo.model === "Hybrid" || repo.model === "Search + Sub"
-                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                                  : "bg-purple-500/10 text-purple-400 border-purple-500/30"
-                              }
-                            >
-                              {repo.model}
-                            </Badge>
-                          </td>
-                          <td className="py-2 px-3 text-center"><BoolBadge value={repo.free} /></td>
-                          <td className="py-2 px-3 text-center"><BoolBadge value={repo.paid} /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.quality)} size="small" showTooltip tooltipContent={metricTooltips.quality} /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.community)} size="small" showTooltip tooltipContent={metricTooltips.community} /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.monetization)} size="small" showTooltip tooltipContent={metricTooltips.monetize} /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.search)} size="small" showTooltip tooltipContent={metricTooltips.search} /></td>
-                          <td className="py-2 px-3"><RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" showTooltip tooltipContent={metricTooltips.ux} /></td>
-                          <td className="py-2 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
-                          <td className="py-2 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Mobile Dropdown */}
+              <div className="sm:hidden py-3">
+                <div className="relative">
+                  <select
+                    value={activeTab}
+                    onChange={(e) => handleTabChange(e.target.value as ReposTab)}
+                    className="w-full appearance-none bg-card border border-border rounded-lg px-4 py-3 pr-10 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    {tabs.map((tab) => (
+                      <option key={tab.id} value={tab.id}>
+                        {tab.label} {tab.count ? `(${tab.count})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 </div>
               </div>
-            </CollapsibleContent>
+            </div>
           </div>
-        </Collapsible>
-        </div>
 
-        {/* Repository List - Progressive Disclosure Cards - Desktop Only */}
-        <div className="hidden md:block space-y-3">
-          {repoData.map((repo, index) => (
-            <ExpandedPlatformCard
-              key={repo.id}
-              repo={repo}
-              rank={index + 1}
-              logo={repoLogos[repo.name]}
-              comparisonData={repoComparison.find(r => r.name === repo.name)}
-            />
-          ))}
-        </div>
+          {/* Tab Content */}
+          <div id="repos-content-section" className="py-8">
+            {/* Recommendations Tab */}
+            {activeTab === "recommendations" && (
+              <div key="recommendations" className="animate-fade-in">
+                {/* Platform Filter Bar - Desktop Only */}
+                <div className="hidden md:block mb-6">
+                  <PlatformFilterBar />
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden md:block">
+                  {/* Staff Picks */}
+                  <StaffPicksSection />
+
+                  {/* Specialized Options */}
+                  <SpecializedSection />
+
+                  {/* Empty State */}
+                  <NoResultsEmpty />
+                </div>
+
+                {/* Mobile View */}
+                <MobileComparisonView platforms={mobilePlatforms} />
+              </div>
+            )}
+
+            {/* Full Comparison Tab */}
+            {activeTab === "comparison" && (
+              <div key="comparison" className="animate-fade-in">
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <ReposComparisonTable data={repoComparison} logos={repoLogos} />
+                </div>
+
+                {/* Mobile View */}
+                <div className="md:hidden">
+                  <MobileComparisonView platforms={mobilePlatforms} />
+                </div>
+              </div>
+            )}
+
+            {/* Platform Profiles Tab */}
+            {activeTab === "profiles" && (
+              <div key="profiles" className="animate-fade-in">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-foreground mb-2">Detailed Platform Profiles</h2>
+                  <p className="text-sm text-muted-foreground">
+                    In-depth analysis of each platform's strengths, weaknesses, and best use cases
+                  </p>
+                </div>
+
+                <ReposProfileAccordion
+                  platforms={repoData}
+                  logos={repoLogos}
+                  comparisonData={comparisonDataMap}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </FilterProvider>
