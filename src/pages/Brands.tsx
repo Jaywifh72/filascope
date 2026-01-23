@@ -2,11 +2,12 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Package, BadgeCheck, Zap, Radio, Info, Search, Star, Clock, CheckCircle2, Store } from "lucide-react";
+import { Package, BadgeCheck, Zap, Radio, Info, Store } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import BrandsHeroSection from "@/components/BrandsHeroSection";
+import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -311,171 +312,107 @@ const Brands = () => {
   const totalProducts = brands?.reduce((sum, b) => sum + b.count, 0) || 0;
   const brandCount = automatedBrands?.length || 0;
 
+  const handleOpenQuiz = () => {
+    toast.info("Brand Quiz coming soon!", {
+      description: "We're building a personalized brand matching experience."
+    });
+  };
+
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Filament Brands</h1>
-          <p className="text-muted-foreground mb-4">
-            Browse {brands?.length || 0} filament brands with live price tracking
-          </p>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <BrandsHeroSection
+        searchTerm={searchQuery}
+        onSearchChange={setSearchQuery}
+        brandCount={brandCount}
+        productCount={totalProducts}
+        onOpenQuiz={handleOpenQuiz}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {/* Platform Filter Tabs */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Button
+            variant={selectedPlatform === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedPlatform(null)}
+          >
+            All ({mergedBrands.length})
+          </Button>
+          {platforms.map((platform) => (
+            <Button
+              key={platform}
+              variant={selectedPlatform === platform ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedPlatform(platform)}
+              className="capitalize"
+            >
+              {platform} ({platformCounts[platform]})
+            </Button>
+          ))}
         </div>
 
-        {/* Featured Brands Section */}
-        {featuredBrands.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-              <h2 className="text-xl font-semibold">Featured Brands</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {featuredBrands.map((brand) => {
-                const logoUrl = getBrandLogo(brand.name);
-                const syncStatus = getSyncStatus(brand.automated?.last_scrape_at || null);
-                
-                return (
-                  <div
-                    key={brand.name}
-                    className="relative bg-card border border-primary/30 rounded-lg p-4 hover:border-primary transition-all cursor-pointer group"
-                    style={{ 
-                      borderTopColor: brand.automated?.color_primary || undefined,
-                      borderTopWidth: brand.automated?.color_primary ? "3px" : undefined 
-                    }}
-                    onClick={() => navigate(`/brands/${encodeURIComponent(brand.name)}`)}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 flex items-center justify-center bg-background rounded-lg p-2">
-                        {logoUrl ? (
-                          <img src={logoUrl} alt={brand.name} className="max-h-full max-w-full object-contain" />
-                        ) : (
-                          <Package className="w-6 h-6 text-primary" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-                          {brand.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground font-mono">{brand.count} filaments</p>
-                      </div>
-                    </div>
-                    {brand.automated?.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                        {brand.automated.description}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className={`text-xs ${getPlatformColor(brand.automated?.platform_type || "other")}`}>
-                        {brand.automated?.platform_type || "manual"}
-                      </Badge>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <div className={`w-2 h-2 rounded-full ${syncStatus.color}`} />
-                        <span>{formatLastScrape(brand.automated?.last_scrape_at || null)}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Legend */}
+        <div className="mb-6 flex flex-wrap items-center gap-4 p-3 bg-card border border-border rounded-lg">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Info className="w-3.5 h-3.5" />
+            <span className="font-mono">LEGEND:</span>
           </div>
-        )}
-
-        {/* Search and Platform Filter */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search brands..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={selectedPlatform === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedPlatform(null)}
-              >
-                All ({mergedBrands.length})
-              </Button>
-              {platforms.map((platform) => (
-                <Button
-                  key={platform}
-                  variant={selectedPlatform === platform ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedPlatform(platform)}
-                  className="capitalize"
-                >
-                  {platform} ({platformCounts[platform]})
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="flex flex-wrap items-center gap-4 p-3 bg-card border border-border rounded-lg">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Info className="w-3.5 h-3.5" />
-              <span className="font-mono">LEGEND:</span>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-help">
-                  <PlasticSpoolIcon className="w-3.5 h-3.5" />
-                  Plastic
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
-                <p className="font-mono text-xs">Standard plastic spools. Durable and reusable, but not eco-friendly.</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help">
-                  <CardboardSpoolIcon className="w-3.5 h-3.5" />
-                  Cardboard
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
-                <p className="font-mono text-xs">Eco-friendly cardboard spools. Recyclable but may absorb moisture - store in dry conditions.</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30 cursor-help">
-                  <Zap className="w-3.5 h-3.5" />
-                  High Speed
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
-                <p className="font-mono text-xs">Optimized for high-speed printing (300+ mm/s). Enhanced flow and cooling properties.</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30 cursor-help">
-                  <Radio className="w-3.5 h-3.5" />
-                  RFID/NFC
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
-                <p className="font-mono text-xs">Spools with RFID/NFC chips for automatic material detection. Distance shows read range in meters.</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30 cursor-help">
-                  <BadgeCheck className="w-3.5 h-3.5" />
-                  Verified
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
-                <p className="font-mono text-xs">Lab-tested brand with verified specifications and quality control.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-help">
+                <PlasticSpoolIcon className="w-3.5 h-3.5" />
+                Plastic
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-mono text-xs">Standard plastic spools. Durable and reusable, but not eco-friendly.</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help">
+                <CardboardSpoolIcon className="w-3.5 h-3.5" />
+                Cardboard
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-mono text-xs">Eco-friendly cardboard spools. Recyclable but may absorb moisture - store in dry conditions.</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30 cursor-help">
+                <Zap className="w-3.5 h-3.5" />
+                High Speed
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-mono text-xs">Optimized for high-speed printing (300+ mm/s). Enhanced flow and cooling properties.</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30 cursor-help">
+                <Radio className="w-3.5 h-3.5" />
+                RFID/NFC
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-mono text-xs">Spools with RFID/NFC chips for automatic material detection. Distance shows read range in meters.</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30 cursor-help">
+                <BadgeCheck className="w-3.5 h-3.5" />
+                Verified
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p className="font-mono text-xs">Lab-tested brand with verified specifications and quality control.</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Brands Grid */}
