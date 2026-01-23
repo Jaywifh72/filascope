@@ -13,19 +13,16 @@ export default function MoreToolsSection({ tools }: MoreToolsSectionProps) {
   return (
     <section className="mb-12" aria-labelledby="more-tools-heading">
       {/* Section Header */}
-      <div className="flex items-start gap-4 mb-6">
-        <span className="text-[28px]" aria-hidden="true">🔧</span>
-        <div>
-          <h2 
-            id="more-tools-heading" 
-            className="text-2xl font-bold text-foreground mb-1.5"
-          >
-            More Specialty Tools
-          </h2>
-          <p className="text-sm font-medium text-muted-foreground">
-            Additional utilities for specific workflows
-          </p>
-        </div>
+      <div className="mb-6">
+        <h2 
+          id="more-tools-heading" 
+          className="text-2xl font-bold text-foreground mb-1.5"
+        >
+          More Specialty Tools
+        </h2>
+        <p className="text-sm font-medium text-muted-foreground">
+          Additional utilities for specific workflows
+        </p>
       </div>
 
       {/* Compact Grid - 4 columns on wide, 3 on desktop, 2 on tablet, 1 on mobile */}
