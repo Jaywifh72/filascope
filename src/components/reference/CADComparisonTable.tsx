@@ -372,7 +372,8 @@ export function CADComparisonTable({ onViewDetails, isDetailedView }: CADCompari
               <tr 
                 key={sw.name} 
                 className={cn(
-                  "border-b border-border/50 transition-colors",
+                  "border-b border-border/50 transition-all duration-200",
+                  "hover:bg-gray-800/50 hover:shadow-sm",
                   index % 2 === 0 ? "bg-transparent" : "bg-gray-900/20"
                 )}
               >
