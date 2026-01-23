@@ -60,9 +60,9 @@ function ProfilesContent({ expandedIds, onToggle }: { expandedIds: string[]; onT
     <div className="flex gap-8">
       <SpecialtyFilterSidebar />
       <div className="flex-1 min-w-0">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Tool Profiles</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white">Tool Profiles</h2>
+          <p className="text-sm text-gray-400 mt-1">
             Detailed information about each specialty tool
           </p>
         </div>

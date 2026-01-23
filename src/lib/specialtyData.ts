@@ -680,20 +680,20 @@ export const pricingLabels: Record<SpecialtyTool['pricingModel'], string> = {
 
 // Category colors for visual styling
 export const categoryColors: Record<SpecialtyTool['category'], string> = {
-  'ai-generation': 'hsl(var(--chart-1))',
-  'filament-art': 'hsl(var(--chart-2))',
-  'farm-management': 'hsl(var(--chart-3))',
-  'calibration': 'hsl(var(--primary))',
-  'cad': 'hsl(var(--chart-4))',
-  'repository': 'hsl(var(--chart-5))',
-  'remote-control': 'hsl(var(--warning))',
-  'mesh-tools': 'hsl(var(--muted-foreground))'
+  'ai-generation': '#A855F7',      // Purple/violet for AI
+  'filament-art': '#EC4899',       // Pink/magenta for art
+  'farm-management': '#3B82F6',    // Blue for farm
+  'calibration': '#F59E0B',        // Orange/amber for calibration
+  'cad': '#06B6D4',                // Cyan for CAD
+  'repository': '#8B5CF6',         // Violet for repos
+  'remote-control': '#22C55E',     // Green for remote
+  'mesh-tools': '#6B7280'          // Gray for mesh tools
 };
 
 // Pricing colors
 export const pricingColors: Record<SpecialtyTool['pricingModel'], string> = {
-  'free': 'hsl(142 76% 36%)',
-  'freemium': 'hsl(var(--warning))',
-  'one-time': 'hsl(var(--chart-4))',
-  'subscription': 'hsl(var(--chart-1))'
+  'free': '#22C55E',               // Green
+  'freemium': '#3B82F6',           // Blue
+  'one-time': '#A855F7',           // Purple
+  'subscription': '#F59E0B'        // Orange
 };

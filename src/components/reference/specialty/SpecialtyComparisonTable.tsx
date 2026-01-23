@@ -159,10 +159,10 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
   return (
     <div id="specialty-comparison-section">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Full Comparison</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h2 className="text-2xl font-bold text-white">Full Comparison</h2>
+          <p className="text-sm text-gray-400 mt-1">
             Compare all {totalCount} tools across rating categories
           </p>
         </div>

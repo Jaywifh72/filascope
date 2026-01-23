@@ -41,8 +41,8 @@ export default function FeaturedToolCard({ tool, index = 0 }: FeaturedToolCardPr
         "group relative flex flex-col p-6 rounded-2xl",
         "bg-card/50 border border-border/50",
         "transition-all duration-300 ease-out",
-        "hover:bg-card/80 hover:border-primary/30 hover:-translate-y-1",
-        "hover:shadow-xl hover:shadow-primary/5",
+        "hover:scale-[1.02] hover:border-primary/50",
+        "hover:shadow-lg hover:shadow-primary/10",
         "animate-fade-in"
       )}
       style={{ animationDelay: `${index * 100}ms` }}
@@ -52,7 +52,7 @@ export default function FeaturedToolCard({ tool, index = 0 }: FeaturedToolCardPr
       <div 
         className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
-          background: `radial-gradient(ellipse at top right, ${categoryColors[tool.category]}15 0%, transparent 70%)`
+          background: `radial-gradient(ellipse at top right, ${categoryColors[tool.category]}20 0%, transparent 70%)`
         }}
       />
 
@@ -62,7 +62,7 @@ export default function FeaturedToolCard({ tool, index = 0 }: FeaturedToolCardPr
           {getCategoryIcon()}
         </span>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-bold text-foreground mb-2 truncate">
+          <h3 className="text-lg font-semibold text-foreground mb-2 truncate">
             {tool.name}
           </h3>
           <div className="flex flex-wrap gap-2">
