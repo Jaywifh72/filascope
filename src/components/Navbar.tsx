@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, User, GitCompareArrows } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, User, GitCompareArrows, Menu, X, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -22,6 +21,7 @@ const Navbar = () => {
   const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Trending panel state
   const trendingPanel = useTrendingPanel();
@@ -34,6 +34,11 @@ const Navbar = () => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!user) {
@@ -72,16 +77,19 @@ const Navbar = () => {
   const LabNavLink = ({
     to,
     children,
-    end = false
+    end = false,
+    onClick
   }: {
     to: string;
     children: React.ReactNode;
     end?: boolean;
+    onClick?: () => void;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
     return (
       <Link 
         to={to} 
+        onClick={onClick}
         className={cn(
           "relative py-3 px-3 transition-colors duration-200",
           "text-xs font-bold uppercase tracking-widest",
@@ -98,6 +106,47 @@ const Navbar = () => {
     );
   };
 
+  // Mobile nav link component
+  const MobileNavLink = ({
+    to,
+    children,
+    icon: Icon,
+    end = false
+  }: {
+    to: string;
+    children: React.ReactNode;
+    icon?: React.ComponentType<{ className?: string }>;
+    end?: boolean;
+  }) => {
+    const active = end ? location.pathname === to : location.pathname.startsWith(to);
+    return (
+      <Link 
+        to={to} 
+        onClick={() => setMobileMenuOpen(false)}
+        className={cn(
+          "flex items-center gap-3 px-4 py-3 transition-colors duration-200",
+          "text-sm font-medium",
+          "hover:bg-gray-800/50",
+          active ? "text-primary bg-primary/10" : "text-gray-300"
+        )}
+      >
+        {Icon && <Icon className="w-4 h-4" />}
+        {children}
+      </Link>
+    );
+  };
+
+  // Resources menu items (shared between desktop and mobile)
+  const resourcesItems = [
+    { to: '/accessories', label: 'Accessories', icon: Puzzle },
+    { to: '/reference/slicers', label: 'Slicers', icon: Scissors },
+    { to: '/reference/cad', label: '3D Modeling / CAD', icon: Box },
+    { to: '/reference/repos', label: '3D Print Repos', icon: FolderGit2 },
+    { to: '/reference/influencers', label: 'YouTube Influencers', icon: Youtube },
+    { to: '/reference/specialty', label: 'Specialty Tools', icon: Sparkles },
+    { to: '/wizard', label: 'Material Wizard', icon: Wand2 },
+  ];
+
   return (
     <>
       <nav 
@@ -113,20 +162,33 @@ const Navbar = () => {
           className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent"
         />
         
-        <div className="h-16 flex items-center px-6 gap-6">
+        <div className="h-16 flex items-center px-4 md:px-6 gap-4 md:gap-6">
+          {/* Mobile hamburger button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
+          </button>
+
           {/* Logo - Only icon and wordmark */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             <img 
               src={filascopeLogo} 
               alt="FilaScope" 
-              className="h-9 w-auto object-contain"
+              className="h-8 md:h-9 w-auto object-contain"
             />
-            <span className="text-base font-bold tracking-widest text-foreground">
+            <span className="text-sm md:text-base font-bold tracking-widest text-foreground">
               FILASCOPE
             </span>
           </Link>
 
-          {/* Navigation Links */}
+          {/* Desktop Navigation Links (lg and up) */}
           <nav className="hidden lg:flex items-center flex-1 justify-center gap-6">
             <LabNavLink to="/" end>Materials</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
@@ -219,8 +281,62 @@ const Navbar = () => {
             </button>
           </nav>
 
+          {/* Tablet Navigation (md to lg) */}
+          <nav className="hidden md:flex lg:hidden items-center flex-1 justify-center gap-4">
+            <LabNavLink to="/" end>Materials</LabNavLink>
+            <LabNavLink to="/printers">Printers</LabNavLink>
+            <LabNavLink to="/brands">Brands</LabNavLink>
+            
+            {/* More Dropdown (Resources collapsed) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className={cn(
+                    "relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200",
+                    "text-xs font-bold uppercase tracking-widest",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "hover:text-white",
+                    isResourcesActive ? 'text-primary' : 'text-gray-400'
+                  )}
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                  More
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="center" 
+                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2"
+              >
+                {resourcesItems.map((item) => (
+                  <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+                    <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                      <item.icon className="w-4 h-4 text-muted-foreground" />
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Compare Button - Tablet */}
+            <button
+              onClick={() => navigate('/compare')}
+              className={cn(
+                "border border-primary bg-transparent hover:bg-primary/10",
+                "rounded-lg px-3 py-1.5",
+                "text-xs font-bold uppercase tracking-widest",
+                "flex items-center gap-2",
+                "transition-all duration-200",
+                isActive('/compare') ? "bg-primary/10 text-primary" : "text-gray-400 hover:text-white"
+              )}
+            >
+              <GitCompareArrows className="w-3.5 h-3.5" />
+              Compare
+            </button>
+          </nav>
+
           {/* Right-side utilities */}
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-auto">
             <WishlistButton />
             <CurrencySelector />
             
@@ -301,6 +417,61 @@ const Navbar = () => {
                 </Avatar>
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Mobile Menu - Slide down animation */}
+        <div 
+          className={cn(
+            "md:hidden overflow-hidden transition-all duration-300 ease-out",
+            mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0"
+          )}
+          style={{
+            background: 'hsla(220, 20%, 4%, 0.98)',
+          }}
+        >
+          <div className="py-4 border-t border-border/30">
+            {/* Compare Button - Prominent at top */}
+            <div className="px-4 pb-4">
+              <button
+                onClick={() => {
+                  navigate('/compare');
+                  setMobileMenuOpen(false);
+                }}
+                className={cn(
+                  "w-full border border-primary bg-primary/10 hover:bg-primary/20",
+                  "rounded-lg px-4 py-3",
+                  "text-sm font-bold uppercase tracking-widest",
+                  "flex items-center justify-center gap-2",
+                  "transition-all duration-200",
+                  "text-primary"
+                )}
+              >
+                <GitCompareArrows className="w-4 h-4" />
+                Compare Filaments
+              </button>
+            </div>
+
+            <div className="border-t border-border/30" />
+
+            {/* Main nav links */}
+            <MobileNavLink to="/" end>Materials</MobileNavLink>
+            <MobileNavLink to="/printers">Printers</MobileNavLink>
+            <MobileNavLink to="/brands">Brands</MobileNavLink>
+
+            <div className="border-t border-border/30 my-2" />
+
+            {/* Resources Section */}
+            <div className="px-4 py-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                Resources
+              </span>
+            </div>
+            {resourcesItems.map((item) => (
+              <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
+                {item.label}
+              </MobileNavLink>
+            ))}
           </div>
         </div>
       </nav>
