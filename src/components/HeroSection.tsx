@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Sparkles, FlaskConical } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Search, Sparkles, FlaskConical, FlaskRound, Printer, Wand2, Tag, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
@@ -11,21 +11,87 @@ interface HeroSectionProps {
   compatibleCount: number;
 }
 
+const searchSuggestions = [
+  "Try 'PETG for outdoor use'",
+  "Try 'best budget PLA'",
+  "Try 'Bambu Lab filament'",
+  "Try 'carbon fiber PETG'",
+  "Try 'flexible TPU'",
+];
+
+const quickStartPaths = [
+  {
+    title: "Find Filament",
+    description: "Browse 2000+ materials",
+    icon: FlaskRound,
+    href: "/finder",
+    color: "primary",
+  },
+  {
+    title: "Compare Printers",
+    description: "Side-by-side specs",
+    icon: Printer,
+    href: "/printers",
+    color: "blue",
+  },
+  {
+    title: "Material Wizard",
+    description: "5 questions, perfect match",
+    icon: Wand2,
+    href: "/wizard",
+    color: "purple",
+  },
+  {
+    title: "Today's Deals",
+    description: "Best prices right now",
+    icon: Tag,
+    href: "/deals",
+    color: "green",
+  },
+];
+
 const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount }: HeroSectionProps) => {
   const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+
+  // Cycle through search suggestions
+  useEffect(() => {
+    if (isFocused || searchTerm) return; // Don't cycle when focused or has value
+    
+    const interval = setInterval(() => {
+      setCurrentSuggestionIndex((prev) => (prev + 1) % searchSuggestions.length);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [isFocused, searchTerm]);
+
+  const getColorClasses = (color: string) => {
+    switch (color) {
+      case 'primary':
+        return 'border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary';
+      case 'blue':
+        return 'border-blue-500/30 hover:border-blue-500/60 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400';
+      case 'purple':
+        return 'border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400';
+      case 'green':
+        return 'border-green-500/30 hover:border-green-500/60 bg-green-500/5 hover:bg-green-500/10 text-green-400';
+      default:
+        return 'border-gray-500/30 hover:border-gray-500/60 bg-gray-500/5 hover:bg-gray-500/10 text-gray-400';
+    }
+  };
 
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-10 pt-28 pb-12 md:pt-32 md:pb-16">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-10 pt-20 pb-8 md:pt-24 md:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left order-1">
             {/* Material Registry Badge */}
             <div 
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-6 animate-fade-in"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-5 animate-fade-in"
             >
               <FlaskConical className="h-3.5 w-3.5 text-primary" />
               <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-primary">
@@ -35,7 +101,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
 
             {/* Headline */}
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light tracking-[0.15em] leading-[1.1] mb-6 animate-fade-in uppercase"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-light tracking-[0.12em] leading-[1.1] mb-4 animate-fade-in uppercase"
             >
               <span className="text-foreground">Measure</span>
               <br />
@@ -44,62 +110,84 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               <span className="font-black italic text-primary">Print.</span>
             </h1>
             
-            {/* Sub-text */}
+            {/* Sub-text with stats */}
             <p 
-              className="text-base md:text-lg text-muted-foreground font-light leading-relaxed mb-10 max-w-[480px] animate-fade-in font-mono"
+              className="text-sm md:text-base text-muted-foreground font-light leading-relaxed mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s" }}
             >
               <span className="text-primary">{filamentCount.toLocaleString()}</span> materials indexed from{" "}
               <span className="text-primary">{brandCount}+</span> manufacturers. 
               Compare properties, specs, and pricing in one unified data hub.
             </p>
-            
-            {/* Buttons Row */}
+
+            {/* Social proof */}
             <div 
-              className="flex flex-col items-start gap-3 w-full sm:w-auto animate-fade-in"
-              style={{ animationDelay: "0.3s" }}
+              className="flex items-center gap-2 text-xs text-muted-foreground mb-6 animate-fade-in"
+              style={{ animationDelay: "0.2s" }}
             >
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-                {/* Primary Button - Material Wizard with Cyan Gradient and Pulse */}
-                <Button 
-                  size="lg"
-                  onClick={() => navigate("/wizard")}
-                  className="group relative h-14 px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
-                >
-                  {/* Subtle pulse ring */}
-                  <span className="absolute inset-0 rounded-xl animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] bg-primary/20" />
-                  <Sparkles className="relative mr-2 h-5 w-5 group-hover:animate-[spin_2s_ease-in-out]" />
-                  <span className="relative">Find Your Perfect Filament</span>
-                </Button>
-                
-                {/* Secondary - Search Input */}
-                <div 
-                  className={`relative transition-all duration-300 ${
-                    isFocused ? "scale-[1.01]" : ""
-                  }`}
-                >
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                  <input
-                    type="text"
-                    placeholder="Search materials..."
-                    value={searchTerm}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
-                      isFocused 
-                        ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
-                        : "border-white/10 hover:border-white/20"
-                    }`}
-                    aria-label="Search materials"
-                  />
-                </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-primary/70" />
+                <span>Trusted by <span className="text-foreground font-medium">10,000+</span> makers</span>
               </div>
-              
-              {/* Wizard subtitle */}
-              <p className="text-xs text-muted-foreground font-mono ml-1">
-                Answer 5 quick questions → Get personalized recommendations
-              </p>
+              <span className="text-gray-600">•</span>
+              <div className="flex items-center gap-1.5">
+                <RefreshCw className="h-3 w-3 text-primary/70" />
+                <span>Updated daily from <span className="text-foreground font-medium">15+</span> retailers</span>
+              </div>
+            </div>
+            
+            {/* Search Input - Larger and more prominent */}
+            <div 
+              className="w-full max-w-[500px] mb-6 animate-fade-in"
+              style={{ animationDelay: "0.25s" }}
+            >
+              <div 
+                className={`relative transition-all duration-300 ${
+                  isFocused ? "scale-[1.01]" : ""
+                }`}
+              >
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                <input
+                  type="text"
+                  placeholder={searchSuggestions[currentSuggestionIndex]}
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  className={`w-full h-14 pl-14 pr-6 text-base bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground/70 rounded-xl border transition-all duration-300 outline-none ${
+                    isFocused 
+                      ? "border-primary/60 shadow-[0_0_20px_rgba(0,207,232,0.3)]" 
+                      : "border-white/15 hover:border-white/25"
+                  }`}
+                  aria-label="Search materials"
+                />
+                {!searchTerm && !isFocused && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-mono uppercase tracking-wider">
+                    Quick Search
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Start Paths - 4 cards */}
+            <div 
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-[600px] animate-fade-in"
+              style={{ animationDelay: "0.35s" }}
+            >
+              {quickStartPaths.map((path) => {
+                const Icon = path.icon;
+                return (
+                  <Link
+                    key={path.title}
+                    to={path.href}
+                    className={`group flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${getColorClasses(path.color)}`}
+                  >
+                    <Icon className="h-6 w-6 mb-2 transition-transform group-hover:scale-110" />
+                    <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">{path.description}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
           
