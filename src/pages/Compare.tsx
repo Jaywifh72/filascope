@@ -380,7 +380,7 @@ const Compare = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="sm" asChild>
             <a href="/">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -390,10 +390,39 @@ const Compare = () => {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Compare</h1>
-          <p className="text-muted-foreground">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium mb-4">
+            <BookOpen className="w-4 h-4" />
+            <span>KNOWLEDGE BASE</span>
+          </div>
+          
+          {/* Title */}
+          <h1 className="text-4xl font-bold text-foreground mb-3">
+            Material <span className="text-primary">Knowledge Base</span>
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-muted-foreground text-lg mb-4">
             Explore material reference information or compare filaments side-by-side.
           </p>
+          
+          {/* Quick Stats */}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              45+ Material Types
+            </span>
+            <span className="text-border">•</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              12 Property Categories
+            </span>
+            <span className="text-border">•</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              Detailed Print Settings
+            </span>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
