@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layers } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import AccessoryCard from "@/components/AccessoryCard";
 
 interface AMS {
   id: string;
@@ -179,84 +179,32 @@ export default function AMSList() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {systems.map(ams => (
-                    <Link key={ams.id} to={`/ams/${ams.id}`}>
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                        <div className="flex">
-                          {/* Product Image - Left Side */}
-                          <div className="relative w-28 h-28 shrink-0 bg-muted/30">
-                            {ams.image_url ? (
-                              <img
-                                src={ams.image_url}
-                                alt={ams.name}
-                                className="w-full h-full object-contain p-2"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Layers className="h-10 w-10 text-muted-foreground/30" />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Card Content - Right Side */}
-                          <div className="flex-1 p-3 min-w-0 flex flex-col">
-                            {/* Header with Name and Price */}
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <h4 className="text-sm font-bold line-clamp-1">{ams.name}</h4>
-                                {ams.specs?.max_spools && (
-                                  <span className="text-xs text-muted-foreground">{ams.specs.max_spools} Spools</span>
-                                )}
-                              </div>
-                              {/* Price */}
-                              <div className="shrink-0 text-right">
-                                {ams.price && (
-                                  <div className="text-sm font-bold text-primary">
-                                    ${ams.price}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Quick Specs - Compact */}
-                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1.5">
-                              {ams.specs?.filament_types && (
-                                <div className="line-clamp-1">{ams.specs.filament_types}</div>
-                              )}
-                            </div>
-
-                            {/* Badges and Brand Logo Row */}
-                            <div className="flex items-end justify-between gap-2 mt-auto pt-1.5">
-                              <div className="flex flex-wrap gap-1">
-                                {ams.specs?.drying_capability && (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Drying</Badge>
-                                )}
-                                {ams.specs?.humidity_control && (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">Humidity</Badge>
-                                )}
-                                {ams.specs?.color_mixing && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Color Mix</Badge>
-                                )}
-                              </div>
-                              {/* Brand Logo - Bottom Right */}
-                              {brandLogo && (
-                                <div className="shrink-0 px-2 py-1.5 bg-muted/50 rounded border border-border/30">
-                                  <img 
-                                    src={brandLogo} 
-                                    alt={`${brand} logo`}
-                                    className="h-10 w-auto object-contain max-w-[120px]"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
-                  ))}
+                  {systems.map(ams => {
+                    const badges: { label: string }[] = [];
+                    if (ams.specs?.drying_capability) badges.push({ label: "Drying" });
+                    if (ams.specs?.humidity_control) badges.push({ label: "Humidity" });
+                    if (ams.specs?.color_mixing) badges.push({ label: "Color Mix" });
+                    
+                    return (
+                      <AccessoryCard
+                        key={ams.id}
+                        id={ams.id}
+                        name={ams.name}
+                        subtitle={ams.specs?.max_spools ? `${ams.specs.max_spools} Spools` : undefined}
+                        brand={ams.brand || "Unknown"}
+                        price={ams.price}
+                        imageUrl={ams.image_url}
+                        href={`/ams/${ams.id}`}
+                        type="ams_mmu"
+                        badges={badges}
+                        specs={
+                          ams.specs?.filament_types ? (
+                            <div className="line-clamp-1">{ams.specs.filament_types}</div>
+                          ) : null
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </div>
             );
