@@ -1,14 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Check, X, HelpCircle, Zap, Filter } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, Check, X, HelpCircle, ExternalLink, Plus, LayoutList, LayoutGrid } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
@@ -16,12 +9,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { RatingLevel, metricTooltips } from '@/lib/platformData';
-import { getStandoutByName } from '@/lib/standoutFeatures';
 import RatingValue from './shared/RatingValue';
 import RatingScaleLegend from './shared/RatingScaleLegend';
-import StandoutBadge from './shared/StandoutBadge';
+import { cn } from '@/lib/utils';
 
-interface RepoComparisonItem {
+export interface RepoComparisonItem {
   name: string;
   owner: string;
   model: string;
@@ -35,6 +27,9 @@ interface RepoComparisonItem {
   mobile: boolean;
   fileTypes: string;
   standout: string;
+  bestFor?: string;
+  websiteUrl?: string;
+  hasApi?: boolean;
 }
 
 interface ReposComparisonTableProps {
@@ -42,12 +37,8 @@ interface ReposComparisonTableProps {
   logos: Record<string, string>;
 }
 
-type SortKey = "name" | "owner" | "model" | "quality" | "community" | "monetization" | "search" | "ux";
+type SortKey = "name" | "quality" | "community" | "search" | "ux" | "price";
 type SortDir = "asc" | "desc";
-
-const modelOrder = { "Loss-Leader": 0, "Hybrid": 1, "Ad-Supported": 2, "Marketplace": 3, "Premium": 4, "Search + Sub": 5, "Mobile Sub": 6, "Lead Gen": 7 };
-const businessModels = ["All", "Loss-Leader", "Hybrid", "Ad-Supported", "Marketplace", "Premium", "Search + Sub", "Mobile Sub", "Lead Gen"];
-const fileFormats = ["All", "STL", "3MF", "OBJ", "G-code", "CAD/STEP"];
 
 const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 5) return 'excellent';
@@ -55,6 +46,22 @@ const mapNumberToSemantic = (num: number): RatingLevel => {
   if (num >= 3) return 'good';
   if (num >= 2) return 'average';
   return 'limited';
+};
+
+const getPriceType = (repo: RepoComparisonItem): string => {
+  if (repo.free && !repo.paid) return 'Free';
+  if (repo.free && repo.paid) return 'Freemium';
+  if (!repo.free && repo.paid) return 'Premium';
+  return 'Paid';
+};
+
+const getPriceBadgeColor = (priceType: string): string => {
+  switch (priceType) {
+    case 'Free': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+    case 'Freemium': return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+    case 'Premium': return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+    default: return 'bg-gray-500/10 text-gray-400 border-gray-500/30';
+  }
 };
 
 const BoolBadge = ({ value }: { value: boolean }) => {
@@ -110,11 +117,44 @@ const SortHeader: React.FC<SortHeaderProps> = ({
   );
 };
 
+interface ViewToggleProps {
+  isDetailed: boolean;
+  onToggle: (detailed: boolean) => void;
+}
+
+const ViewToggle: React.FC<ViewToggleProps> = ({ isDetailed, onToggle }) => (
+  <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
+    <button
+      onClick={() => onToggle(false)}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+        !isDetailed
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <LayoutList className="w-3.5 h-3.5" />
+      Simplified
+    </button>
+    <button
+      onClick={() => onToggle(true)}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+        isDetailed
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      )}
+    >
+      <LayoutGrid className="w-3.5 h-3.5" />
+      Detailed
+    </button>
+  </div>
+);
+
 const ReposComparisonTable: React.FC<ReposComparisonTableProps> = ({ data, logos }) => {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [modelFilter, setModelFilter] = useState<string>("All");
-  const [formatFilter, setFormatFilter] = useState<string>("All");
+  const [isDetailedView, setIsDetailedView] = useState(false);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -125,36 +165,23 @@ const ReposComparisonTable: React.FC<ReposComparisonTableProps> = ({ data, logos
     }
   };
 
-  const filteredAndSortedRepos = useMemo(() => {
+  const sortedRepos = useMemo(() => {
     let result = [...data];
-
-    if (modelFilter !== "All") {
-      result = result.filter(repo => repo.model === modelFilter);
-    }
-
-    if (formatFilter !== "All") {
-      result = result.filter(repo => {
-        const fileTypes = repo.fileTypes.toLowerCase();
-        switch (formatFilter) {
-          case "STL": return fileTypes.includes("stl");
-          case "3MF": return fileTypes.includes("3mf");
-          case "OBJ": return fileTypes.includes("obj");
-          case "G-code": return fileTypes.includes("g-code") || fileTypes.includes("gcode");
-          case "CAD/STEP": return fileTypes.includes("step") || fileTypes.includes("iges") || fileTypes.includes("cad") || fileTypes.includes("30+");
-          default: return true;
-        }
-      });
-    }
 
     if (!sortKey) return result;
 
     return result.sort((a, b) => {
-      let aVal: number | string = a[sortKey];
-      let bVal: number | string = b[sortKey];
+      let aVal: number | string;
+      let bVal: number | string;
 
-      if (sortKey === "model") {
-        aVal = modelOrder[a.model as keyof typeof modelOrder] ?? 99;
-        bVal = modelOrder[b.model as keyof typeof modelOrder] ?? 99;
+      if (sortKey === "price") {
+        // Sort by free first, then freemium, then premium
+        const priceOrder = { Free: 0, Freemium: 1, Premium: 2, Paid: 3 };
+        aVal = priceOrder[getPriceType(a) as keyof typeof priceOrder] ?? 99;
+        bVal = priceOrder[getPriceType(b) as keyof typeof priceOrder] ?? 99;
+      } else {
+        aVal = a[sortKey];
+        bVal = b[sortKey];
       }
 
       if (typeof aVal === "number" && typeof bVal === "number") {
@@ -165,78 +192,52 @@ const ReposComparisonTable: React.FC<ReposComparisonTableProps> = ({ data, logos
         ? String(aVal).localeCompare(String(bVal))
         : String(bVal).localeCompare(String(aVal));
     });
-  }, [data, sortKey, sortDir, modelFilter, formatFilter]);
+  }, [data, sortKey, sortDir]);
 
-  const clearFilters = () => {
-    setModelFilter("All");
-    setFormatFilter("All");
+  const handleVisitSite = (name: string) => {
+    const urls: Record<string, string> = {
+      "MakerWorld": "https://makerworld.com",
+      "Printables": "https://printables.com",
+      "Thingiverse": "https://thingiverse.com",
+      "Cults3D": "https://cults3d.com",
+      "MyMiniFactory": "https://myminifactory.com",
+      "Thangs": "https://thangs.com",
+      "Creality Cloud": "https://crealitycloud.com",
+      "GrabCAD": "https://grabcad.com",
+    };
+    window.open(urls[name] || '#', '_blank');
   };
 
-  const hasActiveFilters = modelFilter !== "All" || formatFilter !== "All";
-
-  const getModelColor = (model: string) => {
-    if (model === "Loss-Leader" || model === "Ad-Supported" || model === "Lead Gen") {
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-    }
-    if (model === "Hybrid" || model === "Search + Sub") {
-      return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-    }
-    return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+  const getBestFor = (name: string): string => {
+    const bestForMap: Record<string, string> = {
+      "MakerWorld": "Bambu Lab users",
+      "Printables": "Community & quality",
+      "Thingiverse": "Largest archive",
+      "Cults3D": "Designers selling",
+      "MyMiniFactory": "Premium quality",
+      "Thangs": "AI-powered search",
+      "Creality Cloud": "Mobile printing",
+      "GrabCAD": "Engineering CAD",
+    };
+    return bestForMap[name] || '';
   };
 
   return (
     <div className="border border-border rounded-xl bg-card/50 overflow-hidden">
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-border/50">
-        <h2 className="text-xl font-bold text-foreground mb-2">Full Comparison Matrix</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          All {data.length} platforms with detailed metrics and ratings
-        </p>
-
-        {/* Filter Controls */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Filters:</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-xl font-bold text-foreground mb-1">Full Comparison Matrix</h2>
+            <p className="text-sm text-muted-foreground">
+              All {data.length} platforms with detailed metrics and ratings
+            </p>
           </div>
-          <Select value={modelFilter} onValueChange={setModelFilter}>
-            <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border">
-              <SelectValue placeholder="Business Model" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border z-50">
-              {businessModels.map((model) => (
-                <SelectItem key={model} value={model} className="text-xs">
-                  {model === "All" ? "All Models" : model}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={formatFilter} onValueChange={setFormatFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs bg-background border-border">
-              <SelectValue placeholder="File Format" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border z-50">
-              {fileFormats.map((format) => (
-                <SelectItem key={format} value={format} className="text-xs">
-                  {format === "All" ? "All Formats" : format}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
-              Clear filters
-            </Button>
-          )}
-          <span className="text-xs text-muted-foreground ml-auto">
-            Showing {filteredAndSortedRepos.length} of {data.length} platforms
-          </span>
+          <ViewToggle isDetailed={isDetailedView} onToggle={setIsDetailedView} />
         </div>
 
         {/* Rating Legend */}
-        <div className="mt-4">
-          <RatingScaleLegend />
-        </div>
+        <RatingScaleLegend />
       </div>
 
       {/* Table */}
@@ -244,67 +245,98 @@ const ReposComparisonTable: React.FC<ReposComparisonTableProps> = ({ data, logos
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
+              <th className="py-3 px-3 font-semibold text-foreground text-center w-12">#</th>
               <SortHeader label="Platform" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <th className="text-left py-3 px-3 font-semibold text-amber-400 bg-amber-500/5">
-                <div className="flex items-center gap-1.5">
-                  <Zap size={14} />
-                  <span>Standout</span>
-                </div>
-              </th>
-              <SortHeader label="Model" sortKey="model" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-              <th className="text-center py-3 px-3 font-semibold text-foreground">Free</th>
-              <th className="text-center py-3 px-3 font-semibold text-foreground">Paid</th>
               <SortHeader label="Quality" sortKey="quality" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.quality} />
               <SortHeader label="Community" sortKey="community" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.community} />
               <SortHeader label="Search" sortKey="search" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.search} />
               <SortHeader label="UX" sortKey="ux" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center tooltip={metricTooltips.ux} />
-              <th className="text-center py-3 px-3 font-semibold text-foreground">Mobile</th>
-              <th className="text-left py-3 px-3 font-semibold text-foreground">Files</th>
+              <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+              <th className="py-3 px-3 font-semibold text-foreground text-left">Best For</th>
+              {isDetailedView && (
+                <>
+                  <th className="py-3 px-3 font-semibold text-foreground text-left">File Types</th>
+                  <th className="py-3 px-3 font-semibold text-foreground text-center">Mobile App</th>
+                  <th className="py-3 px-3 font-semibold text-foreground text-center">API Access</th>
+                </>
+              )}
+              <th className="py-3 px-3 font-semibold text-foreground text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedRepos.map((repo, index) => (
-              <tr
-                key={index}
-                className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-              >
-                <td className="py-3 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    {logos[repo.name] && (
-                      <img
-                        src={logos[repo.name]}
-                        alt={`${repo.name} logo`}
-                        className="w-5 h-5 rounded object-contain"
-                      />
-                    )}
-                    {repo.name}
-                  </div>
-                </td>
-                <td className="py-3 px-3 bg-amber-500/3">
-                  {(() => {
-                    const standout = getStandoutByName(repo.name);
-                    return standout ? (
-                      <StandoutBadge standout={standout} variant="compact" />
-                    ) : (
-                      <span className="text-amber-400 text-xs">{repo.standout}</span>
-                    );
-                  })()}
-                </td>
-                <td className="py-3 px-3">
-                  <Badge variant="outline" className={getModelColor(repo.model)}>
-                    {repo.model}
-                  </Badge>
-                </td>
-                <td className="py-3 px-3 text-center"><BoolBadge value={repo.free} /></td>
-                <td className="py-3 px-3 text-center"><BoolBadge value={repo.paid} /></td>
-                <td className="py-3 px-3"><RatingValue rating={mapNumberToSemantic(repo.quality)} size="small" showTooltip tooltipContent={metricTooltips.quality} /></td>
-                <td className="py-3 px-3"><RatingValue rating={mapNumberToSemantic(repo.community)} size="small" showTooltip tooltipContent={metricTooltips.community} /></td>
-                <td className="py-3 px-3"><RatingValue rating={mapNumberToSemantic(repo.search)} size="small" showTooltip tooltipContent={metricTooltips.search} /></td>
-                <td className="py-3 px-3"><RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" showTooltip tooltipContent={metricTooltips.ux} /></td>
-                <td className="py-3 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
-                <td className="py-3 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
-              </tr>
-            ))}
+            {sortedRepos.map((repo, index) => {
+              const priceType = getPriceType(repo);
+              return (
+                <tr
+                  key={repo.name}
+                  className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                >
+                  <td className="py-3 px-3 text-center text-muted-foreground font-medium">
+                    {index + 1}
+                  </td>
+                  <td className="py-3 px-3 font-medium text-foreground whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {logos[repo.name] && (
+                        <img
+                          src={logos[repo.name]}
+                          alt={`${repo.name} logo`}
+                          className="w-5 h-5 rounded object-contain"
+                        />
+                      )}
+                      {repo.name}
+                    </div>
+                  </td>
+                  <td className="py-3 px-3">
+                    <RatingValue rating={mapNumberToSemantic(repo.quality)} size="small" showTooltip tooltipContent={metricTooltips.quality} />
+                  </td>
+                  <td className="py-3 px-3">
+                    <RatingValue rating={mapNumberToSemantic(repo.community)} size="small" showTooltip tooltipContent={metricTooltips.community} />
+                  </td>
+                  <td className="py-3 px-3">
+                    <RatingValue rating={mapNumberToSemantic(repo.search)} size="small" showTooltip tooltipContent={metricTooltips.search} />
+                  </td>
+                  <td className="py-3 px-3">
+                    <RatingValue rating={mapNumberToSemantic(repo.ux)} size="small" showTooltip tooltipContent={metricTooltips.ux} />
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    <Badge variant="outline" className={cn("text-xs", getPriceBadgeColor(priceType))}>
+                      {priceType}
+                    </Badge>
+                  </td>
+                  <td className="py-3 px-3 text-muted-foreground text-sm">
+                    {getBestFor(repo.name)}
+                  </td>
+                  {isDetailedView && (
+                    <>
+                      <td className="py-3 px-3 text-muted-foreground text-xs">{repo.fileTypes}</td>
+                      <td className="py-3 px-3 text-center"><BoolBadge value={repo.mobile} /></td>
+                      <td className="py-3 px-3 text-center"><BoolBadge value={repo.hasApi ?? false} /></td>
+                    </>
+                  )}
+                  <td className="py-3 px-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2.5 text-xs gap-1.5"
+                        onClick={() => handleVisitSite(repo.name)}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Visit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary hover:bg-primary/10"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Compare
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
