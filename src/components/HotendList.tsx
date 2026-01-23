@@ -549,7 +549,7 @@ export default function HotendList() {
 
                 {/* Hotend Grid - Single column on mobile */}
                 {!isCollapsed && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 items-stretch">
                     {groupedByBrand[brand].map(group => {
                       const nozzle = group.primaryVariant;
                       const specs = nozzle.specs as Record<string, unknown> | null;

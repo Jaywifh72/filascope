@@ -246,7 +246,7 @@ export default function BuildPlateList() {
 
                 {/* Build plate grid - Single column on mobile */}
                 {!isCollapsed && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 items-stretch">
                     {plates.map((plate) => {
                       const specs = plate.specs as Record<string, unknown> | null;
                       const surface = specs?.surface as string | undefined;
