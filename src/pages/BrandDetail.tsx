@@ -9,7 +9,7 @@ import { ArrowLeft, ExternalLink, Filter, Palette, Loader2, CheckCircle2, Clock,
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { normalizeColorHex } from "@/lib/utils";
@@ -17,6 +17,9 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
 import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
 import { BrandHeroSection } from "@/components/brands/BrandHeroSection";
+import { BrandTabNav, BrandTabContent, type BrandTab } from "@/components/brands/tabs/BrandTabNav";
+import { BrandOverviewTab } from "@/components/brands/tabs/BrandOverviewTab";
+import { BrandAboutTab } from "@/components/brands/tabs/BrandAboutTab";
 
 // Platform color mapping
 const PLATFORM_COLORS: Record<string, string> = {
@@ -309,6 +312,7 @@ const BrandDetail = () => {
   const decodedBrand = brand ? decodeURIComponent(brand) : "";
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [isScrapingColors, setIsScrapingColors] = useState(false);
+  const [activeTab, setActiveTab] = useState<BrandTab>("overview");
   const { isAdmin } = useAuth();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
@@ -692,242 +696,269 @@ const BrandDetail = () => {
           </Card>
         )}
 
-        {/* Filaments Section */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 className="text-2xl font-bold">
-              {decodedBrand} Products ({groupedProducts.length} products, {totalVariants} variants)
-            </h2>
-            
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Admin: Scrape Colors Button */}
-              {isAdmin && hasColorScraper && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleScrapeColors}
-                  disabled={isScrapingColors}
-                  className="h-7 text-xs"
-                >
-                  {isScrapingColors ? (
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  ) : (
-                    <Palette className="w-3 h-3 mr-1" />
-                  )}
-                  Scrape Colors
-                </Button>
-              )}
+        {/* Tab Navigation */}
+        <BrandTabNav 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          productCount={groupedProducts.length}
+        />
 
-              {/* Material Filter */}
-              {availableMaterials.length > 1 && (
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-muted-foreground" />
-                  <div className="flex flex-wrap gap-1.5">
+        {/* Tab Content */}
+        <BrandTabContent activeTab={activeTab}>
+          {/* Overview Tab */}
+          {activeTab === "overview" && (
+            <BrandOverviewTab
+              brandName={decodedBrand}
+              brandLogo={brandLogo}
+              groupedProducts={groupedProducts}
+              availableMaterials={availableMaterials}
+              hasHighSpeedProducts={filaments?.some(f => f.high_speed_capable) ?? false}
+              hasEcoSpools={filaments?.some(f => f.spool_material === 'cardboard' || f.spool_material === 'mixed') ?? false}
+              hasRFID={filaments?.some(f => f.transmission_distance && f.transmission_distance > 0) ?? false}
+              onViewAllProducts={() => setActiveTab("products")}
+            />
+          )}
+
+          {/* Products Tab */}
+          {activeTab === "products" && (
+            <div className="space-y-6">
+              {/* Filter Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl font-semibold">
+                  All Products ({groupedProducts.length} products, {totalVariants} variants)
+                </h2>
+                
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Admin: Scrape Colors Button */}
+                  {isAdmin && hasColorScraper && (
                     <Button
-                      variant={selectedMaterial === null ? "default" : "outline"}
+                      variant="outline"
                       size="sm"
-                      onClick={() => setSelectedMaterial(null)}
+                      onClick={handleScrapeColors}
+                      disabled={isScrapingColors}
                       className="h-7 text-xs"
                     >
-                      All
+                      {isScrapingColors ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Palette className="w-3 h-3 mr-1" />
+                      )}
+                      Scrape Colors
                     </Button>
-                    {availableMaterials.map((material) => (
-                      <Button
-                        key={material}
-                        variant={selectedMaterial === material ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedMaterial(material)}
-                        className="h-7 text-xs"
-                      >
-                        {material}
-                      </Button>
-                    ))}
-                  </div>
+                  )}
+
+                  {/* Material Filter */}
+                  {availableMaterials.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex flex-wrap gap-1.5">
+                        <Button
+                          variant={selectedMaterial === null ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedMaterial(null)}
+                          className="h-7 text-xs"
+                        >
+                          All
+                        </Button>
+                        {availableMaterials.map((material) => (
+                          <Button
+                            key={material}
+                            variant={selectedMaterial === material ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setSelectedMaterial(material)}
+                            className="h-7 text-xs"
+                          >
+                            {material}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {selectedMaterial && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Showing {selectedMaterial} products</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedMaterial(null)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    Clear filter
+                  </Button>
                 </div>
               )}
-            </div>
-          </div>
-          
-          {selectedMaterial && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Showing {selectedMaterial} products</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedMaterial(null)}
-                className="h-6 px-2 text-xs"
-              >
-                Clear filter
-              </Button>
-            </div>
-          )}
-        </div>
 
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Loading filaments...
-          </div>
-        ) : groupedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groupedProducts.map((product) => (
-              <Card
-                key={product.baseName}
-                className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group"
-                onClick={() => navigate(`/filament/${product.variants[0].id}`)}
-              >
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {/* Product Image */}
-                    <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
-                      {product.representativeImage ? (
-                        <img
-                          src={product.representativeImage}
-                          alt={product.baseName}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <>
-                          {brandLogo && (
-                            <img
-                              src={brandLogo}
-                              alt={decodedBrand}
-                              className="max-w-[60%] max-h-[60%] object-contain opacity-20"
-                            />
-                          )}
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                              <span className="text-2xl font-bold text-primary">{product.material?.charAt(0) || '📦'}</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground font-medium">{product.material || 'Filament'}</div>
+              {/* Products Grid */}
+              {isLoading ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Loading filaments...
+                </div>
+              ) : groupedProducts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {groupedProducts.map((product) => (
+                    <Card
+                      key={product.baseName}
+                      className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer group"
+                      onClick={() => navigate(`/filament/${product.variants[0].id}`)}
+                    >
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          {/* Product Image */}
+                          <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center relative">
+                            {product.representativeImage ? (
+                              <img
+                                src={product.representativeImage}
+                                alt={product.baseName}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <>
+                                {brandLogo && (
+                                  <img
+                                    src={brandLogo}
+                                    alt={decodedBrand}
+                                    className="max-w-[60%] max-h-[60%] object-contain opacity-20"
+                                  />
+                                )}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+                                    <span className="text-2xl font-bold text-primary">{product.material?.charAt(0) || '📦'}</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground font-medium">{product.material || 'Filament'}</div>
+                                </div>
+                              </>
+                            )}
                           </div>
-                        </>
-                      )}
-                    </div>
 
-                      {/* Product Info */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-lg">{product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, '')}</h3>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {product.material && (
-                          <MaterialBadge material={product.material} variant="secondary" />
-                        )}
-                        <Badge variant="outline">{product.variants.length} color{product.variants.length !== 1 ? 's' : ''}</Badge>
-                      </div>
+                          {/* Product Info */}
+                          <div className="space-y-3">
+                            <h3 className="font-semibold text-lg">{product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, '')}</h3>
+                            
+                            {/* Material & Variants */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {product.material && (
+                                <MaterialBadge material={product.material} />
+                              )}
+                              {product.variants.length > 1 && (
+                                <Badge variant="outline" className="text-xs">
+                                  {product.variants.length} colors
+                                </Badge>
+                              )}
+                            </div>
 
-                      {/* Available Weights */}
-                      {(product as any).availableWeights && (product as any).availableWeights.size > 1 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className="text-xs text-muted-foreground">Sizes:</span>
-                          {Array.from((product as any).availableWeights as Set<number>)
-                            .sort((a, b) => a - b)
-                            .map((weight: number) => (
-                              <Badge key={weight} variant="secondary" className="text-xs px-1.5 py-0.5">
-                                {weight >= 1000 ? `${weight / 1000}kg` : `${weight}g`}
-                              </Badge>
-                            ))
-                          }
-                        </div>
-                      )}
+                            {/* Color Swatches */}
+                            {product.variants.length > 1 && (
+                              <div className="flex flex-wrap gap-1">
+                                {product.variants.slice(0, 10).map((variant, idx) => {
+                                  const colorHex = variant.color_hex ? normalizeColorHex(variant.color_hex) : null;
+                                  return colorHex ? (
+                                    <div
+                                      key={idx}
+                                      className="w-4 h-4 rounded-full border border-border"
+                                      style={{ backgroundColor: colorHex }}
+                                      title={variant.color_family || variant.product_title}
+                                    />
+                                  ) : null;
+                                })}
+                                {product.variants.length > 10 && (
+                                  <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-[8px] text-muted-foreground">
+                                    +{product.variants.length - 10}
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
-                      {/* Price Range */}
-                      {product.priceRange.min && (
-                        <div className="text-lg font-bold text-primary">
-                          {product.priceRange.min === product.priceRange.max 
-                            ? `${formatPrice(product.priceRange.min)}/kg`
-                            : `${formatPrice(product.priceRange.min)} - ${formatPrice(product.priceRange.max)}/kg`
-                          }
-                        </div>
-                      )}
+                            {/* Price Range */}
+                            {product.priceRange && product.priceRange.min !== null && (
+                              <div className="text-sm">
+                                {product.priceRange.min === product.priceRange.max ? (
+                                  <span className="font-semibold text-foreground">
+                                    {formatPrice(product.priceRange.min)}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    {formatPrice(product.priceRange.min!)} - {formatPrice(product.priceRange.max!)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
 
-                      {/* Color Variants */}
-                      {product.variants.length > 1 && (
-                        <div className="pt-2 border-t">
-                          <div className="text-xs text-muted-foreground mb-2">Available Colors:</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {product.variants.map((variant) => {
-                              const colorName = getColorFromTitle(variant.product_title, product.baseName) || variant.color_family;
-                              const hasColorHex = !!variant.color_hex;
-                              
-                              return (
-                                <button
-                                  key={variant.id}
+                            {/* View buttons for grouped products */}
+                            {product.variants.length > 1 && (
+                              <div className="pt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full text-xs"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/filament/${variant.id}`);
+                                    navigate(`/filament/${product.variants[0].id}`);
                                   }}
-                                  className="group/swatch relative"
-                                  title={colorName || variant.product_title}
                                 >
-                                  {hasColorHex ? (
-                                    <div 
-                                      className="w-7 h-7 rounded-full border-2 border-border hover:border-primary hover:scale-110 transition-all shadow-sm"
-                                      style={{ 
-                                        backgroundColor: normalizeColorHex(variant.color_hex),
-                                        boxShadow: normalizeColorHex(variant.color_hex).toUpperCase() === '#FFFFFF' 
-                                          ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' 
-                                          : undefined
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="px-2 py-1 text-xs rounded-md bg-muted hover:bg-primary/20 hover:text-primary transition-colors flex items-center gap-1">
-                                      <span className="w-3 h-3 rounded-full bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10 border border-border" />
-                                      {colorName || 'View'}
-                                    </div>
-                                  )}
-                                  {/* Tooltip on hover */}
-                                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover/swatch:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-border">
-                                    {colorName || variant.product_title}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                          {/* View Collection button for grouped products with category URL */}
-                          {product.categoryUrl && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full mt-2 text-xs"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(getRegionalUrl(product.categoryUrl, decodedBrand), '_blank');
-                              }}
-                            >
-                              <ExternalLink className="w-3 h-3 mr-1" />
-                              View Collection
-                            </Button>
-                          )}
-                        </div>
-                      )}
+                                  View Colors
+                                </Button>
+                                
+                                {/* View Collection button for grouped products with category URL */}
+                                {product.categoryUrl && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full mt-2 text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(getRegionalUrl(product.categoryUrl, decodedBrand), '_blank');
+                                    }}
+                                  >
+                                    <ExternalLink className="w-3 h-3 mr-1" />
+                                    View Collection
+                                  </Button>
+                                )}
+                              </div>
+                            )}
 
-                      {/* Single product - direct link */}
-                      {product.variants.length === 1 && (
-                        <Button 
-                          variant="outline" 
-                          className="w-full mt-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/filament/${product.variants[0].id}`);
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              No filaments found for {decodedBrand}
-            </CardContent>
-          </Card>
-        )}
+                            {/* Single product - direct link */}
+                            {product.variants.length === 1 && (
+                              <Button 
+                                variant="outline" 
+                                className="w-full mt-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/filament/${product.variants[0].id}`);
+                                }}
+                              >
+                                View Details
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center text-muted-foreground">
+                    No filaments found for {decodedBrand}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* About Tab */}
+          {activeTab === "about" && (
+            <BrandAboutTab
+              brandName={decodedBrand}
+              brandInfo={brandInfo}
+              productCount={groupedProducts.length}
+              materialsCount={availableMaterials.length}
+            />
+          )}
+        </BrandTabContent>
       </div>
     </div>
   );
