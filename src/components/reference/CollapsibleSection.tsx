@@ -28,23 +28,24 @@ export function CollapsibleSection({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div>
-          <h2 className="text-xl font-bold text-foreground max-md:text-lg">{title}</h2>
+          <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">{title}</h2>
           {subtitle && (
-            <p className="text-[15px] font-medium text-muted-foreground mt-1">{subtitle}</p>
+            <p className="text-gray-400">{subtitle}</p>
           )}
         </div>
 
         <button
           className={cn(
-            'bg-transparent border-none text-muted-foreground text-sm font-semibold',
-            'inline-flex items-center gap-2 transition-colors hover:text-primary'
+            'bg-transparent border-none text-sm font-medium',
+            'inline-flex items-center gap-2 transition-colors',
+            'text-primary hover:text-primary/80'
           )}
         >
           <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
           <ChevronDown 
             size={16} 
             className={cn(
-              'transition-transform duration-200',
+              'transition-transform duration-300',
               !isExpanded && '-rotate-90'
             )}
           />
