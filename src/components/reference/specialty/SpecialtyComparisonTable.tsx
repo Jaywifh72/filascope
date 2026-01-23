@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, X, Zap, ExternalLink, Info, Sparkles, Palette, Server, Ruler, Box, Database, Wifi, Wrench } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Zap, ExternalLink, Info, Sparkles, Palette, Server, Ruler, Box, Database, Wifi, Wrench, List, LayoutGrid } from "lucide-react";
 import { categoryLabels, pricingLabels, SpecialtyTool } from "@/lib/specialtyData";
 import { numericToRating, specialtyMetricTooltips } from "@/lib/platformData";
 import { useSpecialtyFilters } from "@/contexts/SpecialtyFilterContext";
@@ -23,8 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type SortField = 'name' | 'easeOfUse' | 'featureDepth' | 'valueForMoney' | 'communitySupport' | 'printFocus';
+type SortField = 'name' | 'category' | 'easeOfUse' | 'featureDepth' | 'valueForMoney' | 'communitySupport' | 'printFocus' | 'pricingModel';
 type SortDirection = 'asc' | 'desc';
+type ViewMode = 'simplified' | 'detailed';
 
 const getCategoryIcon = (category: SpecialtyTool['category']) => {
   switch (category) {
@@ -40,61 +41,48 @@ const getCategoryIcon = (category: SpecialtyTool['category']) => {
   }
 };
 
-interface MetricHeaderProps {
+const getPricingBadgeColor = (pricing: SpecialtyTool['pricingModel']) => {
+  switch (pricing) {
+    case 'free': return 'bg-green-500/20 text-green-400 border-green-500/30';
+    case 'freemium': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    case 'one-time': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+    case 'subscription': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+    default: return '';
+  }
+};
+
+interface SortableHeaderProps {
   label: string;
   field: SortField;
-  metricKey: string;
   currentSort: SortField;
   currentDirection: SortDirection;
   onSort: (field: SortField) => void;
+  tooltip?: string;
+  className?: string;
 }
 
-const MetricHeader = ({ label, field, metricKey, currentSort, currentDirection, onSort }: MetricHeaderProps) => (
+const SortableHeader = ({ label, field, currentSort, currentDirection, onSort, tooltip, className }: SortableHeaderProps) => (
   <TableHead 
-    className="cursor-pointer hover:bg-muted/50 transition-colors"
+    className={cn("cursor-pointer hover:bg-muted/50 transition-colors select-none", className)}
     onClick={() => onSort(field)}
   >
     <div className="flex items-center gap-1">
       <span>{label}</span>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Info className="h-3 w-3 text-muted-foreground hover:text-primary transition-colors" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <p className="text-xs">{specialtyMetricTooltips[metricKey]}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      {currentSort === field && (
-        currentDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+      {tooltip && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3 w-3 text-muted-foreground hover:text-primary transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="text-xs">{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
-    </div>
-  </TableHead>
-);
-
-const SortHeader = ({ 
-  label, 
-  field, 
-  currentSort, 
-  currentDirection, 
-  onSort 
-}: { 
-  label: string; 
-  field: SortField; 
-  currentSort: SortField; 
-  currentDirection: SortDirection;
-  onSort: (field: SortField) => void;
-}) => (
-  <TableHead 
-    className="cursor-pointer hover:bg-muted/50 transition-colors"
-    onClick={() => onSort(field)}
-  >
-    <div className="flex items-center gap-1">
-      {label}
-      {currentSort === field && (
-        currentDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-      )}
+      <span className={cn("ml-0.5 transition-opacity", currentSort === field ? "opacity-100" : "opacity-0")}>
+        {currentDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </span>
     </div>
   </TableHead>
 );
@@ -107,13 +95,14 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
   const { filteredTools, totalCount, hasActiveFilters, clearFilters } = useSpecialtyFilters();
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [viewMode, setViewMode] = useState<ViewMode>('simplified');
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection('desc'); // Default to desc for ratings (higher is better)
     }
   };
 
@@ -125,6 +114,15 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
       case 'name':
         aVal = a.name.toLowerCase();
         bVal = b.name.toLowerCase();
+        break;
+      case 'category':
+        aVal = categoryLabels[a.category];
+        bVal = categoryLabels[b.category];
+        break;
+      case 'pricingModel':
+        const pricingOrder = { free: 0, freemium: 1, 'one-time': 2, subscription: 3 };
+        aVal = pricingOrder[a.pricingModel];
+        bVal = pricingOrder[b.pricingModel];
         break;
       case 'easeOfUse':
         aVal = a.ratings.easeOfUse;
@@ -161,11 +159,11 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
   return (
     <div id="specialty-comparison-section">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Full Comparison</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Compare all {totalCount} tools across all rating categories
+            Compare all {totalCount} tools across rating categories
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -175,9 +173,34 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
               Clear filters
             </Button>
           )}
-          <span className="text-sm text-muted-foreground">
-            Showing {sortedTools.length} of {totalCount} tools
-          </span>
+          
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-gray-800 rounded-lg">
+            <button
+              onClick={() => setViewMode('simplified')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                viewMode === 'simplified' 
+                  ? "bg-primary text-primary-foreground" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <List className="h-3.5 w-3.5" />
+              Simplified
+            </button>
+            <button
+              onClick={() => setViewMode('detailed')}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                viewMode === 'detailed' 
+                  ? "bg-primary text-primary-foreground" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Detailed
+            </button>
+          </div>
         </div>
       </div>
 
@@ -190,23 +213,66 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
       <div className="overflow-x-auto rounded-lg border border-border/30">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">#</TableHead>
-              <SortHeader label="Tool" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-              <TableHead>Category</TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1.5 text-warning">
-                  <Zap className="h-4 w-4" />
-                  <span>Standout Feature</span>
-                </div>
-              </TableHead>
-              <TableHead>Pricing</TableHead>
-              <MetricHeader label="Ease of Use" field="easeOfUse" metricKey="easeOfUse" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-              <MetricHeader label="Features" field="featureDepth" metricKey="featureDepth" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-              <MetricHeader label="Value" field="valueForMoney" metricKey="valueForMoney" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-              <MetricHeader label="Community" field="communitySupport" metricKey="communitySupport" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-              <MetricHeader label="Print Focus" field="printFocus" metricKey="printFocus" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
-              <TableHead>Actions</TableHead>
+            <TableRow className="bg-gray-800/50">
+              <TableHead className="w-12 font-semibold">#</TableHead>
+              <SortableHeader label="Tool" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} className="min-w-[140px]" />
+              <SortableHeader label="Category" field="category" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+              <SortableHeader 
+                label="Ease of Use" 
+                field="easeOfUse" 
+                currentSort={sortField} 
+                currentDirection={sortDirection} 
+                onSort={handleSort}
+                tooltip={specialtyMetricTooltips.easeOfUse}
+              />
+              <SortableHeader 
+                label="Features" 
+                field="featureDepth" 
+                currentSort={sortField} 
+                currentDirection={sortDirection} 
+                onSort={handleSort}
+                tooltip={specialtyMetricTooltips.featureDepth}
+              />
+              <SortableHeader 
+                label="Value" 
+                field="valueForMoney" 
+                currentSort={sortField} 
+                currentDirection={sortDirection} 
+                onSort={handleSort}
+                tooltip={specialtyMetricTooltips.valueForMoney}
+              />
+              <SortableHeader label="Pricing" field="pricingModel" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+              <TableHead className="min-w-[160px]">Best For</TableHead>
+              
+              {/* Detailed view columns */}
+              {viewMode === 'detailed' && (
+                <>
+                  <SortableHeader 
+                    label="Community" 
+                    field="communitySupport" 
+                    currentSort={sortField} 
+                    currentDirection={sortDirection} 
+                    onSort={handleSort}
+                    tooltip={specialtyMetricTooltips.communitySupport}
+                  />
+                  <SortableHeader 
+                    label="Print Focus" 
+                    field="printFocus" 
+                    currentSort={sortField} 
+                    currentDirection={sortDirection} 
+                    onSort={handleSort}
+                    tooltip={specialtyMetricTooltips.printFocus}
+                  />
+                  <TableHead>
+                    <div className="flex items-center gap-1.5 text-warning">
+                      <Zap className="h-4 w-4" />
+                      <span>Standout</span>
+                    </div>
+                  </TableHead>
+                </>
+              )}
+              
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -222,35 +288,15 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
                   <div className="flex items-center gap-2">
                     {tool.name}
                     {tool.tier === 'featured' && (
-                      <span className="text-amber-400">⭐</span>
+                      <span className="text-amber-400 text-sm">⭐</span>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                  <Badge variant="secondary" className="flex items-center gap-1.5 w-fit text-xs">
                     {getCategoryIcon(tool.category)}
-                    {categoryLabels[tool.category]}
+                    <span className="hidden sm:inline">{categoryLabels[tool.category]}</span>
                   </Badge>
-                </TableCell>
-                <TableCell className="min-w-[180px] max-w-[240px]">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/30 cursor-help max-w-full">
-                          <Zap className="h-3 w-3 text-warning flex-shrink-0" />
-                          <span className="text-[11px] font-semibold text-warning truncate">
-                            {tool.standoutFeature.title}
-                          </span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p className="text-xs">{tool.standoutFeature.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{pricingLabels[tool.pricingModel]}</Badge>
                 </TableCell>
                 <TableCell>
                   <RatingValue rating={numericToRating(tool.ratings.easeOfUse)} size="small" />
@@ -262,35 +308,84 @@ export default function SpecialtyComparisonTable({ onLearnMore }: SpecialtyCompa
                   <RatingValue rating={numericToRating(tool.ratings.valueForMoney)} size="small" />
                 </TableCell>
                 <TableCell>
-                  <RatingValue rating={numericToRating(tool.ratings.communitySupport)} size="small" />
+                  <Badge className={cn("border text-xs font-medium", getPricingBadgeColor(tool.pricingModel))}>
+                    {pricingLabels[tool.pricingModel]}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  <RatingValue rating={numericToRating(tool.ratings.printFocus)} size="small" />
+                  <span className="text-xs text-muted-foreground line-clamp-2">
+                    {tool.bestFor.slice(0, 2).join(', ')}
+                  </span>
                 </TableCell>
+                
+                {/* Detailed view cells */}
+                {viewMode === 'detailed' && (
+                  <>
+                    <TableCell>
+                      <RatingValue rating={numericToRating(tool.ratings.communitySupport)} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      <RatingValue rating={numericToRating(tool.ratings.printFocus)} size="small" />
+                    </TableCell>
+                    <TableCell className="max-w-[200px]">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-warning/10 border border-warning/30 cursor-help">
+                              <Zap className="h-3 w-3 text-warning flex-shrink-0" />
+                              <span className="text-[11px] font-medium text-warning truncate max-w-[140px]">
+                                {tool.standoutFeature.title}
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-xs">{tool.standoutFeature.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                  </>
+                )}
+                
                 <TableCell>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-2">
                     {onLearnMore && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onLearnMore(tool.id)}
-                        className="text-xs font-medium text-primary hover:underline"
+                        className="h-7 px-2 text-xs text-primary hover:text-primary"
                       >
                         Learn More
-                      </button>
+                      </Button>
                     )}
-                    <a 
-                      href={tool.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-primary flex items-center gap-1"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="h-7 px-2 text-xs"
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
+                      <a 
+                        href={tool.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1"
+                      >
+                        Visit
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+      </div>
+      
+      {/* Results count */}
+      <div className="mt-4 text-sm text-muted-foreground text-right">
+        Showing {sortedTools.length} of {totalCount} tools
       </div>
     </div>
   );
