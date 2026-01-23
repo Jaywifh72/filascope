@@ -27,7 +27,7 @@ export function WishlistButton() {
       <Button
         variant="ghost"
         size="icon"
-        className="relative text-muted-foreground hover:text-foreground"
+        className="relative text-gray-400 hover:text-teal-400 transition-colors duration-200"
         onClick={() => navigate("/auth")}
       >
         <Heart className="h-5 w-5" />
@@ -41,15 +41,13 @@ export function WishlistButton() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-muted-foreground hover:text-foreground"
+          className="relative text-gray-400 hover:text-teal-400 transition-colors duration-200"
         >
           <Heart
-            className={`h-5 w-5 ${stats.totalItems > 0 ? "fill-red-500 text-red-500" : ""}`}
+            className={`h-5 w-5 ${stats.totalItems > 0 ? "fill-teal-500 text-teal-500" : ""}`}
           />
           {stats.totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
-              {stats.totalItems > 99 ? "99+" : stats.totalItems}
-            </span>
+            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-teal-500" />
           )}
         </Button>
       </PopoverTrigger>

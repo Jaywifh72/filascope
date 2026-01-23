@@ -14,9 +14,9 @@ export function CurrencySelector() {
 
   return (
     <Select value={currency} onValueChange={(value) => setCurrency(value as CurrencyCode)}>
-      <SelectTrigger className="w-auto h-9 px-2.5 gap-1 bg-transparent border-border/50 hover:border-border text-foreground">
+      <SelectTrigger className="w-auto h-9 px-2.5 gap-1 bg-transparent border-border/50 hover:border-border text-gray-400 hover:text-white transition-colors duration-200">
         <span className="font-medium text-sm">{currentCurrency.symbol}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        <ChevronDown className="w-3 h-3 text-muted-foreground" />
       </SelectTrigger>
       <SelectContent className="bg-popover border-border min-w-[120px]">
         {Object.values(CURRENCIES).map((curr) => (
