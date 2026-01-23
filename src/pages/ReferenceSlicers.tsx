@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight } from "lucide-react";
+import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Table, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { slicerData } from "@/lib/slicerData";
 import { getSlicersByTier, getSlicerTierInfo, SlicerTierInfo } from "@/lib/slicerTierData";
 import { 
@@ -23,7 +24,7 @@ import {
 import SlicerHeroSection from "@/components/reference/SlicerHeroSection";
 import { SlicerTopPickCard } from "@/components/reference/SlicerTopPickCard";
 import { SlicerPopularCard } from "@/components/reference/SlicerPopularCard";
-import { CollapsibleSection } from "@/components/reference/CollapsibleSection";
+
 import { SlicerSimplifiedTable } from "@/components/reference/SlicerSimplifiedTable";
 import { SlicerComparisonProvider } from "@/contexts/SlicerComparisonContext";
 import { ComparisonBuilderSidebar } from "@/components/reference/ComparisonBuilderSidebar";
@@ -142,7 +143,10 @@ const SortHeader = ({
   );
 };
 
+type SlicerTab = "recommendations" | "comparison" | "profiles";
+
 const ReferenceSlicers = () => {
+  const [activeTab, setActiveTab] = useState<SlicerTab>("recommendations");
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [priceFilter, setPriceFilter] = useState<string>("all");
@@ -286,18 +290,62 @@ const ReferenceSlicers = () => {
           onScrollToComparison={scrollToComparison}
         />
 
+        {/* Sticky Tab Navigation */}
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
+            <nav className="flex gap-1" role="tablist">
+              {[
+                { id: "recommendations" as SlicerTab, label: "Recommendations", icon: Star },
+                { id: "comparison" as SlicerTab, label: "Full Comparison", icon: Table },
+                { id: "profiles" as SlicerTab, label: "Detailed Profiles", icon: FileText, count: slicerData.length },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-4 text-sm font-medium transition-all relative",
+                    "border-b-2 -mb-[1px]",
+                    activeTab === tab.id
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                  )}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                  {tab.count && (
+                    <span className={cn(
+                      "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold",
+                      activeTab === tab.id
+                        ? "bg-primary/20 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
         {/* Main Content with 3-Column Layout */}
         <div className="max-w-[1600px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-8 lg:gap-10 items-start">
           
           {/* Left Sidebar: Filter Panel (Desktop) */}
-          <SlicerFilterPanel
-            filters={filters}
-            counts={filterCounts}
-            totalCount={allSlicers.length}
-            filteredCount={filteredSlicers.length}
-            onFilterChange={handleFilterChange}
-            onClearAll={handleClearAllFilters}
-          />
+          <aside className="hidden lg:block">
+            <div className="sticky top-[72px]">
+              <SlicerFilterPanel
+                filters={filters}
+                counts={filterCounts}
+                totalCount={allSlicers.length}
+                filteredCount={filteredSlicers.length}
+                onFilterChange={handleFilterChange}
+                onClearAll={handleClearAllFilters}
+              />
+            </div>
+          </aside>
 
           {/* Main Content */}
           <main>
@@ -317,392 +365,402 @@ const ReferenceSlicers = () => {
               onRemove={handleRemoveFilter}
             />
 
-            {/* OUR RECOMMENDATIONS - Combined Section */}
-            <section className="py-[60px] max-md:py-10">
-              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6">
-                <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Recommendations</h2>
-                <p className="text-gray-400 mb-6">
-                  Staff-curated recommendations based on use case and performance
-                </p>
-                
-                {/* Top 3 Featured Cards */}
-                {topPickSlicers.length > 0 ? (
-                  <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
-                    {topPickSlicers.slice(0, 3).map((slicer) => (
-                      <SlicerTopPickCard
-                        key={slicer.name}
-                        slicer={slicer}
-                        logo={slicerLogos[slicer.name]}
-                        onLearnMore={() => handleLearnMore(slicer.name)}
-                        onAddToCompare={() => handleAddToCompare(slicer.name)}
-                      />
-                    ))}
+            {/* RECOMMENDATIONS TAB */}
+            {activeTab === "recommendations" && (
+              <section className="py-8 animate-fade-in">
+                <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6">
+                  <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Recommendations</h2>
+                  <p className="text-gray-400 mb-6">
+                    Staff-curated recommendations based on use case and performance
+                  </p>
+                  
+                  {/* Top 3 Featured Cards */}
+                  {topPickSlicers.length > 0 ? (
+                    <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
+                      {topPickSlicers.slice(0, 3).map((slicer) => (
+                        <SlicerTopPickCard
+                          key={slicer.name}
+                          slicer={slicer}
+                          logo={slicerLogos[slicer.name]}
+                          onLearnMore={() => handleLearnMore(slicer.name)}
+                          onAddToCompare={() => handleAddToCompare(slicer.name)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No recommendations match your filters
+                    </div>
+                  )}
+
+                  {/* See More Recommendations - Expandable */}
+                  {popularSlicers.length > 0 && (
+                    <Accordion type="single" collapsible className="mt-6">
+                      <AccordionItem value="more-recommendations" className="border-none">
+                        <AccordionTrigger className="group hover:no-underline py-3 px-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-800 hover:border-gray-600 transition-all duration-200 [&>svg]:hidden data-[state=open]:rounded-b-none data-[state=open]:border-b-0">
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                                <Star className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="text-left">
+                                <span className="text-sm font-semibold text-white">See More Recommendations</span>
+                                <span className="text-xs text-gray-400 ml-2">
+                                  ({popularSlicers.length} additional slicers)
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-300" />
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 pb-4 px-4 bg-gray-800/30 border border-t-0 border-gray-700 rounded-b-lg">
+                          <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1 items-stretch">
+                            {popularSlicers.map((slicer) => (
+                              <SlicerPopularCard
+                                key={slicer.name}
+                                slicer={slicer}
+                                logo={slicerLogos[slicer.name]}
+                                onLearnMore={() => handleLearnMore(slicer.name)}
+                              />
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* FULL COMPARISON TAB */}
+            {activeTab === "comparison" && (
+              <section className="py-8 animate-fade-in">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Full Comparison Table</h2>
+                  <p className="text-gray-400">
+                    View all {filteredSlicers.length} slicers with detailed specifications
+                  </p>
+                </div>
+
+                {/* View Toggle */}
+                <div className="flex gap-3 mb-6">
+                  <button
+                    onClick={() => setShowDetailedTable(false)}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+                      !showDetailedTable 
+                        ? 'bg-primary/15 border-primary/50 text-primary' 
+                        : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30'
+                    }`}
+                  >
+                    Simplified View
+                  </button>
+                  <button
+                    onClick={() => setShowDetailedTable(true)}
+                    className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
+                      showDetailedTable 
+                        ? 'bg-primary/15 border-primary/50 text-primary' 
+                        : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30'
+                    }`}
+                  >
+                    Detailed View
+                  </button>
+                </div>
+
+                {showDetailedTable ? (
+                  /* Detailed Table (Original) */
+                  <div className="border border-border rounded-lg bg-card p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <BarChart3 className="w-6 h-6 text-emerald-400" />
+                      <h3 className="text-lg font-bold font-mono text-foreground">Comparative Features Matrix</h3>
+                    </div>
+                    {/* Filters */}
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Price:</span>
+                        <Select value={priceFilter} onValueChange={setPriceFilter}>
+                          <SelectTrigger className="w-32 bg-background">
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover">
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="Free">Free</SelectItem>
+                            <SelectItem value="Freemium">Freemium</SelectItem>
+                            <SelectItem value="Paid">Paid</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Focus:</span>
+                        <Select value={focusFilter} onValueChange={setFocusFilter}>
+                          <SelectTrigger className="w-32 bg-background">
+                            <SelectValue placeholder="All" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover">
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="FDM">FDM</SelectItem>
+                            <SelectItem value="SLA">SLA</SelectItem>
+                            <SelectItem value="Both">Both</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {hasFilters && (
+                        <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                          <X className="h-4 w-4 mr-1" />
+                          Clear filters
+                        </Button>
+                      )}
+                      <span className="text-sm text-muted-foreground ml-auto">
+                        Showing {filteredAndSortedSlicers.length} of {slicerComparison.length} slicers
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+                      <p className="text-muted-foreground text-sm">
+                        Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
+                      </p>
+                      <div className="flex items-center gap-4 text-xs">
+                        <span className="text-muted-foreground">Rating:</span>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                          <span className="text-muted-foreground">4-5 (Excellent)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-amber-400" />
+                          <span className="text-muted-foreground">3 (Average)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full bg-red-400" />
+                          <span className="text-muted-foreground">1-2 (Limited)</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/30">
+                            <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                            <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                            <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                            <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
+                            <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <th className="text-left py-2 px-3 font-semibold text-foreground">Connect</th>
+                            <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                            <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredAndSortedSlicers.map((slicer, index) => (
+                            <tr 
+                              key={index} 
+                              className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                            >
+                              <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  {slicerLogos[slicer.name] && (
+                                    <img 
+                                      src={slicerLogos[slicer.name]} 
+                                      alt={`${slicer.name} logo`}
+                                      className="w-5 h-5 rounded object-contain"
+                                    />
+                                  )}
+                                  {slicer.name}
+                                </div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <Badge 
+                                  variant="outline" 
+                                  className={
+                                    slicer.price === "Free" 
+                                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                                      : slicer.price === "Freemium"
+                                      ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                      : "bg-red-500/10 text-red-400 border-red-500/30"
+                                  }
+                                >
+                                  {slicer.price}
+                                </Badge>
+                              </td>
+                              <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
+                              <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.os}</td>
+                              <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
+                              <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
+                              <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
+                              <td className="py-2 px-3"><RatingDots rating={slicer.speed} /></td>
+                              <td className="py-2 px-3"><RatingDots rating={slicer.ui} /></td>
+                              <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.connectivity}</td>
+                              <td className="py-2 px-3 text-center"><StepBadge value={slicer.step} /></td>
+                              <td className="py-2 px-3"><RatingDots rating={slicer.multiMat} /></td>
+                              <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{slicer.standout}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    No recommendations match your filters
-                  </div>
+                  /* Simplified Table */
+                  otherSlicers.length > 0 ? (
+                    <SlicerSimplifiedTable
+                      slicers={otherSlicers}
+                      logos={slicerLogos}
+                      onViewDetails={handleLearnMore}
+                    />
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No slicers match your filters
+                    </div>
+                  )
                 )}
+              </section>
+            )}
 
-                {/* See More Recommendations - Expandable */}
-                {popularSlicers.length > 0 && (
-                  <Accordion type="single" collapsible className="mt-6">
-                    <AccordionItem value="more-recommendations" className="border-none">
-                      <AccordionTrigger className="group hover:no-underline py-3 px-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-800 hover:border-gray-600 transition-all duration-200 [&>svg]:hidden data-[state=open]:rounded-b-none data-[state=open]:border-b-0">
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                              <Star className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="text-left">
-                              <span className="text-sm font-semibold text-white">See More Recommendations</span>
-                              <span className="text-xs text-gray-400 ml-2">
-                                ({popularSlicers.length} additional slicers)
-                              </span>
-                            </div>
+            {/* DETAILED PROFILES TAB */}
+            {activeTab === "profiles" && (
+              <section className="py-8 animate-fade-in">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Detailed Slicer Profiles</h2>
+                  <p className="text-gray-400">In-depth analysis of each slicer's features and capabilities</p>
+                </div>
+                <Accordion type="single" collapsible className="space-y-2">
+                  {slicerData.map((slicer, index) => (
+                    <AccordionItem 
+                      key={slicer.id} 
+                      value={slicer.id}
+                      id={`slicer-${slicer.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                      className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 transition-all duration-200 hover:bg-gray-800 hover:border-gray-600 data-[state=open]:border-primary/50 data-[state=open]:bg-gray-800"
+                    >
+                      <AccordionTrigger className="hover:no-underline py-4 [&>svg]:text-gray-400 [&>svg]:transition-transform [&>svg]:duration-300 [&[data-state=open]>svg]:rotate-180">
+                        <div className="flex items-center gap-4 text-left">
+                          <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          {slicerLogos[slicer.name] ? (
+                            <img 
+                              src={slicerLogos[slicer.name]} 
+                              alt={`${slicer.name} logo`}
+                              className="w-10 h-10 rounded-lg object-contain bg-gray-900/50 p-1 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-primary/20 flex-shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <h3 className="text-base font-bold text-white">{slicer.name}</h3>
+                            <p className="text-sm text-gray-400 line-clamp-1 max-w-2xl">
+                              {slicer.summary.substring(0, 80)}...
+                            </p>
                           </div>
-                          <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-300" />
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pt-4 pb-4 px-4 bg-gray-800/30 border border-t-0 border-gray-700 rounded-b-lg">
-                        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1 items-stretch">
-                          {popularSlicers.map((slicer) => (
-                            <SlicerPopularCard
-                              key={slicer.name}
-                              slicer={slicer}
-                              logo={slicerLogos[slicer.name]}
-                              onLearnMore={() => handleLearnMore(slicer.name)}
-                            />
-                          ))}
+                      
+                      <AccordionContent className="pb-6">
+                        <div className="space-y-6 pt-2">
+                          {/* Summary */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-primary mb-2">Summary</h4>
+                            <p className="text-gray-300 leading-relaxed">{slicer.summary}</p>
+                          </div>
+
+                          {/* History */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              History
+                            </h4>
+                            <p className="text-gray-300 leading-relaxed">{slicer.history}</p>
+                          </div>
+
+                          {/* Key Strengths */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-amber-400 mb-3">Key Strengths</h4>
+                            <div className="grid gap-3 md:grid-cols-3">
+                              {slicer.keyStrengths.map((strength, idx) => (
+                                <div key={idx} className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                                  <h5 className="font-medium text-white mb-1">{strength.title}</h5>
+                                  <p className="text-sm text-gray-400">{strength.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Technical Specifications */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-primary mb-3">Technical Specifications</h4>
+                            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                  <DollarSign className="w-3 h-3" />
+                                  Price
+                                </div>
+                                <p className="text-sm text-white">{slicer.technicalSpecs.price}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                  <Monitor className="w-3 h-3" />
+                                  Supported OS
+                                </div>
+                                <p className="text-sm text-white">{slicer.technicalSpecs.supportedOS}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                  <FileCode className="w-3 h-3" />
+                                  File Support
+                                </div>
+                                <p className="text-sm text-white">{slicer.technicalSpecs.fileSupport}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                  <Wifi className="w-3 h-3" />
+                                  Connectivity
+                                </div>
+                                <p className="text-sm text-white">{slicer.technicalSpecs.connectivity}</p>
+                              </div>
+                            </div>
+                            {slicer.technicalSpecs.status && (
+                              <div className="mt-3">
+                                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
+                                  {slicer.technicalSpecs.status}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Links */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-purple-400 mb-3">Important Links</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {slicer.links.map((link, idx) => (
+                                <Button
+                                  key={idx}
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                  className="gap-2 border-gray-600 hover:border-primary hover:text-primary"
+                                >
+                                  <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                    {link.label}
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                  </Accordion>
-                )}
-              </div>
-            </section>
-
-            {/* TIER 3: Full Comparison Table */}
-            <CollapsibleSection
-              id="comparison-table"
-              title="Full Comparison Table"
-              subtitle={`View all ${filteredSlicers.length} slicers with detailed specifications`}
-              defaultExpanded={false}
-            >
-              {/* View Toggle */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  onClick={() => setShowDetailedTable(false)}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
-                    !showDetailedTable 
-                      ? 'bg-primary/15 border-primary/50 text-primary' 
-                      : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30'
-                  }`}
-                >
-                  Simplified View
-                </button>
-                <button
-                  onClick={() => setShowDetailedTable(true)}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border ${
-                    showDetailedTable 
-                      ? 'bg-primary/15 border-primary/50 text-primary' 
-                      : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30'
-                  }`}
-                >
-                  Detailed View
-                </button>
-              </div>
-
-              {showDetailedTable ? (
-                /* Detailed Table (Original) */
-                <div className="border border-border rounded-lg bg-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <BarChart3 className="w-6 h-6 text-emerald-400" />
-                    <h3 className="text-lg font-bold font-mono text-foreground">Comparative Features Matrix</h3>
-                  </div>
-                  {/* Filters */}
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Price:</span>
-                      <Select value={priceFilter} onValueChange={setPriceFilter}>
-                        <SelectTrigger className="w-32 bg-background">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover">
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="Free">Free</SelectItem>
-                          <SelectItem value="Freemium">Freemium</SelectItem>
-                          <SelectItem value="Paid">Paid</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Focus:</span>
-                      <Select value={focusFilter} onValueChange={setFocusFilter}>
-                        <SelectTrigger className="w-32 bg-background">
-                          <SelectValue placeholder="All" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover">
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="FDM">FDM</SelectItem>
-                          <SelectItem value="SLA">SLA</SelectItem>
-                          <SelectItem value="Both">Both</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {hasFilters && (
-                      <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                        <X className="h-4 w-4 mr-1" />
-                        Clear filters
-                      </Button>
-                    )}
-                    <span className="text-sm text-muted-foreground ml-auto">
-                      Showing {filteredAndSortedSlicers.length} of {slicerComparison.length} slicers
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-                    <p className="text-muted-foreground text-sm">
-                      Side-by-side comparison of slicer capabilities, ratings (1-5), and standout features.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs">
-                      <span className="text-muted-foreground">Rating:</span>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-muted-foreground">4-5 (Excellent)</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-amber-400" />
-                        <span className="text-muted-foreground">3 (Average)</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-red-400" />
-                        <span className="text-muted-foreground">1-2 (Limited)</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
-                      <thead>
-                        <tr className="border-b border-border bg-muted/30">
-                          <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                          <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                          <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                          <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
-                          <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <th className="text-left py-2 px-3 font-semibold text-foreground">Connect</th>
-                          <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                          <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredAndSortedSlicers.map((slicer, index) => (
-                          <tr 
-                            key={index} 
-                            className="border-b border-border/50 hover:bg-muted/20 transition-colors"
-                          >
-                            <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
-                                {slicerLogos[slicer.name] && (
-                                  <img 
-                                    src={slicerLogos[slicer.name]} 
-                                    alt={`${slicer.name} logo`}
-                                    className="w-5 h-5 rounded object-contain"
-                                  />
-                                )}
-                                {slicer.name}
-                              </div>
-                            </td>
-                            <td className="py-2 px-3">
-                              <Badge 
-                                variant="outline" 
-                                className={
-                                  slicer.price === "Free" 
-                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-                                    : slicer.price === "Freemium"
-                                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                                    : "bg-red-500/10 text-red-400 border-red-500/30"
-                                }
-                              >
-                                {slicer.price}
-                              </Badge>
-                            </td>
-                            <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
-                            <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.os}</td>
-                            <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
-                            <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
-                            <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
-                            <td className="py-2 px-3"><RatingDots rating={slicer.speed} /></td>
-                            <td className="py-2 px-3"><RatingDots rating={slicer.ui} /></td>
-                            <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.connectivity}</td>
-                            <td className="py-2 px-3 text-center"><StepBadge value={slicer.step} /></td>
-                            <td className="py-2 px-3"><RatingDots rating={slicer.multiMat} /></td>
-                            <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{slicer.standout}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                /* Simplified Table */
-                otherSlicers.length > 0 ? (
-                  <SlicerSimplifiedTable
-                    slicers={otherSlicers}
-                    logos={slicerLogos}
-                    onViewDetails={handleLearnMore}
-                  />
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    No slicers match your filters
-                  </div>
-                )
-              )}
-            </CollapsibleSection>
-
-            {/* Slicer Profiles Accordion */}
-            <div className="py-8">
-              <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Detailed Slicer Profiles ({slicerData.length})</h2>
-              <p className="text-gray-400 mb-6">In-depth analysis of each slicer's features and capabilities</p>
-              <Accordion type="single" collapsible className="space-y-2">
-                {slicerData.map((slicer, index) => (
-                  <AccordionItem 
-                    key={slicer.id} 
-                    value={slicer.id}
-                    id={`slicer-${slicer.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                    className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 transition-all duration-200 hover:bg-gray-800 hover:border-gray-600 data-[state=open]:border-primary/50 data-[state=open]:bg-gray-800"
-                  >
-                    <AccordionTrigger className="hover:no-underline py-4 [&>svg]:text-gray-400 [&>svg]:transition-transform [&>svg]:duration-300 [&[data-state=open]>svg]:rotate-180">
-                      <div className="flex items-center gap-4 text-left">
-                        <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        {slicerLogos[slicer.name] ? (
-                          <img 
-                            src={slicerLogos[slicer.name]} 
-                            alt={`${slicer.name} logo`}
-                            className="w-10 h-10 rounded-lg object-contain bg-gray-900/50 p-1 flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-primary/20 flex-shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <h3 className="text-base font-bold text-white">{slicer.name}</h3>
-                          <p className="text-sm text-gray-400 line-clamp-1 max-w-2xl">
-                            {slicer.summary.substring(0, 80)}...
-                          </p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    
-                    <AccordionContent className="pb-6">
-                      <div className="space-y-6 pt-2">
-                        {/* Summary */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-primary mb-2">Summary</h4>
-                          <p className="text-gray-300 leading-relaxed">{slicer.summary}</p>
-                        </div>
-
-                        {/* History */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            History
-                          </h4>
-                          <p className="text-gray-300 leading-relaxed">{slicer.history}</p>
-                        </div>
-
-                        {/* Key Strengths */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-amber-400 mb-3">Key Strengths</h4>
-                          <div className="grid gap-3 md:grid-cols-3">
-                            {slicer.keyStrengths.map((strength, idx) => (
-                              <div key={idx} className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                                <h5 className="font-medium text-white mb-1">{strength.title}</h5>
-                                <p className="text-sm text-gray-400">{strength.description}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Technical Specifications */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-primary mb-3">Technical Specifications</h4>
-                          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                <DollarSign className="w-3 h-3" />
-                                Price
-                              </div>
-                              <p className="text-sm text-white">{slicer.technicalSpecs.price}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                <Monitor className="w-3 h-3" />
-                                Supported OS
-                              </div>
-                              <p className="text-sm text-white">{slicer.technicalSpecs.supportedOS}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                <FileCode className="w-3 h-3" />
-                                File Support
-                              </div>
-                              <p className="text-sm text-white">{slicer.technicalSpecs.fileSupport}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                <Wifi className="w-3 h-3" />
-                                Connectivity
-                              </div>
-                              <p className="text-sm text-white">{slicer.technicalSpecs.connectivity}</p>
-                            </div>
-                          </div>
-                          {slicer.technicalSpecs.status && (
-                            <div className="mt-3">
-                              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
-                                {slicer.technicalSpecs.status}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Links */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-purple-400 mb-3">Important Links</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {slicer.links.map((link, idx) => (
-                              <Button
-                                key={idx}
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="gap-2 border-gray-600 hover:border-primary hover:text-primary"
-                              >
-                                <a href={link.url} target="_blank" rel="noopener noreferrer">
-                                  {link.label}
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
-                              </Button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
+                  ))}
+                </Accordion>
+              </section>
+            )}
           </main>
 
           {/* Right Sidebar: Comparison Builder (Desktop) */}
           <aside className="hidden lg:block">
-            <div className="sticky top-[100px]">
+            <div className="sticky top-[72px]">
               <ComparisonBuilderSidebar />
             </div>
           </aside>
