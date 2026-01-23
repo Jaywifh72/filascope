@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Gift, Printer, DollarSign, Wrench, ChevronDown, Lightbulb } from 'lucide-react';
+import { Trophy, Gift, Printer, DollarSign, Wrench, ChevronDown, Lightbulb, Box } from 'lucide-react';
 
 interface QuickPick {
   id: string;
@@ -105,6 +105,12 @@ const ReposHeroSection: React.FC<ReposHeroSectionProps> = ({ platformCount, onSc
       <div className="max-w-5xl mx-auto px-4 relative">
         {/* Headline Area */}
         <div className="text-center mb-10">
+          {/* Badge */}
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-400 text-sm font-medium mb-4">
+            <Box className="w-4 h-4" />
+            MODEL LIBRARY
+          </span>
+          
           <h2 
             id="repos-hero-headline"
             className="text-3xl md:text-4xl lg:text-[42px] font-extrabold text-foreground mb-4 tracking-tight"
@@ -117,33 +123,18 @@ const ReposHeroSection: React.FC<ReposHeroSectionProps> = ({ platformCount, onSc
           </p>
           
           {/* Stats Row */}
-          <div className="flex items-center justify-center gap-6 md:gap-10">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-extrabold text-primary mb-1">
-                {platformCount}
-              </div>
-              <div className="text-[11px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Platforms Compared
-              </div>
-            </div>
-            <div className="w-px h-10 bg-border hidden sm:block" />
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-extrabold text-primary mb-1">
-                10
-              </div>
-              <div className="text-[11px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Metrics Analyzed
-              </div>
-            </div>
-            <div className="w-px h-10 bg-border hidden sm:block" />
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-extrabold text-primary mb-1">
-                100+
-              </div>
-              <div className="text-[11px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Hours Research
-              </div>
-            </div>
+          <div className="flex items-center justify-center gap-4 md:gap-8 text-sm md:text-base text-muted-foreground">
+            <span>
+              <span className="text-teal-400 font-semibold">{platformCount}</span> Platforms Compared
+            </span>
+            <span className="text-border">•</span>
+            <span>
+              <span className="text-teal-400 font-semibold">10</span> Metrics Analyzed
+            </span>
+            <span className="text-border hidden sm:inline">•</span>
+            <span className="hidden sm:inline">
+              <span className="text-teal-400 font-semibold">100+</span> Hours Research
+            </span>
           </div>
         </div>
 
