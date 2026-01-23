@@ -319,28 +319,30 @@ const ReferenceSlicers = () => {
 
             {/* TIER 1: Top Picks */}
             <section className="py-[60px] max-md:py-10">
-              <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Top Picks</h2>
-              <p className="text-gray-400 mb-6">
-                Staff-curated recommendations based on use case and performance
-              </p>
-              
-              {topPickSlicers.length > 0 ? (
-                <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
-                  {topPickSlicers.map((slicer) => (
-                    <SlicerTopPickCard
-                      key={slicer.name}
-                      slicer={slicer}
-                      logo={slicerLogos[slicer.name]}
-                      onLearnMore={() => handleLearnMore(slicer.name)}
-                      onAddToCompare={() => handleAddToCompare(slicer.name)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  No top picks match your filters
-                </div>
-              )}
+              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6 mb-8">
+                <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Top Picks</h2>
+                <p className="text-gray-400 mb-6">
+                  Staff-curated recommendations based on use case and performance
+                </p>
+                
+                {topPickSlicers.length > 0 ? (
+                  <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
+                    {topPickSlicers.map((slicer) => (
+                      <SlicerTopPickCard
+                        key={slicer.name}
+                        slicer={slicer}
+                        logo={slicerLogos[slicer.name]}
+                        onLearnMore={() => handleLearnMore(slicer.name)}
+                        onAddToCompare={() => handleAddToCompare(slicer.name)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No top picks match your filters
+                  </div>
+                )}
+              </div>
             </section>
 
             {/* TIER 2: Popular Choices */}
