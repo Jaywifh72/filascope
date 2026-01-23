@@ -554,30 +554,32 @@ const ReferenceSlicers = () => {
             <div className="py-8">
               <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Detailed Slicer Profiles ({slicerData.length})</h2>
               <p className="text-gray-400 mb-6">In-depth analysis of each slicer's features and capabilities</p>
-              <Accordion type="single" collapsible className="space-y-3">
+              <Accordion type="single" collapsible className="space-y-2">
                 {slicerData.map((slicer, index) => (
                   <AccordionItem 
                     key={slicer.id} 
                     value={slicer.id}
                     id={`slicer-${slicer.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                    className="border border-border/50 rounded-lg bg-card/50 backdrop-blur-sm px-4 data-[state=open]:border-emerald-500/30"
+                    className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 transition-all duration-200 hover:bg-gray-800 hover:border-gray-600 data-[state=open]:border-primary/50 data-[state=open]:bg-gray-800"
                   >
-                    <AccordionTrigger className="hover:no-underline py-4">
+                    <AccordionTrigger className="hover:no-underline py-4 [&>svg]:text-gray-400 [&>svg]:transition-transform [&>svg]:duration-300 [&[data-state=open]>svg]:rotate-180">
                       <div className="flex items-center gap-4 text-left">
-                        <span className="text-xs font-mono text-muted-foreground w-6">
+                        <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                           {String(index + 1).padStart(2, '0')}
                         </span>
-                        {slicerLogos[slicer.name] && (
+                        {slicerLogos[slicer.name] ? (
                           <img 
                             src={slicerLogos[slicer.name]} 
                             alt={`${slicer.name} logo`}
-                            className="w-8 h-8 rounded object-contain"
+                            className="w-10 h-10 rounded-lg object-contain bg-gray-900/50 p-1 flex-shrink-0"
                           />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-primary/20 flex-shrink-0" />
                         )}
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">{slicer.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1 max-w-2xl">
-                            {slicer.summary.substring(0, 100)}...
+                        <div className="min-w-0">
+                          <h3 className="text-base font-bold text-white">{slicer.name}</h3>
+                          <p className="text-sm text-gray-400 line-clamp-1 max-w-2xl">
+                            {slicer.summary.substring(0, 80)}...
                           </p>
                         </div>
                       </div>
@@ -587,27 +589,27 @@ const ReferenceSlicers = () => {
                       <div className="space-y-6 pt-2">
                         {/* Summary */}
                         <div>
-                          <h4 className="text-sm font-semibold text-emerald-400 uppercase tracking-wide mb-2">Summary</h4>
-                          <p className="text-muted-foreground leading-relaxed">{slicer.summary}</p>
+                          <h4 className="text-sm font-semibold text-primary mb-2">Summary</h4>
+                          <p className="text-gray-300 leading-relaxed">{slicer.summary}</p>
                         </div>
 
                         {/* History */}
                         <div>
-                          <h4 className="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+                          <h4 className="text-sm font-semibold text-blue-400 mb-2 flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             History
                           </h4>
-                          <p className="text-muted-foreground leading-relaxed">{slicer.history}</p>
+                          <p className="text-gray-300 leading-relaxed">{slicer.history}</p>
                         </div>
 
                         {/* Key Strengths */}
                         <div>
-                          <h4 className="text-sm font-semibold text-amber-400 uppercase tracking-wide mb-3">Key Strengths</h4>
+                          <h4 className="text-sm font-semibold text-amber-400 mb-3">Key Strengths</h4>
                           <div className="grid gap-3 md:grid-cols-3">
                             {slicer.keyStrengths.map((strength, idx) => (
-                              <div key={idx} className="p-3 rounded-lg bg-background/50 border border-border/30">
-                                <h5 className="font-medium text-foreground mb-1">{strength.title}</h5>
-                                <p className="text-sm text-muted-foreground">{strength.description}</p>
+                              <div key={idx} className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                                <h5 className="font-medium text-white mb-1">{strength.title}</h5>
+                                <p className="text-sm text-gray-400">{strength.description}</p>
                               </div>
                             ))}
                           </div>
@@ -615,35 +617,35 @@ const ReferenceSlicers = () => {
 
                         {/* Technical Specifications */}
                         <div>
-                          <h4 className="text-sm font-semibold text-cyan-400 uppercase tracking-wide mb-3">Technical Specifications</h4>
+                          <h4 className="text-sm font-semibold text-primary mb-3">Technical Specifications</h4>
                           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                            <div className="p-3 rounded-lg bg-background/50 border border-border/30">
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                                 <DollarSign className="w-3 h-3" />
                                 Price
                               </div>
-                              <p className="text-sm text-foreground">{slicer.technicalSpecs.price}</p>
+                              <p className="text-sm text-white">{slicer.technicalSpecs.price}</p>
                             </div>
-                            <div className="p-3 rounded-lg bg-background/50 border border-border/30">
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                                 <Monitor className="w-3 h-3" />
                                 Supported OS
                               </div>
-                              <p className="text-sm text-foreground">{slicer.technicalSpecs.supportedOS}</p>
+                              <p className="text-sm text-white">{slicer.technicalSpecs.supportedOS}</p>
                             </div>
-                            <div className="p-3 rounded-lg bg-background/50 border border-border/30">
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                                 <FileCode className="w-3 h-3" />
                                 File Support
                               </div>
-                              <p className="text-sm text-foreground">{slicer.technicalSpecs.fileSupport}</p>
+                              <p className="text-sm text-white">{slicer.technicalSpecs.fileSupport}</p>
                             </div>
-                            <div className="p-3 rounded-lg bg-background/50 border border-border/30">
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                            <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                                 <Wifi className="w-3 h-3" />
                                 Connectivity
                               </div>
-                              <p className="text-sm text-foreground">{slicer.technicalSpecs.connectivity}</p>
+                              <p className="text-sm text-white">{slicer.technicalSpecs.connectivity}</p>
                             </div>
                           </div>
                           {slicer.technicalSpecs.status && (
@@ -657,7 +659,7 @@ const ReferenceSlicers = () => {
 
                         {/* Links */}
                         <div>
-                          <h4 className="text-sm font-semibold text-purple-400 uppercase tracking-wide mb-3">Important Links</h4>
+                          <h4 className="text-sm font-semibold text-purple-400 mb-3">Important Links</h4>
                           <div className="flex flex-wrap gap-2">
                             {slicer.links.map((link, idx) => (
                               <Button
@@ -665,7 +667,7 @@ const ReferenceSlicers = () => {
                                 variant="outline"
                                 size="sm"
                                 asChild
-                                className="gap-2"
+                                className="gap-2 border-gray-600 hover:border-primary hover:text-primary"
                               >
                                 <a href={link.url} target="_blank" rel="noopener noreferrer">
                                   {link.label}
