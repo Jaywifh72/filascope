@@ -56,41 +56,50 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             
             {/* Buttons Row */}
             <div 
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto animate-fade-in"
+              className="flex flex-col items-start gap-3 w-full sm:w-auto animate-fade-in"
               style={{ animationDelay: "0.3s" }}
             >
-              {/* Primary Button - Material Wizard with Cyan Gradient */}
-              <Button 
-                size="lg"
-                onClick={() => navigate("/wizard")}
-                className="h-14 px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
-              >
-                <Sparkles className="mr-2 h-5 w-5" />
-                Material Wizard
-              </Button>
-              
-              {/* Secondary - Search Input */}
-              <div 
-                className={`relative transition-all duration-300 ${
-                  isFocused ? "scale-[1.01]" : ""
-                }`}
-              >
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                <input
-                  type="text"
-                  placeholder="Search materials..."
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
-                    isFocused 
-                      ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
-                      : "border-white/10 hover:border-white/20"
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+                {/* Primary Button - Material Wizard with Cyan Gradient and Pulse */}
+                <Button 
+                  size="lg"
+                  onClick={() => navigate("/wizard")}
+                  className="group relative h-14 px-8 bg-gradient-to-r from-primary via-[hsl(185_100%_45%)] to-[hsl(195_100%_50%)] text-background hover:from-[hsl(180_100%_55%)] hover:via-[hsl(185_100%_50%)] hover:to-[hsl(195_100%_55%)] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-200 font-bold text-base rounded-xl shadow-[0_8px_24px_rgba(0,207,232,0.35)] hover:shadow-[0_12px_32px_rgba(0,207,232,0.5)]"
+                >
+                  {/* Subtle pulse ring */}
+                  <span className="absolute inset-0 rounded-xl animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] bg-primary/20" />
+                  <Sparkles className="relative mr-2 h-5 w-5 group-hover:animate-[spin_2s_ease-in-out]" />
+                  <span className="relative">Find Your Perfect Filament</span>
+                </Button>
+                
+                {/* Secondary - Search Input */}
+                <div 
+                  className={`relative transition-all duration-300 ${
+                    isFocused ? "scale-[1.01]" : ""
                   }`}
-                  aria-label="Search materials"
-                />
+                >
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                  <input
+                    type="text"
+                    placeholder="Search materials..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    className={`w-full sm:w-[280px] h-14 pl-12 pr-5 text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                      isFocused 
+                        ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
+                        : "border-white/10 hover:border-white/20"
+                    }`}
+                    aria-label="Search materials"
+                  />
+                </div>
               </div>
+              
+              {/* Wizard subtitle */}
+              <p className="text-xs text-muted-foreground font-mono ml-1">
+                Answer 5 quick questions → Get personalized recommendations
+              </p>
             </div>
           </div>
           
