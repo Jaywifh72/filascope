@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
-export type FilamentTab = "overview" | "specifications" | "compatibility" | "pricing";
+export type FilamentTab = "overview" | "specifications" | "compatibility" | "pricing" | "community";
 
 interface TabConfig {
   id: FilamentTab;
@@ -14,6 +14,7 @@ const TABS: TabConfig[] = [
   { id: "specifications", label: "Specifications", hash: "#specifications" },
   { id: "compatibility", label: "Compatibility", hash: "#compatibility" },
   { id: "pricing", label: "Pricing", hash: "#pricing" },
+  { id: "community", label: "Community", hash: "#community" },
 ];
 
 interface FilamentTabNavProps {

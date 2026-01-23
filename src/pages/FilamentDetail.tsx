@@ -28,6 +28,7 @@ import {
   SpecificationsTabContent,
   CompatibilityTabContent,
   PricingTabContent,
+  CommunityTabContent,
   type FilamentTab 
 } from "@/components/filament/tabs";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
@@ -649,6 +650,10 @@ const FilamentDetail = () => {
                   onViewRetailers={handleViewRetailers}
                   onRetailerClick={handleRetailerClick}
                 />
+              )}
+
+              {activeTab === "community" && (
+                <CommunityTabContent filament={displayFilament} />
               )}
             </FilamentTabContent>
 
