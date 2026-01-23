@@ -11,16 +11,16 @@ export default function MoreToolsSection({ tools }: MoreToolsSectionProps) {
   if (standardTools.length === 0) return null;
 
   return (
-    <section className="mb-12" aria-labelledby="more-tools-heading">
+    <section className="mb-8" aria-labelledby="more-tools-heading">
       {/* Section Header */}
       <div className="mb-6">
         <h2 
           id="more-tools-heading" 
-          className="text-2xl font-bold text-foreground mb-1.5"
+          className="text-2xl font-bold text-white mb-1.5"
         >
           More Specialty Tools
         </h2>
-        <p className="text-sm font-medium text-muted-foreground">
+        <p className="text-sm text-gray-400">
           Additional utilities for specific workflows
         </p>
       </div>

@@ -41,8 +41,9 @@ export default function CompactToolCard({ tool, index = 0 }: CompactToolCardProp
       className={cn(
         "group flex flex-col p-4 rounded-xl",
         "bg-card/30 border border-border/30",
-        "transition-all duration-200 ease-out",
-        "hover:bg-card/50 hover:border-border/50 hover:-translate-y-0.5",
+        "transition-all duration-300 ease-out",
+        "hover:scale-[1.02] hover:border-primary/50",
+        "hover:shadow-lg hover:shadow-primary/10",
         "focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2",
         "animate-fade-in"
       )}
@@ -54,7 +55,7 @@ export default function CompactToolCard({ tool, index = 0 }: CompactToolCardProp
         <span className="text-[28px]">
           {getCategoryIcon()}
         </span>
-        <h4 className="text-[15px] font-bold text-foreground line-clamp-2 leading-tight">
+        <h4 className="text-sm font-semibold text-foreground line-clamp-2 leading-tight">
           {tool.name}
         </h4>
       </div>
