@@ -716,6 +716,10 @@ const BrandDetail = () => {
               hasEcoSpools={filaments?.some(f => f.spool_material === 'cardboard' || f.spool_material === 'mixed') ?? false}
               hasRFID={filaments?.some(f => f.transmission_distance && f.transmission_distance > 0) ?? false}
               onViewAllProducts={() => setActiveTab("products")}
+              onFilterByMaterial={(material) => {
+                setSelectedMaterial(material);
+                setActiveTab("products");
+              }}
             />
           )}
 
