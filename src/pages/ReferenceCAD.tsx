@@ -194,24 +194,49 @@ const ReferenceCAD = () => {
                         Staff-curated recommendations based on use case and performance
                       </p>
                       
-                      {/* Profile Filter Pills */}
+                      {/* Profile Filter Pills with Quiz Link */}
                       <div className="mb-6">
                         <CADProfileFilterPills 
                           activeFilter={profileFilter} 
-                          onChange={setProfileFilter} 
+                          onChange={setProfileFilter}
+                          onOpenQuiz={() => {
+                            // Scroll to hero quiz CTA or open modal
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
                         />
                       </div>
                       
-                      {/* Staff Pick Cards */}
+                      {/* Filtered Staff Pick Cards */}
                       <div className="flex gap-5 overflow-x-auto pb-4 items-stretch">
-                        {staffPicks.map((pick) => (
-                          <CADStaffPickCard
-                            key={pick.name}
-                            pick={pick}
-                            onViewDetails={() => handleLearnMore(pick.name.toLowerCase().replace(/\s+/g, '-'))}
-                          />
-                        ))}
+                        {staffPicks
+                          .filter(pick => {
+                            if (profileFilter === 'all') return true;
+                            return (pick.profiles as readonly string[]).includes(profileFilter);
+                          })
+                          .map((pick) => (
+                            <CADStaffPickCard
+                              key={pick.name}
+                              pick={pick}
+                              onViewDetails={() => handleLearnMore(pick.name.toLowerCase().replace(/\s+/g, '-'))}
+                            />
+                          ))}
                       </div>
+                      
+                      {/* Empty state when filter has no results */}
+                      {staffPicks.filter(pick => {
+                        if (profileFilter === 'all') return true;
+                        return (pick.profiles as readonly string[]).includes(profileFilter);
+                      }).length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>No recommendations for this profile yet.</p>
+                          <button 
+                            onClick={() => setProfileFilter('all')}
+                            className="mt-2 text-primary hover:text-primary/80"
+                          >
+                            View all recommendations
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   

@@ -21,7 +21,7 @@ const badgeConfigs = {
   bestPro: { icon: Gem, text: 'BEST PROFESSIONAL', color: 'purple' },
 };
 
-// Staff Picks data
+// Staff Picks data with profile categories
 export const staffPicks = [
   {
     name: "Fusion 360",
@@ -39,6 +39,7 @@ export const staffPicks = [
     cloud: "Yes",
     perpetual: "No",
     standout: "Integrated CAD/CAM/CAE",
+    profiles: ['maker', 'professional'] as const,
     whyPicked: [
       'Best balance of power and accessibility',
       'Free for hobbyists and small businesses',
@@ -63,6 +64,7 @@ export const staffPicks = [
     cloud: "No",
     perpetual: "Yes",
     standout: "Complete 3D Suite",
+    profiles: ['artist', 'maker'] as const,
     whyPicked: [
       'Completely free, forever, no limitations',
       'Handles modeling, sculpting, animation',
@@ -87,6 +89,7 @@ export const staffPicks = [
     cloud: "No",
     perpetual: "No",
     standout: "Ultra High-Poly",
+    profiles: ['artist', 'professional'] as const,
     whyPicked: [
       'Industry standard for digital sculpting',
       'Handles millions of polygons effortlessly',
@@ -94,8 +97,35 @@ export const staffPicks = [
       'Unmatched brush and detail tools'
     ],
     bestFor: 'Professional sculptors and character artists'
+  },
+  {
+    name: "Tinkercad",
+    badge: { icon: Star, text: 'BEST FOR BEGINNERS', color: 'cyan' as const },
+    priceType: 'free' as PriceType,
+    overallScore: 7.5,
+    skillLevel: 'beginner' as SkillLevel,
+    type: "CSG",
+    os: "Browser",
+    ease: 5,
+    precision: 2,
+    sculpt: 1,
+    printReady: 5,
+    parametric: 1,
+    cloud: "Yes",
+    perpetual: "N/A",
+    standout: "Zero Learning Curve",
+    profiles: ['beginner'] as const,
+    whyPicked: [
+      'Easiest 3D software to learn',
+      'Runs in any web browser',
+      'Perfect for education and kids',
+      'Direct export to 3D printers'
+    ],
+    bestFor: 'Complete beginners and educators'
   }
 ];
+
+export type StaffPick = typeof staffPicks[number];
 
 interface CADStaffPickCardProps {
   pick: typeof staffPicks[0];
