@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, Users, Globe, TrendingUp, Filter, Palette, Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, ExternalLink, Filter, Palette, Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
@@ -16,6 +16,7 @@ import { normalizeColorHex } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
 import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
+import { BrandHeroSection } from "@/components/brands/BrandHeroSection";
 
 // Platform color mapping
 const PLATFORM_COLORS: Record<string, string> = {
@@ -602,207 +603,94 @@ const BrandDetail = () => {
           Back to Brands
         </Button>
 
-        {/* Brand Header */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              {brandLogo && (
-                <div className="w-full md:w-48 h-32 flex items-center justify-center bg-background rounded-lg p-6 shrink-0">
-                  <img
-                    src={brandLogo}
-                    alt={decodedBrand}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              )}
-              <div className="flex-1 space-y-4">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h1 className="text-4xl font-bold">{decodedBrand}</h1>
-                    {brandInfo?.companyType && (
-                      <Badge variant={getCompanyTypeBadgeVariant(brandInfo.companyType)}>
-                        {getCompanyTypeLabel(brandInfo.companyType)}
-                      </Badge>
-                    )}
-                    {/* Platform badge - admin only */}
-                    {isAdmin && adminBrandData?.platform_type && (
-                      <Badge className={`${PLATFORM_COLORS[adminBrandData.platform_type] || 'bg-zinc-500'} text-white capitalize`}>
-                        {adminBrandData.platform_type}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Quick Info Row */}
-                  {brandInfo && (
-                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-                      {brandInfo.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {brandInfo.location}
-                        </span>
-                      )}
-                      {brandInfo.founded && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          Founded {brandInfo.founded}
-                        </span>
-                      )}
-                      {brandInfo.employees && (
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {brandInfo.employees} employees
-                        </span>
-                      )}
-                      {brandInfo.website && (
-                        <a 
-                          href={brandInfo.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-primary hover:underline"
-                        >
-                          <Globe className="w-4 h-4" />
-                          Website
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
+        {/* Brand Hero Section */}
+        <BrandHeroSection
+          brandName={decodedBrand}
+          brandLogo={brandLogo}
+          isVerified={automatedBrand?.is_visible ?? false}
+          location={brandInfo?.location}
+          founded={brandInfo?.founded}
+          website={brandInfo?.website}
+          productCount={filaments?.length ?? 0}
+          topMaterials={availableMaterials.slice(0, 3)}
+          avgPriceRange={(() => {
+            if (!filaments || filaments.length === 0) return undefined;
+            const prices = filaments
+              .map(f => f.variant_price)
+              .filter((p): p is number => p !== null && p > 0);
+            if (prices.length === 0) return undefined;
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return `$${min.toFixed(0)}-${max.toFixed(0)}`;
+          })()}
+          rating={null}
+        />
 
-                {/* Company Details Grid */}
-                {brandInfo && (brandInfo.headquarters || brandInfo.founder || brandInfo.ceo || brandInfo.president || brandInfo.parentCompany || brandInfo.subsidiaries || brandInfo.stockTicker) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg border">
-                    {brandInfo.headquarters && (
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Headquarters</div>
-                        <div className="text-sm font-medium">{brandInfo.headquarters}</div>
-                      </div>
-                    )}
-                    
-                    {(brandInfo.founder || brandInfo.ceo || brandInfo.president) && (
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-                          {brandInfo.ceo ? 'CEO' : brandInfo.president ? 'President' : 'Founder'}
-                        </div>
-                        <div className="text-sm font-medium">
-                          {brandInfo.ceo || brandInfo.president || brandInfo.founder}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {brandInfo.parentCompany && (
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Parent Company</div>
-                        <div className="text-sm font-medium">{brandInfo.parentCompany}</div>
-                      </div>
-                    )}
-                    
-                    {brandInfo.subsidiaries && brandInfo.subsidiaries.length > 0 && (
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Subsidiaries</div>
-                        <div className="text-sm font-medium">{brandInfo.subsidiaries.join(', ')}</div>
-                      </div>
-                    )}
-                    
-                    {brandInfo.stockTicker && brandInfo.stockExchange && (
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3" />
-                          Stock
-                        </div>
-                        <div className="text-sm font-medium">
-                          {brandInfo.stockTicker} ({brandInfo.stockExchange})
-                        </div>
-                      </div>
-                    )}
-                    
-                    {brandInfo.revenue && (
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Revenue</div>
-                        <div className="text-sm font-medium">{brandInfo.revenue}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Summary */}
-                {brandInfo ? (
-                  <p className="text-foreground leading-relaxed whitespace-pre-line">
-                    {brandInfo.summary}
-                  </p>
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    Information about {decodedBrand} coming soon.
-                  </p>
-                )}
-
-                {/* Admin: Scraping Status Card */}
-                {isAdmin && adminBrandData && (
-                  <div className="mt-4 p-4 bg-muted/30 rounded-lg border">
-                    <div className="flex items-center gap-2 mb-3">
-                      <RefreshCw className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Scraping Status</span>
-                      {adminBrandData.scraping_active && (
-                        <Badge className="bg-primary/20 text-primary text-xs">
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          Running
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</div>
-                        <div className="flex items-center gap-1.5">
-                          {adminBrandData.scraping_enabled ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                              <span className="text-green-500 font-medium">Enabled</span>
-                            </>
-                          ) : (
-                            <>
-                              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                              <span className="text-amber-500 font-medium">Disabled</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Last Sync</div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>
-                            {adminBrandData.last_scrape_at 
-                              ? new Date(adminBrandData.last_scrape_at).toLocaleDateString()
-                              : "Never"}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Success Rate</div>
-                        <div className="font-medium">
-                          {adminBrandData.total_scrapes && adminBrandData.total_scrapes > 0
-                            ? `${Math.round((adminBrandData.successful_scrapes || 0) / adminBrandData.total_scrapes * 100)}%`
-                            : "N/A"}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Products with URLs</div>
-                        <div className="font-medium">
-                          {adminBrandData.products_with_urls || 0} / {adminBrandData.product_count || 0}
-                        </div>
-                      </div>
-                    </div>
-                    {adminBrandData.last_error && (
-                      <div className="mt-3 p-2 bg-destructive/10 rounded border border-destructive/20 text-xs text-destructive">
-                        <span className="font-medium">Last Error:</span> {adminBrandData.last_error}
-                      </div>
-                    )}
-                  </div>
+        {/* Admin: Scraping Status Card */}
+        {isAdmin && adminBrandData && (
+          <Card className="mb-8">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Scraping Status</span>
+                {adminBrandData.scraping_active && (
+                  <Badge className="bg-primary/20 text-primary text-xs">
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    Running
+                  </Badge>
                 )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Status</div>
+                  <div className="flex items-center gap-1.5">
+                    {adminBrandData.scraping_enabled ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                        <span className="text-green-500 font-medium">Enabled</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-amber-500 font-medium">Disabled</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Last Sync</div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>
+                      {adminBrandData.last_scrape_at 
+                        ? new Date(adminBrandData.last_scrape_at).toLocaleDateString()
+                        : "Never"}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Success Rate</div>
+                  <div className="font-medium">
+                    {adminBrandData.total_scrapes && adminBrandData.total_scrapes > 0
+                      ? `${Math.round((adminBrandData.successful_scrapes || 0) / adminBrandData.total_scrapes * 100)}%`
+                      : "N/A"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Products with URLs</div>
+                  <div className="font-medium">
+                    {adminBrandData.products_with_urls || 0} / {adminBrandData.product_count || 0}
+                  </div>
+                </div>
+              </div>
+              {adminBrandData.last_error && (
+                <div className="mt-3 p-2 bg-destructive/10 rounded border border-destructive/20 text-xs text-destructive">
+                  <span className="font-medium">Last Error:</span> {adminBrandData.last_error}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filaments Section */}
         <div className="mb-6 space-y-4">
