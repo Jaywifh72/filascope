@@ -80,39 +80,39 @@ export default function Accessories() {
         <div className="flex gap-4 sm:gap-8 border-b border-gray-700 overflow-x-auto scrollbar-hide pb-px -mb-px">
           <button
             onClick={() => handleTabChange("hotends")}
-            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative whitespace-nowrap min-w-fit ${
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-all duration-300 relative whitespace-nowrap min-w-fit ${
               activeTab === "hotends" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
             <CircleDot className="w-4 h-4" />
             Hotends
-            {activeTab === "hotends" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
+            <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all duration-300 ${
+              activeTab === "hotends" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
+            }`} />
           </button>
           <button
             onClick={() => handleTabChange("build-plates")}
-            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative whitespace-nowrap min-w-fit ${
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-all duration-300 relative whitespace-nowrap min-w-fit ${
               activeTab === "build-plates" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
             <Square className="w-4 h-4" />
             Build Plates
-            {activeTab === "build-plates" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
+            <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all duration-300 ${
+              activeTab === "build-plates" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
+            }`} />
           </button>
           <button
             onClick={() => handleTabChange("ams")}
-            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative whitespace-nowrap min-w-fit ${
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-all duration-300 relative whitespace-nowrap min-w-fit ${
               activeTab === "ams" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
             <Layers className="w-4 h-4" />
             AMS/MMU
-            {activeTab === "ams" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-            )}
+            <span className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-all duration-300 ${
+              activeTab === "ams" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
+            }`} />
           </button>
         </div>
 
