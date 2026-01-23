@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, Zap, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -317,17 +317,18 @@ const ReferenceSlicers = () => {
               onRemove={handleRemoveFilter}
             />
 
-            {/* TIER 1: Top Picks */}
+            {/* OUR RECOMMENDATIONS - Combined Section */}
             <section className="py-[60px] max-md:py-10">
-              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6 mb-8">
-                <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Top Picks</h2>
+              <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Our Recommendations</h2>
                 <p className="text-gray-400 mb-6">
                   Staff-curated recommendations based on use case and performance
                 </p>
                 
+                {/* Top 3 Featured Cards */}
                 {topPickSlicers.length > 0 ? (
                   <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
-                    {topPickSlicers.map((slicer) => (
+                    {topPickSlicers.slice(0, 3).map((slicer) => (
                       <SlicerTopPickCard
                         key={slicer.name}
                         slicer={slicer}
@@ -339,35 +340,47 @@ const ReferenceSlicers = () => {
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
-                    No top picks match your filters
+                    No recommendations match your filters
                   </div>
+                )}
+
+                {/* See More Recommendations - Expandable */}
+                {popularSlicers.length > 0 && (
+                  <Accordion type="single" collapsible className="mt-6">
+                    <AccordionItem value="more-recommendations" className="border-none">
+                      <AccordionTrigger className="group hover:no-underline py-3 px-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-800 hover:border-gray-600 transition-all duration-200 [&>svg]:hidden data-[state=open]:rounded-b-none data-[state=open]:border-b-0">
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <Star className="w-4 h-4 text-primary" />
+                            </div>
+                            <div className="text-left">
+                              <span className="text-sm font-semibold text-white">See More Recommendations</span>
+                              <span className="text-xs text-gray-400 ml-2">
+                                ({popularSlicers.length} additional slicers)
+                              </span>
+                            </div>
+                          </div>
+                          <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-300" />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4 pb-4 px-4 bg-gray-800/30 border border-t-0 border-gray-700 rounded-b-lg">
+                        <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1 items-stretch">
+                          {popularSlicers.map((slicer) => (
+                            <SlicerPopularCard
+                              key={slicer.name}
+                              slicer={slicer}
+                              logo={slicerLogos[slicer.name]}
+                              onLearnMore={() => handleLearnMore(slicer.name)}
+                            />
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 )}
               </div>
             </section>
-
-            {/* TIER 2: Popular Choices */}
-            <CollapsibleSection
-              title="Popular Choices"
-              subtitle="Widely-used slicers with strong community support"
-              defaultExpanded={true}
-            >
-              {popularSlicers.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1 items-stretch">
-                  {popularSlicers.map((slicer) => (
-                    <SlicerPopularCard
-                      key={slicer.name}
-                      slicer={slicer}
-                      logo={slicerLogos[slicer.name]}
-                      onLearnMore={() => handleLearnMore(slicer.name)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  No popular choices match your filters
-                </div>
-              )}
-            </CollapsibleSection>
 
             {/* TIER 3: Full Comparison Table */}
             <CollapsibleSection
