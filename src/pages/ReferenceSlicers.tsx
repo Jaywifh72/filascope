@@ -350,7 +350,7 @@ const ReferenceSlicers = () => {
               defaultExpanded={true}
             >
               {popularSlicers.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+                <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1 items-stretch">
                   {popularSlicers.map((slicer) => (
                     <SlicerPopularCard
                       key={slicer.name}
