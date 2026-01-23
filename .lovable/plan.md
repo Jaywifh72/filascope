@@ -1,55 +1,102 @@
 
-# Compare Button Ghost Style Update
+# Right-Side Utility Section Refinement
 
 ## Overview
-Update the Compare button across all viewport sizes (desktop, tablet, mobile) to use a consistent ghost button style that differentiates it from primary CTA buttons.
+Polish the navbar's right-side utilities (favorites, currency selector, user avatar) for consistent styling and improved visual hierarchy.
 
 ## Current State vs Target
 
-| Property | Current (Desktop/Tablet) | Current (Mobile) | Target |
-|----------|-------------------------|------------------|--------|
-| Background | `bg-transparent` | `bg-primary/10` | `bg-transparent` |
-| Border | `border border-primary` | `border border-primary` | `border border-teal-500` |
-| Text Color | `text-gray-400` | `text-primary` | `text-teal-400` |
-| Hover BG | `hover:bg-primary/10` | `hover:bg-primary/20` | `hover:bg-teal-500/10` |
-| Hover Text | `hover:text-white` | (none) | Keep `text-teal-400` |
-| Padding | `px-4 py-2` | `px-4 py-3` | `px-4 py-2` (mobile: `py-3`) |
-| Border Radius | `rounded-lg` | `rounded-lg` | `rounded-lg` |
+### 1. User Avatar
 
-## Changes
+| Property | Current | Target |
+|----------|---------|--------|
+| Size | `w-8 h-8` (32px) | `w-9 h-9` (36px) |
+| Border | `border border-gray-700` | `border border-gray-700` (keep) |
+| Background | `bg-gray-800` | `bg-gray-800` (keep) |
+| Logged-out icon | `User` icon, `text-gray-400` | Same (already correct) |
+| Logged-in initials | `text-xs font-medium text-white` | `text-sm font-medium text-white` |
+| Hover | `hover:border-primary/50` | `hover:border-teal-500/50` with `transition-colors` |
 
-### File: `src/components/Navbar.tsx`
+### 2. Favorites Heart Icon
 
-#### 1. Desktop Compare Button (lines 270-276)
-Update classes to use explicit teal colors:
-- Change `border-primary` → `border-teal-500`
-- Keep `bg-transparent`
-- Change `hover:bg-primary/10` → `hover:bg-teal-500/10`
-- Change `text-gray-400 hover:text-white` → `text-teal-400`
-- Active state: `bg-teal-500/10 text-teal-400`
+| Property | Current | Target |
+|----------|---------|--------|
+| Size | `h-5 w-5` (20px) | `w-5 h-5` (keep) |
+| Color | `text-muted-foreground` | `text-gray-400` |
+| Hover | `hover:text-foreground` | `hover:text-teal-400` |
+| Indicator | Number badge (red bg) | Small teal dot (absolute, top-right) |
+| Transition | None | `transition-colors duration-200` |
 
-#### 2. Tablet Compare Button (lines 324-330)
-Apply same changes as desktop:
-- `border-teal-500`
-- `bg-transparent`
-- `hover:bg-teal-500/10`
-- `text-teal-400`
+### 3. Currency Selector
 
-#### 3. Mobile Compare Button (lines 441-448)
-Update to match ghost style while keeping it prominent:
-- Change `bg-primary/10` → `bg-transparent`
-- Change `hover:bg-primary/20` → `hover:bg-teal-500/10`
-- Change `border-primary` → `border-teal-500`
-- Keep `text-primary` or change to `text-teal-400`
+| Property | Current | Target |
+|----------|---------|--------|
+| Text color | `text-foreground` | `text-gray-400` |
+| Hover text | None | `hover:text-white` |
+| Arrow size | `h-3.5 w-3.5` | `w-3 h-3` |
+| Transition | None | `transition-colors duration-200` |
 
-## Visual Hierarchy Result
+### 4. Utility Spacing
 
-| Button Type | Style | Use Case |
-|-------------|-------|----------|
-| Ghost (Compare) | Transparent + teal border | Nav actions, secondary actions |
-| Filled (Material Wizard) | Solid teal background | Primary CTAs in content area |
+| Property | Current | Target |
+|----------|---------|--------|
+| Gap | `gap-2 md:gap-4` | `gap-4` (consistent 16px) |
+| Divider | None | `h-6 w-px bg-gray-700` between nav and utilities |
 
-## Technical Notes
-- Using explicit `teal-500` and `teal-400` colors instead of CSS variables (`primary`) ensures the ghost style is visually distinct
-- The `hover:bg-teal-500/10` provides subtle feedback without competing with filled buttons
-- Keeping `rounded-lg` maintains consistency with site-wide button styling
+---
+
+## Files to Modify
+
+### File 1: `src/components/Navbar.tsx`
+
+**Utility container (line 339)**
+- Change `gap-2 md:gap-4` to `gap-4`
+- Add vertical divider before WishlistButton
+
+**User Avatar - Logged in (lines 348-353)**
+- Change `w-8 h-8` to `w-9 h-9`
+- Change `hover:border-primary/50` to `hover:border-teal-500/50`
+- Change initials `text-xs` to `text-sm`
+
+**User Avatar - Logged out (lines 413-417)**
+- Change `w-8 h-8` to `w-9 h-9`
+- Change `hover:border-primary/50` to `hover:border-teal-500/50`
+
+### File 2: `src/components/wishlist/WishlistButton.tsx`
+
+**Button styling (lines 27-35, 41-54)**
+- Change `text-muted-foreground` to `text-gray-400`
+- Change `hover:text-foreground` to `hover:text-teal-400`
+- Add `transition-colors duration-200`
+- Replace number badge with small teal dot indicator
+
+### File 3: `src/components/CurrencySelector.tsx`
+
+**SelectTrigger styling (line 17)**
+- Change text color to `text-gray-400`
+- Add `hover:text-white`
+- Add `transition-colors duration-200`
+
+**ChevronDown (line 19)**
+- Change `h-3.5 w-3.5` to `w-3 h-3`
+
+---
+
+## Implementation Details
+
+### Teal Dot Indicator for Favorites
+Replace the current number badge with a subtle dot:
+```tsx
+{stats.totalItems > 0 && (
+  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-teal-500" />
+)}
+```
+
+### Vertical Divider Before Utilities
+Add before the utilities section in the navbar:
+```tsx
+<div className="hidden md:block h-6 w-px bg-gray-700" />
+```
+
+### Consistent Hover Transitions
+Apply `transition-colors duration-200` to all interactive elements for smooth state changes.
