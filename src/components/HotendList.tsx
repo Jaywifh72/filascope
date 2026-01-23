@@ -85,6 +85,9 @@ export default function HotendList() {
     newParams.set("tab", "hotends");
     setSearchParams(newParams, { replace: true });
   };
+  
+  // Sort state
+  const [sortBy, setSortBy] = useState("alphabetical");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingHotend, setEditingHotend] = useState<Accessory | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -376,97 +379,114 @@ export default function HotendList() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Input
-          type="text"
-          placeholder="Search hotends..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="md:col-span-2"
-        />
-
-        <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select brand" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Brands</SelectItem>
-            {brands.map(brand => (
-              <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Results Count & Admin Actions */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-6">
+      {/* Results Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left: Results Count */}
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold">
-            {groupedCount} <span className="text-muted-foreground font-normal">hotends</span>
-            <span className="text-sm text-muted-foreground font-normal ml-2">({filteredNozzles.length} variants)</span>
+          <h2 className="text-2xl font-semibold">
+            <span className="text-primary">{groupedCount}</span>{" "}
+            <span className="text-foreground">hotends</span>
+            <span className="text-sm text-muted-foreground font-normal ml-2">
+              ({filteredNozzles.length} variants)
+            </span>
           </h2>
-          {missingImageCount > 0 && (
+          {missingImageCount > 0 && isAdmin && (
             <Badge variant="outline" className="text-muted-foreground">
               {missingImageCount} missing images
             </Badge>
           )}
         </div>
 
-        {isAdmin && (
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkScrape}
-              disabled={isScraping || missingImageCount === 0}
-            >
-              {isScraping ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-1" />
-              )}
-              Scrape Missing Images
-            </Button>
+        {/* Right: Filters */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Input
+            type="text"
+            placeholder="Search hotends..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-64 bg-gray-800 border-gray-700"
+          />
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectAll}
-            >
-              {selectedIds.size === filteredNozzles.length ? "Deselect All" : "Select All"}
-            </Button>
-            
-            {selectedIds.size > 0 && (
-              <>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleScrapeSelected}
-                  disabled={isScraping}
-                >
-                  {isScraping ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-1" />
-                  )}
-                  Scrape Selected ({selectedIds.size})
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete ({selectedIds.size})
-                </Button>
-              </>
-            )}
-          </div>
-        )}
+          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
+              <SelectValue placeholder="All Brands" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {brands.map(brand => (
+                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alphabetical">Alphabetical</SelectItem>
+              <SelectItem value="price-low">Price: Low to High</SelectItem>
+              <SelectItem value="price-high">Price: High to Low</SelectItem>
+              <SelectItem value="newest">Newest</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {/* Admin Actions */}
+      {isAdmin && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkScrape}
+            disabled={isScraping || missingImageCount === 0}
+          >
+            {isScraping ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-1" />
+            )}
+            Scrape Missing Images
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={selectAll}
+          >
+            {selectedIds.size === filteredNozzles.length ? "Deselect All" : "Select All"}
+          </Button>
+          
+          {selectedIds.size > 0 && (
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleScrapeSelected}
+                disabled={isScraping}
+              >
+                {isScraping ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-1" />
+                )}
+                Scrape Selected ({selectedIds.size})
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete ({selectedIds.size})
+              </Button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Hotends by Brand */}
       {filteredNozzles.length === 0 ? (
