@@ -22,19 +22,35 @@ interface FeaturedCardProps {
 }
 
 const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform, rank }) => {
+  // Badge color mapping for consistent styling
+  const getBadgeColors = (badge: string) => {
+    const badgeLower = badge.toLowerCase();
+    if (badgeLower.includes('overall') || badgeLower.includes('#1')) {
+      return 'bg-teal-500/20 text-teal-400 border-teal-500/40';
+    }
+    if (badgeLower.includes('free')) {
+      return 'bg-green-500/20 text-green-400 border-green-500/40';
+    }
+    if (badgeLower.includes('bambu')) {
+      return 'bg-orange-500/20 text-orange-400 border-orange-500/40';
+    }
+    if (badgeLower.includes('seller')) {
+      return 'bg-purple-500/20 text-purple-400 border-purple-500/40';
+    }
+    if (badgeLower.includes('engineer')) {
+      return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+    }
+    return 'bg-primary/20 text-primary border-primary/40';
+  };
+
   return (
     <div 
       id={platform.targetId}
-      className="relative p-6 bg-gradient-to-br from-primary/5 via-background to-background border border-primary/30 rounded-2xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.01] transition-all duration-200"
+      className="relative p-6 bg-gradient-to-br from-primary/5 via-background to-background border border-primary/30 rounded-2xl hover:border-teal-500/50 hover:shadow-lg hover:shadow-teal-500/10 hover:scale-[1.02] transition-all duration-300"
     >
       {/* Badge */}
       <div 
-        className="absolute -top-3 left-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold"
-        style={{ 
-          backgroundColor: `${platform.tierBadgeColor}20`,
-          color: platform.tierBadgeColor,
-          border: `1px solid ${platform.tierBadgeColor}50`
-        }}
+        className={`absolute -top-3 left-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold border ${getBadgeColors(platform.tierBadge)}`}
       >
         {getBadgeIcon(platform.tierBadgeIcon, 16)}
         <span>{platform.tierBadge}</span>
@@ -48,8 +64,8 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform, rank }) => {
           className="w-16 h-16 object-contain rounded-xl bg-white/5 p-2"
         />
         <div className="flex-1 min-w-0">
-          <h3 className="text-2xl font-bold text-foreground">{platform.name}</h3>
-          <p className="text-sm text-muted-foreground">by {platform.owner}</p>
+          <h3 className="text-2xl font-bold text-white">{platform.name}</h3>
+          <p className="text-sm text-gray-400">by {platform.owner}</p>
           <p className="text-base font-medium text-primary mt-1">{platform.tagline}</p>
         </div>
         <span 
@@ -75,7 +91,7 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform, rank }) => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {(['quality', 'community', 'search', 'ux'] as const).map(key => (
           <div key={key} className="text-center">
-            <p className="text-xs text-muted-foreground mb-1 capitalize">{key}</p>
+            <p className="text-xs text-gray-400 mb-1 capitalize">{key}</p>
             <RatingValue 
               rating={platform.ratings[key]} 
               size="medium" 
@@ -89,10 +105,10 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform, rank }) => {
       {/* Why We Picked It */}
       {platform.whyPicked && (
         <div className="mb-6 p-4 bg-muted/20 rounded-xl border border-border/50">
-          <h4 className="text-sm font-semibold text-foreground mb-3">Why We Picked It</h4>
+          <h4 className="text-sm font-semibold text-white mb-3">Why We Picked It</h4>
           <ul className="space-y-2">
             {platform.whyPicked.map((reason, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
                 <Check size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
                 <span>{reason}</span>
               </li>
@@ -106,15 +122,15 @@ const FeaturedCard: React.FC<FeaturedCardProps> = ({ platform, rank }) => {
         <FeatureTag label="Free" active={platform.features.free} />
         <FeatureTag label="Paid" active={platform.features.paid} />
         <FeatureTag label="Mobile" active={platform.features.mobile} />
-        <span className="px-2 py-1 text-xs font-medium bg-muted/30 text-muted-foreground rounded-md">
+        <span className="px-2 py-1 text-xs font-medium bg-muted/30 text-gray-400 rounded-md">
           {platform.fileTypes.join(' / ')}
         </span>
       </div>
 
       {/* Best For */}
       <div className="mb-6">
-        <p className="text-xs text-muted-foreground mb-1">Best For</p>
-        <p className="text-sm text-foreground">{platform.bestFor}</p>
+        <p className="text-xs text-gray-400 mb-1">Best For</p>
+        <p className="text-sm text-white">{platform.bestFor}</p>
       </div>
 
       {/* Actions */}
@@ -153,23 +169,23 @@ const StaffPicksSection: React.FC = () => {
             <Trophy className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 id="staff-picks-title" className="text-xl md:text-2xl font-bold text-foreground">
+            <h2 id="staff-picks-title" className="text-2xl font-bold text-white">
               Our Top Recommendations
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               Staff-curated picks based on 100+ hours of research
             </p>
           </div>
         </div>
         {hasActiveFilters && (
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-gray-400 mt-2">
             Showing {staffPicks.length} of {allStaffPicks.length} platforms
           </p>
         )}
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {staffPicks.map((platform, index) => (
           <FeaturedCard key={platform.id} platform={platform} rank={index + 1} />
         ))}

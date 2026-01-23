@@ -14,31 +14,31 @@ export const ratingConfigs: Record<RatingLevel, RatingConfig> = {
     level: 'excellent',
     label: 'Excellent',
     color: '#22C55E',
-    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
     description: 'Best-in-class, industry leading',
     numericValue: 5
   },
   great: {
     level: 'great',
     label: 'Great',
-    color: '#00D9D9',
-    backgroundColor: 'rgba(0, 217, 217, 0.15)',
+    color: '#14B8A6',
+    backgroundColor: 'rgba(20, 184, 166, 0.2)',
     description: 'Above average, highly recommended',
     numericValue: 4
   },
   good: {
     level: 'good',
     label: 'Good',
-    color: '#F59E0B',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    color: '#EAB308',
+    backgroundColor: 'rgba(234, 179, 8, 0.2)',
     description: 'Adequate, meets expectations',
     numericValue: 3
   },
   average: {
     level: 'average',
     label: 'Average',
-    color: '#FB923C',
-    backgroundColor: 'rgba(251, 146, 60, 0.15)',
+    color: '#6B7280',
+    backgroundColor: 'rgba(107, 114, 128, 0.2)',
     description: 'Below average, has limitations',
     numericValue: 2
   },
