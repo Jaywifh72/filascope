@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Star, Table, FileText } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, X, DollarSign, Monitor, FileType, Wifi, Star, Table, FileText, List, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -17,6 +17,8 @@ import CADComparisonSidebar from "@/components/reference/CADComparisonSidebar";
 import CADComparisonMobile from "@/components/reference/CADComparisonMobile";
 import CADComparisonModal from "@/components/reference/CADComparisonModal";
 import CADFilterBar from "@/components/reference/CADFilterBar";
+import { CADFilterSidebar } from "@/components/reference/CADFilterSidebar";
+import { CADComparisonTable } from "@/components/reference/CADComparisonTable";
 import { CADComparisonProvider } from "@/contexts/CADComparisonContext";
 import { CADFilterProvider } from "@/contexts/CADFilterContext";
 import { 
@@ -78,6 +80,7 @@ const ReferenceCAD = () => {
   const [activeTab, setActiveTab] = useState<CADTab>("recommendations");
   const [expandedAccordion, setExpandedAccordion] = useState<string[]>([]);
   const [profileFilter, setProfileFilter] = useState<ProfileFilter>('all');
+  const [isDetailedView, setIsDetailedView] = useState(false);
 
   const handleScrollToComparison = () => {
     setActiveTab("comparison");
@@ -224,20 +227,59 @@ const ReferenceCAD = () => {
             {/* FULL COMPARISON TAB */}
             {activeTab === "comparison" && (
               <section id="cad-comparison-section" className="py-6 animate-fade-in">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-foreground max-md:text-xl mb-2">Full Comparison Table</h2>
-                  <p className="text-muted-foreground">
-                    Compare all {cadComparison.length} CAD software tools with detailed specifications
-                  </p>
+                {/* Header with View Toggle */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground max-md:text-xl mb-2">Full Comparison Table</h2>
+                    <p className="text-muted-foreground">
+                      View all {cadComparison.length} CAD tools with detailed specifications
+                    </p>
+                  </div>
+                  
+                  {/* View Toggle */}
+                  <div className="flex items-center gap-1 p-1 bg-gray-800/50 rounded-lg">
+                    <button
+                      onClick={() => setIsDetailedView(false)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                        !isDetailedView 
+                          ? "bg-primary text-primary-foreground" 
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <List className="w-4 h-4" />
+                      Simplified View
+                    </button>
+                    <button
+                      onClick={() => setIsDetailedView(true)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                        isDetailedView 
+                          ? "bg-primary text-primary-foreground" 
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      Detailed View
+                    </button>
+                  </div>
                 </div>
 
-                {/* Filter Bar */}
-                <CADFilterBar />
-
-                {/* 3-Tier Comparison System */}
-                <CADThreeTierComparison 
-                  onViewDetails={handleLearnMore}
-                />
+                {/* Layout with sidebar */}
+                <div className="flex gap-6">
+                  {/* Left Sidebar - Filter */}
+                  <div className="sticky top-[72px] h-fit">
+                    <CADFilterSidebar />
+                  </div>
+                  
+                  {/* Main Content - Table */}
+                  <div className="flex-1 bg-card/30 border border-border rounded-xl overflow-hidden">
+                    <CADComparisonTable 
+                      onViewDetails={handleLearnMore}
+                      isDetailedView={isDetailedView}
+                    />
+                  </div>
+                </div>
               </section>
             )}
 
