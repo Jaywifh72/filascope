@@ -13,17 +13,17 @@ const badgeConfig: Record<NonNullable<BadgeType>, { icon: typeof Award; label: s
   'staff-pick': {
     icon: Award,
     label: '#1 STAFF PICK',
-    className: 'bg-primary/15 border-primary/30 text-primary',
+    className: 'bg-primary/20 border-primary/30 text-primary',
   },
   'popular': {
     icon: Star,
     label: 'MOST POPULAR',
-    className: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-500',
+    className: 'bg-orange-500/20 border-orange-500/30 text-orange-400',
   },
   'pro-choice': {
     icon: Gem,
     label: 'PRO CHOICE',
-    className: 'bg-purple-500/15 border-purple-500/30 text-purple-400',
+    className: 'bg-purple-500/20 border-purple-500/30 text-purple-400',
   },
 };
 
@@ -48,11 +48,11 @@ export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }:
       className={cn(
         'w-[320px] min-h-[480px] flex-shrink-0 rounded-xl p-6',
         'flex flex-col items-center text-center gap-3',
-        'transition-all duration-200 scroll-snap-align-start',
-        'hover:-translate-y-1 hover:shadow-lg hover:border-primary/50',
+        'transition-all duration-300',
+        'hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50',
         isStaffPick
-          ? 'bg-primary/[0.08] border-2 border-primary'
-          : 'bg-card/50 border border-border',
+          ? 'bg-gray-800 border-2 border-primary'
+          : 'bg-gray-800 border border-gray-700',
         'max-lg:w-full max-lg:min-h-[440px]'
       )}
     >
@@ -128,7 +128,7 @@ export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }:
         
         <button
           onClick={onAddToCompare}
-          className="w-full h-11 bg-transparent border-[1.5px] border-primary/30 hover:border-primary/50 hover:bg-primary/10 rounded-lg text-sm font-semibold text-primary inline-flex items-center justify-center gap-2 transition-all"
+          className="w-full h-11 bg-transparent border-[1.5px] border-primary/30 hover:border-primary/50 hover:bg-primary/10 rounded-lg text-sm font-semibold text-primary hover:text-primary/80 inline-flex items-center justify-center gap-2 transition-all"
         >
           <Plus size={16} />
           <span>Add to Compare</span>
