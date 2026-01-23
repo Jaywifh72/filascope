@@ -268,12 +268,12 @@ const Navbar = () => {
             <button
               onClick={() => navigate('/compare')}
               className={cn(
-                "border border-primary bg-transparent hover:bg-primary/10",
+                "border border-teal-500 bg-transparent hover:bg-teal-500/10",
                 "rounded-lg px-4 py-2",
                 "text-xs font-bold uppercase tracking-widest",
                 "flex items-center gap-2",
                 "transition-all duration-200",
-                isActive('/compare') ? "bg-primary/10 text-primary" : "text-gray-400 hover:text-white"
+                isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400"
               )}
             >
               <GitCompareArrows className="w-3.5 h-3.5" />
@@ -322,12 +322,12 @@ const Navbar = () => {
             <button
               onClick={() => navigate('/compare')}
               className={cn(
-                "border border-primary bg-transparent hover:bg-primary/10",
+                "border border-teal-500 bg-transparent hover:bg-teal-500/10",
                 "rounded-lg px-3 py-1.5",
                 "text-xs font-bold uppercase tracking-widest",
                 "flex items-center gap-2",
                 "transition-all duration-200",
-                isActive('/compare') ? "bg-primary/10 text-primary" : "text-gray-400 hover:text-white"
+                isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400"
               )}
             >
               <GitCompareArrows className="w-3.5 h-3.5" />
@@ -439,12 +439,12 @@ const Navbar = () => {
                   setMobileMenuOpen(false);
                 }}
                 className={cn(
-                  "w-full border border-primary bg-primary/10 hover:bg-primary/20",
+                  "w-full border border-teal-500 bg-transparent hover:bg-teal-500/10",
                   "rounded-lg px-4 py-3",
                   "text-sm font-bold uppercase tracking-widest",
                   "flex items-center justify-center gap-2",
                   "transition-all duration-200",
-                  "text-primary"
+                  "text-teal-400"
                 )}
               >
                 <GitCompareArrows className="w-4 h-4" />
