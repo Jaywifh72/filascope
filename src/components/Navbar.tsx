@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogIn, LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, FlaskConical } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, User, GitCompareArrows } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
-import { TrendingTriggerButton } from "@/components/TrendingTriggerButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 const Navbar = () => {
   const {
     user,
@@ -22,7 +22,6 @@ const Navbar = () => {
   const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
 
   // Trending panel state
   const trendingPanel = useTrendingPanel();
@@ -35,13 +34,7 @@ const Navbar = () => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+
   useEffect(() => {
     if (!user) {
       setAvatarUrl(null);
@@ -59,10 +52,12 @@ const Navbar = () => {
     };
     loadProfile();
   }, [user]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
+
   const getInitials = () => {
     if (displayName) {
       return displayName.slice(0, 2).toUpperCase();
@@ -72,14 +67,8 @@ const Navbar = () => {
     }
     return 'U';
   };
-  const getDisplayLabel = () => {
-    if (displayName) {
-      return displayName;
-    }
-    return user?.email?.split("@")[0] || 'User';
-  };
 
-  // Lab-style nav link component - Uppercase with tracking-widest
+  // Lab-style nav link component
   const LabNavLink = ({
     to,
     children,
@@ -90,44 +79,80 @@ const Navbar = () => {
     end?: boolean;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
-    return <Link to={to} className={cn("relative py-3 px-4 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "hover:text-[#00CFE8]", active ? "text-[#00CFE8]" : "text-foreground/80")}>
+    return (
+      <Link 
+        to={to} 
+        className={cn(
+          "relative py-3 px-3 transition-colors duration-200",
+          "text-xs font-bold uppercase tracking-widest",
+          "hover:text-primary",
+          active ? "text-primary" : "text-foreground/80"
+        )}
+      >
         {children}
-        {/* Underline indicator */}
-        <span className={cn("absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-[#00CFE8] transition-all duration-300", active ? "w-full" : "w-0 group-hover:w-full")} />
-      </Link>;
+        <span className={cn(
+          "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300",
+          active ? "w-full" : "w-0"
+        )} />
+      </Link>
+    );
   };
-  return <>
-      <nav className="sticky top-0 z-50 transition-all duration-300" style={{
-      background: 'hsla(220, 20%, 4%, 0.85)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid hsla(220, 15%, 18%, 0.5)'
-    }}>
-        <div className={`flex items-center px-6 gap-6 transition-all duration-300 ${isScrolled ? "h-16 md:h-18" : "h-18 md:h-20"}`}>
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src={filascopeLogo} alt="FilaScope" className={`w-auto object-contain transition-all duration-300 ${isScrolled ? "h-10 md:h-12" : "h-12 md:h-16"}`} />
-            
+
+  return (
+    <>
+      <nav 
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          background: 'hsla(220, 20%, 4%, 0.9)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+      >
+        {/* Bottom border with subtle shadow for depth */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+          style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}
+        />
+        
+        <div className="h-16 flex items-center px-6 gap-6">
+          {/* Logo - Only icon and wordmark */}
+          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+            <img 
+              src={filascopeLogo} 
+              alt="FilaScope" 
+              className="h-9 w-auto object-contain"
+            />
+            <span className="text-base font-bold tracking-widest text-foreground">
+              FILASCOPE
+            </span>
           </Link>
 
-          {/* Navigation Links - Lab Style */}
-          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+          {/* Navigation Links */}
+          <nav className="hidden lg:flex items-center flex-1 justify-center gap-6">
             <LabNavLink to="/" end>Materials</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
-            <LabNavLink to="/compare">Compare</LabNavLink>
             
             {/* Resources Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn("relative flex items-center gap-1.5 py-3 px-4 transition-colors duration-200 group", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-[#00CFE8]", isResourcesActive ? 'text-[#00CFE8]' : 'text-foreground/80')}>
+                <button 
+                  className={cn(
+                    "relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200",
+                    "text-xs font-bold uppercase tracking-widest",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "hover:text-primary",
+                    isResourcesActive ? 'text-primary' : 'text-foreground/80'
+                  )}
+                >
                   Resources
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-[hsl(220,15%,18%)] min-w-[220px] p-2" style={{
-              backdropFilter: 'blur(20px)'
-            }}>
+              <DropdownMenuContent 
+                align="center" 
+                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2"
+              >
                 <DropdownMenuItem asChild className="rounded-lg">
                   <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                     <Puzzle className="w-4 h-4 text-muted-foreground" />
@@ -174,26 +199,47 @@ const Navbar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Visual separator */}
+            <div className="h-5 w-px bg-border/50 mx-2" />
+
+            {/* Compare Button - Ghost with teal border */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/compare')}
+              className={cn(
+                "border-primary/50 bg-transparent hover:bg-primary/10 hover:border-primary",
+                "text-xs font-bold uppercase tracking-widest gap-2",
+                "transition-all duration-200",
+                isActive('/compare') && "border-primary bg-primary/10 text-primary"
+              )}
+            >
+              <GitCompareArrows className="w-3.5 h-3.5" />
+              Compare
+            </Button>
           </nav>
 
-          {/* User Actions */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Right-side utilities */}
+          <div className="flex items-center gap-4 shrink-0">
             <WishlistButton />
             <CurrencySelector />
-            {user ? <DropdownMenu>
+            
+            {/* User Avatar / Login */}
+            {user ? (
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-border bg-card font-mono text-xs gap-2 pl-1.5 pr-3">
-                    <Avatar className="w-6 h-6">
+                  <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
+                    <Avatar className="w-8 h-8 border border-border/50 hover:border-primary/50 transition-colors cursor-pointer">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-                      <AvatarFallback className="text-[10px] bg-muted">
+                      <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:inline">{getDisplayLabel()}</span>
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card border-border">
-                  <div className="flex items-center gap-3 px-2 py-2">
+                <DropdownMenuContent align="end" className="bg-card border-border min-w-[200px]">
+                  <div className="flex items-center gap-3 px-3 py-2.5">
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
                       <AvatarFallback className="text-sm bg-muted">
@@ -202,52 +248,78 @@ const Navbar = () => {
                     </Avatar>
                     <div className="flex flex-col">
                       {displayName && <span className="text-sm font-medium">{displayName}</span>}
-                      <span className="text-xs text-muted-foreground font-mono">
+                      <span className="text-xs text-muted-foreground">
                         {user.email}
                       </span>
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem asChild>
-                    <Link to="/vault" className="flex items-center font-mono text-xs">
-                      <Archive className="w-3 h-3 mr-2" />
-                      MY VAULT
+                    <Link to="/vault" className="flex items-center text-sm">
+                      <Archive className="w-4 h-4 mr-2" />
+                      My Vault
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center font-mono text-xs">
-                      <Settings className="w-3 h-3 mr-2" />
-                      SETTINGS
+                    <Link to="/settings" className="flex items-center text-sm">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border" />
-                  {isAdmin && <>
+                  {isAdmin && (
+                    <>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/dashboard" className="flex items-center font-mono text-xs">
-                          <Shield className="w-3 h-3 mr-2" />
-                          ADMIN
+                        <Link to="/admin/dashboard" className="flex items-center text-sm">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Admin
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/maintenance" className="flex items-center font-mono text-xs">
-                          <Database className="w-3 h-3 mr-2" />
-                          MAINTENANCE
+                        <Link to="/admin/maintenance" className="flex items-center text-sm">
+                          <Database className="w-4 h-4 mr-2" />
+                          Maintenance
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-border" />
-                    </>}
-                  <DropdownMenuItem onClick={handleSignOut} className="font-mono text-xs">
-                    <LogOut className="w-3 h-3 mr-2" />
-                    SIGN OUT
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={handleSignOut} className="text-sm">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu> : null}
+              </DropdownMenu>
+            ) : (
+              <button 
+                onClick={() => navigate('/auth')}
+                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+              >
+                <Avatar className="w-8 h-8 border border-border/50 hover:border-primary/50 transition-colors cursor-pointer">
+                  <AvatarFallback className="bg-muted text-muted-foreground">
+                    <User className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            )}
           </div>
         </div>
       </nav>
       
       {/* Trending Panel */}
-      <TrendingPanel isOpen={trendingPanel.isOpen} onClose={trendingPanel.closePanel} selectedTab={trendingPanel.selectedTab} onTabChange={trendingPanel.setSelectedTab} activeTrends={trendingPanel.activeTrends} predictions={trendingPanel.predictions} isLoading={trendingPanel.isLoading} error={trendingPanel.error} viewedTrendIds={trendingPanel.viewedTrendIds} />
-    </>;
+      <TrendingPanel 
+        isOpen={trendingPanel.isOpen} 
+        onClose={trendingPanel.closePanel} 
+        selectedTab={trendingPanel.selectedTab} 
+        onTabChange={trendingPanel.setSelectedTab} 
+        activeTrends={trendingPanel.activeTrends} 
+        predictions={trendingPanel.predictions} 
+        isLoading={trendingPanel.isLoading} 
+        error={trendingPanel.error} 
+        viewedTrendIds={trendingPanel.viewedTrendIds} 
+      />
+    </>
+  );
 };
+
 export default Navbar;
