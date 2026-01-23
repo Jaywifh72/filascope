@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 
 import { cadData } from "@/lib/cadData";
 import CADHeroSection from "@/components/reference/CADHeroSection";
-import CADProfileSelector from "@/components/reference/CADProfileSelector";
 import CADThreeTierComparison, { cadComparison } from "@/components/reference/CADThreeTierComparison";
 import CADComparisonSidebar from "@/components/reference/CADComparisonSidebar";
 import CADComparisonMobile from "@/components/reference/CADComparisonMobile";
@@ -23,6 +22,9 @@ import { CADFilterProvider } from "@/contexts/CADFilterContext";
 import { 
   SoftwareBadges,
 } from "@/components/reference/CADBadges";
+import { CADStaffPickCard, staffPicks } from "@/components/reference/CADStaffPickCard";
+import { CADRecommendationsSidebar } from "@/components/reference/CADRecommendationsSidebar";
+import { CADProfileFilterPills, ProfileFilter } from "@/components/reference/CADProfileFilterPills";
 
 // Logo mapping for CAD software
 const cadLogos: Record<string, string> = {
@@ -75,6 +77,7 @@ type CADTab = "recommendations" | "comparison" | "profiles";
 const ReferenceCAD = () => {
   const [activeTab, setActiveTab] = useState<CADTab>("recommendations");
   const [expandedAccordion, setExpandedAccordion] = useState<string[]>([]);
+  const [profileFilter, setProfileFilter] = useState<ProfileFilter>('all');
 
   const handleScrollToComparison = () => {
     setActiveTab("comparison");
@@ -164,7 +167,7 @@ const ReferenceCAD = () => {
           </div>
 
           {/* Main Content */}
-          <div className="max-w-[1600px] mx-auto px-6 lg:px-10 lg:pr-[300px]">
+          <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
             {/* Back Button */}
             <div className="py-4">
               <Button variant="ghost" size="sm" asChild>
@@ -178,17 +181,42 @@ const ReferenceCAD = () => {
             {/* RECOMMENDATIONS TAB */}
             {activeTab === "recommendations" && (
               <section className="py-6 animate-fade-in">
-                <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6 mb-8">
-                  <h2 className="text-2xl font-bold text-foreground max-md:text-xl mb-2">Our Recommendations</h2>
-                  <p className="text-muted-foreground mb-6">
-                    Find the perfect CAD software based on your role and experience level
-                  </p>
+                <div className="flex gap-8">
+                  {/* Main Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-2xl p-6">
+                      <h2 className="text-2xl font-bold text-foreground max-md:text-xl mb-2">Our Recommendations</h2>
+                      <p className="text-muted-foreground mb-6">
+                        Staff-curated recommendations based on use case and performance
+                      </p>
+                      
+                      {/* Profile Filter Pills */}
+                      <div className="mb-6">
+                        <CADProfileFilterPills 
+                          activeFilter={profileFilter} 
+                          onChange={setProfileFilter} 
+                        />
+                      </div>
+                      
+                      {/* Staff Pick Cards */}
+                      <div className="flex gap-5 overflow-x-auto pb-4 items-stretch">
+                        {staffPicks.map((pick) => (
+                          <CADStaffPickCard
+                            key={pick.name}
+                            pick={pick}
+                            onViewDetails={() => handleLearnMore(pick.name.toLowerCase().replace(/\s+/g, '-'))}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                   
-                  {/* Profile Selector embedded as optional filter */}
-                  <CADProfileSelector 
-                    onScrollToComparison={handleScrollToComparison} 
-                    onLearnMore={handleLearnMore} 
-                  />
+                  {/* Right Sidebar - Comparison Builder */}
+                  <div className="hidden lg:block w-[280px] flex-shrink-0">
+                    <div className="sticky top-[72px]">
+                      <CADRecommendationsSidebar />
+                    </div>
+                  </div>
                 </div>
               </section>
             )}
