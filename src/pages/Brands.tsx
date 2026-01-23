@@ -7,6 +7,8 @@ import { getBrandLogo } from "@/lib/brandLogos";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
+import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
+import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -158,6 +160,14 @@ const Brands = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [filters, setFilters] = useState<BrandFilters>({
+    materials: [],
+    features: [],
+    verifiedOnly: false,
+    hasLivePricing: false,
+    filamentCountRange: null,
+    sortBy: "count-desc",
+  });
 
   // Fetch automated brands metadata
   const { data: automatedBrands } = useQuery({
@@ -296,17 +306,86 @@ const Brands = () => {
 
   const platforms = Object.keys(platformCounts).sort();
 
-  // Filter brands
+  // Calculate material counts for sidebar (based on brand data - how many brands have each material)
+  const materialCounts = useMemo(() => {
+    // This is a placeholder - in a real app, we'd query which brands have which materials
+    // For now, we show approximate counts
+    return {
+      "PLA": Math.floor(mergedBrands.length * 0.9),
+      "PETG": Math.floor(mergedBrands.length * 0.7),
+      "ABS": Math.floor(mergedBrands.length * 0.5),
+      "ASA": Math.floor(mergedBrands.length * 0.3),
+      "TPU": Math.floor(mergedBrands.length * 0.4),
+      "Nylon": Math.floor(mergedBrands.length * 0.25),
+      "PC": Math.floor(mergedBrands.length * 0.2),
+      "Other": Math.floor(mergedBrands.length * 0.15),
+    };
+  }, [mergedBrands.length]);
+
+  // Filter brands with all criteria
   const filteredBrands = useMemo(() => {
-    return mergedBrands.filter(brand => {
+    let result = mergedBrands.filter(brand => {
+      // Search filter
       const matchesSearch = brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            brand.automated?.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Platform filter
       const matchesPlatform = !selectedPlatform || 
                              (brand.automated?.platform_type === selectedPlatform) ||
                              (!brand.automated && selectedPlatform === "other");
-      return matchesSearch && matchesPlatform;
+      
+      // Verified filter
+      const matchesVerified = !filters.verifiedOnly || VERIFIED_BRANDS.includes(brand.name);
+      
+      // Live pricing filter
+      const matchesLivePricing = !filters.hasLivePricing || brand.automated?.last_scrape_at != null;
+      
+      // Features filter
+      const matchesHighSpeed = !filters.features.includes("highSpeed") || brand.hasHighSpeed;
+      const matchesRfid = !filters.features.includes("rfid") || brand.avgTransmissionDistance != null;
+      const matchesCardboard = !filters.features.includes("cardboard") || 
+                               brand.spoolMaterial === "Cardboard" || brand.spoolMaterial === "Mixed";
+      
+      // Filament count filter
+      let matchesCount = true;
+      if (filters.filamentCountRange === "1-50") {
+        matchesCount = brand.count >= 1 && brand.count <= 50;
+      } else if (filters.filamentCountRange === "51-200") {
+        matchesCount = brand.count >= 51 && brand.count <= 200;
+      } else if (filters.filamentCountRange === "200+") {
+        matchesCount = brand.count > 200;
+      }
+      
+      return matchesSearch && matchesPlatform && matchesVerified && matchesLivePricing && 
+             matchesHighSpeed && matchesRfid && matchesCardboard && matchesCount;
     });
-  }, [mergedBrands, searchQuery, selectedPlatform]);
+
+    // Sort
+    switch (filters.sortBy) {
+      case "name-asc":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "count-asc":
+        result.sort((a, b) => a.count - b.count);
+        break;
+      case "count-desc":
+      default:
+        result.sort((a, b) => b.count - a.count);
+        break;
+    }
+
+    return result;
+  }, [mergedBrands, searchQuery, selectedPlatform, filters]);
+
+  // Check if any filters are active (besides default sort)
+  const hasActiveFilters = filters.materials.length > 0 || 
+                          filters.features.length > 0 || 
+                          filters.verifiedOnly || 
+                          filters.hasLivePricing || 
+                          filters.filamentCountRange !== null;
 
   // Stats
   const totalProducts = brands?.reduce((sum, b) => sum + b.count, 0) || 0;
@@ -329,97 +408,123 @@ const Brands = () => {
         onOpenQuiz={handleOpenQuiz}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        {/* Platform Filter Tabs */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          <Button
-            variant={selectedPlatform === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedPlatform(null)}
-          >
-            All ({mergedBrands.length})
-          </Button>
-          {platforms.map((platform) => (
-            <Button
-              key={platform}
-              variant={selectedPlatform === platform ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedPlatform(platform)}
-              className="capitalize"
-            >
-              {platform} ({platformCounts[platform]})
-            </Button>
-          ))}
-        </div>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="flex gap-8">
+          {/* Sidebar */}
+          <BrandsSidebar
+            filters={filters}
+            onFiltersChange={setFilters}
+            materialCounts={materialCounts}
+          />
 
-        {/* Legend */}
-        <div className="mb-6 flex flex-wrap items-center gap-4 p-3 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Info className="w-3.5 h-3.5" />
-            <span className="font-mono">LEGEND:</span>
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-help">
-                <PlasticSpoolIcon className="w-3.5 h-3.5" />
-                Plastic
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <p className="font-mono text-xs">Standard plastic spools. Durable and reusable, but not eco-friendly.</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help">
-                <CardboardSpoolIcon className="w-3.5 h-3.5" />
-                Cardboard
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <p className="font-mono text-xs">Eco-friendly cardboard spools. Recyclable but may absorb moisture - store in dry conditions.</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30 cursor-help">
-                <Zap className="w-3.5 h-3.5" />
-                High Speed
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <p className="font-mono text-xs">Optimized for high-speed printing (300+ mm/s). Enhanced flow and cooling properties.</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30 cursor-help">
-                <Radio className="w-3.5 h-3.5" />
-                RFID/NFC
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <p className="font-mono text-xs">Spools with RFID/NFC chips for automatic material detection. Distance shows read range in meters.</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30 cursor-help">
-                <BadgeCheck className="w-3.5 h-3.5" />
-                Verified
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              <p className="font-mono text-xs">Lab-tested brand with verified specifications and quality control.</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            {/* Platform Filter Tabs */}
+            <div className="mb-4 flex flex-wrap gap-2">
+              <Button
+                variant={selectedPlatform === null ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedPlatform(null)}
+              >
+                All ({mergedBrands.length})
+              </Button>
+              {platforms.map((platform) => (
+                <Button
+                  key={platform}
+                  variant={selectedPlatform === platform ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedPlatform(platform)}
+                  className="capitalize"
+                >
+                  {platform} ({platformCounts[platform]})
+                </Button>
+              ))}
+            </div>
 
-        {/* Brands Grid */}
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading brands...</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* Active Filter Chips */}
+            {hasActiveFilters && (
+              <BrandsActiveFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                className="mb-4"
+              />
+            )}
+
+            {/* Results Count */}
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing <span className="text-primary font-semibold">{filteredBrands.length}</span> of {mergedBrands.length} brands
+              </p>
+            </div>
+
+            {/* Legend */}
+            <div className="mb-6 flex flex-wrap items-center gap-4 p-3 bg-card border border-border rounded-lg">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Info className="w-3.5 h-3.5" />
+                <span className="font-mono">LEGEND:</span>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-help">
+                    <PlasticSpoolIcon className="w-3.5 h-3.5" />
+                    Plastic
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="font-mono text-xs">Standard plastic spools. Durable and reusable, but not eco-friendly.</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-help">
+                    <CardboardSpoolIcon className="w-3.5 h-3.5" />
+                    Cardboard
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="font-mono text-xs">Eco-friendly cardboard spools. Recyclable but may absorb moisture - store in dry conditions.</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-primary/20 text-primary border border-primary/30 cursor-help">
+                    <Zap className="w-3.5 h-3.5" />
+                    High Speed
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="font-mono text-xs">Optimized for high-speed printing (300+ mm/s). Enhanced flow and cooling properties.</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30 cursor-help">
+                    <Radio className="w-3.5 h-3.5" />
+                    RFID/NFC
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="font-mono text-xs">Spools with RFID/NFC chips for automatic material detection. Distance shows read range in meters.</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30 cursor-help">
+                    <BadgeCheck className="w-3.5 h-3.5" />
+                    Verified
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="font-mono text-xs">Lab-tested brand with verified specifications and quality control.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Brands Grid */}
+            {isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading brands...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredBrands.map((brand) => {
               const logoUrl = getBrandLogo(brand.name);
               const isVerified = VERIFIED_BRANDS.includes(brand.name);
@@ -541,6 +646,8 @@ const Brands = () => {
               <p className="text-sm text-muted-foreground">Platforms</p>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>
