@@ -65,9 +65,9 @@ export default function AccessoryCard({
             isSelected && "ring-2 ring-primary border-primary/50"
           )}
         >
-          <div className="flex h-full">
-            {/* Product Image - Left Side */}
-            <div className="relative w-28 shrink-0 bg-gray-900/50 flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row h-full">
+            {/* Product Image - Top on mobile, Left on desktop */}
+            <div className="relative w-full sm:w-28 h-32 sm:h-auto shrink-0 bg-gray-900/50 flex items-center justify-center">
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -87,12 +87,12 @@ export default function AccessoryCard({
               </div>
             </div>
 
-            {/* Card Content - Right Side */}
-            <div className="flex-1 p-4 min-w-0 flex flex-col">
+            {/* Card Content - Bottom on mobile, Right on desktop */}
+            <div className="flex-1 p-3 sm:p-4 min-w-0 flex flex-col">
               {/* Header with Name and Price */}
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-foreground line-clamp-1">{name}</h4>
+                  <h4 className="text-sm sm:text-base font-bold text-foreground line-clamp-2 sm:line-clamp-1">{name}</h4>
                   {subtitle && (
                     <span className="text-xs text-muted-foreground line-clamp-1">{subtitle}</span>
                   )}

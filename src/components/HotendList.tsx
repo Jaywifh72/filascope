@@ -392,58 +392,62 @@ export default function HotendList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Results Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: Results Count */}
-        <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-semibold">
-            <span className="text-primary">{groupedCount}</span>{" "}
-            <span className="text-foreground">hotends</span>
-            <span className="text-sm text-muted-foreground font-normal ml-2">
-              ({filteredNozzles.length} variants)
-            </span>
-          </h2>
-          {missingImageCount > 0 && isAdmin && (
-            <Badge variant="outline" className="text-muted-foreground">
-              {missingImageCount} missing images
-            </Badge>
-          )}
+      <div className="flex flex-col gap-4">
+        {/* Results Count */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <h2 className="text-xl sm:text-2xl font-semibold">
+              <span className="text-primary">{groupedCount}</span>{" "}
+              <span className="text-foreground">hotends</span>
+              <span className="text-xs sm:text-sm text-muted-foreground font-normal ml-2">
+                ({filteredNozzles.length} variants)
+              </span>
+            </h2>
+            {missingImageCount > 0 && isAdmin && (
+              <Badge variant="outline" className="text-muted-foreground text-xs">
+                {missingImageCount} missing images
+              </Badge>
+            )}
+          </div>
         </div>
 
-        {/* Right: Filters */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Filters - Full width on mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Input
             type="text"
             placeholder="Search hotends..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 bg-gray-800 border-gray-700"
+            className="w-full sm:w-64 bg-gray-800 border-gray-700 h-10"
           />
 
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
-              <SelectValue placeholder="All Brands" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
-              {brands.map(brand => (
-                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 sm:gap-3">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="flex-1 sm:w-[160px] bg-gray-800 border-gray-700 h-10">
+                <SelectValue placeholder="All Brands" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Brands</SelectItem>
+                {brands.map(brand => (
+                  <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="alphabetical">Alphabetical</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="flex-1 sm:w-[160px] bg-gray-800 border-gray-700 h-10">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alphabetical">Alphabetical</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="newest">Newest</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -543,9 +547,9 @@ export default function HotendList() {
                   />
                 </button>
 
-                {/* Hotend Grid */}
+                {/* Hotend Grid - Single column on mobile */}
                 {!isCollapsed && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                     {groupedByBrand[brand].map(group => {
                       const nozzle = group.primaryVariant;
                       const specs = nozzle.specs as Record<string, unknown> | null;

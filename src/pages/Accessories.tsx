@@ -37,39 +37,50 @@ export default function Accessories() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Hero Header */}
-        <div className="space-y-3 pb-6 border-b border-border/50">
+        <div className="space-y-3 pb-4 sm:pb-6 border-b border-border/50">
           {/* Badge */}
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium">
-            <Wrench className="w-4 h-4" />
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs sm:text-sm font-medium">
+            <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             UPGRADE CENTER
           </span>
           
           {/* Title */}
-          <h1 className="text-4xl font-bold tracking-tight">Accessories</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Accessories</h1>
           
           {/* Subtitle */}
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Browse hotends, build plates, and multi-material systems for your 3D printer
           </p>
           
-          {/* Quick Stats */}
+          {/* Quick Stats - Stack on mobile */}
           {stats && (
-            <p className="text-gray-400 mt-2">
-              <span className="text-primary font-medium">{stats.hotends}</span> Hotends • {" "}
-              <span className="text-primary font-medium">{stats.buildPlates}</span> Build Plates • {" "}
-              <span className="text-primary font-medium">{stats.amsSystems}</span> AMS/MMU Systems • {" "}
-              <span className="text-primary font-medium">{stats.brands}</span> Brands
-            </p>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-0 text-sm sm:text-base text-gray-400 mt-2">
+              <span className="whitespace-nowrap">
+                <span className="text-primary font-medium">{stats.hotends}</span> Hotends
+              </span>
+              <span className="hidden sm:inline mx-2">•</span>
+              <span className="whitespace-nowrap">
+                <span className="text-primary font-medium">{stats.buildPlates}</span> Build Plates
+              </span>
+              <span className="hidden sm:inline mx-2">•</span>
+              <span className="whitespace-nowrap">
+                <span className="text-primary font-medium">{stats.amsSystems}</span> AMS/MMU Systems
+              </span>
+              <span className="hidden sm:inline mx-2">•</span>
+              <span className="whitespace-nowrap">
+                <span className="text-primary font-medium">{stats.brands}</span> Brands
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Underline Tab Navigation */}
-        <div className="flex gap-8 border-b border-gray-700">
+        {/* Tabs - Horizontal scroll on mobile, or 2x2 grid */}
+        <div className="flex gap-4 sm:gap-8 border-b border-gray-700 overflow-x-auto scrollbar-hide pb-px -mb-px">
           <button
             onClick={() => handleTabChange("hotends")}
-            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative ${
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative whitespace-nowrap min-w-fit ${
               activeTab === "hotends" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -81,7 +92,7 @@ export default function Accessories() {
           </button>
           <button
             onClick={() => handleTabChange("build-plates")}
-            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative ${
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative whitespace-nowrap min-w-fit ${
               activeTab === "build-plates" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -93,7 +104,7 @@ export default function Accessories() {
           </button>
           <button
             onClick={() => handleTabChange("ams")}
-            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative ${
+            className={`pb-3 flex items-center gap-2 text-sm font-medium transition-colors relative whitespace-nowrap min-w-fit ${
               activeTab === "ams" ? "text-white" : "text-gray-400 hover:text-white"
             }`}
           >

@@ -162,48 +162,50 @@ export default function AMSList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Results Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: Results Count */}
-        <h2 className="text-2xl font-semibold">
+      <div className="flex flex-col gap-4">
+        {/* Results Count */}
+        <h2 className="text-xl sm:text-2xl font-semibold">
           <span className="text-primary">{filteredAMS.length}</span>{" "}
           <span className="text-foreground">AMS/MMU systems</span>
         </h2>
 
-        {/* Right: Filters */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Filters - Full width on mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Input
             type="text"
             placeholder="Search AMS/MMU..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 bg-gray-800 border-gray-700"
+            className="w-full sm:w-64 bg-gray-800 border-gray-700 h-10"
           />
 
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
-              <SelectValue placeholder="All Brands" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
-              {brands.map(brand => (
-                <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 sm:gap-3">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="flex-1 sm:w-[160px] bg-gray-800 border-gray-700 h-10">
+                <SelectValue placeholder="All Brands" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Brands</SelectItem>
+                {brands.map(brand => (
+                  <SelectItem key={brand} value={brand!}>{brand}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[160px] bg-gray-800 border-gray-700">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="alphabetical">Alphabetical</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="spools">Most Spools</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="flex-1 sm:w-[160px] bg-gray-800 border-gray-700 h-10">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alphabetical">Alphabetical</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="spools">Most Spools</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -251,9 +253,9 @@ export default function AMSList() {
                   />
                 </button>
                 
-                {/* AMS grid */}
+                {/* AMS grid - Single column on mobile */}
                 {!isCollapsed && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                     {systems.map(ams => {
                       const badges: { label: string }[] = [];
                       if (ams.specs?.drying_capability) badges.push({ label: "Drying" });
