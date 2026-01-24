@@ -1,218 +1,316 @@
 
-# Mobile Responsiveness Audit & Fix Plan
+# Performance Optimization Implementation Plan
 
-## Audit Summary
-
-I conducted a thorough review of the FilaScope platform across the specified breakpoints (375px, 414px, 768px, 1024px). The codebase already has a robust mobile infrastructure with dedicated components, but there are several issues to address.
-
----
-
-## Current Mobile Infrastructure (What's Working Well)
-
-### Navigation
-- Hamburger menu implemented via slide-down animation (`Navbar.tsx` lines 455-469)
-- Mobile menu closes on route change
-- Keyboard accessibility with focus management
-- Compare button with count badge in mobile menu
-
-### Filter Panels
-- `MobileFilamentFilterSheet.tsx` - Full bottom sheet for Filaments page (85vh height)
-- `MobileFilterDrawer.tsx` - Slide-out drawer for Printers page (left side)
-- Both have collapsible sections with 44px minimum touch targets
-- Active filter count badges on trigger buttons
-
-### Compare Tray
-- `MobileCompareTray.tsx` - Sticky bottom bar that expands to full sheet
-- Proper safe-area-inset-bottom handling
-- lg:hidden class for mobile-only visibility
-
-### Product Cards
-- `LabReadoutCard.tsx` uses responsive grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
-- Touch-friendly compare buttons with minimum 44px targets
-- Proper z-index layering
+## Summary
+This plan implements comprehensive performance optimizations across four phases: image optimization, list virtualization, state persistence with scroll restoration, and code splitting enhancements. The codebase already has significant infrastructure in place, so this plan focuses on integration and gap-filling.
 
 ---
 
-## Issues Identified & Fixes Required
+## Current State Analysis
 
-### 1. Hero Section - 3D Graphics on Mobile (Priority: High)
-**Issue**: The 3D glass container graphic in `HeroSection.tsx` is already hidden on mobile (`hidden lg:flex`), but the hero section could be more compact on small screens.
+### Already Implemented
+- **OptimizedImage component** (`src/components/ui/optimized-image.tsx`) - Complete with lazy loading, srcset, skeleton placeholders
+- **VirtualGrid/VirtualList components** (`src/components/ui/virtual-grid.tsx`) - Full virtualization ready
+- **URL filter sync** (`src/hooks/useURLFilterSync.ts`) - Filter state to URL + localStorage
+- **Code splitting** (`src/App.tsx`) - All 80+ routes already lazy loaded
+- **Web Vitals tracking** (`src/hooks/useWebVitals.ts`) - FCP, LCP, CLS, FID, TTFB tracking
 
-**Fix**:
-- Reduce hero padding on mobile (currently `pt-20 pb-8`)
-- Tighten the Quick Start cards grid gap on smaller screens
-- Ensure search bar is truly full-width on mobile
-
-### 2. Hero Section Search Bar (Priority: High)
-**Issue**: Search bar has `max-w-[500px]` which works but doesn't utilize full width on mobile.
-
-**Fix**:
-- Update `HeroSection.tsx` to use `max-w-full sm:max-w-[500px]` for the search container
-- Same treatment for `PrintersHeroSection.tsx`
-
-### 3. Filter Button Touch Target (Priority: Medium)
-**Issue**: Filter button in `MobileFilamentFilterSheet.tsx` has `h-11` (44px) which is correct, but needs verification across all instances.
-
-**Fix**:
-- Audit all interactive elements for minimum 44px touch targets
-- Update any buttons smaller than 44px
-
-### 4. Compare Tray z-index Conflicts (Priority: High)
-**Issue**: `MobileCompareTray.tsx` uses `z-[70]` which may conflict with other fixed elements like sticky headers.
-
-**Fix**:
-- Standardize z-index hierarchy across all fixed/sticky elements
-- Ensure compare tray is above filter bars but below modals
-
-### 5. Wizard Modal Mobile Optimization (Priority: High)
-**Issue**: `Wizard.tsx` doesn't have explicit full-screen mobile styles. Currently uses `min-h-screen py-12 px-4` which works but isn't optimized.
-
-**Fix**:
-- Update Wizard to use full-height on mobile with reduced padding
-- Make option cards stack vertically with larger touch targets
-- Ensure navigation buttons are sticky at bottom
-
-### 6. Printer Quiz Modal (Priority: High)
-**Issue**: `PrinterQuiz.tsx` has good mobile styles (`max-h-[90vh] overflow-y-auto`) but quiz options could be larger.
-
-**Fix**:
-- Increase quiz option padding on mobile
-- Add minimum height of 48px to all quiz option buttons
-- Ensure sticky header/footer work correctly
-
-### 7. Product Detail Tabs Horizontal Scroll (Priority: Medium)
-**Issue**: `FilamentTabNav.tsx` needs horizontal scrolling for tabs on mobile - should verify implementation.
-
-**Fix**:
-- Add `overflow-x-auto` with `scrollbar-none` to tab container
-- Ensure active tab indicator works with scroll
-- Add snap-scroll behavior
-
-### 8. Deals Page Filter Accessibility (Priority: Medium)
-**Issue**: `Deals.tsx` uses `DealFilters` component but doesn't have a dedicated mobile filter sheet like other pages.
-
-**Fix**:
-- Create mobile-specific filter presentation for Deals page
-- Either use bottom sheet pattern or horizontal scrollable pills
-
-### 9. Printers Page Mobile Filter Drawer Direction (Priority: Low)
-**Issue**: `MobileFilterDrawer.tsx` slides from left (`side="left"`) which is inconsistent with Filaments page bottom sheet.
-
-**Fix**:
-- Consider standardizing to bottom sheet pattern for consistency
-- Or keep as-is if intentional design decision
-
-### 10. Safe Area Insets Missing in Some Components (Priority: Medium)
-**Issue**: Some bottom-fixed elements may not have proper safe area handling for iPhone notch/home bar.
-
-**Fix**:
-- Audit all fixed bottom elements for `env(safe-area-inset-bottom)` usage
-- Add to: `FilamentMobileBottomBar.tsx`, any sticky headers
+### Gaps to Fill
+1. Product cards don't use `OptimizedImage` - still using raw `<img>` tags
+2. `VirtualGrid` not integrated into main product listing pages
+3. No scroll position restoration on back navigation
+4. Heavy components (charts, wizards) could be split further
+5. No preloading of likely navigation paths
 
 ---
 
-## Implementation Plan
+## Phase 1: Image Optimization Integration
 
-### Phase 1: Critical Touch Target & Layout Fixes
-1. Update `HeroSection.tsx` search bar to be full-width on mobile
-2. Update `PrintersHeroSection.tsx` search bar similarly
-3. Verify all buttons have minimum 44px touch targets
-4. Add safe-area-insets where missing
+### Files to Modify
 
-### Phase 2: Wizard & Quiz Full-Screen Mobile
-5. Update `Wizard.tsx` with mobile-first layout:
-   - Full viewport height
-   - Sticky navigation buttons
-   - Larger option cards
-6. Enhance `PrinterQuiz.tsx` option button sizes
+**1. `src/components/LabReadoutCard.tsx`**
+- Replace brand logo `<img>` tag (line 307-315) with `OptimizedImage`
+- Add blur placeholder with skeleton fallback
+- Apply priority loading for first 4 cards
 
-### Phase 3: Deals Page Mobile Filters
-7. Create `MobileDealsFilterSheet.tsx` component
-8. Integrate with `Deals.tsx`
+**2. `src/components/deals/DealCard.tsx`**
+- Replace product image (line 79-87) with `OptimizedImage`
+- Add aspect ratio constraint for consistent layout
 
-### Phase 4: Tab Navigation Polish
-9. Verify `FilamentTabNav.tsx` horizontal scroll
-10. Add snap-scroll behavior if missing
+**3. `src/components/printers/MediumStandardPrinterCard.tsx`**
+- Integrate `OptimizedImage` for printer images
+- Add WebP detection with fallback
 
-### Phase 5: Z-Index Standardization
-11. Create z-index documentation
-12. Standardize across all fixed/sticky elements:
-    - z-40: Sticky headers
-    - z-50: Filter bars
-    - z-60: Compare tray
-    - z-70: Bottom sheets
-    - z-100: Modals
+**4. `src/components/ui/optimized-image.tsx`**
+- Add `blurDataUrl` prop for blur-up placeholder effect
+- Add WebP format detection and fallback
+- Create `useBlurhash` hook for dynamic blur generation
 
----
+### Technical Details
+```typescript
+// Enhanced OptimizedImage props
+interface OptimizedImageProps {
+  // ... existing props
+  blurDataUrl?: string;        // Base64 blur placeholder
+  preferWebP?: boolean;        // Enable WebP with fallback
+}
 
-## Detailed File Changes
-
-### src/components/HeroSection.tsx
-- Line 146: Change `max-w-[500px]` to `w-full sm:max-w-[500px]`
-- Line 160: Reduce gap on mobile: `gap-2 sm:gap-3`
-
-### src/components/PrintersHeroSection.tsx
-- Line 78: Change `w-full sm:w-[260px]` to ensure full width on mobile
-- Reduce top padding on smallest screens
-
-### src/pages/Wizard.tsx
-- Line 488: Update container: `min-h-screen md:py-12 py-4 px-3 sm:px-6`
-- Line 490: Make Card full height on mobile: `h-full md:h-auto`
-- Add sticky footer for navigation buttons
-
-### src/components/printers/PrinterQuiz.tsx
-- Line 306-317: Add minimum height to option buttons
-- Update padding for mobile
-
-### src/pages/Deals.tsx
-- Import and integrate `MobileDealsFilterSheet.tsx` (new component)
-- Add mobile filter controls similar to Finder.tsx pattern
-
-### src/components/filament/tabs/FilamentTabNav.tsx
-- Verify horizontal scroll with overflow-x-auto
-- Add scrollbar-none and snap-x classes
-
-### Various Components - Safe Area Fixes
-- `MobileCompareTray.tsx` - Already has it (verified)
-- `FilamentMobileBottomBar.tsx` - Already has it (verified)
-- `MobileFilamentFilterSheet.tsx` - Add if missing
+// Blur-up effect implementation
+{!isLoaded && blurDataUrl && (
+  <img 
+    src={blurDataUrl} 
+    className="absolute inset-0 w-full h-full object-cover filter blur-md scale-105" 
+  />
+)}
+```
 
 ---
 
-## Testing Checklist
+## Phase 2: List Virtualization Integration
 
-After implementation, test at these breakpoints:
+### Files to Modify
 
-| Breakpoint | Device | Key Tests |
-|------------|--------|-----------|
-| 375px | iPhone SE | Hero search full-width, touch targets, wizard fits |
-| 414px | iPhone Plus | Compare tray visible, filters accessible |
-| 768px | iPad | Grid transitions to 2-col, drawer opens correctly |
-| 1024px | iPad Landscape | Desktop sidebar appears, mobile elements hide |
+**1. `src/pages/Finder.tsx`**
+- Replace grid rendering (lines 1784-1804) with `VirtualGrid`
+- Add responsive column count detection
+- Maintain "Load More" pattern as fallback for smaller lists
 
-### Specific Test Scenarios
-1. Search "PLA" on mobile - results load, filters work
-2. Open compare tray - items show, can expand sheet
-3. Complete Wizard flow - all steps accessible
-4. Complete Printer Quiz - all options tappable
-5. Browse Deals - filters accessible
-6. Swipe to dismiss compare items
-7. Tab navigation on product detail page
+**2. `src/pages/Printers.tsx`**
+- Integrate `VirtualGrid` for printer listing
+- Calculate dynamic row height based on card dimensions
+
+**3. `src/pages/Deals.tsx`**
+- Add `VirtualGrid` for deals grid (lines 176-188)
+- Enable `onEndReached` for potential infinite scroll
+
+**4. Create `src/hooks/useResponsiveColumns.ts`**
+- Detect optimal column count based on viewport
+- Return: `{ columns: number, rowHeight: number }`
+
+### Technical Details
+```typescript
+// Finder.tsx integration example
+import { VirtualGrid } from "@/components/ui/virtual-grid";
+import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
+
+const { columns, rowHeight } = useResponsiveColumns({
+  breakpoints: { sm: 1, md: 2, lg: 3, xl: 4 },
+  cardBaseHeight: 420,
+  gap: 24
+});
+
+// Only use virtualization for large lists (>50 items)
+{displayedGroups.length > 50 ? (
+  <VirtualGrid
+    items={displayedGroups}
+    renderItem={(group, index) => (
+      <LabReadoutCard 
+        key={group.representativeFilament.id}
+        filament={group.representativeFilament}
+        index={index}
+        // ...props
+      />
+    )}
+    getKey={(group) => group.representativeFilament.id}
+    columnCount={columns}
+    rowHeight={rowHeight}
+    gap={24}
+    className="min-h-[600px]"
+  />
+) : (
+  // Existing grid for small lists
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {/* ... */}
+  </div>
+)}
+```
 
 ---
 
-## Technical Notes
+## Phase 3: State Persistence & Scroll Restoration
 
-### Existing Mobile Detection
-The codebase uses `useIsMobile()` hook (768px breakpoint) for JavaScript-based mobile detection. CSS uses standard Tailwind breakpoints (sm: 640px, md: 768px, lg: 1024px, xl: 1280px).
+### New Files to Create
 
-### Touch-Friendly Patterns Already Used
-- 44px minimum buttons: `min-h-[44px] min-w-[44px]`
-- Collapsible sections with large headers
-- Bottom sheets using `vaul` library via `Sheet` component
-- Horizontal scroll with snap points
+**1. `src/hooks/useScrollRestoration.ts`**
+```typescript
+// Saves scroll position to sessionStorage keyed by route
+// Restores on back/forward navigation
+// Integrates with react-router's navigation state
 
-### Performance Considerations
-- Mobile filter sheets lazy-load content
-- Virtual scrolling not currently used (may be needed for large lists)
-- Image loading appears optimized with lazy loading
+export function useScrollRestoration(key: string) {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  
+  // Save position on scroll (debounced)
+  // Restore on POP navigation type
+  // Clear on new navigation
+}
+```
+
+**2. `src/hooks/useFilterPersistence.ts`**
+- Extend `useURLFilterSync` to include scroll position
+- Add `scrollY` parameter to URL (optional, for deep links)
+
+### Files to Modify
+
+**1. `src/pages/Finder.tsx`**
+- Integrate `useScrollRestoration('finder-scroll')`
+- Save `displayCount` to sessionStorage for pagination state
+
+**2. `src/pages/Printers.tsx`**
+- Add scroll restoration hook
+- Preserve `displayedCount` across navigations
+
+**3. `src/hooks/useURLFilterSync.ts`**
+- Add optional `scrollPosition` to state interface
+- Include in shareable URL generation
+
+### Technical Details
+```typescript
+// useScrollRestoration.ts
+import { useLocation, useNavigationType } from 'react-router-dom';
+import { useEffect, useRef, useCallback } from 'react';
+import { useDebouncedCallback } from './usePerformance';
+
+export function useScrollRestoration(key: string) {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const storageKey = `scroll_${key}_${location.pathname}`;
+  
+  // Debounced scroll save
+  const saveScrollPosition = useDebouncedCallback(() => {
+    sessionStorage.setItem(storageKey, String(window.scrollY));
+  }, 100);
+  
+  // Restore on POP (back/forward)
+  useEffect(() => {
+    if (navigationType === 'POP') {
+      const savedY = sessionStorage.getItem(storageKey);
+      if (savedY) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(savedY, 10));
+        });
+      }
+    }
+  }, [location.key, navigationType, storageKey]);
+  
+  // Listen for scroll events
+  useEffect(() => {
+    window.addEventListener('scroll', saveScrollPosition);
+    return () => window.removeEventListener('scroll', saveScrollPosition);
+  }, [saveScrollPosition]);
+}
+```
+
+---
+
+## Phase 4: Enhanced Code Splitting
+
+### Already Complete
+The `src/App.tsx` already implements comprehensive lazy loading for all 80+ routes using `React.lazy()`.
+
+### Additional Optimizations
+
+**1. Create `src/components/LazyChart.tsx`**
+- Lazy load Recharts components
+- Show skeleton while loading
+
+**2. Create `src/lib/preloadRoutes.ts`**
+- Preload likely next routes on hover/focus
+- Use `requestIdleCallback` for non-blocking preload
+
+**3. Modify `src/components/Navbar.tsx`**
+- Add preload triggers on navigation link hover
+
+### Technical Details
+```typescript
+// LazyChart.tsx - Split heavy charting library
+const LazyLineChart = lazy(() => 
+  import('recharts').then(m => ({ default: m.LineChart }))
+);
+
+export function LazyChart({ children, ...props }) {
+  return (
+    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <LazyLineChart {...props}>{children}</LazyLineChart>
+    </Suspense>
+  );
+}
+
+// preloadRoutes.ts
+const routePreloaders: Record<string, () => Promise<any>> = {
+  '/finder': () => import('../pages/Finder'),
+  '/printers': () => import('../pages/Printers'),
+  '/deals': () => import('../pages/Deals'),
+  '/wizard': () => import('../pages/Wizard'),
+};
+
+export function preloadRoute(path: string) {
+  const preloader = routePreloaders[path];
+  if (preloader && 'requestIdleCallback' in window) {
+    requestIdleCallback(() => preloader());
+  }
+}
+```
+
+---
+
+## Metrics Tracking Integration
+
+### Files to Modify
+
+**1. `src/App.tsx`**
+- Add `useWebVitals()` hook at app root level
+- Ensure metrics are captured on all pages
+
+**2. `src/hooks/useWebVitals.ts`**
+- Already tracks: FCP, LCP, CLS, FID, TTFB
+- Add INP (Interaction to Next Paint) tracking
+- Add custom timing for virtualization performance
+
+### Dashboard Visibility
+Metrics are already stored in `performance_metrics` table and can be viewed via existing admin analytics infrastructure.
+
+---
+
+## Implementation Order
+
+| Phase | Priority | Effort | Impact |
+|-------|----------|--------|--------|
+| 1. Image Optimization | High | Medium | High - Reduces LCP significantly |
+| 2. List Virtualization | High | High | Critical - 443+ products need windowing |
+| 3. Scroll Restoration | Medium | Low | UX improvement for navigation |
+| 4. Code Splitting | Low | Low | Already mostly complete |
+
+---
+
+## Files Summary
+
+### New Files (4)
+- `src/hooks/useScrollRestoration.ts`
+- `src/hooks/useResponsiveColumns.ts`
+- `src/components/LazyChart.tsx`
+- `src/lib/preloadRoutes.ts`
+
+### Modified Files (9)
+- `src/components/LabReadoutCard.tsx` - Use OptimizedImage
+- `src/components/deals/DealCard.tsx` - Use OptimizedImage
+- `src/components/printers/MediumStandardPrinterCard.tsx` - Use OptimizedImage
+- `src/components/ui/optimized-image.tsx` - Add blur-up, WebP
+- `src/pages/Finder.tsx` - VirtualGrid + scroll restoration
+- `src/pages/Printers.tsx` - VirtualGrid + scroll restoration
+- `src/pages/Deals.tsx` - VirtualGrid integration
+- `src/hooks/useWebVitals.ts` - Add INP tracking
+- `src/components/Navbar.tsx` - Route preloading
+
+---
+
+## Expected Performance Gains
+
+| Metric | Current (estimated) | Target | Improvement |
+|--------|---------------------|--------|-------------|
+| LCP | 3.5s | <2.5s | 30%+ |
+| FCP | 1.8s | <1.5s | 15%+ |
+| TTI | 4.0s | <3.0s | 25%+ |
+| CLS | 0.15 | <0.1 | 33%+ |
+| Memory (443 items) | ~200MB | ~50MB | 75%+ |
