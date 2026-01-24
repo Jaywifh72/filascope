@@ -191,24 +191,35 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     toast.success("Old data cleared");
   }, []);
 
-  // Auto-save with timestamp every 5 seconds
+  // Auto-save with timestamp - ALWAYS sync to storage, even when empty
   useEffect(() => {
-    if (items.length === 0) return;
-
     const saveWithTimestamp = () => {
-      const data: StoredComparison = {
-        items,
-        savedAt: Date.now()
-      };
-      saveToStorage(data);
+      if (items.length === 0) {
+        // Clear storage when no items
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+          console.error("Failed to clear compare storage:", e);
+        }
+      } else {
+        // Save items with timestamp
+        const data: StoredComparison = {
+          items,
+          savedAt: Date.now()
+        };
+        saveToStorage(data);
+      }
     };
 
     // Save immediately on change
     saveWithTimestamp();
 
-    // Also save periodically
-    const interval = setInterval(saveWithTimestamp, AUTO_SAVE_INTERVAL);
-    return () => clearInterval(interval);
+    // Also save periodically (only if items exist)
+    if (items.length > 0) {
+      const interval = setInterval(saveWithTimestamp, AUTO_SAVE_INTERVAL);
+      return () => clearInterval(interval);
+    }
   }, [items, saveToStorage]);
 
   const dismissRestoration = useCallback(() => {
