@@ -107,7 +107,7 @@ const BrandCard = ({
           <span>{count} filaments</span>
           {averageRating && averageRating > 0 && (
             <span className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+              <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300 drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]" />
               {averageRating.toFixed(1)}
             </span>
           )}

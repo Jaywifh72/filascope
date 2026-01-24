@@ -259,7 +259,7 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
       {/* Rating */}
       {printer.rating && (
         <div className="flex items-center justify-center gap-1 md:gap-1.5 text-[12px] md:text-[13px] font-medium text-slate-300 mb-2 md:mb-3">
-          <Star className="h-3 md:h-3.5 w-3 md:w-3.5 fill-yellow-400 text-yellow-400" />
+          <Star className="h-3 md:h-3.5 w-3 md:w-3.5 fill-amber-300 text-amber-300 drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]" />
           <span>{printer.rating.toFixed(1)}/5</span>
           {printer.reviewCount && (
             <span className="text-slate-500">({printer.reviewCount})</span>

@@ -28,12 +28,12 @@ export function StarRating({
         key={i}
         size={iconSize}
         className={cn(
-          'transition-colors',
+          'transition-colors drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]',
           isFilled 
-            ? 'fill-amber-400 text-amber-400' 
+            ? 'fill-amber-300 text-amber-300' 
             : isHalf 
-              ? 'fill-amber-400/50 text-amber-400' 
-              : 'fill-none text-muted-foreground/40'
+              ? 'fill-amber-300/50 text-amber-300' 
+              : 'fill-none text-muted-foreground/40 drop-shadow-none'
         )}
       />
     );
