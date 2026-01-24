@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw } from "lucide-react";
+import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 
 interface HeroSectionProps {
@@ -20,7 +21,6 @@ const searchSuggestions = [
 ];
 
 const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount }: HeroSectionProps) => {
-  const [isFocused, setIsFocused] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Use shared deals count hook for consistency with Deals page
@@ -62,14 +62,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
 
   // Cycle through search suggestions
   useEffect(() => {
-    if (isFocused || searchTerm) return; // Don't cycle when focused or has value
+    if (searchTerm) return; // Don't cycle when has value
     
     const interval = setInterval(() => {
       setCurrentSuggestionIndex((prev) => (prev + 1) % searchSuggestions.length);
     }, 3000);
     
     return () => clearInterval(interval);
-  }, [isFocused, searchTerm]);
+  }, [searchTerm]);
 
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -141,37 +141,18 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               </div>
             </div>
             
-            {/* Search Input - Larger and more prominent */}
+            {/* Search Input with History & Suggestions */}
             <div 
               className="w-full max-w-[500px] mb-6 animate-fade-in"
               style={{ animationDelay: "0.25s" }}
             >
-              <div 
-                className={`relative transition-all duration-300 ${
-                  isFocused ? "scale-[1.01]" : ""
-                }`}
-              >
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                <input
-                  type="text"
-                  placeholder={searchSuggestions[currentSuggestionIndex]}
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  className={`w-full h-14 pl-14 pr-6 text-base bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground/70 rounded-xl border transition-all duration-300 outline-none ${
-                    isFocused 
-                      ? "border-primary/60 shadow-[0_0_20px_rgba(0,207,232,0.3)]" 
-                      : "border-white/15 hover:border-white/25"
-                  }`}
-                  aria-label="Search materials"
-                />
-                {!searchTerm && !isFocused && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-mono uppercase tracking-wider">
-                    Quick Search
-                  </div>
-                )}
-              </div>
+              <SearchInputWithHistory
+                value={searchTerm}
+                onChange={onSearchChange}
+                placeholder={searchSuggestions[currentSuggestionIndex]}
+                context="filaments"
+                className="h-14"
+              />
             </div>
 
             {/* Quick Start Paths - 4 cards */}
