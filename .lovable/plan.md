@@ -1,202 +1,131 @@
 
-# Regional Pricing Integration for Product Cards
+# Seed Data for brand_regional_stores Table
 
 ## Overview
 
-This plan updates the FilamentCard, LabReadoutCard, SimilarFilamentCard, and MediumStandardPrinterCard components to use the new `RegionContext` system instead of the legacy `useCurrency` hook. It also creates utility functions for consistent price display across the application.
+This plan creates a SQL migration to populate the `brand_regional_stores` table with accurate regional store information for all major brands in FilaScope. The data will be derived from the existing `BRAND_REGIONAL_STORES` static configuration in `src/lib/brandRegionalStores.ts`, ensuring consistency between the client-side URL generation and database-backed regional pricing.
 
-## Current State Analysis
+## Current State
 
-| Component | Current Approach | Issues |
-|-----------|-----------------|--------|
-| `FilamentCard.tsx` | Uses `useCurrency` + `useRegionalPrice` | Uses legacy hook, no store attribution in UI |
-| `LabReadoutCard.tsx` | Uses `useCurrency` + `useRegionalPrice` | Shows vendor as retailer, no conversion indicator |
-| `SimilarFilamentCard.tsx` | Uses `useCurrency.formatPrice` | No regional awareness at all |
-| `MediumStandardPrinterCard.tsx` | Uses `useCurrency` + `usePrinterCurrentPrice` | Has live price but no regional store attribution |
-| `RegionalPriceDisplay.tsx` | Uses new `RegionalPriceResult` type | Already compatible with new system |
+- **Table**: `brand_regional_stores` exists but is empty
+- **Source Data**: `automated_brands` table contains ~40 brands
+- **Reference Config**: `src/lib/brandRegionalStores.ts` has comprehensive store URL patterns
+- **Constraint**: Only regions `US`, `CA`, `UK`, `EU`, `AU`, `JP`, `CN` are allowed
+- **Unique Constraint**: One entry per brand + region combination
 
-## Key Challenge
+## Database Migration
 
-The existing `useRegionalPrice` hook (in `src/hooks/useRegionalPrice.ts`) returns a different interface than the new `RegionalPriceResult` type used by `RegionalPriceDisplay`. We need to either:
+A new SQL migration file will be created that:
 
-1. **Option A**: Update the existing `useRegionalPrice` hook to return the new `RegionalPriceResult` format
-2. **Option B**: Create an adapter that transforms the legacy result to the new format
-3. **Option C**: Update cards to use `useRegionalPriceV2` which already uses the new format
+1. Uses subqueries to resolve `brand_id` from `automated_brands.brand_slug`
+2. Inserts regional store records for all brands with accurate URLs and shipping info
+3. Uses `ON CONFLICT DO NOTHING` to safely handle re-runs
 
-This plan uses **Option C** for new integrations while maintaining backward compatibility.
+### Brands to Seed
 
----
+| Brand | Regions | Primary |
+|-------|---------|---------|
+| Bambu Lab | US, CA, EU, UK, AU, JP, CN | US |
+| Polymaker | US, CA, EU | US |
+| Creality | US, CA, EU, UK, AU | US |
+| Anycubic | US, CA, EU, UK, AU | US |
+| Elegoo | US, CA, EU, UK, AU | US |
+| eSun | US, EU | US |
+| Hatchbox | US | US |
+| Overture | US | US |
+| Prusament | US, EU | EU |
+| ColorFabb | EU, US | EU |
+| Fillamentum | EU | EU |
+| Fiberlogy | EU, US | EU |
+| Extrudr | EU | EU |
+| 3DXTech | US | US |
+| NinjaTek | US | US |
+| Atomic Filament | US | US |
+| Proto-Pasta | US | US |
+| Push Plastic | US | US |
+| Matter3D | CA, US | CA |
+| AzureFilm | EU | EU |
+| Kingroon | US, EU | US |
+| Eryone | US, EU | US |
+| Sovol | US, EU | US |
+| Geeetech | US | US |
+| 3D-Fuel | US | US |
+| IC3D Printers | US | US |
+| Numakers | US | US |
+| Amolen | US | US |
+| FormFutura | EU | EU |
+| Siraya Tech | US | US |
+| Recreus | EU | EU |
+| Duramic 3D | US | US |
+| Fusion Filaments | US | US |
+| Gizmo Dorks | US | US |
 
-## Implementation Plan
+## Implementation Details
 
-### File 1: Create `src/utils/priceDisplay.ts`
-
-A utility module for consistent price display across cards:
-
-```text
-Functions:
-- getPriceDisplayText(priceResult) → string
-- getStoreAttributionText(priceResult) → string  
-- shouldShowConversionBadge(priceResult) → boolean
-- formatPricePerKg(price, weightG, packQty) → number | null
-```
-
-These utilities work with both the legacy `RegionalPriceResult` from `useRegionalPrice.ts` and the new `RegionalPriceResult` from `types/regional.ts`.
-
-### File 2: Update `src/components/FilamentCard.tsx`
-
-Changes:
-- Replace `useCurrency` import with `useRegion` from RegionContext
-- Add conversion indicator (info icon with tooltip) when price is converted
-- Add store attribution row showing regional flag and store name
-- Add "Local" badge when product is available in user's region
-- Update "Compare →" link to use regional store URL
-
-Key UI additions:
-```text
-Price section:
-  [Current Price] /kg [Info Icon if converted]
-  🇨🇦 at Amazon.ca  ← NEW: Store attribution with flag
-  [Local badge] ← NEW: If hasRegionalStore
-```
-
-### File 3: Update `src/components/LabReadoutCard.tsx`
-
-Changes:
-- Replace `useCurrency` with `useRegion`
-- Add conversion indicator when `isConverted` is true
-- Update "at {vendor}" to show actual store name from regional data
-- Add regional flag to store attribution
-- Keep existing sale price / discount percentage logic
-
-Key UI change:
-```text
-Before: "at Bambu Lab"
-After:  "🇺🇸 at Bambu Lab Store" (with flag)
-```
-
-### File 4: Update `src/components/filament/similar/SimilarFilamentCard.tsx`
-
-Changes:
-- Add `useRegion` hook for currency formatting
-- Replace `formatPrice` with context-aware formatting
-- Add conversion indicator if needed (subtle, due to compact size)
-- This card uses simpler pricing (no live fetch), so lighter changes
-
-### File 5: Update `src/components/printers/MediumStandardPrinterCard.tsx`
-
-Changes:
-- Replace `useCurrency` with `useRegion`  
-- Add regional store attribution for printer purchases
-- Show conversion indicator when live price is from different currency
-- Update discount calculation to work with regional pricing
-
----
-
-## Technical Details
-
-### Bridging Legacy and New Types
-
-The existing `useRegionalPrice` returns:
-```typescript
-{
-  regionalPrice: number | null;
-  isActualRegionalPrice: boolean;
-  regionalUrl: string;
-  currency: CurrencyCode;
-  isUsingFallbackRegion: boolean;
-  isRegionalBrand: boolean;
-  // ...
-}
-```
-
-The new `RegionalPriceResult` expects:
-```typescript
-{
-  displayPrice: number;
-  formattedPrice: string;
-  isConverted: boolean;
-  store: { name, url, regionCode, ... };
-  // ...
-}
-```
-
-The utility functions in `priceDisplay.ts` will handle both formats by checking which fields are present.
-
-### Import Changes Pattern
-
-```typescript
-// Before
-import { useCurrency } from "@/hooks/useCurrency";
-const { formatPrice, formatRegionalPrice, currency } = useCurrency();
-
-// After  
-import { useRegion } from "@/contexts/RegionContext";
-const { currency, formatPrice, region, regionConfig } = useRegion();
-```
-
-### Store Attribution Logic
+### File to Create
 
 ```text
-1. If isActualRegionalPrice && !isUsingFallbackRegion:
-   → Show "🇺🇸 at [Vendor]" with checkmark
-   
-2. If isUsingFallbackRegion:
-   → Show "🇨🇦 at [Vendor] (converted)" with info icon
-   
-3. If priceSource === 'converted':
-   → Show info icon with conversion tooltip
+supabase/migrations/[timestamp]_seed_brand_regional_stores.sql
 ```
 
----
+### Migration Structure
 
-## Files to Create/Modify
+```sql
+-- Seed regional store data
+-- Uses brand_slug to resolve brand_id dynamically
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/utils/priceDisplay.ts` | Create | Centralized price display utilities |
-| `src/components/FilamentCard.tsx` | Modify | Add regional indicators and store attribution |
-| `src/components/LabReadoutCard.tsx` | Modify | Add regional indicators and store attribution |
-| `src/components/filament/similar/SimilarFilamentCard.tsx` | Modify | Use RegionContext for formatting |
-| `src/components/printers/MediumStandardPrinterCard.tsx` | Modify | Add regional indicators |
+-- BAMBU LAB (7 regions)
+INSERT INTO brand_regional_stores (brand_id, region_code, store_name, base_url, product_url_pattern, currency_code, ships_from_country, free_shipping_threshold, estimated_shipping_days, is_primary)
+SELECT id, 'US', 'Bambu Lab US', 'https://us.store.bambulab.com', 'https://us.store.bambulab.com/products/{sku}', 'USD', 'US', 50.00, 5, true
+FROM automated_brands WHERE brand_slug = 'bambu-lab'
+ON CONFLICT (brand_id, region_code) DO NOTHING;
 
----
+-- Repeat for CA, EU, UK, AU, JP, CN...
 
-## UI Specifications
+-- POLYMAKER (3 regions)
+INSERT INTO brand_regional_stores (...)
+SELECT id, 'US', 'Polymaker US', 'https://us.polymaker.com', ...
+FROM automated_brands WHERE brand_slug = 'polymaker'
+ON CONFLICT (brand_id, region_code) DO NOTHING;
 
-### Conversion Indicator
-- Small info icon (lucide `Info`) next to price
-- On hover: Tooltip with original price, exchange rate, source region
-- Color: `text-muted-foreground` default, `text-foreground` on hover
+-- ... Continue for all brands
+```
 
-### Store Attribution
-- Format: `[Flag] at [Store Name]`
-- Size: `text-xs` or `text-[10px]`
-- Color: `text-muted-foreground`
-- Show `ExternalLink` icon if URL available
+### Data Accuracy
 
-### Local Badge
-- Format: `[Flag] Local`
-- Style: Small teal badge
-- Only show when `hasRegionalStore` is true
+Each record will include:
+- **store_name**: Human-readable store identifier (e.g., "Bambu Lab US")
+- **base_url**: Store homepage URL
+- **product_url_pattern**: Template for product links using `{sku}` placeholder
+- **currency_code**: Native store currency
+- **ships_from_country**: 2-letter country code for shipping origin
+- **free_shipping_threshold**: Minimum order for free shipping (based on typical values)
+- **estimated_shipping_days**: Typical delivery time (3-7 days domestic, 10-21 international)
+- **is_primary**: True for the brand's main/home market store
 
----
+### Estimated Record Count
 
-## Backward Compatibility
+Approximately **70-80 records** across ~35 brands, covering:
+- 7 global brands with full regional presence (Bambu Lab, Anycubic, Elegoo, etc.)
+- 20+ US-focused brands (single region)
+- 10+ EU-centric brands
 
-- The existing `useCurrency` hook continues to work
-- Components not yet migrated will function normally
-- The `useRegionalPrice` hook from `src/hooks/useRegionalPrice.ts` remains unchanged
-- New `useRegionalPriceV2` can be adopted incrementally
+## Technical Considerations
 
----
+1. **Idempotency**: `ON CONFLICT DO NOTHING` ensures safe re-runs
+2. **FK Resolution**: Subqueries resolve `brand_slug` to `brand_id` dynamically
+3. **Missing Brands**: If a brand doesn't exist in `automated_brands`, the INSERT is skipped
+4. **URL Patterns**: Use `{sku}` as placeholder for product SKU/handle
 
-## Testing Considerations
+## Testing
 
-After implementation, verify:
-1. Price displays correctly in user's selected currency
-2. Conversion indicator appears for non-local prices
-3. Store attribution shows correct regional store name
-4. Regional flag displays correctly
-5. "Compare" links navigate to appropriate regional store
-6. Sale prices still calculate correctly with regional pricing
+After migration:
+```sql
+-- Verify seed data
+SELECT ab.brand_name, brs.region_code, brs.store_name, brs.currency_code
+FROM brand_regional_stores brs
+JOIN automated_brands ab ON ab.id = brs.brand_id
+ORDER BY ab.brand_name, brs.region_code;
+```
+
+Expected: ~70-80 rows across all seeded brands.
