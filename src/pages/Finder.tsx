@@ -1372,7 +1372,15 @@ const Finder = () => {
             count: cat.materials.reduce((sum, mat) => sum + (filterCounts[`material_${mat}`] || 0), 0)
           }))
         ]}
-        selectedMaterial={selectedMaterials.includes("All") ? "All" : selectedMaterials[0] || "All"}
+        selectedMaterial={(() => {
+          if (selectedMaterials.includes("All") || selectedMaterials.length === 0) return "All";
+          // Check if selectedMaterials matches a category's materials list
+          const matchedCategory = MATERIAL_CATEGORIES.find(cat => {
+            // Check if the first material in selectedMaterials is in this category
+            return cat.materials.includes(selectedMaterials[0]);
+          });
+          return matchedCategory?.name || selectedMaterials[0] || "All";
+        })()}
         onMaterialChange={(material) => {
           if (material === "All") {
             setSelectedMaterials(["All"]);
