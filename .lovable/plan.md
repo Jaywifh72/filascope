@@ -1,316 +1,309 @@
 
-# Performance Optimization Implementation Plan
+# WCAG 2.1 AA Accessibility Audit & Implementation Plan
 
-## Summary
-This plan implements comprehensive performance optimizations across four phases: image optimization, list virtualization, state persistence with scroll restoration, and code splitting enhancements. The codebase already has significant infrastructure in place, so this plan focuses on integration and gap-filling.
+## Executive Summary
 
----
-
-## Current State Analysis
-
-### Already Implemented
-- **OptimizedImage component** (`src/components/ui/optimized-image.tsx`) - Complete with lazy loading, srcset, skeleton placeholders
-- **VirtualGrid/VirtualList components** (`src/components/ui/virtual-grid.tsx`) - Full virtualization ready
-- **URL filter sync** (`src/hooks/useURLFilterSync.ts`) - Filter state to URL + localStorage
-- **Code splitting** (`src/App.tsx`) - All 80+ routes already lazy loaded
-- **Web Vitals tracking** (`src/hooks/useWebVitals.ts`) - FCP, LCP, CLS, FID, TTFB tracking
-
-### Gaps to Fill
-1. Product cards don't use `OptimizedImage` - still using raw `<img>` tags
-2. `VirtualGrid` not integrated into main product listing pages
-3. No scroll position restoration on back navigation
-4. Heavy components (charts, wizards) could be split further
-5. No preloading of likely navigation paths
+FilaScope has a **solid accessibility foundation** with dedicated infrastructure including skip links, screen reader announcements, accessible form fields, keyboard navigation hooks, and WCAG-compliant color tokens. However, the audit identified gaps in implementation consistency across components that need addressing.
 
 ---
 
-## Phase 1: Image Optimization Integration
+## Audit Findings by Category
 
-### Files to Modify
+### 1. Color Contrast
 
-**1. `src/components/LabReadoutCard.tsx`**
-- Replace brand logo `<img>` tag (line 307-315) with `OptimizedImage`
-- Add blur placeholder with skeleton fallback
-- Apply priority loading for first 4 cards
+#### Current State (Good)
+- WCAG color tokens defined in `index.css` (lines 124-137)
+- Muted foreground updated to 72% lightness (~7:1 ratio)
+- Star ratings use enhanced amber (`#FFB800`) with glow
 
-**2. `src/components/deals/DealCard.tsx`**
-- Replace product image (line 79-87) with `OptimizedImage`
-- Add aspect ratio constraint for consistent layout
+#### Issues Identified
+| Component | Issue | Location |
+|-----------|-------|----------|
+| Material Badge Colors | `text-violet-400` on `bg-violet-500/15` may not meet 4.5:1 | `MaterialBadge.tsx:69` |
+| MATERIAL_BADGE_COLORS | `text-orange-400`, `text-yellow-400` on 20% bg may fail | `MiniFilamentCard.tsx:16-24` |
+| Property Indicator dots | Standard Tailwind colors on dark backgrounds | `MaterialBadge.tsx:22-42` |
+| Placeholder text | `--placeholder: 220 10% 55%` should be audited | `index.css:129` |
 
-**3. `src/components/printers/MediumStandardPrinterCard.tsx`**
-- Integrate `OptimizedImage` for printer images
-- Add WebP detection with fallback
+#### Required Fixes
+- Increase text lightness for low-contrast badge variants (orange, yellow)
+- Add explicit high-contrast alternatives for critical status indicators
+- Verify placeholder contrast meets 4.5:1 against all input backgrounds
 
-**4. `src/components/ui/optimized-image.tsx`**
-- Add `blurDataUrl` prop for blur-up placeholder effect
-- Add WebP format detection and fallback
-- Create `useBlurhash` hook for dynamic blur generation
+---
 
-### Technical Details
-```typescript
-// Enhanced OptimizedImage props
-interface OptimizedImageProps {
-  // ... existing props
-  blurDataUrl?: string;        // Base64 blur placeholder
-  preferWebP?: boolean;        // Enable WebP with fallback
+### 2. Keyboard Navigation
+
+#### Current State (Good)
+- Skip link implemented: `SkipLink.tsx` with `#main-content` target
+- `useKeyboardNavigation` hook for arrow-key navigation
+- Focus visible rings on buttons via Tailwind utilities
+- Escape key handling in sheets/dialogs (Radix handles this)
+
+#### Issues Identified
+| Component | Issue | Location |
+|-----------|-------|----------|
+| Hero Quick Start Cards | Missing keyboard focus styling on scroll button | `HeroSection.tsx:184-199` |
+| Filter Section Buttons | Collapsible triggers missing explicit `aria-expanded` | `MobileFilamentFilterSheet.tsx:196-216` |
+| Close buttons in sheets | Missing `aria-label` on X button | `MobileFilamentFilterSheet.tsx:181-186` |
+| Navbar hamburger menu | Missing `aria-expanded` and `aria-controls` | `Navbar.tsx` mobile menu trigger |
+
+#### Required Fixes
+- Add `aria-expanded` to all collapsible triggers
+- Add `aria-controls` linking toggle buttons to controlled content
+- Add `aria-label="Close filter panel"` to close buttons
+- Add keyboard focus styles to Quick Start scroll button
+
+---
+
+### 3. Screen Reader Support
+
+#### Current State (Good)
+- `ScreenReaderAnnouncerProvider` in App.tsx
+- Proper `role="article"` on product cards
+- `sr-only` utility class defined
+- Live regions for dynamic content
+
+#### Issues Identified
+| Component | Issue | Location |
+|-----------|-------|----------|
+| DealCard Share Button | Icon button missing `aria-label` | `DealCard.tsx:69-76` |
+| MiniFilamentCard Quick Buy | Icon link missing `aria-label` | `MiniFilamentCard.tsx:235-238` |
+| MiniFilamentCard Drag Handle | Missing screen reader text | `MiniFilamentCard.tsx:142-155` |
+| CompareTray Share Button | Using `title` instead of `aria-label` | `CompareTray.tsx:486-493` |
+| CompareTray Minimize Button | Missing `aria-label` | `CompareTray.tsx:427-431` |
+| Heading Hierarchy | Some pages may skip heading levels | Multiple pages |
+
+#### Required Fixes
+- Add `aria-label` to all icon-only buttons
+- Add `sr-only` text for drag handles
+- Verify h1 → h2 → h3 hierarchy on key pages
+- Add descriptive alt text to product images where missing
+
+---
+
+### 4. Form Accessibility
+
+#### Current State (Good)
+- `AccessibleFormField` component with proper ID linking
+- `useId()` for generating accessible IDs
+- Form error states with `aria-invalid`
+- Search input has `aria-label`, `aria-expanded`, `aria-haspopup`
+
+#### Issues Identified
+| Component | Issue | Location |
+|-----------|-------|----------|
+| Printer Selection Dropdowns | Missing explicit labels | `MobileFilamentFilterSheet.tsx:219-240` |
+| Filter Checkboxes | Labels exist but could use `aria-describedby` for context | Various filter files |
+| Nozzle Config Selects | Missing accessible names | `MobileFilamentFilterSheet.tsx` |
+
+#### Required Fixes
+- Add `aria-label` or visible labels to all Select components
+- Ensure all inputs have associated labels via `htmlFor`
+- Add `role="search"` to search containers
+
+---
+
+### 5. Motion & Animations
+
+#### Current State (Good)
+- `prefers-reduced-motion` media query in `index.css:376-384`
+- Auto-rotate disabled for reduced motion users in `MicroReview.tsx`
+- Animations set to 0.01ms duration for reduced motion
+
+#### Issues Identified
+| Component | Issue | Location |
+|-----------|-------|----------|
+| Search Suggestions Rotation | May not respect reduced motion | `HeroSection.tsx:64-72` |
+| Badge Pulse Animations | `animate-pulse` on discount badges | `MediumStandardPrinterCard.tsx:235` |
+| Card Entry Animations | Should be disabled for reduced motion | `LabReadoutCard.tsx:221-222` |
+
+#### Required Fixes
+- Add `motion-safe:` prefix to non-essential animations
+- Disable suggestion rotation for reduced motion users
+- Ensure critical state changes don't rely solely on animation
+
+---
+
+## Implementation Plan
+
+### Phase 1: Icon Button ARIA Labels (Priority: Critical)
+**Files to modify:**
+1. `src/components/deals/DealCard.tsx`
+   - Add `aria-label="Share this deal"` to Share button (line 69-76)
+   
+2. `src/components/compare/MiniFilamentCard.tsx`
+   - Add `aria-label="Buy from {vendor}"` to Quick Buy link (line 235-238)
+   - Add `aria-label="Drag to reorder"` + `sr-only` text to drag handle (line 142-155)
+
+3. `src/components/CompareTray.tsx`
+   - Change `title` to `aria-label` on minimize button (line 427-431)
+   - Change `title` to `aria-label` on share button (line 486-493)
+
+4. `src/components/filters/MobileFilamentFilterSheet.tsx`
+   - Add `aria-label="Close filter panel"` to close button (line 181-186)
+
+### Phase 2: ARIA Expanded/Controls (Priority: High)
+**Files to modify:**
+1. `src/components/filters/MobileFilamentFilterSheet.tsx`
+   - Add `aria-expanded={expandedSection === 'printer'}` to section toggles
+   - Add `aria-controls="printer-section-content"` + matching `id`
+
+2. `src/components/Navbar.tsx`
+   - Add `aria-expanded={mobileMenuOpen}` to hamburger button
+   - Add `aria-controls="mobile-navigation"` + matching `id` to menu container
+
+3. `src/components/HeroSection.tsx`
+   - Add focus-visible styles to scroll button (line 184-199)
+
+### Phase 3: Color Contrast Improvements (Priority: High)
+**Files to modify:**
+1. `src/index.css`
+   - Add high-contrast badge variant utilities
+   - Create `--badge-text-on-dark` token for consistent badge text
+
+2. `src/components/compare/MiniFilamentCard.tsx`
+   - Update `MATERIAL_BADGE_COLORS` to use lighter text values:
+     - `text-orange-300` instead of `text-orange-400`
+     - `text-blue-300` instead of `text-blue-400`
+
+3. `src/components/MaterialBadge.tsx`
+   - Increase text lightness for property indicators
+   - Use `text-violet-300` for material badge text
+
+### Phase 4: Form Accessibility Enhancements (Priority: Medium)
+**Files to modify:**
+1. `src/components/filters/MobileFilamentFilterSheet.tsx`
+   - Add `aria-label="Select printer brand"` to brand Select
+   - Add `aria-label="Select printer model"` to model Select
+
+2. `src/components/search/SearchInputWithHistory.tsx`
+   - Wrap in container with `role="search"`
+   - Add `aria-autocomplete="list"` to input
+
+3. Create `src/components/accessibility/AccessibleSelect.tsx`
+   - Wrapper for Select with consistent labeling
+
+### Phase 5: Motion Safety (Priority: Medium)
+**Files to modify:**
+1. `src/components/HeroSection.tsx`
+   - Add reduced motion check to suggestion cycling (line 64-72)
+
+2. `src/components/LabReadoutCard.tsx`
+   - Add `motion-safe:` prefix to card-enter animation
+
+3. `src/components/printers/MediumStandardPrinterCard.tsx`
+   - Add `motion-safe:animate-pulse` to discount badge
+
+4. `src/index.css`
+   - Add utility class `.motion-safe-only` for JS-controlled animations
+
+### Phase 6: Heading Hierarchy Audit (Priority: Medium)
+**Files to audit and fix:**
+1. `src/pages/Finder.tsx` - Ensure h1 in hero, h2 for sections
+2. `src/pages/Printers.tsx` - Same pattern
+3. `src/pages/Deals.tsx` - Same pattern
+4. Product detail pages - h1 for product name, h2 for tabs
+
+### Phase 7: Testing & Validation
+**Testing approach:**
+1. Install `@axe-core/react` for automated accessibility testing
+2. Add accessibility test utilities to `src/test/setup.ts`
+3. Create sample accessibility tests for key components
+4. Document keyboard navigation paths
+
+---
+
+## Technical Details
+
+### New Utility Classes (index.css)
+```css
+/* High contrast badge text for dark backgrounds */
+.badge-text-high-contrast {
+  color: hsl(0 0% 95%);
 }
 
-// Blur-up effect implementation
-{!isLoaded && blurDataUrl && (
-  <img 
-    src={blurDataUrl} 
-    className="absolute inset-0 w-full h-full object-cover filter blur-md scale-105" 
-  />
-)}
-```
-
----
-
-## Phase 2: List Virtualization Integration
-
-### Files to Modify
-
-**1. `src/pages/Finder.tsx`**
-- Replace grid rendering (lines 1784-1804) with `VirtualGrid`
-- Add responsive column count detection
-- Maintain "Load More" pattern as fallback for smaller lists
-
-**2. `src/pages/Printers.tsx`**
-- Integrate `VirtualGrid` for printer listing
-- Calculate dynamic row height based on card dimensions
-
-**3. `src/pages/Deals.tsx`**
-- Add `VirtualGrid` for deals grid (lines 176-188)
-- Enable `onEndReached` for potential infinite scroll
-
-**4. Create `src/hooks/useResponsiveColumns.ts`**
-- Detect optimal column count based on viewport
-- Return: `{ columns: number, rowHeight: number }`
-
-### Technical Details
-```typescript
-// Finder.tsx integration example
-import { VirtualGrid } from "@/components/ui/virtual-grid";
-import { useResponsiveColumns } from "@/hooks/useResponsiveColumns";
-
-const { columns, rowHeight } = useResponsiveColumns({
-  breakpoints: { sm: 1, md: 2, lg: 3, xl: 4 },
-  cardBaseHeight: 420,
-  gap: 24
-});
-
-// Only use virtualization for large lists (>50 items)
-{displayedGroups.length > 50 ? (
-  <VirtualGrid
-    items={displayedGroups}
-    renderItem={(group, index) => (
-      <LabReadoutCard 
-        key={group.representativeFilament.id}
-        filament={group.representativeFilament}
-        index={index}
-        // ...props
-      />
-    )}
-    getKey={(group) => group.representativeFilament.id}
-    columnCount={columns}
-    rowHeight={rowHeight}
-    gap={24}
-    className="min-h-[600px]"
-  />
-) : (
-  // Existing grid for small lists
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {/* ... */}
-  </div>
-)}
-```
-
----
-
-## Phase 3: State Persistence & Scroll Restoration
-
-### New Files to Create
-
-**1. `src/hooks/useScrollRestoration.ts`**
-```typescript
-// Saves scroll position to sessionStorage keyed by route
-// Restores on back/forward navigation
-// Integrates with react-router's navigation state
-
-export function useScrollRestoration(key: string) {
-  const location = useLocation();
-  const navigationType = useNavigationType();
-  
-  // Save position on scroll (debounced)
-  // Restore on POP navigation type
-  // Clear on new navigation
+/* Motion-safe animation wrapper */
+.motion-safe-only {
+  animation: none;
 }
-```
-
-**2. `src/hooks/useFilterPersistence.ts`**
-- Extend `useURLFilterSync` to include scroll position
-- Add `scrollY` parameter to URL (optional, for deep links)
-
-### Files to Modify
-
-**1. `src/pages/Finder.tsx`**
-- Integrate `useScrollRestoration('finder-scroll')`
-- Save `displayCount` to sessionStorage for pagination state
-
-**2. `src/pages/Printers.tsx`**
-- Add scroll restoration hook
-- Preserve `displayedCount` across navigations
-
-**3. `src/hooks/useURLFilterSync.ts`**
-- Add optional `scrollPosition` to state interface
-- Include in shareable URL generation
-
-### Technical Details
-```typescript
-// useScrollRestoration.ts
-import { useLocation, useNavigationType } from 'react-router-dom';
-import { useEffect, useRef, useCallback } from 'react';
-import { useDebouncedCallback } from './usePerformance';
-
-export function useScrollRestoration(key: string) {
-  const location = useLocation();
-  const navigationType = useNavigationType();
-  const storageKey = `scroll_${key}_${location.pathname}`;
-  
-  // Debounced scroll save
-  const saveScrollPosition = useDebouncedCallback(() => {
-    sessionStorage.setItem(storageKey, String(window.scrollY));
-  }, 100);
-  
-  // Restore on POP (back/forward)
-  useEffect(() => {
-    if (navigationType === 'POP') {
-      const savedY = sessionStorage.getItem(storageKey);
-      if (savedY) {
-        requestAnimationFrame(() => {
-          window.scrollTo(0, parseInt(savedY, 10));
-        });
-      }
-    }
-  }, [location.key, navigationType, storageKey]);
-  
-  // Listen for scroll events
-  useEffect(() => {
-    window.addEventListener('scroll', saveScrollPosition);
-    return () => window.removeEventListener('scroll', saveScrollPosition);
-  }, [saveScrollPosition]);
-}
-```
-
----
-
-## Phase 4: Enhanced Code Splitting
-
-### Already Complete
-The `src/App.tsx` already implements comprehensive lazy loading for all 80+ routes using `React.lazy()`.
-
-### Additional Optimizations
-
-**1. Create `src/components/LazyChart.tsx`**
-- Lazy load Recharts components
-- Show skeleton while loading
-
-**2. Create `src/lib/preloadRoutes.ts`**
-- Preload likely next routes on hover/focus
-- Use `requestIdleCallback` for non-blocking preload
-
-**3. Modify `src/components/Navbar.tsx`**
-- Add preload triggers on navigation link hover
-
-### Technical Details
-```typescript
-// LazyChart.tsx - Split heavy charting library
-const LazyLineChart = lazy(() => 
-  import('recharts').then(m => ({ default: m.LineChart }))
-);
-
-export function LazyChart({ children, ...props }) {
-  return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-      <LazyLineChart {...props}>{children}</LazyLineChart>
-    </Suspense>
-  );
-}
-
-// preloadRoutes.ts
-const routePreloaders: Record<string, () => Promise<any>> = {
-  '/finder': () => import('../pages/Finder'),
-  '/printers': () => import('../pages/Printers'),
-  '/deals': () => import('../pages/Deals'),
-  '/wizard': () => import('../pages/Wizard'),
-};
-
-export function preloadRoute(path: string) {
-  const preloader = routePreloaders[path];
-  if (preloader && 'requestIdleCallback' in window) {
-    requestIdleCallback(() => preloader());
+@media (prefers-reduced-motion: no-preference) {
+  .motion-safe-only {
+    animation: inherit;
   }
 }
 ```
 
----
+### Icon Button Pattern
+```tsx
+// Before
+<Button variant="ghost" size="icon" onClick={handleClick}>
+  <Share2 className="h-4 w-4" />
+</Button>
 
-## Metrics Tracking Integration
+// After
+<Button 
+  variant="ghost" 
+  size="icon" 
+  onClick={handleClick}
+  aria-label="Share this deal"
+>
+  <Share2 className="h-4 w-4" aria-hidden="true" />
+</Button>
+```
 
-### Files to Modify
+### Collapsible Section Pattern
+```tsx
+// Before
+<button onClick={() => toggleSection('printer')}>
+  <span>Your Printer</span>
+  <ChevronDown />
+</button>
 
-**1. `src/App.tsx`**
-- Add `useWebVitals()` hook at app root level
-- Ensure metrics are captured on all pages
-
-**2. `src/hooks/useWebVitals.ts`**
-- Already tracks: FCP, LCP, CLS, FID, TTFB
-- Add INP (Interaction to Next Paint) tracking
-- Add custom timing for virtualization performance
-
-### Dashboard Visibility
-Metrics are already stored in `performance_metrics` table and can be viewed via existing admin analytics infrastructure.
-
----
-
-## Implementation Order
-
-| Phase | Priority | Effort | Impact |
-|-------|----------|--------|--------|
-| 1. Image Optimization | High | Medium | High - Reduces LCP significantly |
-| 2. List Virtualization | High | High | Critical - 443+ products need windowing |
-| 3. Scroll Restoration | Medium | Low | UX improvement for navigation |
-| 4. Code Splitting | Low | Low | Already mostly complete |
+// After
+<button 
+  onClick={() => toggleSection('printer')}
+  aria-expanded={expandedSection === 'printer'}
+  aria-controls="printer-section-content"
+>
+  <span>Your Printer</span>
+  <ChevronDown aria-hidden="true" />
+</button>
+<div id="printer-section-content" hidden={expandedSection !== 'printer'}>
+  {/* content */}
+</div>
+```
 
 ---
 
 ## Files Summary
 
-### New Files (4)
-- `src/hooks/useScrollRestoration.ts`
-- `src/hooks/useResponsiveColumns.ts`
-- `src/components/LazyChart.tsx`
-- `src/lib/preloadRoutes.ts`
+### New Files (1)
+- `src/components/accessibility/AccessibleSelect.tsx`
 
-### Modified Files (9)
-- `src/components/LabReadoutCard.tsx` - Use OptimizedImage
-- `src/components/deals/DealCard.tsx` - Use OptimizedImage
-- `src/components/printers/MediumStandardPrinterCard.tsx` - Use OptimizedImage
-- `src/components/ui/optimized-image.tsx` - Add blur-up, WebP
-- `src/pages/Finder.tsx` - VirtualGrid + scroll restoration
-- `src/pages/Printers.tsx` - VirtualGrid + scroll restoration
-- `src/pages/Deals.tsx` - VirtualGrid integration
-- `src/hooks/useWebVitals.ts` - Add INP tracking
-- `src/components/Navbar.tsx` - Route preloading
+### Modified Files (12)
+| File | Changes |
+|------|---------|
+| `src/components/deals/DealCard.tsx` | Add aria-label to share button |
+| `src/components/compare/MiniFilamentCard.tsx` | Add aria-labels, update badge colors |
+| `src/components/CompareTray.tsx` | Replace title with aria-label |
+| `src/components/filters/MobileFilamentFilterSheet.tsx` | Add aria-expanded, aria-controls, aria-labels |
+| `src/components/Navbar.tsx` | Add aria-expanded to mobile menu trigger |
+| `src/components/HeroSection.tsx` | Add reduced motion check, focus styles |
+| `src/components/LabReadoutCard.tsx` | Add motion-safe prefix |
+| `src/components/printers/MediumStandardPrinterCard.tsx` | Add motion-safe to pulse |
+| `src/components/MaterialBadge.tsx` | Increase text contrast |
+| `src/components/search/SearchInputWithHistory.tsx` | Add role="search", aria-autocomplete |
+| `src/index.css` | Add high-contrast utilities |
+| `src/pages/Finder.tsx` | Verify heading hierarchy |
 
 ---
 
-## Expected Performance Gains
+## Expected Accessibility Improvements
 
-| Metric | Current (estimated) | Target | Improvement |
-|--------|---------------------|--------|-------------|
-| LCP | 3.5s | <2.5s | 30%+ |
-| FCP | 1.8s | <1.5s | 15%+ |
-| TTI | 4.0s | <3.0s | 25%+ |
-| CLS | 0.15 | <0.1 | 33%+ |
-| Memory (443 items) | ~200MB | ~50MB | 75%+ |
+| Metric | Before | After |
+|--------|--------|-------|
+| Icon buttons with labels | ~60% | 100% |
+| ARIA expanded on toggles | ~30% | 100% |
+| Color contrast compliance | ~85% | 100% |
+| Motion respect | ~70% | 100% |
+| Form accessibility | ~80% | 100% |
