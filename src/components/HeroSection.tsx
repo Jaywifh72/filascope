@@ -202,7 +202,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
 
             {/* Quick Start Paths - 4 cards */}
             <div 
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-[600px] animate-fade-in mb-12 md:mb-16"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-[600px] animate-fade-in mb-16 md:mb-20"
               style={{ animationDelay: "0.35s" }}
             >
               {quickStartPaths.map((path) => {
