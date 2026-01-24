@@ -16,7 +16,8 @@ export function StarRating({
   size = 'sm',
   className 
 }: StarRatingProps) {
-  const iconSize = size === 'sm' ? 12 : 16;
+  // Minimum 16px for touch accessibility
+  const iconSize = size === 'sm' ? 16 : 20;
   
   const stars = Array.from({ length: maxRating }, (_, i) => {
     const starIndex = i + 1;
@@ -28,12 +29,12 @@ export function StarRating({
         key={i}
         size={iconSize}
         className={cn(
-          'transition-colors drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]',
+          'transition-colors',
           isFilled 
-            ? 'fill-amber-300 text-amber-300' 
+            ? 'fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]' 
             : isHalf 
-              ? 'fill-amber-300/50 text-amber-300' 
-              : 'fill-none text-muted-foreground/40 drop-shadow-none'
+              ? 'fill-[#FFB800]/50 text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.4)]' 
+              : 'fill-none text-muted-foreground/40'
         )}
       />
     );
