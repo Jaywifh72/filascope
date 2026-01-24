@@ -18,6 +18,7 @@ import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatib
 import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 import { SkipLink } from "./components/accessibility/SkipLink";
 import { ScreenReaderAnnouncerProvider } from "./components/accessibility/ScreenReaderAnnouncer";
+import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
@@ -82,6 +83,7 @@ const BrandComparePage = lazy(() => import("./pages/BrandComparePage"));
 const GuidePrintSettings = lazy(() => import("./pages/GuidePrintSettings"));
 const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
+const Install = lazy(() => import("./pages/Install"));
 
 const queryClient = new QueryClient();
 
@@ -102,6 +104,8 @@ const App = () => (
                 <BrowserRouter>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
+                {/* PWA: Offline indicator */}
+                <OfflineBanner />
                 <MaintenanceModeWrapper>
                 <Navbar />
                 <Suspense fallback={
@@ -179,6 +183,7 @@ const App = () => (
                   <Route path="/guides/print-settings" element={<GuidePrintSettings />} />
                   <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
                   <Route path="/resources/profiles" element={<ResourcesProfiles />} />
+                  <Route path="/install" element={<Install />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
@@ -187,6 +192,8 @@ const App = () => (
               <CompareTray />
                 <PrinterCompareBar />
                 <BrandCompareBar />
+                {/* PWA: Install prompt banner */}
+                <PWAInstallBanner />
                 <TechFooter />
                 </MaintenanceModeWrapper>
               </BrowserRouter>

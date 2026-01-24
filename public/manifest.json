@@ -1,0 +1,82 @@
+{
+  "name": "FilaScope - 3D Printer Filament Database",
+  "short_name": "FilaScope",
+  "description": "Explore thousands of 3D printer filaments with detailed technical specs, printer compatibility, and transmissivity data.",
+  "theme_color": "#0A0C10",
+  "background_color": "#0A0C10",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["utilities", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "/pwa-icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/pwa-icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Filaments",
+      "short_name": "Filaments",
+      "url": "/",
+      "icons": [{ "src": "/pwa-icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Compare Materials",
+      "short_name": "Compare",
+      "url": "/compare",
+      "icons": [{ "src": "/pwa-icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Browse Deals",
+      "short_name": "Deals",
+      "url": "/deals",
+      "icons": [{ "src": "/pwa-icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
+}
