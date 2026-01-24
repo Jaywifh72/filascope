@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useDealsCount } from "@/hooks/useDealsCount";
 
 export interface DealFilament {
   id: string;
@@ -40,7 +41,9 @@ export function useDealsWithFilters() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [minDiscount, setMinDiscount] = useState(0);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
-
+  
+  // Use shared deals count for accurate total (not limited by query limit)
+  const { data: totalDealsCount = 0 } = useDealsCount();
   const { data: rawDeals = [], isLoading } = useQuery({
     queryKey: ["deals-page-enhanced"],
     queryFn: async () => {
@@ -143,7 +146,7 @@ export function useDealsWithFilters() {
 
   return {
     deals: filteredDeals,
-    totalDeals: rawDeals.length,
+    totalDeals: totalDealsCount, // Use accurate count from shared hook
     isLoading,
     // Filter state
     selectedMaterials,

@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useDealsCount } from "@/hooks/useDealsCount";
 
 interface HeroSectionProps {
   searchTerm: string;
@@ -24,33 +23,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const [isFocused, setIsFocused] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
-  // Fetch active deals count - must match Deals page logic (compare_at_price > variant_price)
-  const { data: dealsCount = 0 } = useQuery({
-    queryKey: ["hero-deals-count"],
-    queryFn: async () => {
-      // Fetch candidates and filter client-side since Supabase can't do column-to-column comparison
-      const { data, error } = await supabase
-        .from('filaments')
-        .select('variant_price, variant_compare_at_price')
-        .not('variant_compare_at_price', 'is', null)
-        .not('variant_price', 'is', null)
-        .gt('variant_compare_at_price', 0)
-        .or('net_weight_g.is.null,net_weight_g.gte.300')
-        .limit(500);
-      
-      if (error || !data) return 0;
-      
-      // Filter to only count items where compare_at_price > variant_price (actual deals)
-      const actualDeals = data.filter(
-        item => item.variant_compare_at_price !== null && 
-                item.variant_price !== null && 
-                item.variant_compare_at_price > item.variant_price
-      );
-      
-      return actualDeals.length;
-    },
-    staleTime: 1000 * 60 * 5, // 5 min cache
-  });
+  // Use shared deals count hook for consistency with Deals page
+  const { data: dealsCount = 0 } = useDealsCount();
 
   // Dynamic quick start paths
   const quickStartPaths = useMemo(() => [
