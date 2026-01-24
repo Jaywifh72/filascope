@@ -1048,28 +1048,61 @@ All colors MUST be HSL.
 /* Count badge animations */
 @keyframes badgePop {
   0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
+  50% { transform: scale(1.35); }
   100% { transform: scale(1); }
 }
 
 @keyframes badgeFlashGreen {
-  0% { background-color: hsl(var(--primary)); }
-  50% { background-color: hsl(142 76% 36%); }
-  100% { background-color: hsl(var(--primary)); }
+  0% { 
+    background-color: hsl(var(--primary)); 
+    box-shadow: 0 0 0 0 hsl(142 76% 36% / 0.7);
+  }
+  50% { 
+    background-color: hsl(142 76% 36%); 
+    box-shadow: 0 0 12px 4px hsl(142 76% 36% / 0.5);
+  }
+  100% { 
+    background-color: hsl(var(--primary)); 
+    box-shadow: 0 0 0 0 hsl(142 76% 36% / 0);
+  }
 }
 
 @keyframes badgeFlashRed {
-  0% { background-color: hsl(var(--primary)); }
-  50% { background-color: hsl(0 84% 60%); }
-  100% { background-color: hsl(var(--primary)); }
+  0% { 
+    background-color: hsl(var(--primary)); 
+    box-shadow: 0 0 0 0 hsl(0 84% 60% / 0.7);
+  }
+  50% { 
+    background-color: hsl(0 84% 60%); 
+    box-shadow: 0 0 12px 4px hsl(0 84% 60% / 0.5);
+  }
+  100% { 
+    background-color: hsl(var(--primary)); 
+    box-shadow: 0 0 0 0 hsl(0 84% 60% / 0);
+  }
+}
+
+/* Subtle pulse glow for badge attention */
+@keyframes badgePulseGlow {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 8px 3px hsl(var(--primary) / 0.6);
+  }
 }
 
 .badge-pop-add {
-  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), badgeFlashGreen 0.3s ease-out;
+  animation: badgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), badgeFlashGreen 0.4s ease-out;
 }
 
 .badge-pop-remove {
-  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), badgeFlashRed 0.3s ease-out;
+  animation: badgePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), badgeFlashRed 0.4s ease-out;
+}
+
+/* Continuous subtle pulse for active compare badge */
+.badge-pulse-active {
+  animation: badgePulseGlow 2s ease-in-out infinite;
 }
 
 /* Scrollbar styles for compare tray */

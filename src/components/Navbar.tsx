@@ -70,7 +70,7 @@ const Navbar = () => {
     return 'U';
   };
 
-  // Lab-style nav link component with keyboard accessibility
+  // Lab-style nav link component with keyboard accessibility and enhanced active states
   const LabNavLink = ({
     to,
     children,
@@ -88,25 +88,27 @@ const Navbar = () => {
         to={to} 
         onClick={onClick} 
         className={cn(
-          "relative py-3 px-3 transition-colors duration-200",
+          "relative py-2 px-3 transition-all duration-200 rounded-md",
           "text-xs font-bold uppercase tracking-widest",
-          "hover:text-white",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 rounded",
-          active ? "text-primary" : "text-gray-400"
+          "hover:text-white hover:bg-white/5",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950",
+          active 
+            ? "text-primary bg-white/5" 
+            : "text-gray-400"
         )}
       >
         {children}
         <span 
           className={cn(
-            "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300",
-            active ? "w-full" : "w-0"
+            "absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-primary transition-all duration-300 rounded-full",
+            active ? "w-[calc(100%-12px)]" : "w-0"
           )} 
         />
       </Link>
     );
   };
 
-  // Mobile nav link component with keyboard accessibility
+  // Mobile nav link component with keyboard accessibility and left border accent
   const MobileNavLink = ({
     to,
     children,
@@ -126,14 +128,16 @@ const Navbar = () => {
         to={to} 
         onClick={() => setMobileMenuOpen(false)} 
         className={cn(
-          "flex items-center gap-3 px-4 py-3 transition-colors duration-200",
+          "flex items-center gap-3 px-4 py-3 transition-all duration-200 relative",
           "text-sm font-medium",
           "hover:bg-gray-800/50",
           "focus-visible:outline-none focus-visible:bg-gray-800/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
-          active ? "text-primary bg-primary/10" : "text-gray-300"
+          active 
+            ? "text-primary bg-primary/10 border-l-2 border-primary" 
+            : "text-gray-300 border-l-2 border-transparent"
         )}
       >
-        {Icon && <Icon className="w-4 h-4" />}
+        {Icon && <Icon className={cn("w-4 h-4", active && "text-primary")} />}
         {children}
       </Link>
     );
@@ -206,12 +210,26 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">Deals</LabNavLink>
             
-            {/* Learn Dropdown - Mega Menu */}
+            {/* Learn Dropdown - Mega Menu with hover support */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isLearnActive ? 'text-primary' : 'text-gray-400')}>
+                <button 
+                  className={cn(
+                    "group relative flex items-center gap-1.5 py-2 px-3 transition-all duration-200 rounded-md",
+                    "text-xs font-bold uppercase tracking-widest",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "hover:text-white hover:bg-white/5",
+                    isLearnActive ? 'text-primary bg-white/5' : 'text-gray-400'
+                  )}
+                >
                   Learn
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className="w-3 h-3 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <span 
+                    className={cn(
+                      "absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-primary transition-all duration-300 rounded-full",
+                      isLearnActive ? "w-[calc(100%-12px)]" : "w-0"
+                    )} 
+                  />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[400px] p-4">
@@ -271,9 +289,23 @@ const Navbar = () => {
             {/* More Dropdown (Learn collapsed) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isLearnActive ? 'text-primary' : 'text-gray-400')}>
+                <button 
+                  className={cn(
+                    "group relative flex items-center gap-1.5 py-2 px-3 transition-all duration-200 rounded-md",
+                    "text-xs font-bold uppercase tracking-widest",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "hover:text-white hover:bg-white/5",
+                    isLearnActive ? 'text-primary bg-white/5' : 'text-gray-400'
+                  )}
+                >
                   <MoreHorizontal className="w-4 h-4" />
                   More
+                  <span 
+                    className={cn(
+                      "absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-primary transition-all duration-300 rounded-full",
+                      isLearnActive ? "w-[calc(100%-12px)]" : "w-0"
+                    )} 
+                  />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
