@@ -11,9 +11,11 @@ import {
   Atom,
   Layers,
   CheckCircle2,
-  Settings2
+  Settings2,
+  Droplets
 } from "lucide-react";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import { useNozzleConfig, NOZZLE_SIZES, FLOW_TYPES, NOZZLE_MATERIALS, FLOW_TYPE_LABELS, NOZZLE_MATERIAL_LABELS, type NozzleSize, type FlowType, type NozzleMaterial } from "@/hooks/useNozzleConfig";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -104,6 +106,9 @@ export function TechnicalConsoleSidebar({
     modelsLoading,
   } = usePrinterSelection();
 
+  // Nozzle configuration
+  const nozzleConfig = useNozzleConfig(selectedPrinter?.stock_nozzle_diameter_mm);
+
   const [localSpoolSize, setLocalSpoolSize] = useState(spoolSize);
   const [localMaterials, setLocalMaterials] = useState<string[]>(selectedMaterials);
   const [localBrands, setLocalBrands] = useState<string[]>(selectedBrands);
@@ -115,7 +120,7 @@ export function TechnicalConsoleSidebar({
 
   // Printer specs
   const specs = {
-    nozzleDia: selectedPrinter?.stock_nozzle_diameter_mm ?? null,
+    nozzleDia: nozzleConfig.size,
     nozzleTemp: selectedPrinter?.max_nozzle_temp_c ?? null,
     bedTemp: selectedPrinter?.bed_max_temp_c ?? null,
     printSpeed: selectedPrinter?.max_print_speed_mms ?? null,
@@ -241,11 +246,77 @@ export function TechnicalConsoleSidebar({
           </span>
         </div>
 
+        {/* Nozzle Configuration Row */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Droplets className="w-3 h-3 text-gray-400" />
+            <span className="text-xs text-gray-400 uppercase tracking-wide">Nozzle Config</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {/* Nozzle Size Dropdown */}
+            <Select
+              value={String(nozzleConfig.size)}
+              onValueChange={(val) => nozzleConfig.setSize(Number(val) as NozzleSize)}
+            >
+              <SelectTrigger className="h-8 bg-gray-800 border-gray-700 text-white text-xs hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {NOZZLE_SIZES.map((size) => (
+                  <SelectItem key={size} value={String(size)} className="text-xs text-white hover:bg-gray-700">
+                    {size}mm
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Flow Type Dropdown */}
+            <Select
+              value={nozzleConfig.flowType}
+              onValueChange={(val) => nozzleConfig.setFlowType(val as FlowType)}
+            >
+              <SelectTrigger className="h-8 bg-gray-800 border-gray-700 text-white text-xs hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {FLOW_TYPES.map((type) => (
+                  <SelectItem key={type} value={type} className="text-xs text-white hover:bg-gray-700">
+                    {FLOW_TYPE_LABELS[type]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Nozzle Material Dropdown */}
+            <Select
+              value={nozzleConfig.material}
+              onValueChange={(val) => nozzleConfig.setMaterial(val as NozzleMaterial)}
+            >
+              <SelectTrigger className="h-8 bg-gray-800 border-gray-700 text-white text-xs hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {NOZZLE_MATERIALS.map((mat) => (
+                  <SelectItem key={mat} value={mat} className="text-xs text-white hover:bg-gray-700">
+                    {NOZZLE_MATERIAL_LABELS[mat]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Nozzle material warning for abrasives */}
+          {nozzleConfig.material === "brass" && (
+            <p className="text-[10px] text-amber-400/80 leading-tight">
+              ⚠️ Brass nozzles wear quickly with abrasive filaments
+            </p>
+          )}
+        </div>
+
         {/* 2x3 Live Specs Grid */}
         <div className="grid grid-cols-3 gap-1.5">
           <LiveSpecCell 
             label="Nozzle" 
-            value={specs.nozzleDia !== null ? `${specs.nozzleDia}mm` : "--"}
+            value={`${specs.nozzleDia}mm`}
             isLoading={printerLoading}
           />
           <LiveSpecCell 
