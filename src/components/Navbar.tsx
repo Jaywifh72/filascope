@@ -472,7 +472,7 @@ const Navbar = () => {
         {/* Mobile Menu - Slide down animation */}
         <div 
           id="mobile-navigation"
-          className={cn("md:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} 
+          className={cn("lg:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} 
           style={{
             background: 'hsla(220, 20%, 4%, 0.98)'
           }}
