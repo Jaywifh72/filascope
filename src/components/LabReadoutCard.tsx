@@ -300,14 +300,16 @@ export function LabReadoutCard({
         </div>
 
         <div className="flex items-center justify-center gap-3 h-full">
-          {/* Center: Brand Logo */}
+          {/* Center: Brand Logo - Using OptimizedImage */}
           <div className="h-full flex items-center justify-center">
             <div className="h-[90%] flex items-center justify-center">
-              {filament.vendor ? (
+              {filament.vendor && getBrandLogo(filament.vendor) ? (
                 <img 
                   src={getBrandLogo(filament.vendor)} 
                   alt={filament.vendor}
                   className="h-full w-auto max-w-[200px] object-contain opacity-70"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -316,7 +318,7 @@ export function LabReadoutCard({
               ) : null}
               <span className={cn(
                 "text-[10px] text-muted-foreground uppercase tracking-wider",
-                filament.vendor ? "hidden" : ""
+                filament.vendor && getBrandLogo(filament.vendor) ? "hidden" : ""
               )}>
                 {filament.vendor || "Unknown"}
               </span>

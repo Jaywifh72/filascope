@@ -13,6 +13,7 @@ import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
+import { preloadRoute } from "@/lib/preloadRoutes";
 const Navbar = () => {
   const {
     user,
@@ -87,7 +88,7 @@ const Navbar = () => {
     return 'U';
   };
 
-  // Lab-style nav link component with keyboard accessibility and enhanced active states
+  // Lab-style nav link component with keyboard accessibility, enhanced active states, and route preloading
   const LabNavLink = ({
     to,
     children,
@@ -100,10 +101,18 @@ const Navbar = () => {
     onClick?: () => void;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
+    
+    // Preload route on mouse enter for faster navigation
+    const handleMouseEnter = () => {
+      preloadRoute(to);
+    };
+    
     return (
       <Link 
         to={to} 
-        onClick={onClick} 
+        onClick={onClick}
+        onMouseEnter={handleMouseEnter}
+        onFocus={handleMouseEnter}
         className={cn(
           "relative py-2 px-3 transition-all duration-200 rounded-md",
           "text-xs font-bold uppercase tracking-widest",
@@ -125,7 +134,7 @@ const Navbar = () => {
     );
   };
 
-  // Mobile nav link component with keyboard accessibility and left border accent
+  // Mobile nav link component with keyboard accessibility, left border accent, and route preloading
   const MobileNavLink = ({
     to,
     children,
@@ -140,10 +149,17 @@ const Navbar = () => {
     end?: boolean;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
+    
+    // Preload route when link receives focus
+    const handleFocus = () => {
+      preloadRoute(to);
+    };
+    
     return (
       <Link 
         to={to} 
-        onClick={() => setMobileMenuOpen(false)} 
+        onClick={() => setMobileMenuOpen(false)}
+        onFocus={handleFocus}
         className={cn(
           "flex items-center gap-3 px-4 py-3 transition-all duration-200 relative",
           "text-sm font-medium",

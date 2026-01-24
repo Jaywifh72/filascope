@@ -27,6 +27,7 @@ import { QuizAnswers } from "@/lib/printerQuizData";
 import { TechFooter } from "@/components/TechFooter";
 import { exportPrinterDatabaseCSV } from "@/lib/printerExportUtils";
 import ActiveFilterChips from "@/components/printers/ActiveFilterChips";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -89,6 +90,9 @@ export default function Printers() {
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
   
+  // Scroll restoration for back/forward navigation
+  const { savePaginationState, restorePaginationState } = useScrollRestoration('printers');
+  
   // Search analytics tracking
   const { startSearchTimer, trackSearch } = useFilterAnalytics();
   const { trackSearch: trackSearchHistory } = useSearchContext();
@@ -106,8 +110,10 @@ export default function Printers() {
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
   
   
-  // Progressive disclosure state
-  const [displayedCount, setDisplayedCount] = useState(PRINTERS_PER_PAGE);
+  // Progressive disclosure state - restore from session on back navigation
+  const [displayedCount, setDisplayedCount] = useState(() =>
+    restorePaginationState(PRINTERS_PER_PAGE)
+  );
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Quiz state
@@ -220,6 +226,11 @@ export default function Printers() {
   useEffect(() => {
     setDisplayedCount(PRINTERS_PER_PAGE);
   }, [activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, searchTerm, activeQuickFilters]);
+  
+  // Save pagination state for scroll restoration
+  useEffect(() => {
+    savePaginationState(displayedCount);
+  }, [displayedCount, savePaginationState]);
   
   // Track search analytics - start timer on search change
   useEffect(() => {

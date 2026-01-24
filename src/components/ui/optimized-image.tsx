@@ -14,6 +14,10 @@ interface OptimizedImageProps {
   fallback?: React.ReactNode;
   onLoad?: () => void;
   onError?: () => void;
+  /** Base64 blur placeholder for blur-up effect */
+  blurDataUrl?: string;
+  /** Object fit mode for the image */
+  objectFit?: "contain" | "cover" | "fill" | "none" | "scale-down";
 }
 
 /**
@@ -84,6 +88,8 @@ export const OptimizedImage = memo(function OptimizedImage({
   fallback,
   onLoad,
   onError,
+  blurDataUrl,
+  objectFit = "contain",
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -146,8 +152,18 @@ export const OptimizedImage = memo(function OptimizedImage({
         className
       )}
     >
-      {/* Skeleton placeholder */}
-      {!isLoaded && (
+      {/* Blur placeholder for blur-up effect */}
+      {!isLoaded && blurDataUrl && (
+        <img
+          src={blurDataUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover filter blur-lg scale-110"
+        />
+      )}
+
+      {/* Skeleton placeholder (when no blur data) */}
+      {!isLoaded && !blurDataUrl && (
         <Skeleton className="absolute inset-0 w-full h-full" />
       )}
 
@@ -165,7 +181,12 @@ export const OptimizedImage = memo(function OptimizedImage({
           onLoad={handleLoad}
           onError={handleError}
           className={cn(
-            "w-full h-full object-contain transition-opacity duration-300",
+            "w-full h-full transition-opacity duration-300",
+            objectFit === "contain" && "object-contain",
+            objectFit === "cover" && "object-cover",
+            objectFit === "fill" && "object-fill",
+            objectFit === "none" && "object-none",
+            objectFit === "scale-down" && "object-scale-down",
             isLoaded ? "opacity-100" : "opacity-0"
           )}
         />

@@ -54,6 +54,7 @@ import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -133,6 +134,9 @@ const Finder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  
+  // Scroll restoration for back/forward navigation
+  const { savePaginationState, restorePaginationState } = useScrollRestoration('finder');
   
   // Search analytics tracking
   const { startSearchTimer, trackSearch } = useFilterAnalytics();
@@ -239,9 +243,11 @@ const Finder = () => {
 
   const MAX_PRICE_LIMIT = 100;
   
-  // Pagination state
+  // Pagination state - restore from session on back navigation
   const ITEMS_PER_PAGE = 16;
-  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const [displayCount, setDisplayCount] = useState(() => 
+    restorePaginationState(ITEMS_PER_PAGE)
+  );
   // Multi-select mode keyboard listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -277,6 +283,11 @@ const Finder = () => {
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
   }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly]);
+  
+  // Save pagination state for scroll restoration
+  useEffect(() => {
+    savePaginationState(displayCount);
+  }, [displayCount, savePaginationState]);
   
   // Track search analytics - start timer on search change
   useEffect(() => {
