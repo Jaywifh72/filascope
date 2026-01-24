@@ -31,7 +31,7 @@ export function SocialProofBadges({
 
       {hasRating && (
         <div className="inline-flex items-center gap-1.5">
-          <Star className="h-4 w-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
+          <Star size={16} className="fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
           <span className="text-sm font-semibold text-foreground">
             {rating.toFixed(1)}/5
           </span>

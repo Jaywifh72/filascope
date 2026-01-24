@@ -54,11 +54,12 @@ function StarRating({ score, maxScore = 10 }: { score: number; maxScore?: number
       {Array.from({ length: starCount }).map((_, i) => (
         <Star
           key={i}
+          size={16}
           className={cn(
-            'w-4 h-4 transition-all',
+            'transition-all',
             i < filledStars 
-              ? 'fill-amber-400 text-amber-400' 
-              : 'fill-muted text-muted'
+              ? 'fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]' 
+              : 'fill-none text-muted-foreground/40'
           )}
           style={{ animationDelay: `${i * 50 + 300}ms` }}
         />
