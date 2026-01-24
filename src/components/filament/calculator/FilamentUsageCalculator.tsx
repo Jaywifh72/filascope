@@ -13,11 +13,16 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { FilamentUsageOutput } from './types';
+import { SpoolUsageVisual } from './SpoolUsageVisual';
+import { CalculatorShareModal } from './CalculatorShareModal';
 
 interface FilamentUsageCalculatorProps {
   filamentDensity: number; // g/cm³
   spoolWeight: number; // grams
   currentPrice: number; // price per kg
+  filamentName?: string;
+  filamentMaterial?: string;
+  buyMoreUrl?: string;
   onCalculate?: (result: FilamentUsageOutput) => void;
 }
 
@@ -25,8 +30,12 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
   filamentDensity = 1.24,
   spoolWeight = 1000,
   currentPrice = 25,
+  filamentName = 'Filament',
+  filamentMaterial = 'PLA',
+  buyMoreUrl,
   onCalculate
 }) => {
+  const [showShareModal, setShowShareModal] = useState(false);
   const [method, setMethod] = useState<'dimensions' | 'weight'>('dimensions');
   const [length, setLength] = useState('100');
   const [width, setWidth] = useState('100');
@@ -464,7 +473,33 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
               )}
             </p>
           </div>
+
+          {/* Spool Usage Visualization */}
+          <SpoolUsageVisual
+            spoolWeight={spoolWeight}
+            usagePerPrint={result.totalGrams}
+            filamentName={filamentName}
+            filamentPrice={currentPrice}
+            buyMoreUrl={buyMoreUrl}
+            onShare={() => setShowShareModal(true)}
+          />
         </div>
+      )}
+
+      {/* Share Modal */}
+      {result && (
+        <CalculatorShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          calculationData={{
+            filamentName,
+            filamentMaterial,
+            usageGrams: result.totalGrams,
+            totalCost: materialCost,
+            printsPerSpool: Math.floor(spoolWeight / result.totalGrams),
+            costPerPrint: materialCost,
+          }}
+        />
       )}
     </div>
   );
