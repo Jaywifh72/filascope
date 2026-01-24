@@ -1240,6 +1240,54 @@ export type Database = {
         }
         Relationships: []
       }
+      error_logs: {
+        Row: {
+          component_stack: string | null
+          created_at: string
+          device_type: string | null
+          error_id: string
+          error_message: string
+          error_stack: string | null
+          error_type: string
+          id: string
+          metadata: Json | null
+          page_url: string | null
+          route: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          component_stack?: string | null
+          created_at?: string
+          device_type?: string | null
+          error_id: string
+          error_message: string
+          error_stack?: string | null
+          error_type: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          route?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          component_stack?: string | null
+          created_at?: string
+          device_type?: string | null
+          error_id?: string
+          error_message?: string
+          error_stack?: string | null
+          error_type?: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          route?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       featured_content: {
         Row: {
           content_type: string
@@ -2262,6 +2310,42 @@ export type Database = {
           },
         ]
       }
+      filter_analytics: {
+        Row: {
+          action: string
+          created_at: string
+          filter_type: string
+          filter_value: string
+          id: string
+          page: string
+          result_count: number | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          filter_type: string
+          filter_value: string
+          id?: string
+          page: string
+          result_count?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          filter_type?: string
+          filter_value?: string
+          id?: string
+          page?: string
+          result_count?: number | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       finish_types: {
         Row: {
           created_at: string | null
@@ -2283,6 +2367,54 @@ export type Database = {
           display_order?: number | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      funnel_events: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          funnel_type: string
+          id: string
+          metadata: Json | null
+          page_url: string | null
+          previous_step: string | null
+          referrer: string | null
+          session_id: string
+          step_name: string
+          step_order: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          funnel_type: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          previous_step?: string | null
+          referrer?: string | null
+          session_id: string
+          step_name: string
+          step_order?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          funnel_type?: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          previous_step?: string | null
+          referrer?: string | null
+          session_id?: string
+          step_name?: string
+          step_order?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2502,6 +2634,51 @@ export type Database = {
           max_humidity_percent?: number | null
           name?: string
           severity_rank?: number
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          connection_type: string | null
+          created_at: string
+          device_type: string
+          id: string
+          metric_name: string
+          metric_value: number
+          page_url: string
+          rating: string
+          recorded_at: string
+          route: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          connection_type?: string | null
+          created_at?: string
+          device_type: string
+          id?: string
+          metric_name: string
+          metric_value: number
+          page_url: string
+          rating: string
+          recorded_at?: string
+          route: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          connection_type?: string | null
+          created_at?: string
+          device_type?: string
+          id?: string
+          metric_name?: string
+          metric_value?: number
+          page_url?: string
+          rating?: string
+          recorded_at?: string
+          route?: string
+          session_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -4754,6 +4931,42 @@ export type Database = {
           started_at?: string | null
           status?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      search_analytics: {
+        Row: {
+          created_at: string
+          filters_applied: string[] | null
+          has_results: boolean
+          id: string
+          query: string
+          result_count: number
+          session_id: string | null
+          time_to_results_ms: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          filters_applied?: string[] | null
+          has_results: boolean
+          id?: string
+          query: string
+          result_count: number
+          session_id?: string | null
+          time_to_results_ms?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          filters_applied?: string[] | null
+          has_results?: boolean
+          id?: string
+          query?: string
+          result_count?: number
+          session_id?: string | null
+          time_to_results_ms?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
