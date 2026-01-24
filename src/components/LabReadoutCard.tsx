@@ -6,16 +6,19 @@ import {
   ArrowRight,
   Thermometer,
   Plus,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { REGIONS } from "@/config/regions";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Filament {
   id: string;
@@ -73,7 +76,7 @@ export function LabReadoutCard({
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { formatRegionalPrice, currency: userCurrency } = useCurrency();
+  const { currency: userCurrency, formatPrice, region } = useRegion();
   
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
     ? variantIndicators.anyInStock === false
@@ -82,8 +85,15 @@ export function LabReadoutCard({
   const { 
     regionalPrice, 
     regionalUrl,
-    fallbackUrl 
+    fallbackUrl,
+    isActualRegionalPrice,
+    isUsingFallbackRegion,
+    currency: priceCurrency,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
+  
+  // Check if we have a local regional store
+  const hasLocalStore = isActualRegionalPrice && !isUsingFallbackRegion;
+  const isConverted = isUsingFallbackRegion || (priceCurrency && priceCurrency !== userCurrency);
   
   const {
     currentPrice: livePrice,
@@ -353,7 +363,7 @@ export function LabReadoutCard({
                 {/* Original price with strikethrough if on sale */}
                 {isOnSale && originalPricePerKg && (
                   <span className="text-xs text-gray-500 line-through">
-                    {formatRegionalPrice(originalPricePerKg, false, userCurrency)}/kg
+                    {formatPrice(originalPricePerKg)}/kg
                   </span>
                 )}
                 {/* Current/Sale price with "From" prefix */}
@@ -363,17 +373,43 @@ export function LabReadoutCard({
                     "text-xl font-bold",
                     isOnSale ? "text-green-400" : "text-foreground"
                   )}>
-                    {formatRegionalPrice(pricePerKg, false, userCurrency)}
+                    {formatPrice(pricePerKg)}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     /kg
                   </span>
                 </div>
-                {/* Retailer hint + Compare prices link */}
+                {/* Retailer hint + Regional indicator */}
                 <div className="flex items-center gap-1.5">
+                  {/* Regional flag indicator */}
+                  {REGIONS[region] && (
+                    <span className="text-sm">{REGIONS[region].flag}</span>
+                  )}
                   {filament.vendor && (
                     <span className="text-[10px] text-muted-foreground">
                       at {filament.vendor}
+                    </span>
+                  )}
+                  {/* Conversion indicator */}
+                  {isConverted && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="text-muted-foreground hover:text-foreground transition-colors">
+                          <Info className="w-3 h-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs max-w-[200px]">
+                        <p className="font-medium">Converted Price</p>
+                        <p className="text-muted-foreground">
+                          Price converted from {priceCurrency || 'USD'} to {userCurrency}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {/* Local badge */}
+                  {hasLocalStore && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-primary/20 border border-primary/30 text-primary rounded">
+                      Local
                     </span>
                   )}
                   <span className="text-[10px] text-primary hover:text-primary/80 cursor-pointer">

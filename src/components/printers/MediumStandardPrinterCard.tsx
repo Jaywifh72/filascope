@@ -1,13 +1,15 @@
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, CheckCircle2, Tag } from "lucide-react";
+import { Printer as PrinterIcon, CheckCircle2, Tag, Info } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { REGIONS } from "@/config/regions";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -35,7 +37,7 @@ export default function MediumStandardPrinterCard({
   onRescrape,
   isRescraping
 }: MediumStandardPrinterCardProps) {
-  const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
+  const { formatPrice, currency: userCurrency, region, regionConfig } = useRegion();
   const productImage = getPrinterImage(printer);
   const badges = getPrinterBadges(printer, 2);
 
@@ -80,9 +82,6 @@ export default function MediumStandardPrinterCard({
   
   // Format price correctly based on whether conversion is needed
   const formatDisplayPrice = (priceValue: number): string => {
-    if (isLivePriceInUserCurrency) {
-      return formatRegionalPrice(priceValue);
-    }
     return formatPrice(priceValue);
   };
 
