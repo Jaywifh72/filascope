@@ -19,7 +19,11 @@ import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 import { SkipLink } from "./components/accessibility/SkipLink";
 import { ScreenReaderAnnouncerProvider } from "./components/accessibility/ScreenReaderAnnouncer";
 import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboardHandler";
+import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analytics/ErrorBoundary";
 import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
+
+// Initialize global error handlers for uncaught errors
+initializeGlobalErrorHandler();
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
@@ -91,6 +95,7 @@ const queryClient = new QueryClient();
 // Navbar no longer needs compatible count - printer selector moved to hero section
 
 const App = () => (
+  <ErrorBoundary>
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <CurrencyProvider>
@@ -209,6 +214,7 @@ const App = () => (
     </CurrencyProvider>
   </QueryClientProvider>
   </HelmetProvider>
+  </ErrorBoundary>
 );
 
 export default App;
