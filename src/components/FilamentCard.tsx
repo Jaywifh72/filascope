@@ -12,7 +12,8 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  Plus
+  Plus,
+  MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -20,13 +21,14 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
 import { ScoreCalculationTooltip } from "@/components/filament/education/ScoreCalculationTooltip";
+import { REGIONS } from "@/config/regions";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -156,7 +158,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const { formatPrice, formatRegionalPrice, currency: userCurrency } = useCurrency();
+  const { currency: userCurrency, formatPrice, regionConfig } = useRegion();
   
   // Fetch all color variants from DB if not provided via variantIndicators
   // Pass product_line_id to ensure cards use same grouping logic as detail pages
@@ -566,7 +568,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <div className="flex items-center gap-3">
             <div className="flex items-baseline gap-1">
               <span className="text-xl font-bold text-foreground leading-none">
-                {formatRegionalPrice(pricePerKg, false, userCurrency)}
+                {formatPrice(pricePerKg)}
               </span>
               <span className="text-sm font-medium text-muted-foreground">/kg</span>
             </div>

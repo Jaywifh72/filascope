@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Star, ThermometerSun, Check, Plus } from "lucide-react";
+import { Star, ThermometerSun, Check, Plus, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { cn } from "@/lib/utils";
 
 export type SimilarityReason = 
@@ -71,7 +71,7 @@ function getMaterialColor(material: string | null): string {
 
 export function SimilarFilamentCard({ filament, showCompareToggle = true }: SimilarFilamentCardProps) {
   const { items, addItem, removeItem } = useCompare();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useRegion();
   
   const isInCompare = items.some((item) => item.id === filament.id);
   const brandLogo = getBrandLogo(filament.vendor);
@@ -219,7 +219,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
       {pricePerKg && (
         <div className="mb-2">
           <span className="text-lg font-bold text-white">
-            {formatPrice(pricePerKg, false)}
+            {formatPrice(pricePerKg)}
           </span>
           <span className="text-xs text-muted-foreground">/kg</span>
         </div>
