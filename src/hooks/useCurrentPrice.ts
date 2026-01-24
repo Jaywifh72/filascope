@@ -24,6 +24,17 @@ const priceCache = new Map<string, {
 }>();
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
+
+// Check if error is a transient boot error that can be retried
+function isTransientError(error: any): boolean {
+  if (!error) return false;
+  const message = error.message || error.error || String(error);
+  return message.includes('BOOT_ERROR') || 
+         message.includes('503') || 
+         message.includes('Function failed to start');
+}
 
 export function useCurrentPrice(
   productUrl: string | null | undefined,
@@ -43,6 +54,7 @@ export function useCurrentPrice(
   });
   
   const fetchedUrlRef = useRef<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!productUrl) {
@@ -80,10 +92,33 @@ export function useCurrentPrice(
       return;
     }
 
-    const fetchPriceFromUrl = async (url: string): Promise<{ data: any; error: any }> => {
-      return await supabase.functions.invoke('get-current-price', {
-        body: { productUrl: url, currency },
-      });
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    const fetchPriceFromUrl = async (url: string, retryCount = 0): Promise<{ data: any; error: any }> => {
+      try {
+        const result = await supabase.functions.invoke('get-current-price', {
+          body: { productUrl: url, currency },
+        });
+        
+        // Retry on transient boot errors
+        if (isTransientError(result.error) && retryCount < MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1)));
+          return fetchPriceFromUrl(url, retryCount + 1);
+        }
+        
+        return result;
+      } catch (err) {
+        // Retry on network errors
+        if (retryCount < MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1)));
+          return fetchPriceFromUrl(url, retryCount + 1);
+        }
+        return { data: null, error: err };
+      }
     };
 
     const fetchCurrentPrice = async () => {
@@ -96,20 +131,22 @@ export function useCurrentPrice(
         // If we got a 404 error and have a fallback URL, try the fallback
         const is404Error = data?.error?.includes('404') || data?.error?.includes('HTTP 404');
         if (is404Error && fallbackUrl && fallbackUrl !== productUrl) {
-          console.log(`Regional URL returned 404, trying fallback URL: ${fallbackUrl}`);
           const fallbackResult = await fetchPriceFromUrl(fallbackUrl);
           data = fallbackResult.data;
           error = fallbackResult.error;
         }
 
         if (error) {
-          console.error('Error fetching current price:', error);
+          // Silently log transient errors, don't spam console
+          if (!isTransientError(error)) {
+            console.warn('Price fetch failed:', error.message || error);
+          }
           setState(prev => ({
             ...prev,
             currentPrice: fallbackPrice,
             isLoading: false,
             isLivePrice: false,
-            error: error.message,
+            error: null, // Don't expose error to UI for price fetching
           }));
           return;
         }
@@ -136,23 +173,23 @@ export function useCurrentPrice(
             fetchedAt: data.fetchedAt,
           });
         } else {
-          // Fall back to stored price
+          // Fall back to stored price silently
           setState(prev => ({
             ...prev,
             currentPrice: fallbackPrice,
             isLoading: false,
             isLivePrice: false,
-            error: data?.error || 'No price available',
+            error: null, // Don't expose error to UI
           }));
         }
       } catch (err) {
-        console.error('Error in useCurrentPrice:', err);
+        // Silently fall back to database price
         setState(prev => ({
           ...prev,
           currentPrice: fallbackPrice,
           isLoading: false,
           isLivePrice: false,
-          error: err instanceof Error ? err.message : 'Unknown error',
+          error: null,
         }));
       }
       
@@ -160,6 +197,12 @@ export function useCurrentPrice(
     };
 
     fetchCurrentPrice();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [productUrl, currency, fallbackPrice, fallbackUrl]);
 
   return state;
