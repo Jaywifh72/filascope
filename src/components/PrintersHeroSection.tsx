@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Search, Sparkles, Target } from "lucide-react";
+import { Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 
 interface PrintersHeroSectionProps {
   searchTerm: string;
@@ -19,7 +19,6 @@ const PrintersHeroSection = ({
   brandCount,
   onOpenQuiz
 }: PrintersHeroSectionProps) => {
-  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <section className="relative overflow-hidden">
@@ -75,26 +74,14 @@ const PrintersHeroSection = ({
                 Hardware Quiz
               </Button>
               
-              {/* Secondary - Search Input */}
-              <div 
-                className={`relative transition-all duration-300 w-full sm:w-auto ${
-                  isFocused ? "scale-[1.01]" : ""
-                }`}
-              >
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground z-10" />
-                <input
-                  type="text"
-                  placeholder="Search hardware..."
+              {/* Secondary - Search Input with History */}
+              <div className="w-full sm:w-[260px] md:w-[300px]">
+                <SearchInputWithHistory
                   value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  className={`w-full sm:w-[240px] md:w-[280px] h-12 sm:h-14 pl-11 sm:pl-12 pr-4 sm:pr-5 text-sm sm:text-base font-mono bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
-                    isFocused 
-                      ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
-                      : "border-white/10 hover:border-white/20"
-                  }`}
-                  aria-label="Search printers"
+                  onChange={onSearchChange}
+                  placeholder="Search hardware..."
+                  context="printers"
+                  className="h-12 sm:h-14"
                 />
               </div>
             </div>
