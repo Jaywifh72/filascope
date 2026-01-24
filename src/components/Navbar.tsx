@@ -162,7 +162,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation Links (lg and up) */}
           <nav className="hidden lg:flex items-center flex-1 justify-center gap-6">
-            <LabNavLink to="/" end>Materials</LabNavLink>
+            <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
             
@@ -234,7 +234,7 @@ const Navbar = () => {
 
           {/* Tablet Navigation (md to lg) */}
           <nav className="hidden md:flex lg:hidden items-center flex-1 justify-center gap-4">
-            <LabNavLink to="/" end>Materials</LabNavLink>
+            <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
             
@@ -359,7 +359,7 @@ const Navbar = () => {
             <div className="border-t border-border/30" />
 
             {/* Main nav links */}
-            <MobileNavLink to="/" end>Materials</MobileNavLink>
+            <MobileNavLink to="/" end>Filaments</MobileNavLink>
             <MobileNavLink to="/printers">Printers</MobileNavLink>
             <MobileNavLink to="/brands">Brands</MobileNavLink>
 
