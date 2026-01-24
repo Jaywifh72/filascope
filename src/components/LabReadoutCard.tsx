@@ -369,12 +369,17 @@ export function LabReadoutCard({
                     /kg
                   </span>
                 </div>
-                {/* Retailer hint */}
-                {filament.vendor && (
-                  <span className="text-[10px] text-muted-foreground">
-                    at {filament.vendor}
+                {/* Retailer hint + Compare prices link */}
+                <div className="flex items-center gap-1.5">
+                  {filament.vendor && (
+                    <span className="text-[10px] text-muted-foreground">
+                      at {filament.vendor}
+                    </span>
+                  )}
+                  <span className="text-[10px] text-primary hover:text-primary/80 cursor-pointer">
+                    Compare →
                   </span>
-                )}
+                </div>
               </div>
             ) : (
               <span className="text-sm text-muted-foreground">
