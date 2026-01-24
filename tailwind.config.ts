@@ -145,6 +145,17 @@ export default {
             opacity: "0",
           },
         },
+        "filter-activate": {
+          "0%": {
+            transform: "scale(1)",
+          },
+          "50%": {
+            transform: "scale(1.03)",
+          },
+          "100%": {
+            transform: "scale(1)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -154,6 +165,7 @@ export default {
         "success-check": "success-check 1.5s ease-out forwards",
         "pulse-live": "pulse-live 2s ease-in-out infinite",
         "ping-slow": "ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite",
+        "filter-activate": "filter-activate 0.3s ease-out",
       },
     },
   },

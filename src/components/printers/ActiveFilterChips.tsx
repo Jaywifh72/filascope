@@ -82,9 +82,9 @@ interface FilterChipProps {
 
 function FilterChip({ label, value, onRemove }: FilterChipProps) {
   return (
-    <div className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-card/80 border border-primary/30 rounded-full text-sm">
-      <span className="text-muted-foreground">{label}:</span>
-      <span className="text-foreground font-medium">{value}</span>
+    <div className="group inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 border border-primary rounded-full text-sm animate-filter-activate shadow-[0_0_8px_rgba(20,184,166,0.15)]">
+      <span className="text-primary/80">{label}:</span>
+      <span className="text-primary font-medium">{value}</span>
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -94,7 +94,7 @@ function FilterChip({ label, value, onRemove }: FilterChipProps) {
         className="ml-0.5 p-0.5 rounded-full hover:bg-destructive/20 transition-colors opacity-60 group-hover:opacity-100"
         aria-label={`Remove ${label} filter`}
       >
-        <X className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+        <X className="h-3 w-3 text-primary hover:text-destructive" />
       </button>
     </div>
   );
