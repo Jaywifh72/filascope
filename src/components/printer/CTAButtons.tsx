@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ShoppingCart, Activity } from "lucide-react";
+import { ArrowRight, Check, ShoppingCart, Activity, ExternalLink } from "lucide-react";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useTrackPrinterEvent } from "@/hooks/usePrinterAnalytics";
@@ -74,7 +74,7 @@ export function CTAButtons({
                 ({formatPrice(storePrice, false)})
               </span>
             )}
-            <ArrowRight className={`${iconSize} transition-transform group-hover:translate-x-1`} />
+            <ExternalLink className={`${iconSize} opacity-70`} />
           </button>
         </a>
       )}
