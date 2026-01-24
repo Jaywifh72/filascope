@@ -427,9 +427,9 @@ export function CompareTray() {
             <button
               onClick={toggleMinimized}
               className="h-14 px-3 flex items-center justify-center hover:bg-muted/20 transition-colors rounded-r-xl border-l border-border/30"
-              title="Minimize tray"
+              aria-label="Minimize compare tray"
             >
-              <Minus className="w-4 h-4 text-muted-foreground" />
+              <Minus className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -489,9 +489,9 @@ export function CompareTray() {
                   className="h-8 w-8"
                   onClick={handleShare}
                   disabled={!canCompare}
-                  title="Share comparison link"
+                  aria-label="Share comparison link"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="w-4 h-4" aria-hidden="true" />
                 </Button>
 
                 {/* Save for Later (if logged in) */}
@@ -502,9 +502,9 @@ export function CompareTray() {
                     className="h-8 w-8"
                     onClick={() => setShowSaveDialog(true)}
                     disabled={!canCompare}
-                    title="Save comparison"
+                    aria-label="Save comparison for later"
                   >
-                    <Bookmark className="w-4 h-4" />
+                    <Bookmark className="w-4 h-4" aria-hidden="true" />
                   </Button>
                 )}
 

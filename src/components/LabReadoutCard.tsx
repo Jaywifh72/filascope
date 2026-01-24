@@ -218,6 +218,7 @@ export function LabReadoutCard({
         isOutOfStock && "opacity-70"
       )}
       style={{
+        // Animation respects prefers-reduced-motion via CSS media query
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.08}s both`,
         background: "rgba(10, 12, 16, 0.6)",
         backdropFilter: "blur(12px)",

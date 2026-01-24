@@ -60,9 +60,13 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
     },
   ], [filamentCount, dealsCount]);
 
-  // Cycle through search suggestions
+  // Cycle through search suggestions - respects reduced motion preference
   useEffect(() => {
     if (searchTerm) return; // Don't cycle when has value
+    
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return; // Don't animate for users who prefer reduced motion
     
     const interval = setInterval(() => {
       setCurrentSuggestionIndex((prev) => (prev + 1) % searchSuggestions.length);
@@ -189,10 +193,13 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                           const headerOffset = 80;
                           const elementPosition = element.getBoundingClientRect().top;
                           const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                          // Respect reduced motion preference
+                          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                          window.scrollTo({ top: offsetPosition, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
                         }
                       }}
                       className={cardClasses}
+                      aria-label={`${path.title}: ${path.description}`}
                     >
                       {cardContent}
                     </button>

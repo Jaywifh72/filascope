@@ -71,8 +71,9 @@ export function DealCard({
             size="icon"
             className="absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
             onClick={handleShareClick}
+            aria-label="Share this deal"
           >
-            <Share2 className="h-4 w-4" />
+            <Share2 className="h-4 w-4" aria-hidden="true" />
           </Button>
 
           {/* Image - Using OptimizedImage with lazy loading */}

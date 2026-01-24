@@ -145,7 +145,7 @@ export function SearchInputWithHistory({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className)} role="search">
       {/* Input */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
@@ -169,9 +169,11 @@ export function SearchInputWithHistory({
               : "border-white/15 hover:border-white/25",
             inputClassName
           )}
-          aria-label="Search"
+          aria-label="Search filaments, brands, and materials"
           aria-expanded={showDropdown}
           aria-haspopup="listbox"
+          aria-autocomplete="list"
+          aria-controls={showDropdown ? "search-suggestions-list" : undefined}
         />
         {isLoading && value.length >= 2 && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -184,6 +186,7 @@ export function SearchInputWithHistory({
       {showDropdown && (
         <div
           ref={dropdownRef}
+          id="search-suggestions-list"
           className={cn(
             "absolute top-full left-0 right-0 mt-2 z-50",
             "bg-card/95 backdrop-blur-lg border border-border rounded-xl shadow-xl",
@@ -191,6 +194,7 @@ export function SearchInputWithHistory({
             "max-h-[400px] overflow-y-auto"
           )}
           role="listbox"
+          aria-label="Search suggestions"
         >
           {/* Suggestions (when typing) */}
           {value.length >= 2 && suggestions.length > 0 && (
