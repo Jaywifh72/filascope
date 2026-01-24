@@ -220,14 +220,14 @@ export function SiteFooter() {
                   placeholder="Your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-9 text-sm bg-background border-border focus:border-primary"
+                  className="h-10 sm:h-9 text-sm bg-background border-border focus:border-primary min-w-0 flex-1"
                   disabled={isLoading}
                   aria-label="Email address for newsletter"
                 />
                 <Button 
                   type="submit" 
                   size="sm"
-                  className="h-9 px-3 shrink-0"
+                  className="h-10 sm:h-9 min-w-[44px] px-3 shrink-0"
                   disabled={isLoading}
                   aria-label="Subscribe to newsletter"
                 >
@@ -241,17 +241,17 @@ export function SiteFooter() {
             </form>
 
             {/* Social Links */}
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 flex-wrap">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-lg bg-muted/50 hover:bg-primary/20 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+                  className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-muted/50 hover:bg-primary/20 active:bg-primary/30 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors touch-manipulation"
                   aria-label={`Follow us on ${social.name}`}
                 >
-                  <social.icon className="w-4 h-4" />
+                  <social.icon className="w-5 h-5 sm:w-4 sm:h-4" />
                 </a>
               ))}
             </div>
