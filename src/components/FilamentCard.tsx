@@ -500,7 +500,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5 cursor-help">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star className="w-4 h-4 fill-amber-300 text-amber-300 drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]" />
                 <span className="text-lg font-bold text-foreground">{overallScore.toFixed(1)}</span>
                 <span className="text-sm font-medium text-muted-foreground">/10</span>
               </div>

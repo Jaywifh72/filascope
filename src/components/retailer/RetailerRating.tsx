@@ -26,12 +26,12 @@ function StarRating({ rating, max = 5 }: { rating: number; max?: number }) {
         <Star
           key={i}
           className={cn(
-            "h-3 w-3",
+            "h-3 w-3 drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]",
             i < fullStars
-              ? "fill-amber-400 text-amber-400"
+              ? "fill-amber-300 text-amber-300"
               : i === fullStars && hasHalfStar
-              ? "fill-amber-400/50 text-amber-400"
-              : "fill-muted text-muted"
+              ? "fill-amber-300/50 text-amber-300"
+              : "fill-muted text-muted drop-shadow-none"
           )}
         />
       ))}
