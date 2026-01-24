@@ -1229,9 +1229,9 @@ const Finder = () => {
     };
 
     switch (sortBy) {
-      case "rating-asc":
+      case "scoring-asc":
         return (a.value_score || 0) - (b.value_score || 0);
-      case "rating-desc":
+      case "scoring-desc":
         return (b.value_score || 0) - (a.value_score || 0);
       case "alpha-asc":
         return (a.product_title || '').localeCompare(b.product_title || '');

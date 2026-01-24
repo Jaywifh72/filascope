@@ -9,8 +9,8 @@ import {
 import { cn } from "@/lib/utils";
 
 export type SortOption = 
-  | "rating-asc" 
-  | "rating-desc"
+  | "scoring-asc" 
+  | "scoring-desc"
   | "alpha-asc"
   | "alpha-desc"
   | "price-asc"
@@ -26,8 +26,8 @@ interface DataInventoryControlBarProps {
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "rating-desc", label: "Rating: High to Low" },
-  { value: "rating-asc", label: "Rating: Low to High" },
+  { value: "scoring-desc", label: "Scoring: High to Low" },
+  { value: "scoring-asc", label: "Scoring: Low to High" },
   { value: "alpha-asc", label: "A-Z" },
   { value: "alpha-desc", label: "Z-A" },
   { value: "price-asc", label: "Price/KG: Low to High" },
