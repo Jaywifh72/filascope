@@ -23,8 +23,8 @@ export function BestPricesSection({ filamentId, onSeeAllPrices }: BestPricesSect
   const topListings = React.useMemo(() => {
     if (!listings) return [];
     return listings
-      .filter(l => l.available && l.currentPrice)
-      .sort((a, b) => (a.currentPrice || 0) - (b.currentPrice || 0))
+      .filter(l => l.available && l.current_price)
+      .sort((a, b) => (a.current_price || 0) - (b.current_price || 0))
       .slice(0, 3);
   }, [listings]);
 
@@ -69,8 +69,8 @@ export function BestPricesSection({ filamentId, onSeeAllPrices }: BestPricesSect
         <div className="space-y-2">
           {topListings.map((listing, idx) => (
             <a
-              key={listing.id}
-              href={listing.affiliateUrl}
+              key={listing.listing_id}
+              href={listing.affiliate_url || listing.product_url}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
@@ -90,7 +90,7 @@ export function BestPricesSection({ filamentId, onSeeAllPrices }: BestPricesSect
                     "font-medium text-sm",
                     idx === 0 ? "text-emerald-300" : "text-foreground"
                   )}>
-                    {listing.retailerName}
+                    {listing.retailer_name}
                   </span>
                   {idx === 0 && (
                     <span className="ml-2 text-[10px] uppercase tracking-wider text-emerald-500 font-semibold">
@@ -104,7 +104,7 @@ export function BestPricesSection({ filamentId, onSeeAllPrices }: BestPricesSect
                   "font-bold",
                   idx === 0 ? "text-emerald-400 text-lg" : "text-foreground"
                 )}>
-                  {formatRegionalPrice(listing.currentPrice || 0)}
+                  {formatRegionalPrice(listing.current_price || 0)}
                 </span>
                 <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
