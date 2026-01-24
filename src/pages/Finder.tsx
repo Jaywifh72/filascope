@@ -1543,7 +1543,7 @@ const Finder = () => {
       />
 
       {/* Main Content Area with Technical Console Sidebar */}
-      <div className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-10 items-start">
+      <div id="system-config" className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-10 items-start">
         {/* Technical Console Sidebar */}
         <TechnicalConsoleSidebar
           selectedMaterials={selectedMaterials}
