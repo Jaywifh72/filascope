@@ -1,289 +1,225 @@
 
 
-# Performance Optimization Plan
+# Regional Store System - Database Infrastructure Plan
 
 ## Overview
-This plan implements comprehensive performance optimizations to achieve Core Web Vitals targets (LCP < 2.5s, FID < 100ms, CLS < 0.1) across four phases: image optimization, list virtualization, code splitting, and caching improvements.
 
-## Current Infrastructure Analysis
-The project already has significant performance infrastructure in place:
+This plan establishes the database foundation for FilaScope's multi-regional pricing system. The system will track which brands have stores in which regions, manage currency exchange rates, and store user region preferences.
 
-| Component | Status | Location |
-|-----------|--------|----------|
-| `OptimizedImage` | Implemented | `src/components/ui/optimized-image.tsx` |
-| `VirtualGrid` / `VirtualList` | Implemented but **not integrated** | `src/components/ui/virtual-grid.tsx` |
-| Route Lazy Loading | Implemented | `src/App.tsx` (80+ routes) |
-| Route Preloading | Partial | `src/lib/preloadRoutes.ts` |
-| React Query Caching | Inconsistent | Various hooks with different `staleTime` |
-| PWA Service Worker | Configured | `vite.config.ts` |
-| Scroll Restoration | Implemented | `src/hooks/useScrollRestoration.ts` |
-| URL Filter Sync | Implemented | `src/hooks/useURLFilterSync.ts` |
-| Web Vitals Tracking | Implemented | `src/hooks/useWebVitals.ts` |
+## Current State Analysis
+
+The codebase currently handles regional pricing through:
+- **Client-side URL transformation**: `src/lib/brandRegionalStores.ts` contains a hardcoded `BRAND_REGIONAL_STORES` config for ~60+ brands
+- **Filaments table**: Already has regional columns (`price_cad`, `price_eur`, `price_gbp`, `price_aud`, `price_jpy`, `product_url_ca`, `product_url_uk`, etc.)
+- **Currency system**: `src/hooks/useCurrency.tsx` manages currency selection with hardcoded exchange rates
+- **Regional price hook**: `src/hooks/useRegionalPrice.ts` handles fallback logic and price display
+- **Profiles table**: Already has `preferred_currency` and `shipping_country` columns
+
+The proposed database tables will replace the hardcoded configurations and enable dynamic management of regional stores.
 
 ---
 
-## Phase 1: Image Optimization Enhancements
+## Phase 1: Database Tables
 
-### Current State
-- `OptimizedImage` component already implements lazy loading, srcset, and skeleton placeholders
-- Some components (e.g., `LabReadoutCard`) use plain `<img>` tags instead of `OptimizedImage`
+### Table 1: brand_regional_stores
 
-### Tasks
+Links brands to their regional storefronts with shipping and pricing configuration.
 
-1. **Add WebP Format Support with Fallbacks**
-   - File: `src/components/ui/optimized-image.tsx`
-   - Enhance `getOptimizedSrc` to request WebP format from CDNs
-   - Add `<picture>` element with WebP source and fallback
+**Schema:**
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | uuid | PK, default gen_random_uuid() | Primary key |
+| brand_id | uuid | FK to automated_brands(id), NOT NULL | Brand reference |
+| region_code | text | NOT NULL | Region: US, CA, UK, EU, AU, JP, CN |
+| store_name | text | NOT NULL | Display name (e.g., "Creality Canada") |
+| base_url | text | NOT NULL | Store base URL |
+| product_url_pattern | text | nullable | URL pattern with {sku} placeholder |
+| currency_code | text | NOT NULL | ISO 4217 currency code |
+| ships_from_country | text | nullable | ISO country code for shipping origin |
+| free_shipping_threshold | decimal(10,2) | nullable | Min order for free shipping |
+| estimated_shipping_days | integer | nullable | Typical shipping time |
+| is_primary | boolean | default false | Brand's flagship store |
+| is_active | boolean | default true | Whether store is currently active |
+| notes | text | nullable | Internal notes |
+| created_at | timestamptz | default now() | |
+| updated_at | timestamptz | default now() | |
 
-2. **Implement Blur Placeholder Generation**
-   - Create utility to generate low-quality image placeholders (LQIP)
-   - Add `blurDataUrl` prop population for critical images
-   - Implement CSS blur-up animation on load
+**Constraints:**
+- UNIQUE(brand_id, region_code)
+- FK: brand_id → automated_brands(id) ON DELETE CASCADE
 
-3. **Enforce Explicit Dimensions**
-   - Audit and update all `OptimizedImage` usages to include `width` and `height`
-   - Add TypeScript enforcement for required dimensions on critical images
-
-4. **Migrate Remaining `<img>` Tags**
-   - Files: `src/components/LabReadoutCard.tsx`, `src/components/BentoGrid.tsx`
-   - Replace plain `<img>` with `OptimizedImage` for brand logos and product images
-
----
-
-## Phase 2: List Virtualization Integration
-
-### Current State
-- `VirtualGrid` and `VirtualList` components exist but are **not used** in any listing pages
-- Finder page (974+ filaments), Printers (122), Deals (1064+) use standard CSS grids with "Load More" pagination
-
-### Tasks
-
-1. **Create Virtualized Listing Wrapper**
-   - File: `src/components/VirtualizedProductGrid.tsx` (new)
-   - Wrap `VirtualGrid` with responsive column calculation
-   - Integrate `useResponsiveColumns` hook for breakpoint-aware layouts
-   - Add infinite scroll callback for progressive loading
-
-2. **Integrate with Finder Page**
-   - File: `src/pages/Finder.tsx`
-   - Replace standard grid with `VirtualizedProductGrid`
-   - Preserve existing `LabReadoutCard` rendering
-   - Maintain scroll restoration compatibility
-
-3. **Integrate with Printers Page**
-   - File: `src/pages/Printers.tsx`
-   - Apply same virtualization pattern
-   - Adapt for `MediumStandardPrinterCard` dimensions
-
-4. **Integrate with Deals Page**
-   - File: `src/pages/Deals.tsx`
-   - Apply virtualization with `DealCard` rendering
-
-5. **Add Virtualization Toggle**
-   - Create `shouldUseVirtualization` check (threshold: 50+ items)
-   - Fall back to standard grid for small lists to avoid overhead
+**Indexes:**
+- idx_brand_regional_stores_brand_id
+- idx_brand_regional_stores_region
+- idx_brand_regional_stores_active (partial: WHERE is_active = true)
 
 ---
 
-## Phase 3: Code Splitting Enhancements
+### Table 2: currency_exchange_rates
 
-### Current State
-- All 80+ routes use `React.lazy()` with dynamic imports
-- Route preloader covers only 8 routes
-- Heavy components (charts, wizards) are not split
+Stores exchange rates for currency conversion, updateable via API or manually.
 
-### Tasks
+**Schema:**
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | uuid | PK, default gen_random_uuid() | Primary key |
+| base_currency | text | NOT NULL, default 'USD' | Always USD |
+| target_currency | text | NOT NULL | Target currency code |
+| rate | decimal(12,6) | NOT NULL, CHECK > 0 | Multiply USD by this |
+| inverse_rate | decimal(12,6) | NOT NULL, CHECK > 0 | Multiply target to get USD |
+| source | text | default 'manual' | Data source identifier |
+| fetched_at | timestamptz | default now() | When rate was fetched |
+| created_at | timestamptz | default now() | |
 
-1. **Expand Route Preloader Coverage**
-   - File: `src/lib/preloadRoutes.ts`
-   - Add missing routes: `/accessories`, `/learn/*`, `/reference/*`, `/settings`
-   - Expand `navigationPatterns` with more granular predictions
-
-2. **Split Heavy Components**
-   - Create lazy-loaded versions:
-     - `src/components/charts/LazyPriceChart.tsx` (wraps Recharts)
-     - `src/components/LazyComparisonTable.tsx`
-     - `src/components/LazyWizard.tsx` (Quick Match wizard)
-   - Use dynamic import pattern:
-     ```tsx
-     const PriceChart = lazy(() => import('./charts/PriceChart'));
-     ```
-
-3. **Implement Predictive Preloading**
-   - File: `src/hooks/usePreloadOnIdle.ts` (new)
-   - Preload likely routes after initial page load using `requestIdleCallback`
-   - Trigger preload on link hover/focus using `createPreloadHandler`
-
-4. **Integrate Preloading with Navbar**
-   - File: `src/components/Navbar.tsx`
-   - Add hover preload handlers to main navigation links
-   - Use existing `createPreloadHandler` utility
+**Constraints:**
+- UNIQUE(base_currency, target_currency)
+- CHECK(rate > 0)
+- CHECK(inverse_rate > 0)
 
 ---
 
-## Phase 4: Caching Strategy Standardization
+### Table 3: user_region_preferences
 
-### Current State
-- React Query `staleTime` varies inconsistently (0 to 30 minutes)
-- No centralized cache configuration
-- PWA service worker caches API responses with NetworkFirst strategy
+Stores user/session region and currency preferences for personalization.
 
-### Tasks
+**Schema:**
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | uuid | PK, default gen_random_uuid() | Primary key |
+| user_id | uuid | nullable | Authenticated user reference |
+| session_id | text | nullable | For anonymous users |
+| region_code | text | NOT NULL | User's preferred region |
+| currency_code | text | NOT NULL | User's preferred currency |
+| detected_method | text | default 'manual' | How preference was set |
+| created_at | timestamptz | default now() | |
+| updated_at | timestamptz | default now() | |
 
-1. **Create Centralized Query Configuration**
-   - File: `src/lib/queryConfig.ts` (new)
-   - Define standardized cache tiers:
-     ```typescript
-     export const QUERY_CONFIG = {
-       products: { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000 },
-       printers: { staleTime: 10 * 60 * 1000, gcTime: 60 * 60 * 1000 },
-       prices: { staleTime: 2 * 60 * 1000, gcTime: 10 * 60 * 1000 },
-       static: { staleTime: Infinity, gcTime: Infinity },
-     };
-     ```
-
-2. **Apply Configuration to Hooks**
-   - Update key hooks to use centralized config:
-     - `src/pages/Finder.tsx` (filaments query)
-     - `src/pages/Printers.tsx` (printers query)
-     - `src/hooks/useDealsWithFilters.ts`
-     - `src/hooks/useBrowseHistory.ts`
-
-3. **Configure QueryClient Defaults**
-   - File: `src/App.tsx`
-   - Add sensible default options to `QueryClient`:
-     ```typescript
-     const queryClient = new QueryClient({
-       defaultOptions: {
-         queries: {
-           staleTime: 1000 * 60 * 2, // 2 minutes default
-           gcTime: 1000 * 60 * 10,   // 10 minutes
-           refetchOnWindowFocus: false,
-         },
-       },
-     });
-     ```
-
-4. **Enhance Recently Viewed Caching**
-   - File: `src/hooks/usePWACache.ts`
-   - Add image URL preloading for cached products
-   - Implement cache warming on app startup
+**Constraints:**
+- CHECK: either user_id OR session_id must be set
 
 ---
 
-## Technical Details
+## Phase 2: Row Level Security (RLS)
 
-### VirtualizedProductGrid Implementation
+### brand_regional_stores
+```sql
+-- Public read access (store info is public)
+CREATE POLICY "Allow public read" 
+  ON brand_regional_stores FOR SELECT 
+  USING (true);
 
-```tsx
-// src/components/VirtualizedProductGrid.tsx
-interface Props<T> {
-  items: T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
-  getKey: (item: T) => string;
-  minItemHeight?: number;
-  gap?: number;
-  onEndReached?: () => void;
-}
-
-export function VirtualizedProductGrid<T>({ 
-  items, 
-  renderItem, 
-  getKey,
-  minItemHeight = 420,
-  gap = 24,
-  onEndReached 
-}: Props<T>) {
-  const { columns, rowHeight, containerWidth } = useResponsiveColumns({
-    cardBaseHeight: minItemHeight,
-    gap,
-  });
-  
-  const shouldVirtualize = items.length > 50;
-  
-  if (!shouldVirtualize) {
-    // Standard grid for small lists
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {items.map((item, idx) => (
-          <div key={getKey(item)}>{renderItem(item, idx)}</div>
-        ))}
-      </div>
-    );
-  }
-  
-  return (
-    <VirtualGrid
-      items={items}
-      renderItem={renderItem}
-      getKey={getKey}
-      columnCount={columns}
-      rowHeight={rowHeight}
-      gap={gap}
-      onEndReached={onEndReached}
-      className="min-h-[600px]"
-    />
-  );
-}
+-- Authenticated users can modify (admins only in practice)
+CREATE POLICY "Allow authenticated write" 
+  ON brand_regional_stores FOR ALL 
+  USING (auth.role() = 'authenticated');
 ```
 
-### WebP Support Enhancement
+### currency_exchange_rates
+```sql
+-- Public read access (rates are public)
+CREATE POLICY "Allow public read" 
+  ON currency_exchange_rates FOR SELECT 
+  USING (true);
 
-```tsx
-// Enhanced getOptimizedSrc in optimized-image.tsx
-function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'): string {
-  if (!src || !width) return src;
+-- Only service role can write (for automated updates)
+CREATE POLICY "Allow service role write" 
+  ON currency_exchange_rates FOR ALL 
+  USING (auth.role() = 'service_role');
+```
 
-  // Cloudinary with WebP
-  if (src.includes("cloudinary.com")) {
-    const formatParam = format === 'webp' ? 'f_webp' : 'f_auto';
-    return src.replace("/upload/", `/upload/w_${width},q_auto,${formatParam}/`);
-  }
+### user_region_preferences
+```sql
+-- Users can read their own preferences or anonymous session data
+CREATE POLICY "Users can read own preferences" 
+  ON user_region_preferences FOR SELECT 
+  USING (auth.uid() = user_id OR session_id IS NOT NULL);
 
-  // Supabase Storage
-  if (src.includes("supabase") && src.includes("/storage/v1/object/")) {
-    const url = new URL(src);
-    url.searchParams.set("width", String(width));
-    url.searchParams.set("quality", "80");
-    if (format === 'webp') url.searchParams.set("format", "webp");
-    return url.toString();
-  }
+-- Anyone can insert (for anonymous users)
+CREATE POLICY "Users can insert preferences" 
+  ON user_region_preferences FOR INSERT 
+  WITH CHECK (true);
 
-  return src;
-}
+-- Users can update their own preferences
+CREATE POLICY "Users can update own preferences" 
+  ON user_region_preferences FOR UPDATE 
+  USING (auth.uid() = user_id OR session_id IS NOT NULL);
 ```
 
 ---
 
-## Files to Create
-| File | Purpose |
-|------|---------|
-| `src/components/VirtualizedProductGrid.tsx` | Responsive virtualization wrapper |
-| `src/lib/queryConfig.ts` | Centralized React Query cache tiers |
-| `src/hooks/usePreloadOnIdle.ts` | Idle-time route preloading |
-| `src/components/charts/LazyPriceChart.tsx` | Lazy-loaded Recharts wrapper |
+## Phase 3: TypeScript Types
 
-## Files to Modify
-| File | Changes |
-|------|---------|
-| `src/components/ui/optimized-image.tsx` | WebP support, picture element |
-| `src/lib/preloadRoutes.ts` | Expand route coverage |
-| `src/pages/Finder.tsx` | Integrate VirtualizedProductGrid |
-| `src/pages/Printers.tsx` | Integrate VirtualizedProductGrid |
-| `src/pages/Deals.tsx` | Integrate VirtualizedProductGrid |
-| `src/components/Navbar.tsx` | Add preload handlers |
-| `src/App.tsx` | Configure QueryClient defaults |
-| `src/components/LabReadoutCard.tsx` | Use OptimizedImage for logos |
+Create `src/types/regional.ts` with comprehensive type definitions:
+
+```text
+src/types/regional.ts
+├── RegionCode (union type: 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN')
+├── CurrencyCode (extends existing with additional currencies)
+├── BrandRegionalStore (interface for brand_regional_stores row)
+├── CurrencyExchangeRate (interface for currency_exchange_rates row)
+├── UserRegionPreference (interface for user_region_preferences row)
+├── RegionConfig (static config for region metadata)
+├── CurrencyConfig (static config for currency formatting)
+└── RegionalPriceResult (result type for price resolution)
+```
 
 ---
 
-## Expected Outcomes
+## Phase 4: Seed Data
 
-| Metric | Current | Target | Improvement Strategy |
-|--------|---------|--------|---------------------|
-| LCP | ~3-4s | < 2.5s | Image optimization, preloading |
-| FID | ~50-150ms | < 100ms | Code splitting, reduced JS |
-| CLS | ~0.1-0.2 | < 0.1 | Explicit dimensions, skeletons |
-| Memory Usage | High on large lists | Reduced 60-80% | Virtualization |
-| Initial Bundle | Large | Reduced 30-40% | Component splitting |
+### Exchange Rates (Initial Values)
+Insert approximate exchange rates for all supported currencies:
+- USD → CAD: 1.36
+- USD → EUR: 0.92
+- USD → GBP: 0.79
+- USD → AUD: 1.53
+- USD → JPY: 149.50
+- USD → CNY: 7.24
+- USD → CHF: 0.88
+- USD → SEK: 10.45
+- USD → KRW: 1320.00
+- USD → INR: 83.12
+
+---
+
+## Phase 5: Database Triggers
+
+### Auto-update timestamps
+```sql
+CREATE TRIGGER update_brand_regional_stores_updated_at
+  BEFORE UPDATE ON brand_regional_stores
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_region_preferences_updated_at
+  BEFORE UPDATE ON user_region_preferences
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+---
+
+## Implementation Steps
+
+1. **Create migration SQL** with all three tables, constraints, indexes
+2. **Enable RLS** on all tables with appropriate policies
+3. **Add triggers** for updated_at automation
+4. **Insert seed data** for exchange rates
+5. **Create TypeScript types** file at `src/types/regional.ts`
+6. **Supabase types regeneration** will happen automatically
+
+---
+
+## Technical Considerations
+
+### Foreign Key Reference
+- Uses `automated_brands` table (not a separate `brands` table) since that's where filament brands are stored
+- The `automated_brands.id` column is UUID type and exists with proper data
+
+### Compatibility with Existing System
+- The new tables complement the existing `filaments` regional columns
+- The existing `useCurrency` hook can be updated to fetch rates from `currency_exchange_rates`
+- The hardcoded `BRAND_REGIONAL_STORES` in `brandRegionalStores.ts` can eventually be replaced by queries to `brand_regional_stores`
+
+### User Preferences Integration
+- The `profiles` table already has `preferred_currency` - the new `user_region_preferences` handles anonymous users and adds region tracking
+- Session-based preferences enable personalization without login
 
