@@ -101,7 +101,9 @@ export function PrimaryBuyButton({
         </span>
         
         {isLoading ? (
-          <span className="text-sm opacity-80">Loading...</span>
+          <span className="flex flex-col items-end gap-0.5">
+            <span className="h-5 w-16 rounded bg-primary-foreground/20 animate-pulse" />
+          </span>
         ) : total !== null ? (
           <span className="flex flex-col items-end">
             <span className="font-bold tabular-nums">
