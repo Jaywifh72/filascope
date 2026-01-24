@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/hooks/useCurrency";
-import Navbar from "@/components/Navbar";
 
 interface DealFilament {
   id: string;
@@ -63,8 +62,6 @@ const Deals = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative py-16 md:py-20 px-6 md:px-10">
