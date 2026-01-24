@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { GitCompare, ChevronUp, ChevronDown, ArrowRight, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { GitCompare, ChevronUp, ChevronDown, ArrowRight, Loader2, AlertCircle, Sparkles, Minus, Share2, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
@@ -20,6 +20,11 @@ import { PresetDialog } from "@/components/compare/PresetDialog";
 import { PresetGallery } from "@/components/compare/PresetGallery";
 import { TrayFilters, TrayFilter, TraySortOption, sortTrayItems, filterTrayItems } from "@/components/compare/TrayFilters";
 import { KeyboardHints } from "@/components/compare/KeyboardHints";
+import { ClearConfirmDialog } from "@/components/compare/ClearConfirmDialog";
+import { SaveComparisonDialog } from "@/components/compare/SaveComparisonDialog";
+import { MobileCompareTray } from "@/components/compare/MobileCompareTray";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Popular comparison suggestions
 const POPULAR_COMPARISONS = [
@@ -27,6 +32,8 @@ const POPULAR_COMPARISONS = [
   { label: "ABS vs ASA", materials: ["ABS", "ASA"] },
   { label: "TPU vs TPE", materials: ["TPU", "TPE"] },
 ];
+
+const TRAY_MINIMIZED_KEY = "filascope_tray_minimized";
 
 export function CompareTray() {
   const navigate = useNavigate();
@@ -40,10 +47,28 @@ export function CompareTray() {
   const [showPresetDialog, setShowPresetDialog] = useState(false);
   const [showKeyboardHints, setShowKeyboardHints] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const lastClickTime = useRef<number>(0);
+  
+  // Minimized state (persisted across navigation)
+  const [isMinimized, setIsMinimized] = useState(() => {
+    try {
+      return localStorage.getItem(TRAY_MINIMIZED_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   
   // Advanced filters
   const [activeFilters, setActiveFilters] = useState<TrayFilter[]>([]);
   const [sortOption, setSortOption] = useState<TraySortOption>('recent');
+  
+  // Check auth on mount
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+  }, []);
   
   const { 
     items, 
@@ -162,6 +187,65 @@ export function CompareTray() {
     savePreset(name, items);
   };
 
+  // Toggle minimized state with persistence
+  const toggleMinimized = () => {
+    const newState = !isMinimized;
+    setIsMinimized(newState);
+    try {
+      localStorage.setItem(TRAY_MINIMIZED_KEY, String(newState));
+    } catch {}
+  };
+
+  // Handle double-click to expand from minimized
+  const handleMinimizedClick = () => {
+    const now = Date.now();
+    if (now - lastClickTime.current < 300) {
+      // Double click - expand
+      setIsMinimized(false);
+      setIsExpanded(true);
+      try {
+        localStorage.setItem(TRAY_MINIMIZED_KEY, 'false');
+      } catch {}
+    } else {
+      // Single click - just expand from minimized
+      setIsMinimized(false);
+      try {
+        localStorage.setItem(TRAY_MINIMIZED_KEY, 'false');
+      } catch {}
+    }
+    lastClickTime.current = now;
+  };
+
+  // Share comparison link
+  const handleShare = async () => {
+    if (!canCompare) {
+      toast.info("Add at least 2 materials to share");
+      return;
+    }
+    
+    const ids = items.map(i => i.id).join(',');
+    const url = `${window.location.origin}/compare?ids=${ids}`;
+    
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Comparison link copied!", {
+        description: "Share this link with anyone to show your comparison",
+      });
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  // Clear all with confirmation
+  const handleClearAll = () => {
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearAll = () => {
+    clearAll();
+    setShowClearConfirm(false);
+  };
+
   // Drag handlers
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -181,6 +265,7 @@ export function CompareTray() {
   const handleDrop = (index: number) => {
     if (draggedIndex !== null && draggedIndex !== index) {
       reorderItems(draggedIndex, index);
+      toast.success("Items reordered");
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
@@ -260,60 +345,97 @@ export function CompareTray() {
 
   return (
     <>
+      {/* Mobile Compare Tray */}
+      <MobileCompareTray onSaveForLater={() => setShowSaveDialog(true)} />
+
+      {/* Desktop Tray (hidden on mobile) */}
       <div 
         ref={trayRef}
         data-tour="compare-tray"
         className={cn(
-          "fixed bottom-4 left-1/2 z-40",
+          "hidden lg:block fixed bottom-4 left-1/2 z-40",
           "w-[95vw] max-w-[1100px]",
           "bg-card/95 backdrop-blur-md",
           "border border-primary/20 rounded-xl",
           "shadow-[0_-4px_30px_rgba(0,0,0,0.4)]",
           isFirstItem ? "tray-entrance" : "-translate-x-1/2",
-          isGlowing && "tray-success-glow"
+          isGlowing && "tray-success-glow",
+          isMinimized && "transition-all duration-200"
         )}
         style={!isFirstItem ? { transform: 'translateX(-50%)' } : undefined}
         role="region"
         aria-label={`Compare tray containing ${count} of ${maxItems} materials`}
       >
-        {/* Collapsed View */}
-        {!isExpanded && (
+        {/* Minimized Bar */}
+        {isMinimized && (
           <button
-            onClick={() => setIsExpanded(true)}
-            className="w-full h-14 px-4 flex items-center justify-between hover:bg-muted/20 transition-colors rounded-xl"
+            onClick={handleMinimizedClick}
+            className="w-full h-10 px-4 flex items-center justify-center gap-3 hover:bg-muted/20 transition-colors rounded-xl group"
+            title="Double-click to expand"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <GitCompare className="w-4 h-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium flex items-center gap-1">
-                Compare 
-                <span className={cn(
-                  "inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold",
-                  countBadgeClass
-                )}>
-                  {count}
-                </span>
+            <GitCompare className="w-4 h-4 text-primary" />
+            <span className={cn(
+              "inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold",
+              countBadgeClass
+            )}>
+              {count}
+            </span>
+            {canCompare && (
+              <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors">
+                Click to expand
               </span>
-              {!canCompare && (
-                <span className="text-xs text-muted-foreground">
-                  • Add {2 - count} more to compare
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              {canCompare && (
-                <span className="text-sm text-primary font-medium">
-                  View Comparison →
-                </span>
-              )}
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-            </div>
+            )}
           </button>
         )}
 
+        {/* Collapsed View */}
+        {!isMinimized && !isExpanded && (
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="flex-1 h-14 px-4 flex items-center justify-between hover:bg-muted/20 transition-colors rounded-l-xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <GitCompare className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm font-medium flex items-center gap-1">
+                  Compare 
+                  <span className={cn(
+                    "inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold",
+                    countBadgeClass
+                  )}>
+                    {count}
+                  </span>
+                </span>
+                {!canCompare && (
+                  <span className="text-xs text-muted-foreground">
+                    • Add {2 - count} more to compare
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {canCompare && (
+                  <span className="text-sm text-primary font-medium">
+                    View Comparison →
+                  </span>
+                )}
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </button>
+            {/* Minimize button */}
+            <button
+              onClick={toggleMinimized}
+              className="h-14 px-3 flex items-center justify-center hover:bg-muted/20 transition-colors rounded-r-xl border-l border-border/30"
+              title="Minimize tray"
+            >
+              <Minus className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
         {/* Expanded View */}
-        {isExpanded && (
+        {!isMinimized && isExpanded && (
           <div className={cn("p-4", isFirstItem && "tray-content-enter")}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
@@ -324,6 +446,14 @@ export function CompareTray() {
                   aria-label="Collapse compare tray"
                 >
                   <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={toggleMinimized}
+                  className="w-8 h-8 rounded-lg bg-muted/30 flex items-center justify-center hover:bg-muted/50 transition-colors"
+                  aria-label="Minimize tray"
+                  title="Minimize to thin bar"
+                >
+                  <Minus className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <div className="flex items-center gap-2">
                   <GitCompare className="w-5 h-5 text-primary" />
@@ -352,12 +482,38 @@ export function CompareTray() {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Share Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleShare}
+                  disabled={!canCompare}
+                  title="Share comparison link"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+
+                {/* Save for Later (if logged in) */}
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setShowSaveDialog(true)}
+                    disabled={!canCompare}
+                    title="Save comparison"
+                  >
+                    <Bookmark className="w-4 h-4" />
+                  </Button>
+                )}
+
                 {/* Quick Actions Menu */}
                 <TrayActionsMenu
                   items={items}
                   onSavePreset={() => setShowPresetDialog(true)}
                   onViewHistory={() => setShowHistory(!showHistory)}
-                  onClearAll={clearAll}
+                  onClearAll={handleClearAll}
                   onShowKeyboardHints={() => setShowKeyboardHints(true)}
                 />
                 
@@ -489,6 +645,21 @@ export function CompareTray() {
       <KeyboardHints
         isOpen={showKeyboardHints}
         onClose={() => setShowKeyboardHints(false)}
+      />
+
+      {/* Clear Confirmation Dialog */}
+      <ClearConfirmDialog
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={confirmClearAll}
+        itemCount={count}
+      />
+
+      {/* Save Comparison Dialog */}
+      <SaveComparisonDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        items={items}
       />
     </>
   );

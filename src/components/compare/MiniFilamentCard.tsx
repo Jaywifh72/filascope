@@ -1,4 +1,4 @@
-import { X, ImageOff, GripVertical, AlertCircle, RefreshCw, ShoppingCart, ExternalLink } from "lucide-react";
+import { X, ImageOff, GripVertical, AlertCircle, RefreshCw, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -6,6 +6,12 @@ import { CompareItem } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
   "PLA": "bg-blue-500/20 text-blue-400",
@@ -133,10 +139,34 @@ export function MiniFilamentCard({
         isFiltered && "opacity-40"
       )}
     >
-      {/* Drag Handle */}
-      <div className="absolute top-1 left-1 opacity-0 group-hover/mini:opacity-50 transition-opacity">
-        <GripVertical className="w-3 h-3 text-muted-foreground" />
-      </div>
+      {/* Drag Handle - Always visible with grip icon */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div 
+              className={cn(
+                "absolute top-1 left-1 p-0.5 rounded cursor-grab active:cursor-grabbing",
+                "opacity-40 group-hover/mini:opacity-100 transition-all",
+                "hover:bg-muted/50",
+                isDragging && "opacity-100 bg-primary/20"
+              )}
+            >
+              <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            Drag to reorder
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Drop Zone Indicator */}
+      {isDragOver && (
+        <div className={cn(
+          "absolute inset-y-0 w-1 bg-primary rounded-full transition-all",
+          dragDirection === 'right' ? "-right-2" : "-left-2"
+        )} />
+      )}
 
       {/* Remove Button */}
       <button
