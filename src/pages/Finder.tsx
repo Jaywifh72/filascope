@@ -48,6 +48,7 @@ import { FilamentTableView } from "@/components/FilamentTableView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
 import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productNameUtils";
+import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -1331,6 +1332,9 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Onboarding Tour */}
+      <OnboardingTour />
+      
       {/* Hero Section */}
       <HeroSection 
         searchTerm={searchTerm}
@@ -1339,6 +1343,11 @@ const Finder = () => {
         brandCount={brands?.length || 28}
         compatibleCount={totalCount}
       />
+
+      {/* Welcome Banner for New Visitors */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <WelcomeBanner />
+      </div>
 
       {/* Visual Section Separator */}
       <SectionSeparator />
