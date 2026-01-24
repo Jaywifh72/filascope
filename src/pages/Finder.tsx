@@ -1228,11 +1228,49 @@ const Finder = () => {
       return convertedPrice / (weightKg * packQty);
     };
 
+    // Calculate a composite score for sorting when value_score is not available
+    // Uses printability_index, or computes from available data
+    const getCompositeScore = (filament: typeof a) => {
+      // Priority 1: Use stored value_score if available
+      if (filament.value_score && filament.value_score > 0) {
+        return filament.value_score;
+      }
+      
+      // Priority 2: Use printability_index (composite of ease + strength)
+      if (filament.printability_index && filament.printability_index > 0) {
+        return filament.printability_index;
+      }
+      
+      // Priority 3: Compute a basic score from available data
+      let score = 5; // Base score
+      
+      // Boost for high-speed capability
+      if (filament.high_speed_capable) score += 1;
+      
+      // Boost for having complete temperature data
+      if (filament.nozzle_temp_min_c && filament.nozzle_temp_max_c) score += 0.5;
+      if (filament.bed_temp_min_c && filament.bed_temp_max_c) score += 0.5;
+      
+      // Boost for having price data (indicates availability)
+      if (filament.variant_price && filament.variant_price > 0) score += 0.5;
+      
+      // Boost for having TDS data
+      if (filament.tds_url) score += 0.5;
+      
+      // Boost for popular/easy materials
+      const material = filament.material?.toUpperCase() || '';
+      if (material.includes('PLA')) score += 1;
+      else if (material.includes('PETG')) score += 0.8;
+      else if (material.includes('ABS')) score += 0.5;
+      
+      return Math.min(10, score);
+    };
+
     switch (sortBy) {
       case "scoring-asc":
-        return (a.value_score || 0) - (b.value_score || 0);
+        return getCompositeScore(a) - getCompositeScore(b);
       case "scoring-desc":
-        return (b.value_score || 0) - (a.value_score || 0);
+        return getCompositeScore(b) - getCompositeScore(a);
       case "alpha-asc":
         return (a.product_title || '').localeCompare(b.product_title || '');
       case "alpha-desc":
@@ -1248,7 +1286,7 @@ const Finder = () => {
       case "print-desc":
         return (b.printability_index || 0) - (a.printability_index || 0);
       default:
-        return (b.value_score || 0) - (a.value_score || 0);
+        return getCompositeScore(b) - getCompositeScore(a);
     }
   }), [regionalFilaments, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
