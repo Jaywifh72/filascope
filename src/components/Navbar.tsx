@@ -7,6 +7,7 @@ import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { RegionSelector } from "@/components/RegionSelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
@@ -437,6 +438,7 @@ const Navbar = () => {
           <div className="hidden md:block h-6 w-px bg-gray-700" />
           <div className="flex items-center gap-4 shrink-0 ml-auto">
             <WishlistButton />
+            <RegionSelector />
             <CurrencySelector />
             
             {/* User Avatar / Login */}
