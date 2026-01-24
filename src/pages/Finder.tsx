@@ -49,6 +49,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
 import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productNameUtils";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
+import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
+import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
+import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -1552,9 +1555,96 @@ const Finder = () => {
         filterCounts={filterCounts}
       />
 
+      {/* Mobile Filter Controls */}
+      <div className="lg:hidden sticky top-16 z-30 bg-background/95 backdrop-blur-md border-b border-gray-800 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <MobileFilamentFilterSheet
+            selectedMaterials={selectedMaterials}
+            onMaterialChange={(material, checked) => {
+              if (checked) {
+                const newMaterials = selectedMaterials.includes("All") ? [material] : [...selectedMaterials, material];
+                setSelectedMaterials(newMaterials);
+              } else {
+                setSelectedMaterials(selectedMaterials.filter(m => m !== material));
+              }
+            }}
+            selectedBrands={selectedBrands}
+            onBrandChange={(brand, checked) => {
+              if (checked) {
+                setSelectedBrands([...selectedBrands, brand]);
+              } else {
+                setSelectedBrands(selectedBrands.filter(b => b !== brand));
+              }
+            }}
+            carbonFiber={carbonFiber}
+            onCarbonFiberChange={setCarbonFiber}
+            glassFiber={glassFiber}
+            onGlassFiberChange={setGlassFiber}
+            woodFilled={woodFilled}
+            onWoodFilledChange={setWoodFilled}
+            spoolSize={largeSpools ? "large" : "standard"}
+            onSpoolSizeChange={(size) => setLargeSpools(size === "large")}
+            onClearAll={() => {
+              setSelectedMaterials([]);
+              setSelectedBrands([]);
+              setCarbonFiber(false);
+              setGlassFiber(false);
+              setWoodFilled(false);
+              setLargeSpools(false);
+            }}
+          />
+          
+          {/* Sort dropdown for mobile */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="flex-1 h-11 bg-gray-800/50 border-gray-700">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-700 z-50">
+              <SelectItem value="scoring-desc" className="min-h-[44px]">Scoring: High to Low</SelectItem>
+              <SelectItem value="price-asc" className="min-h-[44px]">Price: Low to High</SelectItem>
+              <SelectItem value="price-desc" className="min-h-[44px]">Price: High to Low</SelectItem>
+              <SelectItem value="alpha-asc" className="min-h-[44px]">Name: A-Z</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Mobile Active Filter Chips - Horizontal scroll */}
+      <MobileActiveFilterChips
+        filters={[
+          ...selectedMaterials.map(m => ({ id: m, label: m.replace('-family', '').toUpperCase(), type: 'material' as const })),
+          ...selectedBrands.map(b => ({ id: b, label: b, type: 'brand' as const })),
+          ...(carbonFiber ? [{ id: 'carbon', label: 'Carbon Fiber', type: 'reinforced' as const }] : []),
+          ...(glassFiber ? [{ id: 'glass', label: 'Glass Fiber', type: 'reinforced' as const }] : []),
+          ...(woodFilled ? [{ id: 'wood', label: 'Wood Filled', type: 'reinforced' as const }] : []),
+          ...(largeSpools ? [{ id: 'large', label: 'Large Spool', type: 'spool' as const }] : []),
+        ]}
+        onRemove={(id, type) => {
+          if (type === 'material') setSelectedMaterials(selectedMaterials.filter(m => m !== id));
+          if (type === 'brand') setSelectedBrands(selectedBrands.filter(b => b !== id));
+          if (type === 'reinforced') {
+            if (id === 'carbon') setCarbonFiber(false);
+            if (id === 'glass') setGlassFiber(false);
+            if (id === 'wood') setWoodFilled(false);
+          }
+          if (type === 'spool') setLargeSpools(false);
+        }}
+        onClearAll={() => {
+          setSelectedMaterials([]);
+          setSelectedBrands([]);
+          setCarbonFiber(false);
+          setGlassFiber(false);
+          setWoodFilled(false);
+          setLargeSpools(false);
+        }}
+        selectedPrinterName={selectedPrinter?.model_name}
+        onChangePrinter={() => setPrinterSelectorOpen(true)}
+        className="border-b border-gray-800/50"
+      />
+
       {/* Main Content Area with Technical Console Sidebar */}
-      <div id="system-config" className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-10 items-start">
-        {/* Technical Console Sidebar */}
+      <div id="system-config" className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-6 lg:py-10 items-start">
+        {/* Technical Console Sidebar - Desktop only */}
         <TechnicalConsoleSidebar
           selectedMaterials={selectedMaterials}
           onMaterialChange={(material, checked) => {
@@ -1605,8 +1695,8 @@ const Finder = () => {
           </div>
         </div>
 
-        {/* Data Inventory Control Bar */}
-        {!isLoading && displayedGroups.length > 0 && (
+        {/* Data Inventory Control Bar - Desktop only */}
+        {!isLoading && displayedGroups.length > 0 && !isMobile && (
           <DataInventoryControlBar
             sortBy={sortBy as SortOption}
             onSortChange={(val) => setSortBy(val)}
