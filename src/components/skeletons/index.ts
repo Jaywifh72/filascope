@@ -12,7 +12,7 @@ export {
   ProductDetailSkeleton, 
   ProductImageSkeleton, 
   ProductInfoSkeleton, 
-  PriceSkeleton,
+  PriceSkeleton as ProductPriceSkeleton,
   ProductTabsSkeleton 
 } from "./ProductDetailSkeleton";
 
@@ -28,6 +28,12 @@ export {
   RecentSearchesSkeleton,
   SearchDropdownSkeleton 
 } from "./SearchSuggestionsSkeleton";
+
+// Page loading skeletons
+export { PageLoadingSkeleton } from "./PageLoadingSkeleton";
+export { PriceSkeleton, SalePriceSkeleton, ButtonPriceSkeleton } from "./PriceSkeleton";
+export { BentoGridSkeleton } from "./BentoGridSkeleton";
+export { VaultSkeleton } from "./VaultSkeleton";
 
 // Re-export existing skeletons for convenience
 export { FilamentCardSkeleton, FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";

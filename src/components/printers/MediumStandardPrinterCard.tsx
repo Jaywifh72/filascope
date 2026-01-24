@@ -221,7 +221,7 @@ export default function MediumStandardPrinterCard({
                 {printer.discontinued ? (
                   <span className="text-xs sm:text-sm font-medium text-destructive/70">DISCONTINUED</span>
                 ) : priceLoading ? (
-                  <span className="text-xs sm:text-sm text-muted-foreground animate-pulse">Loading...</span>
+                  <span className="h-5 w-20 rounded bg-muted animate-pulse" />
                 ) : price ? (
                   <>
                     {/* Current Price - WHITE for consistency */}

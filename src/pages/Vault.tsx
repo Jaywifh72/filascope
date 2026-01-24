@@ -40,6 +40,7 @@ import { WishlistItemCard } from "@/components/wishlist/WishlistItem";
 import { CollectionTabs } from "@/components/wishlist/CollectionTabs";
 import { CollectionDialog } from "@/components/wishlist/CollectionDialog";
 import { ShareWishlistDialog } from "@/components/wishlist/ShareWishlistDialog";
+import { VaultSkeleton } from "@/components/skeletons/VaultSkeleton";
 
 const Vault = () => {
   const { user, loading } = useAuth();
@@ -271,7 +272,7 @@ const Vault = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <VaultSkeleton />;
   }
 
   if (!user) {

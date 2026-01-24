@@ -8,6 +8,7 @@ import { getBrandLogo } from "@/lib/brandLogos";
 import { normalizeColorHex } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalFiltering, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Filament {
   id: string;
@@ -190,8 +191,21 @@ const BentoGrid = () => {
         )}
         
         {!featuredFilament && (
-          <div className="h-full flex items-center justify-center">
-            <div className="animate-pulse text-muted-foreground">Loading featured filament...</div>
+          <div className="h-full flex flex-col">
+            <Skeleton className="flex-1 min-h-[200px] rounded-none" />
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-6 w-48" />
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-6 w-24" />
+              </div>
+            </div>
           </div>
         )}
       </Link>
@@ -239,7 +253,18 @@ const BentoGrid = () => {
           ))}
           
           {!priceDrops && (
-            <div className="animate-pulse text-sm text-muted-foreground text-center py-4">Loading...</div>
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-background/50">
+                  <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-2.5 w-20" />
+                  </div>
+                  <Skeleton className="h-3 w-10 shrink-0" />
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

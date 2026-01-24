@@ -21,6 +21,7 @@ import { ScreenReaderAnnouncerProvider } from "./components/accessibility/Screen
 import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboardHandler";
 import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analytics/ErrorBoundary";
 import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
+import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 
 // Initialize global error handlers for uncaught errors
 initializeGlobalErrorHandler();
@@ -115,16 +116,7 @@ const App = () => (
                 <OfflineBanner />
                 <MaintenanceModeWrapper>
                 <Navbar />
-                <Suspense fallback={
-                  <div 
-                    className="flex items-center justify-center min-h-screen"
-                    role="status"
-                    aria-live="polite"
-                    aria-label="Loading page content"
-                  >
-                    <div className="text-muted-foreground">Loading...</div>
-                  </div>
-                }>
+                <Suspense fallback={<PageLoadingSkeleton />}>
                   {/* Main content landmark for accessibility */}
                   <main id="main-content" tabIndex={-1} className="outline-none">
                   <Routes>
