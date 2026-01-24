@@ -564,6 +564,89 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_regional_stores: {
+        Row: {
+          base_url: string
+          brand_id: string
+          created_at: string
+          currency_code: string
+          estimated_shipping_days: number | null
+          free_shipping_threshold: number | null
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          notes: string | null
+          product_url_pattern: string | null
+          region_code: string
+          ships_from_country: string | null
+          store_name: string
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          brand_id: string
+          created_at?: string
+          currency_code: string
+          estimated_shipping_days?: number | null
+          free_shipping_threshold?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          notes?: string | null
+          product_url_pattern?: string | null
+          region_code: string
+          ships_from_country?: string | null
+          store_name: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          brand_id?: string
+          created_at?: string
+          currency_code?: string
+          estimated_shipping_days?: number | null
+          free_shipping_threshold?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          notes?: string | null
+          product_url_pattern?: string | null
+          region_code?: string
+          ships_from_country?: string | null
+          store_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_regional_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_regional_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_regional_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_regional_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_representatives: {
         Row: {
           brand_id: string
@@ -1036,6 +1119,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      currency_exchange_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          fetched_at: string
+          id: string
+          inverse_rate: number
+          rate: number
+          source: string | null
+          target_currency: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          inverse_rate: number
+          rate: number
+          source?: string | null
+          target_currency: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          inverse_rate?: number
+          rate?: number
+          source?: string | null
+          target_currency?: string
+        }
+        Relationships: []
       }
       deals: {
         Row: {
@@ -5902,6 +6018,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_region_preferences: {
+        Row: {
+          created_at: string
+          currency_code: string
+          detected_method: string | null
+          id: string
+          region_code: string
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency_code: string
+          detected_method?: string | null
+          id?: string
+          region_code: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency_code?: string
+          detected_method?: string | null
+          id?: string
+          region_code?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
