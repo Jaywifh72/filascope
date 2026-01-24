@@ -181,8 +181,9 @@ export function MobileFilamentFilterSheet({
             <button 
               onClick={() => setIsOpen(false)}
               className="rounded-full p-2.5 hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Close filter panel"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </SheetHeader>
@@ -199,9 +200,11 @@ export function MobileFilamentFilterSheet({
                   "w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors min-h-[44px]",
                   expandedSection === 'printer' && "bg-white/[0.02]"
                 )}
+                aria-expanded={expandedSection === 'printer'}
+                aria-controls="printer-section-content"
               >
                 <div className="flex items-center gap-2.5">
-                  <Printer className="h-4 w-4 text-primary" />
+                  <Printer className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-white">Your Printer</span>
                   {selectedPrinter && (
                     <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -212,10 +215,10 @@ export function MobileFilamentFilterSheet({
                 <ChevronDown className={cn(
                   "h-4 w-4 text-gray-500 transition-transform duration-200",
                   expandedSection === 'printer' && "rotate-180"
-                )} />
+                )} aria-hidden="true" />
               </button>
               {expandedSection === 'printer' && (
-                <div className="mt-3 space-y-3 px-1">
+                <div id="printer-section-content" className="mt-3 space-y-3 px-1">
                   <Select
                     value={selectedBrand || ""}
                     onValueChange={(val) => {
@@ -223,7 +226,7 @@ export function MobileFilamentFilterSheet({
                       setSelectedPrinterId("");
                     }}
                   >
-                    <SelectTrigger className="w-full h-11 bg-gray-800 border-gray-700 text-white text-sm">
+                    <SelectTrigger className="w-full h-11 bg-gray-800 border-gray-700 text-white text-sm" aria-label="Select printer brand">
                       <SelectValue placeholder="Select brand..." />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700 z-[100]">
@@ -244,7 +247,7 @@ export function MobileFilamentFilterSheet({
                       value={selectedPrinterId || ""}
                       onValueChange={setSelectedPrinterId}
                     >
-                      <SelectTrigger className="w-full h-11 bg-gray-800 border-gray-700 text-white text-sm">
+                      <SelectTrigger className="w-full h-11 bg-gray-800 border-gray-700 text-white text-sm" aria-label="Select printer model">
                         <SelectValue placeholder="Select model..." />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700 z-[100]">
@@ -289,9 +292,11 @@ export function MobileFilamentFilterSheet({
                   "w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors min-h-[44px]",
                   expandedSection === 'materials' && "bg-white/[0.02]"
                 )}
+                aria-expanded={expandedSection === 'materials'}
+                aria-controls="materials-section-content"
               >
                 <div className="flex items-center gap-2">
-                  <Atom className="h-4 w-4 text-primary" />
+                  <Atom className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-white">Material Types</span>
                   {selectedMaterials.length > 0 && (
                     <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
@@ -302,10 +307,10 @@ export function MobileFilamentFilterSheet({
                 <ChevronDown className={cn(
                   "h-4 w-4 text-gray-500 transition-transform duration-200",
                   expandedSection === 'materials' && "rotate-180"
-                )} />
+                )} aria-hidden="true" />
               </button>
               {expandedSection === 'materials' && (
-                <div className="mt-3 grid grid-cols-2 gap-2 px-1">
+                <div id="materials-section-content" className="mt-3 grid grid-cols-2 gap-2 px-1">
                   {MATERIAL_BASE_OPTIONS.map((material) => (
                     <label
                       key={material.id}
@@ -339,9 +344,11 @@ export function MobileFilamentFilterSheet({
                   "w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors min-h-[44px]",
                   expandedSection === 'brands' && "bg-white/[0.02]"
                 )}
+                aria-expanded={expandedSection === 'brands'}
+                aria-controls="brands-section-content"
               >
                 <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-primary" />
+                  <Package className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-white">Preferred Brands</span>
                   {selectedBrands.length > 0 && (
                     <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
@@ -352,10 +359,10 @@ export function MobileFilamentFilterSheet({
                 <ChevronDown className={cn(
                   "h-4 w-4 text-gray-500 transition-transform duration-200",
                   expandedSection === 'brands' && "rotate-180"
-                )} />
+                )} aria-hidden="true" />
               </button>
               {expandedSection === 'brands' && (
-                <div className="mt-3 space-y-2 px-1">
+                <div id="brands-section-content" className="mt-3 space-y-2 px-1">
                   {VERIFIED_BRANDS.map((brand) => (
                     <label
                       key={brand.id}
@@ -389,9 +396,11 @@ export function MobileFilamentFilterSheet({
                   "w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors min-h-[44px]",
                   expandedSection === 'reinforced' && "bg-white/[0.02]"
                 )}
+                aria-expanded={expandedSection === 'reinforced'}
+                aria-controls="reinforced-section-content"
               >
                 <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-primary" />
+                  <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-white">Reinforcements</span>
                   {localReinforced.length > 0 && (
                     <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
@@ -402,10 +411,10 @@ export function MobileFilamentFilterSheet({
                 <ChevronDown className={cn(
                   "h-4 w-4 text-gray-500 transition-transform duration-200",
                   expandedSection === 'reinforced' && "rotate-180"
-                )} />
+                )} aria-hidden="true" />
               </button>
               {expandedSection === 'reinforced' && (
-                <div className="mt-3 grid grid-cols-2 gap-2 px-1">
+                <div id="reinforced-section-content" className="mt-3 grid grid-cols-2 gap-2 px-1">
                   {REINFORCED_OPTIONS.map((option) => (
                     <label
                       key={option.id}

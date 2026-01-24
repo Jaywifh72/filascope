@@ -19,23 +19,24 @@ const PropertyIndicator = ({
   level: 'Low' | 'Medium' | 'High' | 'Very High' | 'Easy' | 'Hard' | 'Expert' | 'Rigid' | 'Semi-Flexible' | 'Flexible' | 'Very Flexible';
   label: string;
 }) => {
+  // WCAG 2.1 AA: Use brighter colors for better contrast against dark backgrounds
   const getColor = () => {
     switch (level) {
       case 'Easy':
       case 'Low':
-        return 'bg-green-500';
+        return 'bg-green-400';
       case 'Medium':
       case 'Semi-Flexible':
-        return 'bg-yellow-500';
+        return 'bg-yellow-400';
       case 'High':
       case 'Hard':
       case 'Flexible':
-        return 'bg-orange-500';
+        return 'bg-orange-400';
       case 'Very High':
       case 'Expert':
       case 'Very Flexible':
       case 'Rigid':
-        return 'bg-red-500';
+        return 'bg-red-400';
       default:
         return 'bg-muted';
     }
@@ -62,11 +63,12 @@ export const MaterialBadge = ({
   const info = getMaterialInfo(material);
   const category = getMaterialCategory(material);
 
+  // WCAG 2.1 AA: Use text-violet-300 for improved contrast (4.5:1+ ratio)
   const badge = (
     <Badge 
       variant={variant} 
       className={cn(
-        "bg-violet-500/15 border-violet-500/40 text-violet-400 font-semibold cursor-default",
+        "bg-violet-500/15 border-violet-500/40 text-violet-300 font-semibold cursor-default",
         size === "sm" ? "text-xs px-2.5 py-1" : "text-sm px-3 py-1.5",
         showTooltip && "cursor-help hover:bg-primary/25 transition-colors",
         className

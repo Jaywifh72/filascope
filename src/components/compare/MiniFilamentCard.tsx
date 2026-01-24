@@ -13,14 +13,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// WCAG 2.1 AA compliant - increased text lightness for 4.5:1 contrast on dark bg
 const MATERIAL_BADGE_COLORS: Record<string, string> = {
-  "PLA": "bg-blue-500/20 text-blue-400",
-  "PETG": "bg-teal-500/20 text-teal-400",
-  "ABS": "bg-orange-500/20 text-orange-400",
-  "ASA": "bg-red-500/20 text-red-400",
-  "TPU": "bg-purple-500/20 text-purple-400",
-  "Nylon": "bg-green-500/20 text-green-400",
-  "PC": "bg-gray-500/20 text-gray-400",
+  "PLA": "bg-blue-500/20 text-blue-300",
+  "PETG": "bg-teal-500/20 text-teal-300",
+  "ABS": "bg-orange-500/20 text-orange-300",
+  "ASA": "bg-red-500/20 text-red-300",
+  "TPU": "bg-purple-500/20 text-purple-300",
+  "Nylon": "bg-green-500/20 text-green-300",
+  "PC": "bg-gray-500/20 text-gray-300",
 };
 
 function getMaterialBadgeClass(material: string | null): string {
@@ -150,8 +151,12 @@ export function MiniFilamentCard({
                 "hover:bg-muted/50",
                 isDragging && "opacity-100 bg-primary/20"
               )}
+              role="button"
+              aria-label="Drag to reorder"
+              tabIndex={0}
             >
-              <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+              <GripVertical className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+              <span className="sr-only">Drag handle</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
@@ -233,9 +238,9 @@ export function MiniFilamentCard({
               onClick={(e) => e.stopPropagation()}
               draggable={false}
               className="opacity-0 group-hover/mini:opacity-100 transition-opacity p-1.5 rounded-md bg-primary/20 hover:bg-primary/30 text-primary"
-              title={`Buy from ${item.vendor}`}
+              aria-label={`Buy ${item.product_title} from ${item.vendor}`}
             >
-              <ShoppingCart className="w-3.5 h-3.5" />
+              <ShoppingCart className="w-3.5 h-3.5" aria-hidden="true" />
             </a>
           )}
         </div>

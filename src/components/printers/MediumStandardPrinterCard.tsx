@@ -232,7 +232,7 @@ export default function MediumStandardPrinterCard({
                     
                     {/* Discount Badge - prominent green pill */}
                     {printer.msrp_usd && price < printer.msrp_usd && discountPercent && discountPercent >= 5 && (
-                      <span className="text-[10px] sm:text-xs font-bold bg-green-500 text-white px-2 py-0.5 rounded-full animate-pulse">
+                      <span className="text-[10px] sm:text-xs font-bold bg-green-500 text-white px-2 py-0.5 rounded-full motion-safe:animate-pulse">
                         -{discountPercent}% OFF
                       </span>
                     )}

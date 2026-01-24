@@ -226,8 +226,9 @@ const Navbar = () => {
             className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
           </button>
 
           {/* Logo - Only icon and wordmark */}
@@ -469,9 +470,14 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu - Slide down animation */}
-        <div className={cn("md:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} style={{
-        background: 'hsla(220, 20%, 4%, 0.98)'
-      }}>
+        <div 
+          id="mobile-navigation"
+          className={cn("md:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} 
+          style={{
+            background: 'hsla(220, 20%, 4%, 0.98)'
+          }}
+          aria-hidden={!mobileMenuOpen}
+        >
           <div className="py-4 border-t border-border/30">
             {/* Compare Button - Prominent at top */}
             <div className="px-4 pb-4">
