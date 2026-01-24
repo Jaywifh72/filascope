@@ -1,9 +1,11 @@
-import { useMemo, useEffect, useState } from "react"; // v4
+import { useMemo, useEffect, useState, useRef } from "react"; // v4
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllFilaments } from "@/lib/supabaseHelpers";
+import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
+import { useSearchContext } from "@/hooks/useSearchContext";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -131,6 +133,11 @@ const Finder = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isMobile = useIsMobile();
+  
+  // Search analytics tracking
+  const { startSearchTimer, trackSearch } = useFilterAnalytics();
+  const { trackSearch: trackSearchHistory } = useSearchContext();
+  const searchTimerRef = useRef<number | null>(null);
   
   // Get URL params for color search
   const urlHexSearch = searchParams.get("hexSearch");
@@ -270,6 +277,15 @@ const Finder = () => {
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
   }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly]);
+  
+  // Track search analytics - start timer on search change
+  useEffect(() => {
+    if (searchTerm && searchTerm.trim().length > 0) {
+      startSearchTimer();
+      // Track search in history
+      trackSearchHistory(searchTerm);
+    }
+  }, [searchTerm, startSearchTimer, trackSearchHistory]);
   
   // Printer selection hook
   const { selectedPrinter } = usePrinterSelection();

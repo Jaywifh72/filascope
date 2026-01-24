@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
-import { Beaker, Search, Sparkles, ArrowRight, X, Target } from "lucide-react";
+import { Beaker, Search, Sparkles, ArrowRight, X, Target, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
+import { getTypoSuggestion, getSimilarSuggestions } from "@/lib/fuzzySearch";
 
 interface FilamentsEmptyStateProps {
   searchTerm?: string;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onSearchChange?: (value: string) => void;
   className?: string;
 }
 
@@ -28,9 +31,26 @@ export function FilamentsEmptyState({
   searchTerm,
   hasActiveFilters,
   onClearFilters,
+  onSearchChange,
   className,
 }: FilamentsEmptyStateProps) {
   const isSearchEmpty = searchTerm && searchTerm.trim().length > 0;
+
+  // Check for typo suggestions
+  const typoSuggestion = useMemo(() => {
+    if (!searchTerm || searchTerm.length < 3) return null;
+    return getTypoSuggestion(searchTerm);
+  }, [searchTerm]);
+
+  // Get similar suggestions if typo suggestion not found
+  const similarSuggestions = useMemo(() => {
+    if (!searchTerm || searchTerm.length < 3 || typoSuggestion) return [];
+    return getSimilarSuggestions(searchTerm, 3);
+  }, [searchTerm, typoSuggestion]);
+
+  const handleSuggestionClick = (suggestion: string) => {
+    onSearchChange?.(suggestion);
+  };
 
   return (
     <div className={cn(
@@ -76,6 +96,47 @@ export function FilamentsEmptyState({
           : "Try removing some filters or explore our popular materials."
         }
       </p>
+
+      {/* Typo Suggestion - "Did you mean?" */}
+      {typoSuggestion && onSearchChange && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 max-w-md w-full">
+          <div className="flex items-center gap-2 mb-2">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-medium text-amber-500">Did you mean?</span>
+          </div>
+          <button
+            onClick={() => handleSuggestionClick(typoSuggestion)}
+            className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
+          >
+            "{typoSuggestion}"
+          </button>
+        </div>
+      )}
+
+      {/* Similar Suggestions */}
+      {!typoSuggestion && similarSuggestions.length > 0 && onSearchChange && (
+        <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 max-w-md w-full">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Similar searches</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {similarSuggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm",
+                  "bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50",
+                  "text-foreground transition-all duration-150 hover:scale-105"
+                )}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Primary Actions */}
       <div className="flex flex-wrap items-center justify-center gap-3 mb-10">

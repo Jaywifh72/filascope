@@ -1,9 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
+import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
+import { useSearchContext } from "@/hooks/useSearchContext";
 
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -86,6 +88,11 @@ export default function Printers() {
   const navigate = useNavigate(); 
   const queryClient = useQueryClient();
   const { isAdmin } = useAuth();
+  
+  // Search analytics tracking
+  const { startSearchTimer, trackSearch } = useFilterAnalytics();
+  const { trackSearch: trackSearchHistory } = useSearchContext();
+  const searchTimerRef = useRef<number | null>(null);
   
   // Search and quick filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -213,6 +220,15 @@ export default function Printers() {
   useEffect(() => {
     setDisplayedCount(PRINTERS_PER_PAGE);
   }, [activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, searchTerm, activeQuickFilters]);
+  
+  // Track search analytics - start timer on search change
+  useEffect(() => {
+    if (searchTerm && searchTerm.trim().length > 0) {
+      startSearchTimer();
+      // Track search in history
+      trackSearchHistory(searchTerm);
+    }
+  }, [searchTerm, startSearchTimer, trackSearchHistory]);
 
   const hasActiveFilters = 
     activeCategory !== 'all' ||
