@@ -1,14 +1,19 @@
 import React from 'react';
 import { 
   DollarSign, TrendingDown, Globe, Store, ExternalLink, Tag, Clock, 
-  Wrench, BookOpen, ChartLine, ShoppingCart, Check, X
+  Wrench, BookOpen, ChartLine, ShoppingCart, Check, X, MapPin, Info, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PrinterPriceChart } from '@/components/PrinterPriceChart';
-import { useCurrency } from '@/hooks/useCurrency';
+import { useRegion } from '@/contexts/RegionContext';
 import { useAffiliateLinks } from '@/hooks/useAffiliateLinks';
+import { useRegionalPriceV2 } from '@/hooks/useRegionalPriceV2';
+import { REGIONS } from '@/config/regions';
+import { formatPrice as formatCurrencyPrice } from '@/config/currencies';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { CurrencyCode } from '@/types/regional';
 
 interface PricingTabContentProps {
   printer: any;
@@ -17,6 +22,7 @@ interface PricingTabContentProps {
   displayMsrp: number | null | undefined;
   isLivePrice: boolean;
   livePriceCurrency?: string;
+  brandId?: string | null;
 }
 
 // Section header with icon and border
@@ -77,10 +83,29 @@ export function PricingTabContent({
   displayPrice, 
   displayMsrp,
   isLivePrice,
-  livePriceCurrency
+  livePriceCurrency,
+  brandId
 }: PricingTabContentProps) {
-  const { formatPrice, formatRegionalPrice, currency } = useCurrency();
+  const { formatPrice, currency, region, getConversionRate } = useRegion();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
+
+  // Fetch regional stores for this brand
+  const { 
+    allStores, 
+    hasRegionalStore,
+    isLoading: storesLoading 
+  } = useRegionalPriceV2({
+    brandId: brandId || '',
+    basePrice: displayPrice || undefined,
+    baseCurrency: 'USD',
+  });
+
+  // Sort stores: user's region first
+  const sortedStores = [...allStores].sort((a, b) => {
+    if (a.region_code === region) return -1;
+    if (b.region_code === region) return 1;
+    return 0;
+  });
 
   // Calculate savings if there's a discount
   const savings = displayMsrp && displayPrice ? displayMsrp - displayPrice : null;
@@ -91,9 +116,6 @@ export function PricingTabContent({
   // Format price based on whether it's a live regional price or database USD
   const formatDisplayPrice = (price: number | null | undefined) => {
     if (price === null || price === undefined) return null;
-    if (isLivePrice && livePriceCurrency && livePriceCurrency === currency) {
-      return formatRegionalPrice(price);
-    }
     return formatPrice(price);
   };
 
@@ -377,6 +399,123 @@ export function PricingTabContent({
           </div>
         </div>
       </section>
+
+      {/* Regional Stores Section */}
+      {brandId && sortedStores.length > 0 && (
+        <section className="section-card">
+          <div className="flex items-center justify-between mb-6">
+            <SectionHeader icon={Globe} title="Regional Stores" />
+            {hasRegionalStore && (
+              <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
+                {REGIONS[region]?.flag} Ships Locally
+              </Badge>
+            )}
+          </div>
+
+          {storesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sortedStores.map((store) => {
+                const isUserRegion = store.region_code === region;
+                const storeRegion = REGIONS[store.region_code as keyof typeof REGIONS];
+                const needsConversion = store.currency_code !== currency;
+                
+                // Calculate converted price
+                const rate = getConversionRate(store.currency_code as CurrencyCode, currency);
+                const nativePrice = displayPrice || 0;
+                const convertedPrice = needsConversion ? nativePrice * rate : nativePrice;
+
+                return (
+                  <div 
+                    key={store.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer",
+                      isUserRegion 
+                        ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
+                        : "bg-muted/20 border-border hover:bg-muted/40"
+                    )}
+                    onClick={() => window.open(store.base_url, '_blank')}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Store Region Flag */}
+                      <span className="text-2xl">{storeRegion?.flag}</span>
+                      
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{store.store_name}</span>
+                          {isUserRegion && (
+                            <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
+                              Your Region
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          {store.ships_from_country && (
+                            <>
+                              <MapPin className="w-3 h-3" />
+                              <span>Ships from {store.ships_from_country}</span>
+                            </>
+                          )}
+                          {store.estimated_shipping_days && (
+                            <span>• {store.estimated_shipping_days} days</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="flex items-center gap-1 font-bold">
+                          {needsConversion && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                <p>Converted from {store.currency_code}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          <span>{needsConversion ? '~' : ''}{formatCurrencyPrice(convertedPrice, currency)}</span>
+                        </div>
+                        {needsConversion && (
+                          <div className="text-xs text-muted-foreground">
+                            {formatCurrencyPrice(nativePrice, store.currency_code as CurrencyCode)} native
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(store.base_url, '_blank');
+                        }}
+                      >
+                        Visit
+                        <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* No Local Store Notice */}
+          {!hasRegionalStore && sortedStores.length > 0 && (
+            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <p className="text-sm text-amber-400">
+                {REGIONS[region]?.flag} {REGIONS[region]?.name}: This brand doesn't have a dedicated store in your region. 
+                Prices shown are converted from other regional stores.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Assembly Info */}
       <section className="section-card">
