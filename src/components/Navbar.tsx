@@ -165,6 +165,7 @@ const Navbar = () => {
             <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
+            <LabNavLink to="/deals">Deals</LabNavLink>
             
             {/* Resources Dropdown */}
             <DropdownMenu>
@@ -237,6 +238,7 @@ const Navbar = () => {
             <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
+            <LabNavLink to="/deals">Deals</LabNavLink>
             
             {/* More Dropdown (Resources collapsed) */}
             <DropdownMenu>
@@ -362,6 +364,7 @@ const Navbar = () => {
             <MobileNavLink to="/" end>Filaments</MobileNavLink>
             <MobileNavLink to="/printers">Printers</MobileNavLink>
             <MobileNavLink to="/brands">Brands</MobileNavLink>
+            <MobileNavLink to="/deals">Deals</MobileNavLink>
 
             <div className="border-t border-border/30 my-2" />
 
