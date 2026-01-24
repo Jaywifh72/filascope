@@ -7,10 +7,9 @@ interface FilamentCardSkeletonProps {
 export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
   return (
     <div 
-      className="relative rounded-2xl bg-white/[0.03] border border-gray-700 min-h-[380px]"
+      className="relative rounded-2xl bg-card/50 border border-border/50 min-h-[380px] skeleton-animated"
       style={{ 
         animationDelay: `${index * 50}ms`,
-        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`
       }}
     >
       {/* Checkbox placeholder - top right */}
@@ -19,7 +18,7 @@ export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
       </div>
 
       {/* Header Section */}
-      <div className="px-6 pt-6 pb-4 border-b border-white/[0.05]">
+      <div className="px-6 pt-6 pb-4 border-b border-border/50">
         {/* Brand - centered */}
         <div className="flex items-center justify-center gap-2 mb-2">
           <Skeleton className="w-5 h-5 rounded" />
@@ -47,7 +46,7 @@ export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
       </div>
 
       {/* Price Section */}
-      <div className="px-6 py-4 border-b border-white/[0.05]">
+      <div className="px-6 py-4 border-b border-border/50">
         <div className="flex items-baseline gap-1">
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-4 w-8" />
@@ -62,7 +61,7 @@ export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
       </div>
 
       {/* Availability Section */}
-      <div className="px-6 py-3 border-b border-white/[0.05]">
+      <div className="px-6 py-3 border-b border-border/50">
         <Skeleton className="h-7 w-24 rounded-md" />
       </div>
 
