@@ -1,6 +1,6 @@
-import { ArrowRight, Scale, Sparkles } from "lucide-react";
+import { ArrowRight, Scale, Sparkles, Target, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface PopularComparison {
@@ -30,6 +30,12 @@ const popularComparisons: PopularComparison[] = [
     materials: ["TPU", "TPE"],
     description: "Common flexible vs. super soft",
   },
+];
+
+const quickStartMaterials = [
+  { name: "Bambu Lab PLA Basic", slug: "bambu-pla-basic" },
+  { name: "Polymaker PolyLite PETG", slug: "polymaker-polylite-petg" },
+  { name: "Prusament ASA", slug: "prusament-asa" },
 ];
 
 interface FilamentComparisonEmptyStateProps {
@@ -66,22 +72,36 @@ export function FilamentComparisonEmptyState({
 
       {/* Title & Subtitle */}
       <h2 className="text-xl font-semibold text-foreground mb-2 text-center">
-        Select Filaments to Compare
+        Your Compare Tray is Empty
       </h2>
       <p className="text-muted-foreground text-center max-w-md mb-8">
         Add filaments from the Materials page to compare their properties, 
         print settings, and performance metrics side-by-side.
       </p>
 
-      {/* Primary Action */}
-      <Button 
-        onClick={onBrowseMaterials} 
-        size="lg"
-        className="gap-2 mb-12 transition-all duration-150 hover:scale-105"
-      >
-        Browse Materials
-        <ArrowRight className="w-4 h-4" />
-      </Button>
+      {/* Primary Actions */}
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+        <Button 
+          onClick={onBrowseMaterials} 
+          size="lg"
+          className="gap-2 transition-all duration-150 hover:scale-105"
+        >
+          <Search className="w-4 h-4" />
+          Browse Materials
+        </Button>
+        
+        <Button 
+          asChild
+          variant="outline"
+          size="lg"
+          className="gap-2"
+        >
+          <Link to="/wizard">
+            <Target className="w-4 h-4" />
+            Try Quick Match
+          </Link>
+        </Button>
+      </div>
 
       {/* Popular Comparisons Section */}
       <div className="w-full max-w-2xl">

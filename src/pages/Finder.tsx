@@ -38,6 +38,7 @@ import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
+import { FilamentsEmptyState } from "@/components/filament/FilamentsEmptyState";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -1663,9 +1664,11 @@ const Finder = () => {
           )}
           </>
         ) : (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No filaments found</p>
-          </div>
+          <FilamentsEmptyState
+            searchTerm={searchTerm}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearAllFilters}
+          />
         )}
           </main>
         </div>

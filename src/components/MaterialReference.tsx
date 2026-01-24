@@ -42,6 +42,7 @@ import {
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
 import { getMaterialReference, MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
 import { printMaterialReference } from "@/components/MaterialReferencePrintable";
+import { MaterialReferenceEmptyState } from "@/components/compare/MaterialReferenceEmptyState";
 import { cn } from "@/lib/utils";
 
 const SectionCard = ({ 
@@ -955,18 +956,10 @@ const MaterialReference = () => {
       {/* Material Detail Panel */}
       <div className="min-h-[600px]">
         {!selectedMaterial ? (
-          <Card className="p-12 text-center bg-gray-800/50 border-gray-700">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Layers className="w-8 h-8 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Select a Material</h3>
-                <p className="text-sm text-muted-foreground">
-                  Choose a material from the list to view its complete reference information.
-                </p>
-              </div>
-            </div>
+          <Card className="bg-gray-800/50 border-gray-700">
+            <MaterialReferenceEmptyState 
+              onSelectMaterial={(material) => setSelectedMaterial(material)}
+            />
           </Card>
         ) : selectedReference ? (
           <Card className="p-6 bg-gray-800/50 border-gray-700">
