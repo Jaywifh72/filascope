@@ -444,6 +444,40 @@ export default function Printers() {
     (advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000 ? 1 : 0) +
     advancedFilters.features.length;
 
+  // Track search results when they're displayed
+  const prevSearchTermRef = useRef<string>("");
+  useEffect(() => {
+    // Only track when we have a search term and results have loaded
+    if (searchTerm && searchTerm.trim().length > 0 && !isLoading && printers !== undefined) {
+      // Only track if search term changed (avoid duplicate tracking)
+      if (prevSearchTermRef.current !== searchTerm) {
+        prevSearchTermRef.current = searchTerm;
+        
+        // Get the active filters as strings
+        const appliedFilters: string[] = [];
+        if (activeCategory !== "all") {
+          appliedFilters.push(`category:${activeCategory}`);
+        }
+        if (priceRangeFilter !== "all") {
+          appliedFilters.push(`price:${priceRangeFilter}`);
+        }
+        if (advancedFilters.brands.length > 0) {
+          appliedFilters.push(`brand:${advancedFilters.brands.join(",")}`);
+        }
+        
+        // Calculate result count
+        const resultCount = filteredPrinters?.length || 0;
+        
+        trackSearch({
+          query: searchTerm,
+          result_count: resultCount,
+          has_results: resultCount > 0,
+          filters_applied: appliedFilters,
+        });
+      }
+    }
+  }, [searchTerm, isLoading, printers, filteredPrinters, activeCategory, priceRangeFilter, advancedFilters, trackSearch]);
+
   // Progressive disclosure computed values
   const displayedPrinters = filteredPrinters.slice(0, displayedCount);
   const hasMore = displayedCount < filteredPrinters.length;
