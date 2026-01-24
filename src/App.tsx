@@ -16,6 +16,8 @@ import { BrandCompareProvider } from "./hooks/useBrandCompare";
 import { BrandCompareBar } from "./components/brands/BrandCompare";
 import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatibleCount";
 import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
+import { SkipLink } from "./components/accessibility/SkipLink";
+import { ScreenReaderAnnouncerProvider } from "./components/accessibility/ScreenReaderAnnouncer";
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
 const Brands = lazy(() => import("./pages/Brands"));
@@ -94,12 +96,26 @@ const App = () => (
             <PrinterCompareProvider>
               <BrandCompareProvider>
               <TooltipProvider>
+                <ScreenReaderAnnouncerProvider>
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                {/* WCAG 2.1 AA: Skip to main content link */}
+                <SkipLink />
                 <MaintenanceModeWrapper>
                 <Navbar />
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="text-muted-foreground">Loading...</div></div>}>
+                <Suspense fallback={
+                  <div 
+                    className="flex items-center justify-center min-h-screen"
+                    role="status"
+                    aria-live="polite"
+                    aria-label="Loading page content"
+                  >
+                    <div className="text-muted-foreground">Loading...</div>
+                  </div>
+                }>
+                  {/* Main content landmark for accessibility */}
+                  <main id="main-content" tabIndex={-1} className="outline-none">
                   <Routes>
                   <Route path="/" element={<Finder />} />
                   <Route path="/brands" element={<Brands />} />
@@ -166,6 +182,7 @@ const App = () => (
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                  </main>
               </Suspense>
               <CompareTray />
                 <PrinterCompareBar />
@@ -173,6 +190,7 @@ const App = () => (
                 <TechFooter />
                 </MaintenanceModeWrapper>
               </BrowserRouter>
+                </ScreenReaderAnnouncerProvider>
             </TooltipProvider>
               </BrandCompareProvider>
           </PrinterCompareProvider>
