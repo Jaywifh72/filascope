@@ -179,7 +179,7 @@ export function TechnicalConsoleSidebar({
 
   return (
     <aside className="hidden lg:flex flex-col w-[345px] shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border-r border-gray-800 bg-gray-900/60">
-      {/* System Config Header */}
+      {/* Your Printer Header */}
       <div className="p-4 border-b border-gray-800">
         <div className="flex items-center gap-2.5">
           <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20">
@@ -187,10 +187,10 @@ export function TechnicalConsoleSidebar({
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-300">
-              System Config
+              Your Printer
             </span>
             <span className="text-xs text-gray-500">
-              Printer Hub
+              Personalized Results
             </span>
           </div>
         </div>
@@ -238,19 +238,19 @@ export function TechnicalConsoleSidebar({
           )}
         </div>
 
-        {/* Live Specs Header */}
+        {/* Print Specs Header */}
         <div className="flex items-center gap-2 pt-3 border-t border-gray-800/50">
           <Settings2 className="w-3.5 h-3.5 text-primary" />
           <span className="text-sm font-semibold text-gray-300">
-            Live Specs
+            Print Specs
           </span>
         </div>
 
-        {/* Nozzle Configuration Row */}
+        {/* Nozzle Setup Row */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Droplets className="w-3 h-3 text-gray-400" />
-            <span className="text-xs text-gray-400 uppercase tracking-wide">Nozzle Config</span>
+            <span className="text-xs text-gray-400 uppercase tracking-wide">Nozzle Setup</span>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             {/* Nozzle Size Dropdown */}
@@ -347,12 +347,12 @@ export function TechnicalConsoleSidebar({
         </div>
       </div>
 
-      {/* Spool Configuration Section */}
+      {/* Spool Size Section */}
       <div className="p-4 border-b border-gray-800 space-y-3">
         <div className="flex items-center gap-2">
           <Package className="w-3.5 h-3.5 text-primary" />
           <span className="text-sm font-semibold text-gray-300">
-            Spool Config
+            Spool Size
           </span>
         </div>
 
@@ -373,27 +373,27 @@ export function TechnicalConsoleSidebar({
 
       {/* Filter Clusters Section */}
       <div className="p-4 space-y-1 flex-1 divide-y divide-gray-800/50">
-        {/* Material Base */}
+        {/* Material Types */}
         <FilterCluster 
-          title="Material Base"
+          title="Material Types"
           icon={Layers}
           options={MATERIAL_BASE_OPTIONS}
           selected={localMaterials}
           onToggle={handleMaterialToggle}
         />
 
-        {/* Verified Brands */}
+        {/* Preferred Brands */}
         <FilterCluster 
-          title="Verified Brands"
+          title="Preferred Brands"
           icon={CheckCircle2}
           options={VERIFIED_BRANDS}
           selected={localBrands}
           onToggle={handleBrandToggle}
         />
 
-        {/* Reinforced Material */}
+        {/* Reinforcements */}
         <FilterCluster 
-          title="Reinforced Material"
+          title="Reinforcements"
           icon={Atom}
           options={REINFORCED_OPTIONS}
           selected={localReinforced}
