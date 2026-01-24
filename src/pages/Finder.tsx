@@ -799,6 +799,40 @@ const Finder = () => {
     if (!filaments) return undefined;
     return filterByRegion(filaments);
   }, [filaments, filterByRegion]);
+  
+  // Track search results when they're displayed
+  const prevSearchTermRef = useRef<string>("");
+  useEffect(() => {
+    // Only track when we have a search term and results have loaded
+    if (searchTerm && searchTerm.trim().length > 0 && !isLoading && regionalFilaments !== undefined) {
+      // Only track if search term changed (avoid duplicate tracking)
+      if (prevSearchTermRef.current !== searchTerm) {
+        prevSearchTermRef.current = searchTerm;
+        
+        // Get the active filters as strings
+        const appliedFilters: string[] = [];
+        if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
+          appliedFilters.push(`material:${selectedMaterials.join(",")}`);
+        }
+        if (selectedBrands.length > 0) {
+          appliedFilters.push(`brand:${selectedBrands.join(",")}`);
+        }
+        if (priceRange[0] > 0 || priceRange[1] < 100) {
+          appliedFilters.push(`price:${priceRange[0]}-${priceRange[1]}`);
+        }
+        
+        // Calculate result count
+        const resultCount = regionalFilaments?.length || 0;
+        
+        trackSearch({
+          query: searchTerm,
+          result_count: resultCount,
+          has_results: resultCount > 0,
+          filters_applied: appliedFilters,
+        });
+      }
+    }
+  }, [searchTerm, isLoading, regionalFilaments, selectedMaterials, selectedBrands, priceRange, trackSearch]);
 
   // Get accurate total filament count (bypasses 1000 row limit)
   const { data: filamentCount } = useQuery({
