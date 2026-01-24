@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { FileText, Clock, ArrowLeft, Download } from "lucide-react";
+import SubscribeForUpdates from "@/components/SubscribeForUpdates";
 
 const ResourcesProfiles = () => {
   return (
@@ -80,6 +81,8 @@ const ResourcesProfiles = () => {
                   Material-specific settings
                 </li>
               </ul>
+
+              <SubscribeForUpdates topic="print profiles" className="mb-8 text-left" />
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link 
