@@ -15,6 +15,7 @@ import {
   Droplets,
   X
 } from "lucide-react";
+import { FeatureHelpIcon } from "@/components/onboarding";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { useNozzleConfig, NOZZLE_SIZES, FLOW_TYPES, NOZZLE_MATERIALS, FLOW_TYPE_LABELS, NOZZLE_MATERIAL_LABELS, type NozzleSize, type FlowType, type NozzleMaterial } from "@/hooks/useNozzleConfig";
 import { Button } from "@/components/ui/button";
@@ -227,7 +228,10 @@ export function TechnicalConsoleSidebar({
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-[345px] shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border border-gray-800 bg-gray-900/60">
+    <aside 
+      data-tour="printer-filter"
+      className="hidden lg:flex flex-col w-[345px] shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border border-gray-800 bg-gray-900/60"
+    >
       {/* Your Printer Header */}
       <div className="p-4 border-b border-gray-800">
         <div className="flex items-center justify-between">
@@ -319,6 +323,7 @@ export function TechnicalConsoleSidebar({
                 <div className="flex items-center gap-2">
                   <Droplets className="w-3 h-3 text-gray-400" />
                   <span className="text-xs text-gray-400 uppercase tracking-wide">Nozzle Setup</span>
+                  <FeatureHelpIcon feature="nozzle_material" side="right" />
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
                   {/* Nozzle Size Dropdown */}

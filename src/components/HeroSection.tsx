@@ -249,6 +249,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                     key={path.title}
                     to={path.href}
                     className={cardClasses}
+                    data-tour={path.title === "Quick Match" ? "quick-match" : undefined}
                   >
                     {cardContent}
                   </Link>

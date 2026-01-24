@@ -262,6 +262,7 @@ export function CompareTray() {
     <>
       <div 
         ref={trayRef}
+        data-tour="compare-tray"
         className={cn(
           "fixed bottom-4 left-1/2 z-40",
           "w-[95vw] max-w-[1100px]",
