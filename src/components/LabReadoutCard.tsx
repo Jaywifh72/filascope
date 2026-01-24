@@ -252,7 +252,7 @@ export function LabReadoutCard({
           HEADER: Dark header area with brand logo
           ═══════════════════════════════════════════════════════════════ */}
       <div className="relative bg-[#14171C] px-4 pt-4 pb-4 h-[72px]">
-        {/* Compare Button - TOP-RIGHT corner with enhanced visibility on hover */}
+        {/* Compare Button - Persistent with enhanced visibility */}
         <div 
           className="absolute top-3 right-3 z-10"
           onMouseEnter={() => setShowTooltip(true)}
@@ -265,27 +265,35 @@ export function LabReadoutCard({
             aria-checked={isSelected}
             role="checkbox"
             className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer",
+              "rounded-full flex items-center justify-center cursor-pointer",
+              "transition-all duration-200 ease-out",
+              // Selected state - always visible with glow
               isSelected || isPendingSelection
-                ? "bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.5)]"
+                ? "w-6 h-6 bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.5)]"
                 : cn(
-                    "bg-gray-800/80 border-2 border-gray-600",
-                    "opacity-0 group-hover:opacity-100",
-                    "hover:border-primary hover:bg-primary/20"
+                    // Default state - subtle but visible
+                    "w-5 h-5 bg-gray-800/60 border border-gray-600/60 opacity-50",
+                    // Hover state - prominent
+                    "group-hover:w-6 group-hover:h-6 group-hover:opacity-100",
+                    "group-hover:border-primary/60 group-hover:bg-primary/20",
+                    "hover:!opacity-100 hover:!scale-110 hover:!border-primary hover:!bg-primary/30"
                   ),
-              isCompareDisabled && "opacity-50 cursor-not-allowed"
+              isCompareDisabled && "opacity-30 cursor-not-allowed"
             )}
           >
             {isSelected || isPendingSelection ? (
-              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+              <Check className="w-3.5 h-3.5 text-white animate-check-draw" strokeWidth={3} />
             ) : (
-              <Plus className="w-4 h-4 text-gray-300 group-hover:text-primary" />
+              <Plus className={cn(
+                "text-gray-400 transition-all duration-200",
+                "w-3 h-3 group-hover:w-3.5 group-hover:h-3.5 group-hover:text-primary"
+              )} />
             )}
           </button>
           
           {/* Tooltip */}
           {showTooltip && !isSelected && !isCompareDisabled && (
-            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20 shadow-lg">
+            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20 shadow-lg border border-gray-700">
               Add to Compare
             </div>
           )}

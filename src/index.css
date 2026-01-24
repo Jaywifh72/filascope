@@ -1105,6 +1105,25 @@ All colors MUST be HSL.
   animation: badgePulseGlow 2s ease-in-out infinite;
 }
 
+/* Checkmark draw-in animation for compare buttons */
+@keyframes checkDraw {
+  0% {
+    stroke-dashoffset: 20;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-check-draw {
+  animation: checkDraw 0.25s ease-out forwards;
+}
+
 /* Scrollbar styles for compare tray */
 .scrollbar-thin::-webkit-scrollbar {
   height: 4px;
