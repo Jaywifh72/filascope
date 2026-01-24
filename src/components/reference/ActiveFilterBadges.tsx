@@ -14,7 +14,7 @@ export function ActiveFilterBadges({ activeFilters, onRemove }: ActiveFilterBadg
       {activeFilters.map(filter => (
         <div
           key={`${filter.categoryId}-${filter.optionValue}`}
-          className="h-8 px-3 bg-primary/15 border border-primary/30 rounded-md text-[13px] font-semibold text-primary inline-flex items-center gap-2"
+          className="h-8 px-3 bg-primary/20 border border-primary rounded-md text-[13px] font-semibold text-primary inline-flex items-center gap-2 animate-filter-activate shadow-[0_0_8px_rgba(20,184,166,0.15)]"
         >
           <span>
             {filter.optionLabel}
