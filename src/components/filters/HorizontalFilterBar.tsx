@@ -86,11 +86,18 @@ interface HorizontalFilterBarProps {
 
 type DropdownType = 'material' | 'brand' | 'price' | null;
 
-// Shared filter button styles
+// Shared filter button styles with enhanced active states
 const filterButtonBase = "h-9 px-3 py-2 gap-2 min-w-[120px] justify-between text-sm rounded-lg border transition-all duration-200";
-const filterButtonDefault = "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600";
-const filterButtonActive = "border-primary bg-primary/10 text-primary";
+const filterButtonDefault = "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600 hover:scale-[1.01]";
+const filterButtonActive = "border-primary bg-primary/20 text-primary shadow-[0_0_8px_rgba(20,184,166,0.15)] animate-filter-activate";
 const filterButtonOpen = "ring-2 ring-primary/50";
+
+// Count badge component for active filter indicators
+const FilterCountBadge = ({ count }: { count: number }) => (
+  <span className="bg-primary text-primary-foreground rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center text-xs font-semibold tabular-nums shadow-sm">
+    {count}
+  </span>
+);
 
 export function HorizontalFilterBar({
   materialCategories,
@@ -213,21 +220,34 @@ export function HorizontalFilterBar({
   };
 
   const getSelectedMaterialLabel = () => {
-    if (selectedMaterial === "All") return "Material Type";
-    return selectedMaterial;
+    return "Material";
   };
 
   const getSelectedBrandsLabel = () => {
-    if (selectedBrands.length === 0) return "Brand";
-    if (selectedBrands.length === 1) return selectedBrands[0];
-    return `${selectedBrands.length} Brands`;
+    return "Brand";
   };
 
   const getPriceLabel = () => {
-    if (priceRange[0] === 0 && priceRange[1] >= maxPriceLimit) return "Price Range";
-    if (priceRange[0] === 0) return `Under $${priceRange[1]}/kg`;
-    if (priceRange[1] >= maxPriceLimit) return `Over $${priceRange[0]}/kg`;
-    return `$${priceRange[0]}-$${priceRange[1]}/kg`;
+    return "Price";
+  };
+  
+  // Get display value for active filters
+  const getMaterialDisplayValue = () => {
+    if (selectedMaterial === "All") return null;
+    return selectedMaterial;
+  };
+  
+  const getBrandDisplayValue = () => {
+    if (selectedBrands.length === 0) return null;
+    if (selectedBrands.length === 1) return selectedBrands[0];
+    return null; // Will show count badge instead
+  };
+  
+  const getPriceDisplayValue = () => {
+    if (priceRange[0] === 0 && priceRange[1] >= maxPriceLimit) return null;
+    if (priceRange[0] === 0) return `<$${priceRange[1]}`;
+    if (priceRange[1] >= maxPriceLimit) return `>$${priceRange[0]}`;
+    return `$${priceRange[0]}-${priceRange[1]}`;
   };
 
   // Brand row component for reuse
@@ -288,20 +308,20 @@ export function HorizontalFilterBar({
               onClick={() => toggleDropdown('material')} 
               className={cn(
                 filterButtonBase, 
-                filterButtonDefault, 
+                isMaterialActive ? filterButtonActive : filterButtonDefault,
                 openDropdown === 'material' && filterButtonOpen, 
-                isMaterialActive && filterButtonActive, 
                 "flex items-center min-w-[140px]"
               )}
             >
-              {/* Active indicator dot */}
-              {isMaterialActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-              )}
-              <span className="truncate flex-1 text-left">{getSelectedMaterialLabel()}</span>
+              <span className="truncate flex-1 text-left">
+                {getSelectedMaterialLabel()}
+                {getMaterialDisplayValue() && (
+                  <span className="ml-1 font-medium">({getMaterialDisplayValue()})</span>
+                )}
+              </span>
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform shrink-0",
-                openDropdown === 'material' ? "rotate-180 text-primary" : "text-gray-500"
+                openDropdown === 'material' ? "rotate-180 text-primary" : isMaterialActive ? "text-primary" : "text-gray-500"
               )} />
             </button>
 
@@ -352,20 +372,22 @@ export function HorizontalFilterBar({
               onClick={() => toggleDropdown('brand')} 
               className={cn(
                 filterButtonBase, 
-                filterButtonDefault, 
+                isBrandActive ? filterButtonActive : filterButtonDefault,
                 openDropdown === 'brand' && filterButtonOpen, 
-                isBrandActive && filterButtonActive, 
                 "flex items-center"
               )}
             >
-              {/* Active indicator dot */}
-              {isBrandActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-              )}
-              <span className="truncate flex-1 text-left">{getSelectedBrandsLabel()}</span>
+              <span className="truncate flex-1 text-left">
+                {getSelectedBrandsLabel()}
+                {getBrandDisplayValue() && (
+                  <span className="ml-1 font-medium">({getBrandDisplayValue()})</span>
+                )}
+              </span>
+              {/* Show count badge for multiple selections */}
+              {selectedBrands.length > 1 && <FilterCountBadge count={selectedBrands.length} />}
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform shrink-0",
-                openDropdown === 'brand' ? "rotate-180 text-primary" : "text-gray-500"
+                openDropdown === 'brand' ? "rotate-180 text-primary" : isBrandActive ? "text-primary" : "text-gray-500"
               )} />
             </button>
 
@@ -443,20 +465,20 @@ export function HorizontalFilterBar({
               onClick={() => toggleDropdown('price')} 
               className={cn(
                 filterButtonBase, 
-                filterButtonDefault, 
+                isPriceActive ? filterButtonActive : filterButtonDefault,
                 openDropdown === 'price' && filterButtonOpen, 
-                isPriceActive && filterButtonActive, 
                 "flex items-center min-w-[130px]"
               )}
             >
-              {/* Active indicator dot */}
-              {isPriceActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-              )}
-              <span className="truncate flex-1 text-left">{getPriceLabel()}</span>
+              <span className="truncate flex-1 text-left">
+                {getPriceLabel()}
+                {getPriceDisplayValue() && (
+                  <span className="ml-1 font-medium">({getPriceDisplayValue()})</span>
+                )}
+              </span>
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform shrink-0",
-                openDropdown === 'price' ? "rotate-180 text-primary" : "text-gray-500"
+                openDropdown === 'price' ? "rotate-180 text-primary" : isPriceActive ? "text-primary" : "text-gray-500"
               )} />
             </button>
 
@@ -541,19 +563,14 @@ export function HorizontalFilterBar({
             onClick={onOpenMoreFilters} 
             className={cn(
               filterButtonBase, 
-              filterButtonDefault, 
-              moreFiltersCount > 0 && filterButtonActive, 
-              "flex items-center min-w-[130px]"
+              moreFiltersCount > 0 ? filterButtonActive : filterButtonDefault, 
+              "flex items-center min-w-[140px]"
             )}
           >
-            <SlidersHorizontal className="h-4 w-4 shrink-0" />
+            <SlidersHorizontal className={cn("h-4 w-4 shrink-0", moreFiltersCount > 0 && "text-primary")} />
             <span className="flex-1 text-left">More Filters</span>
-            {moreFiltersCount > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center text-xs font-medium">
-                {moreFiltersCount}
-              </span>
-            )}
-            <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
+            {moreFiltersCount > 0 && <FilterCountBadge count={moreFiltersCount} />}
+            <ChevronDown className={cn("h-4 w-4 shrink-0", moreFiltersCount > 0 ? "text-primary" : "text-gray-500")} />
           </button>
 
           {/* Clear All Link - Only show when filters are active */}
