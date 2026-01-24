@@ -1,10 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
-import { CheckCircle, XCircle, TreeDeciduous, Layers, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { CheckCircle, XCircle, TreeDeciduous, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 
@@ -30,22 +29,12 @@ interface Filament {
 
 interface FilamentTableViewProps {
   filaments: Filament[];
-  sortBy: string;
-  onSortChange: (sortBy: string) => void;
   isInCompare: (id: string) => boolean;
   addItem: (item: any) => void;
   removeItem: (id: string) => void;
   getAffiliateUrl: (url: string, vendor: string | null) => string | null;
   hexSearch?: string;
   getColorMatchPercent?: (searchHex: string, filamentHex: string) => number;
-}
-
-type SortColumn = "brand" | "truecost" | "price" | "score" | "material";
-type SortDirection = "asc" | "desc";
-
-interface SortConfig {
-  column: SortColumn | null;
-  direction: SortDirection;
 }
 
 // Helper functions for composite materials
@@ -62,87 +51,8 @@ const getWoodPercentage = (filament: Filament) => filament.wood_powder_percentag
 const getGlassFiberPercentage = (filament: Filament) => filament.glass_fiber_percentage;
 const getCarbonFiberPercentage = (filament: Filament) => filament.carbon_fiber_percentage;
 
-// Parse current sort string to get column and direction
-const parseSortBy = (sortBy: string): SortConfig => {
-  const parts = sortBy.split("-");
-  const direction = parts[parts.length - 1] as SortDirection;
-  const column = parts.slice(0, -1).join("-") as SortColumn;
-  
-  // Map sort values to columns
-  const columnMap: Record<string, SortColumn> = {
-    "name": "brand",
-    "truecost": "truecost",
-    "price": "price",
-    "score": "score",
-    "material": "material",
-  };
-  
-  return {
-    column: columnMap[column] || null,
-    direction: direction === "desc" ? "desc" : "asc"
-  };
-};
-
-// Convert sort config back to sortBy string
-const toSortByString = (column: SortColumn, direction: SortDirection): string => {
-  const columnMap: Record<SortColumn, string> = {
-    "brand": "name",
-    "truecost": "truecost",
-    "price": "price",
-    "score": "score",
-    "material": "material",
-  };
-  return `${columnMap[column]}-${direction}`;
-};
-
-interface SortableHeaderProps {
-  column: SortColumn;
-  label: string;
-  sortConfig: SortConfig;
-  onSort: (column: SortColumn) => void;
-  className?: string;
-  highlightColor?: string;
-}
-
-function SortableHeader({ column, label, sortConfig, onSort, className, highlightColor }: SortableHeaderProps) {
-  const isActive = sortConfig.column === column;
-  
-  return (
-    <th 
-      className={cn(
-        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group transition-colors hover:bg-gray-800/30",
-        isActive ? "text-primary" : highlightColor || "text-gray-500",
-        className
-      )}
-      onClick={() => onSort(column)}
-      role="columnheader"
-      aria-sort={isActive ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
-    >
-      <div className="flex items-center gap-1">
-        <span>{label}</span>
-        <span className={cn(
-          "transition-opacity",
-          isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
-        )}>
-          {isActive ? (
-            sortConfig.direction === "asc" ? (
-              <ChevronUp className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
-            )
-          ) : (
-            <ChevronsUpDown className="w-3.5 h-3.5" />
-          )}
-        </span>
-      </div>
-    </th>
-  );
-}
-
 export function FilamentTableView({
   filaments,
-  sortBy,
-  onSortChange,
   isInCompare,
   addItem,
   removeItem,
@@ -151,20 +61,7 @@ export function FilamentTableView({
   getColorMatchPercent,
 }: FilamentTableViewProps) {
   const navigate = useNavigate();
-  const sortConfig = parseSortBy(sortBy);
   const { formatPrice } = useCurrency();
-  
-  const handleSort = (column: SortColumn) => {
-    if (sortConfig.column === column) {
-      // Toggle direction
-      const newDirection = sortConfig.direction === "asc" ? "desc" : "asc";
-      onSortChange(toSortByString(column, newDirection));
-    } else {
-      // Default to ascending for new column (except score which defaults to desc)
-      const defaultDirection = column === "score" ? "desc" : "asc";
-      onSortChange(toSortByString(column, defaultDirection));
-    }
-  };
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border/50" role="region" aria-label="Filament comparison table">
@@ -173,42 +70,13 @@ export function FilamentTableView({
           <tr className="border-b border-border">
             <th className="py-3 px-2 w-8" aria-label="Selection"></th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Color</th>
-            <SortableHeader 
-              column="brand" 
-              label="Brand" 
-              sortConfig={sortConfig} 
-              onSort={handleSort}
-            />
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Brand</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Product</th>
-            <SortableHeader 
-              column="material" 
-              label="Type" 
-              sortConfig={sortConfig} 
-              onSort={handleSort}
-            />
-            <SortableHeader 
-              column="truecost" 
-              label="True Cost" 
-              sortConfig={sortConfig} 
-              onSort={handleSort}
-              className="text-right"
-              highlightColor="text-orange-400"
-            />
-            <SortableHeader 
-              column="price" 
-              label="Price" 
-              sortConfig={sortConfig} 
-              onSort={handleSort}
-              className="text-right"
-            />
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
+            <th className="py-3 px-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-right">True Cost</th>
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Price</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Stock</th>
-            <SortableHeader 
-              column="score" 
-              label="Rating" 
-              sortConfig={sortConfig} 
-              onSort={handleSort}
-              className="text-right"
-            />
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Rating</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Actions</th>
           </tr>
         </thead>
