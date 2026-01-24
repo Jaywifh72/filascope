@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
 import { SiteFooter } from "./components/SiteFooter";
+import { RegionProvider } from "./contexts/RegionContext";
 import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
 import { CompareTray } from "./components/CompareTray";
@@ -105,8 +106,9 @@ const App = () => (
   <ErrorBoundary>
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <CurrencyProvider>
-        <CompatibleCountProvider>
+      <RegionProvider>
+        <CurrencyProvider>
+          <CompatibleCountProvider>
           <CompareProvider>
             <PrinterCompareProvider>
               <BrandCompareProvider>
@@ -208,9 +210,10 @@ const App = () => (
               </BrandCompareProvider>
           </PrinterCompareProvider>
         </CompareProvider>
-      </CompatibleCountProvider>
-    </CurrencyProvider>
-  </QueryClientProvider>
+          </CompatibleCountProvider>
+        </CurrencyProvider>
+      </RegionProvider>
+    </QueryClientProvider>
   </HelmetProvider>
   </ErrorBoundary>
 );
