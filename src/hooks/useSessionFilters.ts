@@ -41,7 +41,7 @@ const defaultFilters: FilamentFiltersState = {
   amsOnly: false,
   selectedBrands: [],
   maxPrice: "",
-  sortBy: "rating-desc",
+  sortBy: "scoring-desc",
   // Surface Finish
   matte: false,
   silk: false,
