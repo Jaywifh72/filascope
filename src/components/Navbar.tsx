@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Sparkles, Puzzle, Wand2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Puzzle, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe, SlidersHorizontal, AlertCircle, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -25,8 +25,8 @@ const Navbar = () => {
   // Trending panel state
   const trendingPanel = useTrendingPanel();
 
-  // Check if Resources dropdown should be active
-  const isResourcesActive = ['/accessories', '/reference', '/wizard', '/learn'].some(path => location.pathname.startsWith(path));
+  // Check if Learn dropdown should be active
+  const isLearnActive = ['/accessories', '/reference', '/learn', '/compare', '/guides', '/resources/profiles'].some(path => location.pathname.startsWith(path));
 
   // Check active nav link
   const isActive = (path: string) => {
@@ -109,40 +109,39 @@ const Navbar = () => {
       </Link>;
   };
 
-  // Resources menu items (shared between desktop and mobile)
-  const resourcesItems = [{
-    to: '/learn',
-    label: 'Guides & Tutorials',
-    icon: BookOpen
-  }, {
-    to: '/accessories',
-    label: 'Accessories',
-    icon: Puzzle
-  }, {
-    to: '/reference/slicers',
-    label: 'Slicers',
-    icon: Scissors
-  }, {
-    to: '/reference/cad',
-    label: '3D Modeling / CAD',
-    icon: Box
-  }, {
-    to: '/reference/repos',
-    label: '3D Print Repos',
-    icon: FolderGit2
-  }, {
-    to: '/reference/influencers',
-    label: 'YouTube Influencers',
-    icon: Youtube
-  }, {
-    to: '/reference/specialty',
-    label: 'Specialty Tools',
-    icon: Sparkles
-  }, {
-    to: '/wizard',
-    label: 'Material Wizard',
-    icon: Wand2
-  }];
+  // Learn menu sections for mega-menu
+  const learnMenuSections = [
+    {
+      title: 'Guides & References',
+      icon: BookOpen,
+      items: [
+        { to: '/compare', label: 'Material Encyclopedia', icon: BookOpen },
+        { to: '/guides/print-settings', label: 'Print Settings Guide', icon: SlidersHorizontal },
+        { to: '/guides/troubleshooting', label: 'Troubleshooting', icon: AlertCircle },
+      ]
+    },
+    {
+      title: 'Tools & Software',
+      icon: Wrench,
+      items: [
+        { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
+        { to: '/reference/cad', label: '3D Modeling Software', icon: Box },
+        { to: '/resources/profiles', label: 'Print Profiles', icon: FileText },
+      ]
+    },
+    {
+      title: 'Community',
+      icon: Globe,
+      items: [
+        { to: '/reference/repos', label: 'Model Repositories', icon: FolderGit2 },
+        { to: '/reference/influencers', label: 'Creator Spotlights', icon: Youtube },
+        { to: '/accessories', label: 'Accessories & Upgrades', icon: Puzzle },
+      ]
+    }
+  ];
+
+  // Flattened items for tablet/mobile "More" dropdown
+  const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
       <nav className="sticky top-0 z-50 bg-gray-950 shadow-lg">
         {/* Bottom border for depth */}
@@ -167,59 +166,41 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">Deals</LabNavLink>
             
-            {/* Resources Dropdown */}
+            {/* Learn Dropdown - Mega Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isResourcesActive ? 'text-primary' : 'text-gray-400')}>
-                  Resources
+                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isLearnActive ? 'text-primary' : 'text-gray-400')}>
+                  Learn
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/accessories" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <Puzzle className="w-4 h-4 text-muted-foreground" />
-                    Accessories
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-2 bg-border/50" />
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/reference/slicers" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <Scissors className="w-4 h-4 text-muted-foreground" />
-                    Slicers
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/reference/cad" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <Box className="w-4 h-4 text-muted-foreground" />
-                    3D Modeling / CAD
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/reference/repos" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <FolderGit2 className="w-4 h-4 text-muted-foreground" />
-                    3D Print Repos
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/reference/influencers" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <Youtube className="w-4 h-4 text-muted-foreground" />
-                    YouTube Influencers
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/reference/specialty" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <Sparkles className="w-4 h-4 text-muted-foreground" />
-                    Specialty Tools
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-2 bg-border/50" />
-                <DropdownMenuItem asChild className="rounded-lg">
-                  <Link to="/wizard" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                    <Wand2 className="w-4 h-4 text-muted-foreground" />
-                    Material Wizard
-                  </Link>
-                </DropdownMenuItem>
+              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[400px] p-4">
+                {learnMenuSections.map((section, sectionIndex) => (
+                  <div key={section.title}>
+                    {/* Section Header */}
+                    <div className="flex items-center gap-2 px-2 py-2">
+                      <section.icon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        {section.title}
+                      </span>
+                    </div>
+                    
+                    {/* Section Items */}
+                    {section.items.map(item => (
+                      <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+                        <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                    
+                    {/* Divider between sections */}
+                    {sectionIndex < learnMenuSections.length - 1 && (
+                      <div className="border-t border-border/30 my-2" />
+                    )}
+                  </div>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -240,16 +221,16 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">Deals</LabNavLink>
             
-            {/* More Dropdown (Resources collapsed) */}
+            {/* More Dropdown (Learn collapsed) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isResourcesActive ? 'text-primary' : 'text-gray-400')}>
+                <button className={cn("relative flex items-center gap-1.5 py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary", "hover:text-white", isLearnActive ? 'text-primary' : 'text-gray-400')}>
                   <MoreHorizontal className="w-4 h-4" />
                   More
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
-                {resourcesItems.map(item => <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+                {learnItemsFlat.map(item => <DropdownMenuItem key={item.to} asChild className="rounded-lg">
                     <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                       <item.icon className="w-4 h-4 text-muted-foreground" />
                       {item.label}
@@ -368,15 +349,25 @@ const Navbar = () => {
 
             <div className="border-t border-border/30 my-2" />
 
-            {/* Resources Section */}
-            <div className="px-4 py-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                Resources
-              </span>
-            </div>
-            {resourcesItems.map(item => <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
-                {item.label}
-              </MobileNavLink>)}
+            {/* Learn Sections */}
+            {learnMenuSections.map((section, sectionIndex) => (
+              <div key={section.title}>
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <section.icon className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                    {section.title}
+                  </span>
+                </div>
+                {section.items.map(item => (
+                  <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
+                    {item.label}
+                  </MobileNavLink>
+                ))}
+                {sectionIndex < learnMenuSections.length - 1 && (
+                  <div className="border-t border-border/30 my-2" />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </nav>
