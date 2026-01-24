@@ -162,16 +162,19 @@ export function SearchInputWithHistory({
             setTimeout(() => setIsFocused(false), 150);
           }}
           onKeyDown={handleKeyDown}
+          data-search-input="true"
           className={cn(
             "w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-4 text-base bg-white/5 backdrop-blur-md text-foreground",
             "placeholder:text-muted-foreground/70 rounded-xl border transition-all duration-300 outline-none",
             "min-h-[44px] touch-manipulation",
+            // Enhanced focus ring for accessibility - WCAG 2.1 AA compliant
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             isFocused
               ? "border-primary/60 shadow-[0_0_20px_rgba(0,207,232,0.3)]"
               : "border-white/15 hover:border-white/25",
             inputClassName
           )}
-          aria-label="Search filaments, brands, and materials"
+          aria-label="Search filaments, brands, and materials. Press forward slash to focus."
           aria-expanded={showDropdown}
           aria-haspopup="listbox"
           aria-autocomplete="list"

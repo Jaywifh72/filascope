@@ -18,6 +18,7 @@ import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatib
 import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 import { SkipLink } from "./components/accessibility/SkipLink";
 import { ScreenReaderAnnouncerProvider } from "./components/accessibility/ScreenReaderAnnouncer";
+import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboardHandler";
 import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
 // Lazy load route components for better performance
 const Finder = lazy(() => import("./pages/Finder"));
@@ -102,6 +103,7 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
                 {/* PWA: Offline indicator */}
@@ -196,6 +198,7 @@ const App = () => (
                 <PWAInstallBanner />
                 <SiteFooter />
                 </MaintenanceModeWrapper>
+                </GlobalKeyboardHandler>
               </BrowserRouter>
                 </ScreenReaderAnnouncerProvider>
             </TooltipProvider>
