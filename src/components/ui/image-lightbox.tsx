@@ -133,7 +133,15 @@ export function ImageLightbox({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 overflow-hidden bg-black/95 border-none">
+      <DialogContent 
+        className="max-w-[100vw] max-h-[100vh] w-screen h-screen p-0 overflow-hidden bg-black/95 border-none"
+        aria-label={`Image gallery${productTitle ? ` for ${productTitle}` : ''}`}
+        aria-describedby="lightbox-description"
+      >
+        <span id="lightbox-description" className="sr-only">
+          Use arrow keys to navigate between images. Press Escape to close. 
+          {images.length > 1 ? ` Viewing image ${currentIndex + 1} of ${images.length}.` : ''}
+        </span>
         <div
           ref={containerRef}
           className="relative w-full h-full flex items-center justify-center touch-none"
@@ -141,6 +149,8 @@ export function ImageLightbox({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onClick={handleDoubleTap}
+          role="group"
+          aria-roledescription="Image viewer"
         >
           {/* Close Button */}
           <Button
@@ -151,12 +161,13 @@ export function ImageLightbox({
               e.stopPropagation();
               onClose();
             }}
+            aria-label="Close image viewer"
           >
             <X className="h-6 w-6" />
           </Button>
 
           {/* Zoom Controls (Desktop) */}
-          <div className="hidden md:flex absolute top-4 left-4 z-50 gap-2">
+          <div className="hidden md:flex absolute top-4 left-4 z-50 gap-2" role="group" aria-label="Zoom controls">
             <Button
               variant="ghost"
               size="icon"
@@ -166,6 +177,7 @@ export function ImageLightbox({
                 zoomIn();
               }}
               disabled={scale >= 4}
+              aria-label={`Zoom in. Current zoom: ${Math.round(scale * 100)}%`}
             >
               <ZoomIn className="h-5 w-5" />
             </Button>
@@ -178,6 +190,7 @@ export function ImageLightbox({
                 zoomOut();
               }}
               disabled={scale <= 1}
+              aria-label={`Zoom out. Current zoom: ${Math.round(scale * 100)}%`}
             >
               <ZoomOut className="h-5 w-5" />
             </Button>
@@ -188,7 +201,7 @@ export function ImageLightbox({
 
           {/* Image Counter */}
           {images.length > 1 && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black/60 text-white px-4 py-2 rounded-full text-sm">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black/60 text-white px-4 py-2 rounded-full text-sm" role="status" aria-live="polite">
               {currentIndex + 1} / {images.length}
             </div>
           )}
@@ -203,6 +216,7 @@ export function ImageLightbox({
                 e.stopPropagation();
                 goToPrevious();
               }}
+              aria-label="Previous image"
             >
               <ChevronLeft className="h-8 w-8" />
             </Button>
@@ -237,6 +251,7 @@ export function ImageLightbox({
                 e.stopPropagation();
                 goToNext();
               }}
+              aria-label="Next image"
             >
               <ChevronRight className="h-8 w-8" />
             </Button>
