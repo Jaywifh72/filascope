@@ -21,59 +21,65 @@ const MATERIAL_COLORS: Record<string, string> = {
   'PET Family': '#0ea5e9',
   'Polypropylene': '#78716c',
   'Support Materials': '#ec4899',
-  'Specialty': '#f43f5e',
+  'Specialty': '#f43f5e'
 };
 
-
 // Letter groupings for alphabetical sections
-const LETTER_GROUPS = [
-  { label: 'A-D', letters: ['A', 'B', 'C', 'D'] },
-  { label: 'E-H', letters: ['E', 'F', 'G', 'H'] },
-  { label: 'I-L', letters: ['I', 'J', 'K', 'L'] },
-  { label: 'M-P', letters: ['M', 'N', 'O', 'P'] },
-  { label: 'Q-T', letters: ['Q', 'R', 'S', 'T'] },
-  { label: 'U-Z', letters: ['U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] },
-];
-
+const LETTER_GROUPS = [{
+  label: 'A-D',
+  letters: ['A', 'B', 'C', 'D']
+}, {
+  label: 'E-H',
+  letters: ['E', 'F', 'G', 'H']
+}, {
+  label: 'I-L',
+  letters: ['I', 'J', 'K', 'L']
+}, {
+  label: 'M-P',
+  letters: ['M', 'N', 'O', 'P']
+}, {
+  label: 'Q-T',
+  letters: ['Q', 'R', 'S', 'T']
+}, {
+  label: 'U-Z',
+  letters: ['U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+}];
 interface MaterialCategory {
   name: string;
   count: number;
 }
-
 interface Brand {
   name: string;
   count: number;
 }
-
 interface HorizontalFilterBarProps {
   // Material filter
   materialCategories: MaterialCategory[];
   selectedMaterial: string;
   onMaterialChange: (material: string) => void;
-  
+
   // Brand filter
   brands: Brand[];
   selectedBrands: string[];
   onBrandsChange: (brands: string[]) => void;
-  
+
   // Price filter
   priceRange: [number, number];
   maxPriceLimit: number;
   onPriceRangeChange: (range: [number, number]) => void;
-  
+
   // More filters trigger
   onOpenMoreFilters: () => void;
   moreFiltersCount: number;
-  
+
   // Sort
   sortBy: string;
   onSortChange: (sort: string) => void;
-  
+
   // Sticky state
   isSticky?: boolean;
   filterBarRef?: React.RefObject<HTMLDivElement>;
 }
-
 type DropdownType = 'material' | 'brand' | 'price' | null;
 
 // Shared filter button styles
@@ -81,7 +87,6 @@ const filterButtonBase = "h-9 px-4 py-2 gap-2 min-w-[120px] justify-between text
 const filterButtonDefault = "bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600";
 const filterButtonActive = "border-primary bg-primary/10 text-primary";
 const filterButtonOpen = "ring-2 ring-primary/50";
-
 export function HorizontalFilterBar({
   materialCategories,
   selectedMaterial,
@@ -97,7 +102,7 @@ export function HorizontalFilterBar({
   sortBy,
   onSortChange,
   isSticky = false,
-  filterBarRef,
+  filterBarRef
 }: HorizontalFilterBarProps) {
   const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
   const [brandSearch, setBrandSearch] = useState("");
@@ -105,10 +110,8 @@ export function HorizontalFilterBar({
   const [tempSelectedBrands, setTempSelectedBrands] = useState<string[]>(selectedBrands);
   const [isApplying, setIsApplying] = useState<'brand' | 'price' | null>(null);
   const [showSuccess, setShowSuccess] = useState<'brand' | 'price' | null>(null);
-  
   const dropdownRef = useRef<HTMLDivElement>(null);
   const brandSearchRef = useRef<HTMLInputElement>(null);
-
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -117,7 +120,6 @@ export function HorizontalFilterBar({
         setOpenDropdown(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -145,16 +147,12 @@ export function HorizontalFilterBar({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
-
   const toggleDropdown = (dropdown: DropdownType) => {
     setOpenDropdown(prev => prev === dropdown ? null : dropdown);
   };
 
   // Filter brands by search
-  const filteredBrands = brands.filter(brand => 
-    brand.name.toLowerCase().includes(brandSearch.toLowerCase())
-  );
-
+  const filteredBrands = brands.filter(brand => brand.name.toLowerCase().includes(brandSearch.toLowerCase()));
   const applyBrandFilter = () => {
     setIsApplying('brand');
     // Brief loading state
@@ -169,7 +167,6 @@ export function HorizontalFilterBar({
       }, 400);
     }, 150);
   };
-
   const applyPriceFilter = () => {
     setIsApplying('price');
     // Brief loading state
@@ -184,18 +181,15 @@ export function HorizontalFilterBar({
       }, 400);
     }, 150);
   };
-
   const getSelectedMaterialLabel = () => {
     if (selectedMaterial === "All") return "Material Type";
     return selectedMaterial;
   };
-
   const getSelectedBrandsLabel = () => {
     if (selectedBrands.length === 0) return "Brand";
     if (selectedBrands.length === 1) return selectedBrands[0];
     return `${selectedBrands.length} Brands`;
   };
-
   const getPriceLabel = () => {
     if (priceRange[0] === 0 && priceRange[1] >= maxPriceLimit) return "Price Range";
     if (priceRange[0] === 0) return `Under $${priceRange[1]}/kg`;
@@ -209,248 +203,136 @@ export function HorizontalFilterBar({
   const isPriceActive = priceRange[0] > 0 || priceRange[1] < maxPriceLimit;
 
   // Brand row component for reuse
-  const BrandRow = ({ brand }: { brand: Brand }) => {
+  const BrandRow = ({
+    brand
+  }: {
+    brand: Brand;
+  }) => {
     const isSelected = tempSelectedBrands.includes(brand.name);
-    return (
-      <label
-        className={cn(
-          "flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors",
-          isSelected
-            ? "bg-primary/10 border border-primary/30"
-            : "hover:bg-muted border border-transparent"
-        )}
-      >
+    return <label className={cn("flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors", isSelected ? "bg-primary/10 border border-primary/30" : "hover:bg-muted border border-transparent")}>
         <div className="flex items-center gap-2">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                setTempSelectedBrands(prev => [...prev, brand.name]);
-              } else {
-                setTempSelectedBrands(prev => prev.filter(b => b !== brand.name));
-              }
-            }}
-          />
+          <Checkbox checked={isSelected} onCheckedChange={checked => {
+          if (checked) {
+            setTempSelectedBrands(prev => [...prev, brand.name]);
+          } else {
+            setTempSelectedBrands(prev => prev.filter(b => b !== brand.name));
+          }
+        }} />
           <span className="text-sm">{brand.name}</span>
           {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
         </div>
         <span className="text-xs text-muted-foreground tabular-nums">
           {brand.count.toLocaleString()}
         </span>
-      </label>
-    );
+      </label>;
   };
-
-  return (
-    <div 
-      ref={(node) => {
-        // Handle both refs
-        (dropdownRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        if (filterBarRef && 'current' in filterBarRef) {
-          (filterBarRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        }
-      }}
-      className={cn(
-        "relative transition-all duration-300 z-30",
-        isSticky 
-          ? "fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-primary/20 shadow-lg shadow-black/20"
-          : "bg-card/50 border-b border-border"
-      )}
-    >
+  return <div ref={node => {
+    // Handle both refs
+    (dropdownRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    if (filterBarRef && 'current' in filterBarRef) {
+      (filterBarRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    }
+  }} className={cn("relative transition-all duration-300 z-30", isSticky ? "fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-primary/20 shadow-lg shadow-black/20" : "bg-card/50 border-b border-border")}>
       <div className="max-w-[1800px] mx-auto px-4 lg:px-6 h-14 flex items-center justify-between gap-4">
         {/* Left side - Filter dropdowns */}
         <div className="flex items-center gap-2">
           {/* Material Type Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => toggleDropdown('material')}
-              className={cn(
-                filterButtonBase,
-                filterButtonDefault,
-                openDropdown === 'material' && filterButtonOpen,
-                isMaterialActive && filterButtonActive,
-                "flex items-center min-w-[140px]"
-              )}
-            >
+            <button onClick={() => toggleDropdown('material')} className={cn(filterButtonBase, filterButtonDefault, openDropdown === 'material' && filterButtonOpen, isMaterialActive && filterButtonActive, "flex items-center min-w-[140px]")}>
               <span className="truncate">{getSelectedMaterialLabel()}</span>
-              <ChevronDown className={cn(
-                "h-4 w-4 transition-transform shrink-0 text-gray-500",
-                openDropdown === 'material' && "rotate-180"
-              )} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0 text-gray-500", openDropdown === 'material' && "rotate-180")} />
             </button>
 
             {/* Material Dropdown Panel */}
-            {openDropdown === 'material' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+            {openDropdown === 'material' && <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
                 <div className="p-2 max-h-[400px] overflow-y-auto">
-                  {materialCategories.map((category) => (
-                    <button
-                      key={category.name}
-                      onClick={() => {
-                        onMaterialChange(category.name);
-                        setOpenDropdown(null);
-                      }}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-colors group",
-                        selectedMaterial === category.name
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-300 hover:bg-gray-700"
-                      )}
-                    >
+                  {materialCategories.map(category => <button key={category.name} onClick={() => {
+                onMaterialChange(category.name);
+                setOpenDropdown(null);
+              }} className={cn("w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm transition-colors group", selectedMaterial === category.name ? "bg-primary/10 text-primary" : "text-gray-300 hover:bg-gray-700")}>
                       <div className="flex items-center gap-3">
                         {/* Color swatch */}
-                        <span 
-                          className="w-3 h-3 rounded-full shrink-0 ring-1 ring-white/20"
-                          style={{ backgroundColor: MATERIAL_COLORS[category.name] || '#6b7280' }}
-                        />
+                        <span className="w-3 h-3 rounded-full shrink-0 ring-1 ring-white/20" style={{
+                    backgroundColor: MATERIAL_COLORS[category.name] || '#6b7280'
+                  }} />
                         {/* Checkmark for selected */}
-                        {selectedMaterial === category.name ? (
-                          <Check className="h-4 w-4 text-primary shrink-0" />
-                        ) : (
-                          <span className="w-4" />
-                        )}
+                        {selectedMaterial === category.name ? <Check className="h-4 w-4 text-primary shrink-0" /> : <span className="w-4" />}
                         <span>{category.name}</span>
                       </div>
                       <span className="text-gray-500 text-xs tabular-nums">
                         {category.count.toLocaleString()}
                       </span>
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Brand Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => toggleDropdown('brand')}
-              className={cn(
-                filterButtonBase,
-                filterButtonDefault,
-                openDropdown === 'brand' && filterButtonOpen,
-                isBrandActive && filterButtonActive,
-                "flex items-center"
-              )}
-            >
+            <button onClick={() => toggleDropdown('brand')} className={cn(filterButtonBase, filterButtonDefault, openDropdown === 'brand' && filterButtonOpen, isBrandActive && filterButtonActive, "flex items-center")}>
               <span className="truncate">{getSelectedBrandsLabel()}</span>
-              <ChevronDown className={cn(
-                "h-4 w-4 transition-transform shrink-0 text-gray-500",
-                openDropdown === 'brand' && "rotate-180"
-              )} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0 text-gray-500", openDropdown === 'brand' && "rotate-180")} />
             </button>
 
             {/* Brand Dropdown Panel */}
-            {openDropdown === 'brand' && (
-              <div className="absolute top-full left-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+            {openDropdown === 'brand' && <div className="absolute top-full left-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
                 {/* Search */}
                 <div className="p-3 border-b border-gray-700">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                    <Input
-                      ref={brandSearchRef}
-                      placeholder="Search brands..."
-                      value={brandSearch}
-                      onChange={(e) => setBrandSearch(e.target.value)}
-                      className="pl-9 h-9 bg-gray-900 border-gray-600 text-white placeholder:text-gray-500"
-                    />
+                    <Input ref={brandSearchRef} placeholder="Search brands..." value={brandSearch} onChange={e => setBrandSearch(e.target.value)} className="pl-9 h-9 bg-gray-900 border-gray-600 text-white placeholder:text-gray-500" />
                   </div>
                 </div>
 
                 {/* Brand List */}
                 <div className="max-h-[350px] overflow-y-auto">
-                  {filteredBrands.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">
+                  {filteredBrands.length === 0 ? <p className="text-sm text-gray-500 text-center py-4">
                       No brands found
-                    </p>
-                  ) : (
-                    <>
+                    </p> : <>
                       {/* All Brands - Flat alphabetical list with numbers first */}
                       <div className="p-2">
-                        {[...filteredBrands]
-                          .sort((a, b) => {
-                            const aStartsWithNumber = /^\d/.test(a.name);
-                            const bStartsWithNumber = /^\d/.test(b.name);
-                            
-                            // Numbers first
-                            if (aStartsWithNumber && !bStartsWithNumber) return -1;
-                            if (!aStartsWithNumber && bStartsWithNumber) return 1;
-                            
-                            // Then alphabetically
-                            return a.name.localeCompare(b.name);
-                          })
-                          .map((brand) => (
-                            <BrandRow key={brand.name} brand={brand} />
-                          ))}
+                        {[...filteredBrands].sort((a, b) => {
+                    const aStartsWithNumber = /^\d/.test(a.name);
+                    const bStartsWithNumber = /^\d/.test(b.name);
+
+                    // Numbers first
+                    if (aStartsWithNumber && !bStartsWithNumber) return -1;
+                    if (!aStartsWithNumber && bStartsWithNumber) return 1;
+
+                    // Then alphabetically
+                    return a.name.localeCompare(b.name);
+                  }).map(brand => <BrandRow key={brand.name} brand={brand} />)}
                       </div>
-                    </>
-                  )}
+                    </>}
                 </div>
 
                 {/* Actions */}
                 <div className="p-3 border-t border-gray-700 flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setTempSelectedBrands([])}
-                    className="text-gray-400 hover:text-white"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setTempSelectedBrands([])} className="text-gray-400 hover:text-white">
                     Clear
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={applyBrandFilter}
-                    disabled={isApplying === 'brand'}
-                    className="min-w-[70px] bg-primary hover:bg-primary/90"
-                  >
-                    {isApplying === 'brand' ? (
-                      <Loader2 className="h-4 w-4 filter-spinner" />
-                    ) : showSuccess === 'brand' ? (
-                      <CheckCircle className="h-4 w-4 text-green-400 success-check" />
-                    ) : (
-                      "Apply"
-                    )}
+                  <Button size="sm" onClick={applyBrandFilter} disabled={isApplying === 'brand'} className="min-w-[70px] bg-primary hover:bg-primary/90">
+                    {isApplying === 'brand' ? <Loader2 className="h-4 w-4 filter-spinner" /> : showSuccess === 'brand' ? <CheckCircle className="h-4 w-4 text-green-400 success-check" /> : "Apply"}
                   </Button>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Price Range Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => toggleDropdown('price')}
-              className={cn(
-                filterButtonBase,
-                filterButtonDefault,
-                openDropdown === 'price' && filterButtonOpen,
-                isPriceActive && filterButtonActive,
-                "flex items-center min-w-[130px]"
-              )}
-            >
+            <button onClick={() => toggleDropdown('price')} className={cn(filterButtonBase, filterButtonDefault, openDropdown === 'price' && filterButtonOpen, isPriceActive && filterButtonActive, "flex items-center min-w-[130px]")}>
               <span className="truncate">{getPriceLabel()}</span>
-              <ChevronDown className={cn(
-                "h-4 w-4 transition-transform shrink-0 text-gray-500",
-                openDropdown === 'price' && "rotate-180"
-              )} />
+              <ChevronDown className={cn("h-4 w-4 transition-transform shrink-0 text-gray-500", openDropdown === 'price' && "rotate-180")} />
             </button>
 
             {/* Price Dropdown Panel */}
-            {openDropdown === 'price' && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+            {openDropdown === 'price' && <div className="absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
                 <div className="p-4 space-y-4">
                   <div className="text-sm font-medium text-white">Price per kg (USD)</div>
                   
                   {/* Slider */}
                   <div className="pt-2">
-                    <Slider
-                      value={tempPriceRange}
-                      onValueChange={(value) => setTempPriceRange(value as [number, number])}
-                      max={maxPriceLimit}
-                      min={0}
-                      step={5}
-                      className="w-full"
-                    />
+                    <Slider value={tempPriceRange} onValueChange={value => setTempPriceRange(value as [number, number])} max={maxPriceLimit} min={0} step={5} className="w-full" />
                     <div className="flex justify-between mt-2 text-sm text-gray-400">
                       <span>${tempPriceRange[0]}</span>
                       <span>${tempPriceRange[1]}{tempPriceRange[1] >= maxPriceLimit ? '+' : ''}</span>
@@ -461,22 +343,13 @@ export function HorizontalFilterBar({
                   <div className="space-y-2">
                     <div className="text-xs text-gray-500">Quick Presets:</div>
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors"
-                        onClick={() => setTempPriceRange([0, 15])}
-                      >
+                      <button className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors" onClick={() => setTempPriceRange([0, 15])}>
                         Budget (&lt;$15)
                       </button>
-                      <button
-                        className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors"
-                        onClick={() => setTempPriceRange([15, 25])}
-                      >
+                      <button className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors" onClick={() => setTempPriceRange([15, 25])}>
                         Mid ($15-25)
                       </button>
-                      <button
-                        className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors"
-                        onClick={() => setTempPriceRange([25, maxPriceLimit])}
-                      >
+                      <button className="h-7 px-3 text-xs rounded-md border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 transition-colors" onClick={() => setTempPriceRange([25, maxPriceLimit])}>
                         Premium (&gt;$25)
                       </button>
                     </div>
@@ -485,74 +358,28 @@ export function HorizontalFilterBar({
 
                 {/* Actions */}
                 <div className="p-3 border-t border-gray-700 flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setTempPriceRange([0, maxPriceLimit])}
-                    className="text-gray-400 hover:text-white"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setTempPriceRange([0, maxPriceLimit])} className="text-gray-400 hover:text-white">
                     Clear
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={applyPriceFilter}
-                    disabled={isApplying === 'price'}
-                    className="min-w-[70px] bg-primary hover:bg-primary/90"
-                  >
-                    {isApplying === 'price' ? (
-                      <Loader2 className="h-4 w-4 filter-spinner" />
-                    ) : showSuccess === 'price' ? (
-                      <CheckCircle className="h-4 w-4 text-green-400 success-check" />
-                    ) : (
-                      "Apply"
-                    )}
+                  <Button size="sm" onClick={applyPriceFilter} disabled={isApplying === 'price'} className="min-w-[70px] bg-primary hover:bg-primary/90">
+                    {isApplying === 'price' ? <Loader2 className="h-4 w-4 filter-spinner" /> : showSuccess === 'price' ? <CheckCircle className="h-4 w-4 text-green-400 success-check" /> : "Apply"}
                   </Button>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* More Filters Button */}
-          <button
-            onClick={onOpenMoreFilters}
-            className={cn(
-              filterButtonBase,
-              filterButtonDefault,
-              moreFiltersCount > 0 && filterButtonActive,
-              "flex items-center min-w-[130px]"
-            )}
-          >
+          <button onClick={onOpenMoreFilters} className={cn(filterButtonBase, filterButtonDefault, moreFiltersCount > 0 && filterButtonActive, "flex items-center min-w-[130px]")}>
             <SlidersHorizontal className="h-4 w-4" />
             <span>More Filters</span>
-            {moreFiltersCount > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium">
+            {moreFiltersCount > 0 && <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium">
                 {moreFiltersCount}
-              </span>
-            )}
+              </span>}
           </button>
         </div>
 
         {/* Right side - Sort */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 hidden sm:inline">Sort:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-gray-700 bg-gray-800 text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-          >
-            <option value="truecost-asc">True Cost: Low to High</option>
-            <option value="truecost-desc">True Cost: High to Low</option>
-            <option value="print-desc">Print: High to Low</option>
-            <option value="print-asc">Print: Low to High</option>
-            <option value="strength-desc">Strength: High to Low</option>
-            <option value="strength-asc">Strength: Low to High</option>
-            <option value="heat-desc">Heat: High to Low</option>
-            <option value="heat-asc">Heat: Low to High</option>
-            <option value="score-desc">Score: High to Low</option>
-            <option value="score-asc">Score: Low to High</option>
-          </select>
-        </div>
+        
       </div>
-    </div>
-  );
+    </div>;
 }
