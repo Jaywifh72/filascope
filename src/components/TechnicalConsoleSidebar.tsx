@@ -24,15 +24,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Material Base options
+// Material Base options - using category IDs that match MATERIAL_CATEGORIES
 const MATERIAL_BASE_OPTIONS = [
-  { id: "pla", label: "PLA" },
-  { id: "petg", label: "PETG" },
-  { id: "abs", label: "ABS" },
-  { id: "asa", label: "ASA" },
-  { id: "tpu", label: "TPU" },
-  { id: "nylon", label: "Nylon" },
-  { id: "pc", label: "PC" },
+  { id: "pla-family", label: "PLA" },
+  { id: "petg-family", label: "PETG" },
+  { id: "abs-family", label: "ABS" },
+  { id: "asa-family", label: "ASA" },
+  { id: "flexible", label: "TPU/Flex" },
+  { id: "nylon-family", label: "Nylon/PA" },
+  { id: "polycarbonate", label: "PC" },
+  { id: "copolyester", label: "Copolyester" },
+  { id: "high-performance", label: "High Perf" },
+  { id: "bio-materials", label: "Bio-Based" },
 ];
 
 // Verified Brands

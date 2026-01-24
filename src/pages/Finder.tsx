@@ -718,8 +718,25 @@ const Finder = () => {
             const materialFilters = allRawMaterials.map(m => `material.eq.${m}`).join(",");
             query = query.or(materialFilters);
           } else {
-            const materialFilters = selectedMaterials.map(m => `material.ilike.%${m}%`).join(",");
-            query = query.or(materialFilters);
+            // Check if any selected materials are category IDs (e.g., "nylon-family")
+            // If so, expand them to include all materials in that category
+            const expandedMaterials: string[] = [];
+            selectedMaterials.forEach(m => {
+              const category = MATERIAL_CATEGORIES.find(c => c.id === m);
+              if (category) {
+                // It's a category ID - add all materials from this category
+                expandedMaterials.push(...category.materials);
+              } else {
+                // It's a direct material name - add as-is
+                expandedMaterials.push(m);
+              }
+            });
+            
+            // Build OR filter for all expanded materials
+            if (expandedMaterials.length > 0) {
+              const materialFilters = expandedMaterials.map(m => `material.eq.${m}`).join(",");
+              query = query.or(materialFilters);
+            }
           }
         }
 
