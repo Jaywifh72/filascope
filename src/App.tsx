@@ -77,6 +77,9 @@ const QuizScoringTest = lazy(() => import("./components/reference/repos/quiz/Qui
 const LearningCenter = lazy(() => import("./pages/LearningCenter"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const BrandComparePage = lazy(() => import("./pages/BrandComparePage"));
+const GuidePrintSettings = lazy(() => import("./pages/GuidePrintSettings"));
+const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
+const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 
 const queryClient = new QueryClient();
 
@@ -157,6 +160,9 @@ const App = () => (
                   <Route path="/td-database" element={<TDDatabase />} />
                   <Route path="/learn" element={<LearningCenter />} />
                   <Route path="/learn/:slug" element={<GuideDetail />} />
+                  <Route path="/guides/print-settings" element={<GuidePrintSettings />} />
+                  <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
+                  <Route path="/resources/profiles" element={<ResourcesProfiles />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
