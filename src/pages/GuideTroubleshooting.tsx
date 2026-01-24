@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { AlertCircle, Clock, ArrowLeft, Wrench } from "lucide-react";
+import SubscribeForUpdates from "@/components/SubscribeForUpdates";
 
 const GuideTroubleshooting = () => {
   return (
@@ -80,6 +81,8 @@ const GuideTroubleshooting = () => {
                   Print quality optimization
                 </li>
               </ul>
+
+              <SubscribeForUpdates topic="the troubleshooting guide" className="mb-8 text-left" />
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link 

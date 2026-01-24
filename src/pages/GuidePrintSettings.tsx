@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { SlidersHorizontal, Clock, ArrowLeft } from "lucide-react";
+import SubscribeForUpdates from "@/components/SubscribeForUpdates";
 
 const GuidePrintSettings = () => {
   return (
@@ -80,6 +81,8 @@ const GuidePrintSettings = () => {
                   First layer adhesion tips
                 </li>
               </ul>
+
+              <SubscribeForUpdates topic="the print settings guide" className="mb-8 text-left" />
               
               <Link 
                 to="/learn"
