@@ -11,6 +11,7 @@ import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 const Navbar = () => {
   const {
     user,
@@ -208,10 +209,17 @@ const Navbar = () => {
             <div className="h-5 w-px bg-border/50 mx-2" />
 
             {/* Compare Button - Ghost with teal border */}
-            <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
-              <GitCompareArrows className="w-3.5 h-3.5" />
-              Compare
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                  <GitCompareArrows className="w-3.5 h-3.5" />
+                  Compare
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-gray-900 border-border text-sm">
+                Compare materials side-by-side
+              </TooltipContent>
+            </Tooltip>
           </nav>
 
           {/* Tablet Navigation (md to lg) */}
@@ -240,10 +248,17 @@ const Navbar = () => {
             </DropdownMenu>
 
             {/* Compare Button - Tablet */}
-            <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
-              <GitCompareArrows className="w-3.5 h-3.5" />
-              Compare
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                  <GitCompareArrows className="w-3.5 h-3.5" />
+                  Compare
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-gray-900 border-border text-sm">
+                Compare materials side-by-side
+              </TooltipContent>
+            </Tooltip>
           </nav>
 
           {/* Right-side utilities */}
