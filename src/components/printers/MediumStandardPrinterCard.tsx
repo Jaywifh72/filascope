@@ -7,6 +7,7 @@ import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
 import ComparisonCheckbox from "./ComparisonCheckbox";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -183,22 +184,17 @@ export default function MediumStandardPrinterCard({
               </div>
             )}
 
-            {/* Printer Image */}
+            {/* Printer Image - Using OptimizedImage */}
             <div className={`relative h-[80px] sm:h-[200px] flex items-center justify-center ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
-              {productImage ? (
-                <img 
-                  src={productImage} 
-                  alt={`${printer.brand?.brand} ${printer.model_name}`}
-                  className="max-h-full max-w-full object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-              ) : null}
-              <div className={`flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-                <PrinterIcon className="h-12 w-12 sm:h-20 sm:w-20 text-white/15" />
-              </div>
+              <OptimizedImage
+                src={productImage}
+                alt={`${printer.brand?.brand} ${printer.model_name}`}
+                className="max-h-full max-w-full drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                aspectRatio="auto"
+                objectFit="contain"
+                width={400}
+                fallback={<PrinterIcon className="h-12 w-12 sm:h-20 sm:w-20 text-white/15" />}
+              />
             </div>
           </div>
 

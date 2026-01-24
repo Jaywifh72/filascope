@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { DealShareModal } from "./DealShareModal";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export interface DealFilament {
   id: string;
@@ -74,17 +75,17 @@ export function DealCard({
             <Share2 className="h-4 w-4" />
           </Button>
 
-          {/* Image */}
+          {/* Image - Using OptimizedImage with lazy loading */}
           <div className="relative h-40 bg-gray-800/50 flex items-center justify-center overflow-hidden">
-            {deal.featured_image ? (
-              <img
-                src={deal.featured_image}
-                alt={deal.product_title}
-                className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-              />
-            ) : (
-              <div className="text-4xl text-muted-foreground">📦</div>
-            )}
+            <OptimizedImage
+              src={deal.featured_image}
+              alt={deal.product_title}
+              className="h-full w-full p-4 group-hover:scale-105 transition-transform duration-300"
+              aspectRatio="auto"
+              objectFit="contain"
+              width={320}
+              fallback={<span className="text-4xl text-muted-foreground">📦</span>}
+            />
           </div>
 
           {/* Content */}
