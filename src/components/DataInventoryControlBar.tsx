@@ -29,12 +29,13 @@ interface DataInventoryControlBarProps {
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "truecost-asc", label: "True Cost: Low to High" },
-  { value: "truecost-desc", label: "True Cost: High to Low" },
-  { value: "print-desc", label: "Printability: High to Low" },
-  { value: "strength-desc", label: "Strength: High to Low" },
-  { value: "heat-desc", label: "Heat Resistance: High to Low" },
   { value: "score-desc", label: "Value Score: High to Low" },
+  { value: "score-asc", label: "Value Score: Low to High" },
+  { value: "truecost-asc", label: "Price: Low to High" },
+  { value: "truecost-desc", label: "Price: High to Low" },
+  { value: "print-desc", label: "Printability: Best First" },
+  { value: "strength-desc", label: "Strength: Strongest First" },
+  { value: "heat-desc", label: "Heat Resistance: Highest First" },
 ];
 
 export function DataInventoryControlBar({ 
