@@ -330,7 +330,7 @@ const PrinterQuiz = ({ onClose, onComplete }: PrinterQuizProps) => {
               variant="ghost"
               onClick={handleBack}
               disabled={currentIndex === 0}
-              className="h-12 px-4 md:px-6 font-semibold"
+              className="h-12 px-4 md:px-6 font-semibold min-h-[48px] touch-manipulation"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -339,7 +339,7 @@ const PrinterQuiz = ({ onClose, onComplete }: PrinterQuizProps) => {
             <Button
               onClick={handleNext}
               disabled={!canProceed}
-              className="h-12 px-6 md:px-8 font-bold min-h-[48px] min-w-[120px]"
+              className="h-12 px-6 md:px-8 font-bold min-h-[48px] min-w-[120px] touch-manipulation"
             >
               {isLastQuestion ? (
                 <>
@@ -403,7 +403,7 @@ const QuizOptionButton = forwardRef<HTMLButtonElement, Omit<QuizOptionButtonProp
         className={`
           relative w-full p-4 md:p-5 flex items-center gap-3 md:gap-4 text-left
           rounded-xl border-2 transition-all duration-200
-          min-h-[60px] touch-manipulation
+          min-h-[64px] md:min-h-[60px] touch-manipulation
           ${isSelected 
             ? 'bg-primary/15 border-primary/50' 
             : 'bg-muted/30 border-border hover:bg-muted/50 hover:border-primary/30'
