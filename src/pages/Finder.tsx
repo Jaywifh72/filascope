@@ -1113,7 +1113,7 @@ const Finder = () => {
     }, 0);
   };
 
-  const filteredAndSortedFilaments = regionalFilaments?.filter(f => {
+  const filteredAndSortedFilaments = useMemo(() => regionalFilaments?.filter(f => {
     // Apply price range filter
     if (f.variant_price) {
       if (f.variant_price < priceRange[0] || f.variant_price > priceRange[1]) return false;
@@ -1256,7 +1256,7 @@ const Finder = () => {
       default:
         return getPricePerKg(a) - getPricePerKg(b);
     }
-  });
+  }), [regionalFilaments, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
   // Group filaments by product before pagination
   const groupedFilaments = useMemo(() => {
