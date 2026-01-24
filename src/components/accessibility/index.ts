@@ -13,7 +13,8 @@ export {
 export { 
   FocusRing, 
   useFocusTrap, 
-  useFocusReturn 
+  useFocusReturn,
+  useRovingTabindex 
 } from "./FocusIndicator";
 
 // Accessible form components
@@ -22,3 +23,7 @@ export {
   AccessibleFieldset,
   RequiredIndicator 
 } from "./AccessibleFormField";
+
+// Global keyboard shortcuts
+export { GlobalKeyboardHandler } from "./GlobalKeyboardHandler";
+export { GlobalKeyboardShortcutsDialog } from "./GlobalKeyboardShortcutsDialog";

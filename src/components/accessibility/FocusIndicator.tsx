@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { forwardRef } from "react";
+import { forwardRef, useRef, useEffect, useCallback, useState } from "react";
 
 /**
  * Focus Ring Wrapper Component
@@ -61,15 +61,34 @@ FocusRing.displayName = "FocusRing";
  * 
  * Traps focus within a container for modals, dialogs, etc.
  * WCAG 2.1 AA Requirement: Focus Order (2.4.3)
+ * 
+ * @param containerRef - Reference to the container element
+ * @param isActive - Whether the focus trap is currently active
+ * @param options - Configuration options
  */
-export const useFocusTrap = (containerRef: React.RefObject<HTMLElement>, isActive: boolean) => {
-  const handleKeyDown = (e: KeyboardEvent) => {
+export const useFocusTrap = (
+  containerRef: React.RefObject<HTMLElement>, 
+  isActive: boolean,
+  options?: {
+    /** Automatically focus the first focusable element when activated */
+    autoFocus?: boolean;
+    /** Restore focus to previously focused element when deactivated */
+    restoreFocus?: boolean;
+    /** Initial focus selector (if different from first focusable) */
+    initialFocusSelector?: string;
+  }
+) => {
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+  const { autoFocus = true, restoreFocus = true, initialFocusSelector } = options || {};
+
+  // Handle focus trapping with Tab key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!isActive || !containerRef.current) return;
     
     if (e.key !== "Tab") return;
 
     const focusableElements = containerRef.current.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
     );
 
     if (focusableElements.length === 0) return;
@@ -84,7 +103,44 @@ export const useFocusTrap = (containerRef: React.RefObject<HTMLElement>, isActiv
       e.preventDefault();
       firstElement.focus();
     }
-  };
+  }, [isActive, containerRef]);
+
+  // Auto-setup focus trap when activated
+  useEffect(() => {
+    if (!isActive) {
+      // Restore focus when deactivating
+      if (restoreFocus && previouslyFocusedElement.current) {
+        previouslyFocusedElement.current.focus();
+        previouslyFocusedElement.current = null;
+      }
+      return;
+    }
+
+    // Save current focus before trapping
+    previouslyFocusedElement.current = document.activeElement as HTMLElement;
+
+    // Setup event listener
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('keydown', handleKeyDown as EventListener);
+      
+      // Auto-focus first focusable element
+      if (autoFocus) {
+        const selector = initialFocusSelector || 
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        const firstFocusable = container.querySelector<HTMLElement>(selector);
+        
+        // Delay focus to ensure element is mounted
+        requestAnimationFrame(() => {
+          firstFocusable?.focus();
+        });
+      }
+    }
+
+    return () => {
+      container?.removeEventListener('keydown', handleKeyDown as EventListener);
+    };
+  }, [isActive, autoFocus, restoreFocus, initialFocusSelector, containerRef, handleKeyDown]);
 
   return { handleKeyDown };
 };
@@ -95,17 +151,79 @@ export const useFocusTrap = (containerRef: React.RefObject<HTMLElement>, isActiv
  * Returns focus to the trigger element when a modal/dialog closes
  */
 export const useFocusReturn = () => {
-  const triggerRef = { current: null as HTMLElement | null };
+  const triggerRef = useRef<HTMLElement | null>(null);
 
-  const saveTrigger = () => {
+  const saveTrigger = useCallback(() => {
     triggerRef.current = document.activeElement as HTMLElement;
-  };
+  }, []);
 
-  const returnFocus = () => {
-    if (triggerRef.current) {
-      triggerRef.current.focus();
+  const returnFocus = useCallback(() => {
+    if (triggerRef.current && document.body.contains(triggerRef.current)) {
+      // Use requestAnimationFrame to ensure the element is focusable
+      requestAnimationFrame(() => {
+        triggerRef.current?.focus();
+      });
     }
-  };
+  }, []);
 
-  return { saveTrigger, returnFocus };
+  return { saveTrigger, returnFocus, triggerRef };
+};
+
+/**
+ * Roving Tabindex Hook
+ * 
+ * Implements roving tabindex pattern for lists, grids, and other composite widgets
+ * WCAG 2.1 AA Requirement: Keyboard (2.1.1)
+ */
+export const useRovingTabindex = (
+  items: HTMLElement[],
+  options?: {
+    /** Orientation of the list for arrow key handling */
+    orientation?: 'horizontal' | 'vertical' | 'grid';
+    /** Whether to wrap around at the ends */
+    wrap?: boolean;
+    /** Number of columns for grid orientation */
+    columns?: number;
+  }
+) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const { orientation = 'vertical', wrap = true, columns = 1 } = options || {};
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const { key } = e;
+    let newIndex = activeIndex;
+
+    const isHorizontal = orientation === 'horizontal' || orientation === 'grid';
+    const isVertical = orientation === 'vertical' || orientation === 'grid';
+
+    if (isHorizontal && key === 'ArrowLeft') {
+      newIndex = activeIndex - 1;
+    } else if (isHorizontal && key === 'ArrowRight') {
+      newIndex = activeIndex + 1;
+    } else if (isVertical && key === 'ArrowUp') {
+      newIndex = orientation === 'grid' ? activeIndex - columns : activeIndex - 1;
+    } else if (isVertical && key === 'ArrowDown') {
+      newIndex = orientation === 'grid' ? activeIndex + columns : activeIndex + 1;
+    } else if (key === 'Home') {
+      newIndex = 0;
+    } else if (key === 'End') {
+      newIndex = items.length - 1;
+    } else {
+      return; // Don't prevent default for unhandled keys
+    }
+
+    e.preventDefault();
+
+    // Handle wrapping or clamping
+    if (wrap) {
+      newIndex = (newIndex + items.length) % items.length;
+    } else {
+      newIndex = Math.max(0, Math.min(items.length - 1, newIndex));
+    }
+
+    setActiveIndex(newIndex);
+    items[newIndex]?.focus();
+  }, [activeIndex, items, orientation, wrap, columns]);
+
+  return { activeIndex, setActiveIndex, handleKeyDown };
 };
