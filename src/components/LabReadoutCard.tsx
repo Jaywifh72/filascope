@@ -5,9 +5,7 @@ import {
   Check, 
   ArrowRight,
   Thermometer,
-  Droplets,
   Plus,
-  Columns3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -17,6 +15,7 @@ import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRe
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface Filament {
   id: string;
@@ -305,16 +304,14 @@ export function LabReadoutCard({
           <div className="h-full flex items-center justify-center">
             <div className="h-[90%] flex items-center justify-center">
               {filament.vendor && getBrandLogo(filament.vendor) ? (
-                <img 
+                <OptimizedImage 
                   src={getBrandLogo(filament.vendor)} 
                   alt={filament.vendor}
-                  className="h-full w-auto max-w-[200px] object-contain opacity-70"
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
+                  className="h-full w-auto max-w-[200px] opacity-70"
+                  objectFit="contain"
+                  width={200}
+                  height={48}
+                  priority
                 />
               ) : null}
               <span className={cn(

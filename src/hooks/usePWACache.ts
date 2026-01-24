@@ -57,8 +57,30 @@ export const useRecentlyViewed = () => {
         ...filtered,
       ].slice(0, MAX_CACHED_PRODUCTS);
       
+      // Preload product image for offline access
+      if (product.imageUrl) {
+        preloadImage(product.imageUrl);
+      }
+      
       return updated;
     });
+  }, []);
+
+  // Preload an image for caching
+  const preloadImage = useCallback((url: string) => {
+    if (!url) return;
+    
+    // Use requestIdleCallback for non-blocking preload
+    const load = () => {
+      const img = new Image();
+      img.src = url;
+    };
+    
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(load, { timeout: 3000 });
+    } else {
+      setTimeout(load, 100);
+    }
   }, []);
 
   // Remove a product from cache

@@ -7,6 +7,7 @@ type RoutePreloader = () => Promise<unknown>;
 
 // Map of routes to their dynamic import functions
 const routePreloaders: Record<string, RoutePreloader> = {
+  // Core pages
   '/': () => import('../pages/Finder'),
   '/finder': () => import('../pages/Finder'),
   '/printers': () => import('../pages/Printers'),
@@ -15,6 +16,28 @@ const routePreloaders: Record<string, RoutePreloader> = {
   '/wizard': () => import('../pages/Wizard'),
   '/compare': () => import('../pages/Compare'),
   '/filament': () => import('../pages/FilamentDetail'),
+  
+  // Accessories & Hardware
+  '/accessories': () => import('../pages/Accessories'),
+  
+  // Learn section
+  '/learn': () => import('../pages/LearningCenter'),
+  '/guides/print-settings': () => import('../pages/GuidePrintSettings'),
+  '/guides/troubleshooting': () => import('../pages/GuideTroubleshooting'),
+  
+  // Reference section
+  '/reference/slicers': () => import('../pages/ReferenceSlicers'),
+  '/reference/cad': () => import('../pages/ReferenceCAD'),
+  '/reference/repos': () => import('../pages/ReferenceRepos'),
+  '/reference/influencers': () => import('../pages/ReferenceInfluencers'),
+  
+  // Resources
+  '/resources/profiles': () => import('../pages/ResourcesProfiles'),
+  
+  // User pages
+  '/settings': () => import('../pages/Settings'),
+  '/vault': () => import('../pages/Vault'),
+  '/auth': () => import('../pages/Auth'),
 };
 
 // Track which routes have been preloaded
@@ -88,14 +111,33 @@ export function preloadLikelyRoutes(currentPath: string): void {
 function getLikelyNextRoutes(currentPath: string): string[] {
   const normalizedPath = normalizePath(currentPath);
   
-  // Define likely navigation patterns
+  // Define likely navigation patterns based on user behavior
   const navigationPatterns: Record<string, string[]> = {
-    '/': ['/printers', '/deals', '/wizard', '/brands'],
-    '/finder': ['/printers', '/deals', '/wizard'],
-    '/printers': ['/', '/compare'],
-    '/deals': ['/', '/printers'],
-    '/brands': ['/', '/printers'],
-    '/wizard': ['/'],
+    // Main pages
+    '/': ['/printers', '/deals', '/wizard', '/brands', '/compare'],
+    '/finder': ['/printers', '/deals', '/wizard', '/compare'],
+    '/printers': ['/', '/compare', '/accessories'],
+    '/deals': ['/', '/printers', '/brands'],
+    '/brands': ['/', '/printers', '/deals'],
+    '/wizard': ['/', '/compare'],
+    '/compare': ['/', '/printers', '/materials/compare'],
+    
+    // Accessories flow
+    '/accessories': ['/printers', '/'],
+    
+    // Learn section - users often explore multiple pages
+    '/learn': ['/guides/print-settings', '/guides/troubleshooting', '/reference/slicers'],
+    '/guides/print-settings': ['/guides/troubleshooting', '/reference/slicers'],
+    '/guides/troubleshooting': ['/guides/print-settings', '/'],
+    
+    // Reference section
+    '/reference/slicers': ['/reference/cad', '/reference/repos'],
+    '/reference/cad': ['/reference/slicers', '/reference/repos'],
+    '/reference/repos': ['/reference/slicers', '/reference/influencers'],
+    '/reference/influencers': ['/reference/repos', '/'],
+    
+    // Resources
+    '/resources/profiles': ['/reference/slicers', '/guides/print-settings'],
   };
 
   return navigationPatterns[normalizedPath] || [];
