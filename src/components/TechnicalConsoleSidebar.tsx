@@ -178,7 +178,7 @@ export function TechnicalConsoleSidebar({
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border-r border-gray-800 bg-gray-900/60">
+    <aside className="hidden lg:flex flex-col w-[345px] shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border-r border-gray-800 bg-gray-900/60">
       {/* System Config Header */}
       <div className="p-4 border-b border-gray-800">
         <div className="flex items-center gap-2.5">
