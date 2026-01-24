@@ -115,7 +115,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-5 animate-fade-in"
             >
               <FlaskConical className="h-3.5 w-3.5 text-primary" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-primary">
+              <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-primary">
                 Material Registry
               </span>
             </div>
@@ -133,8 +133,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             
             {/* Sub-text with stats */}
             <p 
-              className="text-sm md:text-base text-muted-foreground font-light leading-relaxed mb-3 max-w-[460px] animate-fade-in font-mono"
-              style={{ animationDelay: "0.15s" }}
+              className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
+              style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
               <span className="text-primary">{filamentCount.toLocaleString()}</span> materials indexed from{" "}
               <span className="text-primary">{brandCount}+</span> manufacturers. 
@@ -192,7 +192,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
 
             {/* Quick Start Paths - 4 cards */}
             <div 
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-[600px] animate-fade-in"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-[600px] animate-fade-in mb-12 md:mb-16"
               style={{ animationDelay: "0.35s" }}
             >
               {quickStartPaths.map((path) => {
@@ -252,11 +252,11 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             className="hidden lg:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Glass Container with Spool Visualization */}
+            {/* Glass Container with Spool Visualization - Reduced size */}
             <div 
-              className="relative p-10 rounded-2xl border border-white/10 overflow-hidden"
+              className="relative p-8 rounded-2xl border border-white/10 overflow-hidden"
               style={{
-                transform: "rotate(6deg)",
+                transform: "rotate(6deg) scale(0.82)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
                 background: "rgba(255, 255, 255, 0.02)",
