@@ -1193,12 +1193,39 @@ const Finder = () => {
     
     return true;
   }).sort((a, b) => {
-    // Calculate true per-kg price: total_price / (pack_quantity * weight_per_spool_kg)
+    // Calculate true per-kg price in user's currency
+    // Uses the same regional price resolution as FilamentCard for consistency
     const getPricePerKg = (filament: typeof a) => {
-      if (!filament.variant_price || !filament.net_weight_g) return 999999;
+      if (!filament.net_weight_g) return 999999;
+      
       const packQty = (filament as any).pack_quantity || 1;
       const weightKg = filament.net_weight_g / 1000;
-      return filament.variant_price / (weightKg * packQty);
+      
+      // Map currency to database column (same as useRegionalPrice)
+      const currencyToPriceColumn: Record<string, keyof typeof filament> = {
+        USD: 'variant_price',
+        CAD: 'price_cad',
+        GBP: 'price_gbp',
+        EUR: 'price_eur',
+        AUD: 'price_aud',
+        JPY: 'price_jpy',
+      };
+      
+      // Get the regional price column for user's currency
+      const priceColumn = currencyToPriceColumn[currencyInfo.code] || 'variant_price';
+      const regionalPrice = filament[priceColumn] as number | null;
+      
+      // Priority 1: Use actual regional price if available
+      if (regionalPrice && regionalPrice > 0) {
+        return regionalPrice / (weightKg * packQty);
+      }
+      
+      // Priority 2: Convert from variant_price (USD) to user's currency
+      const basePrice = filament.variant_price;
+      if (!basePrice) return 999999;
+      
+      const convertedPrice = convertPrice(basePrice) || basePrice;
+      return convertedPrice / (weightKg * packQty);
     };
 
     switch (sortBy) {
