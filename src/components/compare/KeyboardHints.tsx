@@ -18,7 +18,8 @@ const SHORTCUTS = [
   { key: '1-4', description: 'Focus material card in tray', scope: 'Finder' },
   { key: 'Enter', description: 'Start comparison (≥2 items)', scope: 'Finder' },
   { key: 'Esc', description: 'Collapse tray', scope: 'Finder' },
-  { key: '?', description: 'Show keyboard shortcuts', scope: 'Global' },
+  { key: '/', description: 'Focus search input', scope: 'Global' },
+  { key: '?', description: 'Show all keyboard shortcuts', scope: 'Global' },
 ];
 
 export function KeyboardHints({ isOpen, onClose }: KeyboardHintsProps) {

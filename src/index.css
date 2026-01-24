@@ -461,6 +461,42 @@ All colors MUST be HSL.
   }
 }
 
+/* ==============================================
+   GLOBAL FOCUS STYLES - WCAG 2.1 AA Compliant
+   ==============================================
+   Ensures all interactive elements have visible focus indicators
+   that are not just color changes (uses outline/ring)
+*/
+
+/* Base focus style for all interactive elements */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="option"]:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Enhanced focus for critical actions */
+.focus-enhanced:focus-visible {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px hsla(var(--primary) / 0.2);
+}
+
+/* Touch target enforcement - WCAG 2.1 AA minimum 44x44px */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 @layer components {
   /* Line draw-in animation for separator */
   @keyframes line-draw-in {
