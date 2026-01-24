@@ -24,6 +24,8 @@ const Navbar = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [learnDropdownOpen, setLearnDropdownOpen] = useState(false);
+  const learnHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Compare tray state
   const { items: compareItems } = useCompare();
@@ -244,10 +246,26 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">Deals</LabNavLink>
             
-            {/* Learn Dropdown - Mega Menu with hover support */}
-            <DropdownMenu>
+            {/* Learn Dropdown - Mega Menu with hover support on desktop */}
+            <DropdownMenu 
+              open={learnDropdownOpen} 
+              onOpenChange={setLearnDropdownOpen}
+            >
               <DropdownMenuTrigger asChild>
                 <button 
+                  onMouseEnter={() => {
+                    // Desktop hover with 150ms delay
+                    if (window.matchMedia('(min-width: 1024px)').matches) {
+                      learnHoverTimeoutRef.current = setTimeout(() => {
+                        setLearnDropdownOpen(true);
+                      }, 150);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (learnHoverTimeoutRef.current) {
+                      clearTimeout(learnHoverTimeoutRef.current);
+                    }
+                  }}
                   className={cn(
                     "group relative flex items-center gap-1.5 py-2 px-3 transition-all duration-200 rounded-md",
                     "text-xs font-bold uppercase tracking-widest",
@@ -257,7 +275,10 @@ const Navbar = () => {
                   )}
                 >
                   Learn
-                  <ChevronDown className="w-3 h-3 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <ChevronDown className={cn(
+                    "w-3 h-3 transition-transform duration-200",
+                    learnDropdownOpen && "rotate-180"
+                  )} />
                   <span 
                     className={cn(
                       "absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-primary transition-all duration-300 rounded-full",
@@ -266,7 +287,22 @@ const Navbar = () => {
                   />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[400px] p-4">
+              <DropdownMenuContent 
+                align="center" 
+                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[400px] p-4"
+                onMouseEnter={() => {
+                  // Keep dropdown open when hovering over content
+                  if (learnHoverTimeoutRef.current) {
+                    clearTimeout(learnHoverTimeoutRef.current);
+                  }
+                }}
+                onMouseLeave={() => {
+                  // Close with slight delay when leaving content
+                  learnHoverTimeoutRef.current = setTimeout(() => {
+                    setLearnDropdownOpen(false);
+                  }, 100);
+                }}
+              >
                 {learnMenuSections.map((section, sectionIndex) => (
                   <div key={section.title}>
                     {/* Section Header */}
@@ -279,7 +315,12 @@ const Navbar = () => {
                     
                     {/* Section Items */}
                     {section.items.map(item => (
-                      <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+                      <DropdownMenuItem 
+                        key={item.to} 
+                        asChild 
+                        className="rounded-lg"
+                        onClick={() => setLearnDropdownOpen(false)}
+                      >
                         <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                           <item.icon className="w-4 h-4 text-muted-foreground" />
                           {item.label}
