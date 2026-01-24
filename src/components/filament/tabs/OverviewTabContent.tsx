@@ -1,7 +1,6 @@
 import React from 'react';
 import { Database } from '@/integrations/supabase/types';
 import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
-import { BestPricesSection } from '../BestPricesSection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -22,7 +21,6 @@ type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
 interface OverviewTabContentProps {
   filament: Filament;
-  onNavigateToPricing?: () => void;
 }
 
 // Helper function to get ease label
@@ -145,7 +143,7 @@ function inferNotRecommendedWarnings(filament: Filament): Array<{ label: string;
   return warnings;
 }
 
-export function OverviewTabContent({ filament, onNavigateToPricing }: OverviewTabContentProps) {
+export function OverviewTabContent({ filament }: OverviewTabContentProps) {
   // Build key features list
   const features: Array<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = [];
 
@@ -197,12 +195,6 @@ export function OverviewTabContent({ filament, onNavigateToPricing }: OverviewTa
           </p>
         </CardContent>
       </Card>
-
-      {/* Best Prices Section - Above the fold */}
-      <BestPricesSection 
-        filamentId={filament.id} 
-        onSeeAllPrices={onNavigateToPricing}
-      />
 
       {/* Ideal For / Not Recommended Section */}
       {(idealForTags.length > 0 || notRecommendedWarnings.length > 0) && (

@@ -57,26 +57,8 @@ export default function MediumStandardPrinterCard({
     currentPrice: livePrice, 
     isLoading: priceLoading, 
     isLivePrice,
-    currency: livePriceCurrency,
-    fetchedAt
+    currency: livePriceCurrency
   } = usePrinterCurrentPrice(printer.official_store_url, databasePrice);
-
-  // Calculate time since price verification
-  const getVerificationTime = () => {
-    if (!fetchedAt) return null;
-    const fetchedDate = new Date(fetchedAt);
-    const now = new Date();
-    const diffMs = now.getTime() - fetchedDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    
-    if (diffMins < 5) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return null;
-  };
-
-  const verificationTime = getVerificationTime();
 
   // Debug logging for K2 pricing issue - after hook
   if (printer.model_name === 'K2') {
@@ -245,29 +227,21 @@ export default function MediumStandardPrinterCard({
                 <span className="text-xs sm:text-sm text-muted-foreground animate-pulse">Loading...</span>
               ) : price ? (
                 <>
-                  <div className="flex flex-col">
-                    {/* Current Price - WHITE for consistency */}
-                    <span className="text-base sm:text-xl font-bold text-white inline-flex items-center gap-1">
-                      <Tag className="h-3 w-3 sm:h-4 sm:w-4 text-primary opacity-70" />
-                      {formatDisplayPrice(price)}
-                      {isLivePrice && <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" />}
-                    </span>
-                    {/* Price verification time */}
-                    {isLivePrice && verificationTime && (
-                      <span className="text-[10px] text-emerald-500/70 ml-5 hidden sm:inline">
-                        Verified {verificationTime}
-                      </span>
-                    )}
-                  </div>
+                  {/* Current Price - WHITE for consistency */}
+                  <span className="text-base sm:text-xl font-bold text-white inline-flex items-center gap-1">
+                    <Tag className="h-3 w-3 sm:h-4 sm:w-4 text-primary opacity-70" />
+                    {formatDisplayPrice(price)}
+                    {isLivePrice && <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" />}
+                  </span>
                   
-                  {/* Discount Badge - Prominent GREEN filled */}
-                  {printer.msrp_usd && price < printer.msrp_usd && discountPercent && discountPercent >= 5 && (
+                  {/* Original Price & Discount Badge - GREEN filled */}
+                  {printer.msrp_usd && price < printer.msrp_usd && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-gray-500 line-through hidden sm:inline">
                         {formatDisplayPrice(printer.msrp_usd)}
                       </span>
-                      <span className="text-xs sm:text-sm font-bold bg-green-500 text-white px-2 py-0.5 rounded-full animate-pulse">
-                        -{discountPercent}% OFF
+                      <span className="text-[10px] sm:text-xs font-semibold bg-green-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
+                        -{discountPercent}%
                       </span>
                     </div>
                   )}

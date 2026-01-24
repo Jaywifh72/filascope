@@ -346,7 +346,7 @@ export function LabReadoutCard({
             </span>
           )}
           
-          {/* Price Display - Enhanced with sale pricing and retailer */}
+          {/* Price Display - Enhanced with sale pricing */}
           <div className="text-right flex-shrink-0">
             {isValidPrice && pricePerKg ? (
               <div className="flex flex-col items-end">
@@ -358,7 +358,6 @@ export function LabReadoutCard({
                 )}
                 {/* Current/Sale price */}
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[10px] text-muted-foreground mr-1">From</span>
                   <span className={cn(
                     "text-xl font-bold",
                     isOnSale ? "text-green-400" : "text-foreground"
@@ -369,12 +368,6 @@ export function LabReadoutCard({
                     /kg
                   </span>
                 </div>
-                {/* Retailer hint */}
-                {filament.vendor && (
-                  <span className="text-[9px] text-muted-foreground">
-                    at {filament.vendor}
-                  </span>
-                )}
               </div>
             ) : (
               <span className="text-sm text-muted-foreground">
