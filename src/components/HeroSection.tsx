@@ -129,16 +129,16 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               Compare properties, specs, and pricing in one unified data hub.
             </p>
 
-            {/* Social proof */}
+            {/* Social proof - Responsive wrap for small screens */}
             <div 
-              className="flex items-center gap-2 text-xs text-muted-foreground mb-6 animate-fade-in"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-6 animate-fade-in"
               style={{ animationDelay: "0.2s" }}
             >
               <div className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-primary/70" />
                 <span>Trusted by <span className="text-foreground font-medium">10,000+</span> makers</span>
               </div>
-              <span className="text-gray-600">•</span>
+              <span className="text-gray-600 hidden sm:inline">•</span>
               <div className="flex items-center gap-1.5">
                 <RefreshCw className="h-3 w-3 text-primary/70" />
                 <span>Updated daily from <span className="text-foreground font-medium">15+</span> retailers</span>
@@ -220,16 +220,16 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             </div>
           </div>
           
-          {/* Right: Glass Container with 3D Filament Spool Visual */}
+          {/* Right: Glass Container with 3D Filament Spool Visual - Show on tablet with scaling */}
           <div 
-            className="hidden lg:flex justify-end items-center animate-fade-in order-2"
+            className="hidden md:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Glass Container with Spool Visualization - Reduced size */}
+            {/* Glass Container with Spool Visualization - Responsive scaling */}
             <div 
-              className="relative p-8 rounded-2xl border border-white/10 overflow-hidden"
+              className="relative p-6 lg:p-8 rounded-2xl border border-white/10 overflow-hidden md:scale-[0.6] lg:scale-[0.82] origin-center"
               style={{
-                transform: "rotate(6deg) scale(0.82)",
+                transform: "rotate(6deg)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
                 background: "rgba(255, 255, 255, 0.02)",

@@ -146,10 +146,10 @@ export function SearchInputWithHistory({
   };
 
   return (
-    <div className={cn("relative", className)} role="search">
-      {/* Input */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+    <div className={cn("relative w-full", className)} role="search">
+      {/* Input - Full width on mobile */}
+      <div className="relative w-full">
+        <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
         <input
           ref={inputRef}
           type="text"
@@ -163,8 +163,9 @@ export function SearchInputWithHistory({
           }}
           onKeyDown={handleKeyDown}
           className={cn(
-            "w-full h-14 pl-12 pr-4 text-base bg-white/5 backdrop-blur-md text-foreground",
+            "w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-4 text-base bg-white/5 backdrop-blur-md text-foreground",
             "placeholder:text-muted-foreground/70 rounded-xl border transition-all duration-300 outline-none",
+            "min-h-[44px] touch-manipulation",
             isFocused
               ? "border-primary/60 shadow-[0_0_20px_rgba(0,207,232,0.3)]"
               : "border-white/15 hover:border-white/25",
