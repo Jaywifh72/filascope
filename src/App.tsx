@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
-import { TechFooter } from "./components/TechFooter";
+import { SiteFooter } from "./components/SiteFooter";
 import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
 import { CompareTray } from "./components/CompareTray";
@@ -194,7 +194,7 @@ const App = () => (
                 <BrandCompareBar />
                 {/* PWA: Install prompt banner */}
                 <PWAInstallBanner />
-                <TechFooter />
+                <SiteFooter />
                 </MaintenanceModeWrapper>
               </BrowserRouter>
                 </ScreenReaderAnnouncerProvider>
