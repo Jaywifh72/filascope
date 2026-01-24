@@ -20,26 +20,28 @@ export function HardwareRatingDisplay({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {/* Stars */}
+      {/* Stars - minimum 16px (w-4 h-4) for touch accessibility */}
       <div className="flex items-center gap-0.5">
         {Array.from({ length: fullStars }).map((_, i) => (
           <Star 
             key={`full-${i}`} 
-            className="w-3.5 h-3.5 text-amber-400 fill-amber-400" 
+            size={16}
+            className="text-[#FFB800] fill-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" 
           />
         ))}
         {hasHalfStar && (
-          <div className="relative w-3.5 h-3.5">
-            <Star className="absolute w-3.5 h-3.5 text-amber-400/30" />
+          <div className="relative w-4 h-4">
+            <Star size={16} className="absolute text-muted-foreground/40" />
             <div className="absolute overflow-hidden w-[50%]">
-              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <Star size={16} className="text-[#FFB800] fill-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
             </div>
           </div>
         )}
         {Array.from({ length: emptyStars }).map((_, i) => (
           <Star 
             key={`empty-${i}`} 
-            className="w-3.5 h-3.5 text-amber-400/30" 
+            size={16}
+            className="text-muted-foreground/40" 
           />
         ))}
       </div>
@@ -97,7 +99,7 @@ export function RatingComparison({ items }: RatingComparisonProps) {
               )}
             </div>
             <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+              <Star size={16} className="text-[#FFB800] fill-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
               <span className="text-muted-foreground">{item.rating.toFixed(1)}/5</span>
             </div>
           </div>

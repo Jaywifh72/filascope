@@ -47,10 +47,10 @@ const MobileProductInfo: React.FC<MobileProductInfoProps> = ({
         <button 
           onClick={onReviewsClick} 
           aria-label={`${product.rating} stars, ${product.reviewCount} reviews, tap to see reviews`}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg active:bg-amber-500/20"
+          className="flex items-center gap-1 px-2.5 py-1.5 bg-[#FFB800]/10 border border-[#FFB800]/20 rounded-lg active:bg-[#FFB800]/20"
         >
-          <Star size={16} fill="#F59E0B" className="text-amber-500" />
-          <span className="text-sm font-bold text-amber-500">{product.rating.toFixed(1)}</span>
+          <Star size={16} fill="#FFB800" className="text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
+          <span className="text-sm font-bold text-[#FFB800]">{product.rating.toFixed(1)}</span>
           <span className="text-[13px] font-medium text-muted-foreground">({product.reviewCount})</span>
         </button>
         

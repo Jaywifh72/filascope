@@ -21,24 +21,25 @@ export const CompactRating: React.FC<CompactRatingProps> = ({
   starCount = 1,
   className
 }) => {
+  // Minimum 16px for touch accessibility on single stars
   const sizeConfig = {
     tiny: {
-      star: 12,
-      star5: 10,
+      star: 16,
+      star5: 14,
       rating: 'text-[11px]',
       count: 'text-[10px]',
       gap: 'gap-0.5'
     },
     small: {
-      star: 14,
-      star5: 12,
+      star: 16,
+      star5: 14,
       rating: 'text-[13px]',
       count: 'text-[12px]',
       gap: 'gap-1'
     },
     medium: {
-      star: 16,
-      star5: 14,
+      star: 18,
+      star5: 16,
       rating: 'text-[15px]',
       count: 'text-[13px]',
       gap: 'gap-1.5'
@@ -59,22 +60,26 @@ export const CompactRating: React.FC<CompactRatingProps> = ({
           {starCount === 1 ? (
             <Star 
               size={config.star} 
-              fill="#F59E0B" 
-              className="text-amber-500" 
+              fill="#FFB800" 
+              className="text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" 
             />
           ) : (
             [...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 size={config.star5}
-                fill={i < Math.round(rating) ? '#F59E0B' : 'transparent'}
-                className="text-amber-500"
+                fill={i < Math.round(rating) ? '#FFB800' : 'transparent'}
+                className={cn(
+                  i < Math.round(rating) 
+                    ? 'text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]'
+                    : 'text-muted-foreground/40'
+                )}
               />
             ))
           )}
         </div>
       )}
-      <span className={cn('font-bold text-amber-500', config.rating)}>
+      <span className={cn('font-bold text-[#FFB800]', config.rating)}>
         {rating.toFixed(1)}
       </span>
       {showCount && (
