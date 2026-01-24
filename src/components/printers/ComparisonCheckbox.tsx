@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -52,48 +52,57 @@ export default function ComparisonCheckbox({
       aria-label={`${checked ? "Remove" : "Add"} ${printerName} ${checked ? "from" : "to"} comparison`}
       tabIndex={0}
       className={cn(
-        "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer",
-        // Unchecked state
-        !checked && !isDisabledNotChecked && [
-          "bg-transparent border-2 border-gray-600",
-          "hover:bg-primary/10 hover:border-primary/60 hover:scale-105",
-        ],
-        // Checked state
+        "rounded-full flex items-center justify-center cursor-pointer",
+        "transition-all duration-200 ease-out",
+        // Checked state - always visible with glow and animation
         checked && [
-          "bg-primary border-2 border-primary",
+          "w-6 h-6 bg-primary border-2 border-primary",
           "shadow-[0_0_12px_rgba(0,207,232,0.4)]",
-          "hover:scale-105",
+        ],
+        // Unchecked state - subtle but visible
+        !checked && !isDisabledNotChecked && [
+          "w-5 h-5 bg-gray-800/60 border border-gray-600/60 opacity-50",
+          // Hover state - prominent
+          "group-hover:w-6 group-hover:h-6 group-hover:opacity-100",
+          "group-hover:border-primary/60 group-hover:bg-primary/20",
+          "hover:!opacity-100 hover:!scale-110 hover:!border-primary hover:!bg-primary/30",
         ],
         // Disabled state
         isDisabledNotChecked && [
-          "bg-transparent border-2 border-gray-700",
-          "cursor-not-allowed opacity-50",
+          "w-5 h-5 bg-gray-800/40 border border-gray-700/40",
+          "cursor-not-allowed opacity-30",
         ],
         className
       )}
     >
-      {checked && (
-        <Check className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={3} />
+      {checked ? (
+        <Check className="h-3.5 w-3.5 text-primary-foreground animate-check-draw" strokeWidth={3} />
+      ) : (
+        <Plus className={cn(
+          "text-gray-400 transition-all duration-200",
+          "w-3 h-3 group-hover:w-3.5 group-hover:h-3.5 group-hover:text-primary"
+        )} />
       )}
     </div>
   );
 
-  // Wrap with tooltip only when disabled
-  if (isDisabledNotChecked) {
-    return (
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
-          <TooltipTrigger asChild>{checkbox}</TooltipTrigger>
-          <TooltipContent
-            side="top"
-            className="bg-card border-border text-xs font-medium"
-          >
-            Maximum 4 printers
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  return checkbox;
+  // Wrap with tooltip
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>{checkbox}</TooltipTrigger>
+        <TooltipContent
+          side="top"
+          className="bg-slate-800 border-gray-700 text-xs font-medium"
+        >
+          {isDisabledNotChecked 
+            ? "Maximum 4 printers" 
+            : checked 
+              ? "Remove from compare" 
+              : "Add to Compare"
+          }
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
