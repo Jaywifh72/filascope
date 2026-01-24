@@ -1,172 +1,218 @@
 
-# Search Functionality Audit & Improvement Plan
+# Mobile Responsiveness Audit & Fix Plan
 
-## Current State Analysis
+## Audit Summary
 
-### What's Working Well
-1. **Database-level search**: Filaments and Printers use Supabase `ilike` queries on relevant fields
-2. **Color intelligence**: Smart extraction of color names from search terms (`colorIntelligence.ts`)
-3. **Brand search autocomplete**: BrandsHeroSection has a real-time suggestion dropdown with highlighting
-4. **Empty states**: Well-designed `FilamentsEmptyState` and `PrintersEmptyState` components
-5. **Analytics infrastructure**: `search_analytics` and `filter_analytics` tables exist in the database
-6. **Search history hook**: `useSearchContext` tracks recent searches in localStorage
+I conducted a thorough review of the FilaScope platform across the specified breakpoints (375px, 414px, 768px, 1024px). The codebase already has a robust mobile infrastructure with dedicated components, but there are several issues to address.
 
-### Current Gaps Identified
-1. **No typo tolerance**: Searching "Crality" won't suggest "Creality"
-2. **Analytics not connected**: `useFilterAnalytics.trackSearch()` exists but isn't called from Finder.tsx
-3. **No autocomplete on main search**: Filaments/Printers search bars lack suggestion dropdowns
-4. **No recent searches UI**: History is tracked but not displayed to users
-5. **Inconsistent search scope**: Some areas search names only, others include descriptions
-6. **No cross-platform search**: Can't search across filaments, printers, and brands simultaneously
+---
+
+## Current Mobile Infrastructure (What's Working Well)
+
+### Navigation
+- Hamburger menu implemented via slide-down animation (`Navbar.tsx` lines 455-469)
+- Mobile menu closes on route change
+- Keyboard accessibility with focus management
+- Compare button with count badge in mobile menu
+
+### Filter Panels
+- `MobileFilamentFilterSheet.tsx` - Full bottom sheet for Filaments page (85vh height)
+- `MobileFilterDrawer.tsx` - Slide-out drawer for Printers page (left side)
+- Both have collapsible sections with 44px minimum touch targets
+- Active filter count badges on trigger buttons
+
+### Compare Tray
+- `MobileCompareTray.tsx` - Sticky bottom bar that expands to full sheet
+- Proper safe-area-inset-bottom handling
+- lg:hidden class for mobile-only visibility
+
+### Product Cards
+- `LabReadoutCard.tsx` uses responsive grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
+- Touch-friendly compare buttons with minimum 44px targets
+- Proper z-index layering
+
+---
+
+## Issues Identified & Fixes Required
+
+### 1. Hero Section - 3D Graphics on Mobile (Priority: High)
+**Issue**: The 3D glass container graphic in `HeroSection.tsx` is already hidden on mobile (`hidden lg:flex`), but the hero section could be more compact on small screens.
+
+**Fix**:
+- Reduce hero padding on mobile (currently `pt-20 pb-8`)
+- Tighten the Quick Start cards grid gap on smaller screens
+- Ensure search bar is truly full-width on mobile
+
+### 2. Hero Section Search Bar (Priority: High)
+**Issue**: Search bar has `max-w-[500px]` which works but doesn't utilize full width on mobile.
+
+**Fix**:
+- Update `HeroSection.tsx` to use `max-w-full sm:max-w-[500px]` for the search container
+- Same treatment for `PrintersHeroSection.tsx`
+
+### 3. Filter Button Touch Target (Priority: Medium)
+**Issue**: Filter button in `MobileFilamentFilterSheet.tsx` has `h-11` (44px) which is correct, but needs verification across all instances.
+
+**Fix**:
+- Audit all interactive elements for minimum 44px touch targets
+- Update any buttons smaller than 44px
+
+### 4. Compare Tray z-index Conflicts (Priority: High)
+**Issue**: `MobileCompareTray.tsx` uses `z-[70]` which may conflict with other fixed elements like sticky headers.
+
+**Fix**:
+- Standardize z-index hierarchy across all fixed/sticky elements
+- Ensure compare tray is above filter bars but below modals
+
+### 5. Wizard Modal Mobile Optimization (Priority: High)
+**Issue**: `Wizard.tsx` doesn't have explicit full-screen mobile styles. Currently uses `min-h-screen py-12 px-4` which works but isn't optimized.
+
+**Fix**:
+- Update Wizard to use full-height on mobile with reduced padding
+- Make option cards stack vertically with larger touch targets
+- Ensure navigation buttons are sticky at bottom
+
+### 6. Printer Quiz Modal (Priority: High)
+**Issue**: `PrinterQuiz.tsx` has good mobile styles (`max-h-[90vh] overflow-y-auto`) but quiz options could be larger.
+
+**Fix**:
+- Increase quiz option padding on mobile
+- Add minimum height of 48px to all quiz option buttons
+- Ensure sticky header/footer work correctly
+
+### 7. Product Detail Tabs Horizontal Scroll (Priority: Medium)
+**Issue**: `FilamentTabNav.tsx` needs horizontal scrolling for tabs on mobile - should verify implementation.
+
+**Fix**:
+- Add `overflow-x-auto` with `scrollbar-none` to tab container
+- Ensure active tab indicator works with scroll
+- Add snap-scroll behavior
+
+### 8. Deals Page Filter Accessibility (Priority: Medium)
+**Issue**: `Deals.tsx` uses `DealFilters` component but doesn't have a dedicated mobile filter sheet like other pages.
+
+**Fix**:
+- Create mobile-specific filter presentation for Deals page
+- Either use bottom sheet pattern or horizontal scrollable pills
+
+### 9. Printers Page Mobile Filter Drawer Direction (Priority: Low)
+**Issue**: `MobileFilterDrawer.tsx` slides from left (`side="left"`) which is inconsistent with Filaments page bottom sheet.
+
+**Fix**:
+- Consider standardizing to bottom sheet pattern for consistency
+- Or keep as-is if intentional design decision
+
+### 10. Safe Area Insets Missing in Some Components (Priority: Medium)
+**Issue**: Some bottom-fixed elements may not have proper safe area handling for iPhone notch/home bar.
+
+**Fix**:
+- Audit all fixed bottom elements for `env(safe-area-inset-bottom)` usage
+- Add to: `FilamentMobileBottomBar.tsx`, any sticky headers
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Connect Search Analytics (Quick Win)
-**Files to modify:**
-- `src/pages/Finder.tsx`
-- `src/pages/Printers.tsx`
+### Phase 1: Critical Touch Target & Layout Fixes
+1. Update `HeroSection.tsx` search bar to be full-width on mobile
+2. Update `PrintersHeroSection.tsx` search bar similarly
+3. Verify all buttons have minimum 44px touch targets
+4. Add safe-area-insets where missing
 
-**Changes:**
-- Import `useFilterAnalytics` hook
-- Call `startSearchTimer()` when search input changes
-- Call `trackSearch()` after results are displayed with query, result_count, has_results
-- This enables data collection for understanding search patterns
+### Phase 2: Wizard & Quiz Full-Screen Mobile
+5. Update `Wizard.tsx` with mobile-first layout:
+   - Full viewport height
+   - Sticky navigation buttons
+   - Larger option cards
+6. Enhance `PrinterQuiz.tsx` option button sizes
 
----
+### Phase 3: Deals Page Mobile Filters
+7. Create `MobileDealsFilterSheet.tsx` component
+8. Integrate with `Deals.tsx`
 
-### Phase 2: Add Recent Searches Dropdown
-**Files to create:**
-- `src/components/search/SearchInputWithHistory.tsx`
+### Phase 4: Tab Navigation Polish
+9. Verify `FilamentTabNav.tsx` horizontal scroll
+10. Add snap-scroll behavior if missing
 
-**Files to modify:**
-- `src/components/HeroSection.tsx` (Filaments)
-- `src/components/PrintersHeroSection.tsx`
-
-**Features:**
-- Show dropdown on focus when search is empty
-- Display up to 5 recent searches from `useSearchContext`
-- Add "Clear history" option
-- Each recent search is clickable to apply that query
-
----
-
-### Phase 3: Add Search Autocomplete/Suggestions
-**Files to create:**
-- `src/hooks/useSearchSuggestions.ts`
-- `src/components/search/SearchSuggestionDropdown.tsx`
-
-**Implementation approach:**
-- Query database for matching products/brands as user types (debounced 300ms)
-- Show top 5 suggestions grouped by type (Filaments, Brands, Materials)
-- Highlight matching text (reuse logic from BrandsHeroSection)
-- Navigate directly to product/brand on selection
-
-**Database query strategy:**
-```sql
--- Lightweight suggestion query (limit 5 per category)
-SELECT DISTINCT vendor FROM filaments WHERE vendor ILIKE '%query%' LIMIT 5
-SELECT product_title FROM filaments WHERE product_title ILIKE '%query%' LIMIT 5
-```
+### Phase 5: Z-Index Standardization
+11. Create z-index documentation
+12. Standardize across all fixed/sticky elements:
+    - z-40: Sticky headers
+    - z-50: Filter bars
+    - z-60: Compare tray
+    - z-70: Bottom sheets
+    - z-100: Modals
 
 ---
 
-### Phase 4: Implement Typo Tolerance
-**Files to create:**
-- `src/lib/fuzzySearch.ts`
+## Detailed File Changes
 
-**Implementation approach:**
-- Create a curated list of common terms (brand names, material names)
-- Use Levenshtein distance (already in package-lock.json) for matching
-- When no results found, check for close matches and suggest corrections
-- Example mapping:
-  - "Crality" → "Did you mean Creality?"
-  - "Prusa" partial → Show "Prusa Research", "Prusament"
+### src/components/HeroSection.tsx
+- Line 146: Change `max-w-[500px]` to `w-full sm:max-w-[500px]`
+- Line 160: Reduce gap on mobile: `gap-2 sm:gap-3`
 
-**Integration points:**
-- Enhance empty state to show "Did you mean..." suggestions
-- Add to autocomplete dropdown as "Similar: Creality"
+### src/components/PrintersHeroSection.tsx
+- Line 78: Change `w-full sm:w-[260px]` to ensure full width on mobile
+- Reduce top padding on smallest screens
 
----
+### src/pages/Wizard.tsx
+- Line 488: Update container: `min-h-screen md:py-12 py-4 px-3 sm:px-6`
+- Line 490: Make Card full height on mobile: `h-full md:h-auto`
+- Add sticky footer for navigation buttons
 
-### Phase 5: Improve Empty State with Suggestions
-**Files to modify:**
-- `src/components/filament/FilamentsEmptyState.tsx`
-- `src/components/printers/PrintersEmptyState.tsx`
+### src/components/printers/PrinterQuiz.tsx
+- Line 306-317: Add minimum height to option buttons
+- Update padding for mobile
 
-**Enhancements:**
-- If search term has typo, show "Did you mean: X?"
-- Show related searches based on partial matches
-- Display popular searches in the same category
-- Add "Search instead for: [corrected term]" clickable link
+### src/pages/Deals.tsx
+- Import and integrate `MobileDealsFilterSheet.tsx` (new component)
+- Add mobile filter controls similar to Finder.tsx pattern
 
----
+### src/components/filament/tabs/FilamentTabNav.tsx
+- Verify horizontal scroll with overflow-x-auto
+- Add scrollbar-none and snap-x classes
 
-### Phase 6: Unified Search Results Page (Future)
-**Files to create:**
-- `src/pages/Search.tsx`
-- `src/components/search/UnifiedSearchResults.tsx`
-
-**Features:**
-- Global search from navbar
-- Results grouped by: Filaments, Printers, Brands, Knowledge Base
-- Tab navigation between result types
-- URL structure: `/search?q=bambu`
+### Various Components - Safe Area Fixes
+- `MobileCompareTray.tsx` - Already has it (verified)
+- `FilamentMobileBottomBar.tsx` - Already has it (verified)
+- `MobileFilamentFilterSheet.tsx` - Add if missing
 
 ---
 
-## Technical Details
+## Testing Checklist
 
-### Search Scope by Area
-| Page | Current Fields | Recommended Fields |
-|------|---------------|-------------------|
-| Filaments | product_title, vendor | + material, color_name |
-| Printers | model_name, variant_or_bundle_name | + brand.brand |
-| Brands | name, description | No change needed |
-| Knowledge Base | material name, category | No change needed |
-| Slicers | N/A (filter-based) | Add name search |
+After implementation, test at these breakpoints:
+
+| Breakpoint | Device | Key Tests |
+|------------|--------|-----------|
+| 375px | iPhone SE | Hero search full-width, touch targets, wizard fits |
+| 414px | iPhone Plus | Compare tray visible, filters accessible |
+| 768px | iPad | Grid transitions to 2-col, drawer opens correctly |
+| 1024px | iPad Landscape | Desktop sidebar appears, mobile elements hide |
+
+### Specific Test Scenarios
+1. Search "PLA" on mobile - results load, filters work
+2. Open compare tray - items show, can expand sheet
+3. Complete Wizard flow - all steps accessible
+4. Complete Printer Quiz - all options tappable
+5. Browse Deals - filters accessible
+6. Swipe to dismiss compare items
+7. Tab navigation on product detail page
+
+---
+
+## Technical Notes
+
+### Existing Mobile Detection
+The codebase uses `useIsMobile()` hook (768px breakpoint) for JavaScript-based mobile detection. CSS uses standard Tailwind breakpoints (sm: 640px, md: 768px, lg: 1024px, xl: 1280px).
+
+### Touch-Friendly Patterns Already Used
+- 44px minimum buttons: `min-h-[44px] min-w-[44px]`
+- Collapsible sections with large headers
+- Bottom sheets using `vaul` library via `Sheet` component
+- Horizontal scroll with snap points
 
 ### Performance Considerations
-- Debounce autocomplete queries (300ms minimum)
-- Limit suggestion results to 5 per category
-- Use `select` to fetch only needed columns for suggestions
-- Cache recent search results with React Query (staleTime: 30s)
-
-### Analytics Data to Collect
-```typescript
-interface SearchAnalytics {
-  query: string;
-  result_count: number;
-  has_results: boolean;
-  filters_applied: string[];
-  time_to_results_ms: number;
-  typo_corrected?: string;  // NEW: track corrections
-  suggestion_clicked?: boolean;  // NEW: track engagement
-}
-```
-
----
-
-## Testing Scenarios
-
-| Search Query | Expected Behavior |
-|-------------|-------------------|
-| "PLA" | Show PLA filaments, material filter suggestion |
-| "Bambu" | Show Bambu Lab products AND printers |
-| "high speed" | Show high-speed filaments (finish_type filter) |
-| "Crality" (typo) | Suggest "Creality", show Creality products |
-| Empty search | Show recent searches, popular terms |
-| "purple silk" | Color + finish combined search |
-
----
-
-## Priority Order
-
-1. **Phase 1** - Analytics connection (1-2 hours) - Essential for measuring improvement
-2. **Phase 2** - Recent searches UI (2-3 hours) - High user value, simple implementation
-3. **Phase 5** - Improved empty states (2 hours) - Quick UX improvement
-4. **Phase 3** - Autocomplete (4-6 hours) - Major feature enhancement
-5. **Phase 4** - Typo tolerance (3-4 hours) - Polish and error recovery
-6. **Phase 6** - Unified search (8+ hours) - Future enhancement
-
+- Mobile filter sheets lazy-load content
+- Virtual scrolling not currently used (may be needed for large lists)
+- Image loading appears optimized with lazy loading
