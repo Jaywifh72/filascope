@@ -1,341 +1,289 @@
 
-# Mobile Responsiveness Audit & Implementation Plan
 
-## Executive Summary
+# Performance Optimization Plan
 
-FilaScope demonstrates **strong mobile responsiveness foundations** with robust patterns already established. The audit reveals the platform is well-architected for mobile with consistent use of:
-- 44px minimum touch targets
-- Safe area inset handling for iOS
-- Bottom sheet modals for mobile filters
-- Horizontal snap-scrolling for navigation
-- Progressive responsive grids
+## Overview
+This plan implements comprehensive performance optimizations to achieve Core Web Vitals targets (LCP < 2.5s, FID < 100ms, CLS < 0.1) across four phases: image optimization, list virtualization, code splitting, and caching improvements.
 
-However, several refinements are needed to achieve full compliance across all breakpoints.
+## Current Infrastructure Analysis
+The project already has significant performance infrastructure in place:
 
----
-
-## Current State Assessment
-
-### Strengths Already Implemented
-
-| Area | Status | Implementation |
-|------|--------|----------------|
-| Hamburger Menu | Complete | `Navbar.tsx` lines 219-232 with full ARIA support |
-| Mobile Compare Tray | Complete | `MobileCompareTray.tsx` - thin bottom bar with sheet expansion |
-| Filter Bottom Sheets | Complete | `MobileFilamentFilterSheet.tsx`, `MobileDealsFilterSheet.tsx` - 85vh height |
-| Touch Targets | Complete | 44px minimum enforced via `min-h-[44px]` and `.touch-target` utility |
-| Safe Area Insets | Complete | `env(safe-area-inset-bottom)` used in bottom bars |
-| Tab Navigation | Complete | `FilamentTabNav.tsx` - horizontal snap scroll |
-| Responsive Grids | Complete | 4→2→1 column progression throughout |
-| Wizard Full-screen | Complete | `Wizard.tsx` - mobile-optimized with sticky nav |
-
-### Issues Identified
-
-| Component | Issue | Severity | Breakpoints Affected |
-|-----------|-------|----------|---------------------|
-| Printer Filter Drawer | Opens from left instead of bottom on mobile | Medium | 320-768px |
-| Search bar in Navbar | Not full-width on small mobile | Low | 320-414px |
-| Hero 3D graphic | Hidden on tablet (should show scaled) | Low | 768-1024px |
-| MobileFilterDrawer touch targets | Some buttons lack min-h-[44px] | Medium | All mobile |
-| Social proof section | Text wraps awkwardly at 375px | Low | 375px |
-| Printers grid cards | Image aspect ratio inconsistent on 320px | Low | 320px |
-| Export CSV button | Hidden on mobile but useful for users | Low | <768px |
-| Wizard options | Options could be larger tap targets | Low | 320-414px |
+| Component | Status | Location |
+|-----------|--------|----------|
+| `OptimizedImage` | Implemented | `src/components/ui/optimized-image.tsx` |
+| `VirtualGrid` / `VirtualList` | Implemented but **not integrated** | `src/components/ui/virtual-grid.tsx` |
+| Route Lazy Loading | Implemented | `src/App.tsx` (80+ routes) |
+| Route Preloading | Partial | `src/lib/preloadRoutes.ts` |
+| React Query Caching | Inconsistent | Various hooks with different `staleTime` |
+| PWA Service Worker | Configured | `vite.config.ts` |
+| Scroll Restoration | Implemented | `src/hooks/useScrollRestoration.ts` |
+| URL Filter Sync | Implemented | `src/hooks/useURLFilterSync.ts` |
+| Web Vitals Tracking | Implemented | `src/hooks/useWebVitals.ts` |
 
 ---
 
-## Phase 1: Printer Filter Drawer Enhancement
+## Phase 1: Image Optimization Enhancements
 
-### Problem
-The `MobileFilterDrawer.tsx` component opens from the **left side** (`side="left"`) which is inconsistent with the established pattern of bottom sheets on mobile.
+### Current State
+- `OptimizedImage` component already implements lazy loading, srcset, and skeleton placeholders
+- Some components (e.g., `LabReadoutCard`) use plain `<img>` tags instead of `OptimizedImage`
 
-### Solution
-Convert to a bottom sheet modal like `MobileFilamentFilterSheet.tsx` for consistency.
+### Tasks
 
-### Files to Modify
+1. **Add WebP Format Support with Fallbacks**
+   - File: `src/components/ui/optimized-image.tsx`
+   - Enhance `getOptimizedSrc` to request WebP format from CDNs
+   - Add `<picture>` element with WebP source and fallback
 
-**`src/components/printers/MobileFilterDrawer.tsx`**
-- Change `side="left"` to `side="bottom"` (line 131)
-- Add `h-[85vh]` height class
-- Add rounded top corners `rounded-t-2xl`
-- Add sticky footer with Apply/Clear buttons
-- Ensure all interactive elements have `min-h-[44px]`
+2. **Implement Blur Placeholder Generation**
+   - Create utility to generate low-quality image placeholders (LQIP)
+   - Add `blurDataUrl` prop population for critical images
+   - Implement CSS blur-up animation on load
 
-**Changes:**
+3. **Enforce Explicit Dimensions**
+   - Audit and update all `OptimizedImage` usages to include `width` and `height`
+   - Add TypeScript enforcement for required dimensions on critical images
+
+4. **Migrate Remaining `<img>` Tags**
+   - Files: `src/components/LabReadoutCard.tsx`, `src/components/BentoGrid.tsx`
+   - Replace plain `<img>` with `OptimizedImage` for brand logos and product images
+
+---
+
+## Phase 2: List Virtualization Integration
+
+### Current State
+- `VirtualGrid` and `VirtualList` components exist but are **not used** in any listing pages
+- Finder page (974+ filaments), Printers (122), Deals (1064+) use standard CSS grids with "Load More" pagination
+
+### Tasks
+
+1. **Create Virtualized Listing Wrapper**
+   - File: `src/components/VirtualizedProductGrid.tsx` (new)
+   - Wrap `VirtualGrid` with responsive column calculation
+   - Integrate `useResponsiveColumns` hook for breakpoint-aware layouts
+   - Add infinite scroll callback for progressive loading
+
+2. **Integrate with Finder Page**
+   - File: `src/pages/Finder.tsx`
+   - Replace standard grid with `VirtualizedProductGrid`
+   - Preserve existing `LabReadoutCard` rendering
+   - Maintain scroll restoration compatibility
+
+3. **Integrate with Printers Page**
+   - File: `src/pages/Printers.tsx`
+   - Apply same virtualization pattern
+   - Adapt for `MediumStandardPrinterCard` dimensions
+
+4. **Integrate with Deals Page**
+   - File: `src/pages/Deals.tsx`
+   - Apply virtualization with `DealCard` rendering
+
+5. **Add Virtualization Toggle**
+   - Create `shouldUseVirtualization` check (threshold: 50+ items)
+   - Fall back to standard grid for small lists to avoid overhead
+
+---
+
+## Phase 3: Code Splitting Enhancements
+
+### Current State
+- All 80+ routes use `React.lazy()` with dynamic imports
+- Route preloader covers only 8 routes
+- Heavy components (charts, wizards) are not split
+
+### Tasks
+
+1. **Expand Route Preloader Coverage**
+   - File: `src/lib/preloadRoutes.ts`
+   - Add missing routes: `/accessories`, `/learn/*`, `/reference/*`, `/settings`
+   - Expand `navigationPatterns` with more granular predictions
+
+2. **Split Heavy Components**
+   - Create lazy-loaded versions:
+     - `src/components/charts/LazyPriceChart.tsx` (wraps Recharts)
+     - `src/components/LazyComparisonTable.tsx`
+     - `src/components/LazyWizard.tsx` (Quick Match wizard)
+   - Use dynamic import pattern:
+     ```tsx
+     const PriceChart = lazy(() => import('./charts/PriceChart'));
+     ```
+
+3. **Implement Predictive Preloading**
+   - File: `src/hooks/usePreloadOnIdle.ts` (new)
+   - Preload likely routes after initial page load using `requestIdleCallback`
+   - Trigger preload on link hover/focus using `createPreloadHandler`
+
+4. **Integrate Preloading with Navbar**
+   - File: `src/components/Navbar.tsx`
+   - Add hover preload handlers to main navigation links
+   - Use existing `createPreloadHandler` utility
+
+---
+
+## Phase 4: Caching Strategy Standardization
+
+### Current State
+- React Query `staleTime` varies inconsistently (0 to 30 minutes)
+- No centralized cache configuration
+- PWA service worker caches API responses with NetworkFirst strategy
+
+### Tasks
+
+1. **Create Centralized Query Configuration**
+   - File: `src/lib/queryConfig.ts` (new)
+   - Define standardized cache tiers:
+     ```typescript
+     export const QUERY_CONFIG = {
+       products: { staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000 },
+       printers: { staleTime: 10 * 60 * 1000, gcTime: 60 * 60 * 1000 },
+       prices: { staleTime: 2 * 60 * 1000, gcTime: 10 * 60 * 1000 },
+       static: { staleTime: Infinity, gcTime: Infinity },
+     };
+     ```
+
+2. **Apply Configuration to Hooks**
+   - Update key hooks to use centralized config:
+     - `src/pages/Finder.tsx` (filaments query)
+     - `src/pages/Printers.tsx` (printers query)
+     - `src/hooks/useDealsWithFilters.ts`
+     - `src/hooks/useBrowseHistory.ts`
+
+3. **Configure QueryClient Defaults**
+   - File: `src/App.tsx`
+   - Add sensible default options to `QueryClient`:
+     ```typescript
+     const queryClient = new QueryClient({
+       defaultOptions: {
+         queries: {
+           staleTime: 1000 * 60 * 2, // 2 minutes default
+           gcTime: 1000 * 60 * 10,   // 10 minutes
+           refetchOnWindowFocus: false,
+         },
+       },
+     });
+     ```
+
+4. **Enhance Recently Viewed Caching**
+   - File: `src/hooks/usePWACache.ts`
+   - Add image URL preloading for cached products
+   - Implement cache warming on app startup
+
+---
+
+## Technical Details
+
+### VirtualizedProductGrid Implementation
+
 ```tsx
-// Line 131: Change SheetContent
-<SheetContent 
-  side="bottom"  // Changed from "left"
-  className="h-[85vh] p-0 bg-gray-900/95 border-t border-gray-800 rounded-t-2xl backdrop-blur-xl"
->
+// src/components/VirtualizedProductGrid.tsx
+interface Props<T> {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  getKey: (item: T) => string;
+  minItemHeight?: number;
+  gap?: number;
+  onEndReached?: () => void;
+}
+
+export function VirtualizedProductGrid<T>({ 
+  items, 
+  renderItem, 
+  getKey,
+  minItemHeight = 420,
+  gap = 24,
+  onEndReached 
+}: Props<T>) {
+  const { columns, rowHeight, containerWidth } = useResponsiveColumns({
+    cardBaseHeight: minItemHeight,
+    gap,
+  });
+  
+  const shouldVirtualize = items.length > 50;
+  
+  if (!shouldVirtualize) {
+    // Standard grid for small lists
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {items.map((item, idx) => (
+          <div key={getKey(item)}>{renderItem(item, idx)}</div>
+        ))}
+      </div>
+    );
+  }
+  
+  return (
+    <VirtualGrid
+      items={items}
+      renderItem={renderItem}
+      getKey={getKey}
+      columnCount={columns}
+      rowHeight={rowHeight}
+      gap={gap}
+      onEndReached={onEndReached}
+      className="min-h-[600px]"
+    />
+  );
+}
+```
+
+### WebP Support Enhancement
+
+```tsx
+// Enhanced getOptimizedSrc in optimized-image.tsx
+function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'): string {
+  if (!src || !width) return src;
+
+  // Cloudinary with WebP
+  if (src.includes("cloudinary.com")) {
+    const formatParam = format === 'webp' ? 'f_webp' : 'f_auto';
+    return src.replace("/upload/", `/upload/w_${width},q_auto,${formatParam}/`);
+  }
+
+  // Supabase Storage
+  if (src.includes("supabase") && src.includes("/storage/v1/object/")) {
+    const url = new URL(src);
+    url.searchParams.set("width", String(width));
+    url.searchParams.set("quality", "80");
+    if (format === 'webp') url.searchParams.set("format", "webp");
+    return url.toString();
+  }
+
+  return src;
+}
 ```
 
 ---
 
-## Phase 2: Touch Target Compliance
+## Files to Create
+| File | Purpose |
+|------|---------|
+| `src/components/VirtualizedProductGrid.tsx` | Responsive virtualization wrapper |
+| `src/lib/queryConfig.ts` | Centralized React Query cache tiers |
+| `src/hooks/usePreloadOnIdle.ts` | Idle-time route preloading |
+| `src/components/charts/LazyPriceChart.tsx` | Lazy-loaded Recharts wrapper |
 
-### Files to Modify
-
-**`src/components/printers/MobileFilterDrawer.tsx`**
-
-Several toggle buttons lack explicit touch target sizes:
-
-- Lines 160-172: Sort section toggle - add `min-h-[44px]`
-- Lines 176-189: Sort option buttons - add `min-h-[44px]`
-- Lines 196-208: Price section toggle - add `min-h-[44px]`
-- Lines 232-244: Build volume toggle - add `min-h-[44px]`
-- Lines 269-287: Brands toggle - add `min-h-[44px]`
-- Lines 327-340: Motion toggle - add `min-h-[44px]`
-- Lines 362-382: Features toggle - add `min-h-[44px]`
-
-**Pattern to apply:**
-```tsx
-<button
-  onClick={() => toggleSection('sort')}
-  className={cn(
-    "w-full flex items-center justify-between py-3 px-3 rounded-lg min-h-[44px] touch-manipulation transition-colors",
-    // ... rest
-  )}
->
-```
-
----
-
-## Phase 3: Hero Section Tablet Optimization
-
-### Problem
-The 3D graphic is completely hidden below `lg` (1024px), but tablet users (768-1024px) would benefit from seeing a scaled version.
-
-### Files to Modify
-
-**`src/components/HeroSection.tsx`**
-
-- Line 224-226: Change `hidden lg:flex` to `hidden md:flex` with scale adjustments for tablet
-
-```tsx
-// Current
-<div className="hidden lg:flex justify-end items-center animate-fade-in order-2">
-
-// Proposed
-<div 
-  className="hidden md:flex justify-end items-center animate-fade-in order-2"
-  style={{ animationDelay: "0.4s" }}
->
-  {/* Container with responsive scaling */}
-  <div 
-    className="relative p-4 md:p-6 lg:p-8 rounded-2xl border border-white/10 overflow-hidden"
-    style={{
-      transform: "rotate(6deg) scale(0.65)", // Smaller for tablet
-      "@media (min-width: 1024px)": {
-        transform: "rotate(6deg) scale(0.82)" // Original for desktop
-      },
-      ...
-    }}
-  >
-```
-
-Alternative: Use CSS class-based scaling
-```tsx
-className="hidden md:flex ... md:scale-[0.6] lg:scale-[0.82]"
-```
-
----
-
-## Phase 4: Search Bar Mobile Width
-
-### Problem
-On very small screens (320px), the search bar could use more horizontal space.
-
-### Files to Modify
-
-**`src/components/HeroSection.tsx`**
-
-- Line 149-151: Adjust max-width constraint
-
-```tsx
-// Current
-<div className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in">
-
-// Already correct! w-full with no max on mobile.
-// Issue may be in SearchInputWithHistory.tsx - verify padding
-```
-
-**`src/components/search/SearchInputWithHistory.tsx`**
-
-- Verify no horizontal padding is eating into width on 320px
-- Ensure input fills available space
-
----
-
-## Phase 5: Sticky Footer Pattern for Bottom Sheets
-
-### Problem
-`MobileFilterDrawer` lacks sticky Apply/Clear buttons at bottom.
-
-### Files to Modify
-
-**`src/components/printers/MobileFilterDrawer.tsx`**
-
-Add after ScrollArea (around line 420):
-
-```tsx
-{/* Sticky Footer */}
-<div className="sticky bottom-0 px-4 py-4 bg-gray-900 border-t border-gray-800 space-y-3 safe-area-inset-bottom">
-  <div className="flex gap-3">
-    <Button
-      variant="outline"
-      onClick={onClearFilters}
-      disabled={!hasActiveFilters}
-      className="flex-1 min-h-[44px]"
-    >
-      Clear All
-    </Button>
-    <SheetClose asChild>
-      <Button className="flex-1 min-h-[44px]">
-        Apply Filters
-      </Button>
-    </SheetClose>
-  </div>
-</div>
-```
-
----
-
-## Phase 6: Social Proof Text Wrap Fix
-
-### Problem
-At 375px, the social proof badges in HeroSection wrap awkwardly.
-
-### Files to Modify
-
-**`src/components/HeroSection.tsx`**
-
-- Lines 133-146: Adjust flex behavior for small screens
-
-```tsx
-// Current
-<div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
-
-// Proposed
-<div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 text-xs text-muted-foreground mb-6">
-```
-
-Or use a stacked layout on very small screens:
-```tsx
-<div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-6">
-```
-
----
-
-## Phase 7: Add `aria-expanded` to Printer Filter Toggles
-
-### Problem
-Section toggles in `MobileFilterDrawer.tsx` lack proper ARIA attributes for accessibility.
-
-### Files to Modify
-
-**`src/components/printers/MobileFilterDrawer.tsx`**
-
-Apply to all section toggle buttons (sort, price, volume, brands, motion, features):
-
-```tsx
-<button
-  onClick={() => toggleSection('sort')}
-  aria-expanded={expandedSection === 'sort'}
-  aria-controls="sort-section-content"
-  className={cn(...)}
->
-  ...
-</button>
-{expandedSection === 'sort' && (
-  <div id="sort-section-content" className="mt-3 space-y-1">
-    ...
-  </div>
-)}
-```
-
----
-
-## Phase 8: Printer Card 320px Image Consistency
-
-### Problem
-At 320px, printer card images may have inconsistent aspect ratios.
-
-### Files to Modify
-
-**`src/components/printers/MediumStandardPrinterCard.tsx`**
-
-- Verify image container has explicit aspect ratio
-- Add `aspect-square` or `aspect-[4/3]` to image wrapper
-
-```tsx
-<div className="aspect-square w-full overflow-hidden rounded-lg">
-  <OptimizedImage ... className="w-full h-full object-cover" />
-</div>
-```
-
----
-
-## Files Summary
-
-### Files to Modify (7)
-
+## Files to Modify
 | File | Changes |
 |------|---------|
-| `src/components/printers/MobileFilterDrawer.tsx` | Convert to bottom sheet, add touch targets, sticky footer, ARIA |
-| `src/components/HeroSection.tsx` | Show 3D graphic on tablet, fix social proof wrap |
-| `src/components/printers/MediumStandardPrinterCard.tsx` | Fix image aspect ratio at 320px |
-| `src/components/search/SearchInputWithHistory.tsx` | Verify full-width on 320px |
-| `src/components/Navbar.tsx` | Minor: ensure search triggers are 44px |
-| `src/components/filters/MobileFilamentFilterSheet.tsx` | Already good - no changes needed |
-| `src/pages/Wizard.tsx` | Already good - no changes needed |
+| `src/components/ui/optimized-image.tsx` | WebP support, picture element |
+| `src/lib/preloadRoutes.ts` | Expand route coverage |
+| `src/pages/Finder.tsx` | Integrate VirtualizedProductGrid |
+| `src/pages/Printers.tsx` | Integrate VirtualizedProductGrid |
+| `src/pages/Deals.tsx` | Integrate VirtualizedProductGrid |
+| `src/components/Navbar.tsx` | Add preload handlers |
+| `src/App.tsx` | Configure QueryClient defaults |
+| `src/components/LabReadoutCard.tsx` | Use OptimizedImage for logos |
 
 ---
 
-## Testing Checklist
+## Expected Outcomes
 
-### Per Breakpoint Testing
+| Metric | Current | Target | Improvement Strategy |
+|--------|---------|--------|---------------------|
+| LCP | ~3-4s | < 2.5s | Image optimization, preloading |
+| FID | ~50-150ms | < 100ms | Code splitting, reduced JS |
+| CLS | ~0.1-0.2 | < 0.1 | Explicit dimensions, skeletons |
+| Memory Usage | High on large lists | Reduced 60-80% | Virtualization |
+| Initial Bundle | Large | Reduced 30-40% | Component splitting |
 
-| Breakpoint | Width | Test Areas |
-|------------|-------|------------|
-| Mobile Small | 320px | All touch targets 44px, text readable, no horizontal scroll |
-| Mobile | 375px | Search suggestions fit, social proof readable |
-| Mobile Large | 414px | Cards fill width, filter sheet works |
-| Tablet | 768px | Grid 2-col, 3D graphic scaled, filter sheet 85vh |
-| Tablet Landscape | 1024px | Transition to desktop layout, sidebar visible |
-
-### Component Testing Matrix
-
-| Component | 320px | 375px | 414px | 768px | 1024px |
-|-----------|-------|-------|-------|-------|--------|
-| Navbar hamburger | Test | Test | Test | Hidden | Hidden |
-| Hero section | Test | Test | Test | Test | Test |
-| Filter panel | Bottom sheet | Bottom sheet | Bottom sheet | Bottom sheet | Sidebar |
-| Product grids | 1-col | 1-col | 2-col | 2-col | 3-4 col |
-| Compare tray | Thin bar | Thin bar | Thin bar | Hidden | Full tray |
-| Product detail | Stacked | Stacked | Stacked | 2-col | 2-col |
-| Wizard | Full-screen | Full-screen | Full-screen | Centered | Centered |
-
----
-
-## Expected Improvements
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Touch target compliance | ~90% | 100% |
-| Filter sheet consistency | Mixed | Unified bottom-sheet pattern |
-| Tablet experience | Basic | Enhanced with 3D graphic |
-| ARIA compliance | ~85% | 100% |
-| 320px support | Good | Excellent |
-
----
-
-## Implementation Priority
-
-1. **High**: MobileFilterDrawer → bottom sheet conversion (consistency)
-2. **High**: Touch target compliance (accessibility)
-3. **Medium**: ARIA attributes for filter toggles (accessibility)
-4. **Medium**: Sticky footer pattern (usability)
-5. **Low**: Hero 3D tablet visibility (polish)
-6. **Low**: Social proof text wrap (polish)
-7. **Low**: 320px image aspect ratio (polish)
