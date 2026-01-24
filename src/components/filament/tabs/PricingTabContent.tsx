@@ -170,6 +170,7 @@ export function PricingTabContent({
                 >
                   <ShoppingCart className="w-4 h-4" />
                   Buy Now
+                  <ExternalLink className="w-3.5 h-3.5 opacity-70" />
                 </Button>
               )}
               <Button

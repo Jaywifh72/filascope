@@ -1,4 +1,4 @@
-import { ShoppingCart, Calculator } from "lucide-react";
+import { ShoppingCart, Calculator, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCompare } from "@/hooks/useCompare";
@@ -135,6 +135,7 @@ export function FilamentMobileBottomBar({
             >
               <ShoppingCart className="h-4 w-4" />
               <span>Buy Now</span>
+              <ExternalLink className="h-3 w-3 opacity-70" />
             </Button>
           ) : (
             <Button size="lg" disabled className="gap-2 px-6 opacity-50">

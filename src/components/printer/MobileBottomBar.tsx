@@ -1,4 +1,4 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
@@ -94,6 +94,7 @@ export function MobileBottomBar({
             <Button size="lg" className="gap-2 px-6">
               <ShoppingCart className="h-4 w-4" />
               <span>Buy Now</span>
+              <ExternalLink className="h-3 w-3 opacity-70" />
             </Button>
           </a>
         ) : (
