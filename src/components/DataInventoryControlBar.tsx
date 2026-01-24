@@ -9,18 +9,15 @@ import {
 import { cn } from "@/lib/utils";
 
 export type SortOption = 
-  | "truecost-asc" 
-  | "truecost-desc"
-  | "print-desc"
-  | "print-asc"
-  | "strength-desc"
-  | "strength-asc"
-  | "heat-desc"
-  | "heat-asc"
-  | "score-desc"
-  | "score-asc"
+  | "rating-asc" 
+  | "rating-desc"
+  | "alpha-asc"
+  | "alpha-desc"
   | "price-asc"
-  | "price-desc";
+  | "price-desc"
+  | "strength-desc"
+  | "heat-desc"
+  | "print-desc";
 
 interface DataInventoryControlBarProps {
   sortBy: SortOption;
@@ -29,13 +26,15 @@ interface DataInventoryControlBarProps {
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "score-desc", label: "Value Score: High to Low" },
-  { value: "score-asc", label: "Value Score: Low to High" },
-  { value: "truecost-asc", label: "Price: Low to High" },
-  { value: "truecost-desc", label: "Price: High to Low" },
-  { value: "print-desc", label: "Printability: Best First" },
-  { value: "strength-desc", label: "Strength: Strongest First" },
-  { value: "heat-desc", label: "Heat Resistance: Highest First" },
+  { value: "rating-desc", label: "Rating: High to Low" },
+  { value: "rating-asc", label: "Rating: Low to High" },
+  { value: "alpha-asc", label: "A-Z" },
+  { value: "alpha-desc", label: "Z-A" },
+  { value: "price-asc", label: "Price/KG: Low to High" },
+  { value: "price-desc", label: "Price/KG: High to Low" },
+  { value: "strength-desc", label: "Strength" },
+  { value: "heat-desc", label: "Heat Resistance" },
+  { value: "print-desc", label: "Printability" },
 ];
 
 export function DataInventoryControlBar({ 
