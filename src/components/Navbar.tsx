@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCompare } from "@/hooks/useCompare";
 const Navbar = () => {
   const {
     user,
@@ -22,6 +23,22 @@ const Navbar = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Compare tray state
+  const { items: compareItems } = useCompare();
+  const compareCount = compareItems.length;
+  const prevCountRef = useRef(compareCount);
+  const [isCountAnimating, setIsCountAnimating] = useState(false);
+
+  // Animate badge when count changes
+  useEffect(() => {
+    if (compareCount !== prevCountRef.current) {
+      setIsCountAnimating(true);
+      const timeout = setTimeout(() => setIsCountAnimating(false), 300);
+      prevCountRef.current = compareCount;
+      return () => clearTimeout(timeout);
+    }
+  }, [compareCount]);
 
   // Trending panel state
   const trendingPanel = useTrendingPanel();
@@ -268,9 +285,22 @@ const Navbar = () => {
             {/* Compare Button - Ghost with teal border */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                <button onClick={() => navigate('/compare')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
                   <GitCompareArrows className="w-3.5 h-3.5" />
                   Compare
+                  {compareCount > 0 && (
+                    <span 
+                      className={cn(
+                        "absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5",
+                        "flex items-center justify-center",
+                        "bg-primary text-primary-foreground text-[11px] font-bold rounded-full",
+                        "transition-transform duration-200",
+                        isCountAnimating && "animate-[pulse_0.3s_ease-out]"
+                      )}
+                    >
+                      {compareCount}
+                    </span>
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-gray-900 border-border text-sm">
@@ -321,9 +351,22 @@ const Navbar = () => {
             {/* Compare Button - Tablet */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                <button onClick={() => navigate('/compare')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
                   <GitCompareArrows className="w-3.5 h-3.5" />
                   Compare
+                  {compareCount > 0 && (
+                    <span 
+                      className={cn(
+                        "absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1",
+                        "flex items-center justify-center",
+                        "bg-primary text-primary-foreground text-[10px] font-bold rounded-full",
+                        "transition-transform duration-200",
+                        isCountAnimating && "animate-[pulse_0.3s_ease-out]"
+                      )}
+                    >
+                      {compareCount}
+                    </span>
+                  )}
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-gray-900 border-border text-sm">
@@ -419,9 +462,22 @@ const Navbar = () => {
               <button onClick={() => {
               navigate('/compare');
               setMobileMenuOpen(false);
-            }} className={cn("w-full border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-3", "text-sm font-bold uppercase tracking-widest", "flex items-center justify-center gap-2", "transition-all duration-200", "text-teal-400")}>
+            }} className={cn("relative w-full border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-3", "text-sm font-bold uppercase tracking-widest", "flex items-center justify-center gap-2", "transition-all duration-200", "text-teal-400")}>
                 <GitCompareArrows className="w-4 h-4" />
                 Compare Filaments
+                {compareCount > 0 && (
+                  <span 
+                    className={cn(
+                      "absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1.5",
+                      "flex items-center justify-center",
+                      "bg-primary text-primary-foreground text-xs font-bold rounded-full",
+                      "transition-transform duration-200",
+                      isCountAnimating && "animate-[pulse_0.3s_ease-out]"
+                    )}
+                  >
+                    {compareCount}
+                  </span>
+                )}
               </button>
             </div>
 
