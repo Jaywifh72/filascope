@@ -70,7 +70,7 @@ const Navbar = () => {
     return 'U';
   };
 
-  // Lab-style nav link component
+  // Lab-style nav link component with keyboard accessibility
   const LabNavLink = ({
     to,
     children,
@@ -83,13 +83,30 @@ const Navbar = () => {
     onClick?: () => void;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
-    return <Link to={to} onClick={onClick} className={cn("relative py-3 px-3 transition-colors duration-200", "text-xs font-bold uppercase tracking-widest", "hover:text-white", active ? "text-primary" : "text-gray-400")}>
+    return (
+      <Link 
+        to={to} 
+        onClick={onClick} 
+        className={cn(
+          "relative py-3 px-3 transition-colors duration-200",
+          "text-xs font-bold uppercase tracking-widest",
+          "hover:text-white",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950 rounded",
+          active ? "text-primary" : "text-gray-400"
+        )}
+      >
         {children}
-        <span className={cn("absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300", active ? "w-full" : "w-0")} />
-      </Link>;
+        <span 
+          className={cn(
+            "absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-primary transition-all duration-300",
+            active ? "w-full" : "w-0"
+          )} 
+        />
+      </Link>
+    );
   };
 
-  // Mobile nav link component
+  // Mobile nav link component with keyboard accessibility
   const MobileNavLink = ({
     to,
     children,
@@ -104,10 +121,22 @@ const Navbar = () => {
     end?: boolean;
   }) => {
     const active = end ? location.pathname === to : location.pathname.startsWith(to);
-    return <Link to={to} onClick={() => setMobileMenuOpen(false)} className={cn("flex items-center gap-3 px-4 py-3 transition-colors duration-200", "text-sm font-medium", "hover:bg-gray-800/50", active ? "text-primary bg-primary/10" : "text-gray-300")}>
+    return (
+      <Link 
+        to={to} 
+        onClick={() => setMobileMenuOpen(false)} 
+        className={cn(
+          "flex items-center gap-3 px-4 py-3 transition-colors duration-200",
+          "text-sm font-medium",
+          "hover:bg-gray-800/50",
+          "focus-visible:outline-none focus-visible:bg-gray-800/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+          active ? "text-primary bg-primary/10" : "text-gray-300"
+        )}
+      >
         {Icon && <Icon className="w-4 h-4" />}
         {children}
-      </Link>;
+      </Link>
+    );
   };
 
   // Learn menu sections for mega-menu
@@ -149,8 +178,18 @@ const Navbar = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
         <div className="py-4 flex items-center px-4 md:px-6 gap-4 md:gap-6">
-          {/* Mobile hamburger button */}
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors" aria-label="Toggle menu">
+          {/* Mobile hamburger button with keyboard support */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && mobileMenuOpen) {
+                setMobileMenuOpen(false);
+              }
+            }}
+            className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+          >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
