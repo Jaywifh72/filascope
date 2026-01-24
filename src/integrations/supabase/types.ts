@@ -307,6 +307,38 @@ export type Database = {
           },
         ]
       }
+      answer_helpful_votes: {
+        Row: {
+          answer_id: string
+          created_at: string | null
+          id: string
+          is_helpful: boolean
+          user_id: string
+        }
+        Insert: {
+          answer_id: string
+          created_at?: string | null
+          id?: string
+          is_helpful: boolean
+          user_id: string
+        }
+        Update: {
+          answer_id?: string
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answer_helpful_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "product_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automated_brands: {
         Row: {
           active_product_count: number | null
@@ -531,6 +563,68 @@ export type Database = {
           weight_selectors?: Json | null
         }
         Relationships: []
+      }
+      brand_representatives: {
+        Row: {
+          brand_id: string
+          created_at: string | null
+          id: string
+          role: string | null
+          status: string | null
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          status?: string | null
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          status?: string | null
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_representatives_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_representatives_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_representatives_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_representatives_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       brand_scraper_profiles: {
         Row: {
@@ -1466,6 +1560,94 @@ export type Database = {
             columns: ["retailer_id"]
             isOneToOne: false
             referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filament_reviews: {
+        Row: {
+          created_at: string | null
+          filament_id: string
+          helpful_count: number | null
+          id: string
+          printer_id: string | null
+          rating: number
+          review_text: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          verified_purchase: boolean | null
+          would_recommend: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id: string
+          helpful_count?: number | null
+          id?: string
+          printer_id?: string | null
+          rating: number
+          review_text?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          verified_purchase?: boolean | null
+          would_recommend?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string
+          helpful_count?: number | null
+          id?: string
+          printer_id?: string | null
+          rating?: number
+          review_text?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verified_purchase?: boolean | null
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
             referencedColumns: ["id"]
           },
         ]
@@ -2475,6 +2657,117 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_result_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          print_result_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          print_result_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          print_result_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_result_likes_print_result_id_fkey"
+            columns: ["print_result_id"]
+            isOneToOne: false
+            referencedRelation: "print_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      print_results: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          filament_id: string
+          id: string
+          image_url: string
+          likes_count: number | null
+          print_settings: Json | null
+          printer_id: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          filament_id: string
+          id?: string
+          image_url: string
+          likes_count?: number | null
+          print_settings?: Json | null
+          printer_id?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          filament_id?: string
+          id?: string
+          image_url?: string
+          likes_count?: number | null
+          print_settings?: Json | null
+          printer_id?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_results_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
             referencedColumns: ["id"]
           },
         ]
@@ -3577,6 +3870,53 @@ export type Database = {
           },
         ]
       }
+      product_answers: {
+        Row: {
+          answer_text: string
+          created_at: string | null
+          helpful_count: number | null
+          id: string
+          is_accepted: boolean | null
+          is_brand_verified: boolean | null
+          question_id: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          answer_text: string
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_accepted?: boolean | null
+          is_brand_verified?: boolean | null
+          question_id: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          answer_text?: string
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_accepted?: boolean | null
+          is_brand_verified?: boolean | null
+          question_id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "product_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_discovery_queue: {
         Row: {
           attempts: number | null
@@ -3665,6 +4005,78 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_questions: {
+        Row: {
+          answer_count: number | null
+          created_at: string | null
+          filament_id: string
+          helpful_count: number | null
+          id: string
+          question_text: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          answer_count?: number | null
+          created_at?: string | null
+          filament_id: string
+          helpful_count?: number | null
+          id?: string
+          question_text: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          answer_count?: number | null
+          created_at?: string | null
+          filament_id?: string
+          helpful_count?: number | null
+          id?: string
+          question_text?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
         ]
@@ -3968,6 +4380,38 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      review_helpful_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpful_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "filament_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       safety_alert_subscriptions: {
         Row: {
