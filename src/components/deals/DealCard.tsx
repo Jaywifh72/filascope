@@ -1,0 +1,161 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { TrendingDown, Share2, Eye, Clock, AlertTriangle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/hooks/useCurrency";
+import { DealShareModal } from "./DealShareModal";
+import { cn } from "@/lib/utils";
+
+export interface DealFilament {
+  id: string;
+  product_title: string;
+  vendor: string | null;
+  material: string | null;
+  featured_image: string | null;
+  variant_price: number | null;
+  variant_compare_at_price: number | null;
+  product_url: string | null;
+  net_weight_g: number | null;
+}
+
+interface DealCardProps {
+  deal: DealFilament;
+  discount: number;
+  savings: number;
+  // Urgency indicators (simulated for now)
+  expiresIn?: string | null;
+  stockStatus?: "in_stock" | "low_stock" | "limited" | null;
+  viewsToday?: number;
+}
+
+export function DealCard({
+  deal,
+  discount,
+  savings,
+  expiresIn,
+  stockStatus,
+  viewsToday,
+}: DealCardProps) {
+  const { formatPrice } = useCurrency();
+  const [shareOpen, setShareOpen] = useState(false);
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShareOpen(true);
+  };
+
+  const showUrgency = expiresIn || stockStatus === "low_stock" || stockStatus === "limited";
+
+  return (
+    <>
+      <Link to={`/filament/${deal.id}`} className="group block">
+        <Card
+          className={cn(
+            "relative h-full overflow-hidden transition-all duration-200",
+            "hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/10 hover:border-green-500/50"
+          )}
+        >
+          {/* Discount Badge */}
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-green-500 text-background text-xs font-bold">
+            <TrendingDown className="h-3 w-3" />
+            {discount}% OFF
+          </div>
+
+          {/* Share Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+            onClick={handleShareClick}
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+
+          {/* Image */}
+          <div className="relative h-40 bg-gray-800/50 flex items-center justify-center overflow-hidden">
+            {deal.featured_image ? (
+              <img
+                src={deal.featured_image}
+                alt={deal.product_title}
+                className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="text-4xl text-muted-foreground">📦</div>
+            )}
+          </div>
+
+          {/* Content */}
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">{deal.vendor}</div>
+            <h3 className="font-medium text-sm mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+              {deal.product_title}
+            </h3>
+
+            {/* Price */}
+            <div className="flex items-end gap-2 mb-2">
+              <span className="text-xl font-bold text-green-400">
+                {formatPrice(deal.variant_price!)}
+              </span>
+              <span className="text-sm text-muted-foreground line-through">
+                {formatPrice(deal.variant_compare_at_price!)}
+              </span>
+            </div>
+
+            {/* Savings */}
+            <div className="text-xs text-green-400 mb-3">Save {formatPrice(savings)}</div>
+
+            {/* Urgency Indicators */}
+            {showUrgency && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {expiresIn && (
+                  <Badge
+                    variant="outline"
+                    className="gap-1 text-[10px] border-amber-500/30 bg-amber-500/10 text-amber-400"
+                  >
+                    <Clock className="h-3 w-3" />
+                    {expiresIn}
+                  </Badge>
+                )}
+                {(stockStatus === "low_stock" || stockStatus === "limited") && (
+                  <Badge
+                    variant="outline"
+                    className="gap-1 text-[10px] border-red-500/30 bg-red-500/10 text-red-400"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {stockStatus === "low_stock" ? "Low Stock" : "Limited Stock"}
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Social Proof */}
+            {viewsToday && viewsToday > 5 && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Eye className="h-3.5 w-3.5 text-purple-400" />
+                <span>{viewsToday} people viewed today</span>
+              </div>
+            )}
+
+            {/* Material Badge */}
+            {deal.material && !showUrgency && !viewsToday && (
+              <Badge variant="secondary" className="mt-1 text-xs">
+                {deal.material}
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
+
+      {/* Share Modal */}
+      <DealShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        deal={deal}
+        discount={discount}
+      />
+    </>
+  );
+}
