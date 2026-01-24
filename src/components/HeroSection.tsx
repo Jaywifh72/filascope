@@ -24,8 +24,9 @@ const quickStartPaths = [
     title: "Find Filament",
     description: "Browse 2000+ materials",
     icon: FlaskRound,
-    href: "/finder",
+    href: "#system-config",
     color: "primary",
+    isScroll: true,
   },
   {
     title: "Compare Printers",
@@ -176,6 +177,29 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             >
               {quickStartPaths.map((path) => {
                 const Icon = path.icon;
+                
+                if (path.isScroll) {
+                  return (
+                    <button
+                      key={path.title}
+                      onClick={() => {
+                        const element = document.getElementById('system-config');
+                        if (element) {
+                          const headerOffset = 80;
+                          const elementPosition = element.getBoundingClientRect().top;
+                          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                        }
+                      }}
+                      className={`group flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${getColorClasses(path.color)}`}
+                    >
+                      <Icon className="h-6 w-6 mb-2 transition-transform group-hover:scale-110" />
+                      <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
+                      <span className="text-[10px] text-muted-foreground leading-tight">{path.description}</span>
+                    </button>
+                  );
+                }
+                
                 return (
                   <Link
                     key={path.title}
