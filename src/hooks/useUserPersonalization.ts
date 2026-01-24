@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { usePrinterSelection } from "./usePrinterSelection";
 import { useBrowseHistory } from "./useBrowseHistory";
+import { useNozzleConfig } from "./useNozzleConfig";
 
 const SESSION_KEY = "filascope_session_id";
 
@@ -28,6 +29,7 @@ export function useUserPersonalization() {
   const { user } = useAuth();
   const { selectedPrinter } = usePrinterSelection();
   const { history: browseHistory } = useBrowseHistory(5);
+  const nozzleConfig = useNozzleConfig(selectedPrinter?.stock_nozzle_diameter_mm);
 
   // Fetch user's favorites
   const { data: favorites } = useQuery({
@@ -129,12 +131,18 @@ export function useUserPersonalization() {
   // Check if user has printer context
   const hasPrinterContext = !!selectedPrinter;
 
-  // Get printer specs for filtering
+  // Get printer specs for filtering (including nozzle config)
   const printerSpecs = selectedPrinter ? {
     maxNozzleTemp: selectedPrinter.max_nozzle_temp_c,
     maxBedTemp: selectedPrinter.bed_max_temp_c,
     hasEnclosure: selectedPrinter.has_enclosure,
     abrasiveSupport: selectedPrinter.abrasive_filament_support,
+    maxFlowRate: selectedPrinter.max_flow_rate_mm3s,
+    nozzleConfig: {
+      size: nozzleConfig.size,
+      material: nozzleConfig.material,
+      flowType: nozzleConfig.flowType,
+    },
   } : null;
 
   return {
