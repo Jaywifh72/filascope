@@ -1229,32 +1229,26 @@ const Finder = () => {
     };
 
     switch (sortBy) {
-      case "truecost-asc":
-        return getPricePerKg(a) - getPricePerKg(b);
-      case "truecost-desc":
-        return getPricePerKg(b) - getPricePerKg(a);
-      case "print-desc":
-        return (b.printability_index || 0) - (a.printability_index || 0);
-      case "print-asc":
-        return (a.printability_index || 0) - (b.printability_index || 0);
-      case "strength-desc":
-        return (b.strength_index || 0) - (a.strength_index || 0);
-      case "strength-asc":
-        return (a.strength_index || 0) - (b.strength_index || 0);
-      case "heat-desc":
-        return (b.tg_c || b.nozzle_temp_max_c || 0) - (a.tg_c || a.nozzle_temp_max_c || 0);
-      case "heat-asc":
-        return (a.tg_c || a.nozzle_temp_max_c || 0) - (b.tg_c || b.nozzle_temp_max_c || 0);
-      case "score-desc":
-        return (b.value_score || 0) - (a.value_score || 0);
-      case "score-asc":
+      case "rating-asc":
         return (a.value_score || 0) - (b.value_score || 0);
+      case "rating-desc":
+        return (b.value_score || 0) - (a.value_score || 0);
+      case "alpha-asc":
+        return (a.product_title || '').localeCompare(b.product_title || '');
+      case "alpha-desc":
+        return (b.product_title || '').localeCompare(a.product_title || '');
       case "price-asc":
         return getPricePerKg(a) - getPricePerKg(b);
       case "price-desc":
         return getPricePerKg(b) - getPricePerKg(a);
+      case "strength-desc":
+        return (b.strength_index || 0) - (a.strength_index || 0);
+      case "heat-desc":
+        return (b.tg_c || b.nozzle_temp_max_c || 0) - (a.tg_c || a.nozzle_temp_max_c || 0);
+      case "print-desc":
+        return (b.printability_index || 0) - (a.printability_index || 0);
       default:
-        return getPricePerKg(a) - getPricePerKg(b);
+        return (b.value_score || 0) - (a.value_score || 0);
     }
   }), [regionalFilaments, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
