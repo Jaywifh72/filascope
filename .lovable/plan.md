@@ -1,275 +1,276 @@
 
-# WCAG 2.1 AA Accessibility Audit & Implementation Plan
+# Mobile Responsiveness Audit & Implementation Plan
 
 ## Executive Summary
 
-FilaScope has a **solid accessibility foundation** with dedicated infrastructure including skip links, screen reader announcements, accessible form fields, keyboard navigation hooks, and WCAG-compliant color tokens. However, the audit identified gaps in implementation consistency across components that need addressing.
+FilaScope demonstrates **strong mobile responsiveness foundations** with robust patterns already established. The audit reveals the platform is well-architected for mobile with consistent use of:
+- 44px minimum touch targets
+- Safe area inset handling for iOS
+- Bottom sheet modals for mobile filters
+- Horizontal snap-scrolling for navigation
+- Progressive responsive grids
+
+However, several refinements are needed to achieve full compliance across all breakpoints.
 
 ---
 
-## Audit Findings by Category
+## Current State Assessment
 
-### 1. Color Contrast
+### Strengths Already Implemented
 
-#### Current State (Good)
-- WCAG color tokens defined in `index.css` (lines 124-137)
-- Muted foreground updated to 72% lightness (~7:1 ratio)
-- Star ratings use enhanced amber (`#FFB800`) with glow
+| Area | Status | Implementation |
+|------|--------|----------------|
+| Hamburger Menu | Complete | `Navbar.tsx` lines 219-232 with full ARIA support |
+| Mobile Compare Tray | Complete | `MobileCompareTray.tsx` - thin bottom bar with sheet expansion |
+| Filter Bottom Sheets | Complete | `MobileFilamentFilterSheet.tsx`, `MobileDealsFilterSheet.tsx` - 85vh height |
+| Touch Targets | Complete | 44px minimum enforced via `min-h-[44px]` and `.touch-target` utility |
+| Safe Area Insets | Complete | `env(safe-area-inset-bottom)` used in bottom bars |
+| Tab Navigation | Complete | `FilamentTabNav.tsx` - horizontal snap scroll |
+| Responsive Grids | Complete | 4→2→1 column progression throughout |
+| Wizard Full-screen | Complete | `Wizard.tsx` - mobile-optimized with sticky nav |
 
-#### Issues Identified
-| Component | Issue | Location |
-|-----------|-------|----------|
-| Material Badge Colors | `text-violet-400` on `bg-violet-500/15` may not meet 4.5:1 | `MaterialBadge.tsx:69` |
-| MATERIAL_BADGE_COLORS | `text-orange-400`, `text-yellow-400` on 20% bg may fail | `MiniFilamentCard.tsx:16-24` |
-| Property Indicator dots | Standard Tailwind colors on dark backgrounds | `MaterialBadge.tsx:22-42` |
-| Placeholder text | `--placeholder: 220 10% 55%` should be audited | `index.css:129` |
+### Issues Identified
 
-#### Required Fixes
-- Increase text lightness for low-contrast badge variants (orange, yellow)
-- Add explicit high-contrast alternatives for critical status indicators
-- Verify placeholder contrast meets 4.5:1 against all input backgrounds
-
----
-
-### 2. Keyboard Navigation
-
-#### Current State (Good)
-- Skip link implemented: `SkipLink.tsx` with `#main-content` target
-- `useKeyboardNavigation` hook for arrow-key navigation
-- Focus visible rings on buttons via Tailwind utilities
-- Escape key handling in sheets/dialogs (Radix handles this)
-
-#### Issues Identified
-| Component | Issue | Location |
-|-----------|-------|----------|
-| Hero Quick Start Cards | Missing keyboard focus styling on scroll button | `HeroSection.tsx:184-199` |
-| Filter Section Buttons | Collapsible triggers missing explicit `aria-expanded` | `MobileFilamentFilterSheet.tsx:196-216` |
-| Close buttons in sheets | Missing `aria-label` on X button | `MobileFilamentFilterSheet.tsx:181-186` |
-| Navbar hamburger menu | Missing `aria-expanded` and `aria-controls` | `Navbar.tsx` mobile menu trigger |
-
-#### Required Fixes
-- Add `aria-expanded` to all collapsible triggers
-- Add `aria-controls` linking toggle buttons to controlled content
-- Add `aria-label="Close filter panel"` to close buttons
-- Add keyboard focus styles to Quick Start scroll button
+| Component | Issue | Severity | Breakpoints Affected |
+|-----------|-------|----------|---------------------|
+| Printer Filter Drawer | Opens from left instead of bottom on mobile | Medium | 320-768px |
+| Search bar in Navbar | Not full-width on small mobile | Low | 320-414px |
+| Hero 3D graphic | Hidden on tablet (should show scaled) | Low | 768-1024px |
+| MobileFilterDrawer touch targets | Some buttons lack min-h-[44px] | Medium | All mobile |
+| Social proof section | Text wraps awkwardly at 375px | Low | 375px |
+| Printers grid cards | Image aspect ratio inconsistent on 320px | Low | 320px |
+| Export CSV button | Hidden on mobile but useful for users | Low | <768px |
+| Wizard options | Options could be larger tap targets | Low | 320-414px |
 
 ---
 
-### 3. Screen Reader Support
+## Phase 1: Printer Filter Drawer Enhancement
 
-#### Current State (Good)
-- `ScreenReaderAnnouncerProvider` in App.tsx
-- Proper `role="article"` on product cards
-- `sr-only` utility class defined
-- Live regions for dynamic content
+### Problem
+The `MobileFilterDrawer.tsx` component opens from the **left side** (`side="left"`) which is inconsistent with the established pattern of bottom sheets on mobile.
 
-#### Issues Identified
-| Component | Issue | Location |
-|-----------|-------|----------|
-| DealCard Share Button | Icon button missing `aria-label` | `DealCard.tsx:69-76` |
-| MiniFilamentCard Quick Buy | Icon link missing `aria-label` | `MiniFilamentCard.tsx:235-238` |
-| MiniFilamentCard Drag Handle | Missing screen reader text | `MiniFilamentCard.tsx:142-155` |
-| CompareTray Share Button | Using `title` instead of `aria-label` | `CompareTray.tsx:486-493` |
-| CompareTray Minimize Button | Missing `aria-label` | `CompareTray.tsx:427-431` |
-| Heading Hierarchy | Some pages may skip heading levels | Multiple pages |
+### Solution
+Convert to a bottom sheet modal like `MobileFilamentFilterSheet.tsx` for consistency.
 
-#### Required Fixes
-- Add `aria-label` to all icon-only buttons
-- Add `sr-only` text for drag handles
-- Verify h1 → h2 → h3 hierarchy on key pages
-- Add descriptive alt text to product images where missing
+### Files to Modify
 
----
+**`src/components/printers/MobileFilterDrawer.tsx`**
+- Change `side="left"` to `side="bottom"` (line 131)
+- Add `h-[85vh]` height class
+- Add rounded top corners `rounded-t-2xl`
+- Add sticky footer with Apply/Clear buttons
+- Ensure all interactive elements have `min-h-[44px]`
 
-### 4. Form Accessibility
-
-#### Current State (Good)
-- `AccessibleFormField` component with proper ID linking
-- `useId()` for generating accessible IDs
-- Form error states with `aria-invalid`
-- Search input has `aria-label`, `aria-expanded`, `aria-haspopup`
-
-#### Issues Identified
-| Component | Issue | Location |
-|-----------|-------|----------|
-| Printer Selection Dropdowns | Missing explicit labels | `MobileFilamentFilterSheet.tsx:219-240` |
-| Filter Checkboxes | Labels exist but could use `aria-describedby` for context | Various filter files |
-| Nozzle Config Selects | Missing accessible names | `MobileFilamentFilterSheet.tsx` |
-
-#### Required Fixes
-- Add `aria-label` or visible labels to all Select components
-- Ensure all inputs have associated labels via `htmlFor`
-- Add `role="search"` to search containers
-
----
-
-### 5. Motion & Animations
-
-#### Current State (Good)
-- `prefers-reduced-motion` media query in `index.css:376-384`
-- Auto-rotate disabled for reduced motion users in `MicroReview.tsx`
-- Animations set to 0.01ms duration for reduced motion
-
-#### Issues Identified
-| Component | Issue | Location |
-|-----------|-------|----------|
-| Search Suggestions Rotation | May not respect reduced motion | `HeroSection.tsx:64-72` |
-| Badge Pulse Animations | `animate-pulse` on discount badges | `MediumStandardPrinterCard.tsx:235` |
-| Card Entry Animations | Should be disabled for reduced motion | `LabReadoutCard.tsx:221-222` |
-
-#### Required Fixes
-- Add `motion-safe:` prefix to non-essential animations
-- Disable suggestion rotation for reduced motion users
-- Ensure critical state changes don't rely solely on animation
-
----
-
-## Implementation Plan
-
-### Phase 1: Icon Button ARIA Labels (Priority: Critical)
-**Files to modify:**
-1. `src/components/deals/DealCard.tsx`
-   - Add `aria-label="Share this deal"` to Share button (line 69-76)
-   
-2. `src/components/compare/MiniFilamentCard.tsx`
-   - Add `aria-label="Buy from {vendor}"` to Quick Buy link (line 235-238)
-   - Add `aria-label="Drag to reorder"` + `sr-only` text to drag handle (line 142-155)
-
-3. `src/components/CompareTray.tsx`
-   - Change `title` to `aria-label` on minimize button (line 427-431)
-   - Change `title` to `aria-label` on share button (line 486-493)
-
-4. `src/components/filters/MobileFilamentFilterSheet.tsx`
-   - Add `aria-label="Close filter panel"` to close button (line 181-186)
-
-### Phase 2: ARIA Expanded/Controls (Priority: High)
-**Files to modify:**
-1. `src/components/filters/MobileFilamentFilterSheet.tsx`
-   - Add `aria-expanded={expandedSection === 'printer'}` to section toggles
-   - Add `aria-controls="printer-section-content"` + matching `id`
-
-2. `src/components/Navbar.tsx`
-   - Add `aria-expanded={mobileMenuOpen}` to hamburger button
-   - Add `aria-controls="mobile-navigation"` + matching `id` to menu container
-
-3. `src/components/HeroSection.tsx`
-   - Add focus-visible styles to scroll button (line 184-199)
-
-### Phase 3: Color Contrast Improvements (Priority: High)
-**Files to modify:**
-1. `src/index.css`
-   - Add high-contrast badge variant utilities
-   - Create `--badge-text-on-dark` token for consistent badge text
-
-2. `src/components/compare/MiniFilamentCard.tsx`
-   - Update `MATERIAL_BADGE_COLORS` to use lighter text values:
-     - `text-orange-300` instead of `text-orange-400`
-     - `text-blue-300` instead of `text-blue-400`
-
-3. `src/components/MaterialBadge.tsx`
-   - Increase text lightness for property indicators
-   - Use `text-violet-300` for material badge text
-
-### Phase 4: Form Accessibility Enhancements (Priority: Medium)
-**Files to modify:**
-1. `src/components/filters/MobileFilamentFilterSheet.tsx`
-   - Add `aria-label="Select printer brand"` to brand Select
-   - Add `aria-label="Select printer model"` to model Select
-
-2. `src/components/search/SearchInputWithHistory.tsx`
-   - Wrap in container with `role="search"`
-   - Add `aria-autocomplete="list"` to input
-
-3. Create `src/components/accessibility/AccessibleSelect.tsx`
-   - Wrapper for Select with consistent labeling
-
-### Phase 5: Motion Safety (Priority: Medium)
-**Files to modify:**
-1. `src/components/HeroSection.tsx`
-   - Add reduced motion check to suggestion cycling (line 64-72)
-
-2. `src/components/LabReadoutCard.tsx`
-   - Add `motion-safe:` prefix to card-enter animation
-
-3. `src/components/printers/MediumStandardPrinterCard.tsx`
-   - Add `motion-safe:animate-pulse` to discount badge
-
-4. `src/index.css`
-   - Add utility class `.motion-safe-only` for JS-controlled animations
-
-### Phase 6: Heading Hierarchy Audit (Priority: Medium)
-**Files to audit and fix:**
-1. `src/pages/Finder.tsx` - Ensure h1 in hero, h2 for sections
-2. `src/pages/Printers.tsx` - Same pattern
-3. `src/pages/Deals.tsx` - Same pattern
-4. Product detail pages - h1 for product name, h2 for tabs
-
-### Phase 7: Testing & Validation
-**Testing approach:**
-1. Install `@axe-core/react` for automated accessibility testing
-2. Add accessibility test utilities to `src/test/setup.ts`
-3. Create sample accessibility tests for key components
-4. Document keyboard navigation paths
-
----
-
-## Technical Details
-
-### New Utility Classes (index.css)
-```css
-/* High contrast badge text for dark backgrounds */
-.badge-text-high-contrast {
-  color: hsl(0 0% 95%);
-}
-
-/* Motion-safe animation wrapper */
-.motion-safe-only {
-  animation: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .motion-safe-only {
-    animation: inherit;
-  }
-}
+**Changes:**
+```tsx
+// Line 131: Change SheetContent
+<SheetContent 
+  side="bottom"  // Changed from "left"
+  className="h-[85vh] p-0 bg-gray-900/95 border-t border-gray-800 rounded-t-2xl backdrop-blur-xl"
+>
 ```
 
-### Icon Button Pattern
-```tsx
-// Before
-<Button variant="ghost" size="icon" onClick={handleClick}>
-  <Share2 className="h-4 w-4" />
-</Button>
+---
 
-// After
-<Button 
-  variant="ghost" 
-  size="icon" 
-  onClick={handleClick}
-  aria-label="Share this deal"
+## Phase 2: Touch Target Compliance
+
+### Files to Modify
+
+**`src/components/printers/MobileFilterDrawer.tsx`**
+
+Several toggle buttons lack explicit touch target sizes:
+
+- Lines 160-172: Sort section toggle - add `min-h-[44px]`
+- Lines 176-189: Sort option buttons - add `min-h-[44px]`
+- Lines 196-208: Price section toggle - add `min-h-[44px]`
+- Lines 232-244: Build volume toggle - add `min-h-[44px]`
+- Lines 269-287: Brands toggle - add `min-h-[44px]`
+- Lines 327-340: Motion toggle - add `min-h-[44px]`
+- Lines 362-382: Features toggle - add `min-h-[44px]`
+
+**Pattern to apply:**
+```tsx
+<button
+  onClick={() => toggleSection('sort')}
+  className={cn(
+    "w-full flex items-center justify-between py-3 px-3 rounded-lg min-h-[44px] touch-manipulation transition-colors",
+    // ... rest
+  )}
 >
-  <Share2 className="h-4 w-4" aria-hidden="true" />
-</Button>
 ```
 
-### Collapsible Section Pattern
-```tsx
-// Before
-<button onClick={() => toggleSection('printer')}>
-  <span>Your Printer</span>
-  <ChevronDown />
-</button>
+---
 
-// After
-<button 
-  onClick={() => toggleSection('printer')}
-  aria-expanded={expandedSection === 'printer'}
-  aria-controls="printer-section-content"
+## Phase 3: Hero Section Tablet Optimization
+
+### Problem
+The 3D graphic is completely hidden below `lg` (1024px), but tablet users (768-1024px) would benefit from seeing a scaled version.
+
+### Files to Modify
+
+**`src/components/HeroSection.tsx`**
+
+- Line 224-226: Change `hidden lg:flex` to `hidden md:flex` with scale adjustments for tablet
+
+```tsx
+// Current
+<div className="hidden lg:flex justify-end items-center animate-fade-in order-2">
+
+// Proposed
+<div 
+  className="hidden md:flex justify-end items-center animate-fade-in order-2"
+  style={{ animationDelay: "0.4s" }}
 >
-  <span>Your Printer</span>
-  <ChevronDown aria-hidden="true" />
+  {/* Container with responsive scaling */}
+  <div 
+    className="relative p-4 md:p-6 lg:p-8 rounded-2xl border border-white/10 overflow-hidden"
+    style={{
+      transform: "rotate(6deg) scale(0.65)", // Smaller for tablet
+      "@media (min-width: 1024px)": {
+        transform: "rotate(6deg) scale(0.82)" // Original for desktop
+      },
+      ...
+    }}
+  >
+```
+
+Alternative: Use CSS class-based scaling
+```tsx
+className="hidden md:flex ... md:scale-[0.6] lg:scale-[0.82]"
+```
+
+---
+
+## Phase 4: Search Bar Mobile Width
+
+### Problem
+On very small screens (320px), the search bar could use more horizontal space.
+
+### Files to Modify
+
+**`src/components/HeroSection.tsx`**
+
+- Line 149-151: Adjust max-width constraint
+
+```tsx
+// Current
+<div className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in">
+
+// Already correct! w-full with no max on mobile.
+// Issue may be in SearchInputWithHistory.tsx - verify padding
+```
+
+**`src/components/search/SearchInputWithHistory.tsx`**
+
+- Verify no horizontal padding is eating into width on 320px
+- Ensure input fills available space
+
+---
+
+## Phase 5: Sticky Footer Pattern for Bottom Sheets
+
+### Problem
+`MobileFilterDrawer` lacks sticky Apply/Clear buttons at bottom.
+
+### Files to Modify
+
+**`src/components/printers/MobileFilterDrawer.tsx`**
+
+Add after ScrollArea (around line 420):
+
+```tsx
+{/* Sticky Footer */}
+<div className="sticky bottom-0 px-4 py-4 bg-gray-900 border-t border-gray-800 space-y-3 safe-area-inset-bottom">
+  <div className="flex gap-3">
+    <Button
+      variant="outline"
+      onClick={onClearFilters}
+      disabled={!hasActiveFilters}
+      className="flex-1 min-h-[44px]"
+    >
+      Clear All
+    </Button>
+    <SheetClose asChild>
+      <Button className="flex-1 min-h-[44px]">
+        Apply Filters
+      </Button>
+    </SheetClose>
+  </div>
+</div>
+```
+
+---
+
+## Phase 6: Social Proof Text Wrap Fix
+
+### Problem
+At 375px, the social proof badges in HeroSection wrap awkwardly.
+
+### Files to Modify
+
+**`src/components/HeroSection.tsx`**
+
+- Lines 133-146: Adjust flex behavior for small screens
+
+```tsx
+// Current
+<div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
+
+// Proposed
+<div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 text-xs text-muted-foreground mb-6">
+```
+
+Or use a stacked layout on very small screens:
+```tsx
+<div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-6">
+```
+
+---
+
+## Phase 7: Add `aria-expanded` to Printer Filter Toggles
+
+### Problem
+Section toggles in `MobileFilterDrawer.tsx` lack proper ARIA attributes for accessibility.
+
+### Files to Modify
+
+**`src/components/printers/MobileFilterDrawer.tsx`**
+
+Apply to all section toggle buttons (sort, price, volume, brands, motion, features):
+
+```tsx
+<button
+  onClick={() => toggleSection('sort')}
+  aria-expanded={expandedSection === 'sort'}
+  aria-controls="sort-section-content"
+  className={cn(...)}
+>
+  ...
 </button>
-<div id="printer-section-content" hidden={expandedSection !== 'printer'}>
-  {/* content */}
+{expandedSection === 'sort' && (
+  <div id="sort-section-content" className="mt-3 space-y-1">
+    ...
+  </div>
+)}
+```
+
+---
+
+## Phase 8: Printer Card 320px Image Consistency
+
+### Problem
+At 320px, printer card images may have inconsistent aspect ratios.
+
+### Files to Modify
+
+**`src/components/printers/MediumStandardPrinterCard.tsx`**
+
+- Verify image container has explicit aspect ratio
+- Add `aspect-square` or `aspect-[4/3]` to image wrapper
+
+```tsx
+<div className="aspect-square w-full overflow-hidden rounded-lg">
+  <OptimizedImage ... className="w-full h-full object-cover" />
 </div>
 ```
 
@@ -277,33 +278,64 @@ FilaScope has a **solid accessibility foundation** with dedicated infrastructure
 
 ## Files Summary
 
-### New Files (1)
-- `src/components/accessibility/AccessibleSelect.tsx`
+### Files to Modify (7)
 
-### Modified Files (12)
 | File | Changes |
 |------|---------|
-| `src/components/deals/DealCard.tsx` | Add aria-label to share button |
-| `src/components/compare/MiniFilamentCard.tsx` | Add aria-labels, update badge colors |
-| `src/components/CompareTray.tsx` | Replace title with aria-label |
-| `src/components/filters/MobileFilamentFilterSheet.tsx` | Add aria-expanded, aria-controls, aria-labels |
-| `src/components/Navbar.tsx` | Add aria-expanded to mobile menu trigger |
-| `src/components/HeroSection.tsx` | Add reduced motion check, focus styles |
-| `src/components/LabReadoutCard.tsx` | Add motion-safe prefix |
-| `src/components/printers/MediumStandardPrinterCard.tsx` | Add motion-safe to pulse |
-| `src/components/MaterialBadge.tsx` | Increase text contrast |
-| `src/components/search/SearchInputWithHistory.tsx` | Add role="search", aria-autocomplete |
-| `src/index.css` | Add high-contrast utilities |
-| `src/pages/Finder.tsx` | Verify heading hierarchy |
+| `src/components/printers/MobileFilterDrawer.tsx` | Convert to bottom sheet, add touch targets, sticky footer, ARIA |
+| `src/components/HeroSection.tsx` | Show 3D graphic on tablet, fix social proof wrap |
+| `src/components/printers/MediumStandardPrinterCard.tsx` | Fix image aspect ratio at 320px |
+| `src/components/search/SearchInputWithHistory.tsx` | Verify full-width on 320px |
+| `src/components/Navbar.tsx` | Minor: ensure search triggers are 44px |
+| `src/components/filters/MobileFilamentFilterSheet.tsx` | Already good - no changes needed |
+| `src/pages/Wizard.tsx` | Already good - no changes needed |
 
 ---
 
-## Expected Accessibility Improvements
+## Testing Checklist
+
+### Per Breakpoint Testing
+
+| Breakpoint | Width | Test Areas |
+|------------|-------|------------|
+| Mobile Small | 320px | All touch targets 44px, text readable, no horizontal scroll |
+| Mobile | 375px | Search suggestions fit, social proof readable |
+| Mobile Large | 414px | Cards fill width, filter sheet works |
+| Tablet | 768px | Grid 2-col, 3D graphic scaled, filter sheet 85vh |
+| Tablet Landscape | 1024px | Transition to desktop layout, sidebar visible |
+
+### Component Testing Matrix
+
+| Component | 320px | 375px | 414px | 768px | 1024px |
+|-----------|-------|-------|-------|-------|--------|
+| Navbar hamburger | Test | Test | Test | Hidden | Hidden |
+| Hero section | Test | Test | Test | Test | Test |
+| Filter panel | Bottom sheet | Bottom sheet | Bottom sheet | Bottom sheet | Sidebar |
+| Product grids | 1-col | 1-col | 2-col | 2-col | 3-4 col |
+| Compare tray | Thin bar | Thin bar | Thin bar | Hidden | Full tray |
+| Product detail | Stacked | Stacked | Stacked | 2-col | 2-col |
+| Wizard | Full-screen | Full-screen | Full-screen | Centered | Centered |
+
+---
+
+## Expected Improvements
 
 | Metric | Before | After |
 |--------|--------|-------|
-| Icon buttons with labels | ~60% | 100% |
-| ARIA expanded on toggles | ~30% | 100% |
-| Color contrast compliance | ~85% | 100% |
-| Motion respect | ~70% | 100% |
-| Form accessibility | ~80% | 100% |
+| Touch target compliance | ~90% | 100% |
+| Filter sheet consistency | Mixed | Unified bottom-sheet pattern |
+| Tablet experience | Basic | Enhanced with 3D graphic |
+| ARIA compliance | ~85% | 100% |
+| 320px support | Good | Excellent |
+
+---
+
+## Implementation Priority
+
+1. **High**: MobileFilterDrawer → bottom sheet conversion (consistency)
+2. **High**: Touch target compliance (accessibility)
+3. **Medium**: ARIA attributes for filter toggles (accessibility)
+4. **Medium**: Sticky footer pattern (usability)
+5. **Low**: Hero 3D tablet visibility (polish)
+6. **Low**: Social proof text wrap (polish)
+7. **Low**: 320px image aspect ratio (polish)
