@@ -5,7 +5,9 @@ import {
   Check, 
   ArrowRight,
   Thermometer,
-  Droplets
+  Droplets,
+  Plus,
+  Columns3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -23,6 +25,7 @@ interface Filament {
   material?: string | null;
   color_hex?: string | null;
   variant_price?: number | null;
+  variant_compare_at_price?: number | null;
   net_weight_g?: number | null;
   pack_quantity?: number | null;
   ease_of_printing_score?: number | null;
@@ -114,6 +117,16 @@ export function LabReadoutCard({
     : null;
   const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
 
+  // Calculate original price per kg for sale comparison
+  const originalPrice = filament.variant_compare_at_price;
+  const originalPricePerKg = (originalPrice && effectiveWeightKg)
+    ? originalPrice / (effectiveWeightKg * packQty)
+    : null;
+  const isOnSale = originalPricePerKg && pricePerKg && originalPricePerKg > pricePerKg;
+  const discountPercent = isOnSale 
+    ? Math.round(((originalPricePerKg - pricePerKg) / originalPricePerKg) * 100)
+    : 0;
+
   // Dynamic score calculation
   const dynamicScore = useMemo(() => {
     const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
@@ -194,9 +207,11 @@ export function LabReadoutCard({
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-2xl transition-all duration-200 overflow-hidden",
+        "group relative rounded-2xl overflow-hidden",
         "border border-gray-700",
-        "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50",
+        // Faster transition (150ms) with enhanced hover effects
+        "transition-all duration-150 ease-out",
+        "hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/15 hover:border-primary/60",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
@@ -224,11 +239,20 @@ export function LabReadoutCard({
         </div>
       )}
 
+      {/* Sale Badge - Top Left */}
+      {isOnSale && discountPercent > 0 && (
+        <div className="absolute top-3 left-3 z-10">
+          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-500/20 border border-green-500/30 text-green-400 rounded">
+            -{discountPercent}%
+          </span>
+        </div>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════
           HEADER: Dark header area with brand logo
           ═══════════════════════════════════════════════════════════════ */}
       <div className="relative bg-[#14171C] px-4 pt-4 pb-4 h-[72px]">
-        {/* Checkbox positioned in TOP-RIGHT corner */}
+        {/* Compare Button - TOP-RIGHT corner with enhanced visibility on hover */}
         <div 
           className="absolute top-3 right-3 z-10"
           onMouseEnter={() => setShowTooltip(true)}
@@ -241,21 +265,28 @@ export function LabReadoutCard({
             aria-checked={isSelected}
             role="checkbox"
             className={cn(
-              "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer",
+              "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer",
               isSelected || isPendingSelection
-                ? "bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
-                : "bg-transparent border-2 border-gray-600 hover:border-gray-500",
+                ? "bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.5)]"
+                : cn(
+                    "bg-gray-800/80 border-2 border-gray-600",
+                    "opacity-0 group-hover:opacity-100",
+                    "hover:border-primary hover:bg-primary/20"
+                  ),
               isCompareDisabled && "opacity-50 cursor-not-allowed"
             )}
           >
-            {(isSelected || isPendingSelection) && (
+            {isSelected || isPendingSelection ? (
               <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+            ) : (
+              <Plus className="w-4 h-4 text-gray-300 group-hover:text-primary" />
             )}
           </button>
           
+          {/* Tooltip */}
           {showTooltip && !isSelected && !isCompareDisabled && (
-            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20">
-              Add to compare
+            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20 shadow-lg">
+              Add to Compare
             </div>
           )}
         </div>
@@ -307,16 +338,28 @@ export function LabReadoutCard({
             </span>
           )}
           
-          {/* Price - text-xl font-bold matching Printers */}
+          {/* Price Display - Enhanced with sale pricing */}
           <div className="text-right flex-shrink-0">
             {isValidPrice && pricePerKg ? (
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-bold text-foreground">
-                  {formatRegionalPrice(pricePerKg, false, userCurrency)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  /kg
-                </span>
+              <div className="flex flex-col items-end">
+                {/* Original price with strikethrough if on sale */}
+                {isOnSale && originalPricePerKg && (
+                  <span className="text-xs text-gray-500 line-through">
+                    {formatRegionalPrice(originalPricePerKg, false, userCurrency)}/kg
+                  </span>
+                )}
+                {/* Current/Sale price */}
+                <div className="flex items-baseline gap-1">
+                  <span className={cn(
+                    "text-xl font-bold",
+                    isOnSale ? "text-green-400" : "text-foreground"
+                  )}>
+                    {formatRegionalPrice(pricePerKg, false, userCurrency)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    /kg
+                  </span>
+                </div>
               </div>
             ) : (
               <span className="text-sm text-muted-foreground">
@@ -344,7 +387,7 @@ export function LabReadoutCard({
           FOOTER: Rating + View Details Button
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-3 border-t border-white/[0.05]">
-        {/* Star Rating - left aligned */}
+        {/* Star Rating - Enhanced brightness and contrast */}
         <div className="flex items-center gap-1 mb-3">
           {[...Array(5)].map((_, i) => (
             <Star 
@@ -352,13 +395,13 @@ export function LabReadoutCard({
               className={cn(
                 "w-3.5 h-3.5",
                 i < starCount 
-                  ? "fill-yellow-400 text-yellow-400" 
+                  ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_3px_rgba(251,191,36,0.5)]" 
                   : "fill-transparent text-gray-600"
               )}
             />
           ))}
           {overallScore && (
-            <span className="ml-1 text-sm text-muted-foreground">
+            <span className="ml-1.5 text-sm font-medium text-amber-400/90">
               {overallScore.toFixed(1)}
             </span>
           )}
@@ -367,7 +410,7 @@ export function LabReadoutCard({
         {/* View Details Button - Full width, solid bg-primary */}
         <Link
           to={`/filament/${filament.id}`}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all duration-200"
+          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all duration-150"
         >
           <span>View Details</span>
           <ArrowRight className="w-4 h-4" />
