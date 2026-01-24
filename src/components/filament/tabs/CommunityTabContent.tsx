@@ -71,27 +71,42 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
 
   return (
     <div className="space-y-6">
-      {/* Reviews Section */}
-      <Card className="bg-card/50 border-border">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
+      {/* Reviews Section - Enhanced Empty State */}
+      <Card className="bg-card/50 border-border overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex items-center gap-3 p-6 pb-4">
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Star className="w-5 h-5" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-lg font-semibold">Reviews</h3>
-              <p className="text-xs text-muted-foreground">Aggregated from trusted sources</p>
+              <p className="text-xs text-muted-foreground">Share your experience with this filament</p>
             </div>
+            <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-500 bg-amber-500/10">
+              Coming Soon
+            </Badge>
           </div>
           
-          <div className="flex flex-col items-center justify-center py-12 bg-muted/20 rounded-lg border border-dashed border-border">
-            <Star className="w-12 h-12 text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground text-center mb-2">
-              Reviews coming soon
-            </p>
-            <p className="text-sm text-muted-foreground/70 text-center max-w-sm">
-              We're aggregating ratings and reviews from retailers and the community to help you make informed decisions.
-            </p>
+          <div className="relative px-6 pb-6">
+            <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-b from-primary/5 to-transparent rounded-xl border border-dashed border-primary/20">
+              <div className="relative mb-4">
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+                <div className="relative p-4 bg-primary/10 rounded-full">
+                  <Star className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold mb-2">Be the First to Review!</h4>
+              <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
+                Have you printed with {filament.vendor} {filament.material}? Share your experience to help other makers make informed decisions.
+              </p>
+              <Button variant="outline" disabled className="gap-2">
+                <Star className="w-4 h-4" />
+                Write a Review
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Reviews feature launching soon
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

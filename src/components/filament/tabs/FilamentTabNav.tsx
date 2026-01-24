@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export type FilamentTab = "overview" | "specifications" | "compatibility" | "pricing" | "community";
 
@@ -7,6 +8,7 @@ interface TabConfig {
   id: FilamentTab;
   label: string;
   hash: string;
+  badge?: "coming-soon" | "new";
 }
 
 const TABS: TabConfig[] = [
@@ -14,7 +16,7 @@ const TABS: TabConfig[] = [
   { id: "specifications", label: "Specifications", hash: "#specifications" },
   { id: "compatibility", label: "Compatibility", hash: "#compatibility" },
   { id: "pricing", label: "Pricing", hash: "#pricing" },
-  { id: "community", label: "Community", hash: "#community" },
+  { id: "community", label: "Community", hash: "#community", badge: "coming-soon" },
 ];
 
 interface FilamentTabNavProps {
@@ -78,12 +80,29 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
                 "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation",
                 "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 "active:scale-95 transition-transform",
+                "flex items-center gap-2",
                 activeTab === tab.id
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               {tab.label}
+              {tab.badge === "coming-soon" && (
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] px-1.5 py-0 h-4 font-normal border-amber-500/50 text-amber-500 bg-amber-500/10"
+                >
+                  Soon
+                </Badge>
+              )}
+              {tab.badge === "new" && (
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] px-1.5 py-0 h-4 font-normal border-primary/50 text-primary bg-primary/10"
+                >
+                  New
+                </Badge>
+              )}
               {/* Active indicator - teal underline */}
               {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
