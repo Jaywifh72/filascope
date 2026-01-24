@@ -7,10 +7,9 @@ interface PrinterCardSkeletonProps {
 export function PrinterCardSkeleton({ index = 0 }: PrinterCardSkeletonProps) {
   return (
     <div 
-      className="relative rounded-2xl bg-card/50 border border-border/50 overflow-hidden"
+      className="relative rounded-2xl bg-card/50 border border-border/50 overflow-hidden skeleton-animated"
       style={{ 
         animationDelay: `${index * 50}ms`,
-        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s both`
       }}
     >
       {/* Header with badge and checkbox */}

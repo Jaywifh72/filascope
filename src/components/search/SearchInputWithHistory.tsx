@@ -3,6 +3,7 @@ import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles } from "lucide-r
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useSearchSuggestions, SearchSuggestion } from "@/hooks/useSearchSuggestions";
+import { SearchSuggestionItemSkeleton } from "@/components/skeletons/SearchSuggestionsSkeleton";
 
 interface SearchInputWithHistoryProps {
   value: string;
@@ -196,6 +197,15 @@ export function SearchInputWithHistory({
           role="listbox"
           aria-label="Search suggestions"
         >
+          {/* Loading skeleton while fetching suggestions */}
+          {isLoading && value.length >= 2 && suggestions.length === 0 && (
+            <div className="p-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SearchSuggestionItemSkeleton key={i} index={i} />
+              ))}
+            </div>
+          )}
+
           {/* Suggestions (when typing) */}
           {value.length >= 2 && suggestions.length > 0 && (
             <div className="p-2">
