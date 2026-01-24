@@ -1,5 +1,5 @@
 // Filament comparison page
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import { MobileCompareView } from "@/components/compare/MobileCompareView";
 import { MobileStickyBuyBar } from "@/components/compare/MobileStickyBuyBar";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useCompare } from "@/hooks/useCompare";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   RadarChart,
@@ -54,8 +55,32 @@ const Compare = () => {
   const { getAffiliateUrl } = useAffiliateLinks();
   const { formatPrice } = useCurrency();
   
-  // Tab state - default to reference, but switch to comparison if filament IDs are in URL
-  const activeTab = searchParams.get("tab") || (searchParams.get("ids") ? "comparison" : "reference");
+  // Access the compare tray context
+  const { items: compareItems, removeItem: removeFromContext } = useCompare();
+  const hasSyncedRef = useRef(false);
+  
+  // Sync compare tray items to URL if no URL params exist
+  useEffect(() => {
+    const urlIds = searchParams.get("ids");
+    
+    // If no IDs in URL but we have items in context, sync them to URL
+    if (!urlIds && compareItems.length > 0 && !hasSyncedRef.current) {
+      hasSyncedRef.current = true;
+      const ids = compareItems.map(item => item.id).join(',');
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("ids", ids);
+      // Also switch to comparison tab when syncing
+      if (!newParams.get("tab")) {
+        newParams.set("tab", "comparison");
+      }
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [compareItems, searchParams, setSearchParams]);
+  
+  // Tab state - default to reference, but switch to comparison if filament IDs exist
+  const urlIds = searchParams.get("ids");
+  const hasItems = urlIds || compareItems.length > 0;
+  const activeTab = searchParams.get("tab") || (hasItems ? "comparison" : "reference");
   
   const handleTabChange = (value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -64,10 +89,17 @@ const Compare = () => {
   };
 
   const fetchFilaments = async () => {
-    const ids = searchParams.get("ids")?.split(",") || [];
+    // Get IDs from URL, fall back to compare context items
+    let ids = searchParams.get("ids")?.split(",").filter(Boolean) || [];
+    
+    // If no URL IDs, use compare context items
+    if (ids.length === 0 && compareItems.length > 0) {
+      ids = compareItems.map(item => item.id);
+    }
     
     if (ids.length === 0) {
       setLoading(false);
+      setFilaments([]);
       return;
     }
 
@@ -91,7 +123,7 @@ const Compare = () => {
       setError("Unable to load comparison. Please try again.");
       
       // Try loading from cache
-      const cacheKey = `compare_cache_${searchParams.get("ids")}`;
+      const cacheKey = `compare_cache_${ids.join(',')}`;
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         setFilaments(JSON.parse(cached));
@@ -106,7 +138,7 @@ const Compare = () => {
 
   useEffect(() => {
     fetchFilaments();
-  }, [searchParams]);
+  }, [searchParams, compareItems]);
 
   const handleBack = () => {
     const lastParams = sessionStorage.getItem('finder_last_params');
@@ -165,8 +197,11 @@ const Compare = () => {
     <FilamentComparisonEmptyState onBrowseMaterials={handleBack} />
   );
 
-  // Handle removing a filament from comparison
+  // Handle removing a filament from comparison - sync both URL and context
   const handleRemoveFilament = (id: string) => {
+    // Remove from context as well
+    removeFromContext(id);
+    
     const currentIds = searchParams.get("ids")?.split(",") || [];
     const newIds = currentIds.filter(fid => fid !== id);
     const newParams = new URLSearchParams(searchParams);

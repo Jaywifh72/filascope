@@ -63,7 +63,7 @@ export function useFunnelAnalytics() {
     addStep(event.step);
     
     try {
-      await supabase.from('funnel_events').insert({
+      await supabase.from('funnel_events').insert([{
         session_id: sessionId,
         user_id: user?.id || null,
         funnel_type: event.funnel_type,
@@ -74,8 +74,8 @@ export function useFunnelAnalytics() {
         entity_type: event.entity_type || null,
         page_url: window.location.href,
         referrer: document.referrer || null,
-        metadata: event.metadata || {},
-      });
+        metadata: event.metadata ? JSON.parse(JSON.stringify(event.metadata)) : null,
+      }]);
     } catch (error) {
       console.error('Failed to track funnel step:', error);
     }
