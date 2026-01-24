@@ -62,10 +62,10 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
         isSticky && "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
       )}
     >
-      {/* Horizontal scroll container for mobile */}
-      <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
+      {/* Horizontal scroll container for mobile with snap behavior */}
+      <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0 scroll-smooth snap-x snap-mandatory">
         <nav
-          className="flex gap-1 min-w-max py-3"
+          className="flex gap-1 min-w-max py-3 snap-start"
           role="tablist"
           aria-label="Filament details tabs"
         >
@@ -77,9 +77,9 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
               aria-controls={`tabpanel-${tab.id}`}
               onClick={() => handleTabClick(tab)}
               className={cn(
-                "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation",
+                "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation snap-start",
                 "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                "active:scale-95 transition-transform",
+                "active:scale-95 transition-transform min-h-[44px]",
                 "flex items-center gap-2",
                 activeTab === tab.id
                   ? "text-primary"

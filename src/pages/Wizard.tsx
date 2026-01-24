@@ -359,7 +359,7 @@ const Wizard = () => {
     const recommendations = getRecommendations();
     
     return (
-      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen py-6 sm:py-12 px-3 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Results Header */}
           <div className="text-center mb-10">
@@ -485,9 +485,9 @@ const Wizard = () => {
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <Card className="p-6 md:p-8">
+    <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col">
+      <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
+        <Card className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -519,21 +519,21 @@ const Wizard = () => {
               <RadioGroup
                 value={answers[currentQuestion.id] as string || ''}
                 onValueChange={handleSingleAnswer}
-                className="space-y-3"
+                className="space-y-2 sm:space-y-3"
               >
                 {currentQuestion.options.map((option) => (
                   <div key={option.value}>
                     <RadioGroupItem value={option.value} id={option.value} className="sr-only peer" />
                     <Label
                       htmlFor={option.value}
-                      className="flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 border-border hover:border-primary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
+                      className="flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 border-border hover:border-primary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all min-h-[56px] touch-manipulation"
                     >
                       {option.icon && (
-                        <span className="text-2xl flex-shrink-0">{option.icon}</span>
+                        <span className="text-xl sm:text-2xl flex-shrink-0">{option.icon}</span>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium">{option.label}</div>
-                        <div className="text-sm text-muted-foreground">{option.description}</div>
+                        <div className="font-medium text-sm sm:text-base">{option.label}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">{option.description}</div>
                       </div>
                       <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-muted-foreground/30 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary flex items-center justify-center">
                         {(answers[currentQuestion.id] === option.value) && (
@@ -545,7 +545,7 @@ const Wizard = () => {
                 ))}
               </RadioGroup>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {currentQuestion.options.map((option) => {
                   const currentValues = (answers[currentQuestion.id] as string[]) || [];
                   const isChecked = currentValues.includes(option.value);
@@ -553,7 +553,7 @@ const Wizard = () => {
                   return (
                     <div
                       key={option.value}
-                      className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                      className={`flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all min-h-[56px] touch-manipulation ${
                         isChecked 
                           ? 'border-primary bg-primary/5' 
                           : 'border-border hover:border-primary/50'
@@ -561,11 +561,11 @@ const Wizard = () => {
                       onClick={() => handleMultiAnswer(option.value, !isChecked)}
                     >
                       {option.icon && (
-                        <span className="text-2xl flex-shrink-0">{option.icon}</span>
+                        <span className="text-xl sm:text-2xl flex-shrink-0">{option.icon}</span>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium">{option.label}</div>
-                        <div className="text-sm text-muted-foreground">{option.description}</div>
+                        <div className="font-medium text-sm sm:text-base">{option.label}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">{option.description}</div>
                       </div>
                       <Checkbox
                         checked={isChecked}
@@ -579,13 +579,13 @@ const Wizard = () => {
             )}
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-4">
+          {/* Navigation - Sticky on mobile */}
+          <div className="flex gap-3 sm:gap-4 mt-auto pt-6 sticky bottom-0 bg-card pb-safe">
             <Button
               variant="outline"
               onClick={handleBack}
               disabled={currentStep === 0}
-              className="flex-1"
+              className="flex-1 h-12 sm:h-11 min-h-[48px] touch-manipulation"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -593,7 +593,7 @@ const Wizard = () => {
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              className="flex-1 h-12 sm:h-11 min-h-[48px] touch-manipulation bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
             >
               {isLastQuestion ? (
                 <>

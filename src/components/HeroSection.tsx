@@ -89,7 +89,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-6 md:px-10 pt-20 pb-8 md:pt-24 md:pb-12">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-16 pb-6 sm:pt-20 sm:pb-8 md:pt-24 md:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
@@ -143,7 +143,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             
             {/* Search Input with History & Suggestions */}
             <div 
-              className="w-full max-w-[500px] mb-6 animate-fade-in"
+              className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in"
               style={{ animationDelay: "0.25s" }}
             >
               <SearchInputWithHistory
@@ -151,18 +151,18 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                 onChange={onSearchChange}
                 placeholder={searchSuggestions[currentSuggestionIndex]}
                 context="filaments"
-                className="h-14"
+                className="h-12 sm:h-14"
               />
             </div>
 
             {/* Quick Start Paths - 4 cards */}
             <div 
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-[600px] animate-fade-in mb-16 md:mb-20"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full max-w-[600px] animate-fade-in mb-12 sm:mb-16 md:mb-20"
               style={{ animationDelay: "0.35s" }}
             >
               {quickStartPaths.map((path) => {
                 const Icon = path.icon;
-                const cardClasses = `group relative flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-h-[120px] ${getColorClasses(path.color)}`;
+                const cardClasses = `group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-h-[100px] sm:min-h-[120px] touch-manipulation ${getColorClasses(path.color)}`;
                 
                 const cardContent = (
                   <>

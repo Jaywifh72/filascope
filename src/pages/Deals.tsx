@@ -3,6 +3,7 @@ import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter } from "lucide-react"
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
+import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterSheet";
 import { DealNotificationSignup } from "@/components/deals/DealNotificationSignup";
 import { DealCard } from "@/components/deals/DealCard";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
@@ -80,9 +81,29 @@ const Deals = () => {
         </section>
 
         {/* Filters Section */}
-        <section className="px-6 md:px-10 pb-6">
+        <section className="px-4 sm:px-6 md:px-10 pb-6">
           <div className="max-w-[1600px] mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border">
+            {/* Mobile Filter Sheet */}
+            <div className="md:hidden mb-4">
+              <MobileDealsFilterSheet
+                materials={availableMaterials}
+                brands={availableBrands}
+                selectedMaterials={selectedMaterials}
+                selectedBrands={selectedBrands}
+                minDiscount={minDiscount}
+                priceRange={priceRange}
+                maxPrice={maxPrice}
+                onMaterialChange={setSelectedMaterials}
+                onBrandChange={setSelectedBrands}
+                onDiscountChange={setMinDiscount}
+                onPriceRangeChange={setPriceRange}
+                onClearAll={clearAllFilters}
+                resultCount={deals.length}
+              />
+            </div>
+            
+            {/* Desktop Filters */}
+            <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Filter className="h-4 w-4" />
                 <span>Filter deals:</span>
