@@ -236,7 +236,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
       {/* Rating */}
       {filament.ease_of_printing_score && (
         <div className="flex items-center gap-1 mb-3">
-          <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300 drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]" />
+          <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
           <span className="text-xs text-muted-foreground">
             {filament.ease_of_printing_score.toFixed(1)} Ease of Print
           </span>

@@ -393,9 +393,9 @@ export function LabReadoutCard({
             <Star 
               key={i}
               className={cn(
-                "w-3.5 h-3.5",
+                "w-4 h-4",
                 i < starCount 
-                  ? "fill-amber-300 text-amber-300 drop-shadow-[0_0_4px_rgba(252,211,77,0.6)]" 
+                  ? "fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" 
                   : "fill-transparent text-gray-600"
               )}
             />
