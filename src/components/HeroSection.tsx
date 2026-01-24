@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Search, Sparkles, FlaskConical, FlaskRound, Printer, Wand2, Tag, Users, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeroSectionProps {
   searchTerm: string;
@@ -19,42 +20,61 @@ const searchSuggestions = [
   "Try 'flexible TPU'",
 ];
 
-const quickStartPaths = [
-  {
-    title: "Find Filament",
-    description: "Browse 2000+ materials",
-    icon: FlaskRound,
-    href: "#system-config",
-    color: "primary",
-    isScroll: true,
-  },
-  {
-    title: "Compare Printers",
-    description: "Side-by-side specs",
-    icon: Printer,
-    href: "/printers",
-    color: "blue",
-  },
-  {
-    title: "Material Wizard",
-    description: "5 questions, perfect match",
-    icon: Wand2,
-    href: "/wizard",
-    color: "purple",
-  },
-  {
-    title: "Today's Deals",
-    description: "Best prices right now",
-    icon: Tag,
-    href: "/deals",
-    color: "green",
-  },
-];
-
 const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount }: HeroSectionProps) => {
-  const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+
+  // Fetch active deals count
+  const { data: dealsCount = 0 } = useQuery({
+    queryKey: ["hero-deals-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('filaments')
+        .select('*', { count: 'exact', head: true })
+        .not('variant_compare_at_price', 'is', null)
+        .not('variant_price', 'is', null)
+        .gt('variant_compare_at_price', 0)
+        .or('net_weight_g.is.null,net_weight_g.gte.300');
+      
+      if (error) return 0;
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5, // 5 min cache
+  });
+
+  // Dynamic quick start paths
+  const quickStartPaths = useMemo(() => [
+    {
+      title: "Quick Match",
+      description: "Answer 3 questions, get your perfect filament",
+      icon: Target,
+      href: "/wizard",
+      color: "purple",
+    },
+    {
+      title: "Browse Filaments",
+      description: `Explore ${filamentCount.toLocaleString()}+ materials`,
+      icon: Search,
+      href: "#system-config",
+      color: "primary",
+      isScroll: true,
+    },
+    {
+      title: "Compare Tool",
+      description: "Side-by-side specs & properties",
+      icon: Columns3,
+      href: "/compare",
+      color: "blue",
+    },
+    {
+      title: "Today's Deals",
+      description: dealsCount > 0 ? `${dealsCount} active deals` : "Best prices right now",
+      icon: Tag,
+      href: "/deals",
+      color: "green",
+      hasLiveBadge: true,
+    },
+  ], [filamentCount, dealsCount]);
 
   // Cycle through search suggestions
   useEffect(() => {
@@ -70,13 +90,13 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const getColorClasses = (color: string) => {
     switch (color) {
       case 'primary':
-        return 'border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary';
+        return 'border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary hover:shadow-primary/10';
       case 'blue':
-        return 'border-blue-500/30 hover:border-blue-500/60 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400';
+        return 'border-blue-500/30 hover:border-blue-500/60 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400 hover:shadow-blue-500/10';
       case 'purple':
-        return 'border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400';
+        return 'border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400 hover:shadow-purple-500/10';
       case 'green':
-        return 'border-green-500/30 hover:border-green-500/60 bg-green-500/5 hover:bg-green-500/10 text-green-400';
+        return 'border-green-500/30 hover:border-green-500/60 bg-green-500/5 hover:bg-green-500/10 text-green-400 hover:shadow-green-500/10';
       default:
         return 'border-gray-500/30 hover:border-gray-500/60 bg-gray-500/5 hover:bg-gray-500/10 text-gray-400';
     }
@@ -177,6 +197,22 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             >
               {quickStartPaths.map((path) => {
                 const Icon = path.icon;
+                const cardClasses = `group relative flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-h-[120px] ${getColorClasses(path.color)}`;
+                
+                const cardContent = (
+                  <>
+                    {/* LIVE badge for deals card */}
+                    {path.hasLiveBadge && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[8px] font-bold uppercase">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                        Live
+                      </div>
+                    )}
+                    <Icon className="h-7 w-7 mb-2 transition-transform group-hover:scale-110" />
+                    <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">{path.description}</span>
+                  </>
+                );
                 
                 if (path.isScroll) {
                   return (
@@ -191,11 +227,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                           window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
                         }
                       }}
-                      className={`group flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${getColorClasses(path.color)}`}
+                      className={cardClasses}
                     >
-                      <Icon className="h-6 w-6 mb-2 transition-transform group-hover:scale-110" />
-                      <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
-                      <span className="text-[10px] text-muted-foreground leading-tight">{path.description}</span>
+                      {cardContent}
                     </button>
                   );
                 }
@@ -204,11 +238,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
                   <Link
                     key={path.title}
                     to={path.href}
-                    className={`group flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${getColorClasses(path.color)}`}
+                    className={cardClasses}
                   >
-                    <Icon className="h-6 w-6 mb-2 transition-transform group-hover:scale-110" />
-                    <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">{path.description}</span>
+                    {cardContent}
                   </Link>
                 );
               })}
