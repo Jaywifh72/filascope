@@ -135,6 +135,8 @@ export const CalculatorTabs: React.FC<CalculatorTabsProps> = ({
               filamentDensity={filament.density || 1.24}
               spoolWeight={filament.spoolWeight || 1000}
               currentPrice={filament.price}
+              filamentName={filament.name}
+              filamentMaterial={filament.material}
               onCalculate={setUsageResult}
             />
           )}
