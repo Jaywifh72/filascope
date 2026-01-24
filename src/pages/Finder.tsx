@@ -1582,8 +1582,6 @@ const Finder = () => {
             /* List View - Sortable Table (uses representative filaments from groups) */
             <FilamentTableView
               filaments={displayedGroups.map(g => g.representativeFilament) as any}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
               isInCompare={isInCompare}
               addItem={addItem}
               removeItem={removeItem}
