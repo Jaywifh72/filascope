@@ -91,7 +91,13 @@ const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 const Install = lazy(() => import("./pages/Install"));
 
-const queryClient = new QueryClient();
+import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: DEFAULT_QUERY_OPTIONS,
+  },
+});
 
 // Navbar no longer needs compatible count - printer selector moved to hero section
 

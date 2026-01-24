@@ -24,33 +24,50 @@ interface OptimizedImageProps {
  * Generate optimized image URL with size parameters
  * This works with common CDN patterns and Supabase Storage
  */
-function getOptimizedSrc(src: string, width?: number): string {
+/**
+ * Generate optimized image URL with size and format parameters
+ * Supports WebP format with automatic fallback
+ */
+function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'): string {
   if (!src || !width) return src;
+
+  const requestFormat = format || 'auto';
 
   // Supabase Storage transform
   if (src.includes("supabase") && src.includes("/storage/v1/object/")) {
     const url = new URL(src);
     url.searchParams.set("width", String(width));
     url.searchParams.set("quality", "80");
+    if (requestFormat === 'webp') {
+      url.searchParams.set("format", "webp");
+    }
     return url.toString();
   }
 
-  // Shopify CDN
+  // Shopify CDN - supports format=webp via query param
   if (src.includes("shopify.com") || src.includes("cdn.shopify.com")) {
-    // Insert size before file extension: image.jpg -> image_400x.jpg
-    return src.replace(/(\.\w+)(\?.*)?$/, `_${width}x$1$2`);
+    let optimized = src.replace(/(\.\w+)(\?.*)?$/, `_${width}x$1$2`);
+    if (requestFormat === 'webp') {
+      const separator = optimized.includes('?') ? '&' : '?';
+      optimized += `${separator}format=webp`;
+    }
+    return optimized;
   }
 
-  // Cloudinary
+  // Cloudinary - f_webp or f_auto
   if (src.includes("cloudinary.com")) {
-    return src.replace("/upload/", `/upload/w_${width},q_auto,f_auto/`);
+    const formatParam = requestFormat === 'webp' ? 'f_webp' : 'f_auto';
+    return src.replace("/upload/", `/upload/w_${width},q_auto,${formatParam}/`);
   }
 
-  // Imgix
+  // Imgix - auto=format for WebP when supported
   if (src.includes("imgix.net")) {
     const url = new URL(src);
     url.searchParams.set("w", String(width));
     url.searchParams.set("auto", "format,compress");
+    if (requestFormat === 'webp') {
+      url.searchParams.set("fm", "webp");
+    }
     return url.toString();
   }
 
@@ -58,12 +75,41 @@ function getOptimizedSrc(src: string, width?: number): string {
 }
 
 /**
+ * Generate WebP source URL if CDN supports it
+ */
+function getWebPSrc(src: string, width?: number): string | null {
+  if (!src) return null;
+  
+  // Only generate WebP for CDNs that support it
+  const supportsWebP = 
+    src.includes("cloudinary.com") ||
+    src.includes("imgix.net") ||
+    src.includes("shopify.com") ||
+    (src.includes("supabase") && src.includes("/storage/v1/object/"));
+    
+  if (!supportsWebP) return null;
+  
+  return getOptimizedSrc(src, width, 'webp');
+}
+
+/**
  * Generate srcset for responsive images
  */
-function generateSrcSet(src: string, widths: number[]): string {
+/**
+ * Generate srcset for responsive images
+ */
+function generateSrcSet(src: string, widths: number[], format?: 'webp' | 'auto'): string {
   return widths
-    .map((w) => `${getOptimizedSrc(src, w)} ${w}w`)
+    .map((w) => `${getOptimizedSrc(src, w, format)} ${w}w`)
     .join(", ");
+}
+
+/**
+ * Generate WebP srcset if supported
+ */
+function generateWebPSrcSet(src: string, widths: number[]): string | null {
+  if (!getWebPSrc(src, widths[0])) return null;
+  return generateSrcSet(src, widths, 'webp');
 }
 
 const aspectRatioClasses = {
