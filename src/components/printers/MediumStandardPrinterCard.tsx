@@ -220,34 +220,45 @@ export default function MediumStandardPrinterCard({
             </div>
 
             {/* Price Section */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {printer.discontinued ? (
-                <span className="text-xs sm:text-sm font-medium text-destructive/70">DISCONTINUED</span>
-              ) : priceLoading ? (
-                <span className="text-xs sm:text-sm text-muted-foreground animate-pulse">Loading...</span>
-              ) : price ? (
-                <>
-                  {/* Current Price - WHITE for consistency */}
-                  <span className="text-base sm:text-xl font-bold text-white inline-flex items-center gap-1">
-                    <Tag className="h-3 w-3 sm:h-4 sm:w-4 text-primary opacity-70" />
-                    {formatDisplayPrice(price)}
-                    {isLivePrice && <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400" />}
-                  </span>
-                  
-                  {/* Original Price & Discount Badge - GREEN filled */}
-                  {printer.msrp_usd && price < printer.msrp_usd && (
-                    <div className="flex items-center gap-1.5">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                {printer.discontinued ? (
+                  <span className="text-xs sm:text-sm font-medium text-destructive/70">DISCONTINUED</span>
+                ) : priceLoading ? (
+                  <span className="text-xs sm:text-sm text-muted-foreground animate-pulse">Loading...</span>
+                ) : price ? (
+                  <>
+                    {/* Current Price - WHITE for consistency */}
+                    <span className="text-base sm:text-xl font-bold text-white inline-flex items-center gap-1">
+                      <Tag className="h-3 w-3 sm:h-4 sm:w-4 text-primary opacity-70" />
+                      {formatDisplayPrice(price)}
+                    </span>
+                    
+                    {/* Discount Badge - prominent green pill */}
+                    {printer.msrp_usd && price < printer.msrp_usd && discountPercent && discountPercent >= 5 && (
+                      <span className="text-[10px] sm:text-xs font-bold bg-green-500 text-white px-2 py-0.5 rounded-full animate-pulse">
+                        -{discountPercent}% OFF
+                      </span>
+                    )}
+                    
+                    {/* Original Price strikethrough */}
+                    {printer.msrp_usd && price < printer.msrp_usd && (
                       <span className="text-xs text-gray-500 line-through hidden sm:inline">
                         {formatDisplayPrice(printer.msrp_usd)}
                       </span>
-                      <span className="text-[10px] sm:text-xs font-semibold bg-green-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
-                        -{discountPercent}%
-                      </span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <span className="text-xs sm:text-sm text-muted-foreground">Price TBD</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-xs sm:text-sm text-muted-foreground">Price TBD</span>
+                )}
+              </div>
+              
+              {/* Price verification timestamp */}
+              {!printer.discontinued && price && isLivePrice && (
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400/80">
+                  <CheckCircle2 className="h-3 w-3" />
+                  <span>Price verified just now</span>
+                </div>
               )}
             </div>
 

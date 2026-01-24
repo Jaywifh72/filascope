@@ -3,6 +3,7 @@ import { Database } from '@/integrations/supabase/types';
 import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { BestPricesSection } from '../BestPricesSection';
 import { 
   Zap, 
   Package, 
@@ -21,6 +22,7 @@ type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
 interface OverviewTabContentProps {
   filament: Filament;
+  onNavigateToPricing?: () => void;
 }
 
 // Helper function to get ease label
@@ -143,7 +145,7 @@ function inferNotRecommendedWarnings(filament: Filament): Array<{ label: string;
   return warnings;
 }
 
-export function OverviewTabContent({ filament }: OverviewTabContentProps) {
+export function OverviewTabContent({ filament, onNavigateToPricing }: OverviewTabContentProps) {
   // Build key features list
   const features: Array<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = [];
 
@@ -187,6 +189,12 @@ export function OverviewTabContent({ filament }: OverviewTabContentProps) {
 
   return (
     <div className="space-y-6">
+      {/* Best Prices Section - Above the fold */}
+      <BestPricesSection 
+        filamentId={filament.id} 
+        onViewAllPrices={onNavigateToPricing}
+      />
+
       {/* Product Summary */}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/[0.02] border-primary/20">
         <CardContent className="p-6">
