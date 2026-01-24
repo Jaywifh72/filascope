@@ -248,7 +248,7 @@ const Navbar = () => {
             <div className="h-5 w-px bg-border/50 mx-2" />
 
             {/* Compare Button - Ghost with teal border */}
-            <Tooltip>
+            <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
                   <GitCompareArrows className="w-3.5 h-3.5" />
@@ -287,7 +287,7 @@ const Navbar = () => {
             </DropdownMenu>
 
             {/* Compare Button - Tablet */}
-            <Tooltip>
+            <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <button onClick={() => navigate('/compare')} className={cn("border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
                   <GitCompareArrows className="w-3.5 h-3.5" />
