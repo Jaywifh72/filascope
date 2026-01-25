@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCompare } from "@/hooks/useCompare";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
-import { PriceFreshnessText } from "@/components/price/PriceFreshnessIndicator";
 import { PriceConfidence } from "@/hooks/usePriceFreshness";
+import { HonestPriceDisplayCompact, getCtaText, shouldUsePrimaryCta } from "@/components/price/HonestPriceDisplay";
 
 interface FilamentMobileBottomBarProps {
   filamentId: string;
@@ -100,27 +100,15 @@ export function FilamentMobileBottomBar({
         className="relative bg-card border-t border-border/60 px-4 py-3 flex items-center justify-between gap-4"
         style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
-        {/* Price section */}
+        {/* Price section - Honest Display */}
         <div className="flex-1 min-w-0">
-          {formattedPrice ? (
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="text-xl font-bold text-white">{formattedPrice}</span>
-                <span className="text-sm text-muted-foreground">/kg</span>
-                {discountPercent && (
-                  <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
-                    -{discountPercent}%
-                  </span>
-                )}
-              </div>
-              <PriceFreshnessText 
-                lastVerified={lastScrapedAt} 
-                confidence={priceConfidence as PriceConfidence | undefined}
-              />
-            </div>
-          ) : (
-            <span className="text-sm text-gray-400">Price not available</span>
-          )}
+          <HonestPriceDisplayCompact
+            price={displayPricePerKg}
+            confidence={priceConfidence as PriceConfidence | undefined}
+            lastVerifiedAt={lastScrapedAt}
+            storeName="Store"
+            isConverted={false}
+          />
         </div>
 
         {/* Action buttons */}
@@ -138,15 +126,16 @@ export function FilamentMobileBottomBar({
             </Button>
           )}
           
-          {/* Buy button */}
+          {/* Buy button - dynamic based on confidence */}
           {affiliateUrl ? (
             <Button 
               size="lg" 
               onClick={handleBuyClick}
+              variant={shouldUsePrimaryCta(priceConfidence as PriceConfidence) ? 'default' : 'outline'}
               className="gap-2 px-6"
             >
-              <ShoppingCart className="h-4 w-4" />
-              <span>Buy Now</span>
+              {shouldUsePrimaryCta(priceConfidence as PriceConfidence) && <ShoppingCart className="h-4 w-4" />}
+              <span>{getCtaText(priceConfidence as PriceConfidence, 'Store')}</span>
               <ExternalLink className="h-3 w-3 opacity-70" />
             </Button>
           ) : (

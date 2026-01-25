@@ -24,8 +24,8 @@ import { useRegion } from '@/contexts/RegionContext';
 import { REGIONS } from '@/config/regions';
 import { RegionalPriceResult, CurrencyCode, RegionCode } from '@/types/regional';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { PriceFreshnessIndicator } from '@/components/price/PriceFreshnessIndicator';
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
+import { HonestPriceDisplay, getCtaText, shouldUsePrimaryCta } from '@/components/price/HonestPriceDisplay';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -198,95 +198,66 @@ export function FilamentPurchaseSidebar({
             </div>
           )}
 
-          {/* Price Section */}
-          <div className="space-y-2">
-            {priceLoading ? (
-              <div className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
-                <span className="text-sm text-muted-foreground">Checking price...</span>
-              </div>
-            ) : formattedPricePerKg ? (
-              <>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-white">
-                    {formattedPricePerKg}
-                  </span>
-                  <span className="text-sm text-muted-foreground font-medium">/kg</span>
-                  
-                  {/* Conversion info tooltip */}
-                  {isConvertedPrice && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        {hasValidRegionalPrice && regionalPriceResult ? (
-                          <>
-                            <p className="font-medium">Converted from {regionalPriceResult.originalCurrency}</p>
-                            {regionalPriceResult.conversionRate && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Rate: 1 {regionalPriceResult.originalCurrency} = {regionalPriceResult.conversionRate.toFixed(4)} {currency}
-                              </p>
-                            )}
-                          </>
-                        ) : hasValidLivePrice && isLivePriceConverted ? (
-                          <>
-                            <p className="font-medium">Converted from {liveOriginalCurrency}</p>
-                            {liveConversionRate && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Rate: 1 {liveOriginalCurrency} = {liveConversionRate.toFixed(4)} {currency}
-                              </p>
-                            )}
-                          </>
-                        ) : null}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-                
-                {/* Compare at price (sale indicator) - now works with converted prices */}
-                {isLivePrice && compareAtPrice && livePrice && compareAtPrice > livePrice && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground line-through">
-                      {formatPrice(compareAtPrice)}
-                    </span>
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                      {Math.round((1 - livePrice / compareAtPrice) * 100)}% OFF
-                    </span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <span className="text-lg text-muted-foreground">Price unavailable</span>
-            )}
-
-            {/* Price freshness indicator */}
-            <PriceFreshnessIndicator
-              lastVerified={lastScrapedAt}
-              confidence={priceConfidence || undefined}
-              source={priceSource}
-              className="mt-1"
-            />
-
-            {/* Fallback region warning - show when price is from a different region */}
-            {!isLocalStore && storeRegionCode && !priceLoading && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
-                <Globe className="w-3.5 h-3.5" />
-                <span className="font-medium">
-                  Price from {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
-                </span>
-              </div>
-            )}
-
-            {/* Price Urgency Badge */}
-            {(displayPricePerKg || displayPrice) && (
-              <PriceUrgencyBadge
-                filamentId={filamentId}
-                currentPrice={displayPricePerKg || displayPrice}
-                size="small"
+          {/* Price Section - Honest Display */}
+          {priceLoading ? (
+            <div className="flex items-center gap-2 py-4">
+              <RefreshCw className="w-4 h-4 text-primary animate-spin" />
+              <span className="text-sm text-muted-foreground">Checking price...</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {/* Honest Price Display with confidence-aware messaging */}
+              <HonestPriceDisplay
+                price={displayPricePerKg}
+                confidence={priceConfidence}
+                lastVerifiedAt={lastScrapedAt}
+                storeName={regionalPriceResult?.store?.name || finalRetailerName}
+                storeUrl={affiliateUrl}
+                isConverted={isConvertedPrice}
+                conversionTooltip={
+                  isConvertedPrice && hasValidRegionalPrice && regionalPriceResult
+                    ? `Converted from ${regionalPriceResult.originalCurrency}${regionalPriceResult.conversionRate ? ` (Rate: 1 ${regionalPriceResult.originalCurrency} = ${regionalPriceResult.conversionRate.toFixed(4)} ${currency})` : ''}`
+                    : isConvertedPrice && hasValidLivePrice && isLivePriceConverted
+                      ? `Converted from ${liveOriginalCurrency}${liveConversionRate ? ` (Rate: 1 ${liveOriginalCurrency} = ${liveConversionRate.toFixed(4)} ${currency})` : ''}`
+                      : null
+                }
+                size="lg"
+                showCTA={false}
+                showPerKg={true}
               />
-            )}
-          </div>
+              
+              {/* Compare at price (sale indicator) */}
+              {isLivePrice && compareAtPrice && livePrice && compareAtPrice > livePrice && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground line-through">
+                    {formatPrice(compareAtPrice)}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                    {Math.round((1 - livePrice / compareAtPrice) * 100)}% OFF
+                  </span>
+                </div>
+              )}
+
+              {/* Fallback region warning - show when price is from a different region */}
+              {!isLocalStore && storeRegionCode && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
+                  <Globe className="w-3.5 h-3.5" />
+                  <span className="font-medium">
+                    Price from {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
+                  </span>
+                </div>
+              )}
+
+              {/* Price Urgency Badge */}
+              {(displayPricePerKg || displayPrice) && priceConfidence !== 'stale' && priceConfidence !== 'unknown' && (
+                <PriceUrgencyBadge
+                  filamentId={filamentId}
+                  currentPrice={displayPricePerKg || displayPrice}
+                  size="small"
+                />
+              )}
+            </div>
+          )}
 
           {/* Free Shipping Progress */}
           {shippingRule.flatRate > 0 && (
@@ -296,22 +267,25 @@ export function FilamentPurchaseSidebar({
             />
           )}
 
-          {/* Primary CTA - BUY NOW */}
+          {/* Primary CTA - Dynamic based on confidence */}
           <Button
             onClick={handleBuyClick}
             disabled={!affiliateUrl}
+            variant={shouldUsePrimaryCta(priceConfidence) ? 'default' : 'outline'}
             className={cn(
               "w-full h-14 text-lg font-bold tracking-wide",
-              "bg-gradient-to-r from-primary to-primary/80",
-              "hover:from-primary/90 hover:to-primary/70",
-              "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
-              "hover:shadow-[0_8px_24px_rgba(0,212,212,0.35)]",
+              shouldUsePrimaryCta(priceConfidence) && [
+                "bg-gradient-to-r from-primary to-primary/80",
+                "hover:from-primary/90 hover:to-primary/70",
+                "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
+                "hover:shadow-[0_8px_24px_rgba(0,212,212,0.35)]",
+              ],
               "hover:-translate-y-0.5 transition-all duration-200",
               "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
             )}
           >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            BUY NOW
+            {shouldUsePrimaryCta(priceConfidence) && <ShoppingCart className="w-5 h-5 mr-2" />}
+            {getCtaText(priceConfidence, regionalPriceResult?.store?.name || finalRetailerName)}
             <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
           </Button>
 

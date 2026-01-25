@@ -6,7 +6,6 @@ import {
   RotateCcw, 
   ChevronRight,
   RefreshCw,
-  AlertTriangle,
   Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,8 +18,8 @@ import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
 import { ShippingCountdown } from '../urgency/ShippingCountdown';
 import { RegionalAvailabilityBadge, CrossBorderNote } from '../RegionalAvailabilityBadge';
-import { PriceFreshnessIndicator } from '@/components/price/PriceFreshnessIndicator';
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
+import { HonestPriceDisplay, getCtaText, shouldUsePrimaryCta } from '@/components/price/HonestPriceDisplay';
 
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
@@ -173,75 +172,60 @@ export function FilamentHeroPurchaseCard({
         </div>
       )}
 
-      {/* Price Section */}
-      <div className="space-y-3 mb-4">
-        <div className="flex items-baseline gap-3">
-          {priceLoading ? (
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-primary animate-spin" />
-              <span className="text-lg text-muted-foreground">Checking price...</span>
-            </div>
-          ) : formattedPricePerKg ? (
-            <>
-              <div className="flex items-baseline gap-3">
-                <span className="text-[42px] font-extrabold text-white tracking-tight leading-none">
-                  {formattedPricePerKg}
+      {/* Price Section - Honest Display */}
+      <div className="mb-4">
+        {priceLoading ? (
+          <div className="flex items-center gap-2 py-4">
+            <RefreshCw className="w-5 h-5 text-primary animate-spin" />
+            <span className="text-lg text-muted-foreground">Checking price...</span>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Honest Price Display */}
+            <HonestPriceDisplay
+              price={displayPricePerKg}
+              confidence={priceConfidence as PriceConfidence}
+              lastVerifiedAt={lastScrapedAt}
+              storeName={finalRetailerName}
+              storeUrl={affiliateUrl}
+              isConverted={showCurrencyNote}
+              conversionTooltip={currencyNote}
+              size="lg"
+              showCTA={false}
+              showPerKg={true}
+            />
+            
+            {/* Compare at price (sale indicator) */}
+            {isLivePrice && compareAtPrice && compareAtPrice > (currentPrice || 0) && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground line-through">
+                  {formatLivePrice(compareAtPrice)}
                 </span>
-                <span className="text-lg text-muted-foreground font-medium">/kg</span>
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                  {Math.round((1 - (currentPrice || 0) / compareAtPrice) * 100)}% OFF
+                </span>
               </div>
-              {showCurrencyNote && currencyNote && (
-                <span className="text-sm text-muted-foreground">
-                  {currencyNote}
+            )}
+
+            {/* Fallback region warning - only if not already shown above */}
+            {isUsingFallbackRegion && actualUrlCurrency && isAvailableInUserRegion && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
+                <Globe className="w-3.5 h-3.5" />
+                <span className="font-medium">
+                  Price from {CURRENCIES[actualUrlCurrency]?.name || actualUrlCurrency} store
                 </span>
-              )}
-            </>
-          ) : formattedPricePerSpool ? (
-            <span className="text-[42px] font-extrabold text-white tracking-tight leading-none">
-              {formattedPricePerSpool}
-            </span>
-          ) : (
-            <span className="text-2xl text-muted-foreground">Price unavailable</span>
-          )}
-        </div>
+              </div>
+            )}
 
-        {/* Price freshness indicator */}
-        {!priceLoading && (
-          <PriceFreshnessIndicator
-            lastVerified={lastScrapedAt}
-            confidence={priceConfidence as PriceConfidence | undefined}
-            compact={false}
-          />
-        )}
-
-        {/* Fallback region warning - only if not already shown above */}
-        {isUsingFallbackRegion && actualUrlCurrency && !priceLoading && isAvailableInUserRegion && (
-          <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
-            <Globe className="w-3.5 h-3.5" />
-            <span className="font-medium">
-              Price from {CURRENCIES[actualUrlCurrency]?.name || actualUrlCurrency} store
-            </span>
+            {/* Price Urgency Badge - only show for fresh-enough prices */}
+            {(displayPricePerKg || displayPrice) && priceConfidence !== 'stale' && priceConfidence !== 'unknown' && (
+              <PriceUrgencyBadge
+                filamentId={filamentId}
+                currentPrice={displayPricePerKg || displayPrice}
+                size="medium"
+              />
+            )}
           </div>
-        )}
-
-        {/* Compare at price (sale indicator) */}
-        {isLivePrice && compareAtPrice && compareAtPrice > (currentPrice || 0) && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground line-through">
-              {formatLivePrice(compareAtPrice)}
-            </span>
-            <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-              {Math.round((1 - (currentPrice || 0) / compareAtPrice) * 100)}% OFF
-            </span>
-          </div>
-        )}
-
-        {/* Price Urgency Badge */}
-        {(displayPricePerKg || displayPrice) && (
-          <PriceUrgencyBadge
-            filamentId={filamentId}
-            currentPrice={displayPricePerKg || displayPrice}
-            size="medium"
-          />
         )}
       </div>
 
@@ -266,22 +250,26 @@ export function FilamentHeroPurchaseCard({
         </div>
       )}
 
-      {/* Primary CTA - BUY NOW */}
+      {/* Primary CTA - Dynamic based on confidence */}
       <Button
         onClick={handleBuyClick}
         disabled={!affiliateUrl || stockStatus === 'out_of_stock'}
+        variant={shouldUsePrimaryCta(priceConfidence as PriceConfidence) ? 'default' : 'outline'}
         className={cn(
           "w-full h-16 text-xl font-extrabold tracking-wide",
-          "bg-gradient-to-r from-primary to-primary/80",
-          "hover:from-primary/90 hover:to-primary/70",
-          "shadow-[0_8px_24px_rgba(0,212,212,0.3),inset_0_2px_0_rgba(255,255,255,0.2)]",
-          "hover:shadow-[0_12px_32px_rgba(0,212,212,0.4)]",
+          shouldUsePrimaryCta(priceConfidence as PriceConfidence) && [
+            "bg-gradient-to-r from-primary to-primary/80",
+            "hover:from-primary/90 hover:to-primary/70",
+            "shadow-[0_8px_24px_rgba(0,212,212,0.3),inset_0_2px_0_rgba(255,255,255,0.2)]",
+            "hover:shadow-[0_12px_32px_rgba(0,212,212,0.4)]",
+          ],
           "hover:-translate-y-0.5 transition-all duration-200",
           "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
         )}
       >
-        <ShoppingCart className="w-5 h-5 mr-3" />
-        BUY NOW
+        {shouldUsePrimaryCta(priceConfidence as PriceConfidence) && <ShoppingCart className="w-5 h-5 mr-3" />}
+        {getCtaText(priceConfidence as PriceConfidence, finalRetailerName)}
+        <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
       </Button>
 
       {/* Retailer Info */}

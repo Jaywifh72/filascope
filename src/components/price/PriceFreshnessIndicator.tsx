@@ -100,7 +100,7 @@ export function PriceFreshnessIndicator({
           <Badge
             variant="outline"
             className={cn(
-              'gap-1 text-xs font-normal border',
+              'gap-1 text-xs font-normal border cursor-help',
               config.bgClass,
               config.colorClass,
               className
@@ -110,15 +110,17 @@ export function PriceFreshnessIndicator({
             <span>{label}</span>
           </Badge>
         </TooltipTrigger>
-        <TooltipContent side="top" className="text-xs max-w-[200px]">
+        <TooltipContent side="top" className="text-xs max-w-[220px]">
           {freshness.timeAgo ? (
-            <p>Price updated {freshness.timeAgo}</p>
+            <p className="font-medium">Last checked {freshness.timeAgo}</p>
           ) : (
-            <p>No price update timestamp available</p>
+            <p className="font-medium">No price data available</p>
           )}
           {sourceLabel && <p className="text-muted-foreground mt-1">Source: {sourceLabel}</p>}
-          <p className="text-muted-foreground mt-1">
-            Click to verify current price at store
+          <p className="text-muted-foreground mt-2 pt-2 border-t border-border/40">
+            {confidence === 'high' || confidence === 'medium' 
+              ? 'Price may still vary — click to see current store price'
+              : 'This price may have changed — we recommend verifying at the store'}
           </p>
         </TooltipContent>
       </Tooltip>
@@ -127,7 +129,7 @@ export function PriceFreshnessIndicator({
 }
 
 /**
- * Simple inline text version for use in smaller spaces
+ * Simple inline text version for use in smaller spaces - honest messaging
  */
 export function PriceFreshnessText({
   lastVerified,
@@ -143,14 +145,20 @@ export function PriceFreshnessText({
   const config = confidenceConfig[confidence];
   const Icon = config.icon;
 
+  const getText = () => {
+    if (confidence === 'high' || confidence === 'medium') {
+      return freshness.timeAgo ? `Checked ${freshness.timeAgo}` : 'Recently checked';
+    }
+    if (confidence === 'low') {
+      return freshness.timeAgo ? `Last checked ${freshness.timeAgo}` : 'May be outdated';
+    }
+    return 'Verify at store';
+  };
+
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs', config.colorClass, className)}>
       <Icon className="h-3 w-3" />
-      <span>
-        {freshness.timeAgo 
-          ? `Updated ${freshness.timeAgo}` 
-          : 'Verify at store'}
-      </span>
+      <span>{getText()}</span>
     </span>
   );
 }

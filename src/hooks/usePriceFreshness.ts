@@ -55,21 +55,21 @@ export function usePriceFreshness(lastVerified: string | null | undefined): Pric
 }
 
 /**
- * Get a human-readable label for confidence level
+ * Get a human-readable label for confidence level - honest messaging
  */
 export function getConfidenceLabel(confidence: PriceConfidence): string {
   switch (confidence) {
     case 'high':
       return 'Updated today';
     case 'medium':
-      return 'Updated recently';
+      return 'Updated this week';
     case 'low':
       return 'May be outdated';
     case 'stale':
-      return 'Price may be outdated';
+      return 'Outdated - verify at store';
     case 'unknown':
     default:
-      return 'Verify at store';
+      return 'Check store for price';
   }
 }
 
