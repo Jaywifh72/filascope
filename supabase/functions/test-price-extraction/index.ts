@@ -39,6 +39,18 @@ function getFirecrawlLocation(currency: string): { country: string; languages: s
   }
 }
 
+// Default patterns to exclude discount/savings amounts from price extraction
+const DEFAULT_EXCLUDE_PATTERNS = [
+  'save\\s+\\$',           // "Save $7.26"
+  'saving\\s+\\$',         // "Saving $10"
+  'discount\\s+\\$',       // "Discount $5"
+  'off\\s+\\$',            // "off $20"
+  'coupon\\s+.*\\$',       // "$500 coupon"
+  '\\$\\d+\\s*off',        // "$5 off"
+  '\\$\\d+\\s*coupon',     // "$500 coupon"
+  'student\\s*discount',   // Student discount sections
+];
+
 // Apply configured price patterns to markdown content
 function extractPriceWithConfig(
   markdown: string,
@@ -51,33 +63,40 @@ function extractPriceWithConfig(
   available: boolean;
   matchedPattern: string | null;
 } {
-  const priceRangeMin = config.priceRangeMin ?? 3;
+  // Use higher minimum for filament to avoid capturing weights/discounts
+  const priceRangeMin = config.priceRangeMin ?? 10;  // Raised from 3 to 10
   const priceRangeMax = config.priceRangeMax ?? 150;
   
-  // Determine search section using anchor text
-  let priceSection = markdown;
-  if (config.priceSectionAnchor) {
-    const anchorRegex = new RegExp(config.priceSectionAnchor, 'i');
-    const anchorIndex = markdown.search(anchorRegex);
-    if (anchorIndex > -1) {
-      priceSection = markdown.slice(Math.max(0, anchorIndex - 500), anchorIndex + 200);
-      console.log(`Found anchor at ${anchorIndex}, using section of ${priceSection.length} chars`);
+  // Combine default excludes with configured excludes
+  const excludePatterns = [
+    ...DEFAULT_EXCLUDE_PATTERNS,
+    ...(config.excludePatterns || [])
+  ];
+  
+  // Pre-filter: Remove lines containing savings/discount amounts
+  let cleanedMarkdown = markdown;
+  for (const pattern of excludePatterns) {
+    try {
+      // Remove entire lines that contain discount patterns
+      const lineExcludeRegex = new RegExp(`^.*${pattern}.*\\$[\\d,.]+.*$`, 'gim');
+      const before = cleanedMarkdown.length;
+      cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, '');
+      if (cleanedMarkdown.length < before) {
+        console.log(`Excluded pattern '${pattern}' removed ${before - cleanedMarkdown.length} chars`);
+      }
+    } catch (e) {
+      // Ignore invalid patterns
     }
   }
   
-  // Apply exclude patterns to filter out noise
-  if (config.excludePatterns) {
-    for (const pattern of config.excludePatterns) {
-      try {
-        const excludeRegex = new RegExp(`[^.]*${pattern}[^.]*\\$[\\d,.]+[^.]*`, 'gi');
-        const before = priceSection.length;
-        priceSection = priceSection.replace(excludeRegex, '');
-        if (priceSection.length < before) {
-          console.log(`Excluded pattern '${pattern}' removed ${before - priceSection.length} chars`);
-        }
-      } catch (e) {
-        console.log(`Invalid exclude pattern: ${pattern}`);
-      }
+  // Determine search section using anchor text
+  let priceSection = cleanedMarkdown;
+  if (config.priceSectionAnchor) {
+    const anchorRegex = new RegExp(config.priceSectionAnchor, 'i');
+    const anchorIndex = cleanedMarkdown.search(anchorRegex);
+    if (anchorIndex > -1) {
+      priceSection = cleanedMarkdown.slice(Math.max(0, anchorIndex - 500), anchorIndex + 200);
+      console.log(`Found anchor at ${anchorIndex}, using section of ${priceSection.length} chars`);
     }
   }
   
