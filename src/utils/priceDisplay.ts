@@ -13,15 +13,20 @@ export function getPriceDisplayText(priceResult: RegionalPriceResult | null): st
 
 /**
  * Get store attribution text with regional flag
+ * Always includes the flag for clarity on which store the price is from
  */
-export function getStoreAttributionText(priceResult: RegionalPriceResult | null): string {
+export function getStoreAttributionText(
+  priceResult: RegionalPriceResult | null,
+  options?: { includeFlag?: boolean }
+): string {
   if (!priceResult || !priceResult.store.name) return '';
   
   const regionConfig = REGIONS[priceResult.store.regionCode];
   const flag = regionConfig?.flag || '';
+  const includeFlag = options?.includeFlag ?? true;
   
-  if (priceResult.isConverted) {
-    return `${flag} at ${priceResult.store.name}`;
+  if (includeFlag && flag) {
+    return `at ${priceResult.store.name} ${flag}`;
   }
   return `at ${priceResult.store.name}`;
 }
