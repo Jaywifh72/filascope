@@ -5624,6 +5624,42 @@ export type Database = {
         }
         Relationships: []
       }
+      url_validation_cache: {
+        Row: {
+          check_count: number | null
+          consecutive_failures: number | null
+          created_at: string
+          id: string
+          last_checked: string
+          redirect_url: string | null
+          status: string
+          status_code: number | null
+          url: string
+        }
+        Insert: {
+          check_count?: number | null
+          consecutive_failures?: number | null
+          created_at?: string
+          id?: string
+          last_checked?: string
+          redirect_url?: string | null
+          status: string
+          status_code?: number | null
+          url: string
+        }
+        Update: {
+          check_count?: number | null
+          consecutive_failures?: number | null
+          created_at?: string
+          id?: string
+          last_checked?: string
+          redirect_url?: string | null
+          status?: string
+          status_code?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
       url_validation_results: {
         Row: {
           checked_at: string | null
