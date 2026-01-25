@@ -1,12 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useCurrency } from './useCurrency';
+import { useRegion } from '@/contexts/RegionContext';
+import { CurrencyCode } from '@/types/regional';
 
 interface CurrentPriceResult {
+  /** Price in the user's selected currency (converted if necessary) */
   currentPrice: number | null;
+  /** Compare-at price in the user's selected currency */
   compareAtPrice: number | null;
+  /** Weight in grams from live data */
   weightGrams: number | null;
-  currency: string;
+  /** User's selected currency (the currency of currentPrice) */
+  currency: CurrencyCode;
+  /** Original currency from the store (before conversion) */
+  originalCurrency: CurrencyCode;
+  /** Original price before conversion (null if no conversion needed) */
+  originalPrice: number | null;
+  /** Conversion rate used (null if no conversion) */
+  conversionRate: number | null;
+  /** Whether price was converted from a different currency */
+  isConverted: boolean;
   isLoading: boolean;
   isLivePrice: boolean;
   error: string | null;
@@ -41,12 +54,22 @@ export function useCurrentPrice(
   fallbackPrice: number | null,
   fallbackUrl?: string | null // Original US URL to try if regional URL fails
 ): CurrentPriceResult {
-  const { currency } = useCurrency();
-  const [state, setState] = useState<CurrentPriceResult>({
-    currentPrice: fallbackPrice,
-    compareAtPrice: null,
+  const { currency: userCurrency, convertPrice, getConversionRate } = useRegion();
+  
+  const [rawState, setRawState] = useState<{
+    rawPrice: number | null;
+    rawCompareAtPrice: number | null;
+    weightGrams: number | null;
+    rawCurrency: CurrencyCode;
+    isLoading: boolean;
+    isLivePrice: boolean;
+    error: string | null;
+    fetchedAt: string | null;
+  }>({
+    rawPrice: fallbackPrice,
+    rawCompareAtPrice: null,
     weightGrams: null,
-    currency: currency,
+    rawCurrency: 'USD',
     isLoading: false,
     isLivePrice: false,
     error: null,
@@ -58,9 +81,9 @@ export function useCurrentPrice(
 
   useEffect(() => {
     if (!productUrl) {
-      setState(prev => ({
+      setRawState(prev => ({
         ...prev,
-        currentPrice: fallbackPrice,
+        rawPrice: fallbackPrice,
         weightGrams: null,
         isLoading: false,
         isLivePrice: false,
@@ -73,16 +96,17 @@ export function useCurrentPrice(
       return;
     }
 
-    const cacheKey = `${productUrl}:${currency}`;
+    // Use raw currency for cache key since we convert after
+    const cacheKey = productUrl;
     
     // Check cache first
     const cached = priceCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
-      setState({
-        currentPrice: cached.price,
-        compareAtPrice: cached.compareAtPrice,
+      setRawState({
+        rawPrice: cached.price,
+        rawCompareAtPrice: cached.compareAtPrice,
         weightGrams: cached.weightGrams,
-        currency: cached.currency,
+        rawCurrency: (cached.currency as CurrencyCode) || 'USD',
         isLoading: false,
         isLivePrice: true,
         error: null,
@@ -100,8 +124,9 @@ export function useCurrentPrice(
 
     const fetchPriceFromUrl = async (url: string, retryCount = 0): Promise<{ data: any; error: any }> => {
       try {
+        // Don't pass currency preference - let the edge function return the store's native currency
         const result = await supabase.functions.invoke('get-current-price', {
-          body: { productUrl: url, currency },
+          body: { productUrl: url },
         });
         
         // Retry on transient boot errors
@@ -122,7 +147,7 @@ export function useCurrentPrice(
     };
 
     const fetchCurrentPrice = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setRawState(prev => ({ ...prev, isLoading: true, error: null }));
       
       try {
         // First try the regional URL
@@ -141,9 +166,9 @@ export function useCurrentPrice(
           if (!isTransientError(error)) {
             console.warn('Price fetch failed:', error.message || error);
           }
-          setState(prev => ({
+          setRawState(prev => ({
             ...prev,
-            currentPrice: fallbackPrice,
+            rawPrice: fallbackPrice,
             isLoading: false,
             isLivePrice: false,
             error: null, // Don't expose error to UI for price fetching
@@ -152,21 +177,21 @@ export function useCurrentPrice(
         }
 
         if (data?.success && data.price !== null) {
-          // Cache the result
+          // Cache the result with the store's native currency
           priceCache.set(cacheKey, {
             price: data.price,
             compareAtPrice: data.compareAtPrice,
             weightGrams: data.weightGrams,
-            currency: data.currency,
+            currency: data.currency || 'USD',
             fetchedAt: data.fetchedAt,
             expiresAt: Date.now() + CACHE_TTL_MS,
           });
 
-          setState({
-            currentPrice: data.price,
-            compareAtPrice: data.compareAtPrice,
+          setRawState({
+            rawPrice: data.price,
+            rawCompareAtPrice: data.compareAtPrice,
             weightGrams: data.weightGrams,
-            currency: data.currency,
+            rawCurrency: (data.currency as CurrencyCode) || 'USD',
             isLoading: false,
             isLivePrice: true,
             error: null,
@@ -174,9 +199,9 @@ export function useCurrentPrice(
           });
         } else {
           // Fall back to stored price silently
-          setState(prev => ({
+          setRawState(prev => ({
             ...prev,
-            currentPrice: fallbackPrice,
+            rawPrice: fallbackPrice,
             isLoading: false,
             isLivePrice: false,
             error: null, // Don't expose error to UI
@@ -184,9 +209,9 @@ export function useCurrentPrice(
         }
       } catch (err) {
         // Silently fall back to database price
-        setState(prev => ({
+        setRawState(prev => ({
           ...prev,
-          currentPrice: fallbackPrice,
+          rawPrice: fallbackPrice,
           isLoading: false,
           isLivePrice: false,
           error: null,
@@ -203,7 +228,42 @@ export function useCurrentPrice(
         abortControllerRef.current.abort();
       }
     };
-  }, [productUrl, currency, fallbackPrice, fallbackUrl]);
+  }, [productUrl, fallbackPrice, fallbackUrl]);
 
-  return state;
+  // Convert prices to user's currency
+  const convertedState = useMemo((): CurrentPriceResult => {
+    const { rawPrice, rawCompareAtPrice, rawCurrency, weightGrams, isLoading, isLivePrice, error, fetchedAt } = rawState;
+    
+    const needsConversion = rawCurrency !== userCurrency && rawPrice !== null;
+    
+    let convertedPrice: number | null = rawPrice;
+    let convertedCompareAtPrice: number | null = rawCompareAtPrice;
+    let conversionRate: number | null = null;
+    
+    if (needsConversion && rawPrice !== null) {
+      conversionRate = getConversionRate(rawCurrency, userCurrency);
+      convertedPrice = convertPrice(rawPrice, rawCurrency);
+      
+      if (rawCompareAtPrice !== null) {
+        convertedCompareAtPrice = convertPrice(rawCompareAtPrice, rawCurrency);
+      }
+    }
+    
+    return {
+      currentPrice: convertedPrice,
+      compareAtPrice: convertedCompareAtPrice,
+      weightGrams,
+      currency: userCurrency,
+      originalCurrency: rawCurrency,
+      originalPrice: needsConversion ? rawPrice : null,
+      conversionRate,
+      isConverted: needsConversion,
+      isLoading,
+      isLivePrice,
+      error,
+      fetchedAt,
+    };
+  }, [rawState, userCurrency, convertPrice, getConversionRate]);
+
+  return convertedState;
 }

@@ -75,14 +75,17 @@ export function FilamentPurchaseSidebar({
   const { trackStoreClick } = useConversionTracking();
   const { addItem, removeItem, isInCompare } = useCompare();
   
-  // Fetch live price from the store - used only for sale detection and validation
+  // Fetch live price from the store - now automatically converted to user's currency
   const { 
     currentPrice: livePrice, 
     compareAtPrice,
     weightGrams: liveWeightGrams,
     isLoading: priceLoading, 
     isLivePrice,
-    currency: livePriceCurrency
+    currency: livePriceCurrency,
+    isConverted: isLivePriceConverted,
+    originalCurrency: liveOriginalCurrency,
+    conversionRate: liveConversionRate,
   } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
 
   // Determine the primary retailer name
@@ -123,19 +126,23 @@ export function FilamentPurchaseSidebar({
   };
 
   // PRIORITY 1: Use regional pricing from parent (already converted to user's currency)
-  // PRIORITY 2: Use live price only if the currency matches user's selection
+  // PRIORITY 2: Use live price (now automatically converted to user's currency by useCurrentPrice)
   // PRIORITY 3: Fall back to passed-in pricePerSpool
   const hasValidRegionalPrice = regionalPriceResult && regionalPriceResult.displayPrice !== null && regionalPriceResult.displayPrice > 0;
-  const livePriceCurrencyMatches = isLivePrice && livePrice !== null && livePriceCurrency === currency;
+  const hasValidLivePrice = isLivePrice && livePrice !== null;
   
   const displayPrice = hasValidRegionalPrice 
     ? regionalPriceResult.displayPrice 
-    : livePriceCurrencyMatches 
+    : hasValidLivePrice 
       ? livePrice 
       : pricePerSpool;
   
-  // Track if we're using a converted price
-  const isConvertedPrice = hasValidRegionalPrice ? regionalPriceResult.isConverted : false;
+  // Track if we're using a converted price (from either regional or live pricing)
+  const isConvertedPrice = hasValidRegionalPrice 
+    ? regionalPriceResult.isConverted 
+    : hasValidLivePrice 
+      ? isLivePriceConverted 
+      : false;
   
   // Calculate price per kg using proper weight
   const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
@@ -200,25 +207,38 @@ export function FilamentPurchaseSidebar({
                   <span className="text-sm text-muted-foreground font-medium">/kg</span>
                   
                   {/* Conversion info tooltip */}
-                  {isConvertedPrice && regionalPriceResult && (
+                  {isConvertedPrice && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Info className="w-4 h-4 text-muted-foreground cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
-                        <p className="font-medium">Converted from {regionalPriceResult.originalCurrency}</p>
-                        {regionalPriceResult.conversionRate && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Rate: 1 {regionalPriceResult.originalCurrency} = {regionalPriceResult.conversionRate.toFixed(4)} {currency}
-                          </p>
-                        )}
+                        {hasValidRegionalPrice && regionalPriceResult ? (
+                          <>
+                            <p className="font-medium">Converted from {regionalPriceResult.originalCurrency}</p>
+                            {regionalPriceResult.conversionRate && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Rate: 1 {regionalPriceResult.originalCurrency} = {regionalPriceResult.conversionRate.toFixed(4)} {currency}
+                              </p>
+                            )}
+                          </>
+                        ) : hasValidLivePrice && isLivePriceConverted ? (
+                          <>
+                            <p className="font-medium">Converted from {liveOriginalCurrency}</p>
+                            {liveConversionRate && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Rate: 1 {liveOriginalCurrency} = {liveConversionRate.toFixed(4)} {currency}
+                              </p>
+                            )}
+                          </>
+                        ) : null}
                       </TooltipContent>
                     </Tooltip>
                   )}
                 </div>
                 
-                {/* Compare at price (sale indicator) - only show if live price is in matching currency */}
-                {isLivePrice && compareAtPrice && livePriceCurrency === currency && livePrice && compareAtPrice > livePrice && (
+                {/* Compare at price (sale indicator) - now works with converted prices */}
+                {isLivePrice && compareAtPrice && livePrice && compareAtPrice > livePrice && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground line-through">
                       {formatPrice(compareAtPrice)}
