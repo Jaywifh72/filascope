@@ -24,6 +24,9 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalDeals: 0,
     totalPrinters: 0,
+    totalRegionalStores: 0,
+    brandsWithStores: 0,
+    totalBrands: 0,
   });
 
   useEffect(() => {
@@ -33,18 +36,26 @@ const AdminDashboard = () => {
   }, [isAdmin]);
 
   const fetchStats = async () => {
-    const [filamentsRes, usersRes, dealsRes, printersRes] = await Promise.all([
+    const [filamentsRes, usersRes, dealsRes, printersRes, storesRes, brandsRes] = await Promise.all([
       supabase.from("filaments").select("id", { count: "exact", head: true }),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("deals").select("id", { count: "exact", head: true }),
       supabase.from("printers").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabase.from("brand_regional_stores").select("id, brand_id", { count: "exact" }),
+      supabase.from("automated_brands").select("id", { count: "exact", head: true }),
     ]);
+
+    // Calculate unique brands with stores
+    const uniqueBrandsWithStores = new Set(storesRes.data?.map(s => s.brand_id) || []).size;
 
     setStats({
       totalFilaments: filamentsRes.count || 0,
       totalUsers: usersRes.count || 0,
       totalDeals: dealsRes.count || 0,
       totalPrinters: printersRes.count || 0,
+      totalRegionalStores: storesRes.count || 0,
+      brandsWithStores: uniqueBrandsWithStores,
+      totalBrands: brandsRes.count || 0,
     });
   };
 
@@ -88,7 +99,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
           <Card className="p-6 bg-card border-border">
             <div className="flex items-center justify-between">
               <div>
@@ -126,6 +137,33 @@ const AdminDashboard = () => {
                 <p className="text-3xl font-bold text-foreground">{stats.totalDeals}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-red-400" />
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-card border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Regional Stores</p>
+                <p className="text-3xl font-bold text-foreground">{stats.totalRegionalStores}</p>
+              </div>
+              <Globe className="w-8 h-8 text-teal-500" />
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-card border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Store Coverage</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {stats.totalBrands > 0 
+                    ? Math.round((stats.brandsWithStores / stats.totalBrands) * 100) 
+                    : 0}%
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.brandsWithStores}/{stats.totalBrands} brands
+                </p>
+              </div>
+              <BarChart3 className="w-8 h-8 text-cyan-500" />
             </div>
           </Card>
         </div>
