@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useCompare } from "@/hooks/useCompare";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
+import { PriceFreshnessText } from "@/components/price/PriceFreshnessIndicator";
+import { PriceConfidence } from "@/hooks/usePriceFreshness";
 
 interface FilamentMobileBottomBarProps {
   filamentId: string;
@@ -15,6 +17,8 @@ interface FilamentMobileBottomBarProps {
   hasActualRegionalPrice?: boolean;
   priceCurrency?: string;
   onOpenCalculator?: () => void;
+  lastScrapedAt?: string | null;
+  priceConfidence?: PriceConfidence | string | null;
 }
 
 export function FilamentMobileBottomBar({
@@ -28,6 +32,8 @@ export function FilamentMobileBottomBar({
   hasActualRegionalPrice = false,
   priceCurrency,
   onOpenCalculator,
+  lastScrapedAt,
+  priceConfidence,
 }: FilamentMobileBottomBarProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
   const { count: compareCount } = useCompare();
@@ -97,14 +103,20 @@ export function FilamentMobileBottomBar({
         {/* Price section */}
         <div className="flex-1 min-w-0">
           {formattedPrice ? (
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-xl font-bold text-white">{formattedPrice}</span>
-              <span className="text-sm text-muted-foreground">/kg</span>
-              {discountPercent && (
-                <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
-                  -{discountPercent}%
-                </span>
-              )}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-xl font-bold text-white">{formattedPrice}</span>
+                <span className="text-sm text-muted-foreground">/kg</span>
+                {discountPercent && (
+                  <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
+                    -{discountPercent}%
+                  </span>
+                )}
+              </div>
+              <PriceFreshnessText 
+                lastVerified={lastScrapedAt} 
+                confidence={priceConfidence as PriceConfidence | undefined}
+              />
             </div>
           ) : (
             <span className="text-sm text-gray-400">Price not available</span>
