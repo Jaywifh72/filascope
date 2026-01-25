@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { DollarSign, ExternalLink, ShoppingCart, AlertTriangle, CheckCircle2, Clock, Info } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useRegion } from '@/contexts/RegionContext';
 import { PriceConfidence, usePriceFreshness } from '@/hooks/usePriceFreshness';
+import { PriceVerificationDialog, usePriceVerification } from './PriceVerificationDialog';
 import { cn } from '@/lib/utils';
 
 export interface HonestPriceDisplayProps {
@@ -115,6 +117,15 @@ export function HonestPriceDisplay({
     lastVerifiedAt instanceof Date ? lastVerifiedAt.toISOString() : lastVerifiedAt
   );
   
+  // Price verification dialog state
+  const {
+    showDialog,
+    setShowDialog,
+    pendingNavigation,
+    handleBuyClick,
+    handleContinue,
+  } = usePriceVerification();
+  
   const confidence = providedConfidence || freshness.confidence;
   const displayMode = getDisplayMode(confidence, storeName);
   const config = confidenceConfig[confidence];
@@ -128,10 +139,19 @@ export function HonestPriceDisplay({
   const sizes = sizeClasses[size];
 
   const handleClick = () => {
-    if (onBuyClick) {
-      onBuyClick();
-    } else if (storeUrl) {
-      window.open(storeUrl, '_blank', 'noopener,noreferrer');
+    const shouldProceed = handleBuyClick({
+      storeName,
+      storeUrl: storeUrl || '',
+      lastVerifiedAt,
+      priceConfidence: confidence,
+    });
+
+    if (shouldProceed) {
+      if (onBuyClick) {
+        onBuyClick();
+      } else if (storeUrl) {
+        window.open(storeUrl, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
@@ -233,6 +253,19 @@ export function HonestPriceDisplay({
           <p className={cn('text-muted-foreground text-center', sizes.helper)}>
             Prices change with sales and stock availability
           </p>
+        )}
+
+        {/* Price Verification Dialog */}
+        {pendingNavigation && (
+          <PriceVerificationDialog
+            open={showDialog}
+            onOpenChange={setShowDialog}
+            storeName={pendingNavigation.storeName}
+            storeUrl={pendingNavigation.storeUrl}
+            lastVerifiedAt={pendingNavigation.lastVerifiedAt}
+            priceConfidence={pendingNavigation.priceConfidence}
+            onContinue={handleContinue}
+          />
         )}
       </div>
     </TooltipProvider>
