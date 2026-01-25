@@ -14,6 +14,7 @@ import { REGIONS } from '@/config/regions';
 import { formatPrice as formatCurrencyPrice } from '@/config/currencies';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CurrencyCode } from '@/types/regional';
+import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
 
 interface PricingTabContentProps {
   printer: any;
@@ -23,6 +24,7 @@ interface PricingTabContentProps {
   isLivePrice: boolean;
   livePriceCurrency?: string;
   brandId?: string | null;
+  productSlug?: string | null;
 }
 
 // Section header with icon and border
@@ -84,7 +86,8 @@ export function PricingTabContent({
   displayMsrp,
   isLivePrice,
   livePriceCurrency,
-  brandId
+  brandId,
+  productSlug
 }: PricingTabContentProps) {
   const { formatPrice, currency, region, getConversionRate } = useRegion();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
@@ -301,9 +304,19 @@ export function PricingTabContent({
       <section className="section-card">
         <SectionHeader icon={Globe} title="Price by Region (MSRP)" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-          <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
+          <div className={cn(
+            "p-3 sm:p-6 rounded-xl border",
+            region === 'US' 
+              ? "bg-primary/10 border-primary/30" 
+              : "bg-muted/30 border-border/40"
+          )}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs sm:text-sm text-gray-400">🇺🇸 USD</span>
+              {region === 'US' && (
+                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
+                  Selected
+                </Badge>
+              )}
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
@@ -312,9 +325,19 @@ export function PricingTabContent({
               {printer.msrp_usd ? `$${printer.msrp_usd}` : 'Not set'}
             </div>
           </div>
-          <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
+          <div className={cn(
+            "p-3 sm:p-6 rounded-xl border",
+            region === 'CA' 
+              ? "bg-primary/10 border-primary/30" 
+              : "bg-muted/30 border-border/40"
+          )}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs sm:text-sm text-gray-400">🇨🇦 CAD</span>
+              {region === 'CA' && (
+                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
+                  Selected
+                </Badge>
+              )}
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
@@ -323,9 +346,19 @@ export function PricingTabContent({
               {printer.msrp_cad ? `C$${printer.msrp_cad}` : 'Not set'}
             </div>
           </div>
-          <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
+          <div className={cn(
+            "p-3 sm:p-6 rounded-xl border",
+            region === 'EU' 
+              ? "bg-primary/10 border-primary/30" 
+              : "bg-muted/30 border-border/40"
+          )}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs sm:text-sm text-gray-400">🇪🇺 EUR</span>
+              {region === 'EU' && (
+                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
+                  Selected
+                </Badge>
+              )}
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
@@ -334,9 +367,19 @@ export function PricingTabContent({
               {printer.msrp_eur ? `€${printer.msrp_eur}` : 'Not set'}
             </div>
           </div>
-          <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
+          <div className={cn(
+            "p-3 sm:p-6 rounded-xl border",
+            region === 'UK' 
+              ? "bg-primary/10 border-primary/30" 
+              : "bg-muted/30 border-border/40"
+          )}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs sm:text-sm text-gray-400">🇬🇧 GBP</span>
+              {region === 'UK' && (
+                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
+                  Selected
+                </Badge>
+              )}
             </div>
             <div className={cn(
               "text-sm sm:text-lg font-bold",
@@ -428,6 +471,11 @@ export function PricingTabContent({
                 const nativePrice = displayPrice || 0;
                 const convertedPrice = needsConversion ? nativePrice * rate : nativePrice;
 
+                // Generate product-specific URL using interpolation
+                const storeUrl = store.product_url_pattern && productSlug
+                  ? interpolateProductUrl(store.product_url_pattern, productSlug)
+                  : store.base_url;
+
                 return (
                   <div 
                     key={store.id}
@@ -437,7 +485,7 @@ export function PricingTabContent({
                         ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
                         : "bg-muted/20 border-border hover:bg-muted/40"
                     )}
-                    onClick={() => window.open(store.base_url, '_blank')}
+                    onClick={() => window.open(storeUrl, '_blank')}
                   >
                     <div className="flex items-center gap-3">
                       {/* Store Region Flag */}
@@ -448,7 +496,7 @@ export function PricingTabContent({
                           <span className="font-medium">{store.store_name}</span>
                           {isUserRegion && (
                             <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                              Your Region
+                              Local
                             </Badge>
                           )}
                         </div>
@@ -472,14 +520,17 @@ export function PricingTabContent({
                           {needsConversion && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                <p>Converted from {store.currency_code}</p>
+                              <TooltipContent side="top" className="text-xs max-w-xs">
+                                <p className="font-medium">Original: {formatCurrencyPrice(nativePrice, store.currency_code as CurrencyCode)}</p>
+                                <p className="text-muted-foreground">Rate: 1 {store.currency_code} = {rate.toFixed(4)} {currency}</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
-                          <span>{needsConversion ? '~' : ''}{formatCurrencyPrice(convertedPrice, currency)}</span>
+                          <span className={needsConversion ? "text-muted-foreground" : ""}>
+                            {needsConversion ? '~' : ''}{formatCurrencyPrice(convertedPrice, currency)}
+                          </span>
                         </div>
                         {needsConversion && (
                           <div className="text-xs text-muted-foreground">
@@ -492,7 +543,7 @@ export function PricingTabContent({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.open(store.base_url, '_blank');
+                          window.open(storeUrl, '_blank');
                         }}
                       >
                         Visit

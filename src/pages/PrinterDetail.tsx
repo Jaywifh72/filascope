@@ -116,6 +116,7 @@ const PrinterDetail = () => {
   const [storeImagesError, setStoreImagesError] = useState<string | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadedFilePreview, setUploadedFilePreview] = useState<string | null>(null);
+  const [brandId, setBrandId] = useState<string | null>(null);
   
   // Tab navigation state
   const [activeTab, setActiveTab] = useState<PrinterTab>("overview");
@@ -171,6 +172,24 @@ const PrinterDetail = () => {
   const printerBrand = typeof printer?.brand === 'object' && printer?.brand !== null && 'brand' in printer.brand 
     ? printer.brand.brand 
     : null;
+
+  // Fetch brandId from automated_brands for regional store lookups
+  useEffect(() => {
+    const fetchBrandId = async () => {
+      if (!printerBrand) {
+        setBrandId(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('automated_brands')
+        .select('id')
+        .ilike('brand_name', printerBrand)
+        .limit(1)
+        .maybeSingle();
+      setBrandId(data?.id || null);
+    };
+    fetchBrandId();
+  }, [printerBrand]);
 
   const { data: accessories } = useQuery({
     queryKey: ["printer-accessories", printer?.id, printerBrand, printer?.model_name],
@@ -872,6 +891,8 @@ const PrinterDetail = () => {
                   displayMsrp={displayMsrp}
                   isLivePrice={isLivePrice}
                   livePriceCurrency={livePriceCurrency}
+                  brandId={brandId}
+                  productSlug={printer.printer_id || printer.model_name}
                 />
               )}
             </PrinterTabContent>
