@@ -13,6 +13,8 @@ export interface DealFilament {
   variant_compare_at_price: number | null;
   product_url: string | null;
   net_weight_g: number | null;
+  last_scraped_at?: string | null;
+  created_at?: string | null;
 }
 
 export interface DealWithMeta extends DealFilament {
@@ -50,7 +52,7 @@ export function useDealsWithFilters() {
       const { data, error } = await supabase
         .from("filaments")
         .select(
-          "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g"
+          "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g, last_scraped_at, created_at"
         )
         .not("variant_compare_at_price", "is", null)
         .not("variant_price", "is", null)
@@ -63,11 +65,11 @@ export function useDealsWithFilters() {
 
       // Filter to only show items where compare_at_price > variant_price
       const onSaleItems = (data || []).filter(
-        (item): item is DealFilament =>
+        (item) =>
           item.variant_compare_at_price !== null &&
           item.variant_price !== null &&
           item.variant_compare_at_price > item.variant_price
-      );
+      ) as DealFilament[];
 
       // Add discount calculation and urgency data
       return onSaleItems.map((item) => {

@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle } from "lucide-react";
+import { differenceInDays } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
@@ -34,6 +36,33 @@ const Deals = () => {
     priceRange[0] > 0 ||
     priceRange[1] < maxPrice;
 
+  // Filter and categorize deals by freshness
+  const { freshDeals, staleCount } = useMemo(() => {
+    const MAX_DEAL_AGE_DAYS = 7;
+    
+    const fresh = deals.filter((deal) => {
+      const capturedAt = deal.last_scraped_at || deal.created_at;
+      if (!capturedAt) return true; // Include if no date (can't determine age)
+      const daysSinceCapture = differenceInDays(new Date(), new Date(capturedAt));
+      return daysSinceCapture < MAX_DEAL_AGE_DAYS;
+    });
+    
+    return {
+      freshDeals: fresh,
+      staleCount: deals.length - fresh.length,
+    };
+  }, [deals]);
+
+  // Helper to determine if a deal needs a warning
+  const getDealWarningLevel = (deal: typeof deals[0]): 'none' | 'caution' | 'stale' => {
+    const capturedAt = deal.last_scraped_at || deal.created_at;
+    if (!capturedAt) return 'caution';
+    const daysSinceCapture = differenceInDays(new Date(), new Date(capturedAt));
+    if (daysSinceCapture >= 5) return 'stale';
+    if (daysSinceCapture >= 3) return 'caution';
+    return 'none';
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
@@ -63,7 +92,10 @@ const Deals = () => {
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-green-400" />
                 <span>
-                  <span className="text-foreground font-medium">{totalDeals}</span> active deals
+                  <span className="text-foreground font-medium">{freshDeals.length}</span> active deals
+                  {staleCount > 0 && (
+                    <span className="text-muted-foreground"> ({staleCount} older deals hidden)</span>
+                  )}
                 </span>
               </div>
               <span className="hidden md:inline text-gray-600">•</span>

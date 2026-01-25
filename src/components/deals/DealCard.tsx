@@ -172,7 +172,7 @@ export function DealCard({
               </div>
             )}
 
-            {/* Check Current Price CTA */}
+            {/* Check if Deal is Active CTA */}
             {deal.product_url && (
               <Button
                 variant="outline"
@@ -180,7 +180,7 @@ export function DealCard({
                 className="w-full mt-3 gap-2 text-xs"
                 onClick={handleCheckPrice}
               >
-                Check Current Price
+                Check if Deal is Active
                 <ExternalLink className="h-3.5 w-3.5" />
               </Button>
             )}
