@@ -72,6 +72,7 @@ const navGroups: NavGroup[] = [
     items: [
       { title: 'Data Health', href: '/admin/data-health', icon: Database },
       { title: 'Data Quality', href: '/admin/data-quality', icon: FileSearch },
+      { title: 'Price Verification', href: '/admin/price-verification', icon: DollarSign },
       { title: 'Field Coverage', href: '/admin/field-coverage', icon: BarChart3 },
       { title: 'Broken Links', href: '/admin/broken-links', icon: Link2 },
       { title: 'Duplicates', href: '/admin/duplicates', icon: Copy },
