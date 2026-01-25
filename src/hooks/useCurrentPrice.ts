@@ -29,6 +29,9 @@ interface CurrentPriceResult {
 }
 
 // Simple in-memory cache for the session
+// CACHE VERSION: Increment this when price extraction logic changes to invalidate old cached values
+const CACHE_VERSION = 2; // v2: Fixed "Save $X.XX" extraction bug
+
 const priceCache = new Map<string, {
   price: number | null;
   compareAtPrice: number | null;
@@ -36,6 +39,7 @@ const priceCache = new Map<string, {
   currency: string;
   fetchedAt: string;
   expiresAt: number;
+  cacheVersion: number;
 }>();
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -116,9 +120,9 @@ export function useCurrentPrice(
     // Use raw currency for cache key since we convert after
     const cacheKey = productUrl;
     
-    // Check cache first
+    // Check cache first - also verify cache version matches to invalidate stale extraction logic
     const cached = priceCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
+    if (cached && cached.expiresAt > Date.now() && cached.cacheVersion === CACHE_VERSION) {
       setRawState({
         rawPrice: cached.price,
         rawCompareAtPrice: cached.compareAtPrice,
@@ -210,7 +214,7 @@ export function useCurrentPrice(
             return;
           }
           
-          // Cache the result with the store's native currency
+          // Cache the result with the store's native currency and current cache version
           priceCache.set(cacheKey, {
             price: data.price,
             compareAtPrice: data.compareAtPrice,
@@ -218,6 +222,7 @@ export function useCurrentPrice(
             currency: data.currency || 'USD',
             fetchedAt: data.fetchedAt,
             expiresAt: Date.now() + CACHE_TTL_MS,
+            cacheVersion: CACHE_VERSION,
           });
 
           setRawState({
