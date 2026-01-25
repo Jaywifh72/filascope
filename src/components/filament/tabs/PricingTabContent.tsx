@@ -33,6 +33,7 @@ import { REGIONS } from '@/config/regions';
 import { formatPrice as formatCurrencyPrice } from '@/config/currencies';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CurrencyCode } from '@/types/regional';
+import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -48,6 +49,7 @@ interface PricingTabContentProps {
   onViewRetailers: () => void;
   onRetailerClick: (retailer: Retailer) => void;
   brandId?: string | null;
+  productSku?: string | null;
 }
 
 export function PricingTabContent({
@@ -62,6 +64,7 @@ export function PricingTabContent({
   onViewRetailers,
   onRetailerClick,
   brandId,
+  productSku,
 }: PricingTabContentProps) {
   const { formatPrice, currency, region, convertPrice, getConversionRate } = useRegion();
   const { hasAlert, getAlert } = usePriceAlerts();
@@ -387,6 +390,11 @@ export function PricingTabContent({
                   const nativePrice = pricePerSpool || 0;
                   const convertedPrice = needsConversion ? nativePrice * rate : nativePrice;
 
+                  // Generate product-specific URL using interpolation
+                  const storeUrl = store.product_url_pattern && productSku
+                    ? interpolateProductUrl(store.product_url_pattern, productSku)
+                    : store.base_url;
+
                   return (
                     <div 
                       key={store.id}
@@ -396,7 +404,7 @@ export function PricingTabContent({
                           ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
                           : "bg-muted/20 border-border hover:bg-muted/40"
                       )}
-                      onClick={() => window.open(store.base_url, '_blank')}
+                      onClick={() => window.open(storeUrl, '_blank')}
                     >
                       <div className="flex items-center gap-3">
                         {/* Store Region Flag */}
@@ -407,7 +415,7 @@ export function PricingTabContent({
                             <span className="font-medium">{store.store_name}</span>
                             {isUserRegion && (
                               <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                                Your Region
+                                Local
                               </Badge>
                             )}
                           </div>
@@ -431,14 +439,17 @@ export function PricingTabContent({
                             {needsConversion && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs">
-                                  <p>Converted from {store.currency_code}</p>
+                                <TooltipContent side="top" className="text-xs max-w-xs">
+                                  <p className="font-medium">Original: {formatCurrencyPrice(nativePrice, store.currency_code as CurrencyCode)}</p>
+                                  <p className="text-muted-foreground">Rate: 1 {store.currency_code} = {rate.toFixed(4)} {currency}</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}
-                            <span>{needsConversion ? '~' : ''}{formatCurrencyPrice(convertedPrice, currency)}</span>
+                            <span className={needsConversion ? "text-muted-foreground" : ""}>
+                              {needsConversion ? '~' : ''}{formatCurrencyPrice(convertedPrice, currency)}
+                            </span>
                           </div>
                           {needsConversion && (
                             <div className="text-xs text-muted-foreground">
@@ -451,7 +462,7 @@ export function PricingTabContent({
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            window.open(store.base_url, '_blank');
+                            window.open(storeUrl, '_blank');
                           }}
                         >
                           Visit

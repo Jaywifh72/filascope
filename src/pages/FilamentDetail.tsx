@@ -55,6 +55,7 @@ const FilamentDetail = () => {
   const [rescrapingImage, setRescrapingImage] = useState(false);
   const [scrapingData, setScrapingData] = useState(false);
   const [scrapingColors, setScrapingColors] = useState(false);
+  const [brandId, setBrandId] = useState<string | null>(null);
   
   const [editImageOpen, setEditImageOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -168,6 +169,24 @@ const FilamentDetail = () => {
   useEffect(() => {
     fetchFilament();
   }, [id]);
+
+  // Fetch brandId from automated_brands table based on vendor name
+  useEffect(() => {
+    const fetchBrandId = async () => {
+      if (!filament?.vendor) {
+        setBrandId(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('automated_brands')
+        .select('id')
+        .ilike('brand_name', filament.vendor)
+        .limit(1)
+        .maybeSingle();
+      setBrandId(data?.id || null);
+    };
+    fetchBrandId();
+  }, [filament?.vendor]);
 
   useEffect(() => {
     if (filament?.id) {
@@ -649,6 +668,8 @@ const FilamentDetail = () => {
                   hasActualRegionalPrice={hasActualRegionalPrice}
                   onViewRetailers={handleViewRetailers}
                   onRetailerClick={handleRetailerClick}
+                  brandId={brandId}
+                  productSku={pricingFilament.variant_sku || pricingFilament.product_handle}
                 />
               )}
 
