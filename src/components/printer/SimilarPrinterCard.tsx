@@ -6,6 +6,7 @@ import { SimilarityReason } from "@/hooks/useSimilarPrinters";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import ComparisonCheckbox from "@/components/printers/ComparisonCheckbox";
+import { useRegion } from "@/contexts/RegionContext";
 
 interface SimilarPrinterCardProps {
   printer: {
@@ -99,17 +100,26 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
   showCompareToggle = true,
 }) => {
   const { addPrinter, removePrinter, isSelected, isMaxReached } = usePrinterCompare();
+  const { formatPrice, currency, getConversionRate } = useRegion();
+
+  // Prices are stored in USD - check if conversion needed
+  const sourceCurrency = 'USD';
+  const needsConversion = currency !== sourceCurrency;
+  const rate = needsConversion ? getConversionRate(sourceCurrency, currency) : 1;
+
+  const displayPrice = printer.price ? (needsConversion ? printer.price * rate : printer.price) : null;
+  const displayCurrentPrice = currentPrinterPrice ? (needsConversion ? currentPrinterPrice * rate : currentPrinterPrice) : null;
 
   const priceDifference = 
-    currentPrinterPrice && printer.price && !isCurrent
-      ? printer.price - currentPrinterPrice
+    displayCurrentPrice && displayPrice && !isCurrent
+      ? displayPrice - displayCurrentPrice
       : null;
 
   const formatPriceDiff = (diff: number) => {
     if (diff < 0) {
-      return `↓ $${Math.abs(diff).toLocaleString()} less`;
+      return `↓ ${formatPrice(Math.abs(diff))} less`;
     } else {
-      return `↑ $${diff.toLocaleString()} more`;
+      return `↑ ${formatPrice(diff)} more`;
     }
   };
 
@@ -242,9 +252,25 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
       </h3>
 
       {/* Price */}
-      <div className="text-lg md:text-xl font-bold text-white">
-        {printer.price ? `$${printer.price.toLocaleString()}` : "Price N/A"}
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="text-lg md:text-xl font-bold text-white cursor-help">
+              {displayPrice ? (
+                <>
+                  {needsConversion ? '~' : ''}{formatPrice(displayPrice)}
+                </>
+              ) : "Price N/A"}
+            </div>
+          </TooltipTrigger>
+          {needsConversion && printer.price && (
+            <TooltipContent>
+              <p className="text-xs">Original: ${printer.price.toLocaleString()} USD</p>
+              <p className="text-xs text-muted-foreground">Rate: 1 USD = {rate.toFixed(4)} {currency}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
       
       {/* Price Difference */}
       {priceDifference !== null && (
