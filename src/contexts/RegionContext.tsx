@@ -3,6 +3,7 @@ import { RegionCode, CurrencyCode } from '@/types/regional';
 import { REGIONS, detectRegionFromLocale, REGION_FALLBACK_ORDER } from '@/config/regions';
 import { CURRENCIES, formatPrice as formatPriceUtil } from '@/config/currencies';
 import { supabase } from '@/integrations/supabase/client';
+import { getRegionFromUrl, setRegionInUrl } from '@/utils/regionUrl';
 
 interface RegionContextType {
   // Current selections
@@ -94,7 +95,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initialize from localStorage or detect from browser
+  // Initialize from URL params, localStorage, or detect from browser
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
@@ -102,7 +103,18 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
       // Load exchange rates
       await loadExchangeRates();
       
-      // Try to load from localStorage
+      // Priority 1: Check URL params (for shared links)
+      const urlRegion = getRegionFromUrl();
+      if (urlRegion && REGIONS[urlRegion]) {
+        const urlCurrency = REGIONS[urlRegion].defaultCurrency;
+        setRegionState(urlRegion);
+        setCurrencyState(urlCurrency);
+        savePreferences(urlRegion, urlCurrency);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Priority 2: Try to load from localStorage
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
@@ -119,7 +131,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
         // Ignore localStorage errors
       }
       
-      // Auto-detect from browser locale
+      // Priority 3: Auto-detect from browser locale
       const browserLocale = navigator.language || 'en-US';
       const detectedRegion = detectRegionFromLocale(browserLocale);
       const defaultCurrency = REGIONS[detectedRegion].defaultCurrency;
@@ -141,6 +153,8 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     const newCurrency = REGIONS[newRegion].defaultCurrency;
     setCurrencyState(newCurrency);
     savePreferences(newRegion, newCurrency);
+    // Update URL for shareability
+    setRegionInUrl(newRegion);
   }, [savePreferences]);
 
   const setCurrency = useCallback((newCurrency: CurrencyCode) => {
