@@ -1,156 +1,215 @@
 
-# Plan: Admin Tool for Broken Product URL Detection & Repair
+# Admin Broken URLs Page Implementation Plan
 
-## Current State Analysis
+## Overview
+Create a new admin page at `/admin/broken-urls` to view and manage products with broken URLs detected by the live price checker. This page will help admins quickly identify, fix, or dismiss broken product links.
 
-After thorough codebase exploration, I discovered that **the core infrastructure for detecting and fixing broken URLs already exists**. The system includes:
+## Architecture Summary
 
-- **Edge Functions**: `validate-filament-urls`, `validate-url`, `fix-filament-url`, `report-broken-url`
-- **Admin Dashboard**: `/admin/broken-links` with full monitoring capabilities
-- **Database Tables**: `url_validation_results`, `url_validation_cache`, plus `url_validation_status` column in filaments
-- **Frontend Integration**: `BrokenUrlReport` component shows when 404 detected, `useLivePriceFetch` detects 404 errors
+The `broken_product_urls` table tracks URLs that returned 404 errors during live price checks:
+- `product_url` (unique) - The broken URL
+- `store_domain` - Extracted hostname for grouping
+- `error_type` - Currently `404_not_found`
+- `detection_count` - How many times this URL failed
+- `detected_at` / `last_detected_at` - Timestamps
+- `resolved_at` / `new_url` / `notes` - Resolution tracking
 
-The specific Creality URL mapping (`hyper-series-pla-carbon-fiber-3d-printing-filament` → `hyper-pla-cf`) is already defined in the `fix-filament-url` Edge Function.
-
----
-
-## Implementation Plan
-
-Since the infrastructure exists, the work focuses on **enhancements** and **filling gaps**:
-
-### Phase 1: Enhance Redirect URL Detection
-
-**File**: `supabase/functions/validate-filament-urls/index.ts`
-
-**Changes**:
-- When a URL redirects to a different product page (not homepage), capture and store the `finalUrl` as a suggested replacement
-- Add logic to detect when a redirect goes to a valid product page vs a collection/homepage
-- Update the database to store `suggested_url` alongside validation status
-
-### Phase 2: Add "Apply Redirect as Fix" Feature
-
-**File**: `src/components/admin/BrokenLinkSection.tsx`
-
-**Changes**:
-- For entries with status `redirect` and a valid `redirect_url`, show "Apply Redirect" button
-- Add bulk action: "Apply All Valid Redirects" to automatically update product URLs when redirects point to valid product pages
-- Show the redirect destination URL prominently in the UI
-
-### Phase 3: Add URL Suggestion from Validation
-
-**File**: `supabase/functions/fix-filament-url/index.ts`
-
-**Verify/Add**:
-- Confirm Creality mapping `hyper-series-*` → `hyper-*` is working
-- Add any missing brand-specific URL patterns discovered from validation results
-- Ensure the fixer attempts to validate the suggested URL before returning it
-
-### Phase 4: Enhance Live Price 404 Workflow
-
-**File**: `src/hooks/useLivePriceFetch.ts`
-
-**Changes**:
-- When 404 detected, check if there's a known redirect URL in `url_validation_cache`
-- Automatically retry with the redirect URL before showing error
-- If retry succeeds, suggest URL update in the UI
-
-**File**: `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`
-
-**Changes**:
-- When 404 detected and redirect exists, show "URL has moved" message with new URL
-- Add "Update URL" action (for admins) inline
-
-### Phase 5: Add Quick-Fix from Filament Page (Admin Only)
-
-**File**: `src/components/price/BrokenUrlReport.tsx`
-
-**Changes**:
-- For admin users, add "Try Auto-Fix" button that calls `fix-filament-url` directly
-- Show success message with new URL if fix found
-- Auto-refresh price after successful fix
+The page will join with the `filaments` table via `product_url` to show product names.
 
 ---
 
-## Technical Details
+## Implementation Steps
 
-### Database Changes
-No schema changes required - existing tables support all needed functionality.
+### 1. Create the Admin Page Component
 
-### New Component: Admin Quick-Fix
-```text
-BrokenUrlReport
-├── Report Broken URL (existing)
-├── Go to Store (existing)
-├── [Admin Only] Try Auto-Fix (new)
-│   ├── Calls fix-filament-url Edge Function
-│   ├── If success: updates product_url in filaments table
-│   └── Shows toast with result
-└── [Admin Only] Edit URL (new)
-    └── Opens inline editor for manual URL correction
+**File:** `src/pages/AdminBrokenUrls.tsx`
+
+Features:
+- Uses `AdminLayout` wrapper for consistent sidebar navigation
+- Header with icon, title, and refresh button
+- Stats cards showing: Total Broken, Unresolved, Resolved, Top Store
+- Store domain filter dropdown
+- Sortable table with columns:
+  - Product Name (from filaments join)
+  - Store Domain
+  - Broken URL (truncated, with copy button)
+  - Detection Count
+  - Last Detected
+  - Actions (Update URL, Mark Fixed, Dismiss)
+- Bulk actions for same-store fixes
+- Empty state when no broken URLs exist
+
+### 2. Create the Data Hook
+
+**File:** `src/hooks/useBrokenProductUrls.ts`
+
+```typescript
+interface BrokenUrlWithProduct {
+  id: string;
+  product_url: string;
+  store_domain: string;
+  error_type: string;
+  detection_count: number;
+  detected_at: string;
+  last_detected_at: string;
+  resolved_at: string | null;
+  new_url: string | null;
+  notes: string | null;
+  // Joined from filaments
+  filament_id: string | null;
+  product_title: string | null;
+  vendor: string | null;
+}
 ```
 
-### Edge Function Enhancement Flow
-```text
-validate-filament-urls
-├── Fetch URL with redirect:follow
-├── If redirected to valid product page:
-│   └── Store redirect_url in url_validation_results
-├── If 404 or redirected to homepage:
-│   └── Mark as invalid, suggest calling fix-filament-url
-└── Return results with suggested actions
+Hook functionality:
+- `fetchBrokenUrls()` - Fetches all broken URLs with product info
+- `updateProductUrl(id, newUrl)` - Updates filament URL and marks resolved
+- `markResolved(id, notes?)` - Marks as resolved without URL change
+- `dismissUrl(id)` - Deletes the tracking record
+- `bulkUpdateStore(storeDomain, urlTransform)` - Bulk fix for a store
+
+### 3. Update URL Resolution Dialog
+
+**Component within page:**
+- Modal dialog for entering new URL
+- Test URL button (optional - calls get-current-price to verify)
+- Apply button that:
+  1. Updates the filament's `product_url`
+  2. Sets `resolved_at` and `new_url` in broken_product_urls
+  3. Refreshes the list
+
+### 4. Add Route and Sidebar Link
+
+**File changes:**
+
+`src/App.tsx`:
+- Add lazy import for AdminBrokenUrls
+- Add route: `<Route path="/admin/broken-urls" element={<AdminBrokenUrls />} />`
+
+`src/components/admin/AdminSidebar.tsx`:
+- Add new nav item under "Data Quality" group:
+  ```typescript
+  { title: 'Product 404s', href: '/admin/broken-urls', icon: LinkOff }
+  ```
+
+### 5. Store Domain Stats Component
+
+**Within the page:**
+- Collapsible section showing breakdown by store
+- Click on store to filter table
+- Shows count of broken URLs per domain
+- Highlights stores with most issues
+
+---
+
+## Component Structure
+
+```
+AdminBrokenUrls.tsx
+├── AdminLayout
+│   ├── AdminPageHeader (title, description, refresh action)
+│   ├── Stats Cards Row
+│   │   ├── Total Broken
+│   │   ├── Unresolved
+│   │   ├── Resolved Today
+│   │   └── Most Affected Store
+│   ├── Store Filter / Search Bar
+│   ├── Data Table
+│   │   ├── Columns: Product, Store, URL, Count, Detected, Actions
+│   │   ├── Row actions: Update URL, Mark Fixed, Dismiss
+│   │   └── Bulk selection checkbox
+│   ├── Update URL Dialog
+│   │   ├── Current URL display
+│   │   ├── New URL input
+│   │   ├── Test URL button
+│   │   └── Apply / Cancel
+│   └── Empty State (when no broken URLs)
 ```
 
-### Apply Redirect Flow
-```text
-User clicks "Apply Redirect" in Admin UI
-├── Verify redirect_url is accessible
-├── Update filaments.product_url with new URL
-├── Update url_validation_results status to 'valid'
-└── Clear relevant cache entries
+---
+
+## Database Queries
+
+**Fetch broken URLs with product info:**
+```typescript
+// First get broken URLs
+const { data: brokenUrls } = await supabase
+  .from('broken_product_urls')
+  .select('*')
+  .order('last_detected_at', { ascending: false });
+
+// Then match with filaments by URL
+const { data: filaments } = await supabase
+  .from('filaments')
+  .select('id, product_url, product_title, vendor')
+  .in('product_url', brokenUrls.map(b => b.product_url));
+
+// Join in memory
 ```
+
+**Update product URL:**
+```typescript
+// 1. Update filament
+await supabase
+  .from('filaments')
+  .update({ product_url: newUrl })
+  .eq('product_url', oldUrl);
+
+// 2. Mark as resolved
+await supabase
+  .from('broken_product_urls')
+  .update({ 
+    resolved_at: new Date().toISOString(),
+    new_url: newUrl 
+  })
+  .eq('id', brokenUrlId);
+```
+
+---
+
+## UI/UX Details
+
+**Table row appearance:**
+- Unresolved rows have subtle red left border
+- Resolved rows are grayed out (or hidden by default)
+- High detection count (>5) shows warning badge
+
+**Actions:**
+- **Update URL**: Opens dialog to enter new working URL
+- **Mark Fixed**: For cases where URL was fixed externally
+- **Dismiss**: Remove from tracking (false positive)
+- **Search Store**: Opens store search in new tab (like the user-facing button)
+
+**Filters:**
+- Toggle: Show Resolved / Hide Resolved
+- Dropdown: Filter by store domain
+- Search: Filter by product name
 
 ---
 
 ## Files to Create/Modify
 
-### Modify Existing Files
-1. `supabase/functions/validate-filament-urls/index.ts` - Store redirect URLs properly
-2. `src/components/admin/BrokenLinkSection.tsx` - Add "Apply Redirect" actions
-3. `src/components/price/BrokenUrlReport.tsx` - Add admin quick-fix capability
-4. `src/hooks/useLivePriceFetch.ts` - Auto-retry with known redirect URLs
-
-### No New Files Required
-The existing infrastructure is comprehensive - enhancements can be made to existing components.
+| File | Action | Description |
+|------|--------|-------------|
+| `src/pages/AdminBrokenUrls.tsx` | Create | Main admin page component |
+| `src/hooks/useBrokenProductUrls.ts` | Create | Data fetching and mutation hook |
+| `src/App.tsx` | Modify | Add lazy import and route |
+| `src/components/admin/AdminSidebar.tsx` | Modify | Add sidebar navigation link |
 
 ---
 
-## Immediate Fix for Creality Hyper PLA CF
+## Technical Considerations
 
-The URL mapping already exists in `fix-filament-url`:
-```typescript
-"Creality": {
-  "hyper-series-pla-carbon-fiber-3d-printing-filament": "hyper-pla-cf",
-  // ...
-}
-```
+1. **No direct foreign key**: The `broken_product_urls` table uses `product_url` as the link to filaments, not a foreign key. This means:
+   - Join must be done in application code
+   - A broken URL might not match any filament (if product was deleted)
+   - Multiple filaments could theoretically share the same URL
 
-To apply this fix now:
-1. Go to Admin → Broken Link Monitor
-2. Find the Creality Hyper PLA CF entry
-3. Click "Fix URL" - the existing function will apply the mapping
-4. Alternatively, manually edit to: `https://store.creality.com/products/hyper-pla-cf`
+2. **URL matching**: Use exact match on `product_url` field between tables
 
----
+3. **Pagination**: If the table grows large, implement cursor-based pagination
 
-## Summary
+4. **Real-time updates**: Consider adding Supabase realtime subscription to auto-refresh when new 404s are detected
 
-| Component | Status | Action |
-|-----------|--------|--------|
-| URL Validation Edge Function | Exists | Enhance redirect capture |
-| URL Fixer Edge Function | Exists | Verify Creality mapping works |
-| Admin Broken Links Dashboard | Exists | Add "Apply Redirect" bulk action |
-| Broken URL Report Component | Exists | Add admin quick-fix button |
-| Live Price Fetch Hook | Exists | Add redirect URL retry logic |
-| Database Schema | Complete | No changes needed |
-
-This plan leverages the existing robust infrastructure while adding targeted enhancements for a smoother admin workflow and better automatic recovery from URL changes.
+5. **Permissions**: Page is admin-only, using existing `useAuth` hook pattern
