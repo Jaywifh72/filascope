@@ -24,6 +24,8 @@ interface CurrentPriceResult {
   isLivePrice: boolean;
   error: string | null;
   fetchedAt: string | null;
+  /** Whether the fetched price was flagged as suspicious */
+  isSuspicious: boolean;
 }
 
 // Simple in-memory cache for the session
@@ -39,6 +41,18 @@ const priceCache = new Map<string, {
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 500;
+
+// Price validation: reasonable filament price range per spool
+const MIN_REASONABLE_PRICE = 3; // $3 minimum
+const MAX_REASONABLE_PRICE = 150; // $150 maximum (allows for multi-packs)
+
+/**
+ * Validate that a price is within reasonable range for filament products.
+ * This filters out promotional banners, coupon values, and extraction errors.
+ */
+function isReasonableFilamentPrice(price: number): boolean {
+  return price >= MIN_REASONABLE_PRICE && price <= MAX_REASONABLE_PRICE;
+}
 
 // Check if error is a transient boot error that can be retried
 function isTransientError(error: any): boolean {
@@ -65,6 +79,7 @@ export function useCurrentPrice(
     isLivePrice: boolean;
     error: string | null;
     fetchedAt: string | null;
+    isSuspicious: boolean;
   }>({
     rawPrice: fallbackPrice,
     rawCompareAtPrice: null,
@@ -74,6 +89,7 @@ export function useCurrentPrice(
     isLivePrice: false,
     error: null,
     fetchedAt: null,
+    isSuspicious: false,
   });
   
   const fetchedUrlRef = useRef<string | null>(null);
@@ -87,6 +103,7 @@ export function useCurrentPrice(
         weightGrams: null,
         isLoading: false,
         isLivePrice: false,
+        isSuspicious: false,
       }));
       return;
     }
@@ -111,6 +128,7 @@ export function useCurrentPrice(
         isLivePrice: true,
         error: null,
         fetchedAt: cached.fetchedAt,
+        isSuspicious: false,
       });
       fetchedUrlRef.current = productUrl;
       return;
@@ -177,6 +195,21 @@ export function useCurrentPrice(
         }
 
         if (data?.success && data.price !== null) {
+          // SANITY CHECK: Validate price is within reasonable range
+          if (!isReasonableFilamentPrice(data.price)) {
+            console.warn(`Suspicious price detected: $${data.price} - likely extraction error, falling back to stored price`);
+            setRawState(prev => ({
+              ...prev,
+              rawPrice: fallbackPrice,
+              isLoading: false,
+              isLivePrice: false,
+              isSuspicious: true,
+              error: 'Price extraction returned suspicious value',
+            }));
+            fetchedUrlRef.current = productUrl;
+            return;
+          }
+          
           // Cache the result with the store's native currency
           priceCache.set(cacheKey, {
             price: data.price,
@@ -196,6 +229,7 @@ export function useCurrentPrice(
             isLivePrice: true,
             error: null,
             fetchedAt: data.fetchedAt,
+            isSuspicious: false,
           });
         } else {
           // Fall back to stored price silently
@@ -205,6 +239,7 @@ export function useCurrentPrice(
             isLoading: false,
             isLivePrice: false,
             error: null, // Don't expose error to UI
+            isSuspicious: false,
           }));
         }
       } catch (err) {
@@ -215,6 +250,7 @@ export function useCurrentPrice(
           isLoading: false,
           isLivePrice: false,
           error: null,
+          isSuspicious: false,
         }));
       }
       
@@ -232,7 +268,7 @@ export function useCurrentPrice(
 
   // Convert prices to user's currency
   const convertedState = useMemo((): CurrentPriceResult => {
-    const { rawPrice, rawCompareAtPrice, rawCurrency, weightGrams, isLoading, isLivePrice, error, fetchedAt } = rawState;
+    const { rawPrice, rawCompareAtPrice, rawCurrency, weightGrams, isLoading, isLivePrice, error, fetchedAt, isSuspicious } = rawState;
     
     const needsConversion = rawCurrency !== userCurrency && rawPrice !== null;
     
@@ -262,6 +298,7 @@ export function useCurrentPrice(
       isLivePrice,
       error,
       fetchedAt,
+      isSuspicious,
     };
   }, [rawState, userCurrency, convertPrice, getConversionRate]);
 
