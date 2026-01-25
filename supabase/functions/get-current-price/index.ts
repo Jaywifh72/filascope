@@ -549,13 +549,21 @@ async function attemptSearchResolution(
     
     console.log(`Search returned ${links.length} total links`);
     
-    // Step 5: Filter to product links only
+    // Step 5: Filter to product links only (excluding the original broken URL)
     const baseDomain = storeDomain.replace('www.', '');
+    const originalUrlLower = productUrl.toLowerCase();
     const productLinks = links.filter(link => {
       try {
         const linkUrl = new URL(link);
         // Must be same domain
         if (!linkUrl.hostname.includes(baseDomain)) return false;
+        
+        // CRITICAL: Exclude the original broken URL to prevent self-resolution loops
+        if (link.toLowerCase() === originalUrlLower) {
+          console.log('Excluding original URL from candidates:', link);
+          return false;
+        }
+        
         // Must contain product indicators
         const path = linkUrl.pathname.toLowerCase();
         return path.includes('/products/') || 
@@ -567,9 +575,10 @@ async function attemptSearchResolution(
       }
     });
     
-    console.log(`Found ${productLinks.length} product links on search page`);
+    console.log(`Found ${productLinks.length} product links on search page (excluding original)`);
     
     if (productLinks.length === 0) {
+      console.log('✗ No alternative product URLs found - product may be discontinued');
       return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
     }
     
@@ -583,11 +592,11 @@ async function attemptSearchResolution(
     const topCandidates = scoredLinks.sort((a, b) => b.score - a.score).slice(0, 5);
     console.log('Top URL candidates:', topCandidates.map(c => `${c.url} (${(c.score * 100).toFixed(0)}%)`));
     
-    // Step 7: Get best match with score >= 0.7
-    const bestMatch = topCandidates.find(l => l.score >= 0.7);
+    // Step 7: Get best match with score >= 0.5 (lowered threshold for better matching)
+    const bestMatch = topCandidates.find(l => l.score >= 0.5);
     
     if (bestMatch) {
-      console.log(`Best match found: ${bestMatch.url} (score: ${(bestMatch.score * 100).toFixed(0)}%)`);
+      console.log(`✓ Best match found: ${bestMatch.url} (score: ${(bestMatch.score * 100).toFixed(0)}%)`);
       return {
         success: true,
         newUrl: bestMatch.url,
