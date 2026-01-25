@@ -2,16 +2,15 @@ import React from 'react';
 import { 
   ShoppingCart, 
   ExternalLink, 
-  Shield, 
   Truck, 
   RotateCcw, 
   ChevronRight,
   RefreshCw,
-  CheckCircle2,
   Globe,
   Calculator,
   GitCompare,
-  Info
+  Info,
+  ExternalLinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialBadge } from '@/components/MaterialBadge';
@@ -253,11 +252,11 @@ export function FilamentPurchaseSidebar({
               <span className="text-lg text-muted-foreground">Price unavailable</span>
             )}
 
-            {/* Live price indicator */}
-            {isLivePrice && !priceLoading && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span className="font-medium">Live price verified</span>
+            {/* Price disclaimer */}
+            {!priceLoading && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <ExternalLinkIcon className="w-3.5 h-3.5" />
+                <span>Click to verify price at store</span>
               </div>
             )}
 
@@ -385,10 +384,10 @@ export function FilamentPurchaseSidebar({
 
           {/* Trust Signals */}
           <div className="pt-4 border-t border-border/40 space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span>Price verified across retailers</span>
-            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Prices shown are from our database and may not reflect current store prices. 
+              Click "Buy Now" to verify the latest price.
+            </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Truck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
               <span>

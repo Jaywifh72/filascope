@@ -16,7 +16,7 @@ import { useRegionalPrice } from "@/hooks/useRegionalPrice";
 import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { Badge } from "@/components/ui/badge";
-import { Ban, Loader2 } from "lucide-react";
+import { Ban, Loader2, ExternalLinkIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 
@@ -209,11 +209,11 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
         </div>
       )}
       
-      {/* Live Price Badge */}
-      {isLivePrice && !isPriceLoading && (
-        <div className="flex items-center gap-2 text-xs text-green-500">
-          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <span>Live price from {filament.vendor}</span>
+      {/* Price Source Badge */}
+      {!isPriceLoading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <ExternalLinkIcon className="h-3 w-3" />
+          <span>Click to verify current price at store</span>
         </div>
       )}
       

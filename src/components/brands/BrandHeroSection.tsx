@@ -175,7 +175,7 @@ export function BrandHeroSection({
             {isVerified && (
               <TrustIndicator icon={ShieldCheck} label="Verified Brand" />
             )}
-            <TrustIndicator icon={TrendingUp} label="Live Price Tracking" />
+            <TrustIndicator icon={TrendingUp} label="Price Tracking" />
             <TrustIndicator icon={Database} label="Complete Catalog" />
           </div>
         </div>
