@@ -4374,6 +4374,78 @@ export type Database = {
           },
         ]
       }
+      product_regional_slugs: {
+        Row: {
+          created_at: string | null
+          filament_id: string
+          http_status: number | null
+          id: string
+          region_code: string
+          slug: string
+          updated_at: string | null
+          verified: boolean | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id: string
+          http_status?: number | null
+          id?: string
+          region_code: string
+          slug: string
+          updated_at?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string
+          http_status?: number | null
+          id?: string
+          region_code?: string
+          slug?: string
+          updated_at?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           amazon_prime_member: boolean | null
