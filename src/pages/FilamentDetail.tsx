@@ -34,7 +34,8 @@ import {
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { CalculatorTabs, FloatingCalculatorButton } from "@/components/filament/calculator";
 import { useRegionalStore, getRegionDisplayName } from "@/hooks/useRegionalStore";
-import { useRegionalPricing, extractProductSlug } from "@/hooks/useRegionalPricing";
+import { useUnifiedRegionalPricing, type UnifiedRegionalPricingResult } from "@/hooks/useUnifiedRegionalPricing";
+import { extractProductSlug } from "@/hooks/useRegionalPricing";
 import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 import { useRegion } from "@/contexts/RegionContext";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
@@ -94,19 +95,40 @@ const FilamentDetail = () => {
   // Get region context
   const { region: currentRegionCode } = useRegion();
   
-  // Get regional price and URL using the new unified hook
-  const { 
-    priceResult: regionalPriceResult, 
-    isLoading: regionalPriceLoading,
-    allStores: regionalStores,
-    hasLocalStore
-  } = useRegionalPricing({
-    brandName: pricingFilament?.vendor || null,
+  // Get regional price and URL using the unified hook
+  const unifiedPricing = useUnifiedRegionalPricing({
+    brandName: pricingFilament?.vendor || '',
     productSlug: extractProductSlug(pricingFilament?.product_url),
     basePrice: pricingFilament?.variant_price ?? null,
     baseCurrency: 'USD',
     originalUrl: pricingFilament?.product_url || null,
+    filamentId: pricingFilament?.id,
+    priceLastVerifiedAt: pricingFilament?.last_scraped_at,
+    priceSource: (pricingFilament as any)?.price_source,
+    priceConfidence: (pricingFilament as any)?.price_confidence,
   });
+  
+  // Extract values for backward compatibility with existing code
+  const regionalPriceResult = unifiedPricing.displayPrice != null ? {
+    displayPrice: unifiedPricing.displayPrice,
+    displayCurrency: unifiedPricing.displayCurrency,
+    formattedPrice: unifiedPricing.formattedPrice,
+    originalPrice: unifiedPricing.originalPrice ?? unifiedPricing.displayPrice ?? 0,
+    originalCurrency: unifiedPricing.originalCurrency ?? unifiedPricing.displayCurrency,
+    isConverted: unifiedPricing.isConverted,
+    conversionRate: unifiedPricing.conversionRate,
+    store: unifiedPricing.storeUrl ? {
+      id: '',
+      name: unifiedPricing.storeName,
+      url: unifiedPricing.storeUrl,
+      regionCode: unifiedPricing.storeRegion,
+      shipsFrom: null,
+      freeShippingThreshold: null,
+    } : null,
+  } : null;
+  const regionalPriceLoading = unifiedPricing.isLoading;
+  const regionalStores = unifiedPricing.allStores;
+  const hasLocalStore = unifiedPricing.isLocalStore;
 
   const compatibility = selectedPrinter && displayFilament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, displayFilament)
@@ -678,10 +700,10 @@ const FilamentDetail = () => {
                   pricePerKg={rawPricePerKg}
                   pricePerSpool={rawPricePerSpool}
                   affiliateUrl={getAffiliateUrl(
-                    selectedVariant?.product_url || regionalPriceResult?.store?.url || pricingFilament.product_url || '', 
+                    selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
                     pricingFilament.vendor
                   )}
-                  productUrl={selectedVariant?.product_url || regionalPriceResult?.store?.url || pricingFilament.product_url || ''}
+                  productUrl={selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
                   originalUsUrl={pricingFilament.product_url || undefined}
                   hasActualRegionalPrice={hasActualRegionalPrice}
                   onViewRetailers={handleViewRetailers}
@@ -724,24 +746,24 @@ const FilamentDetail = () => {
             pricePerSpool={rawPricePerSpool}
             weightGrams={pricingFilament.net_weight_g}
             affiliateUrl={getAffiliateUrl(
-              selectedVariant?.product_url || regionalPriceResult?.store?.url || pricingFilament.product_url || '', 
+              selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
               pricingFilament.vendor
             )}
-            productUrl={selectedVariant?.product_url || regionalPriceResult?.store?.url || pricingFilament.product_url || ''}
+            productUrl={selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
             originalUsUrl={pricingFilament.product_url || undefined}
-            retailerName={regionalPriceResult?.store?.name || pricingFilament.vendor || undefined}
+            retailerName={unifiedPricing.storeName || pricingFilament.vendor || undefined}
             retailerCount={retailers.length}
             onViewRetailers={handleViewRetailers}
             hasActualRegionalPrice={hasActualRegionalPrice}
-            isUsingFallbackRegion={!hasLocalStore}
-            actualUrlCurrency={regionalPriceResult?.originalCurrency || null}
-            isAvailableInUserRegion={hasLocalStore}
-            isRegionalBrand={regionalStores.length > 0}
+            isUsingFallbackRegion={!unifiedPricing.isLocalStore}
+            actualUrlCurrency={unifiedPricing.originalCurrency || null}
+            isAvailableInUserRegion={unifiedPricing.isLocalStore}
+            isRegionalBrand={unifiedPricing.allStores.length > 0}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
             regionalPriceResult={regionalPriceResult}
-            lastScrapedAt={pricingFilament.last_scraped_at}
-            priceSource={(pricingFilament as any).price_source}
-            priceConfidence={(pricingFilament as any).price_confidence}
+            lastScrapedAt={unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
+            priceSource={unifiedPricing.priceSource}
+            priceConfidence={unifiedPricing.priceConfidence}
           />
         </div>
       </div>
@@ -753,15 +775,15 @@ const FilamentDetail = () => {
         pricePerSpool={rawPricePerSpool}
         weightGrams={pricingFilament.net_weight_g}
         affiliateUrl={getAffiliateUrl(
-          selectedVariant?.product_url || regionalPriceResult?.store?.url || pricingFilament.product_url || '', 
+          selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
           pricingFilament.vendor
         )}
-        productUrl={selectedVariant?.product_url || regionalPriceResult?.store?.url || pricingFilament.product_url || ''}
+        productUrl={selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
         originalUsUrl={pricingFilament.product_url || undefined}
         hasActualRegionalPrice={hasActualRegionalPrice}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
-        lastScrapedAt={pricingFilament.last_scraped_at}
-        priceConfidence={(pricingFilament as any).price_confidence}
+        lastScrapedAt={unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
+        priceConfidence={unifiedPricing.priceConfidence}
       />
 
       {/* Admin Edit Image Dialog */}
@@ -874,7 +896,7 @@ const FilamentDetail = () => {
       {pricingFilament && (
         <StickyBuyBar
           filament={pricingFilament}
-          affiliateUrl={getAffiliateUrl(regionalPriceResult?.store?.url || pricingFilament.product_url || '', pricingFilament.vendor)}
+          affiliateUrl={getAffiliateUrl(unifiedPricing.storeUrl || pricingFilament.product_url || '', pricingFilament.vendor)}
           pricePerKg={rawPricePerKg}
           isVisible={stickyBarVisible}
           hasActualRegionalPrice={hasActualRegionalPrice}

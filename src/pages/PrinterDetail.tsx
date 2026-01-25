@@ -48,6 +48,7 @@ import { PurchaseSidebar } from "@/components/printer/PurchaseSidebar";
 import { MobileBottomBar } from "@/components/printer/MobileBottomBar";
 import { usePrinterInventory } from "@/hooks/usePrinterInventory";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
+import { useUnifiedRegionalPricing } from "@/hooks/useUnifiedRegionalPricing";
 import { 
   useTrackPrinterView, 
   usePrinterActivityStats
@@ -173,6 +174,18 @@ const PrinterDetail = () => {
   const printerBrand = typeof printer?.brand === 'object' && printer?.brand !== null && 'brand' in printer.brand 
     ? printer.brand.brand 
     : null;
+
+  // Get regional pricing and store URL using unified hook
+  const unifiedPricing = useUnifiedRegionalPricing({
+    brandName: printerBrand || '',
+    productSlug: printer?.printer_id || '',
+    basePrice: displayPrice ?? null,
+    baseCurrency: 'USD',
+    originalUrl: printer?.official_store_url || null,
+    priceLastVerifiedAt: (printer as any)?.prices_last_updated_at,
+    priceSource: (printer as any)?.price_source,
+    priceConfidence: (printer as any)?.price_confidence,
+  });
 
   // Fetch brandId from automated_brands for regional store lookups
   useEffect(() => {
@@ -955,16 +968,19 @@ const PrinterDetail = () => {
             const warrantyYears = (printer as any).warranty_years ?? brandData?.warranty_years ?? null;
             const warrantyCoverage = (printer as any).warranty_coverage ?? brandData?.warranty_coverage ?? null;
             
+            // Use regional store URL if available, otherwise fall back to original
+            const regionalStoreUrl = unifiedPricing.storeUrl || printer.official_store_url;
+            
             return (
               <PurchaseSidebar
                 printer={{
                   id: printer.id,
                   model_name: printer.model_name,
-                  official_store_url: printer.official_store_url,
+                  official_store_url: regionalStoreUrl,
                   discontinued: printer.discontinued,
-                  prices_last_updated_at: (printer as any).prices_last_updated_at,
-                  price_source: (printer as any).price_source,
-                  price_confidence: (printer as any).price_confidence,
+                  prices_last_updated_at: unifiedPricing.lastVerifiedAt?.toISOString() ?? (printer as any).prices_last_updated_at,
+                  price_source: unifiedPricing.priceSource ?? (printer as any).price_source,
+                  price_confidence: unifiedPricing.priceConfidence ?? (printer as any).price_confidence,
                 }}
                 brand={brand}
                 displayPrice={displayPrice}
@@ -983,11 +999,14 @@ const PrinterDetail = () => {
 
         {/* Mobile Bottom Bar - Fixed price/buy button on mobile */}
         {(() => {
+          // Use regional store URL if available
+          const regionalStoreUrl = unifiedPricing.storeUrl || printer.official_store_url;
+          
           return (
             <MobileBottomBar
               price={displayPrice}
               msrp={displayMsrp}
-              officialStoreUrl={printer.official_store_url}
+              officialStoreUrl={regionalStoreUrl}
               getAffiliateUrl={getAffiliateUrl}
               brand={brand}
               isDiscontinued={printer.discontinued}
