@@ -1,131 +1,201 @@
 
-# Seed Data for brand_regional_stores Table
+# Admin Interface for Regional Stores Management
 
 ## Overview
 
-This plan creates a SQL migration to populate the `brand_regional_stores` table with accurate regional store information for all major brands in FilaScope. The data will be derived from the existing `BRAND_REGIONAL_STORES` static configuration in `src/lib/brandRegionalStores.ts`, ensuring consistency between the client-side URL generation and database-backed regional pricing.
+This plan creates a comprehensive admin interface at `/admin/regional-stores` for managing brand regional store configurations. The interface will allow administrators to view, add, edit, and manage regional store data without writing SQL.
 
-## Current State
+## Database Context
 
-- **Table**: `brand_regional_stores` exists but is empty
-- **Source Data**: `automated_brands` table contains ~40 brands
-- **Reference Config**: `src/lib/brandRegionalStores.ts` has comprehensive store URL patterns
-- **Constraint**: Only regions `US`, `CA`, `UK`, `EU`, `AU`, `JP`, `CN` are allowed
-- **Unique Constraint**: One entry per brand + region combination
+The `brand_regional_stores` table already exists with the following structure:
+- `id` (uuid, PK)
+- `brand_id` (uuid, FK to automated_brands)
+- `region_code` (text) - US, CA, UK, EU, AU, JP, CN
+- `store_name` (text)
+- `base_url` (text)
+- `product_url_pattern` (text, nullable)
+- `currency_code` (text)
+- `ships_from_country` (text, nullable)
+- `free_shipping_threshold` (numeric, nullable)
+- `estimated_shipping_days` (integer, nullable)
+- `is_primary` (boolean, default false)
+- `is_active` (boolean, default true)
+- `notes` (text, nullable)
+- `created_at`, `updated_at` (timestamps)
 
-## Database Migration
+The table already contains 69 regional store records across 39 brands.
 
-A new SQL migration file will be created that:
+---
 
-1. Uses subqueries to resolve `brand_id` from `automated_brands.brand_slug`
-2. Inserts regional store records for all brands with accurate URLs and shipping info
-3. Uses `ON CONFLICT DO NOTHING` to safely handle re-runs
+## Files to Create
 
-### Brands to Seed
+### 1. `src/pages/AdminRegionalStores.tsx`
+Main admin page with:
+- Header with page title and "Add Regional Store" button
+- Statistics cards (total brands, brands with stores, brands missing stores, total regional stores)
+- Search and region filter controls
+- Tabbed interface:
+  - **All Brands** - Full list with expandable regional store details
+  - **Missing Stores** - Brands without any regional store configuration
+  - **Coverage Overview** - Visual summary of regional coverage by region
 
-| Brand | Regions | Primary |
-|-------|---------|---------|
-| Bambu Lab | US, CA, EU, UK, AU, JP, CN | US |
-| Polymaker | US, CA, EU | US |
-| Creality | US, CA, EU, UK, AU | US |
-| Anycubic | US, CA, EU, UK, AU | US |
-| Elegoo | US, CA, EU, UK, AU | US |
-| eSun | US, EU | US |
-| Hatchbox | US | US |
-| Overture | US | US |
-| Prusament | US, EU | EU |
-| ColorFabb | EU, US | EU |
-| Fillamentum | EU | EU |
-| Fiberlogy | EU, US | EU |
-| Extrudr | EU | EU |
-| 3DXTech | US | US |
-| NinjaTek | US | US |
-| Atomic Filament | US | US |
-| Proto-Pasta | US | US |
-| Push Plastic | US | US |
-| Matter3D | CA, US | CA |
-| AzureFilm | EU | EU |
-| Kingroon | US, EU | US |
-| Eryone | US, EU | US |
-| Sovol | US, EU | US |
-| Geeetech | US | US |
-| 3D-Fuel | US | US |
-| IC3D Printers | US | US |
-| Numakers | US | US |
-| Amolen | US | US |
-| FormFutura | EU | EU |
-| Siraya Tech | US | US |
-| Recreus | EU | EU |
-| Duramic 3D | US | US |
-| Fusion Filaments | US | US |
-| Gizmo Dorks | US | US |
+### 2. `src/components/admin/regional-stores/BrandRegionalStoresTable.tsx`
+Expandable table component displaying:
+- Brand row with logo, name, slug
+- Region coverage badges (US, CA, EU, UK, AU flags showing presence)
+- Store count badge
+- Coverage percentage with progress bar
+- "Add Store" action button
+- Expandable details showing individual stores with:
+  - Store name, region flag, currency
+  - Shipping info (from country, free shipping threshold)
+  - Primary/Active status badges
+  - Toggle switch for active status
+  - Edit and Delete action buttons
 
-## Implementation Details
+### 3. `src/components/admin/regional-stores/AddRegionalStoreDialog.tsx`
+Dialog for creating new regional stores:
+- Brand selector dropdown (pre-selected if opened from brand row)
+- Region selector with flags
+- Store name input (auto-generated from brand + region)
+- Store URL input
+- Product URL pattern input with `{sku}` placeholder hint
+- Currency selector (auto-set based on region)
+- Ships from country input (2-letter code)
+- Free shipping threshold input
+- Estimated shipping days input
+- Primary store toggle
+- Active toggle
+- Internal notes textarea
 
-### File to Create
+### 4. `src/components/admin/regional-stores/EditRegionalStoreDialog.tsx`
+Dialog for editing existing stores:
+- Pre-populated form with current values
+- All same fields as Add dialog
+- Disabled brand and region selection (cannot change)
+- Update button with loading state
+
+### 5. `src/components/admin/regional-stores/BrandCoverageOverview.tsx`
+Visual overview card showing:
+- Grid of regions (US, CA, EU, UK, AU, JP, CN)
+- For each region: count of brands with stores, percentage coverage
+- Color-coded based on coverage level (green >80%, yellow 50-80%, red <50%)
+- Quick action to filter by region
+
+---
+
+## Routing Updates
+
+### File: `src/App.tsx`
+
+Add lazy import:
+```typescript
+const AdminRegionalStores = lazy(() => import("./pages/AdminRegionalStores"));
+```
+
+Add route after existing admin routes:
+```typescript
+<Route path="/admin/regional-stores" element={<AdminRegionalStores />} />
+```
+
+---
+
+## Admin Dashboard Integration
+
+### File: `src/pages/AdminDashboard.tsx`
+
+Add new quick action to the `quickActions` array:
+```typescript
+{ 
+  to: "/admin/regional-stores", 
+  icon: Globe, 
+  title: "Regional Stores", 
+  desc: "Manage brand storefronts", 
+  color: "text-teal-500" 
+}
+```
+
+---
+
+## Component Architecture
 
 ```text
-supabase/migrations/[timestamp]_seed_brand_regional_stores.sql
+AdminRegionalStores
+├── Header (title + Add Store button)
+├── Stats Cards (4 metrics)
+├── Filters (Search + Region dropdown)
+└── Tabs
+    ├── All Brands Tab
+    │   └── BrandRegionalStoresTable
+    │       └── BrandRow (expandable)
+    │           └── StoreDetailsList
+    ├── Missing Stores Tab
+    │   └── BrandRegionalStoresTable (filtered)
+    └── Coverage Overview Tab
+        └── BrandCoverageOverview
+
+AddRegionalStoreDialog (modal)
+EditRegionalStoreDialog (modal)
 ```
 
-### Migration Structure
+---
 
-```sql
--- Seed regional store data
--- Uses brand_slug to resolve brand_id dynamically
+## Key Technical Details
 
--- BAMBU LAB (7 regions)
-INSERT INTO brand_regional_stores (brand_id, region_code, store_name, base_url, product_url_pattern, currency_code, ships_from_country, free_shipping_threshold, estimated_shipping_days, is_primary)
-SELECT id, 'US', 'Bambu Lab US', 'https://us.store.bambulab.com', 'https://us.store.bambulab.com/products/{sku}', 'USD', 'US', 50.00, 5, true
-FROM automated_brands WHERE brand_slug = 'bambu-lab'
-ON CONFLICT (brand_id, region_code) DO NOTHING;
+### Data Fetching Strategy
 
--- Repeat for CA, EU, UK, AU, JP, CN...
+1. **Main page query**: Fetch all brands from `automated_brands` with LEFT JOIN to `brand_regional_stores` for aggregate counts
+2. **Expanded row query**: Fetch individual stores when a brand row is expanded (lazy loading)
+3. **Mutations**: Create, update, delete operations with optimistic updates and toast notifications
 
--- POLYMAKER (3 regions)
-INSERT INTO brand_regional_stores (...)
-SELECT id, 'US', 'Polymaker US', 'https://us.polymaker.com', ...
-FROM automated_brands WHERE brand_slug = 'polymaker'
-ON CONFLICT (brand_id, region_code) DO NOTHING;
+### Query Keys
+- `['admin-brands-regional-coverage']` - Main brands list with counts
+- `['admin-brand-stores', brandId]` - Individual brand's stores (fetched on expand)
 
--- ... Continue for all brands
-```
+### Mutation Pattern
+Following existing admin patterns with `useMutation`:
+- `toggleActiveMutation` - Toggle store active status
+- `deleteStoreMutation` - Delete store with confirmation dialog
+- `createStoreMutation` - Create new store
+- `updateStoreMutation` - Update existing store
 
-### Data Accuracy
+### UI/UX Features
+- Loading skeletons during data fetch
+- Empty states with helpful messages
+- Confirmation dialogs for destructive actions
+- Toast notifications for success/error feedback
+- Region flags from `REGIONS` config
+- Currency symbols from `CURRENCIES` config
 
-Each record will include:
-- **store_name**: Human-readable store identifier (e.g., "Bambu Lab US")
-- **base_url**: Store homepage URL
-- **product_url_pattern**: Template for product links using `{sku}` placeholder
-- **currency_code**: Native store currency
-- **ships_from_country**: 2-letter country code for shipping origin
-- **free_shipping_threshold**: Minimum order for free shipping (based on typical values)
-- **estimated_shipping_days**: Typical delivery time (3-7 days domestic, 10-21 international)
-- **is_primary**: True for the brand's main/home market store
+---
 
-### Estimated Record Count
+## Files Summary
 
-Approximately **70-80 records** across ~35 brands, covering:
-- 7 global brands with full regional presence (Bambu Lab, Anycubic, Elegoo, etc.)
-- 20+ US-focused brands (single region)
-- 10+ EU-centric brands
+| File | Action | Lines (est) |
+|------|--------|-------------|
+| `src/pages/AdminRegionalStores.tsx` | Create | ~200 |
+| `src/components/admin/regional-stores/BrandRegionalStoresTable.tsx` | Create | ~350 |
+| `src/components/admin/regional-stores/AddRegionalStoreDialog.tsx` | Create | ~280 |
+| `src/components/admin/regional-stores/EditRegionalStoreDialog.tsx` | Create | ~260 |
+| `src/components/admin/regional-stores/BrandCoverageOverview.tsx` | Create | ~120 |
+| `src/App.tsx` | Modify | +3 lines |
+| `src/pages/AdminDashboard.tsx` | Modify | +1 action |
 
-## Technical Considerations
+---
 
-1. **Idempotency**: `ON CONFLICT DO NOTHING` ensures safe re-runs
-2. **FK Resolution**: Subqueries resolve `brand_slug` to `brand_id` dynamically
-3. **Missing Brands**: If a brand doesn't exist in `automated_brands`, the INSERT is skipped
-4. **URL Patterns**: Use `{sku}` as placeholder for product SKU/handle
+## Existing Components to Reuse
 
-## Testing
+- `@/components/ui/dialog` - Modal dialogs
+- `@/components/ui/table` - Data tables
+- `@/components/ui/tabs` - Tab navigation
+- `@/components/ui/badge` - Status badges
+- `@/components/ui/switch` - Toggle switches
+- `@/components/ui/select` - Dropdowns
+- `@/components/ui/collapsible` - Expandable rows
+- `@/components/ui/alert-dialog` - Confirmation dialogs
+- `@/hooks/use-toast` - Toast notifications
 
-After migration:
-```sql
--- Verify seed data
-SELECT ab.brand_name, brs.region_code, brs.store_name, brs.currency_code
-FROM brand_regional_stores brs
-JOIN automated_brands ab ON ab.id = brs.brand_id
-ORDER BY ab.brand_name, brs.region_code;
-```
+## Config to Leverage
 
-Expected: ~70-80 rows across all seeded brands.
+- `src/config/regions.ts` - REGIONS, REGION_LIST for flags and names
+- `src/config/currencies.ts` - CURRENCIES, CURRENCY_LIST for currency info
