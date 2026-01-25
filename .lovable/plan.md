@@ -1,239 +1,286 @@
 
-# Unified Regional Pricing Hook Implementation Plan
+# Admin Price Verification Tool Implementation Plan
 
 ## Overview
-Create a new `useUnifiedRegionalPricing` hook that consolidates all regional pricing logic into a single, comprehensive hook. This will simplify the current fragmented approach where multiple hooks (`useRegionalPricing`, `useRegionalPriceV2`, `useRegionalStoreData`, `useConvertedPrice`, `usePriceFreshness`) are used independently.
+Create a comprehensive admin tool for manually verifying and updating product prices across filaments and printers. This tool addresses the reality that automated price scraping is complex, may violate store ToS, and can produce unreliable data. The manual verification approach ensures honest, accurate pricing.
 
 ---
 
-## Current State Analysis
+## Current Database Schema
 
-### Existing Hooks (Fragmentation Issues)
-The codebase currently has **6+ overlapping regional pricing hooks**:
+The database already has the necessary columns for price freshness tracking:
 
-| Hook | Purpose | Used In |
-|------|---------|---------|
-| `useRegionalPricing` | Full regional store + URL resolution | FilamentDetail |
-| `useRegionalPriceV2` | Price conversion + all stores list | PricingTab components |
-| `useRegionalStoreData` | Store data with React Query caching | Various components |
-| `useConvertedPrice` | Currency conversion only | Price displays |
-| `usePriceFreshness` | Data age calculation | Price freshness indicators |
-| `useRegionalPrice` (legacy) | Hardcoded column-based pricing | FilamentCard, LabReadoutCard |
+**Filaments Table:**
+- `variant_price` (numeric) - Current price
+- `last_scraped_at` (timestamp) - When price was last verified
+- `price_source` (varchar) - How price was obtained
+- `price_confidence` (varchar) - Calculated confidence level
 
-### Problems with Current Approach
-1. **Duplicated Logic**: Store lookups, fallback logic, and currency conversion are repeated
-2. **Inconsistent Results**: Different hooks may return slightly different values
-3. **Missing Freshness Data**: Most hooks don't include `price_confidence` or `last_scraped_at`
-4. **No Caching Coordination**: Multiple hooks may fetch the same store data independently
-5. **Complex Consumer Code**: Components must wire together multiple hooks manually
+**Printers Table:**
+- `base_price` (numeric) - Current price
+- `prices_last_updated_at` (timestamp) - When price was last verified
+- `price_source` (varchar) - How price was obtained
+- `price_confidence` (varchar) - Calculated confidence level
+
+**Price History Table:**
+- `filament_id`, `price`, `recorded_at`, `region`, `currency`, `source`, `notes`
+
+**Current Price Distribution:**
+| Confidence | Count |
+|------------|-------|
+| low | 6,115 |
+| medium | 1,968 |
+| unknown | 167 |
+| stale | 6 |
 
 ---
 
-## Solution Design
+## Architecture Overview
 
-### New Unified Hook: `useUnifiedRegionalPricing`
-
-A single hook that:
-1. Accepts flexible product data (filament, printer, or accessory)
-2. Uses React Query for efficient caching (shares cache with existing hooks)
-3. Returns all regional pricing data in one result object
-4. Includes price freshness metadata
-5. Handles all edge cases (no stores, fallbacks, conversions)
-
-### Interface Design
-
-```typescript
-interface UnifiedRegionalPricingResult {
-  // Display values
-  displayPrice: number;
-  displayCurrency: CurrencyCode;
-  formattedPrice: string;
-  
-  // Store info
-  storeUrl: string;
-  storeRegion: RegionCode;
-  storeName: string;
-  isLocalStore: boolean;
-  storeFlag: string;
-  
-  // Price freshness (NEW)
-  priceConfidence: PriceConfidence;
-  lastVerifiedAt: Date | null;
-  priceSource: string | null;
-  timeAgo: string | null;
-  
-  // Conversion info
-  isConverted: boolean;
-  originalPrice: number | null;
-  originalCurrency: CurrencyCode | null;
-  conversionRate: number | null;
-  conversionTooltip: string | null;
-  
-  // All available stores
-  allStores: RegionalStoreData[];
-  
-  // Status
-  isLoading: boolean;
-  error: string | null;
-}
-
-interface UnifiedProductData {
-  // Required
-  brandName: string;
-  
-  // Price info (at least one required)
-  basePrice?: number | null;
-  baseCurrency?: CurrencyCode;
-  
-  // URL generation
-  productSlug?: string;
-  originalUrl?: string | null;
-  filamentId?: string | null; // For regional slug resolution
-  
-  // Freshness data (optional - from new DB columns)
-  priceLastVerifiedAt?: string | null;
-  priceSource?: string | null;
-  priceConfidence?: string | null;
-}
+```text
+                     ┌─────────────────────────────────────────┐
+                     │        AdminPriceVerification.tsx       │
+                     │   (Main page with tabs and dashboard)   │
+                     └────────────────────┬────────────────────┘
+                                          │
+          ┌───────────────┬───────────────┼───────────────┬───────────────┐
+          ▼               ▼               ▼               ▼               ▼
+   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+   │ Stats Cards  │ │ Product List │ │ Update Form  │ │ CSV Import   │ │ Price Chart  │
+   │ (Dashboard)  │ │ (Filterable) │ │ (Dialog)     │ │ (Bulk)       │ │ (History)    │
+   └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Create the Unified Hook File
-**File: `src/hooks/useUnifiedRegionalPricing.ts`**
+### Step 1: Create Main Page File
 
-Core implementation:
-- Use `useQuery` with shared cache keys (`['brand-id', brandName]`, `['regional-stores', brandId]`)
-- Integrate `usePriceFreshness` logic inline for single-object return
-- Reuse `findBestStore` and `buildRegionalUrl` from `useRegionalPricing`
-- Add `storeFlag` from `REGION_CONFIGS`
-- Calculate `conversionTooltip` string for UI consumption
+**File: `src/pages/AdminPriceVerification.tsx`**
 
-### Step 2: Add Freshness Fields to Return Object
-The hook will read from the new database columns:
-- `price_source` (manual, scraper, api, affiliate)
-- `price_confidence` (high, medium, low, stale, unknown)
-- `last_scraped_at` / `prices_last_updated_at`
+The main page will include:
 
-Calculate derived values:
-- `timeAgo`: Uses `formatDistanceToNow` from date-fns
-- `priceConfidence`: Uses thresholds (<24h = high, <7d = medium, etc.)
+1. **Dashboard Stats Section**
+   - Four cards showing counts by confidence level (High, Medium, Low, Stale/Unknown)
+   - Color-coded (green, blue, amber, red)
+   - Clickable to filter the product list
 
-### Step 3: Handle All Edge Cases
-```typescript
-// No stores found
-if (!stores.length) {
-  return fallbackResult(basePrice, baseCurrency);
-}
+2. **Tabbed Interface**
+   - **Needs Verification**: Products sorted by staleness (oldest first)
+   - **All Products**: Full searchable/filterable list
+   - **Bulk Import**: CSV upload interface
+   - **Price History**: View historical data for a product
 
-// No exact region match
-const { store, isLocal } = findBestStore(stores, region);
+3. **Product Table with Inline Actions**
+   - Product name, brand, current price, currency, last verified, confidence badge
+   - "Update Price" button opens dialog
+   - "View History" button shows price chart
+   - Link to product detail page
 
-// No base price
-if (!basePrice) {
-  return resultWithStore(null, store, isLocal);
-}
+4. **Search and Filter Controls**
+   - Filter by product type (Filaments, Printers)
+   - Filter by confidence level
+   - Search by product name or brand
+   - Sort by last verified date
 
-// Currency conversion needed
-const needsConversion = storeCurrency !== userCurrency;
+### Step 2: Create Price Update Dialog Component
+
+**File: `src/components/admin/PriceUpdateDialog.tsx`**
+
+Dialog for manually updating a product's price:
+
+- **Product Info Display**: Name, brand, current price
+- **Form Fields**:
+  - New price (number input, required)
+  - Currency dropdown (USD, EUR, GBP, etc.)
+  - Store URL (optional, for verification link)
+  - Notes (optional text area for context)
+  - Source dropdown (manual_verification, store_visit, email_confirmation)
+- **Validation**:
+  - Price must be positive
+  - Warn if price change is > 50% from current
+- **On Submit**:
+  - Update `variant_price` / `base_price`
+  - Set `last_scraped_at` / `prices_last_updated_at` to NOW()
+  - Set `price_source` to selected source
+  - Insert record into `price_history` table
+  - Recalculate `price_confidence` (via existing DB trigger)
+
+### Step 3: Create CSV Import Component
+
+**File: `src/components/admin/PriceBulkImport.tsx`**
+
+Bulk import interface for updating multiple prices at once:
+
+- **CSV Format Expected**:
+  ```
+  product_id,price,currency,store_url,notes
+  uuid-here,29.99,USD,https://store.com/product,Manual check
+  ```
+
+- **Upload Flow**:
+  1. File input accepting `.csv`
+  2. Parse CSV client-side (reuse existing manual parser pattern)
+  3. Display preview table showing:
+     - Product name (looked up from DB)
+     - Current price vs New price
+     - Highlight changes > 20%
+  4. "Import" button to apply changes
+  5. Progress indicator during bulk update
+  6. Results summary (success count, error details)
+
+- **Validation Rules**:
+  - Product ID must exist
+  - Price must be positive number
+  - Currency must be valid code
+
+### Step 4: Create Price History Viewer Component
+
+**File: `src/components/admin/PriceHistoryViewer.tsx`**
+
+Detailed price history view for a selected product:
+
+- **Product Selector**: Search dropdown to select a product
+- **Price Chart**: Reuse existing `PriceHistoryChart` component pattern
+  - LineChart with date on X-axis, price on Y-axis
+  - Time range selector (30d, 90d, 6mo, 1yr, All)
+  - Show min/max reference lines
+- **Price History Table**:
+  - Date, Price, Source, Notes columns
+  - Sortable by date
+  - Export button (CSV download)
+
+### Step 5: Add Route and Navigation
+
+**Updates to `src/App.tsx`:**
+- Add lazy import for `AdminPriceVerification`
+- Add route: `<Route path="/admin/price-verification" element={<AdminPriceVerification />} />`
+
+**Updates to `src/components/admin/AdminSidebar.tsx`:**
+- Add navigation item under "Data Quality" section:
+  ```
+  { title: 'Price Verification', href: '/admin/price-verification', icon: DollarSign }
+  ```
+
+---
+
+## Technical Details
+
+### Database Queries
+
+**Fetch Products Needing Verification:**
+```sql
+SELECT id, product_title, vendor, variant_price, last_scraped_at, price_confidence
+FROM filaments
+WHERE price_confidence IN ('low', 'stale', 'unknown')
+   OR last_scraped_at < NOW() - INTERVAL '30 days'
+   OR last_scraped_at IS NULL
+ORDER BY last_scraped_at ASC NULLS FIRST
+LIMIT 100
 ```
 
-### Step 4: Generate Convenience Tooltip
-```typescript
-conversionTooltip: isConverted 
-  ? `Original: ${formatCurrencyPrice(basePrice, baseCurrency)}\nRate: 1 ${baseCurrency} = ${rate.toFixed(4)} ${userCurrency}`
-  : null
+**Update Price with History:**
+```sql
+-- 1. Update filament
+UPDATE filaments SET 
+  variant_price = $1,
+  last_scraped_at = NOW(),
+  price_source = 'manual_verification'
+WHERE id = $2;
+
+-- 2. Insert history (handled by existing trigger: log_listing_price_change)
 ```
 
-### Step 5: Export All Stores for Pricing Tab
-The hook returns `allStores` array so PricingTab can display all regional options without a separate hook call.
+**Aggregate Stats Query:**
+```sql
+SELECT 
+  price_confidence,
+  COUNT(*) as count
+FROM filaments
+GROUP BY price_confidence
+```
+
+### Shared Components (Reuse)
+
+| Component | From | Usage |
+|-----------|------|-------|
+| `AdminLayout` | `src/components/admin/AdminLayout.tsx` | Page wrapper |
+| `AdminPageHeader` | `src/components/admin/AdminPageHeader.tsx` | Page title/actions |
+| `Table` components | `src/components/ui/table.tsx` | Product list |
+| `Badge` | `src/components/ui/badge.tsx` | Confidence indicators |
+| `Dialog` | `src/components/ui/dialog.tsx` | Update form |
+| `PriceHistoryChart` | `src/components/filament/PriceHistoryChart.tsx` | History visualization |
+| `usePriceFreshness` | `src/hooks/usePriceFreshness.ts` | Confidence calculation |
+
+### State Management
+
+- Use React Query for data fetching with keys:
+  - `['admin-price-verification-stats']`
+  - `['admin-price-verification-products', filter, search, page]`
+  - `['admin-price-history', productId]`
+- Optimistic updates on price changes
+- Invalidate queries on successful update
+
+---
+
+## UI/UX Considerations
+
+1. **Clear Visual Hierarchy**
+   - Red/amber badges for products needing attention
+   - Green checkmarks for recently verified
+   - Progress indicators during bulk operations
+
+2. **Efficiency Features**
+   - Keyboard shortcuts (Enter to submit dialog)
+   - "Quick verify" button to confirm current price is accurate
+   - Batch selection for bulk actions
+
+3. **Safety Guardrails**
+   - Confirmation dialog for large price changes (> 30%)
+   - Undo capability (via price history)
+   - Audit log of who made changes and when
+
+4. **Mobile Responsiveness**
+   - Responsive table that collapses on mobile
+   - Dialog works on mobile screens
 
 ---
 
 ## File Changes Summary
 
 ### New Files
+
 | File | Description |
 |------|-------------|
-| `src/hooks/useUnifiedRegionalPricing.ts` | Main unified hook implementation |
+| `src/pages/AdminPriceVerification.tsx` | Main admin page with dashboard, tabs, and product list |
+| `src/components/admin/PriceUpdateDialog.tsx` | Modal form for updating single product price |
+| `src/components/admin/PriceBulkImport.tsx` | CSV upload and bulk import interface |
+| `src/components/admin/PriceHistoryViewer.tsx` | Price history chart and table for a product |
 
-### Modified Files (Future - Not in This PR)
+### Modified Files
+
 | File | Change |
 |------|--------|
-| `src/pages/FilamentDetail.tsx` | Replace `useRegionalPricing` with `useUnifiedRegionalPricing` |
-| `src/pages/PrinterDetail.tsx` | Add unified hook for printer pricing |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Use freshness data from unified result |
-| `src/components/filament/tabs/PricingTabContent.tsx` | Use `allStores` from unified result |
+| `src/App.tsx` | Add lazy import and route for `/admin/price-verification` |
+| `src/components/admin/AdminSidebar.tsx` | Add navigation item for Price Verification |
 
 ---
 
-## Technical Details
+## Future Enhancements (Not in This PR)
 
-### React Query Cache Keys (Shared)
-```typescript
-// Brand lookup - shared with existing hooks
-queryKey: ['brand-id', brandName?.toLowerCase()]
+1. **Automated Verification Reminders**
+   - Email/notification when products become stale
+   - Weekly digest of products needing verification
 
-// Store data - shared with useRegionalStoreData
-queryKey: ['regional-stores', brandId]
+2. **Browser Extension Integration**
+   - Chrome extension to capture prices while browsing stores
+   - One-click submit to database
 
-// Regional slug - shared with useRegionalPricing
-queryKey: ['regional-slug', filamentId, region]
-```
+3. **Price Alert Comparison**
+   - Cross-reference manual prices with affiliate network data
+   - Flag significant discrepancies for review
 
-### Dependencies
-- `@tanstack/react-query` (already installed)
-- `date-fns` (already installed)
-- `RegionContext` for user preferences
-- Existing type definitions from `src/types/regional.ts`
-
-### Performance Considerations
-- Uses React Query with 10-minute staleTime for store data
-- Memoized result computation with `useMemo`
-- Shares cache with existing hooks to avoid duplicate fetches
-
----
-
-## Example Usage
-
-```typescript
-// In FilamentDetail or any component
-const {
-  displayPrice,
-  formattedPrice,
-  storeUrl,
-  isLocalStore,
-  priceConfidence,
-  timeAgo,
-  isConverted,
-  conversionTooltip,
-  allStores,
-  isLoading,
-} = useUnifiedRegionalPricing({
-  brandName: filament.vendor,
-  basePrice: filament.variant_price,
-  baseCurrency: 'USD',
-  productSlug: extractProductSlug(filament.product_url),
-  originalUrl: filament.product_url,
-  filamentId: filament.id,
-  priceLastVerifiedAt: filament.last_scraped_at,
-  priceSource: filament.price_source,
-});
-
-// Use in UI
-<PriceFreshnessIndicator confidence={priceConfidence} timeAgo={timeAgo} />
-<RegionalPriceDisplay price={formattedPrice} isConverted={isConverted} />
-<a href={storeUrl}>Buy Now</a>
-```
-
----
-
-## Benefits
-1. **Single Source of Truth**: One hook for all regional pricing needs
-2. **Includes Freshness**: Price confidence and age built-in
-3. **Efficient Caching**: Shares React Query cache with existing hooks
-4. **Simpler Components**: Consumers get everything in one call
-5. **Type Safety**: Full TypeScript interfaces
-6. **Backward Compatible**: Existing hooks remain functional during migration
+4. **User Contribution System**
+   - Allow registered users to submit price updates
+   - Admin approval workflow before publishing
