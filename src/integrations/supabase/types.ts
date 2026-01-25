@@ -5776,6 +5776,75 @@ export type Database = {
         }
         Relationships: []
       }
+      url_auto_fixes: {
+        Row: {
+          created_at: string | null
+          filament_id: string | null
+          fixed_at: string | null
+          id: string
+          new_url: string
+          original_url: string
+          resolution_method: string
+          similarity_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          filament_id?: string | null
+          fixed_at?: string | null
+          id?: string
+          new_url: string
+          original_url: string
+          resolution_method: string
+          similarity_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          filament_id?: string | null
+          fixed_at?: string | null
+          id?: string
+          new_url?: string
+          original_url?: string
+          resolution_method?: string
+          similarity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       url_validation_cache: {
         Row: {
           check_count: number | null
