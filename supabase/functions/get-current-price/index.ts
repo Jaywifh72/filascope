@@ -161,12 +161,18 @@ function removeSavingsAmounts(text: string): string {
   // Remove student discount promotional lines
   cleaned = cleaned.replace(/[^\n]*student\s*discount[^\n]*\$\d+[^\n]*/gi, ' ');
   
-  // Standard savings patterns
-  cleaned = cleaned.replace(/Save\s*\$[\d,.]+/gi, ' ');
-  cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, ' ');
-  cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, ' ');
-  cleaned = cleaned.replace(/\$[\d,.]+\s*discount/gi, ' ');
-  cleaned = cleaned.replace(/\$[\d,.]+\s*coupon/gi, ' ');
+  // CRITICAL FIX: Remove "Save $X.XX" patterns BEFORE extracting any prices
+  // This ensures we don't pick up savings amounts like $15.26 as the product price
+  // Must use [\d,.]+ to capture full decimal prices like $15.26
+  cleaned = cleaned.replace(/Save\s+\$[\d,.]+/gi, ' ');
+  cleaned = cleaned.replace(/Saving\s+\$[\d,.]+/gi, ' ');
+  cleaned = cleaned.replace(/You\s+save\s+\$[\d,.]+/gi, ' ');
+  cleaned = cleaned.replace(/Savings:?\s*\$[\d,.]+/gi, ' ');
+  
+  // Remove "$X off" patterns
+  cleaned = cleaned.replace(/\$[\d,.]+\s+off\b/gi, ' ');
+  cleaned = cleaned.replace(/\$[\d,.]+\s+discount/gi, ' ');
+  cleaned = cleaned.replace(/\$[\d,.]+\s+coupon/gi, ' ');
   cleaned = cleaned.replace(/💵?\s*\$[\d,.]+\s*coupon\s*pack/gi, ' ');
   cleaned = cleaned.replace(/💵\s*\$[\d,.]+/gi, ' '); // Remove emoji + price (like 💵 $500)
   
@@ -186,7 +192,9 @@ function extractSalePriceBeforeSave(text: string): {
   console.log('After removing savings:', cleanedText.substring(0, 300));
   
   // STEP 2: Extract all dollar amounts from the CLEANED text
-  const priceMatches = cleanedText.match(/\$(\d+\.?\d*)/g);
+  // CRITICAL FIX: Use proper regex that captures full decimal prices
+  // Pattern: $18.99 or $34.25 (dollar sign followed by digits, optional decimal with exactly 2 digits)
+  const priceMatches = cleanedText.match(/\$(\d+(?:\.\d{2})?)/g);
   
   if (!priceMatches || priceMatches.length === 0) {
     console.log('No prices found in cleaned text');
@@ -205,7 +213,7 @@ function extractSalePriceBeforeSave(text: string): {
   }
   
   // STEP 3: The first price is typically the sale/current price
-  // If there are two prices and the first is less than the second, that confirms it
+  // For format "$18.99 $34.25" - first is sale price, second is compare-at
   if (prices.length >= 2) {
     const [first, second] = prices;
     if (first < second) {
