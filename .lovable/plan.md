@@ -1,208 +1,240 @@
 
-# Fix FilamentPurchaseSidebar Regional Pricing
 
-## Problem Summary
+# Product Regional Slugs Mapping System
 
-The `FilamentPurchaseSidebar` component currently **overrides** the regional pricing data passed from `FilamentDetail.tsx` with its own internal `useCurrentPrice` hook. This causes incorrect currency display (e.g., "C$35.99" shown to US users) because:
+## Problem Statement
 
-1. **Parent component (`FilamentDetail.tsx`)** correctly uses `useRegionalPricing` hook to calculate prices in the user's selected currency
-2. **Child component (`FilamentPurchaseSidebar`)** ignores these passed props and re-fetches prices using `useCurrentPrice`, which returns prices in the store's native currency (CAD) without proper conversion
+The same product may have different slugs across regional stores (e.g., `hyper-pla-cf` vs `hyper-pla-carbon-fibre`). Currently, the system blindly substitutes the primary slug into regional URL patterns, which can result in 404 errors when a regional store uses a different slug.
 
-## Solution Overview
+## Current State Analysis
 
-Refactor `FilamentPurchaseSidebar` to:
-1. **Prioritize regional pricing** passed from the parent over internal live price fetching
-2. **Use `useRegion` context** for proper currency formatting instead of `useCurrency`
-3. **Only use `useCurrentPrice`** as a supplementary source for live sale prices and stock validation
-4. **Add regional store badge** showing which store the price is from
+### Existing Infrastructure
+- **URL Pattern Interpolation**: `buildRegionalUrl()` in `useRegionalPricing.ts` replaces `{slug}` placeholders with the product's primary slug
+- **URL Validation**: `validate-filament-urls` edge function checks if URLs return 200/404
+- **No Slug Mapping**: There is currently no database table or logic to map product slugs across regions
+- **Brand URL Fixes**: Some hardcoded fixes exist in `urlValidation.ts` for specific brands (Bambu Lab, Ultimaker)
 
----
+### Data Model
+- Products are stored in `filaments` table with `product_handle` as the primary slug
+- Regional stores are in `brand_regional_stores` with `product_url_pattern` containing `{slug}` placeholder
+- No relationship exists between a product and its region-specific slugs
+
+## Recommended Approach: Hybrid Solution
+
+Combining both approaches provides the best balance of accuracy and simplicity:
+
+1. **New `product_regional_slugs` table** for storing verified regional slugs
+2. **Smart fallback logic** for products without verified regional slugs
+3. **Background verification service** to populate and validate regional slugs over time
 
 ## Implementation Plan
 
-### Step 1: Update Component Props
+### Phase 1: Database Schema
 
-Add new props to receive the complete regional pricing result from the parent:
+Create a new table to store verified regional slug mappings:
 
-```typescript
-interface FilamentPurchaseSidebarProps {
-  // ... existing props ...
-  
-  // NEW: Regional price result from parent
-  regionalPriceResult?: RegionalPriceResult | null;
-  
-  // NEW: Currency the regional price is displayed in  
-  displayCurrency?: CurrencyCode;
-}
+```text
+Table: product_regional_slugs
++-------------------+---------------+------------------------------------------+
+| Column            | Type          | Description                              |
++-------------------+---------------+------------------------------------------+
+| id                | UUID (PK)     | Primary key                              |
+| filament_id       | UUID (FK)     | Reference to filaments.id                |
+| region_code       | VARCHAR(2)    | Region code (US, CA, EU, UK, AU, etc.)   |
+| slug              | VARCHAR(255)  | The verified slug for this region        |
+| verified          | BOOLEAN       | Whether this slug has been validated     |
+| http_status       | INTEGER       | Last HTTP status code when verified      |
+| verified_at       | TIMESTAMP     | When the slug was last verified          |
+| created_at        | TIMESTAMP     | Record creation timestamp                |
++-------------------+---------------+------------------------------------------+
+Constraints: UNIQUE(filament_id, region_code)
 ```
 
-### Step 2: Modify Price Display Logic
+### Phase 2: Slug Resolution Utility
 
-Replace the current logic at lines 118-132 that unconditionally uses `useCurrentPrice` results:
+Create a new utility function that resolves the correct slug for a region:
 
-**Current (problematic):**
-```typescript
-// Uses live price regardless of currency
-const displayPrice = isLivePrice && currentPrice !== null ? currentPrice : pricePerSpool;
+**File: `src/utils/regionalSlugResolver.ts`**
+
+```text
+Functions to implement:
+
+1. getRegionalSlug(filamentId, regionCode, fallbackSlug)
+   - Query product_regional_slugs for verified slug
+   - If found and verified, return the regional slug
+   - Otherwise, return the fallback (primary) slug
+
+2. generateSlugVariants(primarySlug)
+   - Generate common variations for fallback attempts:
+     - Original: "hyper-pla-cf"
+     - Expanded: "hyper-pla-carbon-fiber", "hyper-pla-carbon-fibre"
+     - Hyphenated: variations with different hyphenation
+   - Return array of slug candidates to try
 ```
 
-**New (fixed):**
-```typescript
-// Priority 1: Use regional pricing from parent (already in user's currency)
-// Priority 2: Use live price only if currencies match
-// Priority 3: Fall back to passed-in pricePerSpool
+### Phase 3: Update useRegionalPricing Hook
 
-const shouldUseLivePrice = isLivePrice && 
-  currentPrice !== null && 
-  priceCurrency === displayCurrency;
+Modify the existing hook to use the slug resolver:
 
-const displayPrice = regionalPriceResult?.displayPrice 
-  ?? (shouldUseLivePrice ? currentPrice : null)
-  ?? pricePerSpool;
+**File: `src/hooks/useRegionalPricing.ts`**
+
+Changes:
+1. Add a React Query call to fetch regional slug (if available)
+2. Update `buildRegionalUrl()` to use resolved regional slug
+3. Add `slugVerified` flag to the price result for UI indication
+
+```text
+Logic flow:
+
+1. Fetch brand and regional stores (existing)
+2. NEW: Query product_regional_slugs for matching filament + region
+3. If verified slug exists → use it
+4. If no verified slug → use primary product_handle
+5. Build URL with resolved slug
+6. Return result with verification status
 ```
 
-### Step 3: Update Price Formatting
+### Phase 4: Background Verification Edge Function
 
-Replace `useCurrency` hook with `useRegion` for proper formatting:
+Create an edge function to verify and populate regional slugs:
 
-```typescript
-// Instead of:
-const { formatPrice, formatRegionalPrice, currency } = useCurrency();
+**File: `supabase/functions/verify-regional-slugs/index.ts`**
 
-// Use:
-const { currency, formatPrice } = useRegion();
+Responsibilities:
+1. For each filament × region combination without a verified slug:
+   - Build the regional URL using primary slug
+   - Make HEAD request to check if URL returns 200
+   - If 200: store slug as verified
+   - If 404: try slug variants, store first working variant
+   - If all fail: mark as "unverified" with null slug (will use fallback)
+
+2. Rate limiting and batching for responsible scraping
+3. Scheduled execution (e.g., nightly) to keep slugs current
+
+### Phase 5: Fallback Behavior in UI
+
+When displaying a product without a verified regional slug:
+
+```text
+Priority Order:
+1. Verified regional slug → direct product URL
+2. Primary slug → try URL (most brands use consistent slugs)
+3. Brand store homepage → if product URL might fail
+
+UI Indicators:
+- Verified: No indicator needed (confident link)
+- Unverified: Optional subtle indicator or tooltip
+- Fallback to homepage: Show "Browse [Brand] Store" instead of "Buy Now"
 ```
-
-Update the price formatting at line 142-146:
-
-**Current:**
-```typescript
-const formattedPricePerKg = displayPricePerKg 
-  ? (isLivePrice 
-      ? formatLivePrice(displayPricePerKg) 
-      : hasActualRegionalPrice ? formatRegionalPrice(displayPricePerKg, false) : formatPrice(displayPricePerKg, false))
-  : null;
-```
-
-**New:**
-```typescript
-const formattedPricePerKg = displayPricePerKg 
-  ? formatPrice(displayPricePerKg, { 
-      showApproximate: regionalPriceResult?.isConverted ?? false 
-    })
-  : null;
-```
-
-### Step 4: Add Regional Store Badge
-
-Add a visual indicator showing which store the price is from (lines 269-274):
-
-```typescript
-{/* Retailer Info with Region Badge */}
-<div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-  <span className="font-medium">Best Price:</span>
-  <span className="font-bold text-foreground/80">
-    {regionalPriceResult?.store?.name || finalRetailerName}
-  </span>
-  {regionalPriceResult?.store?.regionCode && (
-    <span>{REGIONS[regionalPriceResult.store.regionCode]?.flag}</span>
-  )}
-  {hasLocalStore && (
-    <span className="text-xs text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-      Local
-    </span>
-  )}
-</div>
-```
-
-### Step 5: Add Conversion Tooltip
-
-When price is converted, show the original price and exchange rate:
-
-```typescript
-{regionalPriceResult?.isConverted && (
-  <Tooltip>
-    <TooltipTrigger>
-      <span className="text-xs text-muted-foreground cursor-help">
-        (converted)
-      </span>
-    </TooltipTrigger>
-    <TooltipContent>
-      <p>Original: {formatPrice(regionalPriceResult.originalPrice, regionalPriceResult.originalCurrency)}</p>
-      {regionalPriceResult.conversionRate && (
-        <p className="text-xs text-muted-foreground">
-          Rate: 1 {regionalPriceResult.originalCurrency} = {regionalPriceResult.conversionRate.toFixed(4)} {currency}
-        </p>
-      )}
-    </TooltipContent>
-  </Tooltip>
-)}
-```
-
-### Step 6: Update FilamentDetail.tsx Integration
-
-Pass the regional pricing result to the sidebar:
-
-```typescript
-<FilamentPurchaseSidebar
-  // ... existing props ...
-  regionalPriceResult={regionalPriceResult}
-  displayCurrency={regionalPriceResult?.displayCurrency || currency}
-/>
-```
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Update props interface, refactor price logic, add region badge |
-| `src/pages/FilamentDetail.tsx` | Pass `regionalPriceResult` to sidebar |
-
----
 
 ## Technical Details
 
-### Price Priority Logic
+### Database Migration SQL
+
+```sql
+CREATE TABLE product_regional_slugs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  filament_id UUID NOT NULL REFERENCES filaments(id) ON DELETE CASCADE,
+  region_code VARCHAR(5) NOT NULL,
+  slug VARCHAR(255) NOT NULL,
+  verified BOOLEAN DEFAULT false,
+  http_status INTEGER,
+  verified_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_filament_region UNIQUE (filament_id, region_code)
+);
+
+CREATE INDEX idx_regional_slugs_filament ON product_regional_slugs(filament_id);
+CREATE INDEX idx_regional_slugs_verified ON product_regional_slugs(verified) WHERE verified = true;
+```
+
+### Hook Integration Changes
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│  Price Resolution Priority                                  │
-├─────────────────────────────────────────────────────────────┤
-│  1. Regional Price Result (from parent)                     │
-│     - Already converted to user's currency                  │
-│     - Includes store metadata                               │
-│                                                             │
-│  2. Live Price (from useCurrentPrice)                       │
-│     - Only if currency matches user's selection             │
-│     - Provides sale price detection                         │
-│                                                             │
-│  3. Fallback to passed props                                │
-│     - pricePerSpool / pricePerKg                           │
-└─────────────────────────────────────────────────────────────┘
+useRegionalPricing.ts modifications:
+
+// New query to fetch regional slug
+const { data: regionalSlugData } = useQuery({
+  queryKey: ['regional-slug', filamentId, region],
+  queryFn: () => fetchRegionalSlug(filamentId, region),
+  enabled: !!filamentId && !!region,
+  staleTime: 30 * 60 * 1000, // 30 minutes
+});
+
+// Updated URL building
+const effectiveSlug = regionalSlugData?.slug || primarySlug;
+const storeUrl = buildRegionalUrl(
+  matchedStore.product_url_pattern,
+  matchedStore.base_url,
+  effectiveSlug
+);
+
+// Add to result
+priceResult.slugVerified = regionalSlugData?.verified ?? false;
 ```
 
-### Import Changes
+### Edge Function Logic
 
-```typescript
-// Add:
-import { useRegion } from '@/contexts/RegionContext';
-import { REGIONS } from '@/config/regions';
-import { RegionalPriceResult, CurrencyCode } from '@/types/regional';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+```text
+verify-regional-slugs/index.ts:
 
-// Remove (if no longer needed):
-// import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
+async function verifySlugForRegion(
+  filamentId: string,
+  regionCode: string,
+  baseSlug: string,
+  urlPattern: string,
+  baseUrl: string
+): Promise<{ slug: string; verified: boolean; httpStatus: number }> {
+  
+  // Try primary slug first
+  const primaryUrl = buildUrl(urlPattern, baseUrl, baseSlug);
+  const primaryResult = await testUrl(primaryUrl);
+  
+  if (primaryResult.ok) {
+    return { slug: baseSlug, verified: true, httpStatus: primaryResult.status };
+  }
+  
+  // Try slug variants if primary fails
+  const variants = generateSlugVariants(baseSlug);
+  for (const variant of variants) {
+    const variantUrl = buildUrl(urlPattern, baseUrl, variant);
+    const result = await testUrl(variantUrl);
+    if (result.ok) {
+      return { slug: variant, verified: true, httpStatus: result.status };
+    }
+  }
+  
+  // No working slug found
+  return { slug: baseSlug, verified: false, httpStatus: primaryResult.status };
+}
 ```
 
----
+## Files to Create/Modify
 
-## Expected Results
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/migrations/xxx_create_product_regional_slugs.sql` | Create | Database table migration |
+| `src/utils/regionalSlugResolver.ts` | Create | Slug resolution utility functions |
+| `src/hooks/useRegionalPricing.ts` | Modify | Integrate slug resolution into pricing hook |
+| `supabase/functions/verify-regional-slugs/index.ts` | Create | Background verification edge function |
+| `src/hooks/useRegionalSlug.ts` | Create | React hook for fetching regional slugs |
+| `src/types/regional.ts` | Modify | Add regional slug types |
+
+## Expected Outcomes
 
 | Scenario | Before | After |
 |----------|--------|-------|
-| US user viewing Creality filament | C$35.99 (wrong) | $25.99 at Creality US 🇺🇸 |
-| CA user viewing Creality filament | C$35.99 | C$35.99 at Creality CA 🇨🇦 Local |
-| EU user viewing Creality filament | C$35.99 (wrong) | ~€23.50 at Creality EU 🇪🇺 (converted) |
-| UK user, no UK store available | C$35.99 (wrong) | ~£20.50 at Creality US 🇺🇸 (converted) |
+| Product with same slug across regions | Works correctly | Works correctly (no change) |
+| Product with different regional slug | 404 error | Correct product page loaded |
+| New product without verified slug | Might 404 | Primary slug used, background verification scheduled |
+| Discontinued regional product | 404 error | Falls back to brand store homepage |
+
+## Benefits
+
+1. **Accuracy**: Verified slugs ensure users reach correct product pages
+2. **Graceful Degradation**: Multiple fallback levels prevent broken experiences
+3. **Self-Healing**: Background verification keeps data current
+4. **Minimal Overhead**: Slug lookups are cached, verification runs asynchronously
+5. **Scalable**: Works for any brand/region combination without hardcoding
+
