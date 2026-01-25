@@ -134,6 +134,18 @@ async function logExtractionAttempt(
   }
 }
 
+// Default patterns to exclude discount/savings amounts from price extraction
+const DEFAULT_EXCLUDE_PATTERNS = [
+  'save\\s+\\$',           // "Save $7.26"
+  'saving\\s+\\$',         // "Saving $10"
+  'discount\\s+\\$',       // "Discount $5"
+  'off\\s+\\$',            // "off $20"
+  'coupon\\s+.*\\$',       // "$500 coupon"
+  '\\$\\d+\\s*off',        // "$5 off"
+  '\\$\\d+\\s*coupon',     // "$500 coupon"
+  'student\\s*discount',   // Student discount sections
+];
+
 // Apply configured price patterns to markdown content
 function extractPriceWithConfig(
   markdown: string,
@@ -146,29 +158,36 @@ function extractPriceWithConfig(
   available: boolean;
   matchedPattern: string | null;
 } {
-  const priceRangeMin = config.priceRangeMin ?? 3;
+  // Use higher minimum for filament to avoid capturing weights/discounts
+  const priceRangeMin = config.priceRangeMin ?? 10;  // Raised from 3 to 10
   const priceRangeMax = config.priceRangeMax ?? 150;
   
-  // Determine search section using anchor text
-  let priceSection = markdown;
-  if (config.priceSectionAnchor) {
-    const anchorRegex = new RegExp(config.priceSectionAnchor, 'i');
-    const anchorIndex = markdown.search(anchorRegex);
-    if (anchorIndex > -1) {
-      // Look in a window around the anchor
-      priceSection = markdown.slice(Math.max(0, anchorIndex - 500), anchorIndex + 200);
+  // Combine default excludes with configured excludes
+  const excludePatterns = [
+    ...DEFAULT_EXCLUDE_PATTERNS,
+    ...(config.excludePatterns || [])
+  ];
+  
+  // Pre-filter: Remove lines containing savings/discount amounts
+  let cleanedMarkdown = markdown;
+  for (const pattern of excludePatterns) {
+    try {
+      // Remove entire lines that contain discount patterns
+      const lineExcludeRegex = new RegExp(`^.*${pattern}.*\\$[\\d,.]+.*$`, 'gim');
+      cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, '');
+    } catch (e) {
+      // Ignore invalid patterns
     }
   }
   
-  // Apply exclude patterns to filter out noise
-  if (config.excludePatterns) {
-    for (const pattern of config.excludePatterns) {
-      try {
-        const excludeRegex = new RegExp(`[^.]*${pattern}[^.]*\\$[\\d,.]+[^.]*`, 'gi');
-        priceSection = priceSection.replace(excludeRegex, '');
-      } catch (e) {
-        console.log(`Invalid exclude pattern: ${pattern}`);
-      }
+  // Determine search section using anchor text
+  let priceSection = cleanedMarkdown;
+  if (config.priceSectionAnchor) {
+    const anchorRegex = new RegExp(config.priceSectionAnchor, 'i');
+    const anchorIndex = cleanedMarkdown.search(anchorRegex);
+    if (anchorIndex > -1) {
+      // Look in a window around the anchor
+      priceSection = cleanedMarkdown.slice(Math.max(0, anchorIndex - 500), anchorIndex + 200);
     }
   }
   
@@ -245,7 +264,8 @@ function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | 'opencart' 
 }
 
 // Validate that a price is within reasonable range for filament products
-function validateFilamentPrice(price: number, min = 3, max = 150): boolean {
+// Minimum raised to $10 to avoid capturing weights, discount amounts, or shipping costs
+function validateFilamentPrice(price: number, min = 10, max = 150): boolean {
   return price >= min && price <= max;
 }
 
@@ -258,17 +278,31 @@ function extractCrealityPrice(markdown: string): {
 } {
   console.log('Extracting Creality price (legacy)...');
   
-  const addToCartIndex = markdown.search(/Add\s*to\s*Cart/i);
-  const buyNowIndex = markdown.search(/Buy\s*Now/i);
+  // Pre-filter: Remove lines containing savings/discount amounts
+  let cleanedMarkdown = markdown;
+  for (const pattern of DEFAULT_EXCLUDE_PATTERNS) {
+    try {
+      const lineExcludeRegex = new RegExp(`^.*${pattern}.*\\$[\\d,.]+.*$`, 'gim');
+      cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, '');
+    } catch (e) {
+      // Ignore invalid patterns
+    }
+  }
+  
+  // Find price section near Add to Cart/Buy Now buttons
+  const addToCartIndex = cleanedMarkdown.search(/Add\s*to\s*Cart/i);
+  const buyNowIndex = cleanedMarkdown.search(/Buy\s*Now/i);
   const priceIndex = Math.max(addToCartIndex, buyNowIndex);
   
   let priceSection = '';
   if (priceIndex > -1) {
-    priceSection = markdown.slice(Math.max(0, priceIndex - 500), priceIndex + 100);
+    priceSection = cleanedMarkdown.slice(Math.max(0, priceIndex - 500), priceIndex + 100);
   }
   
-  const saleMatch = markdown.match(/(?:Sale\s*price|Now|Special)\s*[:.]?\s*\$(\d+(?:\.\d{2})?)/i);
+  // Look for explicit sale price patterns first
+  const saleMatch = cleanedMarkdown.match(/(?:Sale\s*price|Now|Special)\s*[:.]?\s*\$(\d+(?:\.\d{2})?)/i);
   
+  // Pattern: Two prices adjacent (sale and regular)
   const dualPriceMatch = priceSection.match(/\$(\d+(?:\.\d{2})?)\s*(?:[\s\n~-]*)\$(\d+(?:\.\d{2})?)/);
   if (dualPriceMatch) {
     const price1 = parseFloat(dualPriceMatch[1]);
@@ -276,12 +310,14 @@ function extractCrealityPrice(markdown: string): {
     const salePrice = Math.min(price1, price2);
     const comparePrice = Math.max(price1, price2);
     
-    if (validateFilamentPrice(salePrice) && (comparePrice <= 200)) {
+    // Both prices must be in reasonable range (min $10 for filament)
+    if (validateFilamentPrice(salePrice) && validateFilamentPrice(comparePrice, 10, 200)) {
       console.log(`Found Creality sale price: $${salePrice}, compare-at: $${comparePrice}`);
       return { price: salePrice, compareAtPrice: comparePrice, currency: 'USD', available: true };
     }
   }
   
+  // Extract all valid prices from the cleaned price section
   const allPricesInSection = priceSection.match(/\$(\d+(?:\.\d{2})?)/g);
   if (allPricesInSection) {
     const validPrices = allPricesInSection
@@ -297,6 +333,7 @@ function extractCrealityPrice(markdown: string): {
     }
   }
   
+  // Try explicit sale match
   if (saleMatch) {
     const price = parseFloat(saleMatch[1]);
     if (validateFilamentPrice(price)) {
@@ -305,7 +342,8 @@ function extractCrealityPrice(markdown: string): {
     }
   }
   
-  const allPrices = [...markdown.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+  // Last resort: search full cleaned markdown
+  const allPrices = [...cleanedMarkdown.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
     .map(m => parseFloat(m[1]))
     .filter(p => validateFilamentPrice(p))
     .sort((a, b) => a - b);
