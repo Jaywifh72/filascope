@@ -30,6 +30,7 @@ import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { CompatibilityBadge } from "@/components/CompatibilityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { isAMSCompatible } from "@/lib/amsCompatibility";
 import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
@@ -309,6 +310,9 @@ const Finder = () => {
   
   // Currency hook
   const { formatPrice, currencyInfo, convertPrice } = useCurrency();
+  
+  // Region hook for displaying current region
+  const { regionConfig } = useRegion();
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -1754,7 +1758,7 @@ const Finder = () => {
               : ''}
           </p>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground hidden sm:inline">🇺🇸 United States</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">{regionConfig.flag} {regionConfig.name}</span>
             {!isMobile && (
               <ViewToggle 
                 viewMode={viewMode} 
