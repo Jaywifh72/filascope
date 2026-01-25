@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter } from "lucide-react";
+import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
@@ -52,10 +52,10 @@ const Deals = () => {
 
             {/* Headline */}
             <h1 className="text-3xl md:text-5xl font-bold text-center mb-4">
-              Best Prices <span className="text-green-400">Right Now</span>
+              Best Prices <span className="text-green-400">We Found</span>
             </h1>
             <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-6">
-              Discounted filaments from top brands. Prices updated daily from 15+ retailers.
+              Discounted filaments from top brands. Prices captured periodically from retailers.
             </p>
 
             {/* Stats Row */}
@@ -68,8 +68,8 @@ const Deals = () => {
               </div>
               <span className="hidden md:inline text-gray-600">•</span>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <span>Updated hourly</span>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span>Prices may vary</span>
               </div>
               <span className="hidden md:inline text-gray-600">•</span>
               <DealNotificationSignup
@@ -137,6 +137,27 @@ const Deals = () => {
             </div>
           </section>
         )}
+
+        {/* Price Disclaimer */}
+        <section className="px-6 md:px-10 pb-6">
+          <div className="max-w-[1600px] mx-auto">
+            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-amber-400">
+                    Price Disclaimer
+                  </h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Deal prices are captured periodically and may not reflect current store prices. 
+                    Sales and promotions change frequently. Always verify the price at the retailer 
+                    before purchasing.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Deals Grid */}
         <section className="px-6 md:px-10 pb-16">
