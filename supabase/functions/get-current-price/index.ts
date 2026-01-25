@@ -332,16 +332,29 @@ interface ProductMetadata {
   material: string | null;
   vendor: string | null;
   net_weight_g: number | null;
+  product_url: string | null; // Include product_url for resolution
+}
+
+// Extract slug from URL for fuzzy matching
+function extractSlugFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    const segments = urlObj.pathname.split('/').filter(s => s && s !== 'products' && s !== 'product');
+    return segments[segments.length - 1] || null;
+  } catch {
+    return null;
+  }
 }
 
 // Fetch product metadata from database for search resolution
+// Supports fuzzy matching when exact URL match fails
 async function getProductMetadataByUrl(productUrl: string): Promise<ProductMetadata | null> {
   const supabase = getSupabaseClient();
   
-  // Use limit(1) instead of maybeSingle() to handle duplicate URLs gracefully
+  // Try exact match first
   const { data, error } = await supabase
     .from('filaments')
-    .select('id, product_title, material, vendor, net_weight_g')
+    .select('id, product_title, material, vendor, net_weight_g, product_url')
     .eq('product_url', productUrl)
     .limit(1);
   
@@ -350,13 +363,39 @@ async function getProductMetadataByUrl(productUrl: string): Promise<ProductMetad
     return null;
   }
   
-  if (!data || data.length === 0) {
-    console.log('No product metadata found for URL:', productUrl);
-    return null;
+  if (data && data.length > 0) {
+    console.log(`Found exact match: "${data[0].product_title}" (${data[0].vendor})`);
+    return data[0];
   }
   
-  console.log(`Found product metadata: "${data[0].product_title}" (${data[0].vendor})`);
-  return data[0];
+  // Fuzzy match: extract slug from URL and search by ILIKE
+  console.log('No exact URL match, trying fuzzy slug match...');
+  const slug = extractSlugFromUrl(productUrl);
+  
+  if (slug && slug.length > 5) {
+    console.log(`Searching for products with URL containing slug: "${slug}"`);
+    
+    const { data: fuzzyData, error: fuzzyError } = await supabase
+      .from('filaments')
+      .select('id, product_title, material, vendor, net_weight_g, product_url')
+      .ilike('product_url', `%${slug}%`)
+      .limit(5);
+    
+    if (fuzzyError) {
+      console.log('Error in fuzzy search:', fuzzyError.message);
+      return null;
+    }
+    
+    if (fuzzyData && fuzzyData.length > 0) {
+      // Return the best match (first one that contains our slug)
+      console.log(`Found fuzzy match: "${fuzzyData[0].product_title}" via slug "${slug}"`);
+      console.log(`Database URL: ${fuzzyData[0].product_url}`);
+      return fuzzyData[0];
+    }
+  }
+  
+  console.log('No product metadata found for URL:', productUrl);
+  return null;
 }
 
 // Build optimized search query from product metadata
@@ -365,12 +404,13 @@ function buildSearchQuery(product: ProductMetadata): string {
   let query = product.product_title;
   
   // Remove common suffixes that don't help search
+  // NOTE: RFID is intentionally KEPT as it's a key product differentiator for Creality
   query = query
     .replace(/3D\s*Print(ing)?\s*Filament/gi, '')
     .replace(/\d+\s*[gG]\s*/g, '')  // Remove weight like "1000g"
     .replace(/\d+\s*[kK][gG]\s*/g, '') // Remove weight like "1kg"
     .replace(/\d+\.\d+\s*mm/gi, '') // Remove diameter like "1.75mm"
-    .replace(/RFID/gi, '') // Remove RFID tag - often causes no results
+    // REMOVED: .replace(/RFID/gi, '') - RFID is important for Creality products
     .replace(/[-_]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -549,18 +589,29 @@ async function attemptSearchResolution(
     
     console.log(`Search returned ${links.length} total links`);
     
-    // Step 5: Filter to product links only (excluding the original broken URL)
+    // Step 5: Filter to product links only (excluding the original AND database URLs)
     const baseDomain = storeDomain.replace('www.', '');
     const originalUrlLower = productUrl.toLowerCase();
+    // Also exclude the database URL (which may differ from frontend URL due to regional variations)
+    const databaseUrlLower = product.product_url?.toLowerCase() || '';
+    
     const productLinks = links.filter(link => {
       try {
         const linkUrl = new URL(link);
         // Must be same domain
         if (!linkUrl.hostname.includes(baseDomain)) return false;
         
+        const linkLower = link.toLowerCase();
+        
         // CRITICAL: Exclude the original broken URL to prevent self-resolution loops
-        if (link.toLowerCase() === originalUrlLower) {
+        if (linkLower === originalUrlLower) {
           console.log('Excluding original URL from candidates:', link);
+          return false;
+        }
+        
+        // Also exclude the database URL if different from the frontend URL
+        if (databaseUrlLower && linkLower === databaseUrlLower) {
+          console.log('Excluding database URL from candidates:', link);
           return false;
         }
         
