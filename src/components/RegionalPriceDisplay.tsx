@@ -59,33 +59,39 @@ export function RegionalPriceDisplay({
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       {/* Main Price */}
-      <div className="flex items-center gap-2">
-        <span className={cn("font-semibold text-foreground", sizeClasses[size])}>
-          {priceResult.formattedPrice}
-        </span>
+      <div className="flex items-center gap-1.5">
+        {/* Price with conversion indicator */}
+        {priceResult.isConverted ? (
+          <span className={cn("text-muted-foreground", sizeClasses[size])}>
+            ~{priceResult.formattedPrice}
+          </span>
+        ) : (
+          <span className={cn("font-semibold text-foreground", sizeClasses[size])}>
+            {priceResult.formattedPrice}
+          </span>
+        )}
         
         {/* Per kg indicator for filaments */}
         {size === 'lg' && (
           <span className="text-muted-foreground text-sm">/kg</span>
         )}
         
-        {/* Conversion indicator */}
+        {/* Conversion info tooltip */}
         {priceResult.isConverted && showConversionInfo && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Info className="w-4 h-4" />
+                <button className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center">
+                  <Info className="h-3 w-3" />
                 </button>
               </TooltipTrigger>
               <TooltipContent 
                 side="top" 
                 className="bg-popover border-border max-w-xs p-3"
               >
-                <div className="space-y-2">
-                  <p className="font-medium text-sm">Converted Price</p>
-                  <p className="text-xs text-muted-foreground">
-                    Original: {formatPrice(priceResult.originalPrice, priceResult.originalCurrency)}
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    Converted from {formatPrice(priceResult.originalPrice, priceResult.originalCurrency)}
                   </p>
                   {priceResult.conversionRate && (
                     <p className="text-xs text-muted-foreground">
@@ -93,7 +99,7 @@ export function RegionalPriceDisplay({
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Price from {regionConfig?.name || priceResult.store.regionCode} store
+                    From {regionConfig?.flag} {regionConfig?.name || priceResult.store.regionCode}
                   </p>
                 </div>
               </TooltipContent>
@@ -160,25 +166,36 @@ export function CompactRegionalPrice({
   const regionConfig = REGIONS[priceResult.store.regionCode];
 
   return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      <span className="font-semibold text-foreground">
-        {priceResult.formattedPrice}
-      </span>
-      {priceResult.isConverted && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground cursor-help">
-                {regionConfig?.flag}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="bg-popover border-border">
-              <p className="text-xs">
-                {formatPrice(priceResult.originalPrice, priceResult.originalCurrency)} from {regionConfig?.name}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <div className={cn("flex items-center gap-1", className)}>
+      {priceResult.isConverted ? (
+        <>
+          <span className="text-muted-foreground">
+            ~{priceResult.formattedPrice}
+          </span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center">
+                  <Info className="h-3 w-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="bg-popover border-border p-2">
+                <p className="text-xs">
+                  Converted from {formatPrice(priceResult.originalPrice, priceResult.originalCurrency)}
+                </p>
+                {priceResult.conversionRate && (
+                  <p className="text-xs text-muted-foreground">
+                    Rate: {priceResult.conversionRate.toFixed(2)}
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </>
+      ) : (
+        <span className="font-semibold text-foreground">
+          {priceResult.formattedPrice}
+        </span>
       )}
     </div>
   );

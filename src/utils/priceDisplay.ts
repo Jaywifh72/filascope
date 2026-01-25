@@ -56,6 +56,7 @@ export function getRegionalFlag(regionCode: string): string {
 
 /**
  * Format a price with currency symbol for display
+ * If showApproximate is true, adds "~" prefix for converted prices
  */
 export function formatDisplayPrice(
   price: number | null | undefined,
@@ -63,7 +64,8 @@ export function formatDisplayPrice(
   options?: { showApproximate?: boolean; compact?: boolean }
 ): string {
   if (price === null || price === undefined) return '—';
-  return formatPrice(price, currency, options);
+  const formatted = formatPrice(price, currency, { compact: options?.compact });
+  return options?.showApproximate ? `~${formatted}` : formatted;
 }
 
 /**
