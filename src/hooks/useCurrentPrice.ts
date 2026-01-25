@@ -46,6 +46,23 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 500;
 
+/**
+ * Invalidate the price cache for a specific product URL.
+ * Call this after manually refreshing a price to ensure
+ * the next useCurrentPrice call fetches fresh data.
+ */
+export function invalidatePriceCache(productUrl: string): boolean {
+  return priceCache.delete(productUrl);
+}
+
+/**
+ * Clear the entire price cache.
+ * Useful for admin operations that affect multiple products.
+ */
+export function clearAllPriceCache(): void {
+  priceCache.clear();
+}
+
 // Price validation: reasonable filament price range per spool
 const MIN_REASONABLE_PRICE = 3; // $3 minimum
 const MAX_REASONABLE_PRICE = 150; // $150 maximum (allows for multi-packs)
