@@ -249,6 +249,14 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           return baseQuery.eq("status", "valid").eq("manually_verified", false);
         case 'verified':
           return baseQuery.eq("manually_verified", true);
+        case 'user_reported':
+          // User-reported: broken status, no verified_by, and recent (last 7 days)
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          return baseQuery
+            .eq("status", "broken")
+            .eq("manually_verified", false)
+            .is("verified_by", null)
+            .gte("checked_at", sevenDaysAgo);
         case 'all':
         default:
           return baseQuery;
@@ -863,6 +871,11 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     if (activeTab === 'broken') return r.status === 'broken' && !r.manually_verified && !isAmazonUrl(r.url);
     if (activeTab === 'amazon') return r.status === 'broken' && !r.manually_verified && isAmazonUrl(r.url);
     if (activeTab === 'timeout') return r.status === 'timeout' && !r.manually_verified;
+    if (activeTab === 'user_reported') {
+      // User-reported: broken, not verified, no verified_by, recent
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      return r.status === 'broken' && !r.manually_verified && !r.verified_by && r.checked_at >= sevenDaysAgo;
+    }
     return r.status === activeTab;
   });
 
@@ -951,7 +964,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
           {/* Results Tabs */}
           {stats.total > 0 && (
             <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSelectedIds(new Set()); }}>
-              <TabsList className="mb-3">
+              <TabsList className="mb-3 flex-wrap">
                 <TabsTrigger value="all" className="text-xs">All ({stats.total})</TabsTrigger>
                 <TabsTrigger value="broken" className="text-xs">Broken ({stats.broken})</TabsTrigger>
                 {stats.amazonBroken > 0 && (
@@ -960,6 +973,7 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
                 <TabsTrigger value="redirect" className="text-xs">Redirects ({stats.redirect})</TabsTrigger>
                 <TabsTrigger value="timeout" className="text-xs">Timeouts ({stats.timeout})</TabsTrigger>
                 <TabsTrigger value="valid" className="text-xs">Valid ({stats.valid})</TabsTrigger>
+                <TabsTrigger value="user_reported" className="text-xs text-purple-500">User Reported</TabsTrigger>
                 {stats.verified > 0 && (
                   <TabsTrigger value="verified" className="text-xs text-green-600">Verified ({stats.verified})</TabsTrigger>
                 )}

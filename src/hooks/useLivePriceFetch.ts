@@ -15,6 +15,10 @@ export interface LivePriceFetchResult {
   weightGrams: number | null;
   /** Whether the price was flagged as suspicious but still returned */
   isSuspicious?: boolean;
+  /** URL status: 'ok' if successful, 'not_found' for 404, 'error' for other failures */
+  urlStatus?: 'ok' | 'not_found' | 'error';
+  /** Human-readable error message when URL fails */
+  errorMessage?: string;
 }
 
 export interface UseLivePriceFetchReturn {
@@ -103,12 +107,41 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
       // First try the primary URL
       let { data, error: fetchError } = await fetchFromUrl(productUrl);
 
+      // Detect 404 errors
+      const is404Error = data?.error?.includes('404') || 
+                         data?.error?.includes('HTTP 404') ||
+                         data?.error?.toLowerCase().includes('not found');
+      
       // If 404 and fallback exists, try fallback
-      const is404Error = data?.error?.includes('404') || data?.error?.includes('HTTP 404');
       if (is404Error && fallbackUrl && fallbackUrl !== productUrl) {
         const fallbackResult = await fetchFromUrl(fallbackUrl);
-        data = fallbackResult.data;
-        fetchError = fallbackResult.error;
+        // Only use fallback if it succeeds
+        const fallbackIs404 = fallbackResult.data?.error?.includes('404') ||
+                              fallbackResult.data?.error?.includes('HTTP 404');
+        if (!fallbackIs404 && fallbackResult.data?.success) {
+          data = fallbackResult.data;
+          fetchError = fallbackResult.error;
+        }
+      }
+
+      // Return 404-specific result to allow UI to show broken URL report
+      if (is404Error && (!data?.success)) {
+        console.warn('Product URL returned 404:', productUrl);
+        setError('Product page not found');
+        setIsLoading(false);
+        return {
+          price: null,
+          compareAtPrice: null,
+          currency: userCurrency,
+          originalPrice: null,
+          originalCurrency: 'USD',
+          isConverted: false,
+          fetchedAt: null,
+          weightGrams: null,
+          isSuspicious: false,
+          urlStatus: 'not_found',
+          errorMessage: 'Product page not found - URL may have changed',
+        };
       }
 
       if (fetchError) {
@@ -117,7 +150,19 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
         }
         setError('Unable to fetch live price');
         setIsLoading(false);
-        return null;
+        return {
+          price: null,
+          compareAtPrice: null,
+          currency: userCurrency,
+          originalPrice: null,
+          originalCurrency: 'USD',
+          isConverted: false,
+          fetchedAt: null,
+          weightGrams: null,
+          isSuspicious: false,
+          urlStatus: 'error',
+          errorMessage: 'Unable to fetch live price',
+        };
       }
 
       if (data?.success && data.price !== null) {
@@ -155,6 +200,8 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           fetchedAt: data.fetchedAt || new Date().toISOString(),
           weightGrams: data.weightGrams || null,
           isSuspicious: false,
+          urlStatus: 'ok',
+          errorMessage: undefined,
         };
 
         setLastResult(result);
