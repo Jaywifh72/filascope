@@ -10,7 +10,6 @@ import {
   Calculator,
   GitCompare,
   Info,
-  ExternalLinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialBadge } from '@/components/MaterialBadge';
@@ -25,6 +24,8 @@ import { useRegion } from '@/contexts/RegionContext';
 import { REGIONS } from '@/config/regions';
 import { RegionalPriceResult, CurrencyCode, RegionCode } from '@/types/regional';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { PriceFreshnessIndicator } from '@/components/price/PriceFreshnessIndicator';
+import { PriceConfidence } from '@/hooks/usePriceFreshness';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -47,6 +48,10 @@ interface FilamentPurchaseSidebarProps {
   onOpenCalculator?: () => void;
   // NEW: Regional price result from parent (the inner priceResult from useRegionalPricing)
   regionalPriceResult?: RegionalPriceResult | null;
+  // Price freshness tracking
+  lastScrapedAt?: string | null;
+  priceSource?: string | null;
+  priceConfidence?: PriceConfidence | null;
 }
 
 export function FilamentPurchaseSidebar({
@@ -69,6 +74,9 @@ export function FilamentPurchaseSidebar({
   isRegionalBrand = false,
   onOpenCalculator,
   regionalPriceResult,
+  lastScrapedAt,
+  priceSource,
+  priceConfidence,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
@@ -252,13 +260,13 @@ export function FilamentPurchaseSidebar({
               <span className="text-lg text-muted-foreground">Price unavailable</span>
             )}
 
-            {/* Price disclaimer */}
-            {!priceLoading && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ExternalLinkIcon className="w-3.5 h-3.5" />
-                <span>Click to verify price at store</span>
-              </div>
-            )}
+            {/* Price freshness indicator */}
+            <PriceFreshnessIndicator
+              lastVerified={lastScrapedAt}
+              confidence={priceConfidence || undefined}
+              source={priceSource}
+              className="mt-1"
+            />
 
             {/* Fallback region warning - show when price is from a different region */}
             {!isLocalStore && storeRegionCode && !priceLoading && (

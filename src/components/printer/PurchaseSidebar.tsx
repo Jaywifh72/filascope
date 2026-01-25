@@ -3,12 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { PriceSection } from "./PriceSection";
 import { CTAButtons } from "./CTAButtons";
 
+import { PriceConfidence } from "@/hooks/usePriceFreshness";
+
 interface PurchaseSidebarProps {
   printer: {
     id: string;
     model_name: string;
     official_store_url?: string | null;
     discontinued?: boolean;
+    prices_last_updated_at?: string | null;
+    price_source?: string | null;
+    price_confidence?: string | null;
   };
   brand: string | null;
   displayPrice: number | null | undefined;
@@ -62,6 +67,9 @@ export function PurchaseSidebar({
             isDiscontinued={printer.discontinued}
             priceCurrency={isLivePrice ? livePriceCurrency : 'USD'}
             compact
+            pricesLastUpdatedAt={printer.prices_last_updated_at}
+            priceSource={printer.price_source}
+            priceConfidence={printer.price_confidence as PriceConfidence | null}
           />
         </div>
 

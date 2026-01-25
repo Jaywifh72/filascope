@@ -1629,6 +1629,8 @@ export type Database = {
           id: string
           is_primary: boolean | null
           last_scraped_at: string | null
+          price_confidence: string | null
+          price_source: string | null
           product_url: string
           region: string
           retailer_id: string
@@ -1651,6 +1653,8 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           last_scraped_at?: string | null
+          price_confidence?: string | null
+          price_source?: string | null
           product_url: string
           region?: string
           retailer_id: string
@@ -1673,6 +1677,8 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           last_scraped_at?: string | null
+          price_confidence?: string | null
+          price_source?: string | null
           product_url?: string
           region?: string
           retailer_id?: string
@@ -2040,9 +2046,11 @@ export type Database = {
           poissons_ratio: number | null
           price_aud: number | null
           price_cad: number | null
+          price_confidence: string | null
           price_eur: number | null
           price_gbp: number | null
           price_jpy: number | null
+          price_source: string | null
           print_speed_max_mms: number | null
           printability_index: number | null
           product_handle: string | null
@@ -2174,9 +2182,11 @@ export type Database = {
           poissons_ratio?: number | null
           price_aud?: number | null
           price_cad?: number | null
+          price_confidence?: string | null
           price_eur?: number | null
           price_gbp?: number | null
           price_jpy?: number | null
+          price_source?: string | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
@@ -2308,9 +2318,11 @@ export type Database = {
           poissons_ratio?: number | null
           price_aud?: number | null
           price_cad?: number | null
+          price_confidence?: string | null
           price_eur?: number | null
           price_gbp?: number | null
           price_jpy?: number | null
+          price_source?: string | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
@@ -3693,6 +3705,8 @@ export type Database = {
           power_loss_recovery: boolean | null
           power_supply_type: string | null
           pressure_advance_supported: boolean | null
+          price_confidence: string | null
+          price_source: string | null
           price_tier: string | null
           prices_last_updated_at: string | null
           printer_id: string
@@ -3893,6 +3907,8 @@ export type Database = {
           power_loss_recovery?: boolean | null
           power_supply_type?: string | null
           pressure_advance_supported?: boolean | null
+          price_confidence?: string | null
+          price_source?: string | null
           price_tier?: string | null
           prices_last_updated_at?: string | null
           printer_id: string
@@ -4093,6 +4109,8 @@ export type Database = {
           power_loss_recovery?: boolean | null
           power_supply_type?: string | null
           pressure_advance_supported?: boolean | null
+          price_confidence?: string | null
+          price_source?: string | null
           price_tier?: string | null
           prices_last_updated_at?: string | null
           printer_id?: string
@@ -6852,6 +6870,7 @@ export type Database = {
         Args: { p_filament_id: string }
         Returns: Json
       }
+      get_price_confidence: { Args: { last_verified: string }; Returns: string }
       get_printer_activity_stats: {
         Args: { p_printer_id: string }
         Returns: Json

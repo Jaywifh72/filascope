@@ -1,0 +1,156 @@
+import { CheckCircle2, Clock, AlertTriangle, AlertCircle, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { usePriceFreshness, PriceConfidence, getConfidenceLabel } from '@/hooks/usePriceFreshness';
+import { cn } from '@/lib/utils';
+
+interface PriceFreshnessIndicatorProps {
+  lastVerified: string | null | undefined;
+  confidence?: PriceConfidence;
+  source?: string | null;
+  compact?: boolean;
+  className?: string;
+}
+
+const confidenceConfig: Record<PriceConfidence, {
+  icon: typeof CheckCircle2;
+  colorClass: string;
+  bgClass: string;
+}> = {
+  high: {
+    icon: CheckCircle2,
+    colorClass: 'text-green-600 dark:text-green-400',
+    bgClass: 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800',
+  },
+  medium: {
+    icon: Clock,
+    colorClass: 'text-blue-600 dark:text-blue-400',
+    bgClass: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
+  },
+  low: {
+    icon: AlertTriangle,
+    colorClass: 'text-amber-600 dark:text-amber-400',
+    bgClass: 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800',
+  },
+  stale: {
+    icon: AlertCircle,
+    colorClass: 'text-red-600 dark:text-red-400',
+    bgClass: 'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800',
+  },
+  unknown: {
+    icon: ExternalLink,
+    colorClass: 'text-muted-foreground',
+    bgClass: 'bg-muted/50 border-border',
+  },
+};
+
+function getSourceLabel(source: string | null | undefined): string {
+  if (!source) return '';
+  switch (source) {
+    case 'scraper':
+      return 'Auto-updated';
+    case 'api':
+      return 'API sync';
+    case 'affiliate':
+      return 'Affiliate data';
+    case 'manual':
+      return 'Manual entry';
+    default:
+      return '';
+  }
+}
+
+export function PriceFreshnessIndicator({
+  lastVerified,
+  confidence: providedConfidence,
+  source,
+  compact = false,
+  className,
+}: PriceFreshnessIndicatorProps) {
+  const freshness = usePriceFreshness(lastVerified);
+  const confidence = providedConfidence || freshness.confidence;
+  const config = confidenceConfig[confidence];
+  const Icon = config.icon;
+  const label = getConfidenceLabel(confidence);
+  const sourceLabel = getSourceLabel(source);
+
+  if (compact) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={cn('inline-flex items-center gap-1', config.colorClass, className)}>
+              <Icon className="h-3 w-3" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            <p>{label}</p>
+            {freshness.timeAgo && <p className="text-muted-foreground">{freshness.timeAgo}</p>}
+            {sourceLabel && <p className="text-muted-foreground">{sourceLabel}</p>}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(
+              'gap-1 text-xs font-normal border',
+              config.bgClass,
+              config.colorClass,
+              className
+            )}
+          >
+            <Icon className="h-3 w-3" />
+            <span>{label}</span>
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs max-w-[200px]">
+          {freshness.timeAgo ? (
+            <p>Price updated {freshness.timeAgo}</p>
+          ) : (
+            <p>No price update timestamp available</p>
+          )}
+          {sourceLabel && <p className="text-muted-foreground mt-1">Source: {sourceLabel}</p>}
+          <p className="text-muted-foreground mt-1">
+            Click to verify current price at store
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/**
+ * Simple inline text version for use in smaller spaces
+ */
+export function PriceFreshnessText({
+  lastVerified,
+  confidence: providedConfidence,
+  className,
+}: {
+  lastVerified: string | null | undefined;
+  confidence?: PriceConfidence;
+  className?: string;
+}) {
+  const freshness = usePriceFreshness(lastVerified);
+  const confidence = providedConfidence || freshness.confidence;
+  const config = confidenceConfig[confidence];
+  const Icon = config.icon;
+
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-xs', config.colorClass, className)}>
+      <Icon className="h-3 w-3" />
+      <span>
+        {freshness.timeAgo 
+          ? `Updated ${freshness.timeAgo}` 
+          : 'Verify at store'}
+      </span>
+    </span>
+  );
+}
