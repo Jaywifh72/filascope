@@ -146,19 +146,30 @@ const DEFAULT_EXCLUDE_PATTERNS = [
   'student\\s*discount',   // Student discount sections
 ];
 
-// CRITICAL: Remove "Save $X.XX" patterns from text BEFORE extracting prices
-// This prevents capturing savings amounts as product prices
+// CRITICAL: Remove "Save $X.XX" and promotional patterns from text BEFORE extracting prices
+// This prevents capturing savings amounts, coupon values, etc. as product prices
 function removeSavingsAmounts(text: string): string {
-  // Step 1: Remove "Save $X.XX" patterns completely
-  let cleaned = text.replace(/Save\s*\$[\d,.]+/gi, ' ');
-  // Step 2: Remove "Saving $X.XX" patterns
+  let cleaned = text;
+  
+  // Remove "Save $X.XX" patterns
+  cleaned = cleaned.replace(/Save\s*\$[\d,.]+/gi, ' ');
+  // Remove "Saving $X.XX" patterns
   cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, ' ');
-  // Step 3: Remove "$X off" patterns  
+  // Remove "$X off" patterns  
   cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, ' ');
-  // Step 4: Remove "$X discount" patterns
+  // Remove "$X discount" patterns
   cleaned = cleaned.replace(/\$[\d,.]+\s*discount/gi, ' ');
-  // Step 5: Remove "coupon" related prices
+  // Remove "$X coupon" patterns
   cleaned = cleaned.replace(/\$[\d,.]+\s*coupon/gi, ' ');
+  // CRITICAL: Remove "💵 $500 coupon pack" style promotions
+  cleaned = cleaned.replace(/💵?\s*\$[\d,.]+\s*coupon\s*pack/gi, ' ');
+  // Remove "obtain a $X coupon" patterns
+  cleaned = cleaned.replace(/obtain\s+a?\s*\$[\d,.]+/gi, ' ');
+  // Remove any "$X" followed by "coupon" within 5 words
+  cleaned = cleaned.replace(/\$[\d,.]+[^$]{0,30}coupon/gi, ' ');
+  // Remove student discount sections
+  cleaned = cleaned.replace(/student\s*discount[^$]*\$[\d,.]+/gi, ' ');
+  
   return cleaned;
 }
 
@@ -659,6 +670,10 @@ async function fetchPriceWithFirecrawl(
   const location = getFirecrawlLocation(preferredCurrency);
   console.log(`Fetching with Firecrawl: ${productUrl} (location: ${location.country})`);
   
+  // For Creality stores, disable onlyMainContent as their pricing section is often excluded
+  const isCreality = productUrl.includes('store.creality.com');
+  const useMainContentOnly = !isCreality;
+  
   try {
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -669,8 +684,8 @@ async function fetchPriceWithFirecrawl(
       body: JSON.stringify({
         url: productUrl,
         formats: ['markdown'],
-        onlyMainContent: true,
-        waitFor: 3000,
+        onlyMainContent: useMainContentOnly,
+        waitFor: isCreality ? 5000 : 3000, // Wait longer for Creality dynamic content
         location: location,
       }),
     });
