@@ -962,6 +962,9 @@ const PrinterDetail = () => {
                   model_name: printer.model_name,
                   official_store_url: printer.official_store_url,
                   discontinued: printer.discontinued,
+                  prices_last_updated_at: (printer as any).prices_last_updated_at,
+                  price_source: (printer as any).price_source,
+                  price_confidence: (printer as any).price_confidence,
                 }}
                 brand={brand}
                 displayPrice={displayPrice}

@@ -1,5 +1,7 @@
 import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { useCurrency, CurrencyCode } from "@/hooks/useCurrency";
+import { PriceFreshnessIndicator } from "@/components/price/PriceFreshnessIndicator";
+import { PriceConfidence } from "@/hooks/usePriceFreshness";
 
 interface PriceTrend {
   direction: "down" | "up" | "stable";
@@ -16,6 +18,10 @@ interface PriceSectionProps {
   priceCurrency?: CurrencyCode | string | null;
   /** Compact mode for sidebar display */
   compact?: boolean;
+  /** Price freshness tracking */
+  pricesLastUpdatedAt?: string | null;
+  priceSource?: string | null;
+  priceConfidence?: PriceConfidence | null;
 }
 
 export function PriceSection({
@@ -24,7 +30,10 @@ export function PriceSection({
   trend,
   isDiscontinued,
   priceCurrency,
-  compact = false
+  compact = false,
+  pricesLastUpdatedAt,
+  priceSource,
+  priceConfidence,
 }: PriceSectionProps) {
   const {
     formatPrice,
@@ -103,6 +112,15 @@ export function PriceSection({
           <span className={`text-gray-500 ${compact ? 'text-xs' : 'text-sm'}`}>MSRP</span>
         </div>
       )}
+
+      {/* Price Freshness Indicator */}
+      <PriceFreshnessIndicator
+        lastVerified={pricesLastUpdatedAt}
+        confidence={priceConfidence || undefined}
+        source={priceSource}
+        compact={compact}
+        className="mt-2"
+      />
     </div>
   );
 }
