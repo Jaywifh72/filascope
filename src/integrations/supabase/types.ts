@@ -7102,6 +7102,7 @@ export type Database = {
         Returns: undefined
       }
       start_brand_scrape: { Args: { p_brand_slug: string }; Returns: boolean }
+      test_price_extraction: { Args: { p_url: string }; Returns: Json }
       update_brand_enrichment_counts: {
         Args: { p_brand_slug: string }
         Returns: undefined

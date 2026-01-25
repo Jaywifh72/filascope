@@ -53,6 +53,27 @@ interface TestResult {
   error?: string;
 }
 
+interface LiveTestResult {
+  success: boolean;
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  source: string;
+  available: boolean;
+  fetchedAt: string;
+  error?: string;
+  is404?: boolean;
+  dbData?: {
+    filament_id: string;
+    product_title: string;
+    current_db_price: number | null;
+    compare_at_price: number | null;
+    last_scraped: string | null;
+    price_source: string | null;
+    vendor: string | null;
+  };
+}
+
 interface BrandExtractionEditorProps {
   brand: BrandConfig;
   open: boolean;
@@ -73,7 +94,9 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
   const [priceRangeMax, setPriceRangeMax] = useState(config.priceRangeMax?.toString() || '150');
   
   const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [liveTestResult, setLiveTestResult] = useState<LiveTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
+  const [isLiveTesting, setIsLiveTesting] = useState(false);
 
   const buildConfig = (): ExtractionConfig => ({
     priceSectionAnchor: anchorText || undefined,
@@ -117,6 +140,64 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
       });
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  // Live production test using get-current-price with forceRefresh
+  const liveProductionTest = async () => {
+    if (!testUrl) {
+      toast({ title: "Error", description: "Please enter a test URL", variant: "destructive" });
+      return;
+    }
+    
+    setIsLiveTesting(true);
+    setLiveTestResult(null);
+    
+    try {
+      // First, get current DB data for comparison
+      const { data: dbData } = await supabase.rpc('test_price_extraction', { p_url: testUrl });
+      const dbDataParsed = dbData as Record<string, unknown> | null;
+      
+      // Then call the live edge function
+      const { data, error } = await supabase.functions.invoke('get-current-price', {
+        body: {
+          productUrl: testUrl,
+          preferredCurrency: 'USD',
+          forceRefresh: true,
+        },
+      });
+      
+      if (error) throw error;
+      
+      const hasDbError = dbDataParsed && typeof dbDataParsed === 'object' && 'error' in dbDataParsed;
+      const result: LiveTestResult = {
+        ...data,
+        dbData: hasDbError ? undefined : dbDataParsed as LiveTestResult['dbData'],
+      };
+      
+      setLiveTestResult(result);
+      
+      const dbPrice = dbDataParsed?.current_db_price;
+      if (data.success) {
+        toast({ 
+          title: "Live Test Success", 
+          description: `Extracted: $${data.price} (DB: $${dbPrice || 'N/A'})`
+        });
+      } else {
+        toast({ 
+          title: "Live Test Failed", 
+          description: data.error || "Could not extract price", 
+          variant: "destructive" 
+        });
+      }
+    } catch (err) {
+      toast({ 
+        title: "Live Test Failed", 
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLiveTesting(false);
     }
   };
 
@@ -262,7 +343,7 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
                 <Button 
                   variant="secondary" 
                   onClick={testExtraction}
-                  disabled={isTesting || !testUrl}
+                  disabled={isTesting || isLiveTesting || !testUrl}
                 >
                   {isTesting ? (
                     <>
@@ -270,7 +351,22 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
                       Testing...
                     </>
                   ) : (
-                    "Test"
+                    "Test Config"
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={liveProductionTest}
+                  disabled={isTesting || isLiveTesting || !testUrl}
+                  title="Test with actual production edge function"
+                >
+                  {isLiveTesting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Live...
+                    </>
+                  ) : (
+                    "Live Test"
                   )}
                 </Button>
                 {testUrl && (
@@ -282,6 +378,7 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
                 )}
               </div>
 
+              {/* Config Test Result */}
               {testResult && (
                 <div className="rounded-lg border p-4 space-y-3">
                   <div className="flex items-center gap-2">
@@ -291,8 +388,9 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
                       <XCircle className="h-5 w-5 text-destructive" />
                     )}
                     <span className="font-medium">
-                      {testResult.success ? "Extraction Successful" : "Extraction Failed"}
+                      {testResult.success ? "Config Test Successful" : "Config Test Failed"}
                     </span>
+                    <Badge variant="outline" className="text-xs">test-price-extraction</Badge>
                   </div>
                   
                   {testResult.success && (
@@ -331,6 +429,84 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
                       </summary>
                       <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto whitespace-pre-wrap max-h-40">
                         {testResult.rawSample}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              )}
+
+              {/* Live Production Test Result */}
+              {liveTestResult && (
+                <div className="rounded-lg border border-primary/50 p-4 space-y-3 bg-primary/5">
+                  <div className="flex items-center gap-2">
+                    {liveTestResult.success ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-destructive" />
+                    )}
+                    <span className="font-medium">
+                      {liveTestResult.success ? "Live Production Test" : "Live Test Failed"}
+                    </span>
+                    <Badge variant="secondary" className="text-xs">get-current-price</Badge>
+                    {liveTestResult.is404 && (
+                      <Badge variant="destructive" className="text-xs">404 Detected</Badge>
+                    )}
+                  </div>
+                  
+                  {/* Comparison Table */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Live Extraction</p>
+                      <p className="font-mono text-lg">
+                        {liveTestResult.price ? `$${liveTestResult.price}` : 'N/A'}
+                      </p>
+                      {liveTestResult.compareAtPrice && (
+                        <p className="text-xs text-muted-foreground line-through">
+                          ${liveTestResult.compareAtPrice}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Source: {liveTestResult.source}
+                      </p>
+                    </div>
+                    
+                    {liveTestResult.dbData && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Database (Current)</p>
+                        <p className="font-mono text-lg">
+                          {liveTestResult.dbData.current_db_price ? `$${liveTestResult.dbData.current_db_price}` : 'N/A'}
+                        </p>
+                        {liveTestResult.dbData.compare_at_price && (
+                          <p className="text-xs text-muted-foreground line-through">
+                            ${liveTestResult.dbData.compare_at_price}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Source: {liveTestResult.dbData.price_source || 'unknown'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Price Mismatch Warning */}
+                  {liveTestResult.success && liveTestResult.dbData && 
+                   liveTestResult.price !== liveTestResult.dbData.current_db_price && (
+                    <div className="text-sm text-amber-600 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-2 rounded">
+                      ⚠️ Price mismatch: Live extraction got ${liveTestResult.price} but DB shows ${liveTestResult.dbData.current_db_price}
+                    </div>
+                  )}
+                  
+                  {liveTestResult.error && (
+                    <p className="text-sm text-destructive font-mono">{liveTestResult.error}</p>
+                  )}
+                  
+                  {liveTestResult.dbData && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground">
+                        Database details
+                      </summary>
+                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
+                        {JSON.stringify(liveTestResult.dbData, null, 2)}
                       </pre>
                     </details>
                   )}
