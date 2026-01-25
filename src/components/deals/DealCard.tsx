@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingDown, Share2, Eye, Clock, AlertTriangle } from "lucide-react";
+import { TrendingDown, Share2, Eye, Clock, AlertTriangle, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { DealShareModal } from "./DealShareModal";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface DealFilament {
   id: string;
@@ -39,7 +40,7 @@ export function DealCard({
   stockStatus,
   viewsToday,
 }: DealCardProps) {
-  const { formatPrice } = useCurrency();
+  const { currency, formatPrice, convertPrice, getConversionRate } = useRegion();
   const [shareOpen, setShareOpen] = useState(false);
 
   const handleShareClick = (e: React.MouseEvent) => {
@@ -96,18 +97,47 @@ export function DealCard({
               {deal.product_title}
             </h3>
 
-            {/* Price */}
-            <div className="flex items-end gap-2 mb-2">
-              <span className="text-xl font-bold text-green-400">
-                {formatPrice(deal.variant_price!)}
-              </span>
-              <span className="text-sm text-muted-foreground line-through">
-                {formatPrice(deal.variant_compare_at_price!)}
-              </span>
-            </div>
+            {/* Price - with regional conversion */}
+            {(() => {
+              // Deal prices are stored in USD, check if conversion needed
+              const sourceCurrency = 'USD';
+              const needsConversion = currency !== sourceCurrency;
+              const rate = needsConversion ? getConversionRate(sourceCurrency, currency) : 1;
+              const displayPrice = needsConversion ? deal.variant_price! * rate : deal.variant_price!;
+              const displayComparePrice = needsConversion ? deal.variant_compare_at_price! * rate : deal.variant_compare_at_price!;
+              const displaySavings = needsConversion ? savings * rate : savings;
+              
+              return (
+                <>
+                  <div className="flex items-end gap-2 mb-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-xl font-bold text-green-400 cursor-help">
+                            {needsConversion ? '~' : ''}{formatPrice(displayPrice)}
+                          </span>
+                        </TooltipTrigger>
+                        {needsConversion && (
+                          <TooltipContent>
+                            <p className="text-xs">Original: ${deal.variant_price?.toFixed(2)} USD</p>
+                            <p className="text-xs text-muted-foreground">Rate: 1 USD = {rate.toFixed(4)} {currency}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span className="text-sm text-muted-foreground line-through">
+                      {needsConversion ? '~' : ''}{formatPrice(displayComparePrice)}
+                    </span>
+                  </div>
+                  
+                  {/* Savings */}
+                  <div className="text-xs text-green-400 mb-3">
+                    Save {needsConversion ? '~' : ''}{formatPrice(displaySavings)}
+                  </div>
+                </>
+              );
+            })()}
 
-            {/* Savings */}
-            <div className="text-xs text-green-400 mb-3">Save {formatPrice(savings)}</div>
 
             {/* Urgency Indicators */}
             {showUrgency && (
