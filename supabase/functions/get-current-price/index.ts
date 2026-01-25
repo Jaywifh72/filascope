@@ -35,6 +35,7 @@ interface PriceResponse {
   source: 'shopify' | 'firecrawl' | 'html' | 'cached';
   fetchedAt: string;
   error?: string;
+  is404?: boolean; // Indicates product page not found
 }
 
 interface BrandExtractionConfig {
@@ -132,6 +133,72 @@ async function logExtractionAttempt(
   } catch (err) {
     console.error('Failed to log extraction attempt:', err);
   }
+}
+
+// Log broken URL (404) to database for admin review
+async function logBrokenUrl(
+  productUrl: string,
+  errorType: string
+) {
+  try {
+    const supabase = getSupabaseClient();
+    const storeDomain = extractDomain(productUrl);
+    
+    // Upsert to handle duplicates - increment detection count
+    const { data: existing } = await supabase
+      .from('broken_product_urls')
+      .select('id, detection_count')
+      .eq('product_url', productUrl)
+      .maybeSingle();
+    
+    if (existing) {
+      // Update existing record
+      await supabase
+        .from('broken_product_urls')
+        .update({
+          detection_count: (existing.detection_count || 1) + 1,
+          last_detected_at: new Date().toISOString(),
+          error_type: errorType,
+        })
+        .eq('id', existing.id);
+      console.log(`Updated broken URL record for: ${productUrl} (count: ${(existing.detection_count || 1) + 1})`);
+    } else {
+      // Insert new record
+      await supabase
+        .from('broken_product_urls')
+        .insert({
+          product_url: productUrl,
+          store_domain: storeDomain,
+          error_type: errorType,
+          detection_count: 1,
+          detected_at: new Date().toISOString(),
+          last_detected_at: new Date().toISOString(),
+        });
+      console.log(`Logged new broken URL: ${productUrl}`);
+    }
+  } catch (err) {
+    console.error('Failed to log broken URL:', err);
+  }
+}
+
+// Check if content indicates a 404/not found page
+function is404Content(markdown: string): boolean {
+  const notFoundPatterns = [
+    /page\s*(not\s*found|doesn'?t\s*exist)/i,
+    /404\s*(error|not\s*found)?/i,
+    /product\s*(not\s*found|has\s*been\s*(deleted|removed))/i,
+    /this\s*page\s*(doesn'?t|does\s*not)\s*exist/i,
+    /we\s*couldn'?t\s*find\s*(the|this)\s*page/i,
+    /sorry[,!]?\s*(this|the)?\s*page\s*(is|was|has)/i,
+    /item\s*(no\s*longer|not)\s*available/i,
+    /product\s*(is\s*)?no\s*longer\s*available/i,
+    /oops[!.]?\s*(page|something)/i,
+  ];
+  
+  // Check first 2000 chars for 404 indicators
+  const checkContent = markdown.substring(0, 2000).toLowerCase();
+  
+  return notFoundPatterns.some(pattern => pattern.test(checkContent));
 }
 
 // Default patterns to exclude discount/savings amounts from price extraction
@@ -746,6 +813,26 @@ async function fetchPriceWithFirecrawl(
     
     console.log(`Firecrawl returned ${markdown.length} chars of content`);
     
+    // Check for 404/not found content BEFORE extracting prices
+    if (is404Content(markdown)) {
+      console.log(`Detected 404 content for: ${productUrl}`);
+      await logBrokenUrl(productUrl, '404_content');
+      return {
+        success: false,
+        price: null,
+        compareAtPrice: null,
+        weightGrams: null,
+        diameterMm: null,
+        variantTitle: null,
+        currency: preferredCurrency,
+        available: false,
+        source: 'firecrawl',
+        fetchedAt: new Date().toISOString(),
+        error: 'PRODUCT_PAGE_NOT_FOUND',
+        is404: true,
+      };
+    }
+    
     let priceData: { price: number | null; compareAtPrice: number | null; currency: string; available: boolean };
     
     // Use configured extraction if available and working
@@ -950,6 +1037,27 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     
     if (!response.ok) {
       console.error(`Shopify fetch failed: ${response.status} ${response.statusText}`);
+      
+      // Check for 404 specifically
+      if (response.status === 404) {
+        console.log(`Detected 404 for Shopify product: ${productUrl}`);
+        await logBrokenUrl(productUrl, '404_http');
+        return {
+          success: false,
+          price: null,
+          compareAtPrice: null,
+          weightGrams: null,
+          diameterMm: null,
+          variantTitle: null,
+          currency: preferredCurrency,
+          available: false,
+          source: 'shopify',
+          fetchedAt: new Date().toISOString(),
+          error: 'PRODUCT_PAGE_NOT_FOUND',
+          is404: true,
+        };
+      }
+      
       return {
         success: false,
         price: null,
