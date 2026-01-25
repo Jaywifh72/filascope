@@ -738,6 +738,7 @@ const FilamentDetail = () => {
             isAvailableInUserRegion={hasLocalStore}
             isRegionalBrand={regionalStores.length > 0}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
+            regionalPriceResult={regionalPriceResult}
           />
         </div>
       </div>
