@@ -419,14 +419,21 @@ function BrandRow({
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center text-muted-foreground">
-                  No regional stores configured for this brand.{' '}
-                  <button 
-                    className="text-primary hover:underline"
-                    onClick={onAddStore}
-                  >
-                    Add one now
-                  </button>
+                <div className="p-6 text-center">
+                  <p className="text-muted-foreground mb-3">
+                    No regional stores configured for this brand.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button 
+                      size="sm"
+                      onClick={onAddStore}
+                    >
+                      Add Store for {brand.brand_name}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Tip: Start with major regions like US, EU, UK for best coverage
+                  </p>
                 </div>
               )}
             </TableCell>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DollarSign, RefreshCw, Plus, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { DollarSign, RefreshCw, Plus, Clock, TrendingUp, AlertCircle, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ExchangeRatesTable } from '@/components/admin/exchange-rates/ExchangeRatesTable';
 import { AddExchangeRateDialog } from '@/components/admin/exchange-rates/AddExchangeRateDialog';
 import { EditExchangeRateDialog } from '@/components/admin/exchange-rates/EditExchangeRateDialog';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { CURRENCIES, CURRENCY_LIST } from '@/config/currencies';
 import { CurrencyCode, CurrencyExchangeRate } from '@/types/regional';
 import { formatDistanceToNow } from 'date-fns';
@@ -71,31 +72,57 @@ export default function AdminExchangeRates() {
   const hasStaleRates = stats.lastUpdated && 
     (new Date().getTime() - stats.lastUpdated.getTime()) > 24 * 60 * 60 * 1000;
 
+  // Export to JSON
+  const handleExportJSON = () => {
+    if (!exchangeRates || exchangeRates.length === 0) {
+      toast({ title: 'No data to export', variant: 'destructive' });
+      return;
+    }
+
+    const exportData = exchangeRates.map(rate => ({
+      base_currency: rate.base_currency,
+      target_currency: rate.target_currency,
+      rate: rate.rate,
+      inverse_rate: rate.inverse_rate,
+      source: rate.source,
+      fetched_at: rate.fetched_at,
+    }));
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `exchange-rates-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+
+    toast({ title: `Exported ${exchangeRates.length} exchange rates` });
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <DollarSign className="w-6 h-6 text-green-500" />
-              Currency Exchange Rates
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage exchange rates for regional price conversions
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => refetch()} className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
-            <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Rate
-            </Button>
-          </div>
-        </div>
+        {/* Header with back navigation */}
+        <AdminPageHeader
+          title="Currency Exchange Rates"
+          description="Manage exchange rates for regional price conversions"
+          icon={DollarSign}
+          iconColor="text-green-500"
+          actions={
+            <>
+              <Button variant="outline" onClick={handleExportJSON} className="gap-2">
+                <Download className="w-4 h-4" />
+                Export JSON
+              </Button>
+              <Button variant="outline" onClick={() => refetch()} className="gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
+              <Button onClick={() => setShowAddDialog(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Rate
+              </Button>
+            </>
+          }
+        />
 
         {/* Stale Warning */}
         {hasStaleRates && (

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Globe, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Globe, AlertTriangle, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,10 @@ import {
 import { BrandRegionalStoresTable } from '@/components/admin/regional-stores/BrandRegionalStoresTable';
 import { AddRegionalStoreDialog } from '@/components/admin/regional-stores/AddRegionalStoreDialog';
 import { BrandCoverageOverview } from '@/components/admin/regional-stores/BrandCoverageOverview';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { REGIONS, REGION_LIST } from '@/config/regions';
 import { RegionCode } from '@/types/regional';
+import { useToast } from '@/hooks/use-toast';
 
 interface BrandWithCoverage {
   id: string;
@@ -36,7 +38,67 @@ export default function AdminRegionalStores() {
   const [regionFilter, setRegionFilter] = useState<RegionCode | 'all'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const { toast } = useToast();
 
+  // Quick region filters
+  const quickRegions: RegionCode[] = ['US', 'CA', 'EU', 'UK', 'AU', 'JP', 'CN'];
+
+  // Export to CSV function
+  const handleExportCSV = async () => {
+    try {
+      const { data: stores, error } = await supabase
+        .from('brand_regional_stores')
+        .select(`
+          *,
+          automated_brands!inner(brand_name, brand_slug)
+        `)
+        .order('brand_id');
+      
+      if (error) throw error;
+      if (!stores || stores.length === 0) {
+        toast({ title: 'No data to export', variant: 'destructive' });
+        return;
+      }
+
+      // Flatten for CSV
+      const rows = stores.map((store: any) => ({
+        brand_name: store.automated_brands?.brand_name || '',
+        brand_slug: store.automated_brands?.brand_slug || '',
+        store_name: store.store_name,
+        region_code: store.region_code,
+        currency_code: store.currency_code,
+        base_url: store.base_url,
+        is_active: store.is_active ? 'Yes' : 'No',
+        is_primary: store.is_primary ? 'Yes' : 'No',
+        ships_from_country: store.ships_from_country || '',
+        free_shipping_threshold: store.free_shipping_threshold || '',
+        estimated_shipping_days: store.estimated_shipping_days || '',
+      }));
+
+      // Convert to CSV
+      const headers = Object.keys(rows[0]);
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => 
+          headers.map(h => {
+            const val = String(row[h as keyof typeof row] || '');
+            return val.includes(',') ? `"${val}"` : val;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `regional-stores-export-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      
+      toast({ title: `Exported ${rows.length} regional stores` });
+    } catch (error: any) {
+      toast({ title: 'Export failed', description: error.message, variant: 'destructive' });
+    }
+  };
   // Fetch all brands with their regional store counts
   const { data: brandsWithCoverage, isLoading, refetch } = useQuery({
     queryKey: ['admin-brands-regional-coverage'],
@@ -92,22 +154,25 @@ export default function AdminRegionalStores() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Globe className="w-6 h-6 text-teal-500" />
-              Regional Store Management
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage brand storefronts across different regions
-            </p>
-          </div>
-          <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Regional Store
-          </Button>
-        </div>
+        {/* Header with back navigation */}
+        <AdminPageHeader
+          title="Regional Store Management"
+          description="Manage brand storefronts across different regions"
+          icon={Globe}
+          iconColor="text-teal-500"
+          actions={
+            <>
+              <Button variant="outline" onClick={handleExportCSV} className="gap-2">
+                <Download className="w-4 h-4" />
+                Export CSV
+              </Button>
+              <Button onClick={() => setShowAddDialog(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Regional Store
+              </Button>
+            </>
+          }
+        />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -129,7 +194,32 @@ export default function AdminRegionalStores() {
           </Card>
         </div>
 
-        {/* Filters */}
+        {/* Quick Region Filters */}
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant={regionFilter === 'all' ? 'default' : 'outline'}
+            className="cursor-pointer hover:bg-primary/90"
+            onClick={() => setRegionFilter('all')}
+          >
+            All Regions
+          </Badge>
+          {quickRegions.map(region => {
+            const regionConfig = REGIONS[region];
+            const count = brandsWithCoverage?.filter(b => b.regions.includes(region)).length || 0;
+            return (
+              <Badge
+                key={region}
+                variant={regionFilter === region ? 'default' : 'outline'}
+                className="cursor-pointer hover:bg-primary/90"
+                onClick={() => setRegionFilter(region)}
+              >
+                {regionConfig?.flag} {region} ({count})
+              </Badge>
+            );
+          })}
+        </div>
+
+        {/* Search and advanced filter */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
