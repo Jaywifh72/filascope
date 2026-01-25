@@ -286,6 +286,345 @@ async function handleUrlRedirect(
   }
 }
 
+// ===== AUTO-RESOLUTION SYSTEM FOR 404 PRODUCT URLs =====
+
+// Store search URL patterns - maps domains to search URL builders
+const STORE_SEARCH_PATTERNS: Record<string, (query: string) => string> = {
+  // Major stores with known search patterns
+  'store.creality.com': (q) => `https://store.creality.com/search?q=${encodeURIComponent(q)}`,
+  'us.store.bambulab.com': (q) => `https://us.store.bambulab.com/search?q=${encodeURIComponent(q)}`,
+  'store.bambulab.com': (q) => `https://store.bambulab.com/search?q=${encodeURIComponent(q)}`,
+  'www.prusa3d.com': (q) => `https://www.prusa3d.com/search/?s=${encodeURIComponent(q)}`,
+  'prusa3d.com': (q) => `https://www.prusa3d.com/search/?s=${encodeURIComponent(q)}`,
+  'us.polymaker.com': (q) => `https://us.polymaker.com/search?q=${encodeURIComponent(q)}`,
+  'polymaker.com': (q) => `https://polymaker.com/search?q=${encodeURIComponent(q)}`,
+  'www.esun3d.com': (q) => `https://www.esun3d.com/search?keyword=${encodeURIComponent(q)}`,
+  'esun3d.com': (q) => `https://www.esun3d.com/search?keyword=${encodeURIComponent(q)}`,
+  'overture3d.com': (q) => `https://overture3d.com/search?q=${encodeURIComponent(q)}`,
+  'www.sunlu.com': (q) => `https://www.sunlu.com/search?q=${encodeURIComponent(q)}`,
+  'sunlu.com': (q) => `https://www.sunlu.com/search?q=${encodeURIComponent(q)}`,
+  'store.anycubic.com': (q) => `https://store.anycubic.com/search?q=${encodeURIComponent(q)}`,
+  'www.elegoo.com': (q) => `https://www.elegoo.com/search?q=${encodeURIComponent(q)}`,
+  'colorfabb.com': (q) => `https://colorfabb.com/search?q=${encodeURIComponent(q)}`,
+  'fillamentum.com': (q) => `https://fillamentum.com/search?q=${encodeURIComponent(q)}`,
+  'atomicfilament.com': (q) => `https://atomicfilament.com/search?q=${encodeURIComponent(q)}`,
+  'ninjatek.com': (q) => `https://ninjatek.com/search?q=${encodeURIComponent(q)}`,
+  'www.proto-pasta.com': (q) => `https://www.proto-pasta.com/search?q=${encodeURIComponent(q)}`,
+  'amolen.com': (q) => `https://amolen.com/search?q=${encodeURIComponent(q)}`,
+  'fiberlogy.com': (q) => `https://fiberlogy.com/search?q=${encodeURIComponent(q)}`,
+  'www.3dfuel.com': (q) => `https://www.3dfuel.com/search?q=${encodeURIComponent(q)}`,
+  'voxelpla.com': (q) => `https://voxelpla.com/search?q=${encodeURIComponent(q)}`,
+  'ziro3d.com': (q) => `https://ziro3d.com/search?q=${encodeURIComponent(q)}`,
+};
+
+// Get store search URL using patterns or generic Shopify fallback
+function getStoreSearchUrl(domain: string, query: string): string {
+  const pattern = STORE_SEARCH_PATTERNS[domain] || STORE_SEARCH_PATTERNS[domain.replace('www.', '')];
+  if (pattern) return pattern(query);
+  
+  // Generic Shopify fallback (most e-commerce stores use /search?q=)
+  return `https://${domain}/search?q=${encodeURIComponent(query)}`;
+}
+
+interface ProductMetadata {
+  id: string;
+  product_title: string;
+  material: string | null;
+  vendor: string | null;
+  net_weight_g: number | null;
+}
+
+// Fetch product metadata from database for search resolution
+async function getProductMetadataByUrl(productUrl: string): Promise<ProductMetadata | null> {
+  const supabase = getSupabaseClient();
+  
+  const { data, error } = await supabase
+    .from('filaments')
+    .select('id, product_title, material, vendor, net_weight_g')
+    .eq('product_url', productUrl)
+    .maybeSingle();
+  
+  if (error || !data) {
+    console.log('No product metadata found for URL:', productUrl);
+    return null;
+  }
+  return data;
+}
+
+// Build optimized search query from product metadata
+function buildSearchQuery(product: ProductMetadata): string {
+  // Start with product title
+  let query = product.product_title;
+  
+  // Remove common suffixes that don't help search
+  query = query
+    .replace(/3D\s*Print(ing)?\s*Filament/gi, '')
+    .replace(/\d+\s*[gG]\s*/g, '')  // Remove weight like "1000g"
+    .replace(/\d+\s*[kK][gG]\s*/g, '') // Remove weight like "1kg"
+    .replace(/\d+\.\d+\s*mm/gi, '') // Remove diameter like "1.75mm"
+    .replace(/RFID/gi, '') // Remove RFID tag - often causes no results
+    .replace(/[-_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Limit length for search - take first 6 meaningful words
+  const words = query.split(' ').filter(w => w.length > 1).slice(0, 6);
+  return words.join(' ');
+}
+
+// Calculate similarity score between URL and product title
+function calculateUrlSimilarity(url: string, productTitle: string): number {
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname.toLowerCase();
+    
+    // Extract slug from URL (last path segment after /products/ or similar)
+    const segments = path.split('/').filter(s => s && !['products', 'product', 'p'].includes(s));
+    const slug = segments[segments.length - 1] || '';
+    
+    // Split slug into words (by hyphens/underscores)
+    const slugWords = slug.split(/[-_]/).filter(w => w.length > 1);
+    
+    // Normalize product title to meaningful words
+    const stopWords = ['the', 'and', 'for', '3d', 'printing', 'filament', 'with', 'from'];
+    const titleWords = productTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.includes(w));
+    
+    if (titleWords.length === 0) return 0;
+    
+    // Count matching words
+    let matches = 0;
+    for (const titleWord of titleWords) {
+      if (slugWords.some(sw => sw.includes(titleWord) || titleWord.includes(sw))) {
+        matches++;
+      }
+    }
+    
+    return matches / titleWords.length;
+  } catch {
+    return 0;
+  }
+}
+
+// Check if we can attempt auto-fix (rate limit: 1 attempt per URL per 24h)
+async function canAttemptAutoFix(productUrl: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const { data } = await supabase
+    .from('url_auto_fixes')
+    .select('id')
+    .eq('original_url', productUrl)
+    .gte('fixed_at', oneDayAgo)
+    .limit(1);
+  
+  // Allow if no recent attempts
+  return !data || data.length === 0;
+}
+
+interface SearchResolutionResult {
+  success: boolean;
+  newUrl: string | null;
+  score: number;
+  method: 'search_resolution';
+}
+
+// Attempt to resolve 404 by searching the store for the product
+async function attemptSearchResolution(
+  productUrl: string,
+  storeDomain: string
+): Promise<SearchResolutionResult> {
+  const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!firecrawlApiKey) {
+    console.log('No FIRECRAWL_API_KEY for search resolution');
+    return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+  }
+  
+  // Rate limit check
+  const canAttempt = await canAttemptAutoFix(productUrl);
+  if (!canAttempt) {
+    console.log('Rate limited: already attempted auto-fix for this URL in last 24h');
+    return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+  }
+  
+  // Step 1: Get product metadata
+  const product = await getProductMetadataByUrl(productUrl);
+  if (!product) {
+    return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+  }
+  
+  // Step 2: Build search query
+  const searchQuery = buildSearchQuery(product);
+  console.log(`Search query for "${product.product_title}": "${searchQuery}"`);
+  
+  // Step 3: Get store search URL
+  const searchUrl = getStoreSearchUrl(storeDomain, searchQuery);
+  console.log('Searching store:', searchUrl);
+  
+  // Step 4: Scrape search results with Firecrawl
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: searchUrl,
+        formats: ['links'],
+        waitFor: 3000,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error('Firecrawl search failed:', response.status);
+      return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+    }
+    
+    const data = await response.json();
+    const links: string[] = data.data?.links || data.links || [];
+    
+    console.log(`Search returned ${links.length} total links`);
+    
+    // Step 5: Filter to product links only
+    const baseDomain = storeDomain.replace('www.', '');
+    const productLinks = links.filter(link => {
+      try {
+        const linkUrl = new URL(link);
+        // Must be same domain
+        if (!linkUrl.hostname.includes(baseDomain)) return false;
+        // Must contain product indicators
+        const path = linkUrl.pathname.toLowerCase();
+        return path.includes('/products/') || 
+               path.includes('/product/') ||
+               path.includes('/p/') ||
+               path.includes('/shop/');
+      } catch {
+        return false;
+      }
+    });
+    
+    console.log(`Found ${productLinks.length} product links on search page`);
+    
+    if (productLinks.length === 0) {
+      return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+    }
+    
+    // Step 6: Score each link
+    const scoredLinks = productLinks.map(url => ({
+      url,
+      score: calculateUrlSimilarity(url, product.product_title),
+    }));
+    
+    // Log top candidates for debugging
+    const topCandidates = scoredLinks.sort((a, b) => b.score - a.score).slice(0, 5);
+    console.log('Top URL candidates:', topCandidates.map(c => `${c.url} (${(c.score * 100).toFixed(0)}%)`));
+    
+    // Step 7: Get best match with score >= 0.7
+    const bestMatch = topCandidates.find(l => l.score >= 0.7);
+    
+    if (bestMatch) {
+      console.log(`Best match found: ${bestMatch.url} (score: ${(bestMatch.score * 100).toFixed(0)}%)`);
+      return {
+        success: true,
+        newUrl: bestMatch.url,
+        score: bestMatch.score,
+        method: 'search_resolution',
+      };
+    }
+    
+    console.log('No matching product found with score >= 0.7');
+    return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+  } catch (err) {
+    console.error('Search resolution error:', err);
+    return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
+  }
+}
+
+// Handle 404 with auto-resolution attempt, then log and return 404 response
+async function handle404WithResolution(
+  productUrl: string,
+  preferredCurrency: string,
+  brandConfig: BrandConfig | null,
+  source: 'shopify' | 'firecrawl',
+  errorType: string
+): Promise<PriceResponse & { rawSample?: string }> {
+  console.log(`Detected 404 for product: ${productUrl}, attempting search resolution...`);
+  
+  const storeDomain = extractDomain(productUrl);
+  const resolution = await attemptSearchResolution(productUrl, storeDomain);
+  
+  if (resolution.success && resolution.newUrl) {
+    const supabase = getSupabaseClient();
+    
+    // Get the filament ID before updating (for logging)
+    const product = await getProductMetadataByUrl(productUrl);
+    
+    // Update the filament record with new URL
+    const { error: updateError } = await supabase
+      .from('filaments')
+      .update({ 
+        product_url: resolution.newUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('product_url', productUrl);
+    
+    if (!updateError) {
+      console.log(`Auto-resolved URL: ${productUrl} -> ${resolution.newUrl}`);
+      
+      // Log the auto-fix to audit table
+      await supabase
+        .from('url_auto_fixes')
+        .insert({
+          filament_id: product?.id || null,
+          original_url: productUrl,
+          new_url: resolution.newUrl,
+          resolution_method: resolution.method,
+          similarity_score: resolution.score,
+        });
+      
+      // Mark broken URL as resolved if exists
+      await supabase
+        .from('broken_product_urls')
+        .update({
+          resolved_at: new Date().toISOString(),
+          new_url: resolution.newUrl,
+          notes: `Auto-resolved via ${resolution.method} (score: ${(resolution.score * 100).toFixed(0)}%)`,
+        })
+        .eq('product_url', productUrl);
+      
+      // Retry price fetch with the new URL (using Firecrawl to avoid recursive resolution)
+      console.log(`Retrying price fetch with resolved URL: ${resolution.newUrl}`);
+      return await fetchPriceWithFirecrawl(resolution.newUrl, preferredCurrency, brandConfig, true);
+    } else {
+      console.error('Failed to update filament URL:', updateError);
+    }
+  }
+  
+  // Resolution failed - log broken URL for manual review
+  await logBrokenUrl(productUrl, errorType);
+  
+  return {
+    success: false,
+    price: null,
+    compareAtPrice: null,
+    weightGrams: null,
+    diameterMm: null,
+    variantTitle: null,
+    currency: preferredCurrency,
+    available: false,
+    source,
+    fetchedAt: new Date().toISOString(),
+    error: 'PRODUCT_PAGE_NOT_FOUND',
+    is404: true,
+  };
+}
+
+// ===== END AUTO-RESOLUTION SYSTEM =====
+
 // Check if content indicates a 404/not found page
 function is404Content(markdown: string): boolean {
   const notFoundPatterns = [
@@ -830,10 +1169,12 @@ function extractDiameterFromContent(markdown: string, url: string): number | nul
 }
 
 // Fetch price using Firecrawl API
+// skipResolution: set to true when called from resolution retry to prevent infinite loops
 async function fetchPriceWithFirecrawl(
   productUrl: string, 
   preferredCurrency: string,
-  brandConfig?: BrandConfig | null
+  brandConfig?: BrandConfig | null,
+  skipResolution = false
 ): Promise<PriceResponse & { rawSample?: string }> {
   const startTime = Date.now();
   const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
@@ -934,6 +1275,13 @@ async function fetchPriceWithFirecrawl(
     // Check for 404/not found content BEFORE extracting prices
     if (is404Content(markdown)) {
       console.log(`Detected 404 content for: ${productUrl}`);
+      
+      // Attempt search resolution unless we're already in a resolution retry
+      if (!skipResolution) {
+        return await handle404WithResolution(productUrl, preferredCurrency, brandConfig || null, 'firecrawl', '404_content');
+      }
+      
+      // We're in a resolution retry - just log and return 404
       await logBrokenUrl(productUrl, '404_content');
       return {
         success: false,
@@ -1156,24 +1504,10 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     if (!response.ok) {
       console.error(`Shopify fetch failed: ${response.status} ${response.statusText}`);
       
-      // Check for 404 specifically
+      // Check for 404 specifically - attempt search resolution
       if (response.status === 404) {
         console.log(`Detected 404 for Shopify product: ${productUrl}`);
-        await logBrokenUrl(productUrl, '404_http');
-        return {
-          success: false,
-          price: null,
-          compareAtPrice: null,
-          weightGrams: null,
-          diameterMm: null,
-          variantTitle: null,
-          currency: preferredCurrency,
-          available: false,
-          source: 'shopify',
-          fetchedAt: new Date().toISOString(),
-          error: 'PRODUCT_PAGE_NOT_FOUND',
-          is404: true,
-        };
+        return await handle404WithResolution(productUrl, preferredCurrency, null, 'shopify', '404_http');
       }
       
       return {
