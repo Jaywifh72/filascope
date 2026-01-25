@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import ComparisonCheckbox from "@/components/printers/ComparisonCheckbox";
 import { useRegion } from "@/contexts/RegionContext";
+import { RegionalPrice } from "@/components/price/RegionalPrice";
 
 interface SimilarPrinterCardProps {
   printer: {
@@ -252,25 +253,17 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
       </h3>
 
       {/* Price */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="text-lg md:text-xl font-bold text-white cursor-help">
-              {displayPrice ? (
-                <>
-                  {needsConversion ? '~' : ''}{formatPrice(displayPrice)}
-                </>
-              ) : "Price N/A"}
-            </div>
-          </TooltipTrigger>
-          {needsConversion && printer.price && (
-            <TooltipContent>
-              <p className="text-xs">Original: ${printer.price.toLocaleString()} USD</p>
-              <p className="text-xs text-muted-foreground">Rate: 1 USD = {rate.toFixed(4)} {currency}</p>
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
+      {printer.price ? (
+        <RegionalPrice
+          amount={printer.price}
+          sourceCurrency="USD"
+          size="lg"
+        />
+      ) : (
+        <div className="text-lg md:text-xl font-bold text-muted-foreground">
+          Price N/A
+        </div>
+      )}
       
       {/* Price Difference */}
       {priceDifference !== null && (
