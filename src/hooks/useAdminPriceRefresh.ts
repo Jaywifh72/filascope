@@ -126,40 +126,24 @@ export function useAdminPriceRefresh(
 
       const { price, compareAtPrice, currency = 'USD' } = data;
 
-      // Update the filaments table
-      const { error: updateError } = await supabase
-        .from('filaments')
-        .update({
-          variant_price: price,
-          variant_compare_at_price: compareAtPrice || null,
-          last_scraped_at: new Date().toISOString(),
-          price_source: 'admin_refresh',
-        })
-        .eq('id', filamentId);
+      // Use RPC function for atomic update with admin check
+      const { error: rpcError } = await supabase
+        .rpc('update_filament_price_after_refresh', {
+          p_filament_id: filamentId,
+          p_new_price: price,
+          p_compare_at_price: compareAtPrice || null,
+          p_currency: currency,
+          p_source: 'manual'
+        });
 
-      if (updateError) {
-        const errorMsg = 'Failed to save price to database';
-        console.error('Filament update error:', updateError);
+      if (rpcError) {
+        const errorMsg = rpcError.message?.includes('Unauthorized') 
+          ? 'Admin access required' 
+          : 'Failed to save price to database';
+        console.error('RPC error:', rpcError);
         setLastRefreshError(errorMsg);
         setIsRefreshing(false);
         return { success: false, error: errorMsg };
-      }
-
-      // Insert into price history
-      const { error: historyError } = await supabase
-        .from('price_history')
-        .insert({
-          filament_id: filamentId,
-          price: price,
-          currency: currency,
-          source: 'admin_refresh',
-          recorded_at: new Date().toISOString(),
-          region: currencyToRegion(currency),
-        });
-
-      if (historyError) {
-        // Log but don't fail - price history is supplementary
-        console.warn('Price history insert failed:', historyError);
       }
 
       // Invalidate the useCurrentPrice cache for this URL

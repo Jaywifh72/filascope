@@ -2110,6 +2110,7 @@ export type Database = {
           price_eur: number | null
           price_gbp: number | null
           price_jpy: number | null
+          price_last_manual_refresh: string | null
           price_source: string | null
           print_speed_max_mms: number | null
           printability_index: number | null
@@ -2246,6 +2247,7 @@ export type Database = {
           price_eur?: number | null
           price_gbp?: number | null
           price_jpy?: number | null
+          price_last_manual_refresh?: string | null
           price_source?: string | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
@@ -2382,6 +2384,7 @@ export type Database = {
           price_eur?: number | null
           price_gbp?: number | null
           price_jpy?: number | null
+          price_last_manual_refresh?: string | null
           price_source?: string | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
@@ -7106,6 +7109,16 @@ export type Database = {
       update_brand_product_counts: {
         Args: { p_brand_slug?: string }
         Returns: undefined
+      }
+      update_filament_price_after_refresh: {
+        Args: {
+          p_compare_at_price?: number
+          p_currency?: string
+          p_filament_id: string
+          p_new_price: number
+          p_source?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
