@@ -380,6 +380,28 @@ function buildSearchQuery(product: ProductMetadata): string {
   return words.join(' ');
 }
 
+// Common abbreviations used in product URLs
+const URL_ABBREVIATIONS: Record<string, string[]> = {
+  'cf': ['carbon', 'fiber', 'fibre'],
+  'gf': ['glass', 'fiber', 'fibre'],
+  'hs': ['high', 'speed'],
+  'ht': ['high', 'temp', 'temperature'],
+  'rf': ['rfid'],
+  'abs': ['abs'],
+  'pla': ['pla'],
+  'petg': ['petg'],
+  'tpu': ['tpu'],
+  'asa': ['asa'],
+  'pc': ['polycarbonate'],
+  'pa': ['nylon', 'polyamide'],
+  'pro': ['pro', 'professional'],
+  'plus': ['plus'],
+  'max': ['max', 'maximum'],
+  'lite': ['lite', 'light'],
+  'matte': ['matte', 'matt'],
+  'silk': ['silk'],
+};
+
 // Calculate similarity score between URL and product title
 function calculateUrlSimilarity(url: string, productTitle: string): number {
   try {
@@ -390,28 +412,50 @@ function calculateUrlSimilarity(url: string, productTitle: string): number {
     const segments = path.split('/').filter(s => s && !['products', 'product', 'p'].includes(s));
     const slug = segments[segments.length - 1] || '';
     
+    console.log(`Similarity check: slug="${slug}" vs title="${productTitle}"`);
+    
     // Split slug into words (by hyphens/underscores)
-    const slugWords = slug.split(/[-_]/).filter(w => w.length > 1);
+    const slugWords = slug.split(/[-_]/).filter(w => w.length > 0);
+    
+    // Expand abbreviations in slug
+    const expandedSlugWords: string[] = [];
+    for (const word of slugWords) {
+      expandedSlugWords.push(word);
+      if (URL_ABBREVIATIONS[word]) {
+        expandedSlugWords.push(...URL_ABBREVIATIONS[word]);
+      }
+    }
     
     // Normalize product title to meaningful words
-    const stopWords = ['the', 'and', 'for', '3d', 'printing', 'filament', 'with', 'from'];
+    const stopWords = ['the', 'and', 'for', '3d', 'printing', 'filament', 'with', 'from', 'series', '1kg', '500g'];
     const titleWords = productTitle
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, '')
       .split(/\s+/)
-      .filter(w => w.length > 2 && !stopWords.includes(w));
+      .filter(w => w.length > 1 && !stopWords.includes(w));
     
     if (titleWords.length === 0) return 0;
     
-    // Count matching words
+    // Count matching words (with expanded abbreviations)
     let matches = 0;
     for (const titleWord of titleWords) {
-      if (slugWords.some(sw => sw.includes(titleWord) || titleWord.includes(sw))) {
+      const matched = expandedSlugWords.some(sw => 
+        sw === titleWord || 
+        sw.includes(titleWord) || 
+        titleWord.includes(sw) ||
+        (sw.length >= 3 && titleWord.startsWith(sw)) ||
+        (titleWord.length >= 3 && sw.startsWith(titleWord))
+      );
+      if (matched) {
         matches++;
+        console.log(`  Match: "${titleWord}" matched in slug`);
       }
     }
     
-    return matches / titleWords.length;
+    const score = matches / titleWords.length;
+    console.log(`  Score: ${matches}/${titleWords.length} = ${(score * 100).toFixed(0)}%`);
+    
+    return score;
   } catch {
     return 0;
   }
