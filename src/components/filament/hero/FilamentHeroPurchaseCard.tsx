@@ -8,7 +8,6 @@ import {
   RefreshCw,
   AlertTriangle,
   Globe,
-  ExternalLinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
@@ -20,6 +19,8 @@ import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { StockUrgencyIndicator } from '../urgency/StockUrgencyIndicator';
 import { ShippingCountdown } from '../urgency/ShippingCountdown';
 import { RegionalAvailabilityBadge, CrossBorderNote } from '../RegionalAvailabilityBadge';
+import { PriceFreshnessIndicator } from '@/components/price/PriceFreshnessIndicator';
+import { PriceConfidence } from '@/hooks/usePriceFreshness';
 
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
@@ -41,6 +42,8 @@ interface FilamentHeroPurchaseCardProps {
   actualUrlCurrency?: CurrencyCode | null;
   isAvailableInUserRegion?: boolean;
   isRegionalBrand?: boolean;
+  lastScrapedAt?: string | null;
+  priceConfidence?: PriceConfidence | string | null;
 }
 
 export function FilamentHeroPurchaseCard({
@@ -63,6 +66,8 @@ export function FilamentHeroPurchaseCard({
   actualUrlCurrency = null,
   isAvailableInUserRegion = true,
   isRegionalBrand = false,
+  lastScrapedAt,
+  priceConfidence,
 }: FilamentHeroPurchaseCardProps) {
   const { formatPrice, formatRegionalPrice, currency } = useCurrency();
   const { trackStoreClick } = useConversionTracking();
@@ -199,12 +204,13 @@ export function FilamentHeroPurchaseCard({
           )}
         </div>
 
-        {/* Price disclaimer */}
+        {/* Price freshness indicator */}
         {!priceLoading && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <ExternalLinkIcon className="w-3.5 h-3.5" />
-            <span>Click to verify price at store</span>
-          </div>
+          <PriceFreshnessIndicator
+            lastVerified={lastScrapedAt}
+            confidence={priceConfidence as PriceConfidence | undefined}
+            compact={false}
+          />
         )}
 
         {/* Fallback region warning - only if not already shown above */}

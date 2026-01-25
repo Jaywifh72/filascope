@@ -739,6 +739,9 @@ const FilamentDetail = () => {
             isRegionalBrand={regionalStores.length > 0}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
             regionalPriceResult={regionalPriceResult}
+            lastScrapedAt={pricingFilament.last_scraped_at}
+            priceSource={(pricingFilament as any).price_source}
+            priceConfidence={(pricingFilament as any).price_confidence}
           />
         </div>
       </div>
@@ -757,6 +760,8 @@ const FilamentDetail = () => {
         originalUsUrl={pricingFilament.product_url || undefined}
         hasActualRegionalPrice={hasActualRegionalPrice}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
+        lastScrapedAt={pricingFilament.last_scraped_at}
+        priceConfidence={(pricingFilament as any).price_confidence}
       />
 
       {/* Admin Edit Image Dialog */}
