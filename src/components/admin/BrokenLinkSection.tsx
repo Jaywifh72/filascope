@@ -762,6 +762,46 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
     await fetchResultsAndStats();
   };
 
+  // Bulk apply all valid redirects
+  const applyAllRedirects = async () => {
+    const redirectResults = results.filter(r => r.status === 'redirect' && r.redirect_url);
+    if (redirectResults.length === 0) {
+      toast.info("No redirect URLs to apply");
+      return;
+    }
+
+    if (!window.confirm(`Apply ${redirectResults.length} redirect URLs as fixes? This will update the product URLs in the database.`)) {
+      return;
+    }
+
+    setBulkFixing(true);
+    let applied = 0;
+
+    for (const result of redirectResults) {
+      try {
+        if (!result.redirect_url) continue;
+        
+        const tableName = result.entity_type === 'filament' ? 'filaments' 
+          : result.entity_type === 'printer' ? 'printers' 
+          : 'printer_accessories';
+        
+        await supabase.from(tableName).update({ [result.url_field]: result.redirect_url }).eq('id', result.entity_id);
+        await supabase.from("url_validation_results").update({ 
+          status: 'valid', 
+          url: result.redirect_url, 
+          status_code: 200 
+        }).eq('id', result.id);
+        applied++;
+      } catch (e) {
+        console.error("Error applying redirect:", result.id, e);
+      }
+    }
+
+    setBulkFixing(false);
+    toast.success(`Applied ${applied} redirect URLs`);
+    await fetchResultsAndStats();
+  };
+
   const markAsVerified = async (result: UrlValidationResult) => {
     if (!userId) return;
     await supabase.from("url_validation_results").update({ 
@@ -980,13 +1020,29 @@ const BrokenLinkSection = ({ category, title, icon, userId, onRefresh }: BrokenL
               </TabsList>
 
               {/* Bulk Actions */}
-              {selectedCount > 0 && (
-                <div className="flex items-center gap-2 mb-3 p-2 bg-muted/30 rounded-md">
-                  <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
-                  <Button variant="outline" size="sm" onClick={fixSelected} disabled={bulkFixing}>
-                    {bulkFixing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wrench className="w-4 h-4 mr-2" />}
-                    Fix Selected
-                  </Button>
+              {(selectedCount > 0 || (activeTab === 'redirect' && stats.redirect > 0)) && (
+                <div className="flex items-center gap-2 mb-3 p-2 bg-muted/30 rounded-md flex-wrap">
+                  {selectedCount > 0 && (
+                    <>
+                      <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+                      <Button variant="outline" size="sm" onClick={fixSelected} disabled={bulkFixing}>
+                        {bulkFixing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wrench className="w-4 h-4 mr-2" />}
+                        Fix Selected
+                      </Button>
+                    </>
+                  )}
+                  {activeTab === 'redirect' && stats.redirect > 0 && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={applyAllRedirects} 
+                      disabled={bulkFixing}
+                      className="bg-yellow-600 hover:bg-yellow-700"
+                    >
+                      {bulkFixing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ArrowRight className="w-4 h-4 mr-2" />}
+                      Apply All Redirects ({stats.redirect})
+                    </Button>
+                  )}
                 </div>
               )}
 
