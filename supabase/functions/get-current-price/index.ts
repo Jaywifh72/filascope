@@ -1066,19 +1066,26 @@ function extractCrealityPrice(markdown: string): {
   currency: string;
   available: boolean;
 } {
-  console.log('Extracting Creality price (legacy)...');
+  console.log('=== CREALITY EXTRACTION ===');
+  console.log('Input markdown preview (first 500 chars):', markdown.substring(0, 500));
+  console.log('Input markdown length:', markdown.length);
   
   // First, try the sale format pattern: "$18.99 $34.25 Save $15.26"
   const saleResult = extractSalePriceBeforeSave(markdown);
+  console.log('Sale format extraction result:', JSON.stringify(saleResult));
+  
   if (saleResult.salePrice && validateFilamentPrice(saleResult.salePrice)) {
-    console.log(`Creality sale format: $${saleResult.salePrice}, compare-at: $${saleResult.compareAtPrice}`);
-    return { 
+    console.log(`✓ Creality sale format matched: $${saleResult.salePrice}, compare-at: $${saleResult.compareAtPrice}`);
+    const result = { 
       price: saleResult.salePrice, 
       compareAtPrice: saleResult.compareAtPrice, 
       currency: 'USD', 
       available: true 
     };
+    console.log('Final Creality price returned:', JSON.stringify(result));
+    return result;
   }
+  console.log('Sale format not matched, trying fallback methods...');
   
   // Remove savings amounts from text
   let cleanedMarkdown = removeSavingsAmounts(markdown);
@@ -1098,31 +1105,44 @@ function extractCrealityPrice(markdown: string): {
   
   // Pattern: Two prices adjacent (sale and regular)
   const dualPriceMatch = priceSection.match(/\$(\d+(?:\.\d{2})?)\s*(?:[\s\n~-]*)\$(\d+(?:\.\d{2})?)/);
+  console.log('Dual price match result:', dualPriceMatch ? dualPriceMatch[0] : 'null');
+  
   if (dualPriceMatch) {
     const price1 = parseFloat(dualPriceMatch[1]);
     const price2 = parseFloat(dualPriceMatch[2]);
     const salePrice = Math.min(price1, price2);
     const comparePrice = Math.max(price1, price2);
+    console.log(`Dual price parsed: price1=$${price1}, price2=$${price2}, sale=$${salePrice}, compare=$${comparePrice}`);
     
     if (validateFilamentPrice(salePrice) && validateFilamentPrice(comparePrice, 10, 200)) {
-      console.log(`Found Creality dual price: $${salePrice}, compare-at: $${comparePrice}`);
-      return { price: salePrice, compareAtPrice: comparePrice, currency: 'USD', available: true };
+      console.log(`✓ Found Creality dual price: $${salePrice}, compare-at: $${comparePrice}`);
+      const result = { price: salePrice, compareAtPrice: comparePrice, currency: 'USD', available: true };
+      console.log('Final Creality price returned:', JSON.stringify(result));
+      return result;
     }
+    console.log('Dual price validation failed');
   }
   
   // Extract all valid prices from the cleaned price section
   const allPricesInSection = priceSection.match(/\$(\d+(?:\.\d{2})?)/g);
+  console.log('All prices in section (raw):', allPricesInSection);
+  
   if (allPricesInSection) {
-    const validPrices = allPricesInSection
-      .map(p => parseFloat(p.replace('$', '')))
+    const allParsed = allPricesInSection.map(p => parseFloat(p.replace('$', '')));
+    console.log('All prices parsed:', allParsed);
+    
+    const validPrices = allParsed
       .filter(p => validateFilamentPrice(p))
       .sort((a, b) => a - b);
+    console.log('Valid prices after filtering (min=$10, max=$150):', validPrices);
     
     if (validPrices.length > 0) {
       const price = validPrices[0];
       const compareAt = validPrices.length > 1 && validPrices[1] > price * 1.1 ? validPrices[1] : null;
-      console.log(`Found Creality price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
-      return { price, compareAtPrice: compareAt, currency: 'USD', available: true };
+      console.log(`✓ Found Creality price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
+      const result = { price, compareAtPrice: compareAt, currency: 'USD', available: true };
+      console.log('Final Creality price returned:', JSON.stringify(result));
+      return result;
     }
   }
   
@@ -1136,22 +1156,31 @@ function extractCrealityPrice(markdown: string): {
   }
   
   // Last resort: search full cleaned markdown
-  const allPrices = [...cleanedMarkdown.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+  console.log('=== CREALITY FALLBACK: Full markdown search ===');
+  const allPricesRaw = [...cleanedMarkdown.matchAll(/\$(\d+(?:\.\d{2})?)/g)];
+  console.log('All price matches in cleaned markdown:', allPricesRaw.length);
+  console.log('First 10 price matches:', allPricesRaw.slice(0, 10).map(m => m[0]));
+  
+  const allPrices = allPricesRaw
     .map(m => parseFloat(m[1]))
     .filter(p => validateFilamentPrice(p))
     .sort((a, b) => a - b);
   
+  console.log('Valid prices after filtering:', allPrices);
+  
   if (allPrices.length > 0) {
     console.log(`Creality fallback: found ${allPrices.length} valid prices, using lowest: $${allPrices[0]}`);
-    return {
+    const result = {
       price: allPrices[0],
       compareAtPrice: allPrices.length > 1 && allPrices[1] > allPrices[0] * 1.1 ? allPrices[1] : null,
       currency: 'USD',
       available: true,
     };
+    console.log('Final Creality price returned:', JSON.stringify(result));
+    return result;
   }
   
-  console.log('No valid Creality price found');
+  console.log('❌ No valid Creality price found');
   return { price: null, compareAtPrice: null, currency: 'USD', available: false };
 }
 
@@ -1370,7 +1399,11 @@ async function fetchPriceWithFirecrawl(
   }
   
   const location = getFirecrawlLocation(preferredCurrency);
-  console.log(`Fetching with Firecrawl: ${productUrl} (location: ${location.country})`);
+  
+  console.log('=== FIRECRAWL REQUEST ===');
+  console.log('URL:', productUrl);
+  console.log('Location:', location.country);
+  console.log('Currency:', preferredCurrency);
   
   // For Creality stores, disable onlyMainContent as their pricing section is often excluded
   const isCreality = productUrl.includes('store.creality.com');
@@ -1443,7 +1476,14 @@ async function fetchPriceWithFirecrawl(
       };
     }
     
-    console.log(`Firecrawl returned ${markdown.length} chars of content`);
+    console.log('=== FIRECRAWL RESPONSE ===');
+    console.log('Markdown length:', markdown?.length);
+    console.log('First 2000 chars of markdown:', markdown?.substring(0, 2000));
+    console.log('Contains $18.99:', markdown?.includes('$18.99'));
+    console.log('Contains $24.99:', markdown?.includes('$24.99'));
+    console.log('Contains $29.99:', markdown?.includes('$29.99'));
+    console.log('Contains "Hyper ABS":', markdown?.includes('Hyper ABS'));
+    console.log('Contains "Add to Cart":', markdown?.includes('Add to Cart'));
     
     // Check for 404/not found content BEFORE extracting prices
     if (is404Content(markdown)) {
