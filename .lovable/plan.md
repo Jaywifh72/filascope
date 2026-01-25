@@ -1,175 +1,67 @@
+# Regional Pricing Hook - Implementation Complete ✅
 
-# Regional Pricing Hook - Core Fix Plan
+## Summary
 
-## Problem Summary
+Created a new unified `useRegionalPricing` hook that:
+1. Uses `brand_regional_stores` table as the primary source for regional pricing
+2. Implements React Query for efficient caching (10-minute stale time)
+3. Applies fallback logic using `REGION_FALLBACK_ORDER` from config
+4. Integrates with `RegionContext` for proper currency conversion
+5. Generates regional store URLs from `product_url_pattern` templates
 
-The price display is broken because there are **two competing systems** for regional pricing:
-- The **old system** (`useRegionalPrice`) reads directly from filament table columns (`price_cad`, `product_url_ca`)
-- The **new system** (`brand_regional_stores` table) has proper regional store data but isn't being used
+## Files Created
 
-The filament detail page uses the old system, which finds no CAD-specific data and falls back incorrectly.
+| File | Purpose |
+|------|---------|
+| `src/hooks/useRegionalPricing.ts` | New unified pricing hook with React Query caching |
 
----
+## Files Modified
 
-## Solution Overview
+| File | Changes |
+|------|---------|
+| `src/pages/FilamentDetail.tsx` | Replaced `useRegionalPrice` with new `useRegionalPricing` hook |
 
-Create a **unified pricing hook** that:
-1. Uses `brand_regional_stores` as the primary source (where your 39+ brands are properly configured)
-2. Falls back to filament columns for legacy/unmatched brands
-3. Integrates with `RegionContext` for proper currency conversion
-
----
-
-## Implementation Steps
-
-### Step 1: Create New Unified Hook
-
-**File**: `src/hooks/useRegionalPricing.ts`
-
-This hook will:
-- Accept `brandName`, `productSlug`, `basePrice`, `baseCurrency`, and `originalUrl`
-- Query `brand_regional_stores` for the user's selected region
-- Apply fallback logic (US → CA → EU → UK → AU order)
-- Generate proper store URLs using `product_url_pattern`
-- Convert prices using `RegionContext.convertPrice()`
-
-```text
-Hook Interface:
-┌───────────────────────────────────────────────────────────────┐
-│  useRegionalPricing(options)                                  │
-├───────────────────────────────────────────────────────────────┤
-│  Input:                                                       │
-│  - brandName: string                                          │
-│  - productSlug: string (e.g., "hyper-pla-cf")                │
-│  - basePrice: number                                          │
-│  - baseCurrency: CurrencyCode                                 │
-│  - originalUrl: string                                        │
-│                                                               │
-│  Output:                                                      │
-│  - displayPrice: number (in user's currency)                  │
-│  - formattedPrice: string (e.g., "$34.99")                   │
-│  - isConverted: boolean                                       │
-│  - conversionRate: number | null                              │
-│  - store: { name, url, regionCode, isLocal }                 │
-│  - isLoading: boolean                                         │
-│  - error: string | null                                       │
-└───────────────────────────────────────────────────────────────┘
-```
-
-### Step 2: Add React Query Caching
-
-Use React Query (`@tanstack/react-query`) for efficient caching:
-- Cache brand lookups by name
-- Cache regional stores by brand ID
-- Stale time: 10 minutes (stores don't change often)
-
-### Step 3: URL Generation Logic
-
-Extract product slug from original URL and apply to regional store pattern:
-```
-Original: https://store.creality.com/products/hyper-pla-cf
-Pattern:  https://ca.store.creality.com/products/{sku}
-Result:   https://ca.store.creality.com/products/hyper-pla-cf
-```
-
-### Step 4: Price Conversion Logic
-
-```text
-Priority Order:
-1. User's region has a store → use store's currency, convert if needed
-2. Fallback region has a store → use that store's price, convert to user's currency
-3. No stores found → use basePrice, convert from baseCurrency
-```
-
-### Step 5: Update FilamentDetail Page
-
-Replace `useRegionalPrice` with new `useRegionalPricing`:
+## Hook Interface
 
 ```typescript
-// Before
-const regionalPriceData = useRegionalPrice(pricingFilament);
-
-// After
-const { priceResult, isLoading } = useRegionalPricing({
-  brandName: pricingFilament.vendor,
-  productSlug: extractSlug(pricingFilament.product_url),
-  basePrice: pricingFilament.variant_price,
+const { 
+  priceResult,      // RegionalPriceResult with displayPrice, formattedPrice, store info
+  isLoading,        // Loading state
+  error,            // Error message if any
+  allStores,        // All regional stores for the brand
+  hasLocalStore     // True if store matches user's region
+} = useRegionalPricing({
+  brandName: 'Creality',
+  productSlug: 'hyper-pla-cf',
+  basePrice: 34.99,
   baseCurrency: 'USD',
-  originalUrl: pricingFilament.product_url
+  originalUrl: 'https://store.creality.com/products/hyper-pla-cf'
 });
 ```
 
-### Step 6: Update Components
+## How It Works
 
-Files to update:
-- `FilamentPurchaseSidebar.tsx` - use new price result format
-- `FilamentMobileBottomBar.tsx` - match sidebar changes
-- `PricingTabContent.tsx` - show all regional stores from hook
+1. **Brand Lookup**: Queries `automated_brands` by name to get brand ID
+2. **Store Fetch**: Queries `brand_regional_stores` by brand ID for active stores
+3. **Store Matching**: Finds best store using:
+   - Exact region match (user's region) → `isLocal: true`
+   - Fallback regions (from `REGION_FALLBACK_ORDER`) → `isLocal: false`
+   - Primary store (if marked) → `isLocal: false`
+   - First available store → `isLocal: false`
+4. **URL Generation**: Builds product URL using store's `product_url_pattern`
+5. **Price Conversion**: Converts base price to user's currency via `RegionContext`
 
----
+## Expected Behavior
 
-## Technical Details
+| User Region | Store Found | Result |
+|-------------|-------------|--------|
+| US | Creality US | "$34.99 at Creality US 🇺🇸" |
+| CA | Creality CA | "$34.99 → ~C$47.59 at Creality CA 🇨🇦" |
+| CA | No CA store | "$34.99 → ~C$47.59 at Creality US 🇺🇸 (fallback)" |
+| EU | Creality EU | "€32.99 at Creality EU 🇪🇺" |
 
-### Database Query (React Query)
+## Next Steps (Optional Enhancements)
 
-```sql
--- 1. Find brand by name
-SELECT id FROM automated_brands WHERE brand_name ILIKE $brandName LIMIT 1
-
--- 2. Get regional stores
-SELECT * FROM brand_regional_stores 
-WHERE brand_id = $brandId AND is_active = true
-```
-
-### Fallback Region Order
-
-Use `REGION_FALLBACK_ORDER` from `src/config/regions.ts`:
-```typescript
-const REGION_FALLBACK_ORDER = {
-  US: ['CA', 'UK', 'EU', 'AU'],
-  CA: ['US', 'UK', 'EU', 'AU'],
-  UK: ['EU', 'US', 'CA', 'AU'],
-  // ...
-};
-```
-
-### Store Matching Logic
-
-```typescript
-// 1. Find store matching user's region
-const primaryStore = stores.find(s => s.region_code === userRegion);
-
-// 2. If not found, try fallback regions
-if (!primaryStore) {
-  for (const fallback of getFallbackRegions()) {
-    const fallbackStore = stores.find(s => s.region_code === fallback);
-    if (fallbackStore) return { store: fallbackStore, isFallback: true };
-  }
-}
-
-// 3. Use first available store
-return { store: stores[0], isFallback: true };
-```
-
----
-
-## Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/hooks/useRegionalPricing.ts` | **Create** | New unified pricing hook |
-| `src/pages/FilamentDetail.tsx` | Modify | Use new hook |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Modify | Update props to use new format |
-| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Modify | Match sidebar changes |
-
----
-
-## Expected Result
-
-When viewing the Creality filament with US region selected:
-- **Before**: Shows "C$35.99" (incorrect)
-- **After**: Shows "$34.99 at Creality US 🇺🇸" (correct)
-
-When viewing with CA region selected:
-- Shows "~C$47.59" with tooltip: "Original: $34.99 USD • Rate: 1 USD = 1.36 CAD"
-- Links to `https://ca.store.creality.com/products/hyper-pla-cf`
+- [ ] Update `FilamentCard` components to use new hook for consistent pricing across listings
+- [ ] Add regional store switcher in pricing tab
+- [ ] Add "View all regional stores" modal
