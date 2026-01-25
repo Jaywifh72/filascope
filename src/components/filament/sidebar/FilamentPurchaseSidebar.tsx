@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   ShoppingCart, 
   ExternalLink, 
@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { MaterialBadge } from '@/components/MaterialBadge';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
-import { useCurrentPrice } from '@/hooks/useCurrentPrice';
+import { useCurrentPrice, invalidatePriceCache } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
 import { getShippingRule } from '@/lib/pricingRules';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
@@ -112,6 +112,9 @@ export function FilamentPurchaseSidebar({
 
   // Track if live price was fetched on-demand
   const [onDemandLivePrice, setOnDemandLivePrice] = useState<LivePriceFetchResult | null>(null);
+  
+  // State to force re-fetch after admin refresh
+  const [priceRefreshKey, setPriceRefreshKey] = useState(0);
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
@@ -124,6 +127,18 @@ export function FilamentPurchaseSidebar({
     
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
   };
+  
+  // Handler for admin price refresh - invalidates cache and triggers re-fetch
+  const handleAdminRefresh = useCallback(() => {
+    if (productUrl) {
+      invalidatePriceCache(productUrl);
+    }
+    if (originalUsUrl) {
+      invalidatePriceCache(originalUsUrl);
+    }
+    // Force a re-render by incrementing key
+    setPriceRefreshKey(prev => prev + 1);
+  }, [productUrl, originalUsUrl]);
 
   const handleLivePriceFetched = (result: LivePriceFetchResult) => {
     setOnDemandLivePrice(result);
@@ -248,6 +263,9 @@ export function FilamentPurchaseSidebar({
                 size="lg"
                 showCTA={false}
                 showPerKg={true}
+                filamentId={filamentId}
+                productUrl={productUrl || undefined}
+                onAdminRefresh={handleAdminRefresh}
               />
               
               {/* Compare at price (sale indicator) */}
