@@ -146,53 +146,71 @@ const DEFAULT_EXCLUDE_PATTERNS = [
   'student\\s*discount',   // Student discount sections
 ];
 
-// Remove "Save $X.XX" patterns from text to avoid capturing savings as prices
+// CRITICAL: Remove "Save $X.XX" patterns from text BEFORE extracting prices
+// This prevents capturing savings amounts as product prices
 function removeSavingsAmounts(text: string): string {
-  // Remove "Save $X.XX" patterns directly
-  let cleaned = text.replace(/Save\s*\$[\d,.]+/gi, '[SAVINGS_REMOVED]');
-  // Remove "Saving $X.XX" patterns
-  cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, '[SAVINGS_REMOVED]');
-  // Remove "$X off" patterns
-  cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, '[SAVINGS_REMOVED]');
+  // Step 1: Remove "Save $X.XX" patterns completely
+  let cleaned = text.replace(/Save\s*\$[\d,.]+/gi, ' ');
+  // Step 2: Remove "Saving $X.XX" patterns
+  cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, ' ');
+  // Step 3: Remove "$X off" patterns  
+  cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, ' ');
+  // Step 4: Remove "$X discount" patterns
+  cleaned = cleaned.replace(/\$[\d,.]+\s*discount/gi, ' ');
+  // Step 5: Remove "coupon" related prices
+  cleaned = cleaned.replace(/\$[\d,.]+\s*coupon/gi, ' ');
   return cleaned;
 }
 
-// Extract prices using the Creality/common sale format: "$18.99 $34.25 Save $15.26"
-// Returns the FIRST price (sale price) that appears BEFORE any "Save" text
+// Extract prices from text, ensuring we NEVER capture savings amounts
+// Format: "$18.99 $34.25 Save $15.26" -> returns salePrice=18.99, compareAtPrice=34.25
 function extractSalePriceBeforeSave(text: string): {
   salePrice: number | null;
   compareAtPrice: number | null;
 } {
-  // Pattern: $SALE $ORIGINAL Save $SAVINGS (Creality format)
-  // We want the first price, the second is compare-at, third is savings (ignore)
-  const salePricePattern = /\$(\d+(?:\.\d{2})?)\s+\$(\d+(?:\.\d{2})?)\s+Save/i;
-  const match = text.match(salePricePattern);
+  console.log('extractSalePriceBeforeSave input sample:', text.substring(0, 300));
   
-  if (match) {
-    const price1 = parseFloat(match[1]);
-    const price2 = parseFloat(match[2]);
-    // First price is sale, second is original (strikethrough)
-    console.log(`Matched Creality sale format: sale=$${price1}, original=$${price2}`);
-    return { salePrice: price1, compareAtPrice: price2 };
+  // STEP 1: Clean the text by removing savings patterns FIRST
+  const cleanedText = removeSavingsAmounts(text);
+  console.log('After removing savings:', cleanedText.substring(0, 300));
+  
+  // STEP 2: Extract all dollar amounts from the CLEANED text
+  const priceMatches = cleanedText.match(/\$(\d+\.?\d*)/g);
+  
+  if (!priceMatches || priceMatches.length === 0) {
+    console.log('No prices found in cleaned text');
+    return { salePrice: null, compareAtPrice: null };
   }
   
-  // Alternative: just find first price that's NOT after "Save"
-  // Split by "Save" and take prices from the first part only
-  const beforeSave = text.split(/Save\s*\$/i)[0];
-  const pricesBeforeSave = [...beforeSave.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
-    .map(m => parseFloat(m[1]));
+  // Parse all found prices
+  const prices = priceMatches
+    .map(p => parseFloat(p.replace('$', '')))
+    .filter(p => !isNaN(p) && p > 0);
   
-  if (pricesBeforeSave.length >= 2) {
-    // Assume first is sale, second is original
-    const [sale, original] = pricesBeforeSave;
-    if (sale < original) {
-      return { salePrice: sale, compareAtPrice: original };
+  console.log('Extracted prices from cleaned text:', prices);
+  
+  if (prices.length === 0) {
+    return { salePrice: null, compareAtPrice: null };
+  }
+  
+  // STEP 3: The first price is typically the sale/current price
+  // If there are two prices and the first is less than the second, that confirms it
+  if (prices.length >= 2) {
+    const [first, second] = prices;
+    if (first < second) {
+      // First is sale price, second is compare-at (original)
+      console.log(`Identified: salePrice=$${first}, compareAtPrice=$${second}`);
+      return { salePrice: first, compareAtPrice: second };
+    } else if (second < first) {
+      // Second is sale price, first is compare-at
+      console.log(`Identified (reversed): salePrice=$${second}, compareAtPrice=$${first}`);
+      return { salePrice: second, compareAtPrice: first };
     }
-  } else if (pricesBeforeSave.length === 1) {
-    return { salePrice: pricesBeforeSave[0], compareAtPrice: null };
   }
   
-  return { salePrice: null, compareAtPrice: null };
+  // Single price or equal prices - just return the first
+  console.log(`Single/equal price: $${prices[0]}`);
+  return { salePrice: prices[0], compareAtPrice: null };
 }
 
 // Apply configured price patterns to markdown content
