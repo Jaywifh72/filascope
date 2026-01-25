@@ -66,11 +66,11 @@ export function PriceWithFreshness({
     const timeAgo = formatDistanceToNow(verifiedDate, { addSuffix: false });
     
     switch (confidence) {
-      case 'high': return `Verified ${timeAgo} ago`;
+      case 'high': return `Checked ${timeAgo} ago`;
       case 'medium': return `Checked ${timeAgo} ago`;
-      case 'low': return `Last checked ${timeAgo} ago`;
-      case 'stale': return `May be outdated (${timeAgo} ago)`;
-      default: return 'Verification status unknown';
+      case 'low': return `Last checked ${timeAgo} ago - may have changed`;
+      case 'stale': return `Outdated (${timeAgo} ago) - verify at store`;
+      default: return 'No recent price data';
     }
   };
 
@@ -130,14 +130,14 @@ export function PriceWithFreshness({
                 <FreshnessContent />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[240px]">
+            <TooltipContent side="bottom" className="max-w-[260px]">
               <div className="space-y-2 text-xs">
                 <p className="font-medium capitalize">
-                  Price confidence: {confidence}
+                  Data freshness: {confidence === 'unknown' ? 'Unknown' : confidence}
                 </p>
                 {isValidDate && (
                   <p className="text-muted-foreground">
-                    Last verified: {verifiedDate.toLocaleDateString()} at {verifiedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    Last checked: {verifiedDate.toLocaleDateString()} at {verifiedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 )}
                 {priceSource && (
@@ -146,7 +146,9 @@ export function PriceWithFreshness({
                   </p>
                 )}
                 <p className="text-muted-foreground pt-1 border-t border-border/40">
-                  Click "Buy Now" to see the current store price
+                  {confidence === 'high' || confidence === 'medium'
+                    ? 'Prices may still vary — click "Buy Now" to verify'
+                    : 'This price may have changed. We recommend checking the store for the current price.'}
                 </p>
               </div>
             </TooltipContent>
