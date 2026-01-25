@@ -11,6 +11,8 @@ async function validateProductUrl(url: string): Promise<{
   finalUrl?: string;
   productFound: boolean;
   message: string;
+  /** Suggested replacement URL if redirect points to valid product page */
+  suggestedUrl?: string;
 }> {
   try {
     const controller = new AbortController();
@@ -62,9 +64,16 @@ async function validateProductUrl(url: string): Promise<{
           finalUrl,
           productFound: false,
           message: `Redirected to ${isHomepage ? 'homepage' : 'collection'} instead of product page`,
+          suggestedUrl: undefined, // No suggestion for bad redirects
         };
       }
     }
+    
+    // If redirected to a valid product page, suggest it as replacement
+    const isValidProductRedirect = wasRedirected && 
+      (finalUrl.includes('/products/') || finalUrl.includes('/product/')) &&
+      !finalUrl.includes('/collections/');
+    const suggestedUrl = isValidProductRedirect ? finalUrl : undefined;
 
     // Try to verify product exists in page content
     const text = await response.text();
@@ -101,6 +110,7 @@ async function validateProductUrl(url: string): Promise<{
       finalUrl,
       productFound: hasProductContent,
       message: hasProductContent ? 'Valid product page' : 'Page found but product content not detected',
+      suggestedUrl,
     };
 
   } catch (error) {
@@ -180,6 +190,7 @@ Deno.serve(async (req) => {
       productFound: boolean;
       message: string;
       finalUrl?: string;
+      suggestedUrl?: string;
     }[] = [];
 
     let validCount = 0;
@@ -194,7 +205,7 @@ Deno.serve(async (req) => {
 
       const validation = await validateProductUrl(filament.product_url);
 
-      // Update database
+      // Update database - also store suggested URL in url_validation_results if available
       const { error: updateError } = await supabase
         .from('filaments')
         .update({
@@ -206,6 +217,24 @@ Deno.serve(async (req) => {
       if (updateError) {
         console.error('Update error:', updateError);
       }
+      
+      // Upsert to url_validation_results with suggested URL
+      if (validation.suggestedUrl) {
+        await supabase
+          .from('url_validation_results')
+          .upsert({
+            entity_type: 'filament',
+            entity_id: filament.id,
+            url_field: 'product_url',
+            url: filament.product_url,
+            status: validation.status,
+            status_code: validation.status === 'valid' ? 200 : validation.status === 'not_found' ? 404 : null,
+            redirect_url: validation.suggestedUrl,
+            checked_at: new Date().toISOString(),
+          }, {
+            onConflict: 'entity_type,entity_id,url_field',
+          });
+      }
 
       results.push({
         id: filament.id,
@@ -216,6 +245,7 @@ Deno.serve(async (req) => {
         productFound: validation.productFound,
         message: validation.message,
         finalUrl: validation.finalUrl,
+        suggestedUrl: validation.suggestedUrl,
       });
 
       // Count results

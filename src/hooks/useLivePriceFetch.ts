@@ -104,16 +104,48 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
     setError(null);
 
     try {
-      // First try the primary URL
-      let { data, error: fetchError } = await fetchFromUrl(productUrl);
+      // Check if there's a known redirect URL in cache before trying primary URL
+      let urlToTry = productUrl;
+      let cachedRedirectUrl: string | null = null;
+      
+      try {
+        const { data: cachedValidation } = await supabase
+          .from('url_validation_cache')
+          .select('redirect_url, status')
+          .eq('url', productUrl)
+          .maybeSingle();
+        
+        // If we have a cached redirect to a valid product page, use it first
+        if (cachedValidation?.status === 'redirect' && cachedValidation?.redirect_url) {
+          cachedRedirectUrl = cachedValidation.redirect_url;
+          urlToTry = cachedRedirectUrl;
+          console.log('Using cached redirect URL:', urlToTry);
+        }
+      } catch (cacheErr) {
+        // Cache check failed, continue with original URL
+        console.log('Cache check failed, using original URL');
+      }
+
+      // First try the primary URL (or cached redirect)
+      let { data, error: fetchError } = await fetchFromUrl(urlToTry);
 
       // Detect 404 errors
       const is404Error = data?.error?.includes('404') || 
                          data?.error?.includes('HTTP 404') ||
                          data?.error?.toLowerCase().includes('not found');
       
+      // If 404 and we used a cached redirect, try original URL
+      if (is404Error && cachedRedirectUrl && urlToTry === cachedRedirectUrl) {
+        console.log('Cached redirect failed, trying original URL');
+        const originalResult = await fetchFromUrl(productUrl);
+        if (originalResult.data?.success) {
+          data = originalResult.data;
+          fetchError = originalResult.error;
+        }
+      }
+      
       // If 404 and fallback exists, try fallback
-      if (is404Error && fallbackUrl && fallbackUrl !== productUrl) {
+      if (is404Error && fallbackUrl && fallbackUrl !== productUrl && fallbackUrl !== urlToTry) {
         const fallbackResult = await fetchFromUrl(fallbackUrl);
         // Only use fallback if it succeeds
         const fallbackIs404 = fallbackResult.data?.error?.includes('404') ||
