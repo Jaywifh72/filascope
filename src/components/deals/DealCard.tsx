@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingDown, Share2, Eye, Clock, AlertTriangle } from "lucide-react";
+import { TrendingDown, Share2, Eye, Clock, AlertTriangle, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { DealShareModal } from "./DealShareModal";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
+import { formatDistanceToNow } from "date-fns";
 
 export interface DealFilament {
   id: string;
@@ -19,6 +20,8 @@ export interface DealFilament {
   variant_compare_at_price: number | null;
   product_url: string | null;
   net_weight_g: number | null;
+  last_scraped_at?: string | null;
+  created_at?: string | null;
 }
 
 interface DealCardProps {
@@ -47,7 +50,21 @@ export function DealCard({
     setShareOpen(true);
   };
 
+  const handleCheckPrice = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (deal.product_url) {
+      window.open(deal.product_url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const showUrgency = expiresIn || stockStatus === "low_stock" || stockStatus === "limited";
+  
+  // Calculate when the price was captured
+  const priceVerifiedAt = deal.last_scraped_at || deal.created_at;
+  const priceAgeText = priceVerifiedAt 
+    ? formatDistanceToNow(new Date(priceVerifiedAt), { addSuffix: true })
+    : null;
 
   return (
     <>
@@ -107,9 +124,20 @@ export function DealCard({
                 />
                 
                 {/* Savings */}
-                <div className="text-xs text-green-400 mb-3 flex items-center gap-1">
+                <div className="text-xs text-green-400 mb-2 flex items-center gap-1">
                   Save <RegionalPrice amount={savings} sourceCurrency="USD" size="sm" variant="sale" showTooltip={false} />
                 </div>
+
+                {/* Price Freshness */}
+                {priceAgeText && (
+                  <Badge
+                    variant="outline"
+                    className="gap-1 text-[10px] border-muted bg-muted/30 text-muted-foreground mb-2"
+                  >
+                    <Clock className="h-3 w-3" />
+                    Found {priceAgeText}
+                  </Badge>
+                )}
               </>
             )}
             {/* Urgency Indicators */}
@@ -144,9 +172,22 @@ export function DealCard({
               </div>
             )}
 
+            {/* Check Current Price CTA */}
+            {deal.product_url && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-3 gap-2 text-xs"
+                onClick={handleCheckPrice}
+              >
+                Check Current Price
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            )}
+
             {/* Material Badge */}
-            {deal.material && !showUrgency && !viewsToday && (
-              <Badge variant="secondary" className="mt-1 text-xs">
+            {deal.material && !showUrgency && !viewsToday && !deal.product_url && (
+              <Badge variant="secondary" className="mt-2 text-xs">
                 {deal.material}
               </Badge>
             )}
