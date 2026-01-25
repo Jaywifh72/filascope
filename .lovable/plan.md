@@ -1,210 +1,224 @@
 
-# Honest Price Display Transformation Plan
+# Admin Tool for Broken Product URL Detection and Fixing
 
 ## Overview
 
-Transform the price display system from showing potentially inaccurate "exact" prices to an honest, confidence-based approach that sets correct user expectations while still providing value. The core principle: **be honest about what we know and don't know**.
+This plan extends the existing URL validation system to provide better detection of 404 errors during live price checks and integrate URL issue reporting into the user-facing product pages. The project already has robust infrastructure for URL validation—this enhancement focuses on:
+
+1. **Integrating 404 detection into the live price fetch workflow** (user-facing)
+2. **Adding a "Report broken URL" feature** for end users
+3. **Enhancing the existing admin Broken Link Monitor** with the specific Creality use case
+
+## Technical Context
+
+The project already has:
+- **`validate-url` Edge Function**: HEAD request validation with caching
+- **`validate-filament-urls` Edge Function**: Batch validation of filament product URLs
+- **`fix-filament-url` Edge Function**: URL repair with brand-specific mappings and Shopify discovery
+- **`test-url` Edge Function**: Admin URL testing with SSRF protection
+- **`url_validation_results` table**: Tracks broken links with manual verification support
+- **`url_validation_cache` table**: 24-hour cache for URL validation results
+- **`AdminBrokenLinks` page**: Full admin dashboard with tabs for categories
 
 ---
 
-## Current Problem Analysis
+## Implementation Tasks
 
-Based on the investigation of product `5d9dde33-21a9-4ad3-adb8-4249c65994be`:
+### 1. Add Creality URL Mappings to fix-filament-url
 
-| Issue | Current State | Impact |
-|-------|--------------|--------|
-| Price accuracy | Shows $34.99, actual store price is $18.99 (sale) or $34.25 (regular) | Users feel misled |
-| Data freshness | Price last scraped 18+ days ago | Stale data presented as current |
-| Confidence distribution | 71% of products have "low" confidence | Most prices are unreliable |
-| CTA wording | "BUY NOW" implies ready transaction | Sets wrong expectations |
+Update the existing Edge Function to handle Creality-specific URL patterns.
 
----
+**File**: `supabase/functions/fix-filament-url/index.ts`
 
-## Solution: Confidence-Based Display Strategy
-
-### Display Logic Based on Confidence Level
-
-| Confidence | Age | Display Approach |
-|------------|-----|------------------|
-| **High** | < 24 hours | Show specific price with green indicator |
-| **Medium** | 1-7 days | Show price with "~" prefix and blue indicator |
-| **Low** | 7-30 days | Show "Estimated" label with amber warning |
-| **Stale/Unknown** | > 30 days or none | Show "Price varies" with CTA to check store |
-
----
-
-## Implementation Details
-
-### Step 1: Create HonestPriceDisplay Component
-
-**New File: `src/components/price/HonestPriceDisplay.tsx`**
-
-A new unified component that intelligently displays pricing based on confidence:
-
-**Component Props:**
-- `price: number | null` - The database price
-- `confidence: PriceConfidence` - Freshness level
-- `lastVerifiedAt: string | Date | null` - Timestamp
-- `storeName: string` - Retailer name for CTA
-- `storeUrl: string | null` - Link to store
-- `isConverted: boolean` - If currency was converted
-- `currency: string` - Display currency
-
-**Rendering Logic:**
-
-1. **High Confidence (< 24h):**
-   - Shows bold price with green checkmark
-   - Label: "Current price"
-   - Small text: "Verified today"
-
-2. **Medium Confidence (1-7 days):**
-   - Shows price with "~" prefix (approximate)
-   - Label: "Recent price"
-   - Small text: "Last checked X days ago"
-
-3. **Low Confidence (7-30 days):**
-   - Shows price in muted styling
-   - Label: "Estimated price"
-   - Warning: "May have changed - verify at store"
-   - Prominent CTA button
-
-4. **Stale/Unknown (> 30 days):**
-   - No specific price shown
-   - Icon + "Price varies"
-   - Subtext: "Check {storeName} for current pricing"
-   - Primary action: "View at {storeName}" button
-
-### Step 2: Update FilamentPurchaseSidebar
-
-**File: `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`**
-
-**Changes:**
-1. Replace current price display section with `<HonestPriceDisplay />` component
-2. Change "BUY NOW" CTA text based on confidence:
-   - High/Medium: "Buy Now" (standard)
-   - Low/Stale: "Check Current Price" (sets expectations)
-3. Add external link icon to all purchase CTAs
-4. Remove any "Live price" terminology
-5. Keep the existing conversion tooltip logic for regional prices
-
-### Step 3: Update FilamentHeroPurchaseCard
-
-**File: `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`**
-
-**Changes:**
-1. Replace large price display with confidence-aware version
-2. For stale prices, show a helpful message instead of potentially wrong number
-3. Update CTA button text to match sidebar logic
-4. Ensure mobile/desktop parity
-
-### Step 4: Update FilamentMobileBottomBar
-
-**File: `src/components/filament/sidebar/FilamentMobileBottomBar.tsx`**
-
-**Changes:**
-1. Use compact version of `HonestPriceDisplay`
-2. Update button text based on confidence
-3. Ensure touch-friendly sizing maintained
-
-### Step 5: Update PriceWithFreshness Component
-
-**File: `src/components/price/PriceWithFreshness.tsx`**
-
-**Changes:**
-1. Add support for "stale mode" where price is hidden
-2. Update freshness text to be more explicit about uncertainty
-3. Remove any "Verified" language for stale prices (misleading)
-4. Add helper text encouraging users to check current price
-
-### Step 6: Update PriceFreshnessIndicator 
-
-**File: `src/components/price/PriceFreshnessIndicator.tsx`**
-
-**Changes:**
-1. Update labels for better clarity:
-   - High: "Updated today" (keep)
-   - Medium: "Updated this week" (clearer)
-   - Low: "Last checked {X} ago - may be outdated"
-   - Stale: "Price data outdated - verify at store"
-2. Add more actionable tooltip text
-3. For unknown: "No price data - check store"
-
----
-
-## Visual Design Specifications
-
-### High Confidence Display
-```text
-┌─────────────────────────────────────┐
-│  Current price                      │
-│  $34.99 /kg                        │
-│  ✓ Updated today                    │
-│                                     │
-│  [═══════ BUY NOW ═══════]         │
-└─────────────────────────────────────┘
-```
-
-### Low Confidence Display
-```text
-┌─────────────────────────────────────┐
-│  Estimated price                    │
-│  ~$34.99 /kg                       │
-│  ⚠ Last checked 18 days ago        │
-│  Price may have changed             │
-│                                     │
-│  [══ Check Current Price ══]       │
-└─────────────────────────────────────┘
-```
-
-### Stale/Unknown Display
-```text
-┌─────────────────────────────────────┐
-│  💲 Price varies                    │
-│  Check Creality for current pricing │
-│                                     │
-│  [══ View at Creality ══]          │
-│  Prices change with sales and stock │
-└─────────────────────────────────────┘
-```
-
----
-
-## Technical Implementation
-
-### HonestPriceDisplay Component Structure
+Add Creality to the brand configs and URL mappings:
 
 ```typescript
-interface HonestPriceDisplayProps {
-  price: number | null;
-  confidence: PriceConfidence;
-  lastVerifiedAt: string | Date | null;
-  storeName: string;
-  storeUrl: string | null;
-  isConverted?: boolean;
-  currency?: string;
-  conversionTooltip?: string | null;
-  onBuyClick?: () => void;
-  size?: 'sm' | 'md' | 'lg';
-  showCTA?: boolean;
+// Add to ACCESSORY_URL_MAPPINGS or create FILAMENT_URL_MAPPINGS
+"Creality": {
+  "hyper-series-pla-carbon-fiber-3d-printing-filament": "hyper-pla-cf",
+  "hyper-series-pla-3d-printing-filament": "hyper-pla",
+  // Add more as discovered
+}
+
+// Add to BRAND_URL_PATTERNS for domain handling
+"Creality": {
+  pathTransform: (path: string) => {
+    // Creality sometimes changes product slugs
+    // Map old patterns to new
+    return path.replace('hyper-series-', 'hyper-');
+  }
 }
 ```
 
-**Key Logic:**
-1. Determine display mode based on confidence
-2. Format price with appropriate prefix (~, "from", or none)
-3. Select appropriate label and helper text
-4. Choose CTA text and styling
-5. Handle currency conversion indicators
+### 2. Enhance Live Price Fetch to Detect 404s
 
-### Button Text Mapping
+Update the `useLivePriceFetch` hook to surface 404 detection to the UI.
 
-| Confidence | Button Text | Button Style |
-|------------|-------------|--------------|
-| high | "Buy Now" | Primary gradient |
-| medium | "Buy Now" | Primary gradient |
-| low | "Check Current Price" | Primary outline |
-| stale | "View at {Store}" | Secondary |
-| unknown | "Find Price" | Outline |
+**File**: `src/hooks/useLivePriceFetch.ts`
+
+```typescript
+// Add new state to track 404 errors
+export interface LivePriceFetchResult {
+  // ... existing fields
+  urlStatus?: 'ok' | 'not_found' | 'error';
+  errorMessage?: string;
+}
+
+// Update fetchLivePrice to detect and return 404 status
+const is404Error = data?.error?.includes('404') || 
+                   data?.error?.includes('HTTP 404') ||
+                   data?.error?.includes('not found');
+
+if (is404Error) {
+  return {
+    price: null,
+    urlStatus: 'not_found',
+    errorMessage: 'Product page not found - URL may have changed',
+    // ... other fields
+  };
+}
+```
+
+### 3. Add "Report Broken URL" UI Component
+
+Create a reusable component for reporting broken URLs.
+
+**New File**: `src/components/price/BrokenUrlReport.tsx`
+
+```text
+┌─────────────────────────────────────────────────┐
+│  ⚠️ Product page not found                      │
+│                                                 │
+│  The URL for this product may have changed.     │
+│                                                 │
+│  [Report Broken URL]  [Go to Store Homepage →]  │
+└─────────────────────────────────────────────────┘
+```
+
+**Functionality**:
+- Shows when live price fetch returns 404
+- "Report Broken URL" button inserts into `url_validation_results` with status `broken`
+- "Go to Store Homepage" provides fallback navigation
+- Uses toast to confirm report submitted
+
+### 4. Integrate 404 UI into FilamentHeroPurchaseCard
+
+**File**: `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`
+
+Add conditional rendering after the price check:
+
+```typescript
+// When manual price check fails with 404
+{manualPriceError && manualLivePrice?.urlStatus === 'not_found' && (
+  <BrokenUrlReport
+    entityType="filament"
+    entityId={filamentId}
+    urlField="product_url"
+    currentUrl={productUrl}
+    productName={vendor}
+    onReported={() => toast.success("URL reported - thank you!")}
+  />
+)}
+```
+
+### 5. Create Backend Function for User URL Reports
+
+**New File**: `supabase/functions/report-broken-url/index.ts`
+
+Simple function that:
+- Accepts `entity_type`, `entity_id`, `url_field`, `url`
+- Upserts into `url_validation_results` with status `broken`
+- Does NOT require authentication (allows anonymous reports)
+- Rate-limits by IP to prevent abuse
+
+```typescript
+Deno.serve(async (req) => {
+  const { entityType, entityId, urlField, url } = await req.json();
+  
+  // Upsert broken URL report
+  await supabase.from('url_validation_results').upsert({
+    entity_type: entityType,
+    entity_id: entityId,
+    url_field: urlField,
+    url: url,
+    status: 'broken',
+    status_code: 404,
+    checked_at: new Date().toISOString(),
+    // Mark as user-reported for admin review
+  }, { onConflict: 'entity_type,entity_id,url_field' });
+  
+  return new Response(JSON.stringify({ success: true }));
+});
+```
+
+### 6. Add User Report Filter to Admin Dashboard
+
+Update the existing BrokenLinkSection to show user-reported URLs prominently.
+
+**File**: `src/components/admin/BrokenLinkSection.tsx`
+
+Add a "User Reported" tab that filters to:
+- Status = 'broken'
+- Recently added (last 7 days)
+- Not yet manually verified
+
+This helps admins prioritize user-discovered issues.
+
+---
+
+## Workflow Summary
+
+```text
+User visits product page
+         │
+         ▼
+┌─────────────────────────┐
+│ "Check Current Price"   │
+│  button clicked         │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ get-current-price       │
+│ Edge Function called    │
+└───────────┬─────────────┘
+            │
+     ┌──────┴──────┐
+     │             │
+     ▼             ▼
+┌─────────┐  ┌──────────────┐
+│ Success │  │ 404 Error    │
+│ (price) │  │ detected     │
+└────┬────┘  └──────┬───────┘
+     │              │
+     ▼              ▼
+┌─────────────┐  ┌─────────────────────┐
+│ Show live   │  │ Show "URL not found"│
+│ price       │  │ + Report button     │
+└─────────────┘  └──────────┬──────────┘
+                            │
+                    User clicks "Report"
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │ report-broken-url   │
+                 │ Edge Function       │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │ url_validation_     │
+                 │ results table       │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │ Admin reviews in    │
+                 │ Broken Link Monitor │
+                 │ → Uses fix-filament │
+                 │ -url to repair      │
+                 └─────────────────────┘
+```
 
 ---
 
@@ -212,31 +226,30 @@ interface HonestPriceDisplayProps {
 
 | File | Purpose |
 |------|---------|
-| `src/components/price/HonestPriceDisplay.tsx` | Main confidence-aware price component |
+| `src/components/price/BrokenUrlReport.tsx` | UI for reporting/displaying 404 errors |
+| `supabase/functions/report-broken-url/index.ts` | Backend for user URL reports |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Integrate HonestPriceDisplay, update CTAs |
-| `src/components/filament/hero/FilamentHeroPurchaseCard.tsx` | Integrate HonestPriceDisplay, update CTAs |
-| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Use compact honest display |
-| `src/components/price/PriceWithFreshness.tsx` | Add stale mode, update language |
-| `src/components/price/PriceFreshnessIndicator.tsx` | Update labels for clarity |
+| `supabase/functions/fix-filament-url/index.ts` | Add Creality URL mappings |
+| `src/hooks/useLivePriceFetch.ts` | Add 404 detection and status in return type |
+| `src/components/filament/hero/FilamentHeroPurchaseCard.tsx` | Integrate BrokenUrlReport component |
+| `src/components/admin/BrokenLinkSection.tsx` | Add "User Reported" filter tab |
 
 ---
 
-## User Experience Benefits
+## Database Changes
 
-1. **Trust Building**: Honest communication builds long-term user trust
-2. **Reduced Frustration**: Users won't be surprised by different prices at store
-3. **Clear Expectations**: CTAs tell users what to expect (checking vs buying)
-4. **Value Preservation**: Still provides useful price guidance when data is fresh
-5. **Action-Oriented**: Always gives users a clear next step
+No new tables needed. The existing `url_validation_results` table already supports all required fields. May optionally add a `reported_by` column to distinguish user reports from automated scans, but this can be inferred from the absence of a `verified_by` value.
 
-## Backward Compatibility
+---
 
-- All existing props remain supported
-- Confidence calculation logic unchanged
-- Regional pricing and conversion still work
-- No database changes required
+## Benefits
+
+1. **Proactive detection**: Users encountering 404s can report them immediately
+2. **Faster fixes**: Admin dashboard surfaces user-reported issues for quick triage
+3. **Creality support**: Specific URL patterns handled automatically
+4. **No duplicate work**: Leverages existing `fix-filament-url` infrastructure for repairs
+5. **Graceful degradation**: Users see helpful fallback options when URLs fail
