@@ -5,6 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { RegionCode, CurrencyCode, RegionalPriceResult } from '@/types/regional';
 import { formatPrice } from '@/config/currencies';
 import { REGION_FALLBACK_ORDER, REGIONS } from '@/config/regions';
+import { 
+  fetchRegionalSlug, 
+  resolveRegionalSlug, 
+  RegionalSlugData 
+} from '@/utils/regionalSlugResolver';
 
 // ============================================================================
 // Types
@@ -21,6 +26,8 @@ interface UseRegionalPricingOptions {
   baseCurrency?: CurrencyCode;
   /** Original product URL for fallback */
   originalUrl: string | null;
+  /** Filament ID for regional slug lookup */
+  filamentId?: string | null;
 }
 
 interface BrandRegionalStoreRow {
@@ -44,6 +51,8 @@ interface RegionalPricingResult {
   error: string | null;
   allStores: BrandRegionalStoreRow[];
   hasLocalStore: boolean;
+  /** Whether the product slug has been verified for this region */
+  slugVerified: boolean;
 }
 
 // ============================================================================
@@ -200,6 +209,7 @@ export function useRegionalPricing({
   basePrice,
   baseCurrency = 'USD',
   originalUrl,
+  filamentId,
 }: UseRegionalPricingOptions): RegionalPricingResult {
   const { region, currency, convertPrice, getConversionRate } = useRegion();
   
@@ -219,7 +229,15 @@ export function useRegionalPricing({
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
   
-  const isLoading = brandLoading || storesLoading;
+  // Query 3: Fetch regional slug mapping (if filamentId provided)
+  const { data: regionalSlugData, isLoading: slugLoading } = useQuery({
+    queryKey: ['regional-slug', filamentId, region],
+    queryFn: () => fetchRegionalSlug(filamentId!, region),
+    enabled: !!filamentId && !!region,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+  
+  const isLoading = brandLoading || storesLoading || (!!filamentId && slugLoading);
   
   // Compute the result
   const result = useMemo((): RegionalPricingResult => {
@@ -231,8 +249,14 @@ export function useRegionalPricing({
         error: null,
         allStores: [],
         hasLocalStore: false,
+        slugVerified: false,
       };
     }
+    
+    // Resolve the effective slug for this region
+    const slugResolution = resolveRegionalSlug(regionalSlugData || null, productSlug);
+    const effectiveSlug = slugResolution.effectiveSlug;
+    const slugIsVerified = slugResolution.isVerified;
     
     // Find the best store for user's region
     const { store: matchedStore, isLocal } = findBestStore(stores, region);
@@ -246,6 +270,7 @@ export function useRegionalPricing({
           error: null,
           allStores: stores,
           hasLocalStore: false,
+          slugVerified: slugIsVerified,
         };
       }
       
@@ -277,14 +302,15 @@ export function useRegionalPricing({
         error: null,
         allStores: stores,
         hasLocalStore: false,
+        slugVerified: slugIsVerified,
       };
     }
     
-    // We have a matching store - build the URL
+    // We have a matching store - build the URL with resolved slug
     const storeUrl = buildRegionalUrl(
       matchedStore.product_url_pattern,
       matchedStore.base_url,
-      productSlug
+      effectiveSlug
     );
     
     const storeCurrency = matchedStore.currency_code as CurrencyCode;
@@ -316,6 +342,7 @@ export function useRegionalPricing({
         error: null,
         allStores: stores,
         hasLocalStore: isLocal,
+        slugVerified: slugIsVerified,
       };
     }
     
@@ -354,6 +381,7 @@ export function useRegionalPricing({
       error: null,
       allStores: stores,
       hasLocalStore: isLocal,
+      slugVerified: slugIsVerified,
     };
   }, [
     isLoading,
@@ -367,6 +395,7 @@ export function useRegionalPricing({
     brandName,
     convertPrice,
     getConversionRate,
+    regionalSlugData,
   ]);
   
   return result;
