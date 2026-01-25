@@ -68,6 +68,7 @@ const AdminExchangeRates = lazy(() => import("./pages/AdminExchangeRates"));
 const AdminStoreUrls = lazy(() => import("./pages/AdminStoreUrls"));
 const AdminPriceVerification = lazy(() => import("./pages/AdminPriceVerification"));
 const AdminBrandExtraction = lazy(() => import("./pages/AdminBrandExtraction"));
+const AdminBrokenUrls = lazy(() => import("./pages/AdminBrokenUrls"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -188,6 +189,7 @@ const App = () => (
                   <Route path="/admin/store-urls" element={<AdminStoreUrls />} />
                   <Route path="/admin/price-verification" element={<AdminPriceVerification />} />
                   <Route path="/admin/brand-extraction" element={<AdminBrandExtraction />} />
+                  <Route path="/admin/broken-urls" element={<AdminBrokenUrls />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />
