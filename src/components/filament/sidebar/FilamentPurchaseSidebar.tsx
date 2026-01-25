@@ -10,6 +10,7 @@ import {
   Calculator,
   GitCompare,
   Info,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MaterialBadge } from '@/components/MaterialBadge';
@@ -95,6 +96,7 @@ export function FilamentPurchaseSidebar({
     isConverted: isLivePriceConverted,
     originalCurrency: liveOriginalCurrency,
     conversionRate: liveConversionRate,
+    isSuspicious: isLivePriceSuspicious,
   } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
 
   // Determine the primary retailer name
@@ -164,6 +166,12 @@ export function FilamentPurchaseSidebar({
     : hasValidLivePrice 
       ? isLivePriceConverted 
       : false;
+  
+  // Check for price discrepancy (live price differs from estimated by >50%)
+  const priceDiscrepancy = hasValidLivePrice && pricePerSpool && pricePerSpool > 0 && livePrice
+    ? Math.abs((livePrice - pricePerSpool) / pricePerSpool)
+    : 0;
+  const isPriceSuspicious = isLivePriceSuspicious || (hasValidLivePrice && priceDiscrepancy > 0.5);
   
   // Calculate price per kg using proper weight
   const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
@@ -249,6 +257,14 @@ export function FilamentPurchaseSidebar({
                   <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
                     {Math.round((1 - livePrice / compareAtPrice) * 100)}% OFF
                   </span>
+                </div>
+              )}
+              
+              {/* Price discrepancy warning */}
+              {isPriceSuspicious && isLivePrice && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-500 bg-amber-500/10 px-2 py-1.5 rounded-md">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Price may be inaccurate — verify at store</span>
                 </div>
               )}
 

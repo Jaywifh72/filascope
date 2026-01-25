@@ -13,6 +13,8 @@ export interface LivePriceFetchResult {
   isConverted: boolean;
   fetchedAt: string | null;
   weightGrams: number | null;
+  /** Whether the price was flagged as suspicious but still returned */
+  isSuspicious?: boolean;
 }
 
 export interface UseLivePriceFetchReturn {
@@ -25,6 +27,18 @@ export interface UseLivePriceFetchReturn {
 
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 500;
+
+// Price validation: reasonable filament price range per spool
+const MIN_REASONABLE_PRICE = 3; // $3 minimum
+const MAX_REASONABLE_PRICE = 150; // $150 maximum (allows for multi-packs)
+
+/**
+ * Validate that a price is within reasonable range for filament products.
+ * This filters out promotional banners, coupon values, and extraction errors.
+ */
+function isReasonableFilamentPrice(price: number): boolean {
+  return price >= MIN_REASONABLE_PRICE && price <= MAX_REASONABLE_PRICE;
+}
 
 function isTransientError(error: any): boolean {
   if (!error) return false;
@@ -111,6 +125,15 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
         const rawCompareAtPrice = data.compareAtPrice;
         const rawCurrency = (data.currency as CurrencyCode) || 'USD';
         
+        // SANITY CHECK: Validate price is within reasonable range
+        const priceIsSuspicious = !isReasonableFilamentPrice(rawPrice);
+        if (priceIsSuspicious) {
+          console.warn(`Suspicious live price detected: $${rawPrice} - likely extraction error`);
+          setError('Price may be inaccurate');
+          setIsLoading(false);
+          return null;
+        }
+        
         const needsConversion = rawCurrency !== userCurrency;
         let convertedPrice = rawPrice;
         let convertedCompareAtPrice = rawCompareAtPrice;
@@ -131,6 +154,7 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           isConverted: needsConversion,
           fetchedAt: data.fetchedAt || new Date().toISOString(),
           weightGrams: data.weightGrams || null,
+          isSuspicious: false,
         };
 
         setLastResult(result);
