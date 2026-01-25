@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Check, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
+import { RefreshCw, Check, ExternalLink, AlertCircle, Loader2, AlertTriangle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLivePriceFetch, LivePriceFetchResult } from '@/hooks/useLivePriceFetch';
 import { useRegion } from '@/contexts/RegionContext';
@@ -10,18 +10,20 @@ interface LivePriceCheckButtonProps {
   fallbackUrl?: string | null;
   affiliateUrl?: string | null;
   storeName: string;
+  productName?: string; // For search fallback
   onPriceFetched?: (result: LivePriceFetchResult) => void;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
-type ButtonState = 'idle' | 'loading' | 'success' | 'error';
+type ButtonState = 'idle' | 'loading' | 'success' | 'error' | 'not_found';
 
 export function LivePriceCheckButton({
   productUrl,
   fallbackUrl,
   affiliateUrl,
   storeName,
+  productName,
   onPriceFetched,
   className,
   size = 'md',
@@ -56,8 +58,14 @@ export function LivePriceCheckButton({
     const result = await fetchLivePrice(productUrl, fallbackUrl);
     
     if (result) {
-      setButtonState('success');
-      onPriceFetched?.(result);
+      // Check if the result indicates a 404 error
+      if (result.urlStatus === 'not_found') {
+        setButtonState('not_found');
+        onPriceFetched?.(result);
+      } else {
+        setButtonState('success');
+        onPriceFetched?.(result);
+      }
     } else {
       setButtonState('error');
     }
@@ -142,6 +150,64 @@ export function LivePriceCheckButton({
         >
           <RefreshCw className="w-3 h-3 inline mr-1" />
           Check again
+        </button>
+      </div>
+    );
+  }
+
+  // Show 404/not found state - product page has moved
+  if (buttonState === 'not_found') {
+    // Extract store domain for search
+    let storeDomain = '';
+    try {
+      storeDomain = new URL(productUrl).hostname.replace('www.', '');
+    } catch {
+      storeDomain = storeName.toLowerCase().replace(/\s+/g, '') + '.com';
+    }
+    
+    // Create search URL - different stores have different search patterns
+    const searchQuery = productName || storeName;
+    const searchUrl = `https://${storeDomain}/search?q=${encodeURIComponent(searchQuery)}`;
+    
+    return (
+      <div className={cn("space-y-3", className)}>
+        {/* 404 Error Display */}
+        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span className="text-sm font-medium text-amber-400">
+              Product page has moved
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            This store may have updated their website. 
+            {productName && (
+              <> Try searching for "<span className="font-medium text-foreground/80">{productName}</span>".</>
+            )}
+          </p>
+        </div>
+        
+        {/* Search on Store Button */}
+        <Button
+          variant="outline"
+          onClick={() => window.open(searchUrl, '_blank', 'noopener,noreferrer')}
+          className={cn("w-full", sizeClasses[size])}
+        >
+          <Search className="w-4 h-4 mr-2" />
+          Search on {storeName}
+          <ExternalLink className="w-3.5 h-3.5 ml-2 opacity-70" />
+        </Button>
+        
+        {/* Try Again Option */}
+        <button
+          onClick={() => {
+            reset();
+            setButtonState('idle');
+          }}
+          className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <RefreshCw className="w-3 h-3 inline mr-1" />
+          Try again
         </button>
       </div>
     );
