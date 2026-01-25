@@ -14,16 +14,17 @@ import {
   ArrowDown,
   Clock,
   MapPin,
-  Truck,
   Info,
-  Globe
+  Globe,
+  AlertCircle
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useRegion } from '@/contexts/RegionContext';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { usePriceHistory } from '@/hooks/usePriceHistory';
 import { usePriceAlerts } from '@/hooks/usePriceAlerts';
-import { useRegionalPriceV2 } from '@/hooks/useRegionalPriceV2';
+import { useUnifiedRegionalPricing } from '@/hooks/useUnifiedRegionalPricing';
+import { PriceFreshnessIndicator, PriceFreshnessText } from '@/components/price/PriceFreshnessIndicator';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import type { Retailer } from '../hero/RetailersModal';
@@ -70,21 +71,33 @@ export function PricingTabContent({
   const { hasAlert, getAlert } = usePriceAlerts();
   const [priceAlertModalOpen, setPriceAlertModalOpen] = useState(false);
 
-  // Fetch regional stores for this brand
+  // Use unified regional pricing for stores and freshness
+  const unifiedPricing = useUnifiedRegionalPricing({
+    brandName: filament.vendor || '',
+    basePrice: pricePerSpool,
+    baseCurrency: 'USD',
+    productSlug: productSku || undefined,
+    originalUrl: productUrl,
+    filamentId: filament.id,
+    priceLastVerifiedAt: filament.last_scraped_at,
+    priceSource: filament.price_source,
+    priceConfidence: filament.price_confidence,
+  });
+
   const { 
     allStores, 
-    hasRegionalStore,
-    isLoading: storesLoading 
-  } = useRegionalPriceV2({
-    brandId: brandId || '',
-    basePrice: pricePerSpool || undefined,
-    baseCurrency: 'USD',
-  });
+    isLocalStore: hasRegionalStore,
+    isLoading: storesLoading,
+    priceConfidence,
+    lastVerifiedAt,
+    priceSource,
+    timeAgo: freshnessTimeAgo,
+  } = unifiedPricing;
 
   // Sort stores: user's region first
   const sortedStores = [...allStores].sort((a, b) => {
-    if (a.region_code === region) return -1;
-    if (b.region_code === region) return 1;
+    if (a.regionCode === region) return -1;
+    if (b.regionCode === region) return 1;
     return 0;
   });
 
@@ -163,6 +176,12 @@ export function PricingTabContent({
                 {priceLoading && (
                   <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
                 )}
+                {/* Price freshness indicator */}
+                <PriceFreshnessText 
+                  lastVerified={lastVerifiedAt?.toISOString()} 
+                  confidence={priceConfidence}
+                  className="ml-2"
+                />
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-white">
@@ -381,9 +400,9 @@ export function PricingTabContent({
             ) : (
               <div className="space-y-3">
                 {sortedStores.map((store) => {
-                  const isUserRegion = store.region_code === region;
-                  const storeRegion = REGIONS[store.region_code as keyof typeof REGIONS];
-                  const storeCurrency = store.currency_code as CurrencyCode;
+                  const isUserRegion = store.regionCode === region;
+                  const storeRegionConfig = REGIONS[store.regionCode as keyof typeof REGIONS];
+                  const storeCurrency = store.currencyCode as CurrencyCode;
                   const needsConversion = storeCurrency !== currency;
                   
                   // Get the base price in the store's native currency
@@ -400,9 +419,9 @@ export function PricingTabContent({
                   const displayPrice = nativePriceInStoreCurrency * storeToUserRate;
 
                   // Generate product-specific URL using interpolation
-                  const storeUrl = store.product_url_pattern && productSku
-                    ? interpolateProductUrl(store.product_url_pattern, productSku)
-                    : store.base_url;
+                  const storeUrl = store.productUrlPattern && productSku
+                    ? interpolateProductUrl(store.productUrlPattern, productSku)
+                    : store.baseUrl;
 
                   return (
                     <div 
@@ -417,11 +436,11 @@ export function PricingTabContent({
                     >
                       <div className="flex items-center gap-3">
                         {/* Store Region Flag */}
-                        <span className="text-2xl">{storeRegion?.flag}</span>
+                        <span className="text-2xl">{store.flag}</span>
                         
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{store.store_name}</span>
+                            <span className="font-medium">{store.storeName}</span>
                             {isUserRegion && (
                               <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
                                 Local
@@ -429,14 +448,14 @@ export function PricingTabContent({
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground flex items-center gap-2">
-                            {store.ships_from_country && (
+                            {store.shipsFrom && (
                               <>
                                 <MapPin className="w-3 h-3" />
-                                <span>Ships from {store.ships_from_country}</span>
+                                <span>Ships from {store.shipsFrom}</span>
                               </>
                             )}
-                            {store.estimated_shipping_days && (
-                              <span>• {store.estimated_shipping_days} days</span>
+                            {store.estimatedShippingDays && (
+                              <span>• {store.estimatedShippingDays} days</span>
                             )}
                           </div>
                         </div>
@@ -496,6 +515,15 @@ export function PricingTabContent({
           </CardContent>
         </Card>
       )}
+
+      {/* Pricing Disclaimer */}
+      <div className="flex items-start gap-3 p-4 bg-muted/20 rounded-lg border border-border">
+        <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground">
+          Prices shown are from our database and may not reflect current promotions or sales. 
+          Always verify the final price at the retailer before purchasing.
+        </p>
+      </div>
 
       {/* Price Alert Modal */}
       <PriceAlertModal
