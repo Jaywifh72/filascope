@@ -51,6 +51,51 @@ const DEFAULT_EXCLUDE_PATTERNS = [
   'student\\s*discount',   // Student discount sections
 ];
 
+// Remove "Save $X.XX" patterns from text to avoid capturing savings as prices
+function removeSavingsAmounts(text: string): string {
+  // Remove "Save $X.XX" patterns directly
+  let cleaned = text.replace(/Save\s*\$[\d,.]+/gi, '[SAVINGS_REMOVED]');
+  // Remove "Saving $X.XX" patterns
+  cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, '[SAVINGS_REMOVED]');
+  // Remove "$X off" patterns
+  cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, '[SAVINGS_REMOVED]');
+  return cleaned;
+}
+
+// Extract prices using the Creality/common sale format: "$18.99 $34.25 Save $15.26"
+// Returns the FIRST price (sale price) that appears BEFORE any "Save" text
+function extractSalePriceBeforeSave(text: string): {
+  salePrice: number | null;
+  compareAtPrice: number | null;
+} {
+  // Pattern: $SALE $ORIGINAL Save $SAVINGS (Creality format)
+  const salePricePattern = /\$(\d+(?:\.\d{2})?)\s+\$(\d+(?:\.\d{2})?)\s+Save/i;
+  const match = text.match(salePricePattern);
+  
+  if (match) {
+    const price1 = parseFloat(match[1]);
+    const price2 = parseFloat(match[2]);
+    console.log(`Matched sale format: sale=$${price1}, original=$${price2}`);
+    return { salePrice: price1, compareAtPrice: price2 };
+  }
+  
+  // Alternative: just find first price that's NOT after "Save"
+  const beforeSave = text.split(/Save\s*\$/i)[0];
+  const pricesBeforeSave = [...beforeSave.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+    .map(m => parseFloat(m[1]));
+  
+  if (pricesBeforeSave.length >= 2) {
+    const [sale, original] = pricesBeforeSave;
+    if (sale < original) {
+      return { salePrice: sale, compareAtPrice: original };
+    }
+  } else if (pricesBeforeSave.length === 1) {
+    return { salePrice: pricesBeforeSave[0], compareAtPrice: null };
+  }
+  
+  return { salePrice: null, compareAtPrice: null };
+}
+
 // Apply configured price patterns to markdown content
 function extractPriceWithConfig(
   markdown: string,
@@ -63,9 +108,24 @@ function extractPriceWithConfig(
   available: boolean;
   matchedPattern: string | null;
 } {
-  // Use higher minimum for filament to avoid capturing weights/discounts
-  const priceRangeMin = config.priceRangeMin ?? 10;  // Raised from 3 to 10
+  const priceRangeMin = config.priceRangeMin ?? 10;
   const priceRangeMax = config.priceRangeMax ?? 150;
+  
+  // First, try to extract using the Creality sale format pattern
+  const saleResult = extractSalePriceBeforeSave(markdown);
+  if (saleResult.salePrice && saleResult.salePrice >= priceRangeMin && saleResult.salePrice <= priceRangeMax) {
+    console.log(`Sale format extraction: $${saleResult.salePrice}, compare: $${saleResult.compareAtPrice}`);
+    return {
+      price: saleResult.salePrice,
+      compareAtPrice: saleResult.compareAtPrice,
+      currency: preferredCurrency,
+      available: true,
+      matchedPattern: 'sale-before-save',
+    };
+  }
+  
+  // Remove savings amounts from the text
+  let cleanedMarkdown = removeSavingsAmounts(markdown);
   
   // Combine default excludes with configured excludes
   const excludePatterns = [
@@ -73,12 +133,10 @@ function extractPriceWithConfig(
     ...(config.excludePatterns || [])
   ];
   
-  // Pre-filter: Remove lines containing savings/discount amounts
-  let cleanedMarkdown = markdown;
+  // Pre-filter: Remove lines containing discount patterns
   for (const pattern of excludePatterns) {
     try {
-      // Remove entire lines that contain discount patterns
-      const lineExcludeRegex = new RegExp(`^.*${pattern}.*\\$[\\d,.]+.*$`, 'gim');
+      const lineExcludeRegex = new RegExp(`^.*${pattern}.*$`, 'gim');
       const before = cleanedMarkdown.length;
       cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, '');
       if (cleanedMarkdown.length < before) {
@@ -111,7 +169,6 @@ function extractPriceWithConfig(
           if (price >= priceRangeMin && price <= priceRangeMax) {
             console.log(`Pattern '${pattern}' matched: $${price}`);
             
-            // Look for compare-at price
             let compareAt: number | null = null;
             const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
               .map(m => parseFloat(m[1]))

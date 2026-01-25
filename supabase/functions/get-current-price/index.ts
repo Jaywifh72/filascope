@@ -146,6 +146,55 @@ const DEFAULT_EXCLUDE_PATTERNS = [
   'student\\s*discount',   // Student discount sections
 ];
 
+// Remove "Save $X.XX" patterns from text to avoid capturing savings as prices
+function removeSavingsAmounts(text: string): string {
+  // Remove "Save $X.XX" patterns directly
+  let cleaned = text.replace(/Save\s*\$[\d,.]+/gi, '[SAVINGS_REMOVED]');
+  // Remove "Saving $X.XX" patterns
+  cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, '[SAVINGS_REMOVED]');
+  // Remove "$X off" patterns
+  cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, '[SAVINGS_REMOVED]');
+  return cleaned;
+}
+
+// Extract prices using the Creality/common sale format: "$18.99 $34.25 Save $15.26"
+// Returns the FIRST price (sale price) that appears BEFORE any "Save" text
+function extractSalePriceBeforeSave(text: string): {
+  salePrice: number | null;
+  compareAtPrice: number | null;
+} {
+  // Pattern: $SALE $ORIGINAL Save $SAVINGS (Creality format)
+  // We want the first price, the second is compare-at, third is savings (ignore)
+  const salePricePattern = /\$(\d+(?:\.\d{2})?)\s+\$(\d+(?:\.\d{2})?)\s+Save/i;
+  const match = text.match(salePricePattern);
+  
+  if (match) {
+    const price1 = parseFloat(match[1]);
+    const price2 = parseFloat(match[2]);
+    // First price is sale, second is original (strikethrough)
+    console.log(`Matched Creality sale format: sale=$${price1}, original=$${price2}`);
+    return { salePrice: price1, compareAtPrice: price2 };
+  }
+  
+  // Alternative: just find first price that's NOT after "Save"
+  // Split by "Save" and take prices from the first part only
+  const beforeSave = text.split(/Save\s*\$/i)[0];
+  const pricesBeforeSave = [...beforeSave.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+    .map(m => parseFloat(m[1]));
+  
+  if (pricesBeforeSave.length >= 2) {
+    // Assume first is sale, second is original
+    const [sale, original] = pricesBeforeSave;
+    if (sale < original) {
+      return { salePrice: sale, compareAtPrice: original };
+    }
+  } else if (pricesBeforeSave.length === 1) {
+    return { salePrice: pricesBeforeSave[0], compareAtPrice: null };
+  }
+  
+  return { salePrice: null, compareAtPrice: null };
+}
+
 // Apply configured price patterns to markdown content
 function extractPriceWithConfig(
   markdown: string,
@@ -159,21 +208,35 @@ function extractPriceWithConfig(
   matchedPattern: string | null;
 } {
   // Use higher minimum for filament to avoid capturing weights/discounts
-  const priceRangeMin = config.priceRangeMin ?? 10;  // Raised from 3 to 10
+  const priceRangeMin = config.priceRangeMin ?? 10;
   const priceRangeMax = config.priceRangeMax ?? 150;
   
-  // Combine default excludes with configured excludes
+  // First, try to extract using the Creality sale format pattern
+  const saleResult = extractSalePriceBeforeSave(markdown);
+  if (saleResult.salePrice && saleResult.salePrice >= priceRangeMin && saleResult.salePrice <= priceRangeMax) {
+    console.log(`Sale format extraction: $${saleResult.salePrice}, compare: $${saleResult.compareAtPrice}`);
+    return {
+      price: saleResult.salePrice,
+      compareAtPrice: saleResult.compareAtPrice,
+      currency: preferredCurrency,
+      available: true,
+      matchedPattern: 'sale-before-save',
+    };
+  }
+  
+  // Remove savings amounts from the text
+  let cleanedMarkdown = removeSavingsAmounts(markdown);
+  
+  // Combine default excludes with configured excludes for additional cleaning
   const excludePatterns = [
     ...DEFAULT_EXCLUDE_PATTERNS,
     ...(config.excludePatterns || [])
   ];
   
-  // Pre-filter: Remove lines containing savings/discount amounts
-  let cleanedMarkdown = markdown;
+  // Pre-filter: Remove lines containing discount patterns
   for (const pattern of excludePatterns) {
     try {
-      // Remove entire lines that contain discount patterns
-      const lineExcludeRegex = new RegExp(`^.*${pattern}.*\\$[\\d,.]+.*$`, 'gim');
+      const lineExcludeRegex = new RegExp(`^.*${pattern}.*$`, 'gim');
       cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, '');
     } catch (e) {
       // Ignore invalid patterns
@@ -186,7 +249,6 @@ function extractPriceWithConfig(
     const anchorRegex = new RegExp(config.priceSectionAnchor, 'i');
     const anchorIndex = cleanedMarkdown.search(anchorRegex);
     if (anchorIndex > -1) {
-      // Look in a window around the anchor
       priceSection = cleanedMarkdown.slice(Math.max(0, anchorIndex - 500), anchorIndex + 200);
     }
   }
@@ -202,7 +264,6 @@ function extractPriceWithConfig(
           if (price >= priceRangeMin && price <= priceRangeMax) {
             console.log(`Pattern match: ${pattern} -> $${price}`);
             
-            // Look for compare-at price
             let compareAt: number | null = null;
             const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
               .map(m => parseFloat(m[1]))
@@ -227,7 +288,7 @@ function extractPriceWithConfig(
     }
   }
   
-  // Fallback: find all prices in section, filter to valid range
+  // Fallback: find all prices in cleaned section, filter to valid range
   const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
     .map(m => parseFloat(m[1]))
     .filter(p => p >= priceRangeMin && p <= priceRangeMax)
@@ -278,16 +339,20 @@ function extractCrealityPrice(markdown: string): {
 } {
   console.log('Extracting Creality price (legacy)...');
   
-  // Pre-filter: Remove lines containing savings/discount amounts
-  let cleanedMarkdown = markdown;
-  for (const pattern of DEFAULT_EXCLUDE_PATTERNS) {
-    try {
-      const lineExcludeRegex = new RegExp(`^.*${pattern}.*\\$[\\d,.]+.*$`, 'gim');
-      cleanedMarkdown = cleanedMarkdown.replace(lineExcludeRegex, '');
-    } catch (e) {
-      // Ignore invalid patterns
-    }
+  // First, try the sale format pattern: "$18.99 $34.25 Save $15.26"
+  const saleResult = extractSalePriceBeforeSave(markdown);
+  if (saleResult.salePrice && validateFilamentPrice(saleResult.salePrice)) {
+    console.log(`Creality sale format: $${saleResult.salePrice}, compare-at: $${saleResult.compareAtPrice}`);
+    return { 
+      price: saleResult.salePrice, 
+      compareAtPrice: saleResult.compareAtPrice, 
+      currency: 'USD', 
+      available: true 
+    };
   }
+  
+  // Remove savings amounts from text
+  let cleanedMarkdown = removeSavingsAmounts(markdown);
   
   // Find price section near Add to Cart/Buy Now buttons
   const addToCartIndex = cleanedMarkdown.search(/Add\s*to\s*Cart/i);
@@ -299,7 +364,7 @@ function extractCrealityPrice(markdown: string): {
     priceSection = cleanedMarkdown.slice(Math.max(0, priceIndex - 500), priceIndex + 100);
   }
   
-  // Look for explicit sale price patterns first
+  // Look for explicit sale price patterns
   const saleMatch = cleanedMarkdown.match(/(?:Sale\s*price|Now|Special)\s*[:.]?\s*\$(\d+(?:\.\d{2})?)/i);
   
   // Pattern: Two prices adjacent (sale and regular)
@@ -310,9 +375,8 @@ function extractCrealityPrice(markdown: string): {
     const salePrice = Math.min(price1, price2);
     const comparePrice = Math.max(price1, price2);
     
-    // Both prices must be in reasonable range (min $10 for filament)
     if (validateFilamentPrice(salePrice) && validateFilamentPrice(comparePrice, 10, 200)) {
-      console.log(`Found Creality sale price: $${salePrice}, compare-at: $${comparePrice}`);
+      console.log(`Found Creality dual price: $${salePrice}, compare-at: $${comparePrice}`);
       return { price: salePrice, compareAtPrice: comparePrice, currency: 'USD', available: true };
     }
   }
