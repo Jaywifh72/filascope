@@ -627,6 +627,22 @@ async function handle404WithResolution(
 
 // Check if content indicates a 404/not found page
 function is404Content(markdown: string): boolean {
+  // Check first 2000 chars (lowercased) for 404 indicators
+  const checkContent = markdown.substring(0, 2000).toLowerCase();
+  
+  // FIRST: Check for common store-specific redirect patterns that indicate missing product
+  // Creality redirects to shopping bag page when product doesn't exist
+  if (checkContent.includes('shopping bag') && checkContent.includes('is empty')) {
+    console.log('Detected 404: Creality redirect to empty shopping bag page');
+    return true;
+  }
+  
+  // Check for "Oops! Page not found" with various punctuation
+  if (/oops[!?.]?\s*page\s*not\s*found/i.test(checkContent)) {
+    console.log('Detected 404: Oops page not found');
+    return true;
+  }
+  
   const notFoundPatterns = [
     /page\s*(not\s*found|doesn'?t\s*exist)/i,
     /404\s*(error|not\s*found)?/i,
@@ -636,29 +652,13 @@ function is404Content(markdown: string): boolean {
     /sorry[,!]?\s*(this|the)?\s*page\s*(is|was|has)/i,
     /item\s*(no\s*longer|not)\s*available/i,
     /product\s*(is\s*)?no\s*longer\s*available/i,
-    /oops[!.]?\s*(page|something)/i,
+    /oops[!?.]?\s*(page|something)/i,
   ];
-  
-  // Check first 2000 chars for 404 indicators
-  const checkContent = markdown.substring(0, 2000).toLowerCase();
   
   if (notFoundPatterns.some(pattern => pattern.test(checkContent))) {
+    console.log('Detected 404: matched notFoundPattern');
     return true;
   }
-  
-  // Special case: Creality redirects to shopping bag page when product doesn't exist
-  // This is detected by "shopping bag is empty" at the start of the content
-  if (checkContent.includes('shopping bag') && checkContent.includes('your shopping bag is empty')) {
-    console.log('Detected Creality redirect to empty shopping bag (product not found)');
-    return true;
-  }
-  
-  // Special case: Page starts with navigation/header but no product content
-  // Indicates a redirect to homepage or generic page
-  const noProductIndicators = [
-    // No price mentioned in first 2000 chars AND page looks like homepage
-    !checkContent.includes('$') && !checkContent.includes('price') && checkContent.includes('shop now'),
-  ];
   
   return false;
 }
