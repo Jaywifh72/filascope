@@ -4312,7 +4312,7 @@ Deno.serve(async (req) => {
       'prusament': 26,          // CSV-seeded: PLA, PLA Galaxy, PLA Blend, PLA Premium, PLA Marble, PLA Noctua, PLA Opal, PLA Recycled, PETG, PETG Matte, PETG Shimmer, PETG Tungsten, PETG Magnetite, PETG Recycled, ASA, PC Blend, PC Carbon, PC Space-Grade, PA11-CF, PP-CF, PP-GF, PVB, PEI ULTEM, TPU-95A, rPLA, Woodfill
       'matter3d': 18,           // Consolidated lines: pla__basics, pla__basics-matte, pla__basics-silk, pla__basics-cf, pla__basics-recycled, pla__performance, pla__performance-matte, pla__essentials, pla_plus__performance, petg__performance, petg__performance-matte, petg__performance-hf, petg__performance-cf-hf, petg__standard, asa__performance, abs__performance-cf, pa__performance, tpu_95a__standard
       'esun': 39,               // CSV-seeded: 39 distinct product lines from 360+ products (PLA-Basic, PLA-Matte, PLA-Silk, PLA+HS, PETG, ABS+, TPU-95A, etc.)
-      'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
+      'creality': 20,           // 20 lines: Hyper (PLA/PETG/ABS/PC), RFID, RFID-Stardust, Rainbow, Luminous, Lightweight, Soleyin (Ultra/Basic), CR-Silk/Wood/Carbon, Ender Fast, HP-ASA/TPU, PPA-CF, Hyper PLA-CF, Hyper PETG-CF
       'fiberlogy': 19,          // CSV-seeded: ABS, ABS Plus, Easy ABS, ASA, Easy PLA, Easy PETG, FiberFlex 30D/40D, FiberSilk, FiberWood, HIPS, HS PLA Clear, Impact PLA, Matte PLA, Matte PETG, MattFlex 40D, Nylon PA12, PCTG, PP
       'amolen': 33,             // Silk, Matte, Dual Color, Galaxy, Rainbow, Glow, Wood, Marble, etc.
       'hatchbox': 17,           // CSV-seeded: pla-standard, pla-matte, pla-silk, pla-metallic, pla-glow, pla-wood, pla-stone, pla-rainbow, pla-reload, pla-cf, pla-color-change, pla-pro-plus, pla-max-v2, petg-standard, petg-rapid, abs-standard, tpu-standard
@@ -5201,7 +5201,7 @@ Deno.serve(async (req) => {
     // Run hex-color accuracy check
     // Skip for brands with manually curated hex codes in CSV seed (RAL-style naming is correct but flags as mismatch)
     // Matter3D has curated color mappings in defaults file
-    const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla', 'ziro']; // CSV-seeded brands and brands with curated hex codes
+    const skipHexColorCheckBrands = ['creality', 'eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla', 'ziro']; // CSV-seeded brands and brands with curated hex codes
     const shouldRunHexCheck = !skipHexColorCheckBrands.includes(brandSlug);
     
     const colorMismatches: Array<{ id: string; title: string; issue: string; url?: string }> = [];
