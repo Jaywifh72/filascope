@@ -100,9 +100,10 @@ export function useAdminPriceRefresh(
         break;
       }
 
-      // Handle edge function errors
+      // Handle edge function errors (including 429 rate limit)
       if (error) {
-        const errorMsg = error.message || 'Failed to fetch price';
+        // For HTTP errors like 429, the message may be in the data object
+        const errorMsg = data?.error || error.message || 'Failed to fetch price';
         setLastRefreshError(errorMsg);
         setIsRefreshing(false);
         return { success: false, error: errorMsg };
