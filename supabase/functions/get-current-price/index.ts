@@ -642,7 +642,25 @@ function is404Content(markdown: string): boolean {
   // Check first 2000 chars for 404 indicators
   const checkContent = markdown.substring(0, 2000).toLowerCase();
   
-  return notFoundPatterns.some(pattern => pattern.test(checkContent));
+  if (notFoundPatterns.some(pattern => pattern.test(checkContent))) {
+    return true;
+  }
+  
+  // Special case: Creality redirects to shopping bag page when product doesn't exist
+  // This is detected by "shopping bag is empty" at the start of the content
+  if (checkContent.includes('shopping bag') && checkContent.includes('your shopping bag is empty')) {
+    console.log('Detected Creality redirect to empty shopping bag (product not found)');
+    return true;
+  }
+  
+  // Special case: Page starts with navigation/header but no product content
+  // Indicates a redirect to homepage or generic page
+  const noProductIndicators = [
+    // No price mentioned in first 2000 chars AND page looks like homepage
+    !checkContent.includes('$') && !checkContent.includes('price') && checkContent.includes('shop now'),
+  ];
+  
+  return false;
 }
 
 // Default patterns to exclude discount/savings amounts from price extraction
