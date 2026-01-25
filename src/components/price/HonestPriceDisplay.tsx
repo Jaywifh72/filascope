@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { useRegion } from '@/contexts/RegionContext';
 import { PriceConfidence, usePriceFreshness } from '@/hooks/usePriceFreshness';
 import { PriceVerificationDialog, usePriceVerification } from './PriceVerificationDialog';
+import { AdminPriceRefreshButton } from '@/components/admin/AdminPriceRefreshButton';
 import { cn } from '@/lib/utils';
 
 export interface HonestPriceDisplayProps {
@@ -22,6 +23,10 @@ export interface HonestPriceDisplayProps {
   showCTA?: boolean;
   showPerKg?: boolean;
   className?: string;
+  // Admin refresh props
+  filamentId?: string;
+  productUrl?: string;
+  onAdminRefresh?: () => void;
 }
 
 interface DisplayMode {
@@ -111,6 +116,9 @@ export function HonestPriceDisplay({
   showCTA = true,
   showPerKg = true,
   className,
+  filamentId,
+  productUrl,
+  onAdminRefresh,
 }: HonestPriceDisplayProps) {
   const { formatPrice } = useRegion();
   const freshness = usePriceFreshness(
@@ -197,6 +205,20 @@ export function HonestPriceDisplay({
             <div className={cn('flex items-center gap-1.5', config.colorClass, sizes.helper)}>
               <Icon className="h-3 w-3" />
               <span>{timeAgoText || displayMode.helperText}</span>
+              
+              {/* Admin Refresh Button - only shown to admins */}
+              {filamentId && productUrl && (
+                <AdminPriceRefreshButton
+                  productUrl={productUrl}
+                  filamentId={filamentId}
+                  onRefreshComplete={(success) => {
+                    if (success) {
+                      onAdminRefresh?.();
+                    }
+                  }}
+                  className="ml-1"
+                />
+              )}
             </div>
 
             {/* Warning for low confidence */}
