@@ -1,286 +1,242 @@
 
-# Admin Price Verification Tool Implementation Plan
+# Honest Price Display Transformation Plan
 
 ## Overview
-Create a comprehensive admin tool for manually verifying and updating product prices across filaments and printers. This tool addresses the reality that automated price scraping is complex, may violate store ToS, and can produce unreliable data. The manual verification approach ensures honest, accurate pricing.
+
+Transform the price display system from showing potentially inaccurate "exact" prices to an honest, confidence-based approach that sets correct user expectations while still providing value. The core principle: **be honest about what we know and don't know**.
 
 ---
 
-## Current Database Schema
+## Current Problem Analysis
 
-The database already has the necessary columns for price freshness tracking:
+Based on the investigation of product `5d9dde33-21a9-4ad3-adb8-4249c65994be`:
 
-**Filaments Table:**
-- `variant_price` (numeric) - Current price
-- `last_scraped_at` (timestamp) - When price was last verified
-- `price_source` (varchar) - How price was obtained
-- `price_confidence` (varchar) - Calculated confidence level
-
-**Printers Table:**
-- `base_price` (numeric) - Current price
-- `prices_last_updated_at` (timestamp) - When price was last verified
-- `price_source` (varchar) - How price was obtained
-- `price_confidence` (varchar) - Calculated confidence level
-
-**Price History Table:**
-- `filament_id`, `price`, `recorded_at`, `region`, `currency`, `source`, `notes`
-
-**Current Price Distribution:**
-| Confidence | Count |
-|------------|-------|
-| low | 6,115 |
-| medium | 1,968 |
-| unknown | 167 |
-| stale | 6 |
+| Issue | Current State | Impact |
+|-------|--------------|--------|
+| Price accuracy | Shows $34.99, actual store price is $18.99 (sale) or $34.25 (regular) | Users feel misled |
+| Data freshness | Price last scraped 18+ days ago | Stale data presented as current |
+| Confidence distribution | 71% of products have "low" confidence | Most prices are unreliable |
+| CTA wording | "BUY NOW" implies ready transaction | Sets wrong expectations |
 
 ---
 
-## Architecture Overview
+## Solution: Confidence-Based Display Strategy
 
+### Display Logic Based on Confidence Level
+
+| Confidence | Age | Display Approach |
+|------------|-----|------------------|
+| **High** | < 24 hours | Show specific price with green indicator |
+| **Medium** | 1-7 days | Show price with "~" prefix and blue indicator |
+| **Low** | 7-30 days | Show "Estimated" label with amber warning |
+| **Stale/Unknown** | > 30 days or none | Show "Price varies" with CTA to check store |
+
+---
+
+## Implementation Details
+
+### Step 1: Create HonestPriceDisplay Component
+
+**New File: `src/components/price/HonestPriceDisplay.tsx`**
+
+A new unified component that intelligently displays pricing based on confidence:
+
+**Component Props:**
+- `price: number | null` - The database price
+- `confidence: PriceConfidence` - Freshness level
+- `lastVerifiedAt: string | Date | null` - Timestamp
+- `storeName: string` - Retailer name for CTA
+- `storeUrl: string | null` - Link to store
+- `isConverted: boolean` - If currency was converted
+- `currency: string` - Display currency
+
+**Rendering Logic:**
+
+1. **High Confidence (< 24h):**
+   - Shows bold price with green checkmark
+   - Label: "Current price"
+   - Small text: "Verified today"
+
+2. **Medium Confidence (1-7 days):**
+   - Shows price with "~" prefix (approximate)
+   - Label: "Recent price"
+   - Small text: "Last checked X days ago"
+
+3. **Low Confidence (7-30 days):**
+   - Shows price in muted styling
+   - Label: "Estimated price"
+   - Warning: "May have changed - verify at store"
+   - Prominent CTA button
+
+4. **Stale/Unknown (> 30 days):**
+   - No specific price shown
+   - Icon + "Price varies"
+   - Subtext: "Check {storeName} for current pricing"
+   - Primary action: "View at {storeName}" button
+
+### Step 2: Update FilamentPurchaseSidebar
+
+**File: `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`**
+
+**Changes:**
+1. Replace current price display section with `<HonestPriceDisplay />` component
+2. Change "BUY NOW" CTA text based on confidence:
+   - High/Medium: "Buy Now" (standard)
+   - Low/Stale: "Check Current Price" (sets expectations)
+3. Add external link icon to all purchase CTAs
+4. Remove any "Live price" terminology
+5. Keep the existing conversion tooltip logic for regional prices
+
+### Step 3: Update FilamentHeroPurchaseCard
+
+**File: `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`**
+
+**Changes:**
+1. Replace large price display with confidence-aware version
+2. For stale prices, show a helpful message instead of potentially wrong number
+3. Update CTA button text to match sidebar logic
+4. Ensure mobile/desktop parity
+
+### Step 4: Update FilamentMobileBottomBar
+
+**File: `src/components/filament/sidebar/FilamentMobileBottomBar.tsx`**
+
+**Changes:**
+1. Use compact version of `HonestPriceDisplay`
+2. Update button text based on confidence
+3. Ensure touch-friendly sizing maintained
+
+### Step 5: Update PriceWithFreshness Component
+
+**File: `src/components/price/PriceWithFreshness.tsx`**
+
+**Changes:**
+1. Add support for "stale mode" where price is hidden
+2. Update freshness text to be more explicit about uncertainty
+3. Remove any "Verified" language for stale prices (misleading)
+4. Add helper text encouraging users to check current price
+
+### Step 6: Update PriceFreshnessIndicator 
+
+**File: `src/components/price/PriceFreshnessIndicator.tsx`**
+
+**Changes:**
+1. Update labels for better clarity:
+   - High: "Updated today" (keep)
+   - Medium: "Updated this week" (clearer)
+   - Low: "Last checked {X} ago - may be outdated"
+   - Stale: "Price data outdated - verify at store"
+2. Add more actionable tooltip text
+3. For unknown: "No price data - check store"
+
+---
+
+## Visual Design Specifications
+
+### High Confidence Display
 ```text
-                     ┌─────────────────────────────────────────┐
-                     │        AdminPriceVerification.tsx       │
-                     │   (Main page with tabs and dashboard)   │
-                     └────────────────────┬────────────────────┘
-                                          │
-          ┌───────────────┬───────────────┼───────────────┬───────────────┐
-          ▼               ▼               ▼               ▼               ▼
-   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-   │ Stats Cards  │ │ Product List │ │ Update Form  │ │ CSV Import   │ │ Price Chart  │
-   │ (Dashboard)  │ │ (Filterable) │ │ (Dialog)     │ │ (Bulk)       │ │ (History)    │
-   └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
+┌─────────────────────────────────────┐
+│  Current price                      │
+│  $34.99 /kg                        │
+│  ✓ Updated today                    │
+│                                     │
+│  [═══════ BUY NOW ═══════]         │
+└─────────────────────────────────────┘
+```
+
+### Low Confidence Display
+```text
+┌─────────────────────────────────────┐
+│  Estimated price                    │
+│  ~$34.99 /kg                       │
+│  ⚠ Last checked 18 days ago        │
+│  Price may have changed             │
+│                                     │
+│  [══ Check Current Price ══]       │
+└─────────────────────────────────────┘
+```
+
+### Stale/Unknown Display
+```text
+┌─────────────────────────────────────┐
+│  💲 Price varies                    │
+│  Check Creality for current pricing │
+│                                     │
+│  [══ View at Creality ══]          │
+│  Prices change with sales and stock │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-## Implementation Steps
+## Technical Implementation
 
-### Step 1: Create Main Page File
+### HonestPriceDisplay Component Structure
 
-**File: `src/pages/AdminPriceVerification.tsx`**
-
-The main page will include:
-
-1. **Dashboard Stats Section**
-   - Four cards showing counts by confidence level (High, Medium, Low, Stale/Unknown)
-   - Color-coded (green, blue, amber, red)
-   - Clickable to filter the product list
-
-2. **Tabbed Interface**
-   - **Needs Verification**: Products sorted by staleness (oldest first)
-   - **All Products**: Full searchable/filterable list
-   - **Bulk Import**: CSV upload interface
-   - **Price History**: View historical data for a product
-
-3. **Product Table with Inline Actions**
-   - Product name, brand, current price, currency, last verified, confidence badge
-   - "Update Price" button opens dialog
-   - "View History" button shows price chart
-   - Link to product detail page
-
-4. **Search and Filter Controls**
-   - Filter by product type (Filaments, Printers)
-   - Filter by confidence level
-   - Search by product name or brand
-   - Sort by last verified date
-
-### Step 2: Create Price Update Dialog Component
-
-**File: `src/components/admin/PriceUpdateDialog.tsx`**
-
-Dialog for manually updating a product's price:
-
-- **Product Info Display**: Name, brand, current price
-- **Form Fields**:
-  - New price (number input, required)
-  - Currency dropdown (USD, EUR, GBP, etc.)
-  - Store URL (optional, for verification link)
-  - Notes (optional text area for context)
-  - Source dropdown (manual_verification, store_visit, email_confirmation)
-- **Validation**:
-  - Price must be positive
-  - Warn if price change is > 50% from current
-- **On Submit**:
-  - Update `variant_price` / `base_price`
-  - Set `last_scraped_at` / `prices_last_updated_at` to NOW()
-  - Set `price_source` to selected source
-  - Insert record into `price_history` table
-  - Recalculate `price_confidence` (via existing DB trigger)
-
-### Step 3: Create CSV Import Component
-
-**File: `src/components/admin/PriceBulkImport.tsx`**
-
-Bulk import interface for updating multiple prices at once:
-
-- **CSV Format Expected**:
-  ```
-  product_id,price,currency,store_url,notes
-  uuid-here,29.99,USD,https://store.com/product,Manual check
-  ```
-
-- **Upload Flow**:
-  1. File input accepting `.csv`
-  2. Parse CSV client-side (reuse existing manual parser pattern)
-  3. Display preview table showing:
-     - Product name (looked up from DB)
-     - Current price vs New price
-     - Highlight changes > 20%
-  4. "Import" button to apply changes
-  5. Progress indicator during bulk update
-  6. Results summary (success count, error details)
-
-- **Validation Rules**:
-  - Product ID must exist
-  - Price must be positive number
-  - Currency must be valid code
-
-### Step 4: Create Price History Viewer Component
-
-**File: `src/components/admin/PriceHistoryViewer.tsx`**
-
-Detailed price history view for a selected product:
-
-- **Product Selector**: Search dropdown to select a product
-- **Price Chart**: Reuse existing `PriceHistoryChart` component pattern
-  - LineChart with date on X-axis, price on Y-axis
-  - Time range selector (30d, 90d, 6mo, 1yr, All)
-  - Show min/max reference lines
-- **Price History Table**:
-  - Date, Price, Source, Notes columns
-  - Sortable by date
-  - Export button (CSV download)
-
-### Step 5: Add Route and Navigation
-
-**Updates to `src/App.tsx`:**
-- Add lazy import for `AdminPriceVerification`
-- Add route: `<Route path="/admin/price-verification" element={<AdminPriceVerification />} />`
-
-**Updates to `src/components/admin/AdminSidebar.tsx`:**
-- Add navigation item under "Data Quality" section:
-  ```
-  { title: 'Price Verification', href: '/admin/price-verification', icon: DollarSign }
-  ```
-
----
-
-## Technical Details
-
-### Database Queries
-
-**Fetch Products Needing Verification:**
-```sql
-SELECT id, product_title, vendor, variant_price, last_scraped_at, price_confidence
-FROM filaments
-WHERE price_confidence IN ('low', 'stale', 'unknown')
-   OR last_scraped_at < NOW() - INTERVAL '30 days'
-   OR last_scraped_at IS NULL
-ORDER BY last_scraped_at ASC NULLS FIRST
-LIMIT 100
+```typescript
+interface HonestPriceDisplayProps {
+  price: number | null;
+  confidence: PriceConfidence;
+  lastVerifiedAt: string | Date | null;
+  storeName: string;
+  storeUrl: string | null;
+  isConverted?: boolean;
+  currency?: string;
+  conversionTooltip?: string | null;
+  onBuyClick?: () => void;
+  size?: 'sm' | 'md' | 'lg';
+  showCTA?: boolean;
+}
 ```
 
-**Update Price with History:**
-```sql
--- 1. Update filament
-UPDATE filaments SET 
-  variant_price = $1,
-  last_scraped_at = NOW(),
-  price_source = 'manual_verification'
-WHERE id = $2;
+**Key Logic:**
+1. Determine display mode based on confidence
+2. Format price with appropriate prefix (~, "from", or none)
+3. Select appropriate label and helper text
+4. Choose CTA text and styling
+5. Handle currency conversion indicators
 
--- 2. Insert history (handled by existing trigger: log_listing_price_change)
-```
+### Button Text Mapping
 
-**Aggregate Stats Query:**
-```sql
-SELECT 
-  price_confidence,
-  COUNT(*) as count
-FROM filaments
-GROUP BY price_confidence
-```
-
-### Shared Components (Reuse)
-
-| Component | From | Usage |
-|-----------|------|-------|
-| `AdminLayout` | `src/components/admin/AdminLayout.tsx` | Page wrapper |
-| `AdminPageHeader` | `src/components/admin/AdminPageHeader.tsx` | Page title/actions |
-| `Table` components | `src/components/ui/table.tsx` | Product list |
-| `Badge` | `src/components/ui/badge.tsx` | Confidence indicators |
-| `Dialog` | `src/components/ui/dialog.tsx` | Update form |
-| `PriceHistoryChart` | `src/components/filament/PriceHistoryChart.tsx` | History visualization |
-| `usePriceFreshness` | `src/hooks/usePriceFreshness.ts` | Confidence calculation |
-
-### State Management
-
-- Use React Query for data fetching with keys:
-  - `['admin-price-verification-stats']`
-  - `['admin-price-verification-products', filter, search, page]`
-  - `['admin-price-history', productId]`
-- Optimistic updates on price changes
-- Invalidate queries on successful update
+| Confidence | Button Text | Button Style |
+|------------|-------------|--------------|
+| high | "Buy Now" | Primary gradient |
+| medium | "Buy Now" | Primary gradient |
+| low | "Check Current Price" | Primary outline |
+| stale | "View at {Store}" | Secondary |
+| unknown | "Find Price" | Outline |
 
 ---
 
-## UI/UX Considerations
+## Files to Create
 
-1. **Clear Visual Hierarchy**
-   - Red/amber badges for products needing attention
-   - Green checkmarks for recently verified
-   - Progress indicators during bulk operations
+| File | Purpose |
+|------|---------|
+| `src/components/price/HonestPriceDisplay.tsx` | Main confidence-aware price component |
 
-2. **Efficiency Features**
-   - Keyboard shortcuts (Enter to submit dialog)
-   - "Quick verify" button to confirm current price is accurate
-   - Batch selection for bulk actions
+## Files to Modify
 
-3. **Safety Guardrails**
-   - Confirmation dialog for large price changes (> 30%)
-   - Undo capability (via price history)
-   - Audit log of who made changes and when
-
-4. **Mobile Responsiveness**
-   - Responsive table that collapses on mobile
-   - Dialog works on mobile screens
+| File | Changes |
+|------|---------|
+| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Integrate HonestPriceDisplay, update CTAs |
+| `src/components/filament/hero/FilamentHeroPurchaseCard.tsx` | Integrate HonestPriceDisplay, update CTAs |
+| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Use compact honest display |
+| `src/components/price/PriceWithFreshness.tsx` | Add stale mode, update language |
+| `src/components/price/PriceFreshnessIndicator.tsx` | Update labels for clarity |
 
 ---
 
-## File Changes Summary
+## User Experience Benefits
 
-### New Files
+1. **Trust Building**: Honest communication builds long-term user trust
+2. **Reduced Frustration**: Users won't be surprised by different prices at store
+3. **Clear Expectations**: CTAs tell users what to expect (checking vs buying)
+4. **Value Preservation**: Still provides useful price guidance when data is fresh
+5. **Action-Oriented**: Always gives users a clear next step
 
-| File | Description |
-|------|-------------|
-| `src/pages/AdminPriceVerification.tsx` | Main admin page with dashboard, tabs, and product list |
-| `src/components/admin/PriceUpdateDialog.tsx` | Modal form for updating single product price |
-| `src/components/admin/PriceBulkImport.tsx` | CSV upload and bulk import interface |
-| `src/components/admin/PriceHistoryViewer.tsx` | Price history chart and table for a product |
+## Backward Compatibility
 
-### Modified Files
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Add lazy import and route for `/admin/price-verification` |
-| `src/components/admin/AdminSidebar.tsx` | Add navigation item for Price Verification |
-
----
-
-## Future Enhancements (Not in This PR)
-
-1. **Automated Verification Reminders**
-   - Email/notification when products become stale
-   - Weekly digest of products needing verification
-
-2. **Browser Extension Integration**
-   - Chrome extension to capture prices while browsing stores
-   - One-click submit to database
-
-3. **Price Alert Comparison**
-   - Cross-reference manual prices with affiliate network data
-   - Flag significant discrepancies for review
-
-4. **User Contribution System**
-   - Allow registered users to submit price updates
-   - Admin approval workflow before publishing
+- All existing props remain supported
+- Confidence calculation logic unchanged
+- Regional pricing and conversion still work
+- No database changes required
