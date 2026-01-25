@@ -383,12 +383,21 @@ export function PricingTabContent({
                 {sortedStores.map((store) => {
                   const isUserRegion = store.region_code === region;
                   const storeRegion = REGIONS[store.region_code as keyof typeof REGIONS];
-                  const needsConversion = store.currency_code !== currency;
+                  const storeCurrency = store.currency_code as CurrencyCode;
+                  const needsConversion = storeCurrency !== currency;
                   
-                  // Calculate converted price
-                  const rate = getConversionRate(store.currency_code as CurrencyCode, currency);
-                  const nativePrice = pricePerSpool || 0;
-                  const convertedPrice = needsConversion ? nativePrice * rate : nativePrice;
+                  // Get the base price in the store's native currency
+                  // If store currency matches base (USD), use pricePerSpool directly
+                  // Otherwise, convert from USD to store's currency first
+                  const baseUsdPrice = pricePerSpool || 0;
+                  const usdToStoreRate = storeCurrency === 'USD' ? 1 : getConversionRate('USD', storeCurrency);
+                  const nativePriceInStoreCurrency = baseUsdPrice * usdToStoreRate;
+                  
+                  // Now convert store's native price to user's currency if needed
+                  const storeToUserRate = needsConversion 
+                    ? getConversionRate(storeCurrency, currency) 
+                    : 1;
+                  const displayPrice = nativePriceInStoreCurrency * storeToUserRate;
 
                   // Generate product-specific URL using interpolation
                   const storeUrl = store.product_url_pattern && productSku
@@ -442,18 +451,18 @@ export function PricingTabContent({
                                   <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="text-xs max-w-xs">
-                                  <p className="font-medium">Original: {formatCurrencyPrice(nativePrice, store.currency_code as CurrencyCode)}</p>
-                                  <p className="text-muted-foreground">Rate: 1 {store.currency_code} = {rate.toFixed(4)} {currency}</p>
+                                  <p className="font-medium">Store Price: {formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)}</p>
+                                  <p className="text-muted-foreground">Rate: 1 {storeCurrency} = {storeToUserRate.toFixed(4)} {currency}</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}
                             <span className={needsConversion ? "text-muted-foreground" : ""}>
-                              {needsConversion ? '~' : ''}{formatCurrencyPrice(convertedPrice, currency)}
+                              {needsConversion ? '~' : ''}{formatCurrencyPrice(displayPrice, currency)}
                             </span>
                           </div>
                           {needsConversion && (
                             <div className="text-xs text-muted-foreground">
-                              {formatCurrencyPrice(nativePrice, store.currency_code as CurrencyCode)} native
+                              {formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)} native
                             </div>
                           )}
                         </div>
