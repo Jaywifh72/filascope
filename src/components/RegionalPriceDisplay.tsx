@@ -10,6 +10,7 @@ import { RegionalPriceResult } from '@/types/regional';
 import { formatPrice } from '@/config/currencies';
 import { CURRENCIES } from '@/config/currencies';
 import { REGIONS } from '@/config/regions';
+import { useRegion } from '@/contexts/RegionContext';
 import { cn } from '@/lib/utils';
 
 interface RegionalPriceDisplayProps {
@@ -19,6 +20,7 @@ interface RegionalPriceDisplayProps {
   showStore?: boolean;
   showConversionInfo?: boolean;
   showShippingInfo?: boolean;
+  showLocalBadge?: boolean;
   className?: string;
 }
 
@@ -29,8 +31,10 @@ export function RegionalPriceDisplay({
   showStore = true,
   showConversionInfo = true,
   showShippingInfo = false,
+  showLocalBadge = true,
   className,
 }: RegionalPriceDisplayProps) {
+  const { region: userRegion } = useRegion();
   if (isLoading) {
     return (
       <div className={cn("flex flex-col gap-1", className)}>
@@ -55,6 +59,7 @@ export function RegionalPriceDisplay({
   };
 
   const regionConfig = REGIONS[priceResult.store.regionCode];
+  const isLocalStore = priceResult.store.regionCode === userRegion;
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
@@ -111,14 +116,19 @@ export function RegionalPriceDisplay({
       {/* Store attribution */}
       {showStore && priceResult.store.name && priceResult.store.name !== 'Direct' && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {regionConfig && (
-            <span className="text-sm" aria-hidden="true">
-              {regionConfig.flag}
-            </span>
-          )}
           <span>
             at {priceResult.store.name}
           </span>
+          {regionConfig && (
+            <span aria-hidden="true">
+              {regionConfig.flag}
+            </span>
+          )}
+          {isLocalStore && showLocalBadge && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              Local
+            </Badge>
+          )}
           {priceResult.store.url && (
             <ExternalLink className="w-3 h-3" />
           )}
