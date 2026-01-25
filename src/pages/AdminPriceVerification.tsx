@@ -39,6 +39,8 @@ import {
 import { PriceUpdateDialog } from '@/components/admin/PriceUpdateDialog';
 import { PriceBulkImport } from '@/components/admin/PriceBulkImport';
 import { PriceHistoryViewer } from '@/components/admin/PriceHistoryViewer';
+import { PriorityVerificationQueue } from '@/components/admin/PriorityVerificationQueue';
+import { InlineQuickPriceUpdate } from '@/components/admin/InlineQuickPriceUpdate';
 import { toast } from 'sonner';
 
 interface PriceStats {
@@ -71,7 +73,8 @@ export default function AdminPriceVerification() {
   const [productTypeFilter, setProductTypeFilter] = useState<'all' | 'filament' | 'printer'>('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductRow | null>(null);
   const [historyProduct, setHistoryProduct] = useState<ProductRow | null>(null);
-  const [activeTab, setActiveTab] = useState('verification');
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('queue');
 
   // Fetch stats
   const { data: stats, isLoading: statsLoading } = useQuery<PriceStats>({
@@ -278,10 +281,15 @@ export default function AdminPriceVerification() {
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="verification">Needs Verification</TabsTrigger>
+              <TabsTrigger value="queue">Priority Queue</TabsTrigger>
+              <TabsTrigger value="verification">All Products</TabsTrigger>
               <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
               <TabsTrigger value="history">Price History</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="queue" className="space-y-4">
+              <PriorityVerificationQueue />
+            </TabsContent>
 
             <TabsContent value="verification" className="space-y-4">
               {/* Search and Filters */}
@@ -351,7 +359,22 @@ export default function AdminPriceVerification() {
                             {product.vendor || '—'}
                           </TableCell>
                           <TableCell className="text-right font-mono">
-                            {formatPrice(product.variant_price)}
+                            {editingRowId === product.id ? (
+                              <InlineQuickPriceUpdate
+                                productId={product.id}
+                                currentPrice={product.variant_price}
+                                onComplete={() => setEditingRowId(null)}
+                                onCancel={() => setEditingRowId(null)}
+                              />
+                            ) : (
+                              <button
+                                onClick={() => setEditingRowId(product.id)}
+                                className="hover:text-primary transition-colors"
+                                title="Click to edit"
+                              >
+                                {formatPrice(product.variant_price)}
+                              </button>
+                            )}
                           </TableCell>
                           <TableCell className="text-muted-foreground text-sm">
                             {formatLastVerified(product.last_scraped_at)}
