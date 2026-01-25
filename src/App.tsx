@@ -23,6 +23,7 @@ import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboard
 import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analytics/ErrorBoundary";
 import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
+import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 
 // Initialize global error handlers for uncaught errors
 initializeGlobalErrorHandler();
@@ -125,6 +126,7 @@ const App = () => (
                 {/* PWA: Offline indicator */}
                 <OfflineBanner />
                 <MaintenanceModeWrapper>
+                <RegionWelcomeBanner />
                 <Navbar />
                 <Suspense fallback={<PageLoadingSkeleton />}>
                   {/* Main content landmark for accessibility */}
