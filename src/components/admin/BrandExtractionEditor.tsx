@@ -69,7 +69,7 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
   const [anchorText, setAnchorText] = useState(config.priceSectionAnchor || '');
   const [pricePatterns, setPricePatterns] = useState((config.pricePatterns || []).join('\n'));
   const [excludePatterns, setExcludePatterns] = useState((config.excludePatterns || []).join('\n'));
-  const [priceRangeMin, setPriceRangeMin] = useState(config.priceRangeMin?.toString() || '3');
+  const [priceRangeMin, setPriceRangeMin] = useState(config.priceRangeMin?.toString() || '10');
   const [priceRangeMax, setPriceRangeMax] = useState(config.priceRangeMax?.toString() || '150');
   
   const [testResult, setTestResult] = useState<TestResult | null>(null);

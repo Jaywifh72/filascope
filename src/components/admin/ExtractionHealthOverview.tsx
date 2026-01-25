@@ -18,6 +18,10 @@ interface FailingBrand {
   id: string;
   brand_name: string;
   brand_slug: string;
+  base_url: string;
+  extraction_method: string | null;
+  price_extraction_config: Record<string, unknown> | null;
+  test_product_url: string | null;
   extraction_success_rate: number | null;
   extraction_working: boolean | null;
   last_extraction_test_at: string | null;
@@ -51,13 +55,13 @@ export function ExtractionHealthOverview({ onEditBrand }: ExtractionHealthOvervi
     refetchInterval: 60000, // Refresh every minute
   });
 
-  // Fetch brands with low success rates
+  // Fetch brands with low success rates - include all fields needed by BrandExtractionEditor
   const { data: failingBrands, isLoading: brandsLoading } = useQuery({
     queryKey: ['failing-extraction-brands'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('automated_brands')
-        .select('id, brand_name, brand_slug, extraction_success_rate, extraction_working, last_extraction_test_at')
+        .select('id, brand_name, brand_slug, base_url, extraction_method, price_extraction_config, test_product_url, extraction_success_rate, extraction_working, last_extraction_test_at')
         .eq('is_visible', true)
         .or('extraction_working.eq.false,extraction_success_rate.lt.80')
         .order('extraction_success_rate', { ascending: true, nullsFirst: false })
@@ -144,7 +148,7 @@ export function ExtractionHealthOverview({ onEditBrand }: ExtractionHealthOvervi
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => onEditBrand(brand as unknown as FailingBrand)}
+                      onClick={() => onEditBrand(brand)}
                     >
                       Edit
                     </Button>

@@ -103,7 +103,7 @@ export function BrandExtractionConfig() {
 
   return (
     <div className="space-y-6">
-      <ExtractionHealthOverview onEditBrand={(brand) => setEditingBrand(brand as unknown as BrandConfig)} />
+      <ExtractionHealthOverview onEditBrand={(brand) => setEditingBrand(brand as BrandConfig)} />
       
       <Card>
         <CardHeader>
