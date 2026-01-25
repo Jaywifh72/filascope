@@ -36,6 +36,7 @@ interface PriceResponse {
   fetchedAt: string;
   error?: string;
   is404?: boolean; // Indicates product page not found
+  refreshedAt?: string; // ISO timestamp when forceRefresh was used
 }
 
 interface BrandExtractionConfig {
@@ -133,6 +134,23 @@ async function logExtractionAttempt(
   } catch (err) {
     console.error('Failed to log extraction attempt:', err);
   }
+}
+
+// Rate limit manual refreshes: 1 per URL per minute
+async function canForceRefresh(productUrl: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
+  
+  const { data } = await supabase
+    .from('price_extraction_logs')
+    .select('id')
+    .eq('product_url', productUrl)
+    .eq('extraction_method', 'manual_refresh')
+    .gte('created_at', oneMinuteAgo)
+    .limit(1);
+  
+  // Allow if no recent manual refresh
+  return !data || data.length === 0;
 }
 
 // Log broken URL (404) to database for admin review
@@ -1770,7 +1788,7 @@ serve(async (req) => {
   }
 
   try {
-    const { productUrl, currency = 'USD' } = await req.json();
+    const { productUrl, currency = 'USD', forceRefresh = false } = await req.json();
     
     if (!productUrl) {
       return new Response(
@@ -1779,7 +1797,32 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Getting current price for: ${productUrl} (preferred currency: ${currency})`);
+    console.log(`Getting current price for: ${productUrl} (preferred currency: ${currency}${forceRefresh ? ', FORCE REFRESH' : ''})`);
+    
+    // Rate limit check for manual refresh
+    if (forceRefresh) {
+      const canRefresh = await canForceRefresh(productUrl);
+      if (!canRefresh) {
+        console.log('Rate limited: manual refresh already performed for this URL in last minute');
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: 'Rate limited: Please wait at least 1 minute between manual refreshes for this product',
+            price: null,
+            compareAtPrice: null,
+            weightGrams: null,
+            diameterMm: null,
+            variantTitle: null,
+            currency,
+            available: false,
+            source: 'firecrawl',
+            fetchedAt: new Date().toISOString(),
+          }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log('Manual refresh rate limit check passed');
+    }
     
     // Look up brand config from database
     const brandConfig = await findBrandConfigByUrl(productUrl);
@@ -1791,6 +1834,8 @@ serve(async (req) => {
         console.log(`Brand ${brandConfig.brand_name} extraction marked as not working, using fallback`);
       }
     }
+    
+    const startTime = Date.now();
     
     // Check for custom storefronts first (they don't support Shopify JSON)
     const customStorefront = detectCustomStorefront(productUrl);
@@ -1827,6 +1872,28 @@ serve(async (req) => {
       } else {
         console.log('Unknown platform, trying Firecrawl...');
         result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+      }
+    }
+
+    // Log manual refresh and add refreshedAt to response
+    if (forceRefresh) {
+      const responseTimeMs = Date.now() - startTime;
+      await logExtractionAttempt(
+        brandConfig?.id || null,
+        brandConfig?.brand_slug || null,
+        productUrl,
+        'manual_refresh',
+        result.success,
+        result.price,
+        result.currency,
+        result.error || null,
+        null,
+        responseTimeMs
+      );
+      
+      // Add refreshedAt to response
+      if (result.success) {
+        result.refreshedAt = new Date().toISOString();
       }
     }
 
