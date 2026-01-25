@@ -5,11 +5,15 @@ import {
   Zap, 
   Mail, 
   ExternalLink,
-  Loader2
+  Loader2,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useRegion } from "@/contexts/RegionContext";
+import { RegionSelector } from "@/components/RegionSelector";
+import { CurrencySelector } from "@/components/CurrencySelector";
 
 // Social icons as simple SVG components for consistency
 const TwitterIcon = ({ className }: { className?: string }) => (
@@ -41,6 +45,7 @@ export function SiteFooter() {
   const [isLoading, setIsLoading] = useState(false);
   const [latency, setLatency] = useState(14);
   const { toast } = useToast();
+  const { regionConfig, currencyConfig } = useRegion();
 
   // Simulate realistic latency fluctuation
   useEffect(() => {
@@ -254,6 +259,29 @@ export function SiteFooter() {
                   <social.icon className="w-5 h-5 sm:w-4 sm:h-4" />
                 </a>
               ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Region/Currency Indicator Bar */}
+      <div className="border-t border-border/50 bg-card/30">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Left - Current region display */}
+            <div className="flex items-center gap-2 text-sm">
+              <Globe className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <span className="text-muted-foreground">Prices shown for:</span>
+              <span className="text-foreground font-medium">
+                {regionConfig.flag} {regionConfig.name} ({currencyConfig.code})
+              </span>
+            </div>
+            
+            {/* Right - Change selectors */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground hidden sm:inline">Change:</span>
+              <RegionSelector />
+              <CurrencySelector />
             </div>
           </div>
         </div>
