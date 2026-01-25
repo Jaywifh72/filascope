@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,50 +37,238 @@ interface PriceResponse {
   error?: string;
 }
 
-// Detect custom storefronts that don't support Shopify JSON API
+interface BrandExtractionConfig {
+  priceSectionAnchor?: string;
+  pricePatterns?: string[];
+  excludePatterns?: string[];
+  priceRangeMin?: number;
+  priceRangeMax?: number;
+  currencyDetection?: string;
+}
+
+interface BrandConfig {
+  id: string;
+  brand_slug: string;
+  brand_name: string;
+  base_url: string;
+  extraction_method: string;
+  price_extraction_config: BrandExtractionConfig;
+  extraction_working: boolean;
+  default_currency: string | null;
+}
+
+// Initialize Supabase client for brand config lookup
+function getSupabaseClient() {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+// Extract domain from URL for brand matching
+function extractDomain(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+// Find brand config based on URL domain
+async function findBrandConfigByUrl(url: string): Promise<BrandConfig | null> {
+  const domain = extractDomain(url);
+  if (!domain) return null;
+  
+  const supabase = getSupabaseClient();
+  
+  // Query automated_brands table for matching base_url
+  const { data, error } = await supabase
+    .from('automated_brands')
+    .select('id, brand_slug, brand_name, base_url, extraction_method, price_extraction_config, extraction_working, default_currency')
+    .eq('is_visible', true)
+    .order('brand_name');
+  
+  if (error || !data) {
+    console.log('Error fetching brand configs:', error);
+    return null;
+  }
+  
+  // Find matching brand by domain
+  const brand = data.find(b => {
+    const brandDomain = extractDomain(b.base_url);
+    return domain.includes(brandDomain) || brandDomain.includes(domain);
+  });
+  
+  return brand || null;
+}
+
+// Log extraction attempt to database
+async function logExtractionAttempt(
+  brandId: string | null,
+  brandSlug: string | null,
+  productUrl: string,
+  method: string,
+  success: boolean,
+  price: number | null,
+  currency: string,
+  errorMessage: string | null,
+  rawSample: string | null,
+  responseTimeMs: number
+) {
+  try {
+    const supabase = getSupabaseClient();
+    await supabase.from('price_extraction_logs').insert({
+      brand_id: brandId,
+      brand_slug: brandSlug,
+      product_url: productUrl,
+      extraction_method: method,
+      success,
+      extracted_price: price,
+      currency,
+      error_message: errorMessage,
+      raw_content_sample: rawSample?.substring(0, 500),
+      response_time_ms: responseTimeMs,
+    });
+  } catch (err) {
+    console.error('Failed to log extraction attempt:', err);
+  }
+}
+
+// Apply configured price patterns to markdown content
+function extractPriceWithConfig(
+  markdown: string,
+  config: BrandExtractionConfig,
+  preferredCurrency: string
+): {
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  available: boolean;
+  matchedPattern: string | null;
+} {
+  const priceRangeMin = config.priceRangeMin ?? 3;
+  const priceRangeMax = config.priceRangeMax ?? 150;
+  
+  // Determine search section using anchor text
+  let priceSection = markdown;
+  if (config.priceSectionAnchor) {
+    const anchorRegex = new RegExp(config.priceSectionAnchor, 'i');
+    const anchorIndex = markdown.search(anchorRegex);
+    if (anchorIndex > -1) {
+      // Look in a window around the anchor
+      priceSection = markdown.slice(Math.max(0, anchorIndex - 500), anchorIndex + 200);
+    }
+  }
+  
+  // Apply exclude patterns to filter out noise
+  if (config.excludePatterns) {
+    for (const pattern of config.excludePatterns) {
+      try {
+        const excludeRegex = new RegExp(`[^.]*${pattern}[^.]*\\$[\\d,.]+[^.]*`, 'gi');
+        priceSection = priceSection.replace(excludeRegex, '');
+      } catch (e) {
+        console.log(`Invalid exclude pattern: ${pattern}`);
+      }
+    }
+  }
+  
+  // Try configured price patterns first
+  if (config.pricePatterns && config.pricePatterns.length > 0) {
+    for (const pattern of config.pricePatterns) {
+      try {
+        const regex = new RegExp(pattern, 'i');
+        const match = priceSection.match(regex);
+        if (match && match[1]) {
+          const price = parseFloat(match[1].replace(',', ''));
+          if (price >= priceRangeMin && price <= priceRangeMax) {
+            console.log(`Pattern match: ${pattern} -> $${price}`);
+            
+            // Look for compare-at price
+            let compareAt: number | null = null;
+            const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+              .map(m => parseFloat(m[1]))
+              .filter(p => p >= priceRangeMin && p <= priceRangeMax && p !== price);
+            if (allPrices.length > 0) {
+              const higherPrice = allPrices.find(p => p > price);
+              if (higherPrice) compareAt = higherPrice;
+            }
+            
+            return {
+              price,
+              compareAtPrice: compareAt,
+              currency: preferredCurrency,
+              available: true,
+              matchedPattern: pattern,
+            };
+          }
+        }
+      } catch (e) {
+        console.log(`Invalid price pattern: ${pattern}`);
+      }
+    }
+  }
+  
+  // Fallback: find all prices in section, filter to valid range
+  const allPrices = [...priceSection.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+    .map(m => parseFloat(m[1]))
+    .filter(p => p >= priceRangeMin && p <= priceRangeMax)
+    .sort((a, b) => a - b);
+  
+  if (allPrices.length > 0) {
+    const price = allPrices[0];
+    const compareAt = allPrices.length > 1 && allPrices[1] > price * 1.1 ? allPrices[1] : null;
+    return {
+      price,
+      compareAtPrice: compareAt,
+      currency: preferredCurrency,
+      available: true,
+      matchedPattern: 'fallback-generic',
+    };
+  }
+  
+  return {
+    price: null,
+    compareAtPrice: null,
+    currency: preferredCurrency,
+    available: false,
+    matchedPattern: null,
+  };
+}
+
+// Legacy: Detect custom storefronts that don't support Shopify JSON API
 function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | 'opencart' | 'creality' | null {
   if (url.includes('store.bambulab.com')) return 'bambulab';
   if (url.includes('prusa3d.com')) return 'prusa';
-  if (url.includes('geeetech.com')) return 'opencart'; // OpenCart-based PHP store
+  if (url.includes('geeetech.com')) return 'opencart';
   if (url.includes('store.creality.com')) return 'creality';
   return null;
 }
 
 // Validate that a price is within reasonable range for filament products
-// This filters out promotional banners, coupon values, and other non-product prices
-function validateFilamentPrice(price: number): boolean {
-  // Reasonable filament price range: $3 - $150 per spool (allowing for multi-packs)
-  return price >= 3 && price <= 150;
+function validateFilamentPrice(price: number, min = 3, max = 150): boolean {
+  return price >= min && price <= max;
 }
 
-// Extract price specifically from Creality store pages
-// Creality pages often have promotional banners with large dollar amounts (e.g., "$500 coupon pack")
-// that can be mistakenly captured by generic regex
+// Legacy: Extract price specifically from Creality store pages
 function extractCrealityPrice(markdown: string): {
   price: number | null;
   compareAtPrice: number | null;
   currency: string;
   available: boolean;
 } {
-  console.log('Extracting Creality price...');
+  console.log('Extracting Creality price (legacy)...');
   
-  // Look for price section near "Add to Cart" or product-specific areas
   const addToCartIndex = markdown.search(/Add\s*to\s*Cart/i);
   const buyNowIndex = markdown.search(/Buy\s*Now/i);
   const priceIndex = Math.max(addToCartIndex, buyNowIndex);
   
-  // Search in a window around the Add to Cart button
   let priceSection = '';
   if (priceIndex > -1) {
-    // Look backwards from Add to Cart (prices typically appear before it)
     priceSection = markdown.slice(Math.max(0, priceIndex - 500), priceIndex + 100);
   }
   
-  // Also look for explicit sale price indicators
   const saleMatch = markdown.match(/(?:Sale\s*price|Now|Special)\s*[:.]?\s*\$(\d+(?:\.\d{2})?)/i);
   
-  // Pattern 1: Look for strikethrough/compare-at pattern (current price, then higher original)
-  // e.g., "$18.99" followed by "$34.25" 
   const dualPriceMatch = priceSection.match(/\$(\d+(?:\.\d{2})?)\s*(?:[\s\n~-]*)\$(\d+(?:\.\d{2})?)/);
   if (dualPriceMatch) {
     const price1 = parseFloat(dualPriceMatch[1]);
@@ -87,19 +276,12 @@ function extractCrealityPrice(markdown: string): {
     const salePrice = Math.min(price1, price2);
     const comparePrice = Math.max(price1, price2);
     
-    // Validate both prices are in reasonable range
     if (validateFilamentPrice(salePrice) && (comparePrice <= 200)) {
       console.log(`Found Creality sale price: $${salePrice}, compare-at: $${comparePrice}`);
-      return {
-        price: salePrice,
-        compareAtPrice: comparePrice,
-        currency: 'USD',
-        available: true,
-      };
+      return { price: salePrice, compareAtPrice: comparePrice, currency: 'USD', available: true };
     }
   }
   
-  // Pattern 2: Find all prices in section, filter to valid range, pick lowest
   const allPricesInSection = priceSection.match(/\$(\d+(?:\.\d{2})?)/g);
   if (allPricesInSection) {
     const validPrices = allPricesInSection
@@ -109,35 +291,20 @@ function extractCrealityPrice(markdown: string): {
     
     if (validPrices.length > 0) {
       const price = validPrices[0];
-      // If there are multiple valid prices, larger might be compare-at
-      const compareAt = validPrices.length > 1 && validPrices[1] > price * 1.1 
-        ? validPrices[1] 
-        : null;
+      const compareAt = validPrices.length > 1 && validPrices[1] > price * 1.1 ? validPrices[1] : null;
       console.log(`Found Creality price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
-      return {
-        price,
-        compareAtPrice: compareAt,
-        currency: 'USD',
-        available: true,
-      };
+      return { price, compareAtPrice: compareAt, currency: 'USD', available: true };
     }
   }
   
-  // Pattern 3: Explicit sale match
   if (saleMatch) {
     const price = parseFloat(saleMatch[1]);
     if (validateFilamentPrice(price)) {
       console.log(`Found Creality explicit sale price: $${price}`);
-      return {
-        price,
-        compareAtPrice: null,
-        currency: 'USD',
-        available: true,
-      };
+      return { price, compareAtPrice: null, currency: 'USD', available: true };
     }
   }
   
-  // Fallback: Search entire content but with strict validation
   const allPrices = [...markdown.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
     .map(m => parseFloat(m[1]))
     .filter(p => validateFilamentPrice(p))
@@ -154,41 +321,24 @@ function extractCrealityPrice(markdown: string): {
   }
   
   console.log('No valid Creality price found');
-  return {
-    price: null,
-    compareAtPrice: null,
-    currency: 'USD',
-    available: false,
-  };
+  return { price: null, compareAtPrice: null, currency: 'USD', available: false };
 }
 
-// Detect Shopify stores known to use multi-currency (geo-based pricing)
-// These stores show different prices based on visitor location, but Shopify JSON API
-// always returns prices in the store's base currency (usually USD)
+// Detect Shopify stores known to use multi-currency
 function isMultiCurrencyShopifyStore(url: string): boolean {
-  const multiCurrencyDomains = [
-    'polymaker.com',
-    'esun3d.com',
-    'sunlu.com',
-    'overture3d.com',
-    // Note: geeetech.com is NOT Shopify - it's OpenCart
-    // Add other known multi-currency Shopify stores here
-  ];
+  const multiCurrencyDomains = ['polymaker.com', 'esun3d.com', 'sunlu.com', 'overture3d.com'];
   const urlLower = url.toLowerCase();
   return multiCurrencyDomains.some(domain => urlLower.includes(domain));
 }
 
-// Detect stores where Shopify JSON API returns unreliable/incorrect prices
-// even for USD. These stores require Firecrawl for accurate pricing.
+// Detect stores where Shopify JSON API returns unreliable prices
 function shouldAlwaysUseFirecrawl(url: string): boolean {
-  const unreliableJsonStores = [
-    'amolen.com', // JSON API returns outdated prices that don't match website
-  ];
+  const unreliableJsonStores = ['amolen.com'];
   const urlLower = url.toLowerCase();
   return unreliableJsonStores.some(domain => urlLower.includes(domain));
 }
 
-// Map currency to Firecrawl location settings for proper regional pricing
+// Map currency to Firecrawl location settings
 function getFirecrawlLocation(currency: string): { country: string; languages: string[] } {
   switch (currency) {
     case 'CAD': return { country: 'CA', languages: ['en-CA', 'en'] };
@@ -200,107 +350,59 @@ function getFirecrawlLocation(currency: string): { country: string; languages: s
   }
 }
 
-// Extract price specifically from GEEETECH OpenCart pages
-// GEEETECH page structure shows prices like:
-// $9.79 (sale price)
-// $15.00 (original price - crossed out)
-// -35% (discount badge)
-// The key is to find the price AFTER the product title/SKU, not coupon banners
+// Legacy: Extract price from GEEETECH OpenCart pages
 function extractOpenCartPrice(markdown: string): {
   price: number | null;
   compareAtPrice: number | null;
   currency: string;
   available: boolean;
 } {
-  console.log('Extracting OpenCart/GEEETECH price...');
+  console.log('Extracting OpenCart/GEEETECH price (legacy)...');
   
-  // Find the SKU line which appears just before the price
-  // Format: "SKU: 700-001-042651 Reviews" or similar
   const skuIndex = markdown.search(/SKU:\s*[\d\-]+/i);
+  let priceSection = skuIndex > -1 ? markdown.slice(skuIndex, skuIndex + 500) : '';
   
-  // If we found SKU, look for prices after it (within 500 chars)
-  let priceSection = skuIndex > -1 
-    ? markdown.slice(skuIndex, skuIndex + 500)
-    : '';
-  
-  // Alternative: look for "Add to Cart" button area
   if (!priceSection) {
     const cartIndex = markdown.search(/Add\s*to\s*Cart/i);
     if (cartIndex > -1) {
-      // Look backwards for prices (they appear before Add to Cart)
       priceSection = markdown.slice(Math.max(0, cartIndex - 300), cartIndex);
     }
   }
   
-  // Fallback: look in the middle section of the page (after header, before footer)
   if (!priceSection) {
     const lines = markdown.split('\n');
-    const startLine = Math.floor(lines.length * 0.15); // Skip first 15% (header/banner)
-    const endLine = Math.floor(lines.length * 0.5); // Take up to 50%
+    const startLine = Math.floor(lines.length * 0.15);
+    const endLine = Math.floor(lines.length * 0.5);
     priceSection = lines.slice(startLine, endLine).join('\n');
   }
   
-  console.log(`Price section (${priceSection.length} chars): ${priceSection.slice(0, 200)}...`);
-  
-  // Pattern 1: Look for sale price followed by strikethrough original price
-  // e.g., "$9.79\n$15.00" or "$9.79 $15.00"
   const salePriceMatch = priceSection.match(/\$(\d+(?:\.\d{2})?)\s*(?:\n|\s)*\$(\d+(?:\.\d{2})?)/);
   if (salePriceMatch) {
     const price1 = parseFloat(salePriceMatch[1]);
     const price2 = parseFloat(salePriceMatch[2]);
-    // Smaller is sale price, larger is compare-at
     const salePrice = Math.min(price1, price2);
     const comparePrice = Math.max(price1, price2);
     
-    // Validate: prices should be in reasonable range for filament ($5-$50)
     if (salePrice >= 5 && salePrice <= 50 && comparePrice <= 60) {
       console.log(`Found OpenCart sale price: $${salePrice}, compare-at: $${comparePrice}`);
-      return {
-        price: salePrice,
-        compareAtPrice: comparePrice,
-        currency: 'USD',
-        available: true,
-      };
+      return { price: salePrice, compareAtPrice: comparePrice, currency: 'USD', available: true };
     }
   }
   
-  // Pattern 2: Single price (no sale)
-  // Find all prices in the section, filter out coupon values
   const allPrices = priceSection.match(/\$(\d+(?:\.\d{2})?)/g);
   if (allPrices) {
-    // Filter to reasonable filament prices ($5-$50)
-    const validPrices = allPrices
-      .map(p => parseFloat(p.replace('$', '')))
-      .filter(p => p >= 5 && p <= 50);
-    
+    const validPrices = allPrices.map(p => parseFloat(p.replace('$', ''))).filter(p => p >= 5 && p <= 50);
     if (validPrices.length > 0) {
-      // Take the first valid price (most likely to be the product price)
-      const price = validPrices[0];
-      console.log(`Found OpenCart single price: $${price}`);
-      return {
-        price,
-        compareAtPrice: null,
-        currency: 'USD',
-        available: true,
-      };
+      console.log(`Found OpenCart single price: $${validPrices[0]}`);
+      return { price: validPrices[0], compareAtPrice: null, currency: 'USD', available: true };
     }
   }
   
   console.log('No valid OpenCart price found');
-  return {
-    price: null,
-    compareAtPrice: null,
-    currency: 'USD',
-    available: false,
-  };
+  return { price: null, compareAtPrice: null, currency: 'USD', available: false };
 }
 
-// Extract price from page content using various patterns
-// Handles formats like:
-// - "$28.79 CAD$31.99 CAD" (sale + original, Bambu style)
-// - "$22.49 USD" (single price)
-// - "Sale price$19.99 USDRegular price$28.98 USD" (Shopify multi-currency)
-// - "$28.00 CAD" (simple format)
+// Legacy: Extract price from Bambu Lab and generic stores
 function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   price: number | null;
   compareAtPrice: number | null;
@@ -311,7 +413,7 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   
   const currencyPatterns = ['CAD', 'USD', 'GBP', 'EUR', 'AUD', 'JPY'];
   
-  // Pattern 1: Shopify multi-currency format "Sale price$XX.XX CURRegular price$YY.YY CUR"
+  // Pattern 1: Shopify multi-currency format
   const shopifySaleRegex = new RegExp(
     `Sale\\s*price\\s*\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}[^\\d]*Regular\\s*price\\s*\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}`,
     'i'
@@ -321,15 +423,10 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     const salePrice = parseFloat(shopifySaleMatch[1].replace(',', ''));
     const regularPrice = parseFloat(shopifySaleMatch[2].replace(',', ''));
     console.log(`Found Shopify sale format: $${salePrice} ${preferredCurrency}, regular: $${regularPrice}`);
-    return {
-      price: salePrice,
-      compareAtPrice: regularPrice,
-      currency: preferredCurrency,
-      available: true,
-    };
+    return { price: salePrice, compareAtPrice: regularPrice, currency: preferredCurrency, available: true };
   }
   
-  // Pattern 2: Bambu Lab style "$XX.XX CUR$YY.YY CUR" (two prices back to back)
+  // Pattern 2: Bambu Lab style back-to-back prices
   const preferredPriceRegex = new RegExp(
     `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency})?`,
     'i'
@@ -340,29 +437,18 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     const price1 = parseFloat(preferredMatch[1].replace(',', ''));
     const price2 = preferredMatch[2] ? parseFloat(preferredMatch[2].replace(',', '')) : null;
     
-    // If two prices found, smaller one is sale price, larger is compare-at
     if (price2 !== null) {
       const salePrice = Math.min(price1, price2);
       const comparePrice = Math.max(price1, price2);
       console.log(`Found ${preferredCurrency} sale price: $${salePrice}, compare-at: $${comparePrice}`);
-      return {
-        price: salePrice,
-        compareAtPrice: comparePrice,
-        currency: preferredCurrency,
-        available: true,
-      };
+      return { price: salePrice, compareAtPrice: comparePrice, currency: preferredCurrency, available: true };
     }
     
     console.log(`Found ${preferredCurrency} price: $${price1}`);
-    return {
-      price: price1,
-      compareAtPrice: null,
-      currency: preferredCurrency,
-      available: true,
-    };
+    return { price: price1, compareAtPrice: null, currency: preferredCurrency, available: true };
   }
   
-  // If preferred currency not found, try to find any price
+  // Try other currencies as fallback
   for (const cur of currencyPatterns) {
     const priceRegex = new RegExp(
       `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${cur}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${cur})?`,
@@ -377,55 +463,33 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
         const salePrice = Math.min(price1, price2);
         const comparePrice = Math.max(price1, price2);
         console.log(`Found ${cur} sale price: $${salePrice}, compare-at: $${comparePrice} (fallback)`);
-        return {
-          price: salePrice,
-          compareAtPrice: comparePrice,
-          currency: cur,
-          available: true,
-        };
+        return { price: salePrice, compareAtPrice: comparePrice, currency: cur, available: true };
       }
       
       console.log(`Found ${cur} price: $${price1} (fallback)`);
-      return {
-        price: price1,
-        compareAtPrice: null,
-        currency: cur,
-        available: true,
-      };
+      return { price: price1, compareAtPrice: null, currency: cur, available: true };
     }
   }
   
-  // Last resort: try to find any price pattern like "$XX.XX"
-  // Filter to reasonable filament prices to avoid capturing promotional banners
+  // Last resort: any price pattern with validation
   const allPrices = [...markdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
     .map(m => parseFloat(m[1].replace(',', '')))
     .filter(p => validateFilamentPrice(p))
-    .sort((a, b) => a - b); // Sort ascending to get lowest reasonable price
+    .sort((a, b) => a - b);
   
   if (allPrices.length > 0) {
     const price = allPrices[0];
     const compareAtPrice = allPrices.length > 1 && allPrices[1] > price * 1.1 ? allPrices[1] : null;
-    console.log(`Found generic price (filtered): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''} (from ${allPrices.length} valid prices)`);
-    return {
-      price,
-      compareAtPrice,
-      currency: preferredCurrency, // Assume preferred currency
-      available: true,
-    };
+    console.log(`Found generic price (filtered): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''}`);
+    return { price, compareAtPrice, currency: preferredCurrency, available: true };
   }
   
   console.log('No valid price found in content');
-  return {
-    price: null,
-    compareAtPrice: null,
-    currency: preferredCurrency,
-    available: false,
-  };
+  return { price: null, compareAtPrice: null, currency: preferredCurrency, available: false };
 }
 
 // Extract weight from page content
 function extractWeightFromContent(markdown: string): number | null {
-  // Look for weight patterns like "1KG", "1 KG", "1000g", "1kg"
   const kgMatch = markdown.match(/\b(\d+(?:\.\d+)?)\s*kg\b/i);
   if (kgMatch) return Math.round(parseFloat(kgMatch[1]) * 1000);
   
@@ -437,21 +501,22 @@ function extractWeightFromContent(markdown: string): number | null {
 
 // Extract diameter from page content
 function extractDiameterFromContent(markdown: string, url: string): number | null {
-  // Check URL first
   const urlMatch = url.match(/[_-](1[.-]75|2[.-]85)/i);
-  if (urlMatch) {
-    return parseFloat(urlMatch[1].replace('-', '.'));
-  }
+  if (urlMatch) return parseFloat(urlMatch[1].replace('-', '.'));
   
-  // Check content
   const contentMatch = markdown.match(/\b(1\.75|2\.85)\s*mm\b/i);
   if (contentMatch) return parseFloat(contentMatch[1]);
   
   return null;
 }
 
-// Fetch price using Firecrawl API for custom storefronts
-async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
+// Fetch price using Firecrawl API
+async function fetchPriceWithFirecrawl(
+  productUrl: string, 
+  preferredCurrency: string,
+  brandConfig?: BrandConfig | null
+): Promise<PriceResponse & { rawSample?: string }> {
+  const startTime = Date.now();
   const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
   
   if (!firecrawlApiKey) {
@@ -472,7 +537,7 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
   }
   
   const location = getFirecrawlLocation(preferredCurrency);
-  console.log(`Fetching with Firecrawl: ${productUrl} (location: ${location.country}, lang: ${location.languages.join(', ')})`);
+  console.log(`Fetching with Firecrawl: ${productUrl} (location: ${location.country})`);
   
   try {
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
@@ -485,7 +550,7 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
         url: productUrl,
         formats: ['markdown'],
         onlyMainContent: true,
-        waitFor: 3000, // Wait for JavaScript to load currency
+        waitFor: 3000,
         location: location,
       }),
     });
@@ -530,21 +595,52 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
     
     console.log(`Firecrawl returned ${markdown.length} chars of content`);
     
-    // Extract price based on storefront type
-    // Detect if this is a specialized storefront and use appropriate extraction
-    const isOpenCart = productUrl.includes('geeetech.com');
-    const isCreality = productUrl.includes('store.creality.com');
+    let priceData: { price: number | null; compareAtPrice: number | null; currency: string; available: boolean };
     
-    let priceData;
-    if (isCreality) {
-      priceData = extractCrealityPrice(markdown);
-    } else if (isOpenCart) {
-      priceData = extractOpenCartPrice(markdown);
+    // Use configured extraction if available and working
+    if (brandConfig && brandConfig.extraction_working && brandConfig.extraction_method !== 'auto') {
+      console.log(`Using configured extraction for ${brandConfig.brand_name}`);
+      const configResult = extractPriceWithConfig(
+        markdown,
+        brandConfig.price_extraction_config || {},
+        brandConfig.default_currency || preferredCurrency
+      );
+      priceData = configResult;
+      
+      if (configResult.matchedPattern) {
+        console.log(`Config extraction matched pattern: ${configResult.matchedPattern}`);
+      }
     } else {
-      priceData = extractBambuLabPrice(markdown, preferredCurrency);
+      // Legacy extraction logic
+      const isOpenCart = productUrl.includes('geeetech.com');
+      const isCreality = productUrl.includes('store.creality.com');
+      
+      if (isCreality) {
+        priceData = extractCrealityPrice(markdown);
+      } else if (isOpenCart) {
+        priceData = extractOpenCartPrice(markdown);
+      } else {
+        priceData = extractBambuLabPrice(markdown, preferredCurrency);
+      }
     }
+    
     const weightGrams = extractWeightFromContent(markdown);
     const diameterMm = extractDiameterFromContent(markdown, productUrl);
+    const responseTimeMs = Date.now() - startTime;
+    
+    // Log extraction attempt
+    await logExtractionAttempt(
+      brandConfig?.id || null,
+      brandConfig?.brand_slug || null,
+      productUrl,
+      brandConfig?.extraction_method || 'legacy',
+      priceData.price !== null,
+      priceData.price,
+      priceData.currency,
+      priceData.price === null ? 'Could not extract price' : null,
+      markdown.substring(0, 500),
+      responseTimeMs
+    );
     
     if (priceData.price === null) {
       return {
@@ -559,6 +655,7 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
         source: 'firecrawl',
         fetchedAt: new Date().toISOString(),
         error: 'Could not extract price from page',
+        rawSample: markdown.substring(0, 500),
       };
     }
     
@@ -575,6 +672,7 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
       available: priceData.available,
       source: 'firecrawl',
       fetchedAt: new Date().toISOString(),
+      rawSample: markdown.substring(0, 500),
     };
   } catch (error) {
     console.error('Firecrawl fetch error:', error);
@@ -594,11 +692,10 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
   }
 }
 
-// Parse weight from variant title (e.g., "1.75mm - 1KG AMS Compatible")
+// Parse weight from variant title
 function parseWeightFromTitle(title: string): number | null {
   if (!title) return null;
   
-  // Match patterns like "1KG", "1 KG", "1.5kg", "500g", "2.2lb"
   const kgMatch = title.match(/(\d+(?:\.\d+)?)\s*kg/i);
   if (kgMatch) return Math.round(parseFloat(kgMatch[1]) * 1000);
   
@@ -611,37 +708,30 @@ function parseWeightFromTitle(title: string): number | null {
   return null;
 }
 
-// Parse pack quantity from product content (e.g., "12pcs", "12 Pack", "12 Rolls", "12 Spools")
+// Parse pack quantity from product content
 function parsePackQuantity(title: string, content?: string): number {
   const textToSearch = `${title} ${content || ''}`;
   
-  // Match patterns like "12pcs", "12 pcs", "12-pack", "12 pack", "12 rolls", "12 spools"
   const packMatch = textToSearch.match(/(\d+)\s*(?:pcs?|pack|rolls?|spools?|pieces?|x\s*\d)/i);
   if (packMatch) {
     const qty = parseInt(packMatch[1]);
-    // Only consider it a pack if quantity > 1 and reasonable (max 100)
-    if (qty > 1 && qty <= 100) {
-      return qty;
-    }
+    if (qty > 1 && qty <= 100) return qty;
   }
   
   return 1;
 }
 
-// Parse diameter from URL or title (e.g., "1.75mm", "2.85", "1-75", "2-85")
+// Parse diameter from URL or title
 function parseDiameter(url: string, title: string): number | null {
-  // Check URL first - often has patterns like "2-85" or "1-75"
   const urlDashMatch = url.match(/[_-](1[.-]75|2[.-]85|3[.-]00?)/i);
   if (urlDashMatch) {
     const normalized = urlDashMatch[1].replace('-', '.').replace(',', '.');
     return parseFloat(normalized);
   }
   
-  // Check title for explicit mm patterns
   const titleMmMatch = title?.match(/(1\.75|2\.85|3\.00?)\s*mm/i);
   if (titleMmMatch) return parseFloat(titleMmMatch[1]);
   
-  // Check for diameter in title without mm suffix
   const titleDiamMatch = title?.match(/\b(1\.75|2\.85|3\.00?)\b/);
   if (titleDiamMatch) return parseFloat(titleDiamMatch[1]);
   
@@ -650,17 +740,10 @@ function parseDiameter(url: string, title: string): number | null {
 
 // Detect platform from URL
 function detectPlatform(url: string): 'shopify' | 'unknown' {
-  // Most filament stores use Shopify
-  const shopifyIndicators = [
-    '/products/',
-    '.myshopify.com',
-    'cdn.shopify.com',
-  ];
+  const shopifyIndicators = ['/products/', '.myshopify.com', 'cdn.shopify.com'];
   
   for (const indicator of shopifyIndicators) {
-    if (url.includes(indicator)) {
-      return 'shopify';
-    }
+    if (url.includes(indicator)) return 'shopify';
   }
   
   return 'unknown';
@@ -668,7 +751,6 @@ function detectPlatform(url: string): 'shopify' | 'unknown' {
 
 // Get Shopify JSON URL from product URL
 function getShopifyJsonUrl(url: string): string {
-  // Remove query params and add .json
   const cleanUrl = url.split('?')[0].split('#')[0];
   return cleanUrl.endsWith('.json') ? cleanUrl : `${cleanUrl}.json`;
 }
@@ -677,10 +759,8 @@ function getShopifyJsonUrl(url: string): string {
 function extractVariantIdFromUrl(url: string): string | null {
   try {
     const urlObj = new URL(url);
-    const variantId = urlObj.searchParams.get('variant');
-    return variantId || null;
+    return urlObj.searchParams.get('variant') || null;
   } catch {
-    // Fallback: try regex
     const match = url.match(/[?&]variant=(\d+)/);
     return match ? match[1] : null;
   }
@@ -690,28 +770,12 @@ function extractVariantIdFromUrl(url: string): string | null {
 function detectCurrencyFromUrl(url: string): string {
   const urlLower = url.toLowerCase();
   
-  // Canadian stores
-  if (urlLower.includes('.ca') || urlLower.includes('ca.')) {
-    return 'CAD';
-  }
-  // UK stores
-  if (urlLower.includes('.co.uk') || urlLower.includes('uk.')) {
-    return 'GBP';
-  }
-  // EU stores
-  if (urlLower.includes('.eu') || urlLower.includes('.de') || urlLower.includes('.fr') || urlLower.includes('.it')) {
-    return 'EUR';
-  }
-  // Australian stores
-  if (urlLower.includes('.au') || urlLower.includes('au.')) {
-    return 'AUD';
-  }
-  // Japanese stores
-  if (urlLower.includes('.jp') || urlLower.includes('jp.')) {
-    return 'JPY';
-  }
+  if (urlLower.includes('.ca') || urlLower.includes('ca.')) return 'CAD';
+  if (urlLower.includes('.co.uk') || urlLower.includes('uk.')) return 'GBP';
+  if (urlLower.includes('.eu') || urlLower.includes('.de') || urlLower.includes('.fr') || urlLower.includes('.it')) return 'EUR';
+  if (urlLower.includes('.au') || urlLower.includes('au.')) return 'AUD';
+  if (urlLower.includes('.jp') || urlLower.includes('jp.')) return 'JPY';
   
-  // Default to USD
   return 'USD';
 }
 
@@ -721,22 +785,15 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
   console.log(`Fetching Shopify JSON from: ${jsonUrl}`);
   
   try {
-    // Try to get price in preferred currency by setting headers
     const headers: Record<string, string> = {
       'Accept': 'application/json',
       'User-Agent': 'Mozilla/5.0 (compatible; PriceChecker/1.0)',
     };
     
-    // Some Shopify stores use geo headers
-    if (preferredCurrency === 'CAD') {
-      headers['Accept-Language'] = 'en-CA';
-    } else if (preferredCurrency === 'GBP') {
-      headers['Accept-Language'] = 'en-GB';
-    } else if (preferredCurrency === 'EUR') {
-      headers['Accept-Language'] = 'de-DE';
-    } else if (preferredCurrency === 'AUD') {
-      headers['Accept-Language'] = 'en-AU';
-    }
+    if (preferredCurrency === 'CAD') headers['Accept-Language'] = 'en-CA';
+    else if (preferredCurrency === 'GBP') headers['Accept-Language'] = 'en-GB';
+    else if (preferredCurrency === 'EUR') headers['Accept-Language'] = 'de-DE';
+    else if (preferredCurrency === 'AUD') headers['Accept-Language'] = 'en-AU';
     
     const response = await fetch(jsonUrl, { headers });
     
@@ -775,24 +832,20 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
       };
     }
     
-    // Find the specific variant requested in the URL, or fall back to first available
     const requestedVariantId = extractVariantIdFromUrl(productUrl);
     let variant: ShopifyVariant;
     
     if (requestedVariantId) {
-      // Look for exact variant ID match
       const matchedVariant = data.product.variants.find(v => String(v.id) === requestedVariantId);
       if (matchedVariant) {
         variant = matchedVariant;
         console.log(`Found requested variant ${requestedVariantId}: "${variant.title}"`);
       } else {
-        // Variant ID not found - fall back to first available
         console.log(`Requested variant ${requestedVariantId} not found, using first available`);
         const availableVariant = data.product.variants.find(v => v.available);
         variant = availableVariant || data.product.variants[0];
       }
     } else {
-      // No variant ID in URL - use first available
       const availableVariant = data.product.variants.find(v => v.available);
       variant = availableVariant || data.product.variants[0];
     }
@@ -800,28 +853,20 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
     const price = parseFloat(variant.price);
     const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
     
-    // Extract weight: try variant title first, then product title, then grams field
-    // Product title often has weight like "PLA Matte Basic 1.75mm, 1KG/2.2LB"
-    // Note: variant.grams is often shipping weight (including packaging), not net weight
     const weightFromVariantTitle = parseWeightFromTitle(variant.title);
     const weightFromProductTitle = parseWeightFromTitle(data.product.title);
-    // Only use variant.grams if it's a reasonable filament weight (250g-3000g) and no title weight found
     const isReasonableGrams = variant.grams && variant.grams >= 250 && variant.grams <= 3000;
     let singleSpoolWeight = weightFromVariantTitle || weightFromProductTitle || (isReasonableGrams ? variant.grams : null) || null;
     
-    // Detect pack quantity and adjust weight accordingly
     const packQuantity = parsePackQuantity(data.product.title, variant.title);
     const weightGrams = singleSpoolWeight !== null ? singleSpoolWeight * packQuantity : null;
     
     console.log(`Weight extraction: variant="${variant.title}", product="${data.product.title}", singleSpool=${singleSpoolWeight}g, packQty=${packQuantity}, total=${weightGrams}g`);
     
-    // Extract diameter from URL or title (check both product and variant title)
     const diameterMm = parseDiameter(productUrl, variant.title) || parseDiameter(productUrl, data.product.title);
-    
-    // Detect currency from URL since Shopify JSON doesn't include it
     const detectedCurrency = detectCurrencyFromUrl(productUrl);
     
-    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, packQty: ${packQuantity}, diameter: ${diameterMm}mm, available: ${variant.available})`);
+    console.log(`Shopify price fetched: ${price} ${detectedCurrency} (weight: ${weightGrams}g, diameter: ${diameterMm}mm, available: ${variant.available})`);
     
     return {
       success: true,
@@ -854,7 +899,6 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -871,45 +915,52 @@ serve(async (req) => {
 
     console.log(`Getting current price for: ${productUrl} (preferred currency: ${currency})`);
     
+    // Look up brand config from database
+    const brandConfig = await findBrandConfigByUrl(productUrl);
+    if (brandConfig) {
+      console.log(`Found brand config: ${brandConfig.brand_name} (method: ${brandConfig.extraction_method}, working: ${brandConfig.extraction_working})`);
+      
+      // If brand extraction is marked as not working, log and continue with fallback
+      if (!brandConfig.extraction_working) {
+        console.log(`Brand ${brandConfig.brand_name} extraction marked as not working, using fallback`);
+      }
+    }
+    
     // Check for custom storefronts first (they don't support Shopify JSON)
     const customStorefront = detectCustomStorefront(productUrl);
     let result: PriceResponse;
     
     if (customStorefront) {
       console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl`);
-      result = await fetchPriceWithFirecrawl(productUrl, currency);
+      result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
     } else if (shouldAlwaysUseFirecrawl(productUrl)) {
-      // Some stores have unreliable Shopify JSON API (prices don't match website)
       console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing`);
-      result = await fetchPriceWithFirecrawl(productUrl, currency);
+      result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+    } else if (brandConfig && brandConfig.extraction_method === 'firecrawl') {
+      // Brand config explicitly requests Firecrawl
+      console.log(`Brand config requests Firecrawl extraction`);
+      result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
     } else {
       // Try Shopify JSON API for standard stores
       const platform = detectPlatform(productUrl);
       
       if (platform === 'shopify') {
-        // Check if this is a multi-currency Shopify store and user wants non-USD
-        // These stores show geo-based prices on the frontend, but Shopify JSON API
-        // always returns the base currency (USD), so we need Firecrawl to get the
-        // actual localized price
         const isMultiCurrency = isMultiCurrencyShopifyStore(productUrl);
         
         if (isMultiCurrency && currency !== 'USD') {
-          console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl for geo-localized price`);
-          result = await fetchPriceWithFirecrawl(productUrl, currency);
+          console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl`);
+          result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
         } else {
-          // Standard Shopify store or USD requested - use JSON API
           result = await fetchShopifyPrice(productUrl, currency);
           
-          // If Shopify fails, try Firecrawl as fallback
           if (!result.success) {
             console.log('Shopify failed, trying Firecrawl as fallback...');
-            result = await fetchPriceWithFirecrawl(productUrl, currency);
+            result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
           }
         }
       } else {
-        // For unknown platforms, try Firecrawl
         console.log('Unknown platform, trying Firecrawl...');
-        result = await fetchPriceWithFirecrawl(productUrl, currency);
+        result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
       }
     }
 
