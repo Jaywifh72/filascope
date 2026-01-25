@@ -1,226 +1,275 @@
 
 
-# Create `useAdminPriceRefresh` Hook
+# Create `AdminPriceRefreshButton` Component
 
 ## Overview
 
-Create a new admin hook that provides functionality to manually refresh filament prices by calling the `get-current-price` Edge Function and persisting results to the database. The hook will also support cache invalidation for the `useCurrentPrice` hook.
+Create an admin-only button component that allows manual price refresh for filament products. The button displays a refresh icon, shows loading/success/error states with visual feedback, and integrates with the existing `useAdminPriceRefresh` hook.
 
 ---
 
-## Files to Create/Modify
+## File to Create
 
-### 1. **Modify** `src/hooks/useCurrentPrice.ts`
+### `src/components/admin/AdminPriceRefreshButton.tsx`
 
-Export a cache invalidation function to allow external clearing of the price cache.
+---
 
-**Changes:**
-- Export a new `invalidatePriceCache(url: string)` function
-- Export the `priceCache` Map for direct access if needed
+## Component Structure
+
+### Props Interface
 
 ```typescript
-// Add export for cache invalidation
-export function invalidatePriceCache(productUrl: string): boolean {
-  return priceCache.delete(productUrl);
+interface AdminPriceRefreshButtonProps {
+  productUrl: string;
+  filamentId: string;
+  onRefreshComplete?: (success: boolean, newPrice?: number) => void;
+  className?: string;
 }
 ```
 
+### State Management
+
+- **Visual state**: `'idle' | 'refreshing' | 'success' | 'error'`
+- Tracks current visual state for icon/animation display
+- Success/error states auto-reset to idle after brief display (1.5s)
+
 ---
 
-### 2. **Create** `src/hooks/useAdminPriceRefresh.ts`
+## Implementation Details
 
-New hook with the following structure:
-
-**Parameters:**
-- `productUrl: string` - The URL to fetch the price from
-- `filamentId: string` - The database ID to update
-
-**Exported Interface:**
+### 1. Admin-Only Rendering
 ```typescript
-interface AdminPriceRefreshResult {
-  success: boolean;
-  newPrice?: number;
-  compareAtPrice?: number;
-  currency?: string;
-  error?: string;
-}
+const { user, isAdmin, loading } = useAuth();
 
-interface UseAdminPriceRefreshReturn {
-  refreshPrice: () => Promise<AdminPriceRefreshResult>;
-  isRefreshing: boolean;
-  lastRefreshError: string | null;
+// Return null if not authenticated or not admin
+if (loading || !user || !isAdmin) {
+  return null;
 }
 ```
 
-**Implementation Details:**
+### 2. Icon States
 
-1. **State Management:**
-   - `isRefreshing: boolean` - Loading state during refresh
-   - `lastRefreshError: string | null` - Most recent error message
+| State | Icon | Visual |
+|-------|------|--------|
+| `idle` | `RefreshCw` | Default muted color |
+| `refreshing` | `RefreshCw` | Spinning animation, disabled |
+| `success` | `Check` | Green color, brief display |
+| `error` | `X` | Red color, brief display |
 
-2. **`refreshPrice()` Function:**
-   - Calls `get-current-price` Edge Function with `forceRefresh: true` parameter
-   - Handles retry logic for transient errors (BOOT_ERROR, 503)
-   - On success:
-     - Updates `filaments` table with: `variant_price`, `variant_compare_at_price`, `last_scraped_at`, `price_source`
-     - Optionally inserts into `price_history` table
-     - Calls `invalidatePriceCache(productUrl)` from `useCurrentPrice`
-     - Returns `{ success: true, newPrice, compareAtPrice, currency }`
-   - On 404 error:
-     - Returns `{ success: false, error: 'Product page not found (404)' }`
-     - Does NOT crash or throw
-   - On other errors:
-     - Returns `{ success: false, error: <message> }`
+### 3. Button Styling
+- Uses `Button` component with `size="icon"` and `variant="ghost"`
+- Small size: `h-6 w-6` with smaller icon `w-3.5 h-3.5`
+- Muted styling that becomes visible on hover
+- CSS classes for state colors: `text-green-500`, `text-destructive`
 
-3. **Database Update Fields:**
-   ```typescript
-   {
-     variant_price: data.price,
-     variant_compare_at_price: data.compareAtPrice,
-     last_scraped_at: new Date().toISOString(),
-     price_source: 'admin_refresh',
-   }
-   ```
+### 4. Tooltip Integration
+- Wraps button in `TooltipProvider` + `Tooltip`
+- Default tooltip: "Refresh price from store"
+- On error: Shows error message in tooltip content
 
-4. **Price History Insert:**
-   ```typescript
-   {
-     filament_id: filamentId,
-     price: data.price,
-     currency: data.currency || 'USD',
-     source: 'admin_refresh',
-     recorded_at: new Date().toISOString(),
-     region: currencyToRegion(data.currency),
-   }
-   ```
+### 5. Animation Classes
+```css
+/* Spinning animation for refreshing state */
+animate-spin
 
----
-
-## Technical Implementation
-
-### Hook Code Structure
-
-```typescript
-import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { invalidatePriceCache } from './useCurrentPrice';
-
-interface AdminPriceRefreshResult {
-  success: boolean;
-  newPrice?: number;
-  compareAtPrice?: number;
-  currency?: string;
-  error?: string;
-}
-
-interface UseAdminPriceRefreshReturn {
-  refreshPrice: () => Promise<AdminPriceRefreshResult>;
-  isRefreshing: boolean;
-  lastRefreshError: string | null;
-}
-
-const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 500;
-
-function isTransientError(error: any): boolean {
-  if (!error) return false;
-  const message = error.message || error.error || String(error);
-  return message.includes('BOOT_ERROR') || 
-         message.includes('503') || 
-         message.includes('Function failed to start');
-}
-
-function currencyToRegion(currency: string): string {
-  const map: Record<string, string> = {
-    'USD': 'US', 'CAD': 'CA', 'EUR': 'EU', 
-    'GBP': 'UK', 'AUD': 'AU', 'JPY': 'JP'
-  };
-  return map[currency] || 'US';
-}
-
-export function useAdminPriceRefresh(
-  productUrl: string,
-  filamentId: string
-): UseAdminPriceRefreshReturn {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefreshError, setLastRefreshError] = useState<string | null>(null);
-
-  const refreshPrice = useCallback(async (): Promise<AdminPriceRefreshResult> => {
-    setIsRefreshing(true);
-    setLastRefreshError(null);
-
-    // Retry logic with exponential backoff
-    // Call edge function with forceRefresh: true
-    // Handle 404 gracefully
-    // Update database on success
-    // Invalidate useCurrentPrice cache
-    // Return result
-
-    setIsRefreshing(false);
-    return { success, ... };
-  }, [productUrl, filamentId]);
-
-  return { refreshPrice, isRefreshing, lastRefreshError };
-}
+/* Brief success/error flash */
+transition-colors duration-200
 ```
 
----
-
-## Error Handling
-
-| Scenario | Behavior |
-|----------|----------|
-| 404 Page Not Found | Return `{ success: false, error: 'Product page not found (404)' }` |
-| Network timeout | Retry up to 2 times, then return error |
-| BOOT_ERROR / 503 | Retry with exponential backoff |
-| Database update fails | Return `{ success: false, error: 'Failed to save price' }` |
-| Invalid price response | Return `{ success: false, error: 'Invalid price data received' }` |
-
----
-
-## Cache Invalidation Flow
-
-```text
-1. Admin clicks "Refresh Price"
-2. refreshPrice() is called
-3. Edge function fetches fresh price
-4. Database is updated
-5. invalidatePriceCache(productUrl) clears the in-memory cache
-6. Next useCurrentPrice call will fetch fresh from edge function
+### 6. Click Handler Flow
+```typescript
+const handleClick = async () => {
+  setVisualState('refreshing');
+  
+  const result = await refreshPrice();
+  
+  if (result.success) {
+    setVisualState('success');
+    toast.success(`Price updated to $${result.newPrice?.toFixed(2)}`);
+    onRefreshComplete?.(true, result.newPrice);
+    
+    // Reset to idle after 1.5s
+    setTimeout(() => setVisualState('idle'), 1500);
+  } else {
+    setVisualState('error');
+    toast.error(result.error || 'Failed to refresh price');
+    onRefreshComplete?.(false);
+    
+    // Reset to idle after 2s (longer for error)
+    setTimeout(() => setVisualState('idle'), 2000);
+  }
+};
 ```
 
 ---
 
 ## Dependencies
 
-- `@/integrations/supabase/client` - Supabase client
-- `./useCurrentPrice` - For `invalidatePriceCache` export
+| Import | From |
+|--------|------|
+| `useState` | `react` |
+| `Button` | `@/components/ui/button` |
+| `Tooltip, TooltipContent, TooltipProvider, TooltipTrigger` | `@/components/ui/tooltip` |
+| `toast` | `sonner` |
+| `RefreshCw, Check, X` | `lucide-react` |
+| `useAuth` | `@/hooks/useAuth` |
+| `useAdminPriceRefresh` | `@/hooks/useAdminPriceRefresh` |
+| `cn` | `@/lib/utils` |
+
+---
+
+## Full Component Code
+
+```tsx
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { toast } from 'sonner';
+import { RefreshCw, Check, X } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminPriceRefresh } from '@/hooks/useAdminPriceRefresh';
+import { cn } from '@/lib/utils';
+
+interface AdminPriceRefreshButtonProps {
+  productUrl: string;
+  filamentId: string;
+  onRefreshComplete?: (success: boolean, newPrice?: number) => void;
+  className?: string;
+}
+
+type VisualState = 'idle' | 'refreshing' | 'success' | 'error';
+
+export function AdminPriceRefreshButton({
+  productUrl,
+  filamentId,
+  onRefreshComplete,
+  className,
+}: AdminPriceRefreshButtonProps) {
+  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { refreshPrice, isRefreshing, lastRefreshError } = useAdminPriceRefresh(
+    productUrl,
+    filamentId
+  );
+  const [visualState, setVisualState] = useState<VisualState>('idle');
+
+  // Only render for authenticated admin users
+  if (authLoading || !user || !isAdmin) {
+    return null;
+  }
+
+  const handleClick = async () => {
+    if (isRefreshing) return;
+    
+    setVisualState('refreshing');
+    
+    const result = await refreshPrice();
+    
+    if (result.success) {
+      setVisualState('success');
+      toast.success(`Price updated to $${result.newPrice?.toFixed(2)}`);
+      onRefreshComplete?.(true, result.newPrice);
+      
+      // Reset to idle after brief success display
+      setTimeout(() => setVisualState('idle'), 1500);
+    } else {
+      setVisualState('error');
+      toast.error(result.error || 'Failed to refresh price');
+      onRefreshComplete?.(false);
+      
+      // Reset to idle after error display
+      setTimeout(() => setVisualState('idle'), 2000);
+    }
+  };
+
+  const getIcon = () => {
+    switch (visualState) {
+      case 'refreshing':
+        return <RefreshCw className="w-3.5 h-3.5 animate-spin" />;
+      case 'success':
+        return <Check className="w-3.5 h-3.5 text-green-500" />;
+      case 'error':
+        return <X className="w-3.5 h-3.5 text-destructive" />;
+      default:
+        return <RefreshCw className="w-3.5 h-3.5" />;
+    }
+  };
+
+  const getTooltipContent = () => {
+    if (visualState === 'error' && lastRefreshError) {
+      return lastRefreshError;
+    }
+    if (visualState === 'success') {
+      return 'Price updated!';
+    }
+    if (visualState === 'refreshing') {
+      return 'Refreshing price...';
+    }
+    return 'Refresh price from store';
+  };
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'h-6 w-6 text-muted-foreground hover:text-foreground',
+              visualState === 'success' && 'text-green-500 hover:text-green-500',
+              visualState === 'error' && 'text-destructive hover:text-destructive',
+              className
+            )}
+            onClick={handleClick}
+            disabled={isRefreshing}
+            aria-label="Refresh price from store"
+          >
+            {getIcon()}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs">
+          {getTooltipContent()}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+```
 
 ---
 
 ## Usage Example
 
 ```tsx
-function AdminPriceRefreshButton({ productUrl, filamentId }) {
-  const { refreshPrice, isRefreshing, lastRefreshError } = useAdminPriceRefresh(
-    productUrl,
-    filamentId
-  );
+// In FilamentPurchaseSidebar or similar component
+import { AdminPriceRefreshButton } from '@/components/admin/AdminPriceRefreshButton';
 
-  const handleClick = async () => {
-    const result = await refreshPrice();
-    if (result.success) {
-      toast.success(`Price updated to $${result.newPrice}`);
-    } else {
-      toast.error(result.error);
-    }
-  };
-
-  return (
-    <Button onClick={handleClick} disabled={isRefreshing}>
-      {isRefreshing ? <Loader2 className="animate-spin" /> : 'Refresh Price'}
-    </Button>
-  );
-}
+// Positioned next to "Last checked X ago" text
+<div className="flex items-center gap-2 text-xs text-muted-foreground">
+  <span>Last checked {formatDistanceToNow(lastCheckedAt)} ago</span>
+  <AdminPriceRefreshButton
+    productUrl={product.product_url}
+    filamentId={product.id}
+    onRefreshComplete={(success, newPrice) => {
+      if (success) {
+        // Optionally trigger a refetch or state update
+      }
+    }}
+  />
+</div>
 ```
+
+---
+
+## Visual Behavior Summary
+
+1. **Default (idle)**: Subtle gray refresh icon, shows tooltip "Refresh price from store"
+2. **On click (refreshing)**: Icon spins, button disabled, tooltip shows "Refreshing price..."
+3. **On success**: Green checkmark briefly, toast "Price updated to $X.XX", resets after 1.5s
+4. **On error**: Red X briefly, toast with error message, tooltip shows error, resets after 2s
 
