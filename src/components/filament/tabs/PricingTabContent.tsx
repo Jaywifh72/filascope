@@ -16,24 +16,22 @@ import {
   MapPin,
   Info,
   Globe,
-  AlertCircle
+  AlertTriangle,
+  Truck,
+  ShoppingBag
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useRegion } from '@/contexts/RegionContext';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { usePriceHistory } from '@/hooks/usePriceHistory';
 import { usePriceAlerts } from '@/hooks/usePriceAlerts';
-import { useUnifiedRegionalPricing } from '@/hooks/useUnifiedRegionalPricing';
-import { PriceFreshnessIndicator, PriceFreshnessText } from '@/components/price/PriceFreshnessIndicator';
+import { useUnifiedRegionalPricing, RegionalStoreData } from '@/hooks/useUnifiedRegionalPricing';
+import { PriceFreshnessText } from '@/components/price/PriceFreshnessIndicator';
 import { cn } from '@/lib/utils';
-import { format, parseISO } from 'date-fns';
 import type { Retailer } from '../hero/RetailersModal';
 import { PriceHistoryChart } from '../PriceHistoryChart';
 import { PriceAlertModal } from '../PriceAlertModal';
 import { REGIONS } from '@/config/regions';
-import { formatPrice as formatCurrencyPrice } from '@/config/currencies';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { CurrencyCode } from '@/types/regional';
 import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -51,6 +49,104 @@ interface PricingTabContentProps {
   onRetailerClick: (retailer: Retailer) => void;
   brandId?: string | null;
   productSku?: string | null;
+}
+
+// Store Card Component - Focus on links rather than prices
+interface StoreCardProps {
+  store: RegionalStoreData;
+  productSku: string | null | undefined;
+  userRegion: string;
+  brandName: string;
+}
+
+function StoreCard({ store, productSku, userRegion, brandName }: StoreCardProps) {
+  const isUserRegion = store.regionCode === userRegion;
+  const storeRegionConfig = REGIONS[store.regionCode as keyof typeof REGIONS];
+  
+  // Generate product-specific URL
+  const storeUrl = store.productUrlPattern && productSku
+    ? interpolateProductUrl(store.productUrlPattern, productSku)
+    : store.baseUrl;
+
+  const handleClick = () => {
+    window.open(storeUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <div 
+      className={cn(
+        "p-4 rounded-lg border transition-all cursor-pointer group",
+        isUserRegion 
+          ? "border-primary bg-primary/5 hover:bg-primary/10" 
+          : "border-border hover:border-primary/50 hover:bg-muted/30"
+      )}
+      onClick={handleClick}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{store.flag}</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{store.storeName}</span>
+              {isUserRegion && (
+                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
+                  Your Region
+                </Badge>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              <span>{storeRegionConfig?.name || store.regionCode}</span>
+              <span>•</span>
+              <span>{store.currencyCode}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            size="sm"
+            variant={isUserRegion ? "default" : "outline"}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
+            className={cn(
+              "gap-1",
+              isUserRegion && [
+                "bg-gradient-to-r from-primary to-primary/80",
+                "hover:from-primary/90 hover:to-primary/70",
+              ]
+            )}
+          >
+            Check Price
+            <ExternalLink className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+      
+      {/* Shipping info */}
+      <div className="mt-2 flex flex-wrap gap-2">
+        {store.shipsFrom && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            Ships from {store.shipsFrom}
+          </span>
+        )}
+        {store.estimatedShippingDays && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Truck className="w-3 h-3" />
+            {store.estimatedShippingDays} days
+          </span>
+        )}
+        {store.freeShippingThreshold && (
+          <span className="text-xs text-emerald-400 flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" />
+            Free shipping over {store.currencyCode === 'USD' ? '$' : store.currencyCode}{store.freeShippingThreshold}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function PricingTabContent({
@@ -76,8 +172,9 @@ export function PricingTabContent({
     brandName: filament.vendor || '',
     basePrice: pricePerSpool,
     baseCurrency: 'USD',
-    productSlug: productSku || undefined,
+    productSlug: productSku || filament.product_handle || undefined,
     originalUrl: productUrl,
+    productName: filament.product_title,
     filamentId: filament.id,
     priceLastVerifiedAt: filament.last_scraped_at,
     priceSource: filament.price_source,
@@ -90,7 +187,6 @@ export function PricingTabContent({
     isLoading: storesLoading,
     priceConfidence,
     lastVerifiedAt,
-    priceSource,
     timeAgo: freshnessTimeAgo,
   } = unifiedPricing;
 
@@ -101,7 +197,7 @@ export function PricingTabContent({
     return 0;
   });
 
-  // Fetch live price to match the sidebar
+  // Fetch live price for chart/alert purposes
   const { 
     currentPrice: livePrice, 
     weightGrams: liveWeightGrams,
@@ -117,413 +213,241 @@ export function PricingTabContent({
     isLoading: historyLoading
   } = usePriceHistory(filament.id, pricePerKg, 180);
 
-  // Calculate live price per kg
+  // Calculate display price for alerts/charts
   const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
   const fallbackWeightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : 1;
 
   let displayPricePerKg: number | null = null;
-  let displayPricePerSpool: number | null = null;
-
   if (isLivePrice && livePrice !== null) {
-    displayPricePerSpool = livePrice;
     displayPricePerKg = liveWeightKg 
       ? livePrice / liveWeightKg 
       : livePrice / fallbackWeightKg;
   } else {
     displayPricePerKg = pricePerKg;
-    displayPricePerSpool = pricePerSpool;
   }
 
   // Check for existing alert
   const existingAlert = getAlert(filament.id);
   const alertExists = hasAlert(filament.id);
 
-  // Format live prices in their original currency
-  const formatLivePrice = (price: number): string => {
-    const symbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
-    const symbol = symbols[livePriceCurrency] || '$';
-    return `${symbol}${price.toFixed(2)}`;
-  };
-
-  const formatDisplayPrice = (price: number | null, forceNoSuffix = true) => {
-    if (!price) return null;
-    if (isLivePrice) {
-      return formatLivePrice(price);
-    }
-    return formatPrice(price);
-  };
-
-  // Get currency symbol for charts
+  // Currency symbol
   const currencySymbol = isLivePrice 
     ? ({ 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' }[livePriceCurrency] || '$')
     : '$';
 
-  // Calculate % above historical low
-  const percentAboveLow = displayPricePerKg && historicalLow && historicalLow > 0
-    ? Math.round(((displayPricePerKg - historicalLow) / historicalLow) * 100)
-    : null;
-
   return (
     <div className="space-y-6">
-      {/* Current Best Price */}
-      <Card className="bg-gradient-to-br from-primary/5 to-primary/[0.02] border-primary/20">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium text-emerald-400">Best Price Available</span>
-                {priceLoading && (
-                  <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-                )}
-                {/* Price freshness indicator */}
-                <PriceFreshnessText 
-                  lastVerified={lastVerifiedAt?.toISOString()} 
-                  confidence={priceConfidence}
-                  className="ml-2"
-                />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-white">
-                  {formatDisplayPrice(displayPricePerKg) || 'N/A'}
-                </span>
-                <span className="text-lg text-muted-foreground">/kg</span>
-              </div>
-              {displayPricePerSpool && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {formatDisplayPrice(displayPricePerSpool)} per spool ({filament.net_weight_g}g)
-                </p>
-              )}
-              
-              {/* Price badges */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {isBestIn6Months && (
-                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1">
-                    <ArrowDown className="w-3 h-3" />
-                    Best in 6 months
-                  </Badge>
-                )}
-                {alertExists && existingAlert && (
-                  <Badge variant="outline" className="gap-1">
-                    <Bell className="w-3 h-3" />
-                    Alert: {currencySymbol}{existingAlert.targetPrice.toFixed(2)}/kg
-                  </Badge>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              {affiliateUrl && (
-                <Button
-                  onClick={() => window.open(affiliateUrl, '_blank')}
-                  className="gap-2"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Buy Now
-                  <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => setPriceAlertModalOpen(true)}
-                className={cn(
-                  "gap-2",
-                  alertExists && "border-primary/50 text-primary"
-                )}
-              >
-                <Bell className="w-4 h-4" />
-                {alertExists ? 'Edit Alert' : 'Set Alert'}
-              </Button>
-            </div>
+      {/* Honest Pricing Disclaimer */}
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm text-amber-200 font-medium">
+              Prices change frequently
+            </p>
+            <p className="text-sm text-amber-200/80 mt-1">
+              We track prices for reference, but stores run sales and promotions that we can't always capture in real-time. 
+              Click on a store below to see the current price.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Historical Low Indicator */}
-      {historicalLow && historicalLow > 0 && !historyLoading && (
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                  <TrendingDown className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium">Historical Low Price</div>
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Lowest recorded in the past 6 months
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold text-emerald-400">
-                  {currencySymbol}{historicalLow.toFixed(2)}/kg
-                </div>
-                {percentAboveLow !== null && percentAboveLow > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    Current is {percentAboveLow}% above low
-                  </div>
-                )}
-                {percentAboveLow !== null && percentAboveLow <= 0 && (
-                  <div className="text-xs text-emerald-400">
-                    At or below historical low!
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Price History Chart */}
-      <Card className="bg-card/50 border-border">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <TrendingDown className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-semibold">Price History</h3>
-          </div>
-          <PriceHistoryChart
-            filamentId={filament.id}
-            currentPrice={displayPricePerKg}
-            currencySymbol={currencySymbol}
-          />
-        </CardContent>
-      </Card>
-
-      {/* All Retailers */}
+      {/* Where to Buy - Regional Stores */}
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <Store className="w-5 h-5" />
+                <Globe className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-semibold">Available Retailers</h3>
+              <div>
+                <h3 className="text-lg font-semibold">Where to Buy</h3>
+                <p className="text-xs text-muted-foreground">Official {filament.vendor} stores</p>
+              </div>
             </div>
-            {retailers.length > 3 && (
-              <Button variant="ghost" size="sm" onClick={onViewRetailers}>
-                View All ({retailers.length})
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
+            {hasRegionalStore && (
+              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                Available in {REGIONS[region]?.name}
+              </Badge>
             )}
           </div>
 
-          <div className="space-y-3">
-            {retailers.map((retailer, idx) => {
-              // For the primary store retailer, use the live price if available
-              const retailerPrice = (idx === 0 && retailer.id === 'store' && isLivePrice && livePrice !== null)
-                ? livePrice
-                : retailer.price;
-              
-              return (
-                <div 
-                  key={retailer.id}
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer",
-                    idx === 0 
-                      ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
-                      : "bg-muted/20 border-border hover:bg-muted/40"
-                  )}
-                  onClick={() => {
-                    onRetailerClick(retailer);
-                    if (retailer.url) window.open(retailer.url, '_blank');
-                  }}
+          {storesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : sortedStores.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="mb-2">No regional stores found for {filament.vendor}</p>
+              {productUrl && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open(productUrl, '_blank', 'noopener,noreferrer')}
+                  className="gap-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-2 h-2 rounded-full",
-                      retailer.inStock ? "bg-emerald-500" : "bg-red-500"
-                    )} />
-                    <div>
-                      <div className="font-medium">{retailer.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {retailer.inStock ? retailer.shippingEstimate : 'Out of stock'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {retailerPrice && (
-                      <div className="text-right">
-                        <div className="font-bold">
-                          {idx === 0 && retailer.id === 'store' && isLivePrice
-                            ? formatLivePrice(retailerPrice)
-                            : formatDisplayPrice(retailerPrice)
-                          }
-                        </div>
-                      </div>
-                    )}
-                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-              );
-            })}
+                  Visit Product Page
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sortedStores.map((store) => (
+                <StoreCard
+                  key={store.id}
+                  store={store}
+                  productSku={productSku || filament.product_handle}
+                  userRegion={region}
+                  brandName={filament.vendor || 'Store'}
+                />
+              ))}
+            </div>
+          )}
 
-            {retailers.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Store className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>No retailers available for this region</p>
-              </div>
-            )}
-          </div>
+          {/* No Local Store Notice */}
+          {!hasRegionalStore && sortedStores.length > 0 && (
+            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <p className="text-sm text-amber-400 flex items-center gap-2">
+                <Info className="w-4 h-4 shrink-0" />
+                {filament.vendor} doesn't have a dedicated store in {REGIONS[region]?.name}. 
+                You may need to order from another region.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Regional Stores Section */}
-      {brandId && (
+      {/* Price Alerts - Still useful for tracking */}
+      <Card className="bg-card/50 border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Price Alerts</h3>
+                <p className="text-xs text-muted-foreground">Get notified when we detect a price drop</p>
+              </div>
+            </div>
+            <Button
+              variant={alertExists ? "default" : "outline"}
+              onClick={() => setPriceAlertModalOpen(true)}
+              className={cn(
+                "gap-2",
+                alertExists && "border-primary/50"
+              )}
+            >
+              <Bell className="w-4 h-4" />
+              {alertExists ? 'Edit Alert' : 'Set Price Alert'}
+            </Button>
+          </div>
+          
+          {alertExists && existingAlert && (
+            <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+              <p className="text-sm text-primary flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                Alert set for {currencySymbol}{existingAlert.targetPrice.toFixed(2)}/kg
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Price History Chart - Still valuable context */}
+      <Card className="bg-card/50 border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <TrendingDown className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Price History</h3>
+              <p className="text-xs text-muted-foreground">Track price trends over time</p>
+            </div>
+          </div>
+          
+          {/* Historical low indicator */}
+          {historicalLow && historicalLow > 0 && !historyLoading && (
+            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ArrowDown className="w-4 h-4 text-emerald-400" />
+                <span className="text-sm text-emerald-400">Lowest recorded in 6 months:</span>
+              </div>
+              <span className="font-bold text-emerald-400">{currencySymbol}{historicalLow.toFixed(2)}/kg</span>
+            </div>
+          )}
+          
+          <PriceHistoryChart
+            filamentId={filament.id}
+            currentPrice={displayPricePerKg}
+            currencySymbol={currencySymbol}
+          />
+          
+          <p className="text-xs text-muted-foreground mt-4 text-center">
+            Historical data is based on our periodic price checks. Actual prices may have varied.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Other Retailers - Keep but simplify */}
+      {retailers.length > 0 && (
         <Card className="bg-card/50 border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Globe className="w-5 h-5" />
+                  <Store className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-semibold">Regional Stores</h3>
-                {hasRegionalStore && (
-                  <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
-                    {REGIONS[region]?.flag} Ships Locally
-                  </Badge>
-                )}
+                <div>
+                  <h3 className="text-lg font-semibold">Other Retailers</h3>
+                  <p className="text-xs text-muted-foreground">Amazon and third-party sellers</p>
+                </div>
               </div>
             </div>
 
-            {storesLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : sortedStores.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>No regional stores available for this brand</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {sortedStores.map((store) => {
-                  const isUserRegion = store.regionCode === region;
-                  const storeRegionConfig = REGIONS[store.regionCode as keyof typeof REGIONS];
-                  const storeCurrency = store.currencyCode as CurrencyCode;
-                  const needsConversion = storeCurrency !== currency;
-                  
-                  // Get the base price in the store's native currency
-                  // If store currency matches base (USD), use pricePerSpool directly
-                  // Otherwise, convert from USD to store's currency first
-                  const baseUsdPrice = pricePerSpool || 0;
-                  const usdToStoreRate = storeCurrency === 'USD' ? 1 : getConversionRate('USD', storeCurrency);
-                  const nativePriceInStoreCurrency = baseUsdPrice * usdToStoreRate;
-                  
-                  // Now convert store's native price to user's currency if needed
-                  const storeToUserRate = needsConversion 
-                    ? getConversionRate(storeCurrency, currency) 
-                    : 1;
-                  const displayPrice = nativePriceInStoreCurrency * storeToUserRate;
-
-                  // Generate product-specific URL using interpolation
-                  const storeUrl = store.productUrlPattern && productSku
-                    ? interpolateProductUrl(store.productUrlPattern, productSku)
-                    : store.baseUrl;
-
-                  return (
-                    <div 
-                      key={store.id}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer",
-                        isUserRegion 
-                          ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
-                          : "bg-muted/20 border-border hover:bg-muted/40"
-                      )}
-                      onClick={() => window.open(storeUrl, '_blank')}
-                    >
-                      <div className="flex items-center gap-3">
-                        {/* Store Region Flag */}
-                        <span className="text-2xl">{store.flag}</span>
-                        
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{store.storeName}</span>
-                            {isUserRegion && (
-                              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                                Local
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-2">
-                            {store.shipsFrom && (
-                              <>
-                                <MapPin className="w-3 h-3" />
-                                <span>Ships from {store.shipsFrom}</span>
-                              </>
-                            )}
-                            {store.estimatedShippingDays && (
-                              <span>• {store.estimatedShippingDays} days</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="flex items-center gap-1 font-bold">
-                            {needsConversion && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs max-w-xs">
-                                  <p className="font-medium">Store Price: {formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)}</p>
-                                  <p className="text-muted-foreground">Rate: 1 {storeCurrency} = {storeToUserRate.toFixed(4)} {currency}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                            <span className={needsConversion ? "text-muted-foreground" : ""}>
-                              {needsConversion ? '~' : ''}{formatCurrencyPrice(displayPrice, currency)}
-                            </span>
-                          </div>
-                          {needsConversion && (
-                            <div className="text-xs text-muted-foreground">
-                              {formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)} native
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(storeUrl, '_blank');
-                          }}
-                        >
-                          Visit
-                          <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                        </Button>
+            <div className="space-y-2">
+              {retailers.map((retailer) => (
+                <div 
+                  key={retailer.id}
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer",
+                    "bg-muted/20 border-border hover:bg-muted/40 hover:border-primary/30"
+                  )}
+                  onClick={() => {
+                    onRetailerClick(retailer);
+                    if (retailer.url) window.open(retailer.url, '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-2 h-2 rounded-full shrink-0",
+                      retailer.inStock ? "bg-emerald-500" : "bg-red-500"
+                    )} />
+                    <div>
+                      <div className="font-medium text-sm">{retailer.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {retailer.inStock ? retailer.shippingEstimate : 'Check availability'}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* No Local Store Notice */}
-            {!hasRegionalStore && sortedStores.length > 0 && (
-              <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                <p className="text-sm text-amber-400">
-                  {REGIONS[region]?.flag} {REGIONS[region]?.name}: This brand doesn't have a dedicated store in your region. 
-                  Prices shown are converted from other regional stores.
-                </p>
-              </div>
-            )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1"
+                  >
+                    View
+                    <ExternalLink className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Pricing Disclaimer */}
-      <div className="flex items-start gap-3 p-4 bg-muted/20 rounded-lg border border-border">
-        <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
-        <p className="text-sm text-muted-foreground">
-          Prices shown are from our database and may not reflect current promotions or sales. 
-          Always verify the final price at the retailer before purchasing.
-        </p>
-      </div>
 
       {/* Price Alert Modal */}
       <PriceAlertModal
