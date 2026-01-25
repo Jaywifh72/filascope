@@ -51,29 +51,29 @@ const DEFAULT_EXCLUDE_PATTERNS = [
   'student\\s*discount',   // Student discount sections
 ];
 
-// CRITICAL: Remove "Save $X.XX" and promotional patterns from text BEFORE extracting prices
+// CRITICAL: Remove promotional patterns from text BEFORE extracting prices
 // This prevents capturing savings amounts, coupon values, etc. as product prices
 function removeSavingsAmounts(text: string): string {
   let cleaned = text;
   
-  // Remove "Save $X.XX" patterns
+  // CRITICAL: Remove entire promotional lines/sections FIRST (before any price extraction)
+  // Remove lines containing "coupon pack" - e.g., "💵 $500 coupon pack for your order!"
+  cleaned = cleaned.replace(/[^\n]*\$\d+[^\n]*coupon\s*pack[^\n]*/gi, ' ');
+  // Remove lines containing "obtain" + dollar amount (promotional signup)
+  cleaned = cleaned.replace(/[^\n]*obtain[^\n]*\$\d+[^\n]*/gi, ' ');
+  // Remove lines with "Subscribe" and dollar amounts
+  cleaned = cleaned.replace(/[^\n]*subscribe[^\n]*\$\d+[^\n]*/gi, ' ');
+  // Remove student discount promotional lines
+  cleaned = cleaned.replace(/[^\n]*student\s*discount[^\n]*\$\d+[^\n]*/gi, ' ');
+  
+  // Standard savings patterns
   cleaned = cleaned.replace(/Save\s*\$[\d,.]+/gi, ' ');
-  // Remove "Saving $X.XX" patterns
   cleaned = cleaned.replace(/Saving\s*\$[\d,.]+/gi, ' ');
-  // Remove "$X off" patterns  
   cleaned = cleaned.replace(/\$[\d,.]+\s*off\b/gi, ' ');
-  // Remove "$X discount" patterns
   cleaned = cleaned.replace(/\$[\d,.]+\s*discount/gi, ' ');
-  // Remove "$X coupon" patterns
   cleaned = cleaned.replace(/\$[\d,.]+\s*coupon/gi, ' ');
-  // CRITICAL: Remove "💵 $500 coupon pack" style promotions
   cleaned = cleaned.replace(/💵?\s*\$[\d,.]+\s*coupon\s*pack/gi, ' ');
-  // Remove "obtain a $X coupon" patterns
-  cleaned = cleaned.replace(/obtain\s+a?\s*\$[\d,.]+/gi, ' ');
-  // Remove any "$X" followed by "coupon" within 5 words
-  cleaned = cleaned.replace(/\$[\d,.]+[^$]{0,30}coupon/gi, ' ');
-  // Remove student discount sections
-  cleaned = cleaned.replace(/student\s*discount[^$]*\$[\d,.]+/gi, ' ');
+  cleaned = cleaned.replace(/💵\s*\$[\d,.]+/gi, ' '); // Remove emoji + price (like 💵 $500)
   
   return cleaned;
 }
@@ -147,10 +147,18 @@ function extractPriceWithConfig(
   // First, try to extract using the Creality sale format pattern
   const saleResult = extractSalePriceBeforeSave(markdown);
   if (saleResult.salePrice && saleResult.salePrice >= priceRangeMin && saleResult.salePrice <= priceRangeMax) {
-    console.log(`Sale format extraction: $${saleResult.salePrice}, compare: $${saleResult.compareAtPrice}`);
+    // CRITICAL: Also validate compareAtPrice - it must be within reasonable range (not $500 coupon packs!)
+    // Compare-at price should be reasonable (max 3x the sale price or within $200)
+    const maxCompareAt = Math.min(200, saleResult.salePrice * 3);
+    const validCompareAt = saleResult.compareAtPrice && 
+      saleResult.compareAtPrice >= priceRangeMin && 
+      saleResult.compareAtPrice <= maxCompareAt &&
+      saleResult.compareAtPrice > saleResult.salePrice;
+    
+    console.log(`Sale format extraction: $${saleResult.salePrice}, compare: ${validCompareAt ? `$${saleResult.compareAtPrice}` : 'invalid/filtered'}`);
     return {
       price: saleResult.salePrice,
-      compareAtPrice: saleResult.compareAtPrice,
+      compareAtPrice: validCompareAt ? saleResult.compareAtPrice : null,
       currency: preferredCurrency,
       available: true,
       matchedPattern: 'sale-before-save',
