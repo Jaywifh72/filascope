@@ -25,6 +25,7 @@ import {
   FileSearch,
   Sparkles,
   BookOpen,
+  Link2Off,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -78,6 +79,7 @@ const navGroups: NavGroup[] = [
       { title: 'Broken Links', href: '/admin/broken-links', icon: Link2 },
       { title: 'Duplicates', href: '/admin/duplicates', icon: Copy },
       { title: 'Price Anomalies', href: '/admin/price-anomalies', icon: TrendingDown },
+      { title: 'Product 404s', href: '/admin/broken-urls', icon: Link2Off },
       { title: 'Filament Audit', href: '/admin/filament-audit', icon: FileText },
     ],
   },
