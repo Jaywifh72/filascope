@@ -2,14 +2,13 @@ import React from 'react';
 import { 
   ShoppingCart, 
   ExternalLink, 
-  Shield, 
   Truck, 
   RotateCcw, 
   ChevronRight,
   RefreshCw,
-  CheckCircle2,
   AlertTriangle,
-  Globe
+  Globe,
+  ExternalLinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
@@ -200,11 +199,11 @@ export function FilamentHeroPurchaseCard({
           )}
         </div>
 
-        {/* Live price indicator */}
-        {isLivePrice && !priceLoading && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className="font-medium">Live price verified</span>
+        {/* Price disclaimer */}
+        {!priceLoading && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ExternalLinkIcon className="w-3.5 h-3.5" />
+            <span>Click to verify price at store</span>
           </div>
         )}
 
@@ -306,10 +305,9 @@ export function FilamentHeroPurchaseCard({
 
       {/* Trust Signals */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/30">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Shield className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Price verified</span>
-        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Prices may vary — verify at store
+        </p>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Truck className="w-3.5 h-3.5 text-emerald-400" />
           <span>

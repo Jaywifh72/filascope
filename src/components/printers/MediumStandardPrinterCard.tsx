@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, CheckCircle2, Tag, Info } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useRegion } from "@/contexts/RegionContext";
@@ -248,11 +248,11 @@ export default function MediumStandardPrinterCard({
                 )}
               </div>
               
-              {/* Price verification timestamp */}
-              {!printer.discontinued && price && isLivePrice && (
-                <div className="flex items-center gap-1 text-[10px] text-emerald-400/80">
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>Price verified just now</span>
+              {/* Price disclaimer */}
+              {!printer.discontinued && price && (
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <ExternalLinkIcon className="h-3 w-3" />
+                  <span>Verify at store</span>
                 </div>
               )}
             </div>
