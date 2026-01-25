@@ -935,6 +935,48 @@ export type Database = {
           },
         ]
       }
+      broken_product_urls: {
+        Row: {
+          created_at: string | null
+          detected_at: string | null
+          detection_count: number | null
+          error_type: string
+          id: string
+          last_detected_at: string | null
+          new_url: string | null
+          notes: string | null
+          product_url: string
+          resolved_at: string | null
+          store_domain: string
+        }
+        Insert: {
+          created_at?: string | null
+          detected_at?: string | null
+          detection_count?: number | null
+          error_type: string
+          id?: string
+          last_detected_at?: string | null
+          new_url?: string | null
+          notes?: string | null
+          product_url: string
+          resolved_at?: string | null
+          store_domain: string
+        }
+        Update: {
+          created_at?: string | null
+          detected_at?: string | null
+          detection_count?: number | null
+          error_type?: string
+          id?: string
+          last_detected_at?: string | null
+          new_url?: string | null
+          notes?: string | null
+          product_url?: string
+          resolved_at?: string | null
+          store_domain?: string
+        }
+        Relationships: []
+      }
       color_audit_logs: {
         Row: {
           audit_run_id: string | null
