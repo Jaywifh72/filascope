@@ -122,11 +122,12 @@ export function BrandExtractionEditor({ brand, open, onClose, onSave }: BrandExt
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const configToSave = JSON.parse(JSON.stringify(buildConfig()));
       const { error } = await supabase
         .from('automated_brands')
         .update({
           extraction_method: extractionMethod,
-          price_extraction_config: buildConfig() as unknown as Record<string, unknown>,
+          price_extraction_config: configToSave,
           test_product_url: testUrl || null,
           last_extraction_test_at: testResult?.success ? new Date().toISOString() : brand.last_extraction_test_at,
           extraction_working: testResult ? testResult.success : brand.extraction_working,
