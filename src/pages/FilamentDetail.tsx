@@ -545,6 +545,7 @@ const FilamentDetail = () => {
         price={rawPricePerKg}
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}
+        productType="filament"
       />
       
       {/* JSON-LD Structured Data */}

@@ -92,6 +92,7 @@ import {
   Upload,
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
+import { ProductSEO, ProductJsonLd } from "@/components/seo";
 
 const PrinterDetail = () => {
   const { id } = useParams();
@@ -558,8 +559,57 @@ const PrinterDetail = () => {
     </Card>
   );
 
+  // Build SEO description
+  const printerModel = printer.model_name || printer.printer_id || 'Unknown Printer';
+  const printerName = `${printerBrand || ''} ${printerModel}`.trim();
+  const isDiscontinued = printer.discontinued === true;
+  
+  const seoDescription = `${printerName} 3D printer. ${
+    printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
+      ? `Build volume: ${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}mm. `
+      : ''
+  }${
+    printer.max_print_speed_mms ? `Up to ${printer.max_print_speed_mms}mm/s. ` : ''
+  }${
+    displayPrice ? `From ${formatPrice(displayPrice)}. ` : ''
+  }Compare specs, prices & reviews at FilaScope.`;
+
+  // Get primary image for SEO
+  const seoImage = productImages[0] || null;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20 lg:pb-0">
+      {/* SEO Meta Tags */}
+      <ProductSEO
+        title={printerName}
+        description={seoDescription}
+        canonicalUrl={`/printer/${printer.printer_id || printer.id}`}
+        image={seoImage}
+        brand={printerBrand}
+        price={displayPrice}
+        availability={!isDiscontinued}
+        productType="printer"
+      />
+      
+      {/* JSON-LD Structured Data */}
+      <ProductJsonLd
+        name={printerName}
+        description={seoDescription}
+        image={seoImage}
+        brand={printerBrand}
+        sku={printer.printer_id}
+        url={`https://filascope.com/printer/${printer.printer_id || printer.id}`}
+        price={displayPrice}
+        availability={!isDiscontinued}
+        buildVolume={printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm ? {
+          x: printer.build_volume_x_mm,
+          y: printer.build_volume_y_mm,
+          z: printer.build_volume_z_mm,
+        } : null}
+        maxPrintSpeed={printer.max_print_speed_mms}
+        printerType={printer.printer_technology}
+      />
+
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
         {/* Navigation */}
         <Button variant="ghost" onClick={() => navigate('/printers')} className="mb-4 sm:mb-6 hover:bg-accent/50 transition-colors">
