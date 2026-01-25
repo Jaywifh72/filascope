@@ -98,10 +98,11 @@ const FilamentDetail = () => {
   // Get regional price and URL using the unified hook
   const unifiedPricing = useUnifiedRegionalPricing({
     brandName: pricingFilament?.vendor || '',
-    productSlug: extractProductSlug(pricingFilament?.product_url),
+    productSlug: pricingFilament?.product_handle || extractProductSlug(pricingFilament?.product_url),
     basePrice: pricingFilament?.variant_price ?? null,
     baseCurrency: 'USD',
     originalUrl: pricingFilament?.product_url || null,
+    productName: pricingFilament?.product_title, // Used as fallback for slug generation
     filamentId: pricingFilament?.id,
     priceLastVerifiedAt: pricingFilament?.last_scraped_at,
     priceSource: (pricingFilament as any)?.price_source,

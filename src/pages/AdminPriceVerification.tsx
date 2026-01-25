@@ -58,6 +58,7 @@ interface ProductRow {
   last_scraped_at: string | null;
   price_confidence: string | null;
   product_url: string | null;
+  product_handle: string | null;
   type: 'filament' | 'printer';
 }
 
@@ -106,7 +107,7 @@ export default function AdminPriceVerification() {
     queryFn: async () => {
       let query = supabase
         .from('filaments')
-        .select('id, product_title, vendor, variant_price, last_scraped_at, price_confidence, product_url')
+        .select('id, product_title, vendor, variant_price, last_scraped_at, price_confidence, product_url, product_handle')
         .order('last_scraped_at', { ascending: true, nullsFirst: true })
         .limit(100);
 
