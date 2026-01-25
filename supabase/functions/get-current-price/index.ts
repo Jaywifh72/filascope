@@ -338,17 +338,25 @@ interface ProductMetadata {
 async function getProductMetadataByUrl(productUrl: string): Promise<ProductMetadata | null> {
   const supabase = getSupabaseClient();
   
+  // Use limit(1) instead of maybeSingle() to handle duplicate URLs gracefully
   const { data, error } = await supabase
     .from('filaments')
     .select('id, product_title, material, vendor, net_weight_g')
     .eq('product_url', productUrl)
-    .maybeSingle();
+    .limit(1);
   
-  if (error || !data) {
+  if (error) {
+    console.log('Error fetching product metadata:', error.message);
+    return null;
+  }
+  
+  if (!data || data.length === 0) {
     console.log('No product metadata found for URL:', productUrl);
     return null;
   }
-  return data;
+  
+  console.log(`Found product metadata: "${data[0].product_title}" (${data[0].vendor})`);
+  return data[0];
 }
 
 // Build optimized search query from product metadata
