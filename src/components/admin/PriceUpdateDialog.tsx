@@ -33,6 +33,7 @@ interface ProductRow {
   last_scraped_at: string | null;
   price_confidence: string | null;
   product_url: string | null;
+  product_handle: string | null;
   type: 'filament' | 'printer';
 }
 
@@ -62,14 +63,21 @@ export function PriceUpdateDialog({ product, onClose, onUpdate }: PriceUpdateDia
   const [newPrice, setNewPrice] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [storeUrl, setStoreUrl] = useState('');
+  const [productHandle, setProductHandle] = useState('');
   const [notes, setNotes] = useState('');
   const [source, setSource] = useState('manual_verification');
+
+  // Extract slug suggestion from URL
+  const suggestedHandle = storeUrl 
+    ? (storeUrl.match(/\/products?\/([^/?#]+)/i)?.[1]?.toLowerCase() || '')
+    : '';
 
   // Reset form when product changes
   useEffect(() => {
     if (product) {
       setNewPrice(product.variant_price?.toString() || '');
       setStoreUrl(product.product_url || '');
+      setProductHandle(product.product_handle || '');
       setCurrency('USD');
       setNotes('');
       setSource('manual_verification');
@@ -99,6 +107,7 @@ export function PriceUpdateDialog({ product, onClose, onUpdate }: PriceUpdateDia
           last_scraped_at: new Date().toISOString(),
           price_source: source,
           product_url: storeUrl || product.product_url,
+          product_handle: productHandle.trim() || product.product_handle,
         })
         .eq('id', product.id);
 
@@ -249,6 +258,36 @@ export function PriceUpdateDialog({ product, onClose, onUpdate }: PriceUpdateDia
               onChange={(e) => setStoreUrl(e.target.value)}
               placeholder="https://store.com/product"
             />
+          </div>
+
+          {/* Product Handle (slug) */}
+          <div className="space-y-2">
+            <Label htmlFor="productHandle">
+              Product Handle (slug for regional URLs)
+            </Label>
+            <div className="space-y-1.5">
+              <Input
+                id="productHandle"
+                value={productHandle}
+                onChange={(e) => setProductHandle(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                placeholder="e.g., hyper-pla-cf"
+                className="font-mono text-sm"
+              />
+              {!productHandle && suggestedHandle && (
+                <button
+                  type="button"
+                  onClick={() => setProductHandle(suggestedHandle)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Suggest from URL: <span className="font-mono">{suggestedHandle}</span>
+                </button>
+              )}
+              {!productHandle && !suggestedHandle && (
+                <p className="text-xs text-amber-500">
+                  ⚠️ Missing handle - regional URLs won't work correctly
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Notes */}

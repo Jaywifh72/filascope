@@ -82,11 +82,14 @@ export interface UnifiedProductData {
   /** Currency of the base price (defaults to USD) */
   baseCurrency?: CurrencyCode;
   
-  /** Product slug for URL generation */
+  /** Product slug for URL generation (from product_handle) */
   productSlug?: string;
   
-  /** Original product URL as fallback */
+  /** Original product URL as fallback for slug extraction */
   originalUrl?: string | null;
+  
+  /** Product name for slug generation fallback */
+  productName?: string;
   
   /** Filament ID for regional slug resolution */
   filamentId?: string | null;
@@ -119,6 +122,66 @@ interface BrandRegionalStoreRow {
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+/**
+ * Extract a product slug from multiple possible sources.
+ * Priority order:
+ * 1. Explicit productSlug parameter (usually from product_handle)
+ * 2. Extract from product URL patterns
+ * 3. Slugify from product name as last resort
+ */
+function resolveProductSlugFromData(
+  productSlug: string | undefined,
+  originalUrl: string | null | undefined,
+  productName?: string
+): string {
+  // 1. Try explicit slug first (most reliable - from product_handle)
+  if (productSlug && productSlug.trim()) {
+    return productSlug.trim();
+  }
+  
+  // 2. Try to extract from URL
+  if (originalUrl) {
+    // Common patterns for product URLs
+    const patterns = [
+      /\/products?\/([^\/\?#]+)/i,  // /products/slug or /product/slug
+      /\/p\/([^\/\?#]+)/i,          // /p/slug
+      /\/filament\/([^\/\?#]+)/i,   // /filament/slug
+      /\/item\/([^\/\?#]+)/i,       // /item/slug
+    ];
+    
+    for (const pattern of patterns) {
+      const match = originalUrl.match(pattern);
+      if (match?.[1]) {
+        // Clean up the extracted slug
+        return match[1].toLowerCase().replace(/\+/g, '-');
+      }
+    }
+    
+    // Fallback: last path segment of URL
+    try {
+      const urlObj = new URL(originalUrl);
+      const segments = urlObj.pathname.split('/').filter(Boolean);
+      const lastSegment = segments[segments.length - 1];
+      if (lastSegment && lastSegment.length > 2 && !lastSegment.includes('.')) {
+        return lastSegment.toLowerCase();
+      }
+    } catch {
+      // URL parsing failed, continue to next fallback
+    }
+  }
+  
+  // 3. Slugify from product name as last resort
+  if (productName) {
+    return productName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .substring(0, 100); // Limit length
+  }
+  
+  return '';
+}
 
 /**
  * Calculate price confidence based on age thresholds:
@@ -336,13 +399,20 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     brandName,
     basePrice,
     baseCurrency = 'USD',
-    productSlug = '',
+    productSlug: rawProductSlug,
     originalUrl,
+    productName,
     filamentId,
     priceLastVerifiedAt,
     priceSource,
     priceConfidence: preCalculatedConfidence,
   } = product;
+  
+  // Resolve slug using fallback chain: explicit slug → URL extraction → name slugification
+  const resolvedSlug = useMemo(
+    () => resolveProductSlugFromData(rawProductSlug, originalUrl, productName),
+    [rawProductSlug, originalUrl, productName]
+  );
   
   // Query 1: Fetch brand ID by name
   const { data: brandId, isLoading: brandLoading } = useQuery({
@@ -373,9 +443,9 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     if (!rawStores.length) return null;
     const { store } = findBestStore(rawStores, region);
     if (!store) return null;
-    const slugResolution = resolveRegionalSlug(regionalSlugData || null, productSlug);
+    const slugResolution = resolveRegionalSlug(regionalSlugData || null, resolvedSlug);
     return buildRegionalUrl(store.product_url_pattern, store.base_url, slugResolution.effectiveSlug);
-  }, [rawStores, region, regionalSlugData, productSlug]);
+  }, [rawStores, region, regionalSlugData, resolvedSlug]);
   
   // Query 4: Check URL validation cache (non-blocking)
   const { data: urlValidationData } = useQuery({
@@ -406,7 +476,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     const timeAgo = formatTimeAgo(priceLastVerifiedAt);
     
     // Resolve the effective slug for this region
-    const slugResolution = resolveRegionalSlug(regionalSlugData || null, productSlug);
+    const slugResolution = resolveRegionalSlug(regionalSlugData || null, resolvedSlug);
     const effectiveSlug = slugResolution.effectiveSlug;
     const slugIsVerified = slugResolution.isVerified;
     
@@ -533,7 +603,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     currency,
     basePrice,
     baseCurrency,
-    productSlug,
+    resolvedSlug,
     originalUrl,
     brandName,
     convertPrice,
