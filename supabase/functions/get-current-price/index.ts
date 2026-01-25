@@ -445,24 +445,32 @@ async function attemptSearchResolution(
   productUrl: string,
   storeDomain: string
 ): Promise<SearchResolutionResult> {
+  console.log('=== SEARCH RESOLUTION ATTEMPT ===');
+  console.log('Product URL:', productUrl);
+  console.log('Store domain:', storeDomain);
+  
   const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
   if (!firecrawlApiKey) {
-    console.log('No FIRECRAWL_API_KEY for search resolution');
+    console.log('✗ No FIRECRAWL_API_KEY for search resolution');
     return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
   }
   
   // Rate limit check
   const canAttempt = await canAttemptAutoFix(productUrl);
   if (!canAttempt) {
-    console.log('Rate limited: already attempted auto-fix for this URL in last 24h');
+    console.log('✗ Rate limited: already attempted auto-fix for this URL in last 24h');
     return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
   }
+  console.log('✓ Rate limit check passed');
   
   // Step 1: Get product metadata
+  console.log('Fetching product metadata from database...');
   const product = await getProductMetadataByUrl(productUrl);
   if (!product) {
+    console.log('✗ No product metadata found - cannot resolve');
     return { success: false, newUrl: null, score: 0, method: 'search_resolution' };
   }
+  console.log('✓ Found product:', product.product_title);
   
   // Step 2: Build search query
   const searchQuery = buildSearchQuery(product);
@@ -560,16 +568,22 @@ async function handle404WithResolution(
   source: 'shopify' | 'firecrawl',
   errorType: string
 ): Promise<PriceResponse & { rawSample?: string }> {
-  console.log(`Detected 404 for product: ${productUrl}, attempting search resolution...`);
+  console.log('=== 404 RESOLUTION STARTED ===');
+  console.log('Original URL:', productUrl);
+  console.log('Brand config:', brandConfig?.brand_name || 'none');
   
   const storeDomain = extractDomain(productUrl);
+  console.log('Store domain:', storeDomain);
+  
   const resolution = await attemptSearchResolution(productUrl, storeDomain);
+  console.log('Resolution result:', JSON.stringify(resolution));
   
   if (resolution.success && resolution.newUrl) {
     const supabase = getSupabaseClient();
     
     // Get the filament ID before updating (for logging)
     const product = await getProductMetadataByUrl(productUrl);
+    console.log('Product for URL update:', product?.id || 'not found');
     
     // Update the filament record with new URL
     const { error: updateError } = await supabase
@@ -581,7 +595,7 @@ async function handle404WithResolution(
       .eq('product_url', productUrl);
     
     if (!updateError) {
-      console.log(`Auto-resolved URL: ${productUrl} -> ${resolution.newUrl}`);
+      console.log(`✓ Auto-resolved URL: ${productUrl} -> ${resolution.newUrl}`);
       
       // Log the auto-fix to audit table
       await supabase
@@ -613,6 +627,7 @@ async function handle404WithResolution(
   }
   
   // Resolution failed - log broken URL for manual review
+  console.log('=== 404 RESOLUTION FAILED - logging for manual review ===');
   await logBrokenUrl(productUrl, errorType);
   
   return {
@@ -635,39 +650,49 @@ async function handle404WithResolution(
 
 // Check if content indicates a 404/not found page
 function is404Content(markdown: string): boolean {
-  // Check first 2000 chars (lowercased) for 404 indicators
-  const checkContent = markdown.substring(0, 2000).toLowerCase();
+  // Check first 3000 chars (lowercased) for 404 indicators - increased for Creality's verbose pages
+  const checkContent = markdown.substring(0, 3000).toLowerCase();
+  
+  console.log('is404Content checking content sample:', checkContent.substring(0, 200));
   
   // FIRST: Check for common store-specific redirect patterns that indicate missing product
   // Creality redirects to shopping bag page when product doesn't exist
-  if (checkContent.includes('shopping bag') && checkContent.includes('is empty')) {
-    console.log('Detected 404: Creality redirect to empty shopping bag page');
+  const hasShoppingBag = checkContent.includes('shopping bag');
+  const hasEmpty = checkContent.includes('empty');
+  console.log(`Creality 404 check: shopping bag=${hasShoppingBag}, empty=${hasEmpty}`);
+  
+  if (hasShoppingBag && hasEmpty) {
+    console.log('✓ Detected 404: Creality redirect to empty shopping bag page');
     return true;
   }
   
   // Check for "Oops! Page not found" with various punctuation
-  if (/oops[!?.]?\s*page\s*not\s*found/i.test(checkContent)) {
-    console.log('Detected 404: Oops page not found');
+  if (/oops[!?.\s]*page\s*not\s*found/i.test(checkContent)) {
+    console.log('✓ Detected 404: Oops page not found');
     return true;
   }
   
   const notFoundPatterns = [
     /page\s*(not\s*found|doesn'?t\s*exist)/i,
-    /404\s*(error|not\s*found)?/i,
+    /\b404\b/i,  // Simplified: just look for "404" as a word
     /product\s*(not\s*found|has\s*been\s*(deleted|removed))/i,
     /this\s*page\s*(doesn'?t|does\s*not)\s*exist/i,
     /we\s*couldn'?t\s*find\s*(the|this)\s*page/i,
     /sorry[,!]?\s*(this|the)?\s*page\s*(is|was|has)/i,
     /item\s*(no\s*longer|not)\s*available/i,
     /product\s*(is\s*)?no\s*longer\s*available/i,
-    /oops[!?.]?\s*(page|something)/i,
+    /oops[!?.\s]*(page|something)/i,
+    /your\s*shopping\s*bag\s*is\s*empty/i, // Alternative Creality pattern
   ];
   
-  if (notFoundPatterns.some(pattern => pattern.test(checkContent))) {
-    console.log('Detected 404: matched notFoundPattern');
-    return true;
+  for (const pattern of notFoundPatterns) {
+    if (pattern.test(checkContent)) {
+      console.log(`✓ Detected 404: matched pattern ${pattern}`);
+      return true;
+    }
   }
   
+  console.log('No 404 patterns detected');
   return false;
 }
 
