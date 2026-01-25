@@ -1,206 +1,238 @@
 
-# Regional Store Utilities Implementation Plan
+# FilamentDetail & PricingTab Regional Integration
 
-## Overview
-Create a centralized utility system in `src/utils/regionalStoreUtils.ts` that consolidates regional store URL generation, store information retrieval, and price fetching. This new utility will leverage the existing `brand_regional_stores` database table (69 records) and integrate with the `RegionContext` for seamless regional pricing.
+## Summary
+Update the `FilamentDetail.tsx` and `PricingTabContent.tsx` components to dynamically use regional store data from the database via the newly created `regionalStoreUtils.ts`, ensuring prices and store links reflect the user's selected region.
 
 ## Current State Analysis
-The project already has several related implementations that we will build upon:
-- `useRegionalPriceV2.ts` - Fetches stores by `brand_id` from database
-- `useRegionalPrice.ts` - Uses hardcoded column mappings for regional prices
-- `useRegionalStore.ts` - Client-side URL transformation using `brandRegionalStores.ts`
-- `priceDisplay.ts` - Price formatting utilities
-- `RegionContext.tsx` - Central region/currency state with exchange rates
 
-The new utility will unify these approaches with database-first store lookups.
+The codebase already has:
+1. **`useRegionalPriceV2`** - Queries `brand_regional_stores` by `brandId`, finds best store using fallback logic
+2. **`useRegionalPrice`** - Uses hardcoded column mappings (`price_cad`, `product_url_ca`) for regional data
+3. **`PricingTabContent`** - Already integrates `useRegionalPriceV2` for the "Regional Stores" section
+4. **`FilamentDetail`** - Uses both `useRegionalPrice` (old) and passes `brandId` to `PricingTabContent`
 
-## Technical Implementation
+The main gap: `brandId` is not being passed to `PricingTabContent`, and the component doesn't have direct access to product-specific regional URLs from `brand_regional_stores`.
 
-### 1. New File: `src/utils/regionalStoreUtils.ts`
+## Technical Changes
 
-#### Type Definitions
-```text
-RegionalStoreInfo {
-  id: string
-  brand_id: string
-  region_code: RegionCode
-  store_name: string
-  base_url: string
-  product_url_pattern: string | null
-  currency_code: CurrencyCode
-  ships_from_country: string | null
-  free_shipping_threshold: number | null
-  estimated_shipping_days: number | null
-  is_primary: boolean
-  is_active: boolean
-  supports_local_shipping: boolean  // derived from ships_from_country matching region
+### 1. FilamentDetail.tsx Updates
+
+**Add `brandId` prop to PricingTabContent call (line ~638-652)**
+
+The `brandId` needs to be fetched or derived. Looking at the current code, there's no direct `brandId` available - filaments only have `vendor` (brand name).
+
+**New approach**: Add a query to fetch `brandId` from `automated_brands` table based on `vendor` name.
+
+```typescript
+// Add state and effect to fetch brandId
+const [brandId, setBrandId] = useState<string | null>(null);
+
+useEffect(() => {
+  const fetchBrandId = async () => {
+    if (!filament?.vendor) return;
+    const { data } = await supabase
+      .from('automated_brands')
+      .select('id')
+      .ilike('brand_name', filament.vendor)
+      .limit(1)
+      .maybeSingle();
+    setBrandId(data?.id || null);
+  };
+  fetchBrandId();
+}, [filament?.vendor]);
+
+// Then pass to PricingTabContent
+<PricingTabContent
+  ...
+  brandId={brandId}
+/>
+```
+
+### 2. PricingTabContent.tsx Updates
+
+**Update interface (lines ~39-51)**
+
+Add `brandId` to the existing props - it's already there but optional:
+```typescript
+interface PricingTabContentProps {
+  // ... existing props
+  brandId?: string | null;  // Already exists
 }
+```
 
-RegionalPriceResult {
-  displayPrice: number
-  displayCurrency: CurrencyCode
-  formattedPrice: string
-  originalPrice: number
-  originalCurrency: CurrencyCode
-  isConverted: boolean
-  conversionRate: number | null
-  store: RegionalStoreInfo | null
-  tooltipData: {
-    originalFormatted: string
-    rateInfo: string
-  } | null
+**Regional Stores Section Improvements (lines ~351-478)**
+
+The "Regional Stores" section already uses `useRegionalPriceV2`. Key improvements needed:
+
+1. **Use product-specific URLs** - Currently showing `store.base_url`, should interpolate with product SKU/slug
+2. **Accurate price display** - Currently using hardcoded `pricePerSpool`, should use store-specific prices if available
+3. **Better conversion tooltips** - Add detailed tooltip showing original price and conversion rate
+
+**Updated Store Card Logic:**
+```typescript
+import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
+
+// Inside the stores map:
+{sortedStores.map((store) => {
+  const isUserRegion = store.region_code === region;
+  const storeRegion = REGIONS[store.region_code];
+  const needsConversion = store.currency_code !== currency;
+  
+  // Get product-specific URL if pattern exists
+  const productUrl = store.product_url_pattern && filament.variant_sku
+    ? interpolateProductUrl(store.product_url_pattern, filament.variant_sku)
+    : store.base_url;
+  
+  // Calculate proper conversion
+  const rate = getConversionRate(store.currency_code, currency);
+  const storeNativePrice = /* price from store's region or basePrice */;
+  const convertedPrice = needsConversion ? storeNativePrice * rate : storeNativePrice;
+  
+  return (
+    <div key={store.id} onClick={() => window.open(productUrl, '_blank')}>
+      {/* Store display */}
+      <Tooltip>
+        <TooltipContent>
+          {needsConversion && (
+            <>
+              <p>Original: {formatCurrencyPrice(storeNativePrice, store.currency_code)}</p>
+              <p>Rate: 1 {store.currency_code} = {rate.toFixed(4)} {currency}</p>
+            </>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+})}
+```
+
+### 3. Add Product SKU/Slug to Props
+
+The `PricingTabContent` needs the product's SKU or slug to generate correct store URLs.
+
+**Update PricingTabContentProps:**
+```typescript
+interface PricingTabContentProps {
+  filament: Filament;
+  retailers: Retailer[];
+  pricePerKg: number | null;
+  pricePerSpool: number | null;
+  affiliateUrl: string | null;
+  hasActualRegionalPrice: boolean;
+  productUrl?: string | null;
+  originalUsUrl?: string | null;
+  onViewRetailers: () => void;
+  onRetailerClick: (retailer: Retailer) => void;
+  brandId?: string | null;
+  productSku?: string | null;  // NEW
 }
-
-PriceDisplayOptions {
-  showApproximate?: boolean
-  compact?: boolean
-  includeTooltip?: boolean
-}
 ```
 
-#### Function 1: `getRegionalStoreInfo`
+### 4. Enhanced Regional Price Display
+
+**"Best Price Available" section improvements:**
+
+```typescript
+// Add loading state for regional data
+{storesLoading || priceLoading ? (
+  <div className="flex items-center gap-2">
+    <Loader2 className="w-4 h-4 animate-spin" />
+    <span className="text-sm text-muted-foreground">Loading regional prices...</span>
+  </div>
+) : (
+  <div className="flex items-baseline gap-2">
+    <span className="text-4xl font-bold text-white">
+      {needsConversion ? '~' : ''}
+      {formatDisplayPrice(displayPricePerKg) || 'N/A'}
+    </span>
+    <span className="text-lg text-muted-foreground">/kg</span>
+    {needsConversion && (
+      <Tooltip>
+        <TooltipTrigger>
+          <Info className="w-4 h-4 text-muted-foreground" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Original: {originalPriceFormatted}</p>
+          <p>Rate: {rateInfo}</p>
+        </TooltipContent>
+      </Tooltip>
+    )}
+  </div>
+)}
+```
+
+### 5. Store Attribution Updates
+
+Ensure "Available Retailers" section shows regional badges:
+
+```typescript
+// In retailers.map()
+<div className="font-medium flex items-center gap-2">
+  {retailer.name}
+  {retailer.region && (
+    <Badge variant="outline" className="text-xs">
+      {REGIONS[retailer.region]?.flag} {retailer.region}
+    </Badge>
+  )}
+  {retailer.region === region && (
+    <Badge className="bg-primary/20 text-primary text-xs">
+      Local
+    </Badge>
+  )}
+</div>
+```
+
+## File Modifications
+
+### File 1: `src/pages/FilamentDetail.tsx`
+- Add `brandId` state and fetch logic (~10 lines)
+- Pass `brandId` and `productSku` to `PricingTabContent` (2 lines)
+
+### File 2: `src/components/filament/tabs/PricingTabContent.tsx`
+- Add import for `interpolateProductUrl` (1 line)
+- Update props interface to include `productSku` (1 line)
+- Update store URL generation logic (5-10 lines)
+- Enhance price conversion tooltip display (15-20 lines)
+- Add loading skeleton for regional data (5 lines)
+
+## Implementation Flow
+
 ```text
-async function getRegionalStoreInfo(
-  brandName: string | null,
-  region: RegionCode
-): Promise<RegionalStoreInfo | null>
-```
-- Query `brand_regional_stores` table joining with `automated_brands` on brand_name
-- Filter by `region_code = region` and `is_active = true`
-- Return matching store info or null
-- Results will be cached per brand+region combination
-
-#### Function 2: `getRegionalStoreUrl`
-```text
-async function getRegionalStoreUrl(
-  brandName: string | null,
-  region: RegionCode,
-  productSlug?: string,
-  fallbackOrder?: RegionCode[]
-): Promise<{ url: string; storeRegion: RegionCode; isFromFallback: boolean }>
-```
-- First attempt: Get store for exact region
-- Fallback chain: Use provided `fallbackOrder` or default from `REGION_FALLBACK_ORDER`
-- URL construction:
-  - If `product_url_pattern` exists and `productSlug` provided: interpolate `{sku}` placeholder
-  - Otherwise return `base_url`
-- Return the URL, actual region used, and whether fallback was used
-
-#### Function 3: `getBrandRegionalStores`
-```text
-async function getBrandRegionalStores(
-  brandName: string | null
-): Promise<RegionalStoreInfo[]>
-```
-- Fetch all active stores for a brand
-- Used by components that need to show "available regions" or store selector
-
-#### Function 4: `formatRegionalPrice`
-```text
-function formatRegionalPrice(
-  price: number,
-  sourceCurrency: CurrencyCode,
-  targetCurrency: CurrencyCode,
-  exchangeRates: Map<string, number>,
-  options?: PriceDisplayOptions
-): RegionalPriceResult
-```
-- Calculate conversion if currencies differ
-- Format with appropriate symbol and decimal places
-- Include tooltip data with original price and conversion rate
-- Add "~" prefix for converted prices
-
-#### Function 5: `findBestStoreForRegion`
-```text
-async function findBestStoreForRegion(
-  brandName: string | null,
-  userRegion: RegionCode,
-  fallbackOrder?: RegionCode[]
-): Promise<{ store: RegionalStoreInfo | null; isFallback: boolean }>
-```
-- Implements the fallback logic centrally
-- Tries user's region first
-- Then iterates through fallback order
-- Returns null if no stores found
-
-#### Utility: `interpolateProductUrl`
-```text
-function interpolateProductUrl(
-  pattern: string,
-  productSlug: string
-): string
-```
-- Replaces `{sku}`, `{slug}`, or `{product}` placeholders with the product identifier
-
-### 2. Database Query Patterns
-
-The queries will match the existing table structure:
-```sql
--- Get store for specific brand and region
-SELECT brs.*, ab.brand_name 
-FROM brand_regional_stores brs
-JOIN automated_brands ab ON brs.brand_id = ab.id
-WHERE LOWER(ab.brand_name) ILIKE LOWER($brandName)
-  AND brs.region_code = $region
-  AND brs.is_active = true
-LIMIT 1
-
--- Get all stores for a brand
-SELECT brs.*, ab.brand_name 
-FROM brand_regional_stores brs
-JOIN automated_brands ab ON brs.brand_id = ab.id
-WHERE LOWER(ab.brand_name) ILIKE LOWER($brandName)
-  AND brs.is_active = true
-ORDER BY brs.is_primary DESC, brs.region_code
+┌─────────────────────────────────────────────────────┐
+│                  FilamentDetail                      │
+│                                                     │
+│  1. Fetch filament data                             │
+│  2. Derive brandId from vendor name                 │
+│  3. Pass brandId + productSku to PricingTabContent  │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│               PricingTabContent                      │
+│                                                     │
+│  1. useRegionalPriceV2(brandId) - fetch all stores  │
+│  2. Sort stores by user's region                    │
+│  3. For each store:                                 │
+│     - Generate product URL via interpolation        │
+│     - Calculate converted price with rate           │
+│     - Show tooltip with original price              │
+│  4. Display "Local" badge if store matches region   │
+└─────────────────────────────────────────────────────┘
 ```
 
-### 3. Fallback Logic
+## Price Display Standards
 
-Using the existing `REGION_FALLBACK_ORDER` from `src/config/regions.ts`:
-```text
-Priority Order:
-1. User's selected region (exact match)
-2. First match from REGION_FALLBACK_ORDER[userRegion]
-3. 'US' as ultimate fallback
-4. Any available active store
-5. null if no stores exist
-```
+| Scenario | Display Format | Tooltip |
+|----------|----------------|---------|
+| Native price (store currency = user currency) | `$12.00` | None |
+| Converted price | `~$14.40` (muted) | "Original: C$12.00 CAD • Rate: 1 CAD = 1.20 USD" |
+| No price available | "—" | None |
 
-### 4. Caching Strategy
+## Dependencies
 
-Implement simple in-memory caching to avoid repeated database calls:
-```text
-- Cache key: `${brandName.toLowerCase()}_${region}`
-- TTL: 5 minutes (matches existing query staleTime patterns)
-- Cache invalidation: on page refresh or region change
-```
-
-### 5. Integration Points
-
-The utility will be designed to work with:
-- `RegionContext` for current region/currency and exchange rates
-- `useRegionalPriceV2` hook can be refactored to use these utilities
-- Product detail pages (`FilamentDetail.tsx`, `PrinterDetail.tsx`)
-- Product cards for consistent store attribution
-
-### 6. Error Handling
-
-Each function will:
-- Return null/empty gracefully on database errors
-- Log warnings to console for debugging
-- Never throw exceptions that break the UI
-
-## Files to Create
-1. `src/utils/regionalStoreUtils.ts` - Main utility file with all functions and types
-
-## Files that Will Benefit (Future Integration)
-- `src/hooks/useRegionalPriceV2.ts` - Can use `findBestStoreForRegion`
-- `src/components/RegionalPriceDisplay.tsx` - Can use `formatRegionalPrice`
-- `src/pages/FilamentDetail.tsx` - Can use `getRegionalStoreUrl` for product links
-- `src/pages/PrinterDetail.tsx` - Same as above
-
-## Testing Considerations
-- Mock the supabase client for unit tests
-- Test fallback chain behavior
-- Test URL interpolation with various patterns
-- Test currency conversion accuracy
+No new dependencies required. Uses existing:
+- `@/utils/regionalStoreUtils` (just created)
+- `@/hooks/useRegionalPriceV2`
+- `@/contexts/RegionContext`
+- `@/config/regions`
