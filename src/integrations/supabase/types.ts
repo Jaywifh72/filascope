@@ -363,6 +363,9 @@ export type Database = {
           diameter_selectors: Json | null
           display_name: string
           display_order: number | null
+          extraction_method: string | null
+          extraction_success_rate: number | null
+          extraction_working: boolean | null
           failed_scrapes: number | null
           featured: boolean | null
           has_amazon_store: boolean | null
@@ -372,6 +375,7 @@ export type Database = {
           is_visible: boolean | null
           last_error: string | null
           last_error_at: string | null
+          last_extraction_test_at: string | null
           last_scrape_at: string | null
           logo_url: string | null
           material_selectors: Json | null
@@ -381,6 +385,7 @@ export type Database = {
           notes: string | null
           pagination_enabled: boolean | null
           platform_type: string
+          price_extraction_config: Json | null
           price_selectors: Json | null
           product_count: number | null
           product_list_selector: string | null
@@ -407,6 +412,7 @@ export type Database = {
           scraping_enabled: boolean | null
           successful_scrapes: number | null
           supported_regions: string[] | null
+          test_product_url: string | null
           timeout_ms: number | null
           title_selectors: Json | null
           total_scrapes: number | null
@@ -437,6 +443,9 @@ export type Database = {
           diameter_selectors?: Json | null
           display_name: string
           display_order?: number | null
+          extraction_method?: string | null
+          extraction_success_rate?: number | null
+          extraction_working?: boolean | null
           failed_scrapes?: number | null
           featured?: boolean | null
           has_amazon_store?: boolean | null
@@ -446,6 +455,7 @@ export type Database = {
           is_visible?: boolean | null
           last_error?: string | null
           last_error_at?: string | null
+          last_extraction_test_at?: string | null
           last_scrape_at?: string | null
           logo_url?: string | null
           material_selectors?: Json | null
@@ -455,6 +465,7 @@ export type Database = {
           notes?: string | null
           pagination_enabled?: boolean | null
           platform_type: string
+          price_extraction_config?: Json | null
           price_selectors?: Json | null
           product_count?: number | null
           product_list_selector?: string | null
@@ -481,6 +492,7 @@ export type Database = {
           scraping_enabled?: boolean | null
           successful_scrapes?: number | null
           supported_regions?: string[] | null
+          test_product_url?: string | null
           timeout_ms?: number | null
           title_selectors?: Json | null
           total_scrapes?: number | null
@@ -511,6 +523,9 @@ export type Database = {
           diameter_selectors?: Json | null
           display_name?: string
           display_order?: number | null
+          extraction_method?: string | null
+          extraction_success_rate?: number | null
+          extraction_working?: boolean | null
           failed_scrapes?: number | null
           featured?: boolean | null
           has_amazon_store?: boolean | null
@@ -520,6 +535,7 @@ export type Database = {
           is_visible?: boolean | null
           last_error?: string | null
           last_error_at?: string | null
+          last_extraction_test_at?: string | null
           last_scrape_at?: string | null
           logo_url?: string | null
           material_selectors?: Json | null
@@ -529,6 +545,7 @@ export type Database = {
           notes?: string | null
           pagination_enabled?: boolean | null
           platform_type?: string
+          price_extraction_config?: Json | null
           price_selectors?: Json | null
           product_count?: number | null
           product_list_selector?: string | null
@@ -555,6 +572,7 @@ export type Database = {
           scraping_enabled?: boolean | null
           successful_scrapes?: number | null
           supported_regions?: string[] | null
+          test_product_url?: string | null
           timeout_ms?: number | null
           title_selectors?: Json | null
           total_scrapes?: number | null
@@ -2884,6 +2902,80 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_extraction_logs: {
+        Row: {
+          brand_id: string | null
+          brand_slug: string | null
+          created_at: string | null
+          currency: string | null
+          error_message: string | null
+          extracted_price: number | null
+          extraction_method: string
+          id: string
+          product_url: string
+          raw_content_sample: string | null
+          response_time_ms: number | null
+          success: boolean
+        }
+        Insert: {
+          brand_id?: string | null
+          brand_slug?: string | null
+          created_at?: string | null
+          currency?: string | null
+          error_message?: string | null
+          extracted_price?: number | null
+          extraction_method: string
+          id?: string
+          product_url: string
+          raw_content_sample?: string | null
+          response_time_ms?: number | null
+          success: boolean
+        }
+        Update: {
+          brand_id?: string | null
+          brand_slug?: string | null
+          created_at?: string | null
+          currency?: string | null
+          error_message?: string | null
+          extracted_price?: number | null
+          extraction_method?: string
+          id?: string
+          product_url?: string
+          raw_content_sample?: string | null
+          response_time_ms?: number | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_extraction_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_extraction_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_extraction_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_extraction_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
             referencedColumns: ["id"]
           },
         ]
