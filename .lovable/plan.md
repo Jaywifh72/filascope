@@ -1,94 +1,226 @@
 
-# Fix Post Sync Check Configuration for Creality
 
-## Problem Summary
+# Create `useAdminPriceRefresh` Hook
 
-The Post Sync Check for Creality flags two issues that are **configuration problems**, not data problems:
+## Overview
 
-1. **Filament Card Count**: Expected 17, found 20 - the expected count is outdated
-2. **Hex-Color Accuracy**: 121 products flagged - Creality uses curated hex codes but isn't in the skip list
+Create a new admin hook that provides functionality to manually refresh filament prices by calling the `get-current-price` Edge Function and persisting results to the database. The hook will also support cache invalidation for the `useCurrentPrice` hook.
 
 ---
 
-## Root Cause Analysis
+## Files to Create/Modify
 
-### Issue 1: Card Count Mismatch
+### 1. **Modify** `src/hooks/useCurrentPrice.ts`
 
-The database contains **20 valid product lines** for Creality:
+Export a cache invalidation function to allow external clearing of the price cache.
 
-| Product Line | Count |
-|--------------|-------|
-| creality__abs__hyper | 3 |
-| creality__asa__hp | 1 |
-| creality__pc__hyper | 1 |
-| creality__petg__hyper | 8 |
-| creality__petg__soleyin-basic | 12 |
-| creality__petg-cf__hyper-petg-cf | 8 |
-| creality__pla__cr-silk | 12 |
-| creality__pla__ender-fast | 3 |
-| creality__pla__hyper | 15 |
-| creality__pla__hyper-lightweight | 2 |
-| creality__pla__hyper-luminous | 4 |
-| creality__pla__hyper-rainbow | 3 |
-| creality__pla__hyper-rfid | 15 |
-| creality__pla__hyper-rfid-stardust | 9 |
-| creality__pla__soleyin-ultra | 16 |
-| creality__pla-cf__cr-carbon | 1 |
-| creality__pla-cf__hyper-pla-cf | 5 |
-| creality__pla-wood__cr-wood | 1 |
-| creality__ppa-cf__standard | 1 |
-| creality__tpu__hp | 2 |
+**Changes:**
+- Export a new `invalidatePriceCache(url: string)` function
+- Export the `priceCache` Map for direct access if needed
 
-The expected count of 17 (line 4315) was set before product lines like `hyper-lightweight`, `hyper-luminous`, and `soleyin-basic` were added.
-
-### Issue 2: Hex-Color Warnings
-
-Creality's hex codes are **manually curated** in `creality-defaults.ts` with 150+ specific color mappings (e.g., "Dusk Blue" = #2C3E50). The post-sync check uses heuristics that flag these specialty colors as mismatches.
-
-Creality is missing from the `skipHexColorCheckBrands` list on line 5204.
-
----
-
-## Implementation
-
-### File: `supabase/functions/run-post-sync-check/index.ts`
-
-### Change 1: Update Expected Card Count (Line 4315)
-
-```text
-BEFORE (line 4315):
-'creality': 17,           // Hyper Series (PLA/PETG/ABS/PC), RFID, Stardust, Rainbow, Soleyin Ultra, CR-Silk, CR-Wood, Ender Fast, HP-ASA, HP-TPU, PPA-CF, CF variants
-
-AFTER:
-'creality': 20,           // 20 lines: Hyper (PLA/PETG/ABS/PC), RFID, RFID-Stardust, Rainbow, Luminous, Lightweight, Soleyin (Ultra/Basic), CR-Silk/Wood/Carbon, Ender Fast, HP-ASA/TPU, PPA-CF, Hyper PLA-CF, Hyper PETG-CF
-```
-
-### Change 2: Add Creality to Hex-Color Skip List (Line 5204)
-
-```text
-BEFORE (line 5204):
-const skipHexColorCheckBrands = ['eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla', 'ziro'];
-
-AFTER:
-const skipHexColorCheckBrands = ['creality', 'eryone', 'esun', 'extrudr', 'fiberlogy', 'fillamentum', 'formfutura', 'fusion-filaments', 'gizmo-dorks', 'hatchbox', 'kingroon', 'matter3d', 'ninjatek', 'numakers', 'overture', 'paramount-3d', 'polymaker', 'proto-pasta', 'prusament', 'push-plastic', 'recreus', 'spectrum-filaments', 'sunlu', 'treed-filaments', 'ultimaker', 'voxelpla', 'ziro'];
+```typescript
+// Add export for cache invalidation
+export function invalidatePriceCache(productUrl: string): boolean {
+  return priceCache.delete(productUrl);
+}
 ```
 
 ---
 
-## Technical Notes
+### 2. **Create** `src/hooks/useAdminPriceRefresh.ts`
 
-- **No sync function changes required** - the data is correct
-- **No database changes required** - product_line_ids are accurate  
-- The 20 product lines represent Creality's current product catalog
-- Hex codes in `creality-defaults.ts` are manually verified against actual product swatches
+New hook with the following structure:
+
+**Parameters:**
+- `productUrl: string` - The URL to fetch the price from
+- `filamentId: string` - The database ID to update
+
+**Exported Interface:**
+```typescript
+interface AdminPriceRefreshResult {
+  success: boolean;
+  newPrice?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  error?: string;
+}
+
+interface UseAdminPriceRefreshReturn {
+  refreshPrice: () => Promise<AdminPriceRefreshResult>;
+  isRefreshing: boolean;
+  lastRefreshError: string | null;
+}
+```
+
+**Implementation Details:**
+
+1. **State Management:**
+   - `isRefreshing: boolean` - Loading state during refresh
+   - `lastRefreshError: string | null` - Most recent error message
+
+2. **`refreshPrice()` Function:**
+   - Calls `get-current-price` Edge Function with `forceRefresh: true` parameter
+   - Handles retry logic for transient errors (BOOT_ERROR, 503)
+   - On success:
+     - Updates `filaments` table with: `variant_price`, `variant_compare_at_price`, `last_scraped_at`, `price_source`
+     - Optionally inserts into `price_history` table
+     - Calls `invalidatePriceCache(productUrl)` from `useCurrentPrice`
+     - Returns `{ success: true, newPrice, compareAtPrice, currency }`
+   - On 404 error:
+     - Returns `{ success: false, error: 'Product page not found (404)' }`
+     - Does NOT crash or throw
+   - On other errors:
+     - Returns `{ success: false, error: <message> }`
+
+3. **Database Update Fields:**
+   ```typescript
+   {
+     variant_price: data.price,
+     variant_compare_at_price: data.compareAtPrice,
+     last_scraped_at: new Date().toISOString(),
+     price_source: 'admin_refresh',
+   }
+   ```
+
+4. **Price History Insert:**
+   ```typescript
+   {
+     filament_id: filamentId,
+     price: data.price,
+     currency: data.currency || 'USD',
+     source: 'admin_refresh',
+     recorded_at: new Date().toISOString(),
+     region: currencyToRegion(data.currency),
+   }
+   ```
 
 ---
 
-## Verification
+## Technical Implementation
 
-After implementation:
+### Hook Code Structure
 
-1. Run **Post Sync Check** for Creality
-2. Expected results:
-   - Filament Card Count: **PASS** (20 cards, expected 20)
-   - Hex-Color Accuracy: **SKIPPED** (curated brand)
+```typescript
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { invalidatePriceCache } from './useCurrentPrice';
+
+interface AdminPriceRefreshResult {
+  success: boolean;
+  newPrice?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  error?: string;
+}
+
+interface UseAdminPriceRefreshReturn {
+  refreshPrice: () => Promise<AdminPriceRefreshResult>;
+  isRefreshing: boolean;
+  lastRefreshError: string | null;
+}
+
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
+
+function isTransientError(error: any): boolean {
+  if (!error) return false;
+  const message = error.message || error.error || String(error);
+  return message.includes('BOOT_ERROR') || 
+         message.includes('503') || 
+         message.includes('Function failed to start');
+}
+
+function currencyToRegion(currency: string): string {
+  const map: Record<string, string> = {
+    'USD': 'US', 'CAD': 'CA', 'EUR': 'EU', 
+    'GBP': 'UK', 'AUD': 'AU', 'JPY': 'JP'
+  };
+  return map[currency] || 'US';
+}
+
+export function useAdminPriceRefresh(
+  productUrl: string,
+  filamentId: string
+): UseAdminPriceRefreshReturn {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshError, setLastRefreshError] = useState<string | null>(null);
+
+  const refreshPrice = useCallback(async (): Promise<AdminPriceRefreshResult> => {
+    setIsRefreshing(true);
+    setLastRefreshError(null);
+
+    // Retry logic with exponential backoff
+    // Call edge function with forceRefresh: true
+    // Handle 404 gracefully
+    // Update database on success
+    // Invalidate useCurrentPrice cache
+    // Return result
+
+    setIsRefreshing(false);
+    return { success, ... };
+  }, [productUrl, filamentId]);
+
+  return { refreshPrice, isRefreshing, lastRefreshError };
+}
+```
+
+---
+
+## Error Handling
+
+| Scenario | Behavior |
+|----------|----------|
+| 404 Page Not Found | Return `{ success: false, error: 'Product page not found (404)' }` |
+| Network timeout | Retry up to 2 times, then return error |
+| BOOT_ERROR / 503 | Retry with exponential backoff |
+| Database update fails | Return `{ success: false, error: 'Failed to save price' }` |
+| Invalid price response | Return `{ success: false, error: 'Invalid price data received' }` |
+
+---
+
+## Cache Invalidation Flow
+
+```text
+1. Admin clicks "Refresh Price"
+2. refreshPrice() is called
+3. Edge function fetches fresh price
+4. Database is updated
+5. invalidatePriceCache(productUrl) clears the in-memory cache
+6. Next useCurrentPrice call will fetch fresh from edge function
+```
+
+---
+
+## Dependencies
+
+- `@/integrations/supabase/client` - Supabase client
+- `./useCurrentPrice` - For `invalidatePriceCache` export
+
+---
+
+## Usage Example
+
+```tsx
+function AdminPriceRefreshButton({ productUrl, filamentId }) {
+  const { refreshPrice, isRefreshing, lastRefreshError } = useAdminPriceRefresh(
+    productUrl,
+    filamentId
+  );
+
+  const handleClick = async () => {
+    const result = await refreshPrice();
+    if (result.success) {
+      toast.success(`Price updated to $${result.newPrice}`);
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  return (
+    <Button onClick={handleClick} disabled={isRefreshing}>
+      {isRefreshing ? <Loader2 className="animate-spin" /> : 'Refresh Price'}
+    </Button>
+  );
+}
+```
+
