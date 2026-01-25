@@ -23,6 +23,7 @@ import { ShippingCountdown } from '../urgency/ShippingCountdown';
 import { RegionalAvailabilityBadge, CrossBorderNote } from '../RegionalAvailabilityBadge';
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
 import { HonestPriceDisplay, getCtaText, shouldUsePrimaryCta } from '@/components/price/HonestPriceDisplay';
+import { BrokenUrlReport } from '@/components/price/BrokenUrlReport';
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
   vendor: string | null;
@@ -119,8 +120,14 @@ export function FilamentHeroPurchaseCard({
     if (result) {
       setManualLivePrice(result);
       setHasCheckedLivePrice(true);
+    } else {
+      // Still mark as checked even on error (to show error state)
+      setHasCheckedLivePrice(true);
     }
   }, [productUrl, originalUsUrl, manualPriceLoading, fetchLivePrice, trackStoreClick, filamentId]);
+
+  // Check if we got a 404 error from the manual price check
+  const isUrl404 = hasCheckedLivePrice && manualLivePrice?.urlStatus === 'not_found';
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
@@ -231,7 +238,30 @@ export function FilamentHeroPurchaseCard({
               {manualPriceLoading ? 'Fetching live price...' : 'Checking price...'}
             </span>
           </div>
-        ) : hasCheckedLivePrice && manualLivePrice ? (
+        ) : isUrl404 ? (
+          // Show broken URL report when 404 detected
+          <div className="space-y-3 animate-in fade-in duration-300">
+            <BrokenUrlReport
+              entityType="filament"
+              entityId={filamentId}
+              urlField="product_url"
+              currentUrl={productUrl || ''}
+              productName={vendor || undefined}
+              errorType="404"
+              className="mb-2"
+            />
+            {/* Still show stored price as fallback */}
+            {pricePerSpool && (
+              <div className="flex items-baseline gap-2 pt-2">
+                <span className="text-2xl font-bold text-muted-foreground">
+                  {formatPrice(pricePerSpool, false)}
+                </span>
+                <span className="text-sm text-muted-foreground">/spool</span>
+                <span className="text-xs text-muted-foreground ml-2">(last known price)</span>
+              </div>
+            )}
+          </div>
+        ) : hasCheckedLivePrice && manualLivePrice?.price ? (
           // Show verified live price after manual check
           <div className="space-y-3 animate-in fade-in duration-300">
             <div className="flex items-baseline gap-2">

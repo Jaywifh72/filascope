@@ -7,6 +7,18 @@ const corsHeaders = {
 
 // Accessory brand URL mappings - old URLs to new working URLs
 const ACCESSORY_URL_MAPPINGS: Record<string, Record<string, string>> = {
+  // Creality URL mappings - Hyper series renamed
+  "Creality": {
+    // Hyper PLA CF renamed
+    "hyper-series-pla-carbon-fiber-3d-printing-filament": "hyper-pla-cf",
+    "hyper-series-pla-3d-printing-filament": "hyper-pla",
+    "hyper-series-petg-3d-printing-filament": "hyper-petg",
+    "hyper-series-abs-3d-printing-filament": "hyper-abs",
+    // Other Hyper variants
+    "hyper-series-pla-high-speed-3d-printing-filament": "hyper-pla",
+    "creality-hyper-pla-carbon-fiber": "hyper-pla-cf",
+    "creality-hyper-pla-cf": "hyper-pla-cf",
+  },
   // Snapmaker URL mappings - products were consolidated or renamed
   "Snapmaker": {
     // PEI sheets - old URLs redirected to new product pages
@@ -62,6 +74,13 @@ interface BrandUrlPattern {
 }
 
 const BRAND_URL_PATTERNS: Record<string, BrandUrlPattern> = {
+  // Creality: hyper-series renamed to hyper-
+  "Creality": {
+    pathTransform: (path: string) => {
+      // Creality renamed hyper-series-* to hyper-*
+      return path.replace('hyper-series-', 'hyper-');
+    }
+  },
   // Snapmaker: shop.snapmaker.com → us.snapmaker.com
   "Snapmaker": {
     oldDomain: "shop.snapmaker.com",
@@ -606,6 +625,42 @@ const BRAND_URL_FIXERS: Record<string, UrlFixer> = {
       if (url.hostname === 'www.elegoo.com') {
         // The main site should work, but could try regional
         return null;
+      }
+      
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  
+  "Creality": (currentUrl: string) => {
+    if (!currentUrl) return null;
+    if (!currentUrl.includes('creality.com') && !currentUrl.includes('store.creality.com')) return null;
+    
+    try {
+      const url = new URL(currentUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      const productSlug = pathParts[pathParts.length - 1];
+      
+      // Check accessory URL mappings first
+      const accessoryMappings = ACCESSORY_URL_MAPPINGS["Creality"];
+      if (accessoryMappings && accessoryMappings[productSlug]) {
+        return `https://store.creality.com/products/${accessoryMappings[productSlug]}`;
+      }
+      
+      // Try applying the hyper-series- to hyper- transformation
+      const pattern = BRAND_URL_PATTERNS["Creality"];
+      if (pattern?.pathTransform) {
+        const transformedSlug = pattern.pathTransform(productSlug);
+        if (transformedSlug !== productSlug) {
+          return `https://store.creality.com/products/${transformedSlug}`;
+        }
+      }
+      
+      // Try generic path transformations
+      if (productSlug.includes('hyper-series-')) {
+        const newSlug = productSlug.replace('hyper-series-', 'hyper-');
+        return `https://store.creality.com/products/${newSlug}`;
       }
       
       return null;
