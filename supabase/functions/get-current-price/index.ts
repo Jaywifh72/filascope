@@ -181,6 +181,111 @@ async function logBrokenUrl(
   }
 }
 
+// Check if a redirect URL is a valid product page (not homepage/category)
+function isValidProductRedirect(originalUrl: string, newUrl: string): boolean {
+  // Must be same domain
+  const originalDomain = extractDomain(originalUrl);
+  const newDomain = extractDomain(newUrl);
+  if (originalDomain !== newDomain) {
+    console.log(`Redirect to different domain rejected: ${newDomain}`);
+    return false;
+  }
+  
+  try {
+    const newUrlObj = new URL(newUrl);
+    const path = newUrlObj.pathname.toLowerCase();
+    
+    // Reject if redirected to homepage
+    if (path === '/' || path === '') {
+      console.log('Redirect to homepage rejected');
+      return false;
+    }
+    
+    // Reject common category/collection pages
+    const categoryPatterns = [
+      /^\/collections?\/?$/i,
+      /^\/products?\/?$/i,
+      /^\/shop\/?$/i,
+      /^\/category\/?$/i,
+      /^\/categories\/?$/i,
+      /^\/search\/?$/i,
+      /^\/filament\/?$/i,
+      /^\/filaments?\/?$/i,
+    ];
+    
+    if (categoryPatterns.some(p => p.test(path))) {
+      console.log(`Redirect to category page rejected: ${path}`);
+      return false;
+    }
+    
+    // Likely a valid product page if it has product-like path structure
+    const productPatterns = [
+      /\/products?\//i,
+      /\/p\//i,
+      /\/item\//i,
+      /-filament/i,
+      /filament-/i,
+    ];
+    
+    // If path looks like a product page or is just different, accept it
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Auto-update filament URL when a valid redirect is detected
+async function handleUrlRedirect(
+  originalUrl: string,
+  newUrl: string
+): Promise<boolean> {
+  try {
+    // Validate the redirect
+    if (!isValidProductRedirect(originalUrl, newUrl)) {
+      console.log(`Invalid redirect rejected: ${originalUrl} -> ${newUrl}`);
+      return false;
+    }
+    
+    const supabase = getSupabaseClient();
+    
+    // Update filament(s) with the old URL to use the new URL
+    const { data: updated, error } = await supabase
+      .from('filaments')
+      .update({ 
+        product_url: newUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('product_url', originalUrl)
+      .select('id, product_title');
+    
+    if (error) {
+      console.error('Failed to update filament URL:', error);
+      return false;
+    }
+    
+    if (updated && updated.length > 0) {
+      console.log(`Auto-updated ${updated.length} filament(s) URL: ${originalUrl} -> ${newUrl}`);
+      
+      // If there was a broken_product_urls record, mark it as resolved
+      await supabase
+        .from('broken_product_urls')
+        .update({
+          resolved_at: new Date().toISOString(),
+          new_url: newUrl,
+          notes: 'Auto-resolved via redirect detection',
+        })
+        .eq('product_url', originalUrl);
+      
+      return true;
+    }
+    
+    return false;
+  } catch (err) {
+    console.error('Error handling URL redirect:', err);
+    return false;
+  }
+}
+
 // Check if content indicates a 404/not found page
 function is404Content(markdown: string): boolean {
   const notFoundPatterns = [
@@ -793,6 +898,19 @@ async function fetchPriceWithFirecrawl(
     
     const data = await response.json();
     const markdown = data.data?.markdown || data.markdown || '';
+    const metadata = data.data?.metadata || data.metadata || {};
+    const sourceURL = metadata.sourceURL || metadata.url || null;
+    
+    // Detect URL redirects - Firecrawl returns the final URL after any redirects
+    if (sourceURL && sourceURL !== productUrl) {
+      console.log(`URL redirect detected: ${productUrl} -> ${sourceURL}`);
+      
+      // Attempt to auto-update the product URL if it's a valid redirect
+      const updated = await handleUrlRedirect(productUrl, sourceURL);
+      if (updated) {
+        console.log('Product URL auto-updated from redirect');
+      }
+    }
     
     if (!markdown) {
       console.error('No markdown content returned from Firecrawl');
