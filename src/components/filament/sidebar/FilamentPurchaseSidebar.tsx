@@ -34,6 +34,7 @@ interface FilamentPurchaseSidebarProps {
   filamentId: string;
   vendor: string | null;
   material: string | null;
+  productTitle?: string | null; // Product name for search fallback on 404
   pricePerKg: number | null;
   pricePerSpool: number | null;
   weightGrams: number | null;
@@ -61,6 +62,7 @@ export function FilamentPurchaseSidebar({
   filamentId,
   vendor,
   material,
+  productTitle,
   pricePerKg,
   pricePerSpool,
   weightGrams,
@@ -305,6 +307,7 @@ export function FilamentPurchaseSidebar({
               fallbackUrl={originalUsUrl}
               affiliateUrl={affiliateUrl}
               storeName={regionalPriceResult?.store?.name || finalRetailerName}
+              productName={productTitle || `${vendor} ${material}`}
               onPriceFetched={handleLivePriceFetched}
               size="lg"
             />

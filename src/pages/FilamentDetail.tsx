@@ -743,6 +743,7 @@ const FilamentDetail = () => {
             filamentId={displayFilament.id}
             vendor={pricingFilament.vendor}
             material={pricingFilament.material}
+            productTitle={displayFilament.product_title}
             pricePerKg={rawPricePerKg}
             pricePerSpool={rawPricePerSpool}
             weightGrams={pricingFilament.net_weight_g}
