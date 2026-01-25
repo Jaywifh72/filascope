@@ -13,7 +13,9 @@ import {
   XCircle,
   Loader2,
   Plus,
-  MapPin
+  MapPin,
+  Clock,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -29,6 +31,7 @@ import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
 import { ScoreCalculationTooltip } from "@/components/filament/education/ScoreCalculationTooltip";
 import { REGIONS } from "@/config/regions";
+import { usePriceFreshness } from "@/hooks/usePriceFreshness";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -87,6 +90,10 @@ interface Filament {
   price_eur?: number | null;
   price_aud?: number | null;
   price_jpy?: number | null;
+  // Price freshness fields
+  last_scraped_at?: string | null;
+  price_confidence?: string | null;
+  price_source?: string | null;
 }
 
 // Variant indicator data for grouped products
@@ -226,6 +233,15 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     variantIndicators?.priceRange?.min !== null && 
     variantIndicators?.priceRange?.max !== null &&
     variantIndicators?.priceRange?.min !== variantIndicators?.priceRange?.max;
+
+  // Price freshness - determine confidence level
+  const { confidence: priceConfidence, timeAgo, isStale } = usePriceFreshness(
+    isLivePrice ? new Date().toISOString() : filament.last_scraped_at
+  );
+  
+  // Determine if we should show the actual price or "Check price"
+  const shouldShowPrice = !isStale && isValidPrice && pricePerKg;
+  const isHighConfidence = priceConfidence === 'high' || priceConfidence === 'medium';
 
   // Dynamically calculate score based on filament data
   const dynamicScore = useMemo(() => {
@@ -564,25 +580,52 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
             <span className="text-sm text-muted-foreground">Checking price...</span>
           </div>
-        ) : isValidPrice && pricePerKg ? (
-          <div className="flex items-center gap-3">
-            <div className="flex items-baseline gap-1">
-              <span className="text-xl font-bold text-foreground leading-none">
-                {formatPrice(pricePerKg)}
-              </span>
-              <span className="text-sm font-medium text-muted-foreground">/kg</span>
+        ) : shouldShowPrice ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-bold text-foreground leading-none">
+                  {formatPrice(pricePerKg)}
+                </span>
+                <span className="text-sm font-medium text-muted-foreground">/kg</span>
+              </div>
+              
+              {/* Budget-Friendly Badge (inline with price) */}
+              {isBudgetFriendly && (
+                <div className="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 rounded-md px-2 py-1">
+                  <DollarSign className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[10px] font-medium text-emerald-400">Budget</span>
+                </div>
+              )}
             </div>
             
-            {/* Budget-Friendly Badge (inline with price) */}
-            {isBudgetFriendly && (
-              <div className="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 rounded-md px-2 py-1">
-                <DollarSign className="w-3 h-3 text-emerald-400" />
-                <span className="text-[10px] font-medium text-emerald-400">Budget</span>
+            {/* Price freshness indicator */}
+            {timeAgo && !isLivePrice && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{timeAgo}</span>
               </div>
             )}
           </div>
+        ) : isValidPrice && pricePerKg && isStale ? (
+          // Stale price - show muted with warning
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-lg text-muted-foreground line-through opacity-60">
+                {formatPrice(pricePerKg)}/kg
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-amber-500">
+              <Clock className="w-3 h-3" />
+              <span>Price may have changed</span>
+            </div>
+          </div>
         ) : (
-          <span className="text-lg text-muted-foreground">Price unavailable</span>
+          // No price available
+          <div className="flex items-center gap-2">
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Check price at store</span>
+          </div>
         )}
       </div>
 
@@ -629,7 +672,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           )}
         >
           <Link to={`/filament/${filament.id}`} aria-label={`View details for ${filament.product_title}`}>
-            View Details
+            {isHighConfidence ? 'View Details' : 'Check Price'}
             <ArrowRight className="w-[18px] h-[18px] ml-2" />
           </Link>
         </Button>
