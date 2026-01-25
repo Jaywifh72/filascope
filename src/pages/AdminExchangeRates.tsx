@@ -10,6 +10,7 @@ import { ExchangeRatesTable } from '@/components/admin/exchange-rates/ExchangeRa
 import { AddExchangeRateDialog } from '@/components/admin/exchange-rates/AddExchangeRateDialog';
 import { EditExchangeRateDialog } from '@/components/admin/exchange-rates/EditExchangeRateDialog';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CURRENCIES, CURRENCY_LIST } from '@/config/currencies';
 import { CurrencyCode, CurrencyExchangeRate } from '@/types/regional';
 import { formatDistanceToNow } from 'date-fns';
@@ -98,8 +99,9 @@ export default function AdminExchangeRates() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <AdminLayout>
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* Header with back navigation */}
         <AdminPageHeader
           title="Currency Exchange Rates"
@@ -215,7 +217,8 @@ export default function AdminExchangeRates() {
             setEditingRate(null);
           }}
         />
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

@@ -18,6 +18,7 @@ import { BrandRegionalStoresTable } from '@/components/admin/regional-stores/Bra
 import { AddRegionalStoreDialog } from '@/components/admin/regional-stores/AddRegionalStoreDialog';
 import { BrandCoverageOverview } from '@/components/admin/regional-stores/BrandCoverageOverview';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { REGIONS, REGION_LIST } from '@/config/regions';
 import { RegionCode } from '@/types/regional';
 import { useToast } from '@/hooks/use-toast';
@@ -152,8 +153,9 @@ export default function AdminRegionalStores() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <AdminLayout>
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
         {/* Header with back navigation */}
         <AdminPageHeader
           title="Regional Store Management"
@@ -299,7 +301,8 @@ export default function AdminRegionalStores() {
             setSelectedBrandId(null);
           }}
         />
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

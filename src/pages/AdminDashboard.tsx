@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useAdminHealth } from "@/hooks/useAdminHealth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HealthScoreWidget } from "@/components/admin/HealthScoreWidget";
 import { StaleDataAlerts } from "@/components/admin/StaleDataAlerts";
 import { RecentActivityLog } from "@/components/admin/RecentActivityLog";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { useAuth } from "@/hooks/useAuth";
 import { 
-  Database, Users, Package, Upload, TrendingUp, Shield, ExternalLink, 
-  BarChart3, ShoppingCart, ClipboardCheck, Wrench, RefreshCw, Building2,
-  Link2, Copy, Calendar, DollarSign, PieChart, Star, FlaskConical, FileText,
-  ShoppingBag, Scan, Settings, Globe
+  Database, Users, Package, TrendingUp, Shield, 
+  BarChart3, RefreshCw, Building2,
+  DollarSign, PieChart, Star, FileText,
+  Scan, Settings, Globe, ClipboardCheck, Calendar
 } from "lucide-react";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const { user, isAdmin, loading } = useAuth();
+  const { isAdmin } = useAuth();
   const { metrics, alerts, loading: healthLoading, refresh } = useAdminHealth();
   const [stats, setStats] = useState({
     totalFilaments: 0,
@@ -25,14 +25,6 @@ const AdminDashboard = () => {
     totalDeals: 0,
     totalPrinters: 0,
   });
-
-  useEffect(() => {
-    if (!loading && user && !isAdmin) {
-      navigate("/");
-    } else if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [isAdmin, loading, user, navigate]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -56,18 +48,6 @@ const AdminDashboard = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
-
   const quickActions = [
     { to: "/admin/site-settings", icon: Settings, title: "Site Settings", desc: "Coming soon mode & more", color: "text-orange-500" },
     { to: "/admin/brand-pipeline", icon: Building2, title: "Brand Pipeline", desc: "Unified scraping & sync", color: "text-emerald-500" },
@@ -86,8 +66,9 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+    <AdminLayout>
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-primary" />
@@ -164,8 +145,9 @@ const AdminDashboard = () => {
             </Card>
           ))}
         </div>
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
