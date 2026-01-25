@@ -37,11 +37,129 @@ interface PriceResponse {
 }
 
 // Detect custom storefronts that don't support Shopify JSON API
-function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | 'opencart' | null {
+function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | 'opencart' | 'creality' | null {
   if (url.includes('store.bambulab.com')) return 'bambulab';
   if (url.includes('prusa3d.com')) return 'prusa';
   if (url.includes('geeetech.com')) return 'opencart'; // OpenCart-based PHP store
+  if (url.includes('store.creality.com')) return 'creality';
   return null;
+}
+
+// Validate that a price is within reasonable range for filament products
+// This filters out promotional banners, coupon values, and other non-product prices
+function validateFilamentPrice(price: number): boolean {
+  // Reasonable filament price range: $3 - $150 per spool (allowing for multi-packs)
+  return price >= 3 && price <= 150;
+}
+
+// Extract price specifically from Creality store pages
+// Creality pages often have promotional banners with large dollar amounts (e.g., "$500 coupon pack")
+// that can be mistakenly captured by generic regex
+function extractCrealityPrice(markdown: string): {
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  available: boolean;
+} {
+  console.log('Extracting Creality price...');
+  
+  // Look for price section near "Add to Cart" or product-specific areas
+  const addToCartIndex = markdown.search(/Add\s*to\s*Cart/i);
+  const buyNowIndex = markdown.search(/Buy\s*Now/i);
+  const priceIndex = Math.max(addToCartIndex, buyNowIndex);
+  
+  // Search in a window around the Add to Cart button
+  let priceSection = '';
+  if (priceIndex > -1) {
+    // Look backwards from Add to Cart (prices typically appear before it)
+    priceSection = markdown.slice(Math.max(0, priceIndex - 500), priceIndex + 100);
+  }
+  
+  // Also look for explicit sale price indicators
+  const saleMatch = markdown.match(/(?:Sale\s*price|Now|Special)\s*[:.]?\s*\$(\d+(?:\.\d{2})?)/i);
+  
+  // Pattern 1: Look for strikethrough/compare-at pattern (current price, then higher original)
+  // e.g., "$18.99" followed by "$34.25" 
+  const dualPriceMatch = priceSection.match(/\$(\d+(?:\.\d{2})?)\s*(?:[\s\n~-]*)\$(\d+(?:\.\d{2})?)/);
+  if (dualPriceMatch) {
+    const price1 = parseFloat(dualPriceMatch[1]);
+    const price2 = parseFloat(dualPriceMatch[2]);
+    const salePrice = Math.min(price1, price2);
+    const comparePrice = Math.max(price1, price2);
+    
+    // Validate both prices are in reasonable range
+    if (validateFilamentPrice(salePrice) && (comparePrice <= 200)) {
+      console.log(`Found Creality sale price: $${salePrice}, compare-at: $${comparePrice}`);
+      return {
+        price: salePrice,
+        compareAtPrice: comparePrice,
+        currency: 'USD',
+        available: true,
+      };
+    }
+  }
+  
+  // Pattern 2: Find all prices in section, filter to valid range, pick lowest
+  const allPricesInSection = priceSection.match(/\$(\d+(?:\.\d{2})?)/g);
+  if (allPricesInSection) {
+    const validPrices = allPricesInSection
+      .map(p => parseFloat(p.replace('$', '')))
+      .filter(p => validateFilamentPrice(p))
+      .sort((a, b) => a - b);
+    
+    if (validPrices.length > 0) {
+      const price = validPrices[0];
+      // If there are multiple valid prices, larger might be compare-at
+      const compareAt = validPrices.length > 1 && validPrices[1] > price * 1.1 
+        ? validPrices[1] 
+        : null;
+      console.log(`Found Creality price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
+      return {
+        price,
+        compareAtPrice: compareAt,
+        currency: 'USD',
+        available: true,
+      };
+    }
+  }
+  
+  // Pattern 3: Explicit sale match
+  if (saleMatch) {
+    const price = parseFloat(saleMatch[1]);
+    if (validateFilamentPrice(price)) {
+      console.log(`Found Creality explicit sale price: $${price}`);
+      return {
+        price,
+        compareAtPrice: null,
+        currency: 'USD',
+        available: true,
+      };
+    }
+  }
+  
+  // Fallback: Search entire content but with strict validation
+  const allPrices = [...markdown.matchAll(/\$(\d+(?:\.\d{2})?)/g)]
+    .map(m => parseFloat(m[1]))
+    .filter(p => validateFilamentPrice(p))
+    .sort((a, b) => a - b);
+  
+  if (allPrices.length > 0) {
+    console.log(`Creality fallback: found ${allPrices.length} valid prices, using lowest: $${allPrices[0]}`);
+    return {
+      price: allPrices[0],
+      compareAtPrice: allPrices.length > 1 && allPrices[1] > allPrices[0] * 1.1 ? allPrices[1] : null,
+      currency: 'USD',
+      available: true,
+    };
+  }
+  
+  console.log('No valid Creality price found');
+  return {
+    price: null,
+    compareAtPrice: null,
+    currency: 'USD',
+    available: false,
+  };
 }
 
 // Detect Shopify stores known to use multi-currency (geo-based pricing)
@@ -278,19 +396,25 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   }
   
   // Last resort: try to find any price pattern like "$XX.XX"
-  const genericMatch = markdown.match(/\$([0-9,]+(?:\.[0-9]{2})?)/);
-  if (genericMatch) {
-    const price = parseFloat(genericMatch[1].replace(',', ''));
-    console.log(`Found generic price: $${price}`);
+  // Filter to reasonable filament prices to avoid capturing promotional banners
+  const allPrices = [...markdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
+    .map(m => parseFloat(m[1].replace(',', '')))
+    .filter(p => validateFilamentPrice(p))
+    .sort((a, b) => a - b); // Sort ascending to get lowest reasonable price
+  
+  if (allPrices.length > 0) {
+    const price = allPrices[0];
+    const compareAtPrice = allPrices.length > 1 && allPrices[1] > price * 1.1 ? allPrices[1] : null;
+    console.log(`Found generic price (filtered): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''} (from ${allPrices.length} valid prices)`);
     return {
       price,
-      compareAtPrice: null,
+      compareAtPrice,
       currency: preferredCurrency, // Assume preferred currency
       available: true,
     };
   }
   
-  console.log('No price found in content');
+  console.log('No valid price found in content');
   return {
     price: null,
     compareAtPrice: null,
@@ -407,11 +531,18 @@ async function fetchPriceWithFirecrawl(productUrl: string, preferredCurrency: st
     console.log(`Firecrawl returned ${markdown.length} chars of content`);
     
     // Extract price based on storefront type
-    // Detect if this is an OpenCart/GEEETECH page and use specialized extraction
+    // Detect if this is a specialized storefront and use appropriate extraction
     const isOpenCart = productUrl.includes('geeetech.com');
-    const priceData = isOpenCart 
-      ? extractOpenCartPrice(markdown)
-      : extractBambuLabPrice(markdown, preferredCurrency);
+    const isCreality = productUrl.includes('store.creality.com');
+    
+    let priceData;
+    if (isCreality) {
+      priceData = extractCrealityPrice(markdown);
+    } else if (isOpenCart) {
+      priceData = extractOpenCartPrice(markdown);
+    } else {
+      priceData = extractBambuLabPrice(markdown, preferredCurrency);
+    }
     const weightGrams = extractWeightFromContent(markdown);
     const diameterMm = extractDiameterFromContent(markdown, productUrl);
     
