@@ -7,6 +7,7 @@ import { RegionCode, CurrencyCode, REGION_CONFIGS, CURRENCY_CONFIGS, formatCurre
 import { formatPrice } from '@/config/currencies';
 import { REGION_FALLBACK_ORDER, REGIONS } from '@/config/regions';
 import { fetchRegionalSlug, resolveRegionalSlug } from '@/utils/regionalSlugResolver';
+import { getUrlValidationFromCache } from '@/services/urlValidationService';
 
 // ============================================================================
 // Types
@@ -60,6 +61,11 @@ export interface UnifiedRegionalPricingResult {
   // Slug verification
   slugVerified: boolean;
   effectiveSlug: string;
+  
+  // URL validation
+  urlValidation: 'valid' | 'invalid' | 'redirect' | 'unknown' | 'pending';
+  urlValidatedAt: Date | null;
+  usedFallbackUrl: boolean;
   
   // Status
   isLoading: boolean;
@@ -316,6 +322,9 @@ const DEFAULT_RESULT: UnifiedRegionalPricingResult = {
   allStores: [],
   slugVerified: false,
   effectiveSlug: '',
+  urlValidation: 'pending',
+  urlValidatedAt: null,
+  usedFallbackUrl: false,
   isLoading: true,
   error: null,
 };
@@ -357,6 +366,23 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     queryFn: () => fetchRegionalSlug(filamentId!, region),
     enabled: !!filamentId && !!region,
     staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+  
+  // Compute the store URL first for URL validation query
+  const preliminaryStoreUrl = useMemo(() => {
+    if (!rawStores.length) return null;
+    const { store } = findBestStore(rawStores, region);
+    if (!store) return null;
+    const slugResolution = resolveRegionalSlug(regionalSlugData || null, productSlug);
+    return buildRegionalUrl(store.product_url_pattern, store.base_url, slugResolution.effectiveSlug);
+  }, [rawStores, region, regionalSlugData, productSlug]);
+  
+  // Query 4: Check URL validation cache (non-blocking)
+  const { data: urlValidationData } = useQuery({
+    queryKey: ['url-validation-cache', preliminaryStoreUrl],
+    queryFn: () => getUrlValidationFromCache(preliminaryStoreUrl!),
+    enabled: !!preliminaryStoreUrl,
+    staleTime: 60 * 60 * 1000, // 1 hour - matches URL validation TTL
   });
   
   const isLoading = brandLoading || storesLoading || (!!filamentId && slugLoading);
@@ -432,15 +458,39 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
           ? generateConversionTooltip(basePrice, baseCurrency, rate, currency)
           : null,
         allStores,
+        urlValidation: 'unknown',
+        urlValidatedAt: null,
+        usedFallbackUrl: false,
       };
     }
     
     // We have a matching store - build the URL
-    const storeUrl = buildRegionalUrl(
+    let storeUrl = buildRegionalUrl(
       matchedStore.product_url_pattern,
       matchedStore.base_url,
       effectiveSlug
     );
+    
+    // Check URL validation status and apply fallback if invalid
+    let urlValidation: 'valid' | 'invalid' | 'redirect' | 'unknown' | 'pending' = 'pending';
+    let urlValidatedAt: Date | null = null;
+    let usedFallbackUrl = false;
+    
+    if (urlValidationData) {
+      urlValidation = urlValidationData.status;
+      urlValidatedAt = urlValidationData.lastChecked;
+      
+      // If URL is invalid (404), fall back to store base URL
+      if (urlValidationData.status === 'invalid') {
+        console.warn(`Product URL invalid (${urlValidationData.statusCode}), falling back to: ${matchedStore.base_url}`);
+        storeUrl = matchedStore.base_url;
+        usedFallbackUrl = true;
+      }
+      // If redirect detected, use the redirect URL
+      else if (urlValidationData.status === 'redirect' && urlValidationData.redirectUrl) {
+        storeUrl = urlValidationData.redirectUrl;
+      }
+    }
     
     const storeRegion = matchedStore.region_code as RegionCode;
     const storeFlag = REGION_CONFIGS[storeRegion]?.flag || REGIONS[storeRegion]?.flag || '🌐';
@@ -472,6 +522,9 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
       conversionTooltip: needsConversion && basePrice != null && rate
         ? generateConversionTooltip(basePrice, baseCurrency, rate, currency)
         : null,
+      urlValidation,
+      urlValidatedAt,
+      usedFallbackUrl,
     };
   }, [
     isLoading,
@@ -486,6 +539,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     convertPrice,
     getConversionRate,
     regionalSlugData,
+    urlValidationData,
     priceLastVerifiedAt,
     priceSource,
     preCalculatedConfidence,
