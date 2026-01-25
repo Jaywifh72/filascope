@@ -1,267 +1,156 @@
 
-# Configurable Brand-Specific Price Extraction System
-
-## Overview
-
-This plan transforms the hardcoded price extraction logic in `get-current-price` into a database-driven, configurable system. The key insight is that the `automated_brands` table **already has** the infrastructure for brand scraping configs (including `price_selectors`, `platform_type`, `default_currency`, success/failure tracking) - but the Edge Function doesn't use it yet.
+# Plan: Admin Tool for Broken Product URL Detection & Repair
 
 ## Current State Analysis
 
-### What Already Exists
+After thorough codebase exploration, I discovered that **the core infrastructure for detecting and fixing broken URLs already exists**. The system includes:
 
-| Component | Description |
-|-----------|-------------|
-| `automated_brands` table | Contains 60+ brands with `price_selectors`, `platform_type`, `base_url`, `default_currency` columns |
-| `brand_scraper_profiles` table | Brand-specific extraction rules (color, material patterns, etc.) |
-| `scrape_job_logs` table | Logs scrape operations with levels and metadata |
-| `get-current-price` Edge Function | 940 lines with 4 hardcoded extractors (Creality, Bambu Lab, OpenCart, Prusa) |
+- **Edge Functions**: `validate-filament-urls`, `validate-url`, `fix-filament-url`, `report-broken-url`
+- **Admin Dashboard**: `/admin/broken-links` with full monitoring capabilities
+- **Database Tables**: `url_validation_results`, `url_validation_cache`, plus `url_validation_status` column in filaments
+- **Frontend Integration**: `BrokenUrlReport` component shows when 404 detected, `useLivePriceFetch` detects 404 errors
 
-### The Problem
-
-The Edge Function ignores the `automated_brands` config and relies on:
-1. `detectCustomStorefront(url)` - Hardcoded domain matching
-2. `extractCrealityPrice()`, `extractBambuLabPrice()`, etc. - Hardcoded per-brand logic
-3. `shouldAlwaysUseFirecrawl()` - Hardcoded domain list
+The specific Creality URL mapping (`hyper-series-pla-carbon-fiber-3d-printing-filament` → `hyper-pla-cf`) is already defined in the `fix-filament-url` Edge Function.
 
 ---
 
-## Implementation Strategy
+## Implementation Plan
 
-We will extend the existing `automated_brands` table with additional price extraction fields rather than creating a separate `brand_scraping_configs` table. This avoids data duplication and maintains the single source of truth.
+Since the infrastructure exists, the work focuses on **enhancements** and **filling gaps**:
 
-### Phase 1: Database Schema Extension
+### Phase 1: Enhance Redirect URL Detection
 
-Add new columns to `automated_brands` for configurable extraction:
+**File**: `supabase/functions/validate-filament-urls/index.ts`
 
-```sql
-ALTER TABLE automated_brands ADD COLUMN IF NOT EXISTS extraction_method text DEFAULT 'auto';
--- Values: 'shopify_json', 'firecrawl', 'custom', 'auto'
+**Changes**:
+- When a URL redirects to a different product page (not homepage), capture and store the `finalUrl` as a suggested replacement
+- Add logic to detect when a redirect goes to a valid product page vs a collection/homepage
+- Update the database to store `suggested_url` alongside validation status
 
-ALTER TABLE automated_brands ADD COLUMN IF NOT EXISTS price_extraction_config jsonb DEFAULT '{}'::jsonb;
--- Structure:
--- {
---   "priceSectionAnchor": "Add to Cart|Buy Now",
---   "pricePatterns": ["\\$([\\d,]+(?:\\.\\d{2})?)\\s*CAD"],
---   "excludePatterns": ["coupon|bundle|pack of \\d{2,}"],
---   "priceRangeMin": 3,
---   "priceRangeMax": 150,
---   "currencyDetection": "url|content|fixed:USD"
--- }
+### Phase 2: Add "Apply Redirect as Fix" Feature
 
-ALTER TABLE automated_brands ADD COLUMN IF NOT EXISTS test_product_url text;
-ALTER TABLE automated_brands ADD COLUMN IF NOT EXISTS last_extraction_test_at timestamptz;
-ALTER TABLE automated_brands ADD COLUMN IF NOT EXISTS extraction_working boolean DEFAULT true;
-ALTER TABLE automated_brands ADD COLUMN IF NOT EXISTS extraction_success_rate numeric(5,2);
-```
+**File**: `src/components/admin/BrokenLinkSection.tsx`
 
-### Phase 2: Create Extraction Logging Table
+**Changes**:
+- For entries with status `redirect` and a valid `redirect_url`, show "Apply Redirect" button
+- Add bulk action: "Apply All Valid Redirects" to automatically update product URLs when redirects point to valid product pages
+- Show the redirect destination URL prominently in the UI
 
-Track individual extraction attempts for monitoring:
+### Phase 3: Add URL Suggestion from Validation
 
-```sql
-CREATE TABLE price_extraction_logs (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  brand_id uuid REFERENCES automated_brands(id),
-  product_url text NOT NULL,
-  extraction_method text NOT NULL,
-  success boolean NOT NULL,
-  extracted_price numeric,
-  error_message text,
-  raw_content_sample text, -- First 500 chars for debugging
-  response_time_ms integer,
-  created_at timestamptz DEFAULT now()
-);
+**File**: `supabase/functions/fix-filament-url/index.ts`
 
--- Index for brand success rate queries
-CREATE INDEX idx_extraction_logs_brand_success 
-ON price_extraction_logs (brand_id, success, created_at DESC);
-```
+**Verify/Add**:
+- Confirm Creality mapping `hyper-series-*` → `hyper-*` is working
+- Add any missing brand-specific URL patterns discovered from validation results
+- Ensure the fixer attempts to validate the suggested URL before returning it
 
-### Phase 3: Update get-current-price Edge Function
+### Phase 4: Enhance Live Price 404 Workflow
 
-Refactor to use database config with fallback to legacy logic:
+**File**: `src/hooks/useLivePriceFetch.ts`
 
+**Changes**:
+- When 404 detected, check if there's a known redirect URL in `url_validation_cache`
+- Automatically retry with the redirect URL before showing error
+- If retry succeeds, suggest URL update in the UI
+
+**File**: `src/components/filament/hero/FilamentHeroPurchaseCard.tsx`
+
+**Changes**:
+- When 404 detected and redirect exists, show "URL has moved" message with new URL
+- Add "Update URL" action (for admins) inline
+
+### Phase 5: Add Quick-Fix from Filament Page (Admin Only)
+
+**File**: `src/components/price/BrokenUrlReport.tsx`
+
+**Changes**:
+- For admin users, add "Try Auto-Fix" button that calls `fix-filament-url` directly
+- Show success message with new URL if fix found
+- Auto-refresh price after successful fix
+
+---
+
+## Technical Details
+
+### Database Changes
+No schema changes required - existing tables support all needed functionality.
+
+### New Component: Admin Quick-Fix
 ```text
-                   ┌─────────────────────────────┐
-                   │   get-current-price called  │
-                   └─────────────┬───────────────┘
-                                 │
-                                 ▼
-                   ┌─────────────────────────────┐
-                   │ Extract domain from URL     │
-                   │ Query automated_brands      │
-                   └─────────────┬───────────────┘
-                                 │
-              ┌──────────────────┼──────────────────┐
-              │                  │                  │
-              ▼                  ▼                  ▼
-     ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
-     │ Config found   │ │ No config      │ │ Config says    │
-     │ extraction_    │ │ Fall back to   │ │ extraction_    │
-     │ method set     │ │ legacy logic   │ │ working=false  │
-     └───────┬────────┘ └───────┬────────┘ └───────┬────────┘
-             │                  │                  │
-             ▼                  ▼                  ▼
-     ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
-     │ Use configured │ │ detectCustom   │ │ Return early   │
-     │ method +       │ │ Storefront()   │ │ with error     │
-     │ patterns       │ │ (existing)     │ │ "Brand has     │
-     └───────┬────────┘ └────────────────┘ │ extraction     │
-             │                             │ issues"        │
-             ▼                             └────────────────┘
-     ┌────────────────┐
-     │ Log to         │
-     │ extraction_logs│
-     └────────────────┘
+BrokenUrlReport
+├── Report Broken URL (existing)
+├── Go to Store (existing)
+├── [Admin Only] Try Auto-Fix (new)
+│   ├── Calls fix-filament-url Edge Function
+│   ├── If success: updates product_url in filaments table
+│   └── Shows toast with result
+└── [Admin Only] Edit URL (new)
+    └── Opens inline editor for manual URL correction
 ```
 
-Key changes to the function:
-1. Query `automated_brands` by domain at request start
-2. If config exists and `extraction_method` is set, use it
-3. Apply `price_extraction_config` patterns for Firecrawl results
-4. Log all extraction attempts to `price_extraction_logs`
-5. Fall back to legacy hardcoded logic for unconfigured brands
-
-### Phase 4: Create Admin UI Component
-
-New file: `src/components/admin/BrandExtractionConfig.tsx`
-
+### Edge Function Enhancement Flow
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│ 🔧 Brand Price Extraction Config                                 │
-├──────────────────────────────────────────────────────────────────┤
-│ ┌─────────────────────────────────────────────────────────────┐ │
-│ │ 🔍 Filter: [__________]  Status: [All ▼]  Method: [All ▼]  │ │
-│ └─────────────────────────────────────────────────────────────┘ │
-│                                                                  │
-│ ┌────────────────────────────────────────────────────────────┐  │
-│ │ Brand          │ Method    │ Success │ Last Test │ Status  │  │
-│ ├────────────────┼───────────┼─────────┼───────────┼─────────┤  │
-│ │ Bambu Lab      │ firecrawl │ 94.2%   │ 2h ago    │ ✅      │  │
-│ │ Creality       │ firecrawl │ 87.1%   │ 4h ago    │ ⚠️      │  │
-│ │ Prusa          │ firecrawl │ 98.0%   │ 1h ago    │ ✅      │  │
-│ │ Polymaker      │ shopify   │ 99.1%   │ 30m ago   │ ✅      │  │
-│ │ GEEETECH       │ firecrawl │ 72.3%   │ 12h ago   │ ❌      │  │
-│ └────────────────┴───────────┴─────────┴───────────┴─────────┘  │
-│                                                                  │
-│ [Test All Configs]  [Export Report]                              │
-└──────────────────────────────────────────────────────────────────┘
+validate-filament-urls
+├── Fetch URL with redirect:follow
+├── If redirected to valid product page:
+│   └── Store redirect_url in url_validation_results
+├── If 404 or redirected to homepage:
+│   └── Mark as invalid, suggest calling fix-filament-url
+└── Return results with suggested actions
 ```
 
-Clicking a row opens the config editor:
-
+### Apply Redirect Flow
 ```text
-┌──────────────────────────────────────────────────────────────────┐
-│ Configure: Creality                                              │
-├──────────────────────────────────────────────────────────────────┤
-│ Extraction Method: [Firecrawl ▼]                                 │
-│                                                                  │
-│ ┌─ Price Patterns ───────────────────────────────────────────┐  │
-│ │ Anchor Text: [Add to Cart|Buy Now       ]                  │  │
-│ │ Price Regex: [\$(\d+(?:\.\d{2})?)        ]                 │  │
-│ │ Exclude:     [coupon|bundle              ]                 │  │
-│ │ Range:       [$3] to [$150]                                │  │
-│ │ Currency:    [Fixed: USD ▼]                                │  │
-│ └────────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│ Test URL: [https://store.creality.com/products/hyper-pla    ]    │
-│           [🧪 Test Extraction]                                   │
-│                                                                  │
-│ ┌─ Test Result ──────────────────────────────────────────────┐  │
-│ │ ✅ Price: $18.99 USD                                       │  │
-│ │ ⏱️ Response: 1.2s                                          │  │
-│ │ 📍 Source: Firecrawl → Pattern Match                       │  │
-│ └────────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│ [Cancel]  [Save Configuration]                                   │
-└──────────────────────────────────────────────────────────────────┘
+User clicks "Apply Redirect" in Admin UI
+├── Verify redirect_url is accessible
+├── Update filaments.product_url with new URL
+├── Update url_validation_results status to 'valid'
+└── Clear relevant cache entries
 ```
 
-### Phase 5: Create Test Extraction Edge Function
+---
 
-New function: `supabase/functions/test-price-extraction/index.ts`
+## Files to Create/Modify
 
-Purpose: Allow admins to test extraction config without affecting production.
+### Modify Existing Files
+1. `supabase/functions/validate-filament-urls/index.ts` - Store redirect URLs properly
+2. `src/components/admin/BrokenLinkSection.tsx` - Add "Apply Redirect" actions
+3. `src/components/price/BrokenUrlReport.tsx` - Add admin quick-fix capability
+4. `src/hooks/useLivePriceFetch.ts` - Auto-retry with known redirect URLs
 
+### No New Files Required
+The existing infrastructure is comprehensive - enhancements can be made to existing components.
+
+---
+
+## Immediate Fix for Creality Hyper PLA CF
+
+The URL mapping already exists in `fix-filament-url`:
 ```typescript
-// Input
-{ 
-  brandId?: string,      // Test specific brand
-  productUrl: string,    // URL to test
-  config?: {...}         // Optional override config for testing
-}
-
-// Output
-{
-  success: boolean,
-  price: number | null,
-  method: 'shopify_json' | 'firecrawl' | 'custom',
-  matchedPattern: string | null,
-  rawSample: string,     // First 500 chars of content
-  responseTimeMs: number,
-  error?: string
+"Creality": {
+  "hyper-series-pla-carbon-fiber-3d-printing-filament": "hyper-pla-cf",
+  // ...
 }
 ```
 
-### Phase 6: Success Rate Monitoring Dashboard
-
-Add to the BrandExtractionConfig component:
-
-```text
-┌─ Extraction Health Overview ─────────────────────────────────────┐
-│                                                                  │
-│ Last 24 Hours                                                    │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│ Total Attempts: 1,247                                            │
-│ Success Rate:   92.4%                                            │
-│                                                                  │
-│ ┌─ Brands Below 80% Threshold ────────────────────────────────┐ │
-│ │ ⚠️ GEEETECH      72.3%   [View Logs] [Edit Config]          │ │
-│ │ ⚠️ Creality      78.9%   [View Logs] [Edit Config]          │ │
-│ └─────────────────────────────────────────────────────────────┘ │
-│                                                                  │
-│ [Run Health Check on All Brands]                                 │
-└──────────────────────────────────────────────────────────────────┘
-```
+To apply this fix now:
+1. Go to Admin → Broken Link Monitor
+2. Find the Creality Hyper PLA CF entry
+3. Click "Fix URL" - the existing function will apply the mapping
+4. Alternatively, manually edit to: `https://store.creality.com/products/hyper-pla-cf`
 
 ---
 
-## Files to Create
+## Summary
 
-| File | Purpose |
-|------|---------|
-| `src/pages/AdminBrandExtraction.tsx` | Admin page wrapper |
-| `src/components/admin/BrandExtractionConfig.tsx` | Main config UI |
-| `src/components/admin/BrandExtractionEditor.tsx` | Single brand editor dialog |
-| `src/components/admin/ExtractionHealthOverview.tsx` | Success rate dashboard |
-| `supabase/functions/test-price-extraction/index.ts` | Test extraction endpoint |
+| Component | Status | Action |
+|-----------|--------|--------|
+| URL Validation Edge Function | Exists | Enhance redirect capture |
+| URL Fixer Edge Function | Exists | Verify Creality mapping works |
+| Admin Broken Links Dashboard | Exists | Add "Apply Redirect" bulk action |
+| Broken URL Report Component | Exists | Add admin quick-fix button |
+| Live Price Fetch Hook | Exists | Add redirect URL retry logic |
+| Database Schema | Complete | No changes needed |
 
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `supabase/functions/get-current-price/index.ts` | Query brand config, use patterns, log results |
-| `src/App.tsx` | Add route for `/admin/brand-extraction` |
-| `src/components/admin/AdminSidebar.tsx` | Add "Price Extraction" to Data Quality group |
-
----
-
-## Migration Strategy
-
-1. **Add columns** to `automated_brands` (non-breaking)
-2. **Create logging table** `price_extraction_logs`
-3. **Update Edge Function** with config lookup + logging (maintains legacy fallback)
-4. **Seed configs** for known brands (Creality, Bambu Lab, GEEETECH, Prusa)
-5. **Deploy admin UI** for monitoring and editing
-
-The legacy hardcoded extraction logic remains as fallback, ensuring zero disruption during rollout.
-
----
-
-## Technical Benefits
-
-1. **Database-Driven**: Add new brands without code changes
-2. **Testable**: Admin can test configs before saving
-3. **Observable**: Extraction logs enable debugging and success rate tracking
-4. **Maintainable**: Centralized config vs. scattered hardcoded functions
-5. **Scalable**: Works for 60+ brands without Edge Function bloat
+This plan leverages the existing robust infrastructure while adding targeted enhancements for a smoother admin workflow and better automatic recovery from URL changes.
