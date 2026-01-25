@@ -301,20 +301,32 @@ export function FilamentPurchaseSidebar({
             {isComparing ? 'Remove from Compare' : 'Add to Compare'}
           </Button>
 
-          {/* Retailer Info with Region Badge */}
+          {/* Store Region Badge */}
+          {storeRegionCode && (
+            <div className="flex items-center justify-center">
+              <div className={cn(
+                "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium",
+                isLocalStore 
+                  ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                  : "bg-muted/50 border border-border/60 text-muted-foreground"
+              )}>
+                <span className="text-base">{storeRegionFlag}</span>
+                <span>{REGIONS[storeRegionCode]?.name || storeRegionCode} Store</span>
+                {isLocalStore && (
+                  <span className="text-xs bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">
+                    Local
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Retailer Info */}
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium">Best Price:</span>
             <span className="font-bold text-foreground/80">
               {regionalPriceResult?.store?.name || finalRetailerName}
             </span>
-            {storeRegionFlag && (
-              <span>{storeRegionFlag}</span>
-            )}
-            {isLocalStore && (
-              <span className="text-xs text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                Local
-              </span>
-            )}
             <ExternalLink className="w-3.5 h-3.5" />
           </div>
 
