@@ -63,6 +63,7 @@ const navGroups: NavGroup[] = [
     label: 'Regional',
     items: [
       { title: 'Regional Stores', href: '/admin/regional-stores', icon: Globe },
+      { title: 'Store URLs', href: '/admin/store-urls', icon: Link2 },
       { title: 'Exchange Rates', href: '/admin/exchange-rates', icon: DollarSign },
     ],
   },

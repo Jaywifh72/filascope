@@ -65,6 +65,7 @@ const AdminFilamentScraper = lazy(() => import("./pages/AdminFilamentScraper"));
 const AdminSiteSettings = lazy(() => import("./pages/AdminSiteSettings"));
 const AdminRegionalStores = lazy(() => import("./pages/AdminRegionalStores"));
 const AdminExchangeRates = lazy(() => import("./pages/AdminExchangeRates"));
+const AdminStoreUrls = lazy(() => import("./pages/AdminStoreUrls"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -182,6 +183,7 @@ const App = () => (
                   <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
                   <Route path="/admin/regional-stores" element={<AdminRegionalStores />} />
                   <Route path="/admin/exchange-rates" element={<AdminExchangeRates />} />
+                  <Route path="/admin/store-urls" element={<AdminStoreUrls />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />
