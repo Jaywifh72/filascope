@@ -29,9 +29,17 @@ export function useCreatePrinter() {
 
   return useMutation({
     mutationFn: async (data: PrinterInsertData) => {
+      // Generate a printer_id slug from the model name
+      const printerId = data.model_name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50) + '-' + Date.now().toString(36);
+
       const { data: result, error } = await supabase
         .from('printers')
         .insert([{
+          printer_id: printerId,
           model_name: data.model_name,
           display_name: data.model_name,
           official_product_url: data.product_url,
@@ -46,14 +54,12 @@ export function useCreatePrinter() {
           has_usb_a_port: data.connectivity.includes('USB'),
           has_bluetooth: data.connectivity.includes('Bluetooth'),
           auto_bed_leveling: data.features.includes('Auto Bed Leveling'),
-          enclosed: data.features.includes('Enclosure'),
-          multi_material_capable: data.features.includes('Multi-Color'),
-          direct_drive: data.features.includes('Direct Drive'),
+          has_enclosure: data.features.includes('Enclosure'),
+          multi_material_supported: data.features.includes('Multi-Color'),
+          extruder_drive_type: data.features.includes('Direct Drive') ? 'Direct Drive' : null,
           msrp_usd: data.msrp_usd,
           current_price_usd_store: data.current_price_usd || null,
           compare_at_price_usd: data.compare_at_price_usd || null,
-          description: data.description || null,
-          image_url: data.image_url || null,
           admin_notes: data.admin_notes || null,
           sync_enabled: true,
           status: 'active',
