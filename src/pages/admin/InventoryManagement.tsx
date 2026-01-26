@@ -13,7 +13,7 @@ import { AddFilamentWizard } from '@/components/admin/inventory/AddFilamentWizar
 import { AddPrinterWizard } from '@/components/admin/inventory/AddPrinterWizard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { usePriceSync } from '@/hooks/usePriceSync';
 
 type TabValue = 'filaments' | 'printers' | 'sync';
 
@@ -23,6 +23,8 @@ export default function InventoryManagement() {
   const [selectedBrand, setSelectedBrand] = useState('');
   const [showAddFilamentWizard, setShowAddFilamentWizard] = useState(false);
   const [showAddPrinterWizard, setShowAddPrinterWizard] = useState(false);
+
+  const { syncAllFilaments, syncAllPrinters, isSyncing, lastSyncTime } = usePriceSync();
 
   // Get active tab from URL, default to filaments
   const activeTab = (searchParams.get('tab') as TabValue) || 'filaments';
@@ -44,17 +46,16 @@ export default function InventoryManagement() {
     },
   });
 
-  // Placeholder handlers for global actions
   const handleSyncFilaments = () => {
-    toast.info('Sync All Filaments', {
-      description: 'Coming soon in Part 3',
-    });
+    if (!isSyncing) {
+      syncAllFilaments(50);
+    }
   };
 
   const handleSyncPrinters = () => {
-    toast.info('Sync All Printers', {
-      description: 'Coming soon in Part 3',
-    });
+    if (!isSyncing) {
+      syncAllPrinters(50);
+    }
   };
 
   const handleAddFilament = () => {
@@ -80,7 +81,8 @@ export default function InventoryManagement() {
           onSyncPrinters={handleSyncPrinters}
           onAddFilament={handleAddFilament}
           onAddPrinter={handleAddPrinter}
-          lastSyncTime={null}
+          lastSyncTime={lastSyncTime}
+          isSyncing={isSyncing}
         />
 
         <SearchAndFilterBar
