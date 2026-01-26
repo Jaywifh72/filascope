@@ -332,14 +332,12 @@ Deno.serve(async (req) => {
       try {
         await supabase.from('price_extraction_logs').insert({
           product_url: productUrl,
-          vendor: vendor,
-          extraction_method: extraction.method || 'unknown',
+          brand_slug: vendor,
+          extraction_method: extraction.method || 'sync-prices',
           success: extraction.success,
           extracted_price: extraction.price,
-          compare_at_price: extraction.compareAtPrice,
           error_message: extraction.error || null,
-          response_time_ms: responseTime,
-          sync_run_id: syncRunId
+          response_time_ms: responseTime
         });
       } catch (logError) {
         console.error('Failed to log extraction:', logError);
