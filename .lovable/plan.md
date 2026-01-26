@@ -1,234 +1,222 @@
 
+# Admin Inventory Management - Part 2: Page Structure & Navigation
 
-# Admin Inventory Management - Part 1: Database Foundation
+## Overview
 
-## Current State Assessment
+This implementation creates a unified inventory management page at `/admin/inventory` with tabbed navigation for Filaments, Printers, and Sync Status. The page follows existing admin patterns (AdminLayout, AdminPageHeader) and includes global action buttons, search, and brand filtering.
 
-After thorough analysis of the existing database schema, here's what already exists vs. what needs to be added:
+## Files to Create
 
-### Existing Infrastructure
+| File | Purpose |
+|------|---------|
+| `src/pages/admin/InventoryManagement.tsx` | Main page component with tabs |
+| `src/components/admin/inventory/GlobalActionsBar.tsx` | Bulk sync buttons and "Add" actions |
+| `src/components/admin/inventory/SearchAndFilterBar.tsx` | Search input + brand dropdown |
+| `src/components/admin/inventory/FilamentsInventoryTab.tsx` | Placeholder for filaments table |
+| `src/components/admin/inventory/PrintersInventoryTab.tsx` | Placeholder for printers table |
+| `src/components/admin/inventory/SyncStatusTab.tsx` | Placeholder for sync logs view |
 
-| Table/Feature | Status | Details |
-|---------------|--------|---------|
-| `filaments` table | ✅ Exists | 122+ columns, comprehensive filament data |
-| `printers` table | ✅ Exists | 122 printers, includes MSRP and price columns |
-| `automated_brands` table | ✅ Exists | Brand sync configs with all required fields |
-| `brand_sync_logs` table | ✅ Exists | Sync run tracking with full metrics |
-| `price_extraction_logs` table | ✅ Exists | Individual extraction logging |
+## Files to Modify
 
-### Filaments Table - Column Analysis
-
-| Requested Column | Status | Existing Equivalent |
-|------------------|--------|---------------------|
-| `display_name` | ❌ Missing | None - needs adding |
-| `msrp` | ❌ Missing | None - needs adding |
-| `sync_enabled` | ❌ Missing | None - needs adding |
-| `last_sync_at` | ⚠️ Partial | `last_scraped_at` exists for price updates |
-| `last_sync_status` | ⚠️ Partial | `sync_status` exists (synced/pending/error) |
-| `last_sync_error` | ❌ Missing | None - needs adding |
-| `admin_notes` | ❌ Missing | None - needs adding |
-
-### Printers Table - Column Analysis
-
-| Requested Column | Status | Existing Equivalent |
-|------------------|--------|---------------------|
-| `display_name` | ❌ Missing | None - needs adding |
-| `msrp` | ✅ Exists | `msrp_usd`, `msrp_eur`, `msrp_cad` |
-| `current_price` | ✅ Exists | Multi-currency columns (usd_store, usd_amazon, etc.) |
-| `compare_at_price` | ❌ Missing | None - needs adding |
-| `sync_enabled` | ❌ Missing | None - needs adding |
-| `last_sync_at` | ⚠️ Partial | `prices_last_updated_at` exists |
-| `last_sync_status` | ❌ Missing | None - needs adding |
-| `last_sync_error` | ❌ Missing | None - needs adding |
-| `admin_notes` | ❌ Missing | None - needs adding |
-
-### Sync Tables Analysis
-
-| Requested Table | Status | Recommendation |
-|-----------------|--------|----------------|
-| `price_sync_runs` | ❌ Missing | **Not needed** - `brand_sync_logs` already tracks sync runs with all required fields |
-| `brand_sync_configs` | ❌ Duplicate | **Not needed** - `automated_brands` already has all config fields |
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Add lazy import and route for `/admin/inventory` |
+| `src/components/admin/AdminSidebar.tsx` | Add "Inventory" nav item with Package icon |
 
 ---
 
-## Recommended Schema Changes
+## Implementation Details
 
-Based on the analysis, I recommend a streamlined approach that extends existing tables rather than creating duplicates.
+### 1. InventoryManagement.tsx (Main Page)
 
-### Migration 1: Add Admin Columns to Filaments
+The main page follows the existing AdminDataHealth pattern:
 
 ```text
-+------------------+-------------+----------------------------------+
-| Column           | Type        | Purpose                          |
-+------------------+-------------+----------------------------------+
-| display_name     | text        | Admin-editable override name     |
-| msrp             | numeric     | Manufacturer suggested price     |
-| sync_enabled     | boolean     | Include in automated syncs       |
-| last_sync_error  | text        | Error message from last sync     |
-| admin_notes      | text        | Internal admin notes             |
-+------------------+-------------+----------------------------------+
++--------------------------------------------------+
+| AdminLayout wrapper                               |
+|  +----------------------------------------------+ |
+|  | AdminPageHeader: "Inventory Management"      | |
+|  |   Icon: Package (cyan)                       | |
+|  |   Description: "Manage filaments, printers..." |
+|  +----------------------------------------------+ |
+|  | GlobalActionsBar                             | |
+|  |   [Sync All Filaments] [Sync All Printers]   | |
+|  |   [Add Filament] [Add Printer]               | |
+|  |   Last sync: 5 minutes ago                   | |
+|  +----------------------------------------------+ |
+|  | SearchAndFilterBar                           | |
+|  |   [Search input...] [Brand dropdown ▼]       | |
+|  +----------------------------------------------+ |
+|  | Tabs                                         | |
+|  | [Filaments] [Printers] [Sync Status]         | |
+|  +----------------------------------------------+ |
+|  | TabsContent (based on active tab)            | |
+|  |   - FilamentsInventoryTab (placeholder)     | |
+|  |   - PrintersInventoryTab (placeholder)      | |
+|  |   - SyncStatusTab (placeholder)             | |
+|  +----------------------------------------------+ |
++--------------------------------------------------+
 ```
 
-Note: `last_sync_at` → Use existing `last_scraped_at`
-Note: `last_sync_status` → Use existing `sync_status`
+Key features:
+- Uses `AdminLayout` for consistent sidebar and auth protection
+- Uses `AdminPageHeader` for consistent header styling
+- Tab state stored in URL search params (like PrinterDetail)
+- Search/filter state lifted to parent and passed to tabs
 
-### Migration 2: Add Admin Columns to Printers
+### 2. GlobalActionsBar.tsx
 
 ```text
-+------------------------+-------------+----------------------------------+
-| Column                 | Type        | Purpose                          |
-+------------------------+-------------+----------------------------------+
-| display_name           | text        | Admin-editable override name     |
-| compare_at_price_usd   | numeric     | Compare-at price for USD         |
-| sync_enabled           | boolean     | Include in automated syncs       |
-| last_sync_status       | text        | success/failed/pending           |
-| last_sync_error        | text        | Error message from last sync     |
-| admin_notes            | text        | Internal admin notes             |
-+------------------------+-------------+----------------------------------+
++--------------------------------------------------------+
+| [🔄 Sync All Filaments] [🔄 Sync All Printers]         |
+| [+ Add Filament] [+ Add Printer]                        |
+|                                          Last sync: ... |
++--------------------------------------------------------+
 ```
 
-Note: `last_sync_at` → Use existing `prices_last_updated_at`
-Note: MSRPs → Already exist as `msrp_usd`, `msrp_eur`, `msrp_cad`
+Props:
+- `onSyncFilaments`: () => void (placeholder, shows toast)
+- `onSyncPrinters`: () => void (placeholder, shows toast)
+- `onAddFilament`: () => void (placeholder, shows toast)
+- `onAddPrinter`: () => void (placeholder, shows toast)
+- `lastSyncTime`: Date | null
 
-### No New Tables Required
+### 3. SearchAndFilterBar.tsx
 
-The requested `price_sync_runs` and `brand_sync_configs` tables are **already covered** by:
-
-- **`brand_sync_logs`**: Tracks all sync runs with status, timing, success/failure counts, error details, and trigger source
-- **`automated_brands`**: Has comprehensive sync configuration including:
-  - `scraping_enabled` (sync on/off)
-  - `platform_type` (firecrawl/shopify/api)
-  - `rate_limit_ms` (rate limiting)
-  - `price_selectors` (JSONB extraction config)
-  - `last_scrape_at` / `next_scrape_at` (scheduling)
-  - Success/failure tracking metrics
-
-Brands already seeded: Creality, Bambu Lab, Polymaker, eSun, Elegoo, Hatchbox, Overture, Sunlu (8 of 9 requested)
-
----
-
-## Implementation Steps
-
-### Step 1: Database Migration - Filaments Admin Columns
-
-SQL to execute:
-
-```sql
--- Add admin management columns to filaments table
-ALTER TABLE filaments 
-  ADD COLUMN IF NOT EXISTS display_name text,
-  ADD COLUMN IF NOT EXISTS msrp numeric,
-  ADD COLUMN IF NOT EXISTS sync_enabled boolean DEFAULT true,
-  ADD COLUMN IF NOT EXISTS last_sync_error text,
-  ADD COLUMN IF NOT EXISTS admin_notes text;
-
--- Add comments for documentation
-COMMENT ON COLUMN filaments.display_name IS 'Admin-editable display name that overrides product_title';
-COMMENT ON COLUMN filaments.msrp IS 'Manufacturer Suggested Retail Price';
-COMMENT ON COLUMN filaments.sync_enabled IS 'Whether to include in automated price syncs';
-COMMENT ON COLUMN filaments.last_sync_error IS 'Error message from the last sync attempt';
-COMMENT ON COLUMN filaments.admin_notes IS 'Internal notes for admin use only';
-
--- Create index for sync filtering
-CREATE INDEX IF NOT EXISTS idx_filaments_sync_enabled ON filaments(sync_enabled) WHERE sync_enabled = true;
+```text
++--------------------------------------------------------+
+| 🔍 [Search name, vendor, URL...            ]           |
+| Brand: [All Brands ▼]                                   |
++--------------------------------------------------------+
 ```
 
-### Step 2: Database Migration - Printers Admin Columns
+Props:
+- `searchTerm`: string
+- `onSearchChange`: (value: string) => void
+- `selectedBrand`: string
+- `onBrandChange`: (value: string) => void
+- `brands`: string[] (fetched from automated_brands)
 
-SQL to execute:
+### 4. Tab Placeholder Components
 
-```sql
--- Add admin management columns to printers table
-ALTER TABLE printers 
-  ADD COLUMN IF NOT EXISTS display_name text,
-  ADD COLUMN IF NOT EXISTS compare_at_price_usd numeric,
-  ADD COLUMN IF NOT EXISTS sync_enabled boolean DEFAULT true,
-  ADD COLUMN IF NOT EXISTS last_sync_status text,
-  ADD COLUMN IF NOT EXISTS last_sync_error text,
-  ADD COLUMN IF NOT EXISTS admin_notes text;
+Each tab component receives search/filter props and renders a placeholder:
 
--- Add comments for documentation
-COMMENT ON COLUMN printers.display_name IS 'Admin-editable display name that overrides model_name';
-COMMENT ON COLUMN printers.compare_at_price_usd IS 'Compare-at/strikethrough price in USD';
-COMMENT ON COLUMN printers.sync_enabled IS 'Whether to include in automated price syncs';
-COMMENT ON COLUMN printers.last_sync_status IS 'Status of last sync: success, failed, or pending';
-COMMENT ON COLUMN printers.last_sync_error IS 'Error message from the last sync attempt';
-COMMENT ON COLUMN printers.admin_notes IS 'Internal notes for admin use only';
+```text
+FilamentsInventoryTab / PrintersInventoryTab:
++--------------------------------------------------------+
+| Card with placeholder message                           |
+| "Filaments table coming in Part 3"                     |
+| Shows current search term and brand filter for testing |
++--------------------------------------------------------+
 
--- Create index for sync filtering
-CREATE INDEX IF NOT EXISTS idx_printers_sync_enabled ON printers(sync_enabled) WHERE sync_enabled = true;
-```
-
-### Step 3: Add Missing Brand (Prusa)
-
-SQL to execute:
-
-```sql
--- Add Prusa if not already present
-INSERT INTO automated_brands (brand_name, brand_slug, platform_type, scraping_enabled, rate_limit_ms)
-VALUES ('Prusa', 'prusa', 'shopify', true, 2000)
-ON CONFLICT (brand_slug) DO NOTHING;
-```
-
-### Step 4: TypeScript Types Regeneration
-
-After migrations complete, the Supabase types will automatically regenerate in `src/integrations/supabase/types.ts`.
-
----
-
-## Verification Queries
-
-After implementation, run these verification queries:
-
-```sql
--- Verify filaments columns
-SELECT column_name FROM information_schema.columns 
-WHERE table_name = 'filaments' 
-AND column_name IN ('display_name', 'msrp', 'sync_enabled', 'last_sync_error', 'admin_notes');
--- Expected: 5 rows
-
--- Verify printers columns  
-SELECT column_name FROM information_schema.columns 
-WHERE table_name = 'printers' 
-AND column_name IN ('display_name', 'compare_at_price_usd', 'sync_enabled', 'last_sync_status', 'last_sync_error', 'admin_notes');
--- Expected: 6 rows
-
--- Verify Prusa brand exists
-SELECT brand_name, brand_slug, platform_type FROM automated_brands WHERE brand_slug = 'prusa';
--- Expected: 1 row
+SyncStatusTab:
++--------------------------------------------------------+
+| Card with placeholder message                           |
+| "Sync history and status coming in Part 3"             |
++--------------------------------------------------------+
 ```
 
 ---
 
-## Technical Notes
+## Routing Configuration
 
-### Why Not Create `price_sync_runs`?
+Add to `src/App.tsx`:
 
-The existing `brand_sync_logs` table already provides:
-- `sync_type` (full_scrape, price_update, etc.)
-- `status` (running, completed, failed)
-- `started_at` / `completed_at` / `duration_seconds`
-- `products_discovered`, `products_created`, `products_updated`, `products_failed`
-- `price_changes` count
-- `error_details` (JSONB)
-- `triggered_by` (admin, scheduler, etc.)
+```typescript
+// Add lazy import (line ~72, with other admin imports)
+const AdminInventory = lazy(() => import("./pages/admin/InventoryManagement"));
 
-### Why Not Create `brand_sync_configs`?
-
-The existing `automated_brands` table already provides:
-- `scraping_enabled` → sync on/off toggle
-- `platform_type` → sync method (shopify, firecrawl, api)
-- `rate_limit_ms` → rate limiting
-- `price_selectors` → JSONB extraction config
-- `last_scrape_at` / `next_scrape_at` → scheduling
-- `successful_scrapes` / `failed_scrapes` → success rate tracking
+// Add route (line ~192, after other admin routes)
+<Route path="/admin/inventory" element={<AdminInventory />} />
+```
 
 ---
 
-## Files to be Modified
+## Sidebar Navigation
 
-| File | Action |
-|------|--------|
-| New migration SQL | Create via migration tool |
-| `src/integrations/supabase/types.ts` | Auto-regenerated after migration |
+Add to `src/components/admin/AdminSidebar.tsx` in the "Content" group:
 
+```typescript
+// In navGroups, Content section (after "Deals")
+{ title: 'Inventory', href: '/admin/inventory', icon: Package },
+```
+
+Position: Place after "Deals" in the Content section as it's a primary management feature.
+
+---
+
+## Auth Protection
+
+The page uses `AdminLayout` which already enforces:
+1. User must be authenticated
+2. User must have admin role (checked via `useAuth().isAdmin`)
+3. Redirects to `/auth` if either check fails
+
+No additional auth code needed.
+
+---
+
+## Data Fetching
+
+**Brands for dropdown** - Fetched once on mount:
+```typescript
+const { data: brands } = useQuery({
+  queryKey: ['automated-brands-list'],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('automated_brands')
+      .select('brand_name, brand_slug')
+      .eq('scraping_enabled', true)
+      .order('brand_name');
+    return data || [];
+  }
+});
+```
+
+---
+
+## Component Hierarchy
+
+```text
+InventoryManagement (page)
+├── AdminLayout (wrapper)
+│   └── AdminSidebar (auto-included)
+├── AdminPageHeader
+├── GlobalActionsBar
+├── SearchAndFilterBar
+└── Tabs
+    ├── TabsList
+    │   ├── TabsTrigger "Filaments"
+    │   ├── TabsTrigger "Printers"
+    │   └── TabsTrigger "Sync Status"
+    └── TabsContent
+        ├── FilamentsInventoryTab
+        ├── PrintersInventoryTab
+        └── SyncStatusTab
+```
+
+---
+
+## Styling Notes
+
+Following the established design system:
+- Background: Uses AdminLayout's `bg-background`
+- Cards: `bg-card border-border` with hover states
+- Tabs: Standard shadcn tabs with `TabsList` grid layout
+- Buttons: Primary variant for sync actions, outline for add actions
+- Search: Full-width input with Search icon prefix
+- Spacing: 8px rhythm (gap-4, gap-6 for sections)
+
+---
+
+## Verification Steps
+
+After implementation, verify:
+
+1. **Navigation**: `/admin/inventory` loads without errors
+2. **Tabs**: All three tabs are visible and switching works
+3. **Sidebar**: "Inventory" link appears in admin sidebar under "Content"
+4. **Auth**: Logging out and visiting `/admin/inventory` redirects to `/auth`
+5. **Search**: Typing in search input updates the displayed search term in tab placeholders
+6. **Brand filter**: Dropdown shows brands from database
+7. **Buttons**: Global action buttons are visible (click shows "Coming soon" toast)
