@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Clock, Package } from 'lucide-react';
+import { RefreshCw, Clock, Package, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
+import { REGIONS } from '@/config/regions';
+import { RegionCode } from '@/types/regional';
 
 interface RunningSyncLog {
   id: string;
@@ -16,6 +18,8 @@ interface RunningSyncLog {
   products_discovered: number | null;
   products_updated: number | null;
   products_failed: number | null;
+  region_code: string | null;
+  regions_synced: string[] | null;
 }
 
 export function CurrentSyncStatus() {
@@ -26,7 +30,7 @@ export function CurrentSyncStatus() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('brand_sync_logs')
-        .select('id, brand_slug, sync_type, status, started_at, products_discovered, products_updated, products_failed')
+        .select('id, brand_slug, sync_type, status, started_at, products_discovered, products_updated, products_failed, region_code, regions_synced')
         .eq('status', 'running')
         .order('started_at', { ascending: false });
 
@@ -118,6 +122,12 @@ export function CurrentSyncStatus() {
                   <Badge variant="secondary" className="text-xs">
                     {sync.sync_type}
                   </Badge>
+                  {/* Single region badge */}
+                  {sync.region_code && (
+                    <Badge variant="outline" className="text-xs">
+                      {REGIONS[sync.region_code as RegionCode]?.flag || '🌐'} {sync.region_code}
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span>Started {formatDistanceToNow(new Date(sync.started_at), { addSuffix: true })}</span>
@@ -126,6 +136,20 @@ export function CurrentSyncStatus() {
                   </Badge>
                 </div>
               </div>
+
+              {/* Regional progress badges */}
+              {sync.regions_synced && sync.regions_synced.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Globe className="w-3 h-3 text-muted-foreground" />
+                  <div className="flex flex-wrap gap-1">
+                    {sync.regions_synced.map((region) => (
+                      <Badge key={region} variant="outline" className="text-xs py-0">
+                        {REGIONS[region as RegionCode]?.flag || '🌐'} {region}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {total > 0 && (
                 <div className="space-y-1">

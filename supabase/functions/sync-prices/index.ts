@@ -13,6 +13,10 @@ interface SyncRequest {
   triggeredBy?: 'admin' | 'scheduled' | 'api';
   dryRun?: boolean;
   limit?: number;
+  // Regional sync options
+  regionCodes?: string[];       // Which regions to sync (null = all configured)
+  skipRegions?: string[];       // Regions to exclude
+  useRegionalUrls?: boolean;    // Use product_regional_urls table (default: true for single, false for batch)
 }
 
 interface BrandConfig {
@@ -29,6 +33,25 @@ interface ExtractionResult {
   compareAtPrice: number | null;
   error?: string;
   method?: string;
+}
+
+interface RegionalUrl {
+  id: string;
+  product_id: string;
+  product_type: string;
+  region_code: string;
+  store_url: string;
+  store_name: string | null;
+  currency_code: string;
+  is_primary: boolean;
+  is_verified: boolean;
+}
+
+interface RegionStats {
+  attempted: number;
+  successful: number;
+  failed: number;
+  priceChanges: number;
 }
 
 const MAX_RUNTIME_MS = 5 * 60 * 1000; // 5 minutes
@@ -152,6 +175,80 @@ async function extractPrice(
   return await callGetCurrentPrice(productUrl);
 }
 
+// Fetch regional URLs for a product
+// deno-lint-ignore no-explicit-any
+async function getProductRegionalUrls(
+  supabase: any,
+  productId: string,
+  productType: string,
+  regionCodes?: string[],
+  skipRegions?: string[]
+): Promise<RegionalUrl[]> {
+  let query = supabase
+    .from('product_regional_urls')
+    .select('*')
+    .eq('product_id', productId)
+    .eq('product_type', productType);
+  
+  if (regionCodes && regionCodes.length > 0) {
+    query = query.in('region_code', regionCodes);
+  }
+  
+  const { data, error } = await query;
+  if (error) {
+    console.error('Failed to fetch regional URLs:', error);
+    return [];
+  }
+  
+  let urls: RegionalUrl[] = data || [];
+  
+  // Filter out skipped regions
+  if (skipRegions && skipRegions.length > 0) {
+    urls = urls.filter((u: RegionalUrl) => !skipRegions.includes(u.region_code));
+  }
+  
+  return urls;
+}
+
+// Update regional price after extraction
+// deno-lint-ignore no-explicit-any
+async function updateRegionalPrice(
+  supabase: any,
+  productId: string,
+  productType: string,
+  regionCode: string,
+  currencyCode: string,
+  extractedPrice: number | null,
+  compareAtPrice: number | null,
+  storeUrlId: string,
+  success: boolean,
+  errorMessage?: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('product_regional_prices')
+    .upsert({
+      product_id: productId,
+      product_type: productType,
+      region_code: regionCode,
+      currency_code: currencyCode,
+      current_price: extractedPrice,
+      compare_at_price: compareAtPrice,
+      store_url_id: storeUrlId,
+      last_sync_at: new Date().toISOString(),
+      last_sync_status: success ? 'success' : 'failed',
+      last_sync_error: errorMessage || null,
+      price_source: 'sync',
+    }, {
+      onConflict: 'product_id,product_type,region_code',
+    });
+
+  if (error) {
+    console.error('Failed to update regional price:', error);
+    return false;
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -172,10 +269,19 @@ Deno.serve(async (req) => {
       brandSlug, 
       triggeredBy = 'api',
       dryRun = false,
-      limit = 100
+      limit = 100,
+      regionCodes,
+      skipRegions,
+      useRegionalUrls = syncType === 'single' // Default true for single sync
     } = body;
     
-    console.log(`Starting ${syncType} sync for ${productType}s`, { brandSlug, targetId, dryRun });
+    console.log(`Starting ${syncType} sync for ${productType}s`, { 
+      brandSlug, 
+      targetId, 
+      dryRun, 
+      regionCodes, 
+      useRegionalUrls 
+    });
     
     // Validate request
     if (syncType === 'single' && !targetId) {
@@ -199,11 +305,14 @@ Deno.serve(async (req) => {
         sync_type: 'prices',
         status: 'running',
         triggered_by: triggeredBy,
+        region_code: regionCodes && regionCodes.length === 1 ? regionCodes[0] : null,
+        regions_synced: regionCodes || [],
         products_processed: { 
           progress: { stage: 'initializing' },
           dryRun,
           productType,
-          syncType
+          syncType,
+          regionCodes: regionCodes || 'all'
         }
       })
       .select('id')
@@ -267,11 +376,14 @@ Deno.serve(async (req) => {
           syncType, 
           productType, 
           dryRun,
-          total: 0, 
+          total: 0,
+          totalProducts: 0,
+          totalRegionalUrls: 0,
           successful: 0, 
           failed: 0, 
           skipped: 0,
           priceChanges: 0,
+          regionStats: {},
           duration_ms: Date.now() - startTime
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -303,7 +415,26 @@ Deno.serve(async (req) => {
     let failed = 0;
     let skipped = 0;
     let priceChanges = 0;
-    const errors: Array<{ productId: string; error: string }> = [];
+    let totalRegionalUrls = 0;
+    const regionStats: Record<string, RegionStats> = {};
+    const regionsProcessed = new Set<string>();
+    const errors: Array<{ productId: string; regionCode?: string; error: string }> = [];
+    
+    // Helper to update region stats
+    function updateRegionStats(
+      regionCode: string, 
+      type: 'attempted' | 'successful' | 'failed', 
+      priceChanged = false
+    ) {
+      if (!regionStats[regionCode]) {
+        regionStats[regionCode] = { attempted: 0, successful: 0, failed: 0, priceChanges: 0 };
+      }
+      regionStats[regionCode][type]++;
+      if (priceChanged) {
+        regionStats[regionCode].priceChanges++;
+      }
+      regionsProcessed.add(regionCode);
+    }
     
     for (const product of products) {
       // Check timeout
@@ -312,106 +443,305 @@ Deno.serve(async (req) => {
         break;
       }
       
-      const productUrl = product.product_url;
-      if (!productUrl) {
-        skipped++;
-        continue;
-      }
-      
       const vendor = product.vendor || 'unknown';
       const brandConfig = await getBrandConfig(vendor);
       const rateLimitMs = brandConfig?.rate_limit_ms || DEFAULT_RATE_LIMIT_MS;
       
-      console.log(`Processing: ${product.product_title?.substring(0, 50)}...`);
-      
-      const extractionStart = Date.now();
-      const extraction = await extractPrice(productUrl, brandConfig);
-      const responseTime = Date.now() - extractionStart;
-      
-      // Log extraction attempt
-      try {
-        await supabase.from('price_extraction_logs').insert({
-          product_url: productUrl,
-          brand_slug: vendor,
-          extraction_method: extraction.method || 'sync-prices',
-          success: extraction.success,
-          extracted_price: extraction.price,
-          error_message: extraction.error || null,
-          response_time_ms: responseTime
-        });
-      } catch (logError) {
-        console.error('Failed to log extraction:', logError);
-      }
-      
-      if (extraction.success && extraction.price !== null) {
-        const currentPrice = product[priceColumn as keyof typeof product] as number | null;
-        const priceChanged = currentPrice !== extraction.price;
+      // Decide whether to use regional URLs or legacy flow
+      if (useRegionalUrls) {
+        // Regional sync: get URLs from product_regional_urls
+        const regionalUrls = await getProductRegionalUrls(
+          supabase, 
+          product.id, 
+          productType, 
+          regionCodes, 
+          skipRegions
+        );
         
-        if (priceChanged) priceChanges++;
-        
-        if (!dryRun) {
-          // Update product with new price
-          const updateData: Record<string, unknown> = {
-            [priceColumn]: extraction.price,
-            last_scraped_at: new Date().toISOString(),
-          };
-          
-          // Add compare_at_price for filaments
-          if (productType === 'filament' && extraction.compareAtPrice) {
-            updateData.compare_at_price = extraction.compareAtPrice;
+        if (regionalUrls.length === 0) {
+          // No regional URLs, fall back to legacy product_url
+          const productUrl = product.product_url;
+          if (!productUrl) {
+            skipped++;
+            continue;
           }
           
-          // Add sync status for printers
-          if (productType === 'printer') {
-            updateData.last_sync_status = 'success';
-            updateData.last_sync_error = null;
+          console.log(`No regional URLs for ${product.id}, using legacy product_url`);
+          
+          const extractionStart = Date.now();
+          const extraction = await extractPrice(productUrl, brandConfig);
+          const responseTime = Date.now() - extractionStart;
+          
+          // Log extraction
+          try {
+            await supabase.from('price_extraction_logs').insert({
+              product_url: productUrl,
+              brand_slug: vendor,
+              extraction_method: extraction.method || 'sync-prices',
+              success: extraction.success,
+              extracted_price: extraction.price,
+              error_message: extraction.error || null,
+              response_time_ms: responseTime
+            });
+          } catch (logError) {
+            console.error('Failed to log extraction:', logError);
           }
           
-          const { error: updateError } = await supabase
-            .from(tableName)
-            .update(updateData)
-            .eq('id', product.id);
-          
-          if (updateError) {
-            console.error(`Failed to update ${product.id}:`, updateError);
-            failed++;
-            errors.push({ productId: product.id, error: updateError.message });
+          if (extraction.success && extraction.price !== null) {
+            const currentPrice = product[priceColumn as keyof typeof product] as number | null;
+            const priceChanged = currentPrice !== extraction.price;
+            if (priceChanged) priceChanges++;
+            
+            if (!dryRun) {
+              const updateData: Record<string, unknown> = {
+                [priceColumn]: extraction.price,
+                last_scraped_at: new Date().toISOString(),
+              };
+              
+              if (productType === 'filament' && extraction.compareAtPrice) {
+                updateData.compare_at_price = extraction.compareAtPrice;
+              }
+              
+              if (productType === 'printer') {
+                updateData.last_sync_status = 'success';
+                updateData.last_sync_error = null;
+              }
+              
+              const { error: updateError } = await supabase
+                .from(tableName)
+                .update(updateData)
+                .eq('id', product.id);
+              
+              if (updateError) {
+                console.error(`Failed to update ${product.id}:`, updateError);
+                failed++;
+                errors.push({ productId: product.id, error: updateError.message });
+              } else {
+                successful++;
+              }
+            } else {
+              successful++;
+            }
           } else {
-            successful++;
+            failed++;
+            errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
           }
-        } else {
-          // Dry run - count as successful
-          successful++;
-          console.log(`[DRY RUN] Would update ${product.id}: $${currentPrice} -> $${extraction.price}`);
+          
+          await sleep(rateLimitMs);
+          continue;
+        }
+        
+        // Process each regional URL
+        console.log(`Processing ${regionalUrls.length} regional URLs for ${product.product_title?.substring(0, 40)}...`);
+        totalRegionalUrls += regionalUrls.length;
+        
+        for (const regionalUrl of regionalUrls) {
+          // Check timeout
+          if (Date.now() - startTime > MAX_RUNTIME_MS) {
+            console.warn('Sync timeout reached during regional processing');
+            break;
+          }
+          
+          const regionCode = regionalUrl.region_code;
+          const storeUrl = regionalUrl.store_url;
+          
+          if (!storeUrl) {
+            updateRegionStats(regionCode, 'failed');
+            skipped++;
+            continue;
+          }
+          
+          updateRegionStats(regionCode, 'attempted');
+          console.log(`  [${regionCode}] Extracting from ${storeUrl.substring(0, 60)}...`);
+          
+          const extractionStart = Date.now();
+          const extraction = await extractPrice(storeUrl, brandConfig);
+          const responseTime = Date.now() - extractionStart;
+          
+          // Log extraction with region info
+          try {
+            await supabase.from('price_extraction_logs').insert({
+              product_url: storeUrl,
+              brand_slug: vendor,
+              extraction_method: extraction.method || 'sync-prices',
+              success: extraction.success,
+              extracted_price: extraction.price,
+              error_message: extraction.error || null,
+              response_time_ms: responseTime,
+              region_code: regionCode
+            });
+          } catch (logError) {
+            console.error('Failed to log extraction:', logError);
+          }
+          
+          if (extraction.success && extraction.price !== null) {
+            // Check if price changed
+            const { data: existingPrice } = await supabase
+              .from('product_regional_prices')
+              .select('current_price')
+              .eq('product_id', product.id)
+              .eq('product_type', productType)
+              .eq('region_code', regionCode)
+              .single();
+            
+            const priceChanged = existingPrice?.current_price !== extraction.price;
+            if (priceChanged) priceChanges++;
+            
+            if (!dryRun) {
+              // Update product_regional_prices
+              const updated = await updateRegionalPrice(
+                supabase,
+                product.id,
+                productType,
+                regionCode,
+                regionalUrl.currency_code,
+                extraction.price,
+                extraction.compareAtPrice,
+                regionalUrl.id,
+                true
+              );
+              
+              if (updated) {
+                successful++;
+                updateRegionStats(regionCode, 'successful', priceChanged);
+              } else {
+                failed++;
+                updateRegionStats(regionCode, 'failed');
+                errors.push({ productId: product.id, regionCode, error: 'Failed to update regional price' });
+              }
+            } else {
+              successful++;
+              updateRegionStats(regionCode, 'successful', priceChanged);
+              console.log(`  [${regionCode}] [DRY RUN] Would set price to ${extraction.price} ${regionalUrl.currency_code}`);
+            }
+          } else {
+            failed++;
+            updateRegionStats(regionCode, 'failed');
+            errors.push({ 
+              productId: product.id, 
+              regionCode, 
+              error: extraction.error || 'Unknown error' 
+            });
+            
+            if (!dryRun) {
+              // Update regional price with error status
+              await updateRegionalPrice(
+                supabase,
+                product.id,
+                productType,
+                regionCode,
+                regionalUrl.currency_code,
+                null,
+                null,
+                regionalUrl.id,
+                false,
+                extraction.error
+              );
+            }
+          }
+          
+          // Rate limit between regional URLs
+          await sleep(rateLimitMs);
         }
       } else {
-        failed++;
-        errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
-        
-        if (!dryRun) {
-          // Update product with error
-          const errorData: Record<string, unknown> = {
-            last_sync_error: extraction.error || 'Extraction failed'
-          };
-          
-          if (productType === 'printer') {
-            errorData.last_sync_status = 'failed';
-          }
-          
-          await supabase
-            .from(tableName)
-            .update(errorData)
-            .eq('id', product.id);
+        // Legacy flow: use product_url directly
+        const productUrl = product.product_url;
+        if (!productUrl) {
+          skipped++;
+          continue;
         }
+        
+        console.log(`Processing: ${product.product_title?.substring(0, 50)}...`);
+        
+        const extractionStart = Date.now();
+        const extraction = await extractPrice(productUrl, brandConfig);
+        const responseTime = Date.now() - extractionStart;
+        
+        // Log extraction attempt
+        try {
+          await supabase.from('price_extraction_logs').insert({
+            product_url: productUrl,
+            brand_slug: vendor,
+            extraction_method: extraction.method || 'sync-prices',
+            success: extraction.success,
+            extracted_price: extraction.price,
+            error_message: extraction.error || null,
+            response_time_ms: responseTime
+          });
+        } catch (logError) {
+          console.error('Failed to log extraction:', logError);
+        }
+        
+        if (extraction.success && extraction.price !== null) {
+          const currentPrice = product[priceColumn as keyof typeof product] as number | null;
+          const priceChanged = currentPrice !== extraction.price;
+          
+          if (priceChanged) priceChanges++;
+          
+          if (!dryRun) {
+            // Update product with new price
+            const updateData: Record<string, unknown> = {
+              [priceColumn]: extraction.price,
+              last_scraped_at: new Date().toISOString(),
+            };
+            
+            // Add compare_at_price for filaments
+            if (productType === 'filament' && extraction.compareAtPrice) {
+              updateData.compare_at_price = extraction.compareAtPrice;
+            }
+            
+            // Add sync status for printers
+            if (productType === 'printer') {
+              updateData.last_sync_status = 'success';
+              updateData.last_sync_error = null;
+            }
+            
+            const { error: updateError } = await supabase
+              .from(tableName)
+              .update(updateData)
+              .eq('id', product.id);
+            
+            if (updateError) {
+              console.error(`Failed to update ${product.id}:`, updateError);
+              failed++;
+              errors.push({ productId: product.id, error: updateError.message });
+            } else {
+              successful++;
+            }
+          } else {
+            // Dry run - count as successful
+            successful++;
+            console.log(`[DRY RUN] Would update ${product.id}: $${currentPrice} -> $${extraction.price}`);
+          }
+        } else {
+          failed++;
+          errors.push({ productId: product.id, error: extraction.error || 'Unknown error' });
+          
+          if (!dryRun) {
+            // Update product with error
+            const errorData: Record<string, unknown> = {
+              last_sync_error: extraction.error || 'Extraction failed'
+            };
+            
+            if (productType === 'printer') {
+              errorData.last_sync_status = 'failed';
+            }
+            
+            await supabase
+              .from(tableName)
+              .update(errorData)
+              .eq('id', product.id);
+          }
+        }
+        
+        // Rate limit
+        await sleep(rateLimitMs);
       }
-      
-      // Rate limit
-      await sleep(rateLimitMs);
     }
     
     const durationMs = Date.now() - startTime;
     
-    // Update sync run record
+    // Update sync run record with regional stats
     if (syncLog?.id) {
       await supabase.from('brand_sync_logs').update({
         status: 'completed',
@@ -421,6 +751,12 @@ Deno.serve(async (req) => {
         products_updated: successful,
         products_failed: failed,
         price_changes: priceChanges,
+        regions_synced: Array.from(regionsProcessed),
+        success_details: { 
+          regionStats, 
+          totalRegionalUrls,
+          dryRun 
+        },
         error_details: errors.length > 0 ? { errors: errors.slice(0, 20) } : null
       }).eq('id', syncLog.id);
     }
@@ -432,10 +768,13 @@ Deno.serve(async (req) => {
       productType,
       dryRun,
       total: products.length,
+      totalProducts: products.length,
+      totalRegionalUrls,
       successful,
       failed,
       skipped,
       priceChanges,
+      regionStats,
       duration_ms: durationMs,
       errors: errors.length > 0 ? errors.slice(0, 20) : undefined
     };
