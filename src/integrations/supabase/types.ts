@@ -853,6 +853,8 @@ export type Database = {
           products_failed: number | null
           products_processed: Json | null
           products_updated: number | null
+          region_code: string | null
+          regions_synced: string[] | null
           started_at: string
           status: string
           success_details: Json | null
@@ -875,6 +877,8 @@ export type Database = {
           products_failed?: number | null
           products_processed?: Json | null
           products_updated?: number | null
+          region_code?: string | null
+          regions_synced?: string[] | null
           started_at?: string
           status: string
           success_details?: Json | null
@@ -897,6 +901,8 @@ export type Database = {
           products_failed?: number | null
           products_processed?: Json | null
           products_updated?: number | null
+          region_code?: string | null
+          regions_synced?: string[] | null
           started_at?: string
           status?: string
           success_details?: Json | null
@@ -1161,6 +1167,13 @@ export type Database = {
             foreignKeyName: "community_safety_reports_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_safety_reports_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -1266,6 +1279,13 @@ export type Database = {
             foreignKeyName: "deals_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -1326,6 +1346,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discovery_models_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -1568,6 +1595,13 @@ export type Database = {
             foreignKeyName: "filament_comments_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_comments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -1644,6 +1678,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_inventory_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -1768,6 +1809,13 @@ export type Database = {
             foreignKeyName: "filament_listings_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -1856,6 +1904,13 @@ export type Database = {
             foreignKeyName: "filament_reviews_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -1878,6 +1933,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_reviews_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -1923,6 +1985,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_score_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -2004,6 +2073,13 @@ export type Database = {
             foreignKeyName: "filament_user_ratings_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -2026,6 +2102,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_user_ratings_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -2076,6 +2159,7 @@ export type Database = {
           glass_fiber_percentage: number | null
           gtin: string | null
           hardness_shore_a: number | null
+          has_regional_urls: boolean | null
           haze_percent: number | null
           hdt_045_mpa_c: number | null
           hdt_18_mpa_c: number | null
@@ -2116,6 +2200,7 @@ export type Database = {
           price_jpy: number | null
           price_last_manual_refresh: string | null
           price_source: string | null
+          primary_region: string | null
           print_speed_max_mms: number | null
           printability_index: number | null
           product_handle: string | null
@@ -2218,6 +2303,7 @@ export type Database = {
           glass_fiber_percentage?: number | null
           gtin?: string | null
           hardness_shore_a?: number | null
+          has_regional_urls?: boolean | null
           haze_percent?: number | null
           hdt_045_mpa_c?: number | null
           hdt_18_mpa_c?: number | null
@@ -2258,6 +2344,7 @@ export type Database = {
           price_jpy?: number | null
           price_last_manual_refresh?: string | null
           price_source?: string | null
+          primary_region?: string | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
@@ -2360,6 +2447,7 @@ export type Database = {
           glass_fiber_percentage?: number | null
           gtin?: string | null
           hardness_shore_a?: number | null
+          has_regional_urls?: boolean | null
           haze_percent?: number | null
           hdt_045_mpa_c?: number | null
           hdt_18_mpa_c?: number | null
@@ -2400,6 +2488,7 @@ export type Database = {
           price_jpy?: number | null
           price_last_manual_refresh?: string | null
           price_source?: string | null
+          primary_region?: string | null
           print_speed_max_mms?: number | null
           printability_index?: number | null
           product_handle?: string | null
@@ -2947,6 +3036,13 @@ export type Database = {
             foreignKeyName: "price_alerts_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -3099,6 +3195,13 @@ export type Database = {
             foreignKeyName: "price_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -3203,6 +3306,13 @@ export type Database = {
             foreignKeyName: "print_results_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_results_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -3225,6 +3335,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "print_results_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -3301,6 +3418,13 @@ export type Database = {
             referencedRelation: "printers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "printer_accessories_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
         ]
       }
       printer_analytics: {
@@ -3334,6 +3458,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_analytics_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -3430,6 +3561,13 @@ export type Database = {
             foreignKeyName: "printer_compatibility_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_compatibility_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -3503,6 +3641,13 @@ export type Database = {
             referencedRelation: "printers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "printer_firmware_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
         ]
       }
       printer_inventory: {
@@ -3557,6 +3702,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "printer_inventory_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "printer_inventory_retailer_id_fkey"
             columns: ["retailer_id"]
             isOneToOne: false
@@ -3599,6 +3751,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printer_price_history_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -3707,6 +3866,13 @@ export type Database = {
             referencedRelation: "printers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "printer_software_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
         ]
       }
       printers: {
@@ -3795,6 +3961,7 @@ export type Database = {
           has_enclosure: boolean | null
           has_ethernet: boolean | null
           has_micro_sd_card: boolean | null
+          has_regional_urls: boolean | null
           has_sd_card: boolean | null
           has_usb_a_port: boolean | null
           has_usb_c_port: boolean | null
@@ -3866,6 +4033,7 @@ export type Database = {
           price_source: string | null
           price_tier: string | null
           prices_last_updated_at: string | null
+          primary_region: string | null
           printer_id: string
           printer_profile_slug_in_slicers: string | null
           printer_technology: string | null
@@ -3879,6 +4047,7 @@ export type Database = {
           recommended_materials: string | null
           recommended_quality_speed_mms: number | null
           recommended_upgrades: string | null
+          regional_availability: string[] | null
           release_date: string | null
           remote_control_supported: boolean | null
           remote_monitoring_supported: boolean | null
@@ -4003,6 +4172,7 @@ export type Database = {
           has_enclosure?: boolean | null
           has_ethernet?: boolean | null
           has_micro_sd_card?: boolean | null
+          has_regional_urls?: boolean | null
           has_sd_card?: boolean | null
           has_usb_a_port?: boolean | null
           has_usb_c_port?: boolean | null
@@ -4074,6 +4244,7 @@ export type Database = {
           price_source?: string | null
           price_tier?: string | null
           prices_last_updated_at?: string | null
+          primary_region?: string | null
           printer_id: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
@@ -4087,6 +4258,7 @@ export type Database = {
           recommended_materials?: string | null
           recommended_quality_speed_mms?: number | null
           recommended_upgrades?: string | null
+          regional_availability?: string[] | null
           release_date?: string | null
           remote_control_supported?: boolean | null
           remote_monitoring_supported?: boolean | null
@@ -4211,6 +4383,7 @@ export type Database = {
           has_enclosure?: boolean | null
           has_ethernet?: boolean | null
           has_micro_sd_card?: boolean | null
+          has_regional_urls?: boolean | null
           has_sd_card?: boolean | null
           has_usb_a_port?: boolean | null
           has_usb_c_port?: boolean | null
@@ -4282,6 +4455,7 @@ export type Database = {
           price_source?: string | null
           price_tier?: string | null
           prices_last_updated_at?: string | null
+          primary_region?: string | null
           printer_id?: string
           printer_profile_slug_in_slicers?: string | null
           printer_technology?: string | null
@@ -4295,6 +4469,7 @@ export type Database = {
           recommended_materials?: string | null
           recommended_quality_speed_mms?: number | null
           recommended_upgrades?: string | null
+          regional_availability?: string[] | null
           release_date?: string | null
           remote_control_supported?: boolean | null
           remote_monitoring_supported?: boolean | null
@@ -4543,6 +4718,13 @@ export type Database = {
             foreignKeyName: "product_questions_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_questions_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -4558,6 +4740,68 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_regional_prices: {
+        Row: {
+          compare_at_price: number | null
+          created_at: string | null
+          currency_code: string
+          current_price: number | null
+          id: string
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status: string | null
+          msrp: number | null
+          price_source: string | null
+          product_id: string
+          product_type: string
+          region_code: string
+          store_url_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          compare_at_price?: number | null
+          created_at?: string | null
+          currency_code: string
+          current_price?: number | null
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          msrp?: number | null
+          price_source?: string | null
+          product_id: string
+          product_type: string
+          region_code: string
+          store_url_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          compare_at_price?: number | null
+          created_at?: string | null
+          currency_code?: string
+          current_price?: number | null
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          msrp?: number | null
+          price_source?: string | null
+          product_id?: string
+          product_type?: string
+          region_code?: string
+          store_url_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_regional_prices_store_url_id_fkey"
+            columns: ["store_url_id"]
+            isOneToOne: false
+            referencedRelation: "product_regional_urls"
             referencedColumns: ["id"]
           },
         ]
@@ -4615,6 +4859,13 @@ export type Database = {
             foreignKeyName: "product_regional_slugs_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_regional_slugs_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -4633,6 +4884,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_regional_urls: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          id: string
+          is_primary: boolean | null
+          is_verified: boolean | null
+          last_verified_at: string | null
+          product_id: string
+          product_type: string
+          region_code: string
+          store_name: string | null
+          store_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code?: string
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          last_verified_at?: string | null
+          product_id: string
+          product_type: string
+          region_code: string
+          store_name?: string | null
+          store_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          last_verified_at?: string | null
+          product_id?: string
+          product_type?: string
+          region_code?: string
+          store_name?: string | null
+          store_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -4729,6 +5025,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_filaments_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -5097,6 +5400,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_alerts_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -5566,6 +5876,13 @@ export type Database = {
             foreignKeyName: "sync_activity_log_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sync_activity_log_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -5683,6 +6000,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tds_review_queue_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -5856,6 +6180,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "url_auto_fixes_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -6063,6 +6394,13 @@ export type Database = {
             foreignKeyName: "user_browse_history_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -6136,6 +6474,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -6238,6 +6583,13 @@ export type Database = {
             columns: ["printer_id"]
             isOneToOne: false
             referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_printer_preferences_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]
@@ -6352,6 +6704,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_purchases_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
@@ -6557,6 +6916,13 @@ export type Database = {
             foreignKeyName: "user_slicer_profiles_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_slicer_profiles_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
@@ -6631,6 +6997,504 @@ export type Database = {
         }
         Relationships: []
       }
+      filaments_with_regional: {
+        Row: {
+          admin_notes: string | null
+          amazon_link_de: string | null
+          amazon_link_uk: string | null
+          amazon_link_us: string | null
+          amazon_match_confidence: number | null
+          amazon_price_usd: number | null
+          amazon_prices_last_updated_at: string | null
+          annealing_temp_c: number | null
+          annealing_time_hours: number | null
+          auto_created: boolean | null
+          auto_updated: boolean | null
+          available_regions: string[] | null
+          bed_temp_max_c: number | null
+          bed_temp_min_c: number | null
+          bending_modulus_mpa: number | null
+          bending_strength_mpa: number | null
+          brand_id: string | null
+          carbon_fiber_percentage: number | null
+          chemical_resistance: Json | null
+          color_family: string | null
+          color_family_id: string | null
+          color_hex: string | null
+          created_at: string | null
+          density_g_cm3: number | null
+          diameter_nominal_mm: number | null
+          dimensional_accuracy_score: number | null
+          display_name: string | null
+          drying_temp_c: number | null
+          drying_time_hours: number | null
+          ean: string | null
+          ease_of_printing_score: number | null
+          elongation_break_xy_percent: number | null
+          elongation_break_z_percent: number | null
+          external_data_hash: string | null
+          fan_max_percent: number | null
+          fan_min_percent: number | null
+          featured_image: string | null
+          finish_type: string | null
+          finish_type_id: string | null
+          flexural_strength_mpa: number | null
+          food_contact_rating: string | null
+          glass_fiber_percentage: number | null
+          gtin: string | null
+          hardness_shore_a: number | null
+          has_regional_urls: boolean | null
+          haze_percent: number | null
+          hdt_045_mpa_c: number | null
+          hdt_18_mpa_c: number | null
+          high_speed_capable: boolean | null
+          id: string | null
+          impact_strength_kj_m2: number | null
+          industry_tags: string[] | null
+          is_nozzle_abrasive: boolean | null
+          last_external_sync_at: string | null
+          last_scraped_at: string | null
+          last_sync_error: string | null
+          light_transmission_percent: number | null
+          material: string | null
+          material_id: string | null
+          max_bridging_length_mm: number | null
+          max_overhang_angle_deg: number | null
+          melt_index_g_10min: number | null
+          melt_temp_c: number | null
+          moisture_care: string | null
+          moisture_level_id: string | null
+          moisture_sensitivity_level: string | null
+          mpn: string | null
+          msrp: number | null
+          net_weight_g: number | null
+          next_scrape_at: string | null
+          notched_izod_j_m: number | null
+          nozzle_care: string | null
+          nozzle_temp_max_c: number | null
+          nozzle_temp_min_c: number | null
+          nozzle_temp_sweetspot_c: number | null
+          pack_quantity: number | null
+          poissons_ratio: number | null
+          price_aud: number | null
+          price_cad: number | null
+          price_confidence: string | null
+          price_eur: number | null
+          price_gbp: number | null
+          price_jpy: number | null
+          price_last_manual_refresh: string | null
+          price_source: string | null
+          primary_region: string | null
+          print_speed_max_mms: number | null
+          printability_index: number | null
+          product_handle: string | null
+          product_id: string | null
+          product_line_id: string | null
+          product_title: string | null
+          product_url: string | null
+          product_url_au: string | null
+          product_url_ca: string | null
+          product_url_eu: string | null
+          product_url_jp: string | null
+          product_url_uk: string | null
+          published_at: string | null
+          recommended_nozzle_type: string | null
+          regional_prices: Json | null
+          regional_prices_updated_at: string | null
+          regional_urls: Json | null
+          retraction_length_mm: number | null
+          retraction_speed_mms: number | null
+          scrape_frequency_hours: number | null
+          shore_hardness_d: number | null
+          shrinkage_annealed_percent: number | null
+          spool_ams_fit: boolean | null
+          spool_material: string | null
+          spool_outer_d_mm: number | null
+          spool_width_mm: number | null
+          strength_index: number | null
+          surface_resistivity_ohm: number | null
+          sync_enabled: boolean | null
+          sync_status: string | null
+          tds_url: string | null
+          tensile_modulus_xy_mpa: number | null
+          tensile_modulus_z_mpa: number | null
+          tensile_strength_xy_mpa: number | null
+          tensile_strength_z_mpa: number | null
+          tg_c: number | null
+          transmission_distance: number | null
+          upc: string | null
+          updated_at: string | null
+          url_validated_at: string | null
+          url_validation_status: string | null
+          use_case_tags: string[] | null
+          user_override_fields: string[] | null
+          value_score: number | null
+          variant_available: boolean | null
+          variant_compare_at_price: number | null
+          variant_price: number | null
+          variant_sku: string | null
+          vendor: string | null
+          vicat_softening_temp_c: number | null
+          volume_resistivity_ohm_cm: number | null
+          water_absorption_percent: number | null
+          wood_fiber_length_mm: number | null
+          wood_particle_size_microns: number | null
+          wood_powder_percentage: number | null
+          wood_scent_level: string | null
+          wood_type: string | null
+          youngs_modulus_mpa: number | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          amazon_link_de?: string | null
+          amazon_link_uk?: string | null
+          amazon_link_us?: string | null
+          amazon_match_confidence?: number | null
+          amazon_price_usd?: number | null
+          amazon_prices_last_updated_at?: string | null
+          annealing_temp_c?: number | null
+          annealing_time_hours?: number | null
+          auto_created?: boolean | null
+          auto_updated?: boolean | null
+          available_regions?: string[] | null
+          bed_temp_max_c?: number | null
+          bed_temp_min_c?: number | null
+          bending_modulus_mpa?: number | null
+          bending_strength_mpa?: number | null
+          brand_id?: string | null
+          carbon_fiber_percentage?: number | null
+          chemical_resistance?: Json | null
+          color_family?: string | null
+          color_family_id?: string | null
+          color_hex?: string | null
+          created_at?: string | null
+          density_g_cm3?: number | null
+          diameter_nominal_mm?: number | null
+          dimensional_accuracy_score?: number | null
+          display_name?: string | null
+          drying_temp_c?: number | null
+          drying_time_hours?: number | null
+          ean?: string | null
+          ease_of_printing_score?: number | null
+          elongation_break_xy_percent?: number | null
+          elongation_break_z_percent?: number | null
+          external_data_hash?: string | null
+          fan_max_percent?: number | null
+          fan_min_percent?: number | null
+          featured_image?: string | null
+          finish_type?: string | null
+          finish_type_id?: string | null
+          flexural_strength_mpa?: number | null
+          food_contact_rating?: string | null
+          glass_fiber_percentage?: number | null
+          gtin?: string | null
+          hardness_shore_a?: number | null
+          has_regional_urls?: boolean | null
+          haze_percent?: number | null
+          hdt_045_mpa_c?: number | null
+          hdt_18_mpa_c?: number | null
+          high_speed_capable?: boolean | null
+          id?: string | null
+          impact_strength_kj_m2?: number | null
+          industry_tags?: string[] | null
+          is_nozzle_abrasive?: boolean | null
+          last_external_sync_at?: string | null
+          last_scraped_at?: string | null
+          last_sync_error?: string | null
+          light_transmission_percent?: number | null
+          material?: string | null
+          material_id?: string | null
+          max_bridging_length_mm?: number | null
+          max_overhang_angle_deg?: number | null
+          melt_index_g_10min?: number | null
+          melt_temp_c?: number | null
+          moisture_care?: string | null
+          moisture_level_id?: string | null
+          moisture_sensitivity_level?: string | null
+          mpn?: string | null
+          msrp?: number | null
+          net_weight_g?: number | null
+          next_scrape_at?: string | null
+          notched_izod_j_m?: number | null
+          nozzle_care?: string | null
+          nozzle_temp_max_c?: number | null
+          nozzle_temp_min_c?: number | null
+          nozzle_temp_sweetspot_c?: number | null
+          pack_quantity?: number | null
+          poissons_ratio?: number | null
+          price_aud?: number | null
+          price_cad?: number | null
+          price_confidence?: string | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_jpy?: number | null
+          price_last_manual_refresh?: string | null
+          price_source?: string | null
+          primary_region?: string | null
+          print_speed_max_mms?: number | null
+          printability_index?: number | null
+          product_handle?: string | null
+          product_id?: string | null
+          product_line_id?: string | null
+          product_title?: string | null
+          product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
+          published_at?: string | null
+          recommended_nozzle_type?: string | null
+          regional_prices?: never
+          regional_prices_updated_at?: string | null
+          regional_urls?: never
+          retraction_length_mm?: number | null
+          retraction_speed_mms?: number | null
+          scrape_frequency_hours?: number | null
+          shore_hardness_d?: number | null
+          shrinkage_annealed_percent?: number | null
+          spool_ams_fit?: boolean | null
+          spool_material?: string | null
+          spool_outer_d_mm?: number | null
+          spool_width_mm?: number | null
+          strength_index?: number | null
+          surface_resistivity_ohm?: number | null
+          sync_enabled?: boolean | null
+          sync_status?: string | null
+          tds_url?: string | null
+          tensile_modulus_xy_mpa?: number | null
+          tensile_modulus_z_mpa?: number | null
+          tensile_strength_xy_mpa?: number | null
+          tensile_strength_z_mpa?: number | null
+          tg_c?: number | null
+          transmission_distance?: number | null
+          upc?: string | null
+          updated_at?: string | null
+          url_validated_at?: string | null
+          url_validation_status?: string | null
+          use_case_tags?: string[] | null
+          user_override_fields?: string[] | null
+          value_score?: number | null
+          variant_available?: boolean | null
+          variant_compare_at_price?: number | null
+          variant_price?: number | null
+          variant_sku?: string | null
+          vendor?: string | null
+          vicat_softening_temp_c?: number | null
+          volume_resistivity_ohm_cm?: number | null
+          water_absorption_percent?: number | null
+          wood_fiber_length_mm?: number | null
+          wood_particle_size_microns?: number | null
+          wood_powder_percentage?: number | null
+          wood_scent_level?: string | null
+          wood_type?: string | null
+          youngs_modulus_mpa?: number | null
+        }
+        Update: {
+          admin_notes?: string | null
+          amazon_link_de?: string | null
+          amazon_link_uk?: string | null
+          amazon_link_us?: string | null
+          amazon_match_confidence?: number | null
+          amazon_price_usd?: number | null
+          amazon_prices_last_updated_at?: string | null
+          annealing_temp_c?: number | null
+          annealing_time_hours?: number | null
+          auto_created?: boolean | null
+          auto_updated?: boolean | null
+          available_regions?: string[] | null
+          bed_temp_max_c?: number | null
+          bed_temp_min_c?: number | null
+          bending_modulus_mpa?: number | null
+          bending_strength_mpa?: number | null
+          brand_id?: string | null
+          carbon_fiber_percentage?: number | null
+          chemical_resistance?: Json | null
+          color_family?: string | null
+          color_family_id?: string | null
+          color_hex?: string | null
+          created_at?: string | null
+          density_g_cm3?: number | null
+          diameter_nominal_mm?: number | null
+          dimensional_accuracy_score?: number | null
+          display_name?: string | null
+          drying_temp_c?: number | null
+          drying_time_hours?: number | null
+          ean?: string | null
+          ease_of_printing_score?: number | null
+          elongation_break_xy_percent?: number | null
+          elongation_break_z_percent?: number | null
+          external_data_hash?: string | null
+          fan_max_percent?: number | null
+          fan_min_percent?: number | null
+          featured_image?: string | null
+          finish_type?: string | null
+          finish_type_id?: string | null
+          flexural_strength_mpa?: number | null
+          food_contact_rating?: string | null
+          glass_fiber_percentage?: number | null
+          gtin?: string | null
+          hardness_shore_a?: number | null
+          has_regional_urls?: boolean | null
+          haze_percent?: number | null
+          hdt_045_mpa_c?: number | null
+          hdt_18_mpa_c?: number | null
+          high_speed_capable?: boolean | null
+          id?: string | null
+          impact_strength_kj_m2?: number | null
+          industry_tags?: string[] | null
+          is_nozzle_abrasive?: boolean | null
+          last_external_sync_at?: string | null
+          last_scraped_at?: string | null
+          last_sync_error?: string | null
+          light_transmission_percent?: number | null
+          material?: string | null
+          material_id?: string | null
+          max_bridging_length_mm?: number | null
+          max_overhang_angle_deg?: number | null
+          melt_index_g_10min?: number | null
+          melt_temp_c?: number | null
+          moisture_care?: string | null
+          moisture_level_id?: string | null
+          moisture_sensitivity_level?: string | null
+          mpn?: string | null
+          msrp?: number | null
+          net_weight_g?: number | null
+          next_scrape_at?: string | null
+          notched_izod_j_m?: number | null
+          nozzle_care?: string | null
+          nozzle_temp_max_c?: number | null
+          nozzle_temp_min_c?: number | null
+          nozzle_temp_sweetspot_c?: number | null
+          pack_quantity?: number | null
+          poissons_ratio?: number | null
+          price_aud?: number | null
+          price_cad?: number | null
+          price_confidence?: string | null
+          price_eur?: number | null
+          price_gbp?: number | null
+          price_jpy?: number | null
+          price_last_manual_refresh?: string | null
+          price_source?: string | null
+          primary_region?: string | null
+          print_speed_max_mms?: number | null
+          printability_index?: number | null
+          product_handle?: string | null
+          product_id?: string | null
+          product_line_id?: string | null
+          product_title?: string | null
+          product_url?: string | null
+          product_url_au?: string | null
+          product_url_ca?: string | null
+          product_url_eu?: string | null
+          product_url_jp?: string | null
+          product_url_uk?: string | null
+          published_at?: string | null
+          recommended_nozzle_type?: string | null
+          regional_prices?: never
+          regional_prices_updated_at?: string | null
+          regional_urls?: never
+          retraction_length_mm?: number | null
+          retraction_speed_mms?: number | null
+          scrape_frequency_hours?: number | null
+          shore_hardness_d?: number | null
+          shrinkage_annealed_percent?: number | null
+          spool_ams_fit?: boolean | null
+          spool_material?: string | null
+          spool_outer_d_mm?: number | null
+          spool_width_mm?: number | null
+          strength_index?: number | null
+          surface_resistivity_ohm?: number | null
+          sync_enabled?: boolean | null
+          sync_status?: string | null
+          tds_url?: string | null
+          tensile_modulus_xy_mpa?: number | null
+          tensile_modulus_z_mpa?: number | null
+          tensile_strength_xy_mpa?: number | null
+          tensile_strength_z_mpa?: number | null
+          tg_c?: number | null
+          transmission_distance?: number | null
+          upc?: string | null
+          updated_at?: string | null
+          url_validated_at?: string | null
+          url_validation_status?: string | null
+          use_case_tags?: string[] | null
+          user_override_fields?: string[] | null
+          value_score?: number | null
+          variant_available?: boolean | null
+          variant_compare_at_price?: number | null
+          variant_price?: number | null
+          variant_sku?: string | null
+          vendor?: string | null
+          vicat_softening_temp_c?: number | null
+          volume_resistivity_ohm_cm?: number | null
+          water_absorption_percent?: number | null
+          wood_fiber_length_mm?: number | null
+          wood_particle_size_microns?: number | null
+          wood_powder_percentage?: number | null
+          wood_scent_level?: string | null
+          wood_type?: string | null
+          youngs_modulus_mpa?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "automated_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brands_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_color_family_id_fkey"
+            columns: ["color_family_id"]
+            isOneToOne: false
+            referencedRelation: "color_families"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_finish_type_id_fkey"
+            columns: ["finish_type_id"]
+            isOneToOne: false
+            referencedRelation: "finish_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_moisture_level_id_fkey"
+            columns: ["moisture_level_id"]
+            isOneToOne: false
+            referencedRelation: "moisture_levels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_trends_90d: {
         Row: {
           avg_price_90d: number | null
@@ -6646,6 +7510,663 @@ export type Database = {
           vendor: string | null
         }
         Relationships: []
+      }
+      printers_with_regional: {
+        Row: {
+          abl_technique: string | null
+          abrasive_filament_support: boolean | null
+          abrasive_materials_supported: boolean | null
+          admin_notes: string | null
+          ai_camera_features: string | null
+          ai_spaghetti_detection: boolean | null
+          amazon_url_au: string | null
+          amazon_url_ca: string | null
+          amazon_url_de: string | null
+          amazon_url_jp: string | null
+          amazon_url_uk: string | null
+          amazon_url_us: string | null
+          area_leveling_supported: boolean | null
+          assembly_required: boolean | null
+          auto_bed_leveling: boolean | null
+          auto_bed_leveling_method: string | null
+          average_assembly_time_min: number | null
+          bed_heated: boolean | null
+          bed_heater_power_w: number | null
+          bed_max_temp_c: number | null
+          bed_size_x_mm: number | null
+          bed_size_y_mm: number | null
+          bed_type: string | null
+          belt_tensioning_method: string | null
+          brand_id: string | null
+          build_volume_shape: string | null
+          build_volume_x_mm: number | null
+          build_volume_y_mm: number | null
+          build_volume_z_mm: number | null
+          camera_count: number | null
+          camera_resolution: string | null
+          camera_type: string | null
+          cloud_platforms: string | null
+          coming_soon: boolean | null
+          common_failure_points: string | null
+          common_mods_tags: string | null
+          community_popularity_score: number | null
+          compare_at_price_usd: number | null
+          compatible_multi_material_systems: string | null
+          compatible_plate_types: string | null
+          control_knob: boolean | null
+          created_at: string | null
+          current_price_aud_amazon: number | null
+          current_price_aud_store: number | null
+          current_price_cad_amazon: number | null
+          current_price_cad_store: number | null
+          current_price_eur_amazon: number | null
+          current_price_eur_store: number | null
+          current_price_gbp_amazon: number | null
+          current_price_gbp_store: number | null
+          current_price_jpy_amazon: number | null
+          current_price_jpy_store: number | null
+          current_price_usd_amazon: number | null
+          current_price_usd_store: number | null
+          data_quality_notes: string | null
+          data_source_priority: string | null
+          data_source_urls: string | null
+          default_plate_type: string | null
+          discontinued: boolean | null
+          discontinued_date: string | null
+          display_name: string | null
+          door_sensor: boolean | null
+          ean_upc: string | null
+          enclosure_heated: boolean | null
+          enclosure_max_temp_c: number | null
+          enclosure_type: string | null
+          extruder_count: number | null
+          extruder_drive_type: string | null
+          extruder_notes: string | null
+          extruder_type: string | null
+          filament_diameter_mm: number | null
+          filament_entanglement_detection: boolean | null
+          filament_runout_detection: boolean | null
+          filter_type: string | null
+          firmware_family: string | null
+          firmware_open_source: boolean | null
+          firmware_url: string | null
+          first_layer_assist_features: string | null
+          flow_calibration_supported: boolean | null
+          frame_material: string | null
+          has_bluetooth: boolean | null
+          has_enclosure: boolean | null
+          has_ethernet: boolean | null
+          has_micro_sd_card: boolean | null
+          has_regional_urls: boolean | null
+          has_sd_card: boolean | null
+          has_usb_a_port: boolean | null
+          has_usb_c_port: boolean | null
+          has_wifi: boolean | null
+          hotend_brand_model: string | null
+          hotend_material_composition: string | null
+          hotend_type: string | null
+          id: string | null
+          input_shaping_supported: boolean | null
+          internal_lighting: boolean | null
+          last_sync_error: string | null
+          last_sync_status: string | null
+          last_verified_utc: string | null
+          layer_height_default_um: number | null
+          layer_height_max_um: number | null
+          layer_height_min_um: number | null
+          linear_rails_on_axes: string | null
+          machine_depth_mm: number | null
+          machine_height_mm: number | null
+          machine_style: string | null
+          machine_weight_kg: number | null
+          machine_width_mm: number | null
+          maintenance_interval_hours: number | null
+          marketing_tags: string | null
+          materials_notes: string | null
+          max_acceleration_xy_mmss: number | null
+          max_acceleration_z_mmss: number | null
+          max_build_height_with_ams_mm: number | null
+          max_flow_rate_mm3s: number | null
+          max_nozzle_temp_c: number | null
+          max_print_speed_mms: number | null
+          max_recommended_material_temp_c: number | null
+          max_travel_speed_xy_mms: number | null
+          model_name: string | null
+          motion_system_notes: string | null
+          msrp_cad: number | null
+          msrp_eur: number | null
+          msrp_usd: number | null
+          multi_material_drying_capability: boolean | null
+          multi_material_limitations_notes: string | null
+          multi_material_max_spools: number | null
+          multi_material_spool_chamber_max_temp_c: number | null
+          multi_material_supported: boolean | null
+          native_multi_material_system: boolean | null
+          noise_level_idle_db: number | null
+          noise_level_printing_db: number | null
+          nozzle_change_ease: string | null
+          nozzle_material: string | null
+          object_skip_supported: boolean | null
+          official_product_url: string | null
+          official_store_url: string | null
+          official_store_url_au: string | null
+          official_store_url_ca: string | null
+          official_store_url_eu: string | null
+          official_store_url_jp: string | null
+          official_store_url_uk: string | null
+          official_supported_materials: string | null
+          onboard_storage_gb: number | null
+          other_retailer_urls: string | null
+          package_depth_mm: number | null
+          package_height_mm: number | null
+          package_weight_kg: number | null
+          package_width_mm: number | null
+          power_input_voltage: string | null
+          power_loss_recovery: boolean | null
+          power_supply_type: string | null
+          pressure_advance_supported: boolean | null
+          price_confidence: string | null
+          price_source: string | null
+          price_tier: string | null
+          prices_last_updated_at: string | null
+          primary_region: string | null
+          printer_id: string | null
+          printer_profile_slug_in_slicers: string | null
+          printer_technology: string | null
+          quick_release_hotend: boolean | null
+          rated_power_w: number | null
+          rating_community_overall: number | null
+          rating_ease_of_use: number | null
+          rating_print_quality: number | null
+          rating_reliability: number | null
+          rating_value_for_money: number | null
+          recommended_materials: string | null
+          recommended_quality_speed_mms: number | null
+          recommended_upgrades: string | null
+          regional_availability: string[] | null
+          regional_prices: Json | null
+          regional_urls: Json | null
+          release_date: string | null
+          remote_control_supported: boolean | null
+          remote_monitoring_supported: boolean | null
+          repeatability_um: number | null
+          review_count_aggregated: number | null
+          safety_certifications: string | null
+          safety_notes: string | null
+          scrape_completed_at: string | null
+          scrape_error: string | null
+          scrape_status: string | null
+          scraped_data: Json | null
+          screen_resolution: string | null
+          screen_size_inch: number | null
+          screen_type: string | null
+          series_id: string | null
+          sku: string | null
+          smoke_sensor: boolean | null
+          status: string | null
+          stock_nozzle_diameter_mm: number | null
+          stock_plate_types: string | null
+          supported_nozzle_diameters_mm: string | null
+          supported_plate_types: string | null
+          sustained_nozzle_temp_c: number | null
+          sync_enabled: boolean | null
+          target_user_segment: string | null
+          temperature_sensors: string | null
+          thermal_runaway_protection: boolean | null
+          timelapse_supported: boolean | null
+          typical_power_abs_w: number | null
+          typical_power_pla_w: number | null
+          ui_language_options: string | null
+          updated_at: string | null
+          variant_or_bundle_name: string | null
+          warranty_coverage: string | null
+          warranty_years: number | null
+          xy_positioning_accuracy_um: number | null
+          z_offset_supported: boolean | null
+          z_positioning_accuracy_um: number | null
+        }
+        Insert: {
+          abl_technique?: string | null
+          abrasive_filament_support?: boolean | null
+          abrasive_materials_supported?: boolean | null
+          admin_notes?: string | null
+          ai_camera_features?: string | null
+          ai_spaghetti_detection?: boolean | null
+          amazon_url_au?: string | null
+          amazon_url_ca?: string | null
+          amazon_url_de?: string | null
+          amazon_url_jp?: string | null
+          amazon_url_uk?: string | null
+          amazon_url_us?: string | null
+          area_leveling_supported?: boolean | null
+          assembly_required?: boolean | null
+          auto_bed_leveling?: boolean | null
+          auto_bed_leveling_method?: string | null
+          average_assembly_time_min?: number | null
+          bed_heated?: boolean | null
+          bed_heater_power_w?: number | null
+          bed_max_temp_c?: number | null
+          bed_size_x_mm?: number | null
+          bed_size_y_mm?: number | null
+          bed_type?: string | null
+          belt_tensioning_method?: string | null
+          brand_id?: string | null
+          build_volume_shape?: string | null
+          build_volume_x_mm?: number | null
+          build_volume_y_mm?: number | null
+          build_volume_z_mm?: number | null
+          camera_count?: number | null
+          camera_resolution?: string | null
+          camera_type?: string | null
+          cloud_platforms?: string | null
+          coming_soon?: boolean | null
+          common_failure_points?: string | null
+          common_mods_tags?: string | null
+          community_popularity_score?: number | null
+          compare_at_price_usd?: number | null
+          compatible_multi_material_systems?: string | null
+          compatible_plate_types?: string | null
+          control_knob?: boolean | null
+          created_at?: string | null
+          current_price_aud_amazon?: number | null
+          current_price_aud_store?: number | null
+          current_price_cad_amazon?: number | null
+          current_price_cad_store?: number | null
+          current_price_eur_amazon?: number | null
+          current_price_eur_store?: number | null
+          current_price_gbp_amazon?: number | null
+          current_price_gbp_store?: number | null
+          current_price_jpy_amazon?: number | null
+          current_price_jpy_store?: number | null
+          current_price_usd_amazon?: number | null
+          current_price_usd_store?: number | null
+          data_quality_notes?: string | null
+          data_source_priority?: string | null
+          data_source_urls?: string | null
+          default_plate_type?: string | null
+          discontinued?: boolean | null
+          discontinued_date?: string | null
+          display_name?: string | null
+          door_sensor?: boolean | null
+          ean_upc?: string | null
+          enclosure_heated?: boolean | null
+          enclosure_max_temp_c?: number | null
+          enclosure_type?: string | null
+          extruder_count?: number | null
+          extruder_drive_type?: string | null
+          extruder_notes?: string | null
+          extruder_type?: string | null
+          filament_diameter_mm?: number | null
+          filament_entanglement_detection?: boolean | null
+          filament_runout_detection?: boolean | null
+          filter_type?: string | null
+          firmware_family?: string | null
+          firmware_open_source?: boolean | null
+          firmware_url?: string | null
+          first_layer_assist_features?: string | null
+          flow_calibration_supported?: boolean | null
+          frame_material?: string | null
+          has_bluetooth?: boolean | null
+          has_enclosure?: boolean | null
+          has_ethernet?: boolean | null
+          has_micro_sd_card?: boolean | null
+          has_regional_urls?: boolean | null
+          has_sd_card?: boolean | null
+          has_usb_a_port?: boolean | null
+          has_usb_c_port?: boolean | null
+          has_wifi?: boolean | null
+          hotend_brand_model?: string | null
+          hotend_material_composition?: string | null
+          hotend_type?: string | null
+          id?: string | null
+          input_shaping_supported?: boolean | null
+          internal_lighting?: boolean | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_verified_utc?: string | null
+          layer_height_default_um?: number | null
+          layer_height_max_um?: number | null
+          layer_height_min_um?: number | null
+          linear_rails_on_axes?: string | null
+          machine_depth_mm?: number | null
+          machine_height_mm?: number | null
+          machine_style?: string | null
+          machine_weight_kg?: number | null
+          machine_width_mm?: number | null
+          maintenance_interval_hours?: number | null
+          marketing_tags?: string | null
+          materials_notes?: string | null
+          max_acceleration_xy_mmss?: number | null
+          max_acceleration_z_mmss?: number | null
+          max_build_height_with_ams_mm?: number | null
+          max_flow_rate_mm3s?: number | null
+          max_nozzle_temp_c?: number | null
+          max_print_speed_mms?: number | null
+          max_recommended_material_temp_c?: number | null
+          max_travel_speed_xy_mms?: number | null
+          model_name?: string | null
+          motion_system_notes?: string | null
+          msrp_cad?: number | null
+          msrp_eur?: number | null
+          msrp_usd?: number | null
+          multi_material_drying_capability?: boolean | null
+          multi_material_limitations_notes?: string | null
+          multi_material_max_spools?: number | null
+          multi_material_spool_chamber_max_temp_c?: number | null
+          multi_material_supported?: boolean | null
+          native_multi_material_system?: boolean | null
+          noise_level_idle_db?: number | null
+          noise_level_printing_db?: number | null
+          nozzle_change_ease?: string | null
+          nozzle_material?: string | null
+          object_skip_supported?: boolean | null
+          official_product_url?: string | null
+          official_store_url?: string | null
+          official_store_url_au?: string | null
+          official_store_url_ca?: string | null
+          official_store_url_eu?: string | null
+          official_store_url_jp?: string | null
+          official_store_url_uk?: string | null
+          official_supported_materials?: string | null
+          onboard_storage_gb?: number | null
+          other_retailer_urls?: string | null
+          package_depth_mm?: number | null
+          package_height_mm?: number | null
+          package_weight_kg?: number | null
+          package_width_mm?: number | null
+          power_input_voltage?: string | null
+          power_loss_recovery?: boolean | null
+          power_supply_type?: string | null
+          pressure_advance_supported?: boolean | null
+          price_confidence?: string | null
+          price_source?: string | null
+          price_tier?: string | null
+          prices_last_updated_at?: string | null
+          primary_region?: string | null
+          printer_id?: string | null
+          printer_profile_slug_in_slicers?: string | null
+          printer_technology?: string | null
+          quick_release_hotend?: boolean | null
+          rated_power_w?: number | null
+          rating_community_overall?: number | null
+          rating_ease_of_use?: number | null
+          rating_print_quality?: number | null
+          rating_reliability?: number | null
+          rating_value_for_money?: number | null
+          recommended_materials?: string | null
+          recommended_quality_speed_mms?: number | null
+          recommended_upgrades?: string | null
+          regional_availability?: string[] | null
+          regional_prices?: never
+          regional_urls?: never
+          release_date?: string | null
+          remote_control_supported?: boolean | null
+          remote_monitoring_supported?: boolean | null
+          repeatability_um?: number | null
+          review_count_aggregated?: number | null
+          safety_certifications?: string | null
+          safety_notes?: string | null
+          scrape_completed_at?: string | null
+          scrape_error?: string | null
+          scrape_status?: string | null
+          scraped_data?: Json | null
+          screen_resolution?: string | null
+          screen_size_inch?: number | null
+          screen_type?: string | null
+          series_id?: string | null
+          sku?: string | null
+          smoke_sensor?: boolean | null
+          status?: string | null
+          stock_nozzle_diameter_mm?: number | null
+          stock_plate_types?: string | null
+          supported_nozzle_diameters_mm?: string | null
+          supported_plate_types?: string | null
+          sustained_nozzle_temp_c?: number | null
+          sync_enabled?: boolean | null
+          target_user_segment?: string | null
+          temperature_sensors?: string | null
+          thermal_runaway_protection?: boolean | null
+          timelapse_supported?: boolean | null
+          typical_power_abs_w?: number | null
+          typical_power_pla_w?: number | null
+          ui_language_options?: string | null
+          updated_at?: string | null
+          variant_or_bundle_name?: string | null
+          warranty_coverage?: string | null
+          warranty_years?: number | null
+          xy_positioning_accuracy_um?: number | null
+          z_offset_supported?: boolean | null
+          z_positioning_accuracy_um?: number | null
+        }
+        Update: {
+          abl_technique?: string | null
+          abrasive_filament_support?: boolean | null
+          abrasive_materials_supported?: boolean | null
+          admin_notes?: string | null
+          ai_camera_features?: string | null
+          ai_spaghetti_detection?: boolean | null
+          amazon_url_au?: string | null
+          amazon_url_ca?: string | null
+          amazon_url_de?: string | null
+          amazon_url_jp?: string | null
+          amazon_url_uk?: string | null
+          amazon_url_us?: string | null
+          area_leveling_supported?: boolean | null
+          assembly_required?: boolean | null
+          auto_bed_leveling?: boolean | null
+          auto_bed_leveling_method?: string | null
+          average_assembly_time_min?: number | null
+          bed_heated?: boolean | null
+          bed_heater_power_w?: number | null
+          bed_max_temp_c?: number | null
+          bed_size_x_mm?: number | null
+          bed_size_y_mm?: number | null
+          bed_type?: string | null
+          belt_tensioning_method?: string | null
+          brand_id?: string | null
+          build_volume_shape?: string | null
+          build_volume_x_mm?: number | null
+          build_volume_y_mm?: number | null
+          build_volume_z_mm?: number | null
+          camera_count?: number | null
+          camera_resolution?: string | null
+          camera_type?: string | null
+          cloud_platforms?: string | null
+          coming_soon?: boolean | null
+          common_failure_points?: string | null
+          common_mods_tags?: string | null
+          community_popularity_score?: number | null
+          compare_at_price_usd?: number | null
+          compatible_multi_material_systems?: string | null
+          compatible_plate_types?: string | null
+          control_knob?: boolean | null
+          created_at?: string | null
+          current_price_aud_amazon?: number | null
+          current_price_aud_store?: number | null
+          current_price_cad_amazon?: number | null
+          current_price_cad_store?: number | null
+          current_price_eur_amazon?: number | null
+          current_price_eur_store?: number | null
+          current_price_gbp_amazon?: number | null
+          current_price_gbp_store?: number | null
+          current_price_jpy_amazon?: number | null
+          current_price_jpy_store?: number | null
+          current_price_usd_amazon?: number | null
+          current_price_usd_store?: number | null
+          data_quality_notes?: string | null
+          data_source_priority?: string | null
+          data_source_urls?: string | null
+          default_plate_type?: string | null
+          discontinued?: boolean | null
+          discontinued_date?: string | null
+          display_name?: string | null
+          door_sensor?: boolean | null
+          ean_upc?: string | null
+          enclosure_heated?: boolean | null
+          enclosure_max_temp_c?: number | null
+          enclosure_type?: string | null
+          extruder_count?: number | null
+          extruder_drive_type?: string | null
+          extruder_notes?: string | null
+          extruder_type?: string | null
+          filament_diameter_mm?: number | null
+          filament_entanglement_detection?: boolean | null
+          filament_runout_detection?: boolean | null
+          filter_type?: string | null
+          firmware_family?: string | null
+          firmware_open_source?: boolean | null
+          firmware_url?: string | null
+          first_layer_assist_features?: string | null
+          flow_calibration_supported?: boolean | null
+          frame_material?: string | null
+          has_bluetooth?: boolean | null
+          has_enclosure?: boolean | null
+          has_ethernet?: boolean | null
+          has_micro_sd_card?: boolean | null
+          has_regional_urls?: boolean | null
+          has_sd_card?: boolean | null
+          has_usb_a_port?: boolean | null
+          has_usb_c_port?: boolean | null
+          has_wifi?: boolean | null
+          hotend_brand_model?: string | null
+          hotend_material_composition?: string | null
+          hotend_type?: string | null
+          id?: string | null
+          input_shaping_supported?: boolean | null
+          internal_lighting?: boolean | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          last_verified_utc?: string | null
+          layer_height_default_um?: number | null
+          layer_height_max_um?: number | null
+          layer_height_min_um?: number | null
+          linear_rails_on_axes?: string | null
+          machine_depth_mm?: number | null
+          machine_height_mm?: number | null
+          machine_style?: string | null
+          machine_weight_kg?: number | null
+          machine_width_mm?: number | null
+          maintenance_interval_hours?: number | null
+          marketing_tags?: string | null
+          materials_notes?: string | null
+          max_acceleration_xy_mmss?: number | null
+          max_acceleration_z_mmss?: number | null
+          max_build_height_with_ams_mm?: number | null
+          max_flow_rate_mm3s?: number | null
+          max_nozzle_temp_c?: number | null
+          max_print_speed_mms?: number | null
+          max_recommended_material_temp_c?: number | null
+          max_travel_speed_xy_mms?: number | null
+          model_name?: string | null
+          motion_system_notes?: string | null
+          msrp_cad?: number | null
+          msrp_eur?: number | null
+          msrp_usd?: number | null
+          multi_material_drying_capability?: boolean | null
+          multi_material_limitations_notes?: string | null
+          multi_material_max_spools?: number | null
+          multi_material_spool_chamber_max_temp_c?: number | null
+          multi_material_supported?: boolean | null
+          native_multi_material_system?: boolean | null
+          noise_level_idle_db?: number | null
+          noise_level_printing_db?: number | null
+          nozzle_change_ease?: string | null
+          nozzle_material?: string | null
+          object_skip_supported?: boolean | null
+          official_product_url?: string | null
+          official_store_url?: string | null
+          official_store_url_au?: string | null
+          official_store_url_ca?: string | null
+          official_store_url_eu?: string | null
+          official_store_url_jp?: string | null
+          official_store_url_uk?: string | null
+          official_supported_materials?: string | null
+          onboard_storage_gb?: number | null
+          other_retailer_urls?: string | null
+          package_depth_mm?: number | null
+          package_height_mm?: number | null
+          package_weight_kg?: number | null
+          package_width_mm?: number | null
+          power_input_voltage?: string | null
+          power_loss_recovery?: boolean | null
+          power_supply_type?: string | null
+          pressure_advance_supported?: boolean | null
+          price_confidence?: string | null
+          price_source?: string | null
+          price_tier?: string | null
+          prices_last_updated_at?: string | null
+          primary_region?: string | null
+          printer_id?: string | null
+          printer_profile_slug_in_slicers?: string | null
+          printer_technology?: string | null
+          quick_release_hotend?: boolean | null
+          rated_power_w?: number | null
+          rating_community_overall?: number | null
+          rating_ease_of_use?: number | null
+          rating_print_quality?: number | null
+          rating_reliability?: number | null
+          rating_value_for_money?: number | null
+          recommended_materials?: string | null
+          recommended_quality_speed_mms?: number | null
+          recommended_upgrades?: string | null
+          regional_availability?: string[] | null
+          regional_prices?: never
+          regional_urls?: never
+          release_date?: string | null
+          remote_control_supported?: boolean | null
+          remote_monitoring_supported?: boolean | null
+          repeatability_um?: number | null
+          review_count_aggregated?: number | null
+          safety_certifications?: string | null
+          safety_notes?: string | null
+          scrape_completed_at?: string | null
+          scrape_error?: string | null
+          scrape_status?: string | null
+          scraped_data?: Json | null
+          screen_resolution?: string | null
+          screen_size_inch?: number | null
+          screen_type?: string | null
+          series_id?: string | null
+          sku?: string | null
+          smoke_sensor?: boolean | null
+          status?: string | null
+          stock_nozzle_diameter_mm?: number | null
+          stock_plate_types?: string | null
+          supported_nozzle_diameters_mm?: string | null
+          supported_plate_types?: string | null
+          sustained_nozzle_temp_c?: number | null
+          sync_enabled?: boolean | null
+          target_user_segment?: string | null
+          temperature_sensors?: string | null
+          thermal_runaway_protection?: boolean | null
+          timelapse_supported?: boolean | null
+          typical_power_abs_w?: number | null
+          typical_power_pla_w?: number | null
+          ui_language_options?: string | null
+          updated_at?: string | null
+          variant_or_bundle_name?: string | null
+          warranty_coverage?: string | null
+          warranty_years?: number | null
+          xy_positioning_accuracy_um?: number | null
+          z_offset_supported?: boolean | null
+          z_positioning_accuracy_um?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "printer_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "printers_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "printer_series"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recent_price_drops: {
         Row: {
@@ -6857,6 +8378,13 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_listings_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
