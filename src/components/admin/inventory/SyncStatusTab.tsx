@@ -8,6 +8,7 @@ import { RegionalHealthOverview } from './sync-status/RegionalHealthOverview';
 import { BrandRegionMatrix } from './sync-status/BrandRegionMatrix';
 import { RegionalFailedProducts } from './sync-status/RegionalFailedProducts';
 import { MissingRegionalUrlsReport } from './sync-status/MissingRegionalUrlsReport';
+import { SyncScheduleHints } from './sync-status/SyncScheduleHints';
 
 export function SyncStatusTab() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined);
@@ -45,6 +46,9 @@ export function SyncStatusTab() {
 
           {/* Missing Regional URLs Report */}
           <MissingRegionalUrlsReport />
+
+          {/* Sync Schedule Hints */}
+          <SyncScheduleHints />
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-6 mt-4">

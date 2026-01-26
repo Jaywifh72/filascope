@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Package, Keyboard } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -18,7 +18,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { supabase } from '@/integrations/supabase/client';
 import { usePriceSync } from '@/hooks/usePriceSync';
 import { useInventoryKeyboardShortcuts } from '@/hooks/useInventoryKeyboardShortcuts';
+import { useAdminKeyboardShortcuts } from '@/hooks/useAdminKeyboardShortcuts';
 import { RegionCode, CurrencyCode } from '@/types/regional';
+import { toast } from 'sonner';
 
 type TabValue = 'filaments' | 'printers' | 'sync';
 
@@ -61,10 +63,36 @@ function InventoryManagementContent() {
     setShowAddPrinterWizard(true);
   }, []);
 
+  const queryClient = useQueryClient();
+
   useInventoryKeyboardShortcuts({
     activeTab,
     onAddFilament: handleAddFilament,
     onAddPrinter: handleAddPrinter,
+  });
+
+  // Admin regional keyboard shortcuts
+  const handleRegionShortcut = useCallback((region: RegionCode) => {
+    setSelectedRegion(region);
+    toast.info(`Switched to ${region} view`, { duration: 1500 });
+  }, [setSelectedRegion]);
+
+  const handleToggleAllRegions = useCallback(() => {
+    setShowAllRegions(!showAllRegions);
+    toast.info(showAllRegions ? 'Single region view' : 'All regions view', { duration: 1500 });
+  }, [showAllRegions, setShowAllRegions]);
+
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['admin-filaments'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-printers'] });
+    queryClient.invalidateQueries({ queryKey: ['regional-sync-health'] });
+    toast.info('Refreshing data...', { duration: 1500 });
+  }, [queryClient]);
+
+  const { shortcuts } = useAdminKeyboardShortcuts({
+    onRegionChange: handleRegionShortcut,
+    onShowAllRegions: handleToggleAllRegions,
+    onRefresh: handleRefresh,
   });
 
   // Fetch brands for dropdown
@@ -145,10 +173,16 @@ function InventoryManagementContent() {
               </div>
             </TooltipTrigger>
             <TooltipContent side="left" className="max-w-xs">
-              <div className="space-y-1 text-xs">
-                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘N</kbd> Add Filament (Filaments tab)</p>
-                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘⇧N</kbd> Add Printer (Printers tab)</p>
+              <div className="space-y-2 text-xs">
+                <div className="font-medium border-b pb-1 mb-1">Actions</div>
+                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘N</kbd> Add Filament</p>
+                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘⇧N</kbd> Add Printer</p>
                 <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Esc</kbd> Close modal</p>
+                
+                <div className="font-medium border-b pb-1 mb-1 mt-2">Regions</div>
+                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">1-5</kbd> Switch to US/CA/UK/EU/AU</p>
+                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">A</kbd> Toggle All Regions</p>
+                <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">R</kbd> Refresh data</p>
               </div>
             </TooltipContent>
           </Tooltip>
