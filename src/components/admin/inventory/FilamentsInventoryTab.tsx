@@ -104,12 +104,6 @@ export function FilamentsInventoryTab({
     });
   };
 
-  const handleEditProduct = (id: string) => {
-    toast.info('Edit Product', {
-      description: `Edit product ${id} - Coming soon`,
-    });
-  };
-
   const handleSyncProduct = (id: string) => {
     toast.info('Sync Product', {
       description: `Syncing product ${id} - Coming soon in Part 4`,
@@ -169,6 +163,7 @@ export function FilamentsInventoryTab({
         const products: ProductRow[] = brandFilaments.map((f) => ({
           id: f.id,
           displayName: f.display_name || f.product_title,
+          productTitle: f.product_title,
           material: f.material,
           productUrl: f.product_url,
           msrp: f.msrp,
@@ -190,7 +185,6 @@ export function FilamentsInventoryTab({
             <ProductTable
               products={products}
               type="filament"
-              onEdit={handleEditProduct}
               onSync={handleSyncProduct}
             />
           </BrandSection>

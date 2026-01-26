@@ -105,12 +105,6 @@ export function PrintersInventoryTab({
     });
   };
 
-  const handleEditProduct = (id: string) => {
-    toast.info('Edit Printer', {
-      description: `Edit printer ${id} - Coming soon`,
-    });
-  };
-
   const handleSyncProduct = (id: string) => {
     toast.info('Sync Printer', {
       description: `Syncing printer ${id} - Coming soon in Part 4`,
@@ -171,6 +165,7 @@ export function PrintersInventoryTab({
         const products: ProductRow[] = brandPrinters.map((p) => ({
           id: p.id,
           displayName: p.display_name || p.model_name,
+          modelName: p.model_name,
           productUrl: p.official_product_url,
           msrp: p.msrp_usd,
           currentPrice: p.current_price_usd_store,
@@ -191,7 +186,6 @@ export function PrintersInventoryTab({
             <ProductTable
               products={products}
               type="printer"
-              onEdit={handleEditProduct}
               onSync={handleSyncProduct}
             />
           </BrandSection>
