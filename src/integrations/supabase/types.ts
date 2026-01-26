@@ -8599,6 +8599,20 @@ export type Database = {
           retailer_slug: string
         }[]
       }
+      get_brand_region_coverage: {
+        Args: never
+        Returns: {
+          brand_slug: string
+          display_name: string
+          last_sync_at: string
+          logo_url: string
+          region_code: string
+          success_rate: number
+          total_products: number
+          with_prices: number
+          with_urls: number
+        }[]
+      }
       get_brands_needing_scrape: {
         Args: never
         Returns: {
@@ -8637,10 +8651,34 @@ export type Database = {
         Args: { p_filament_id: string }
         Returns: Json
       }
+      get_missing_regional_urls: {
+        Args: { limit_count?: number }
+        Returns: {
+          brand_slug: string
+          has_regions: string[]
+          missing_regions: string[]
+          product_id: string
+          product_name: string
+          product_type: string
+        }[]
+      }
       get_price_confidence: { Args: { last_verified: string }; Returns: string }
       get_printer_activity_stats: {
         Args: { p_printer_id: string }
         Returns: Json
+      }
+      get_regional_failed_syncs: {
+        Args: never
+        Returns: {
+          brand_slug: string
+          last_sync_at: string
+          last_sync_error: string
+          product_id: string
+          product_name: string
+          product_type: string
+          region_code: string
+          store_url: string
+        }[]
       }
       has_role: {
         Args: {
