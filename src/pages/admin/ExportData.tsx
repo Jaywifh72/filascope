@@ -60,7 +60,7 @@ export default function ExportData() {
 
   useEffect(() => {
     if (filaments && filaments.length > 0) {
-      const headers = ['Brand', 'Product Name', 'Current URL', 'Current Price', 'MSRP'];
+      const headers = ['Brand', 'Product Name', 'Current URL', 'New_Working_URL', 'Current Price', 'MSRP'];
       const rows = [headers.join(',')];
 
       for (const f of filaments) {
@@ -68,6 +68,7 @@ export default function ExportData() {
           escapeCSV(f.vendor),
           escapeCSV(f.product_title),
           escapeCSV(f.product_url),
+          'Verified',
           f.variant_price?.toFixed(2) || '',
           f.msrp?.toFixed(2) || ''
         ];
