@@ -37,26 +37,44 @@ export function FilamentsInventoryTab({
   const { data: filaments, isLoading, error } = useQuery({
     queryKey: ['admin-filaments'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('filaments')
-        .select(`
-          id,
-          product_title,
-          display_name,
-          material,
-          product_url,
-          msrp,
-          variant_price,
-          last_scraped_at,
-          sync_status,
-          last_sync_error,
-          vendor
-        `)
-        .order('vendor')
-        .order('product_title');
+      // Fetch all filaments in batches to bypass 1000-row limit
+      const PAGE_SIZE = 1000;
+      let allFilaments: FilamentRecord[] = [];
+      let page = 0;
+      let hasMore = true;
 
-      if (error) throw error;
-      return data as FilamentRecord[];
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('filaments')
+          .select(`
+            id,
+            product_title,
+            display_name,
+            material,
+            product_url,
+            msrp,
+            variant_price,
+            last_scraped_at,
+            sync_status,
+            last_sync_error,
+            vendor
+          `)
+          .order('vendor')
+          .order('product_title')
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allFilaments = [...allFilaments, ...data];
+          page++;
+          hasMore = data.length === PAGE_SIZE;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allFilaments as FilamentRecord[];
     },
   });
 
