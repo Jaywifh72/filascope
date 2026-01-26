@@ -14,6 +14,10 @@ import {
 } from '@/components/ui/form';
 import type { PrinterWizardFormValues } from '../AddPrinterWizard';
 
+interface PrinterWizardStep6DetailsProps {
+  form: UseFormReturn<PrinterWizardFormValues>;
+}
+
 const COMMON_SPECS = [
   { key: 'Nozzle Size', value: '0.4mm' },
   { key: 'Layer Height', value: '0.05-0.35mm' },
@@ -25,11 +29,7 @@ const COMMON_SPECS = [
   { key: 'Power Supply', value: '350W' },
 ];
 
-interface PrinterWizardStep5Props {
-  form: UseFormReturn<PrinterWizardFormValues>;
-}
-
-export function PrinterWizardStep5({ form }: PrinterWizardStep5Props) {
+export function PrinterWizardStep6Details({ form }: PrinterWizardStep6DetailsProps) {
   const imageUrl = form.watch('image_url');
   const specifications = form.watch('specifications') || {};
 
