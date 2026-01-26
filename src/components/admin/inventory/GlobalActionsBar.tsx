@@ -1,4 +1,5 @@
-import { RefreshCw, Plus, Loader2, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { RefreshCw, Plus, Loader2, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
@@ -7,6 +8,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 import { AdminRegionSelector, AdminCurrencySelector } from './AdminRegionSelector';
 import { RegionSyncSelector } from './RegionSyncSelector';
+import { exportFilamentInventoryCSV } from '@/lib/adminExportUtils';
+import { toast } from 'sonner';
 
 interface GlobalActionsBarProps {
   onSyncFilaments: (regions?: RegionCode[] | null) => void;
@@ -38,6 +41,24 @@ export function GlobalActionsBar({
   showAllRegions,
   onShowAllRegionsChange,
 }: GlobalActionsBarProps) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const result = await exportFilamentInventoryCSV();
+      if (result.success) {
+        toast.success(`Exported ${result.count} filaments to CSV`);
+      } else {
+        toast.error(result.error || 'Export failed');
+      }
+    } catch (err) {
+      toast.error('Export failed');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div 
       className="flex flex-col gap-4 p-4 bg-card border border-border rounded-lg"
@@ -119,6 +140,26 @@ export function GlobalActionsBar({
                 <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">⌘⇧N</kbd>
               </div>
             </TooltipContent>
+          </Tooltip>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                onClick={handleExportCSV} 
+                variant="outline" 
+                size="sm"
+                disabled={isExporting}
+                aria-label="Export filaments to CSV"
+              >
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                Export CSV
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export all filaments to CSV</TooltipContent>
           </Tooltip>
         </div>
 
