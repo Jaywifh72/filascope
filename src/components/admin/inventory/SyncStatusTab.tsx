@@ -1,11 +1,17 @@
 import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrentSyncStatus } from './sync-status/CurrentSyncStatus';
 import { BrandHealthGrid } from './sync-status/BrandHealthGrid';
 import { RecentSyncRuns } from './sync-status/RecentSyncRuns';
 import { FailedProductsList } from './sync-status/FailedProductsList';
+import { RegionalHealthOverview } from './sync-status/RegionalHealthOverview';
+import { BrandRegionMatrix } from './sync-status/BrandRegionMatrix';
+import { RegionalFailedProducts } from './sync-status/RegionalFailedProducts';
+import { MissingRegionalUrlsReport } from './sync-status/MissingRegionalUrlsReport';
 
 export function SyncStatusTab() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<'overview' | 'regional'>('regional');
 
   const handleBrandClick = (brandSlug: string) => {
     setBrandFilter(brandSlug);
@@ -20,17 +26,41 @@ export function SyncStatusTab() {
       {/* Current Sync Status */}
       <CurrentSyncStatus />
 
-      {/* Brand Health Overview */}
-      <BrandHealthGrid onBrandClick={handleBrandClick} />
+      {/* View Mode Toggle */}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional')}>
+        <TabsList>
+          <TabsTrigger value="regional">Regional View</TabsTrigger>
+          <TabsTrigger value="overview">Brand Overview</TabsTrigger>
+        </TabsList>
 
-      {/* Recent Sync Runs */}
-      <RecentSyncRuns 
-        brandFilter={brandFilter} 
-        onClearBrandFilter={handleClearBrandFilter} 
-      />
+        <TabsContent value="regional" className="space-y-6 mt-4">
+          {/* Regional Health Overview */}
+          <RegionalHealthOverview />
 
-      {/* Failed Products */}
-      <FailedProductsList />
+          {/* Brand × Region Matrix */}
+          <BrandRegionMatrix onBrandClick={handleBrandClick} />
+
+          {/* Failed Products by Region */}
+          <RegionalFailedProducts />
+
+          {/* Missing Regional URLs Report */}
+          <MissingRegionalUrlsReport />
+        </TabsContent>
+
+        <TabsContent value="overview" className="space-y-6 mt-4">
+          {/* Brand Health Overview (legacy) */}
+          <BrandHealthGrid onBrandClick={handleBrandClick} />
+
+          {/* Recent Sync Runs */}
+          <RecentSyncRuns 
+            brandFilter={brandFilter} 
+            onClearBrandFilter={handleClearBrandFilter} 
+          />
+
+          {/* Failed Products (legacy) */}
+          <FailedProductsList />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
