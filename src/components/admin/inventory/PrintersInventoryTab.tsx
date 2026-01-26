@@ -38,26 +38,44 @@ export function PrintersInventoryTab({
   const { data: printers, isLoading, error } = useQuery({
     queryKey: ['admin-printers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('printers')
-        .select(`
-          id,
-          model_name,
-          display_name,
-          official_product_url,
-          msrp_usd,
-          current_price_usd_store,
-          prices_last_updated_at,
-          last_sync_status,
-          last_sync_error,
-          printer_brands (
-            brand
-          )
-        `)
-        .order('model_name');
+      // Fetch all printers in batches to bypass 1000-row limit
+      const PAGE_SIZE = 1000;
+      let allPrinters: PrinterRecord[] = [];
+      let page = 0;
+      let hasMore = true;
 
-      if (error) throw error;
-      return data as PrinterRecord[];
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('printers')
+          .select(`
+            id,
+            model_name,
+            display_name,
+            official_product_url,
+            msrp_usd,
+            current_price_usd_store,
+            prices_last_updated_at,
+            last_sync_status,
+            last_sync_error,
+            printer_brands (
+              brand
+            )
+          `)
+          .order('model_name')
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allPrinters = [...allPrinters, ...data];
+          page++;
+          hasMore = data.length === PAGE_SIZE;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allPrinters as PrinterRecord[];
     },
   });
 
