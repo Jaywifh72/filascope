@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { Link2, Loader2 } from 'lucide-react';
+import { Link2, Loader2, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,8 +20,15 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Alert,
+  AlertDescription,
+} from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { detectBrandFromUrl } from '@/lib/brandAutoDetection';
+import { detectRegionFromUrl } from './autoGenerateUrls';
+import { REGIONS } from '@/config/regions';
+import { RegionCode } from '@/types/regional';
 import type { PrinterWizardFormValues } from '../AddPrinterWizard';
 
 interface PrinterWizardStep1Props {
@@ -30,6 +37,7 @@ interface PrinterWizardStep1Props {
 
 export function PrinterWizardStep1({ form }: PrinterWizardStep1Props) {
   const productUrl = form.watch('product_url');
+  const detectedRegion = form.watch('detected_region') as RegionCode | undefined;
 
   // Fetch brands for dropdown - reuse the same brands as filaments
   const { data: brands = [] } = useQuery({
@@ -44,9 +52,10 @@ export function PrinterWizardStep1({ form }: PrinterWizardStep1Props) {
     },
   });
 
-  // Auto-detect brand when URL changes
+  // Auto-detect brand and region when URL changes
   useEffect(() => {
     if (productUrl) {
+      // Detect brand
       const detection = detectBrandFromUrl(productUrl);
       if (detection.slug) {
         form.setValue('vendor', detection.slug);
@@ -54,6 +63,14 @@ export function PrinterWizardStep1({ form }: PrinterWizardStep1Props) {
       if (detection.sourceType) {
         form.setValue('source_type', detection.sourceType);
       }
+      
+      // Detect region
+      const region = detectRegionFromUrl(productUrl);
+      if (region) {
+        form.setValue('detected_region', region);
+      }
+    } else {
+      form.setValue('detected_region', undefined);
     }
   }, [productUrl, form]);
 
@@ -68,6 +85,11 @@ export function PrinterWizardStep1({ form }: PrinterWizardStep1Props) {
     if (detection.sourceType) {
       form.setValue('source_type', detection.sourceType);
     }
+    
+    const region = detectRegionFromUrl(url);
+    if (region) {
+      form.setValue('detected_region', region);
+    }
   };
 
   return (
@@ -75,7 +97,7 @@ export function PrinterWizardStep1({ form }: PrinterWizardStep1Props) {
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Source Information</h3>
         <p className="text-sm text-muted-foreground">
-          Enter the product URL and we'll try to auto-detect the brand.
+          Enter the product URL and we'll try to auto-detect the brand and region.
         </p>
       </div>
 
@@ -110,6 +132,22 @@ export function PrinterWizardStep1({ form }: PrinterWizardStep1Props) {
           </FormItem>
         )}
       />
+
+      {/* Detected Region Badge */}
+      {productUrl && detectedRegion && (
+        <Alert className="bg-muted/50 border-primary/20">
+          <Info className="h-4 w-4" />
+          <AlertDescription className="flex items-center gap-2">
+            <span className="text-xl">{REGIONS[detectedRegion]?.flag}</span>
+            <span>
+              <strong>Detected:</strong> {REGIONS[detectedRegion]?.name} store URL
+            </span>
+            <span className="text-muted-foreground ml-auto text-xs">
+              This will be set as the primary regional URL
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <FormField
         control={form.control}
