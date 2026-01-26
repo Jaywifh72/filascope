@@ -10,6 +10,7 @@ import { FilamentsInventoryTab } from '@/components/admin/inventory/FilamentsInv
 import { PrintersInventoryTab } from '@/components/admin/inventory/PrintersInventoryTab';
 import { SyncStatusTab } from '@/components/admin/inventory/SyncStatusTab';
 import { AddFilamentWizard } from '@/components/admin/inventory/AddFilamentWizard';
+import { AddPrinterWizard } from '@/components/admin/inventory/AddPrinterWizard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -21,6 +22,7 @@ export default function InventoryManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [showAddFilamentWizard, setShowAddFilamentWizard] = useState(false);
+  const [showAddPrinterWizard, setShowAddPrinterWizard] = useState(false);
 
   // Get active tab from URL, default to filaments
   const activeTab = (searchParams.get('tab') as TabValue) || 'filaments';
@@ -60,9 +62,7 @@ export default function InventoryManagement() {
   };
 
   const handleAddPrinter = () => {
-    toast.info('Add Printer', {
-      description: 'Coming soon in Part 3',
-    });
+    setShowAddPrinterWizard(true);
   };
 
   return (
@@ -120,6 +120,11 @@ export default function InventoryManagement() {
         <AddFilamentWizard
           open={showAddFilamentWizard}
           onOpenChange={setShowAddFilamentWizard}
+        />
+
+        <AddPrinterWizard
+          open={showAddPrinterWizard}
+          onOpenChange={setShowAddPrinterWizard}
         />
       </div>
     </AdminLayout>
