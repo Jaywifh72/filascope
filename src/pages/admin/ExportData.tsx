@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Copy, Check, Loader2 } from 'lucide-react';
+import { Copy, Check, Loader2, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,20 @@ export default function ExportData() {
     }
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'filascope_filament_export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('CSV file downloaded');
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-4">
@@ -103,23 +117,33 @@ export default function ExportData() {
               }
             </p>
           </div>
-          <Button 
-            onClick={handleCopy} 
-            disabled={isLoading || !csvContent}
-            variant="default"
-          >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4 mr-2" />
-                Copy to Clipboard
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleDownload} 
+              disabled={isLoading || !csvContent}
+              variant="default"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download CSV
+            </Button>
+            <Button 
+              onClick={handleCopy} 
+              disabled={isLoading || !csvContent}
+              variant="outline"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy to Clipboard
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {isLoading && (
