@@ -11,6 +11,10 @@ interface SyncRequest {
   triggeredBy?: 'admin' | 'scheduled' | 'api';
   dryRun?: boolean;
   limit?: number;
+  // Regional sync options
+  regionCodes?: string[];
+  skipRegions?: string[];
+  useRegionalUrls?: boolean;
 }
 
 interface SyncResponse {
@@ -20,12 +24,20 @@ interface SyncResponse {
   productType: string;
   dryRun: boolean;
   total: number;
+  totalProducts?: number;
+  totalRegionalUrls?: number;
   successful: number;
   failed: number;
   skipped: number;
   priceChanges: number;
   duration_ms: number;
-  errors?: Array<{ productId: string; error: string }>;
+  regionStats?: Record<string, {
+    attempted: number;
+    successful: number;
+    failed: number;
+    priceChanges: number;
+  }>;
+  errors?: Array<{ productId: string; regionCode?: string; error: string }>;
 }
 
 export interface SyncStatus {
@@ -259,12 +271,26 @@ export function usePriceSync() {
     });
   }, [syncMutation]);
 
-  const syncSingle = useCallback((productId: string, productType: 'filament' | 'printer') => {
+  const syncSingle = useCallback((productId: string, productType: 'filament' | 'printer', regionCodes?: string[]) => {
     syncMutation.mutate({
       syncType: 'single',
       productType,
       targetId: productId,
       triggeredBy: 'admin',
+      regionCodes,
+      useRegionalUrls: regionCodes ? true : undefined,
+    });
+  }, [syncMutation]);
+
+  // Helper for syncing a single region
+  const syncRegion = useCallback((productId: string, productType: 'filament' | 'printer', regionCode: string) => {
+    syncMutation.mutate({
+      syncType: 'single',
+      productType,
+      targetId: productId,
+      triggeredBy: 'admin',
+      regionCodes: [regionCode],
+      useRegionalUrls: true,
     });
   }, [syncMutation]);
 
@@ -293,16 +319,24 @@ export function usePriceSync() {
     return ids;
   }, [activeSyncs]);
 
+  // Helper to check if a specific region is syncing
+  const isRegionSyncing = useCallback((productId: string, regionCode: string): boolean => {
+    const regionKey = `${productId}-region-${regionCode}`;
+    return activeSyncs.has(regionKey);
+  }, [activeSyncs]);
+
   return {
     syncAll,
     syncAllFilaments,
     syncAllPrinters,
     syncBrand,
     syncSingle,
+    syncRegion,
     activeSyncs,
     isSyncing: syncMutation.isPending || activeSyncs.size > 0,
     isItemSyncing,
     isBrandSyncing,
+    isRegionSyncing,
     getSyncingIds,
     lastSyncTime,
   };
