@@ -6,25 +6,38 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import { InlineEditableCell } from './InlineEditableCell';
+import { EditProductModal, FilamentProduct, PrinterProduct } from './EditProductModal';
+import { useUpdateFilament, useUpdatePrinter } from '@/hooks/useProductMutations';
 
 export type ProductType = 'filament' | 'printer';
 
 export interface ProductRow {
   id: string;
   displayName: string;
-  material?: string | null; // Only for filaments
+  productTitle?: string; // Original title for filaments
+  modelName?: string; // Original name for printers
+  material?: string | null;
   productUrl?: string | null;
   msrp?: number | null;
   currentPrice?: number | null;
   lastSyncedAt?: string | null;
   syncStatus?: string | null;
   syncError?: string | null;
+  // Extended fields for edit modal
+  diameter?: string | null;
+  weightGrams?: number | null;
+  colorName?: string | null;
+  imageUrl?: string | null;
+  syncEnabled?: boolean;
+  adminNotes?: string | null;
+  buildVolume?: string | null;
+  maxPrintSpeed?: number | null;
 }
 
 interface ProductTableProps {
   products: ProductRow[];
   type: ProductType;
-  onEdit?: (id: string) => void;
   onSync?: (id: string) => void;
   syncingIds?: string[];
 }
@@ -69,12 +82,16 @@ function getSyncStatusIcon(status: string | null | undefined, error: string | nu
 export function ProductTable({
   products,
   type,
-  onEdit,
   onSync,
   syncingIds = [],
 }: ProductTableProps) {
   const [sortField, setSortField] = useState<SortField>('displayName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [editingProduct, setEditingProduct] = useState<FilamentProduct | PrinterProduct | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const updateFilament = useUpdateFilament();
+  const updatePrinter = useUpdatePrinter();
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -131,6 +148,66 @@ export function ProductTable({
     toast.success('URL copied to clipboard');
   };
 
+  const handleEditProduct = (product: ProductRow) => {
+    if (type === 'filament') {
+      const filamentProduct: FilamentProduct = {
+        id: product.id,
+        display_name: product.displayName,
+        product_title: product.productTitle || product.displayName,
+        product_url: product.productUrl || null,
+        msrp: product.msrp || null,
+        variant_price: product.currentPrice || null,
+        material: product.material || null,
+        diameter: product.diameter || null,
+        weight_grams: product.weightGrams || null,
+        color_name: product.colorName || null,
+        image_url: product.imageUrl || null,
+        sync_enabled: product.syncEnabled,
+        admin_notes: product.adminNotes || null,
+      };
+      setEditingProduct(filamentProduct);
+    } else {
+      const printerProduct: PrinterProduct = {
+        id: product.id,
+        display_name: product.displayName,
+        model_name: product.modelName || product.displayName,
+        official_product_url: product.productUrl || null,
+        msrp_usd: product.msrp || null,
+        current_price_usd_store: product.currentPrice || null,
+        image_url: product.imageUrl || null,
+        build_volume: product.buildVolume || null,
+        max_print_speed_mm_s: product.maxPrintSpeed || null,
+        sync_enabled: product.syncEnabled,
+        admin_notes: product.adminNotes || null,
+      };
+      setEditingProduct(printerProduct);
+    }
+    setIsEditModalOpen(true);
+  };
+
+  const handleInlineNameSave = async (id: string, value: string) => {
+    if (!value.trim()) {
+      throw new Error('Display name cannot be empty');
+    }
+    if (type === 'filament') {
+      await updateFilament.mutateAsync({ id, display_name: value.trim() });
+    } else {
+      await updatePrinter.mutateAsync({ id, display_name: value.trim() });
+    }
+  };
+
+  const handleInlineMsrpSave = async (id: string, value: string) => {
+    const numValue = value === '' ? null : parseFloat(value);
+    if (numValue !== null && (isNaN(numValue) || numValue < 0)) {
+      throw new Error('MSRP must be a positive number');
+    }
+    if (type === 'filament') {
+      await updateFilament.mutateAsync({ id, msrp: numValue });
+    } else {
+      await updatePrinter.mutateAsync({ id, msrp_usd: numValue });
+    }
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <ArrowUpDown className="w-3 h-3 ml-1 text-muted-foreground" />;
@@ -161,151 +238,172 @@ export function ProductTable({
   }
 
   return (
-    <div className="relative w-full overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableHeader field="displayName">Display Name</SortableHeader>
-            {type === 'filament' && (
-              <SortableHeader field="material">Material</SortableHeader>
-            )}
-            <TableHead>Product URL</TableHead>
-            <SortableHeader field="msrp">MSRP</SortableHeader>
-            <SortableHeader field="currentPrice">Current Price</SortableHeader>
-            <SortableHeader field="priceDiff">Price Diff</SortableHeader>
-            <SortableHeader field="lastSyncedAt">Last Synced</SortableHeader>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedProducts.map((product) => {
-            const priceDiff = getPriceDiff(product.msrp, product.currentPrice);
-            const stalePrice = isStalePrice(product.lastSyncedAt);
-            const statusInfo = getSyncStatusIcon(product.syncStatus, product.syncError);
-            const StatusIcon = statusInfo.icon;
-            const hasError = product.syncStatus === 'failed' || product.syncStatus === 'error';
-            const isSyncing = syncingIds.includes(product.id);
+    <>
+      <div className="relative w-full overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <SortableHeader field="displayName">Display Name</SortableHeader>
+              {type === 'filament' && (
+                <SortableHeader field="material">Material</SortableHeader>
+              )}
+              <TableHead>Product URL</TableHead>
+              <SortableHeader field="msrp">MSRP</SortableHeader>
+              <SortableHeader field="currentPrice">Current Price</SortableHeader>
+              <SortableHeader field="priceDiff">Price Diff</SortableHeader>
+              <SortableHeader field="lastSyncedAt">Last Synced</SortableHeader>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedProducts.map((product) => {
+              const priceDiff = getPriceDiff(product.msrp, product.currentPrice);
+              const stalePrice = isStalePrice(product.lastSyncedAt);
+              const statusInfo = getSyncStatusIcon(product.syncStatus, product.syncError);
+              const StatusIcon = statusInfo.icon;
+              const hasError = product.syncStatus === 'failed' || product.syncStatus === 'error';
+              const isSyncing = syncingIds.includes(product.id);
+              const isSaving = updateFilament.isPending || updatePrinter.isPending;
 
-            return (
-              <TableRow 
-                key={product.id}
-                className={cn(hasError && 'bg-destructive/5')}
-              >
-                <TableCell className="font-medium max-w-[250px] truncate">
-                  {product.displayName}
-                </TableCell>
-                {type === 'filament' && (
-                  <TableCell className="text-muted-foreground">
-                    {product.material || '—'}
+              return (
+                <TableRow 
+                  key={product.id}
+                  className={cn(hasError && 'bg-destructive/5')}
+                >
+                  <TableCell className="font-medium max-w-[250px]">
+                    <InlineEditableCell
+                      value={product.displayName}
+                      onSave={(value) => handleInlineNameSave(product.id, value)}
+                      validate={(value) => !value.trim() ? 'Name cannot be empty' : null}
+                      disabled={isSaving}
+                    />
                   </TableCell>
-                )}
-                <TableCell>
-                  {product.productUrl ? (
+                  {type === 'filament' && (
+                    <TableCell className="text-muted-foreground">
+                      {product.material || '—'}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    {product.productUrl ? (
+                      <div className="flex items-center gap-1">
+                        <a
+                          href={product.productUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline inline-flex items-center gap-1 max-w-[150px] truncate"
+                        >
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                          <span className="truncate">
+                            {new URL(product.productUrl).hostname.replace('www.', '')}
+                          </span>
+                        </a>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => copyUrl(product.productUrl!)}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    <InlineEditableCell
+                      value={product.msrp}
+                      onSave={(value) => handleInlineMsrpSave(product.id, value)}
+                      type="price"
+                      formatDisplay={(v) => formatPrice(v as number | null)}
+                      disabled={isSaving}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
                     <div className="flex items-center gap-1">
-                      <a
-                        href={product.productUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline inline-flex items-center gap-1 max-w-[150px] truncate"
+                      {formatPrice(product.currentPrice)}
+                      {stalePrice && product.currentPrice != null && (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <AlertTriangle className="w-3 h-3 text-amber-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>Price is stale (&gt;7 days old)</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {priceDiff !== null ? (
+                      <span
+                        className={cn(
+                          'font-mono text-sm',
+                          priceDiff < 0 && 'text-green-600',
+                          priceDiff > 0 && 'text-destructive'
+                        )}
                       >
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                        <span className="truncate">
-                          {new URL(product.productUrl).hostname.replace('www.', '')}
-                        </span>
-                      </a>
+                        {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(1)}%
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {product.lastSyncedAt ? (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          {formatDistanceToNow(new Date(product.lastSyncedAt), { addSuffix: true })}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {format(new Date(product.lastSyncedAt), 'PPpp')}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      '—'
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <StatusIcon className={cn('w-4 h-4', statusInfo.color)} />
+                      </TooltipTrigger>
+                      <TooltipContent>{statusInfo.label}</TooltipContent>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
-                        onClick={() => copyUrl(product.productUrl!)}
+                        className="h-8 w-8"
+                        onClick={() => handleEditProduct(product)}
                       >
-                        <Copy className="w-3 h-3" />
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => onSync?.(product.id)}
+                        disabled={isSyncing}
+                      >
+                        <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
                       </Button>
                     </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="font-mono text-sm">
-                  {formatPrice(product.msrp)}
-                </TableCell>
-                <TableCell className="font-mono text-sm">
-                  <div className="flex items-center gap-1">
-                    {formatPrice(product.currentPrice)}
-                    {stalePrice && product.currentPrice != null && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <AlertTriangle className="w-3 h-3 text-amber-500" />
-                        </TooltipTrigger>
-                        <TooltipContent>Price is stale (&gt;7 days old)</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {priceDiff !== null ? (
-                    <span
-                      className={cn(
-                        'font-mono text-sm',
-                        priceDiff < 0 && 'text-green-600',
-                        priceDiff > 0 && 'text-destructive'
-                      )}
-                    >
-                      {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(1)}%
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {product.lastSyncedAt ? (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        {formatDistanceToNow(new Date(product.lastSyncedAt), { addSuffix: true })}
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {format(new Date(product.lastSyncedAt), 'PPpp')}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    '—'
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <StatusIcon className={cn('w-4 h-4', statusInfo.color)} />
-                    </TooltipTrigger>
-                    <TooltipContent>{statusInfo.label}</TooltipContent>
-                  </Tooltip>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onEdit?.(product.id)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onSync?.(product.id)}
-                      disabled={isSyncing}
-                    >
-                      <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <EditProductModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        product={editingProduct}
+        type={type}
+      />
+    </>
   );
 }
