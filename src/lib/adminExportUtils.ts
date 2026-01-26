@@ -262,3 +262,79 @@ export async function exportRegionalPricesCSV(): Promise<{ success: boolean; cou
     return { success: false, count: 0, error: message };
   }
 }
+
+/**
+ * Export filaments inventory to CSV with Brand, Product, Current URL, Current Price, MSRP
+ */
+export async function exportFilamentInventoryCSV(): Promise<{ success: boolean; count: number; error?: string }> {
+  const PAGE_SIZE = 1000;
+  const allFilaments: Array<{
+    vendor: string | null;
+    product_title: string | null;
+    product_url: string | null;
+    variant_price: number | null;
+    msrp: number | null;
+  }> = [];
+
+  try {
+    let page = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('filaments')
+        .select('vendor, product_title, product_url, variant_price, msrp')
+        .order('vendor', { ascending: true })
+        .order('product_title', { ascending: true })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      if (data && data.length > 0) {
+        allFilaments.push(...data);
+        hasMore = data.length === PAGE_SIZE;
+        page++;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    if (allFilaments.length === 0) {
+      return { success: false, count: 0, error: 'No filaments found in database' };
+    }
+
+    const headers = ['Brand', 'Product', 'Current URL', 'Current Price', 'MSRP'];
+    const csvRows = [headers.join(',')];
+
+    for (const filament of allFilaments) {
+      const row = [
+        escapeCSV(filament.vendor),
+        escapeCSV(filament.product_title),
+        escapeCSV(filament.product_url),
+        filament.variant_price?.toFixed(2) || '',
+        filament.msrp?.toFixed(2) || ''
+      ];
+      csvRows.push(row.join(','));
+    }
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `filament_inventory_${today}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    return { success: true, count: allFilaments.length };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error occurred';
+    return { success: false, count: 0, error: message };
+  }
+}
