@@ -1,321 +1,385 @@
 
 
-# Regional Database Schema - Part 1 Implementation Plan
+# Admin Inventory Management - Part 2: Regional Page Structure
 
 ## Overview
-This migration adds normalized regional URL and pricing tables to support multi-region e-commerce, replacing/augmenting the current denormalized column-based approach.
+This implementation adds regional awareness to the admin inventory management system, allowing administrators to view and manage products with region-specific data (URLs, prices, coverage) without affecting the user-facing region context.
 
-## Current State Analysis
-
-### Already Exists
-| Component | Status |
-|-----------|--------|
-| `brand_regional_stores` | Complete - stores brand-level regional config |
-| `product_regional_slugs` | Exists for filaments only |
-| Filaments: `product_url_*` columns | 5 regional URL columns exist |
-| Filaments: `price_*` columns | 5 regional price columns exist |
-| Filaments: `available_regions` | Array column exists |
-| Printers: `official_store_url_*` | 5 regional URL columns exist |
-| Printers: regional price columns | 12 regional price columns exist (store + Amazon) |
-| `brand_sync_logs` | Sync tracking (no `price_sync_runs` table) |
-
-### What This Migration Adds
-- **Normalized tables** for flexible multi-store per region support
-- **Tracking columns** for verification and sync status
-- **Helper views** for easy querying with regional data included
+## Pre-Check Results
+- `product_regional_urls` table: Exists (empty, ready for data)
+- `product_regional_prices` table: Exists (empty, ready for data)
+- `filaments.primary_region` column: Exists
 
 ---
 
-## Database Migration Steps
+## Implementation Steps
 
-### Step 1: Create `product_regional_urls` Table
+### Step 1: Create AdminRegionContext
 
-```sql
-CREATE TABLE public.product_regional_urls (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id uuid NOT NULL,
-  product_type text NOT NULL,
-  region_code text NOT NULL,
-  store_url text NOT NULL,
-  store_name text,
-  currency_code text NOT NULL DEFAULT 'USD',
-  is_primary boolean DEFAULT false,
-  is_verified boolean DEFAULT false,
-  last_verified_at timestamptz,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  
-  CONSTRAINT product_regional_urls_type_check 
-    CHECK (product_type IN ('filament', 'printer')),
-  CONSTRAINT product_regional_urls_region_check 
-    CHECK (region_code IN ('US', 'CA', 'UK', 'EU', 'AU', 'JP', 'CN')),
-  CONSTRAINT product_regional_urls_unique 
-    UNIQUE (product_id, product_type, region_code, store_url)
-);
+**File:** `src/contexts/AdminRegionContext.tsx`
+
+A separate context specifically for admin region/currency viewing preferences, isolated from the user-facing `RegionContext`.
+
+```text
+AdminRegionContext
+├── selectedRegion: RegionCode      (which region's data to display)
+├── setSelectedRegion()             (change viewing region)
+├── viewCurrency: CurrencyCode      (currency for price display)
+├── setViewCurrency()               (override currency independently)
+├── showAllRegions: boolean         (toggle to see all regional data at once)
+├── setShowAllRegions()             
+└── formatAdminPrice()              (format prices in the selected currency)
 ```
 
-**Indexes:**
-- `(product_id, product_type)` - Primary lookup
-- `(region_code)` - Filter by region
-- `(is_verified)` - Find unverified URLs
-
-### Step 2: Create `product_regional_prices` Table
-
-```sql
-CREATE TABLE public.product_regional_prices (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id uuid NOT NULL,
-  product_type text NOT NULL,
-  region_code text NOT NULL,
-  currency_code text NOT NULL,
-  current_price numeric,
-  compare_at_price numeric,
-  msrp numeric,
-  price_source text,
-  last_sync_at timestamptz,
-  last_sync_status text,
-  last_sync_error text,
-  store_url_id uuid REFERENCES product_regional_urls(id) ON DELETE SET NULL,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  
-  CONSTRAINT product_regional_prices_type_check 
-    CHECK (product_type IN ('filament', 'printer')),
-  CONSTRAINT product_regional_prices_region_check 
-    CHECK (region_code IN ('US', 'CA', 'UK', 'EU', 'AU', 'JP', 'CN')),
-  CONSTRAINT product_regional_prices_unique 
-    UNIQUE (product_id, product_type, region_code)
-);
-```
-
-### Step 3: Add Columns to `filaments` Table
-
-```sql
-ALTER TABLE filaments 
-  ADD COLUMN IF NOT EXISTS primary_region text DEFAULT 'US',
-  ADD COLUMN IF NOT EXISTS has_regional_urls boolean DEFAULT false;
--- Note: available_regions already exists as text[]
-```
-
-### Step 4: Add Columns to `printers` Table
-
-```sql
-ALTER TABLE printers 
-  ADD COLUMN IF NOT EXISTS primary_region text DEFAULT 'US',
-  ADD COLUMN IF NOT EXISTS has_regional_urls boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS regional_availability text[];
-```
-
-### Step 5: Add Regional Columns to `brand_sync_logs`
-
-```sql
-ALTER TABLE brand_sync_logs
-  ADD COLUMN IF NOT EXISTS region_code text,
-  ADD COLUMN IF NOT EXISTS regions_synced text[];
-```
-
-### Step 6: Create Helper View for Filaments
-
-```sql
-CREATE OR REPLACE VIEW filaments_with_regional AS
-SELECT 
-  f.*,
-  COALESCE(
-    (SELECT jsonb_agg(jsonb_build_object(
-      'region', pru.region_code,
-      'url', pru.store_url,
-      'storeName', pru.store_name,
-      'isVerified', pru.is_verified,
-      'isPrimary', pru.is_primary
-    ))
-    FROM product_regional_urls pru 
-    WHERE pru.product_id = f.id AND pru.product_type = 'filament'),
-    '[]'::jsonb
-  ) as regional_urls,
-  COALESCE(
-    (SELECT jsonb_agg(jsonb_build_object(
-      'region', prp.region_code,
-      'price', prp.current_price,
-      'currency', prp.currency_code,
-      'lastSync', prp.last_sync_at,
-      'status', prp.last_sync_status
-    ))
-    FROM product_regional_prices prp 
-    WHERE prp.product_id = f.id AND prp.product_type = 'filament'),
-    '[]'::jsonb
-  ) as regional_prices
-FROM filaments f;
-```
-
-### Step 7: Create Helper View for Printers
-
-```sql
-CREATE OR REPLACE VIEW printers_with_regional AS
-SELECT 
-  p.*,
-  COALESCE(
-    (SELECT jsonb_agg(jsonb_build_object(
-      'region', pru.region_code,
-      'url', pru.store_url,
-      'storeName', pru.store_name,
-      'isVerified', pru.is_verified,
-      'isPrimary', pru.is_primary
-    ))
-    FROM product_regional_urls pru 
-    WHERE pru.product_id = p.id AND pru.product_type = 'printer'),
-    '[]'::jsonb
-  ) as regional_urls,
-  COALESCE(
-    (SELECT jsonb_agg(jsonb_build_object(
-      'region', prp.region_code,
-      'price', prp.current_price,
-      'currency', prp.currency_code,
-      'lastSync', prp.last_sync_at,
-      'status', prp.last_sync_status
-    ))
-    FROM product_regional_prices prp 
-    WHERE prp.product_id = p.id AND prp.product_type = 'printer'),
-    '[]'::jsonb
-  ) as regional_prices
-FROM printers p;
-```
-
-### Step 8: RLS Policies
-
-```sql
--- product_regional_urls
-ALTER TABLE product_regional_urls ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read regional URLs"
-  ON product_regional_urls FOR SELECT USING (true);
-
-CREATE POLICY "Service role manages regional URLs"
-  ON product_regional_urls FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-
--- product_regional_prices
-ALTER TABLE product_regional_prices ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read regional prices"
-  ON product_regional_prices FOR SELECT USING (true);
-
-CREATE POLICY "Service role manages regional prices"
-  ON product_regional_prices FOR ALL TO service_role
-  USING (true) WITH CHECK (true);
-```
-
-### Step 9: Auto-Update Trigger
-
-```sql
-CREATE OR REPLACE FUNCTION update_regional_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_product_regional_urls_timestamp
-  BEFORE UPDATE ON product_regional_urls
-  FOR EACH ROW EXECUTE FUNCTION update_regional_timestamp();
-
-CREATE TRIGGER update_product_regional_prices_timestamp
-  BEFORE UPDATE ON product_regional_prices
-  FOR EACH ROW EXECUTE FUNCTION update_regional_timestamp();
-```
+**Key Features:**
+- Persists to localStorage under a separate key (`filascope_admin_region_prefs`)
+- Does NOT sync to URL or affect user preferences
+- Defaults to 'US' / 'USD'
+- Provides utility for formatting prices in the admin view currency
 
 ---
 
-## TypeScript Types Update
+### Step 2: Create AdminRegionSelector Component
 
-After migration, the generated types will include:
+**File:** `src/components/admin/inventory/AdminRegionSelector.tsx`
 
+Dropdown selector for admin region viewing preference with flag icons.
+
+**Props:**
 ```typescript
-interface ProductRegionalUrl {
-  id: string;
-  product_id: string;
-  product_type: 'filament' | 'printer';
-  region_code: 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN';
-  store_url: string;
-  store_name: string | null;
-  currency_code: string;
-  is_primary: boolean;
-  is_verified: boolean;
-  last_verified_at: string | null;
-  created_at: string;
-  updated_at: string;
+interface AdminRegionSelectorProps {
+  value: RegionCode;
+  onChange: (region: RegionCode) => void;
+  showFlags?: boolean;        // default: true
+  size?: 'sm' | 'default';
 }
+```
 
-interface ProductRegionalPrice {
-  id: string;
-  product_id: string;
-  product_type: 'filament' | 'printer';
-  region_code: string;
-  currency_code: string;
-  current_price: number | null;
-  compare_at_price: number | null;
-  msrp: number | null;
-  price_source: string | null;
-  last_sync_at: string | null;
-  last_sync_status: string | null;
-  last_sync_error: string | null;
-  store_url_id: string | null;
-  created_at: string;
-  updated_at: string;
+**Design:**
+```text
+┌───────────────────────┐
+│ 🇺🇸 United States  ▼  │
+└───────────────────────┘
+       │
+       ▼
+┌───────────────────────┐
+│ 🇺🇸 United States  ✓  │
+│ 🇨🇦 Canada            │
+│ 🇬🇧 United Kingdom    │
+│ 🇪🇺 Europe            │
+│ 🇦🇺 Australia         │
+│ 🇯🇵 Japan             │
+│ 🇨🇳 China             │
+└───────────────────────┘
+```
+
+Uses the existing `DropdownMenu` component pattern from `RegionSelector.tsx`.
+
+---
+
+### Step 3: Create RegionalCoverageBadges Component
+
+**File:** `src/components/admin/inventory/RegionalCoverageBadges.tsx`
+
+Visual indicator showing which regions have configured URLs/prices.
+
+**Props:**
+```typescript
+interface RegionalCoverageBadgesProps {
+  availableRegions: RegionCode[];      // Regions with data
+  allRegions?: RegionCode[];           // All possible regions (defaults to main 5)
+  compact?: boolean;                   // Smaller badges for table cells
+  showLabels?: boolean;                // Show region code text
+}
+```
+
+**Display Modes:**
+
+Full mode (for brand headers):
+```text
+🇺🇸 US ✓  🇨🇦 CA ✓  🇪🇺 EU ✓  🇬🇧 UK ✗  🇦🇺 AU ✗
+```
+
+Compact mode (for table cells):
+```text
+🇺🇸 🇨🇦 🇪🇺 (3/5)
+```
+
+**Styling:**
+- Available regions: Green check, full opacity
+- Missing regions: Gray X, reduced opacity (50%)
+- Hover tooltip shows "Available in: US, CA, EU" or "Not configured: UK, AU"
+
+---
+
+### Step 4: Create RegionalFilters Component
+
+**File:** `src/components/admin/inventory/RegionalFilters.tsx`
+
+Filter controls for regional-specific product queries.
+
+**Props:**
+```typescript
+interface RegionalFiltersProps {
+  hasRegionalUrl: RegionCode | 'any' | null;
+  onHasRegionalUrlChange: (value: RegionCode | 'any' | null) => void;
+  missingRegionalUrls: boolean;
+  onMissingRegionalUrlsChange: (value: boolean) => void;
+  priceMismatch: boolean;
+  onPriceMismatchChange: (value: boolean) => void;
+  compact?: boolean;
+}
+```
+
+**Filter Options:**
+```text
+┌─ Regional Filters ─────────────────────────────────┐
+│ Has URL in: [All ▼] [US] [CA] [EU] [UK] [AU]       │
+│ ☐ Missing Regional URLs   ☐ Price Mismatch >20%   │
+└────────────────────────────────────────────────────┘
+```
+
+- "Has URL in [Region]": Show only products with a URL for that region
+- "Missing Regional URLs": Products where `has_regional_urls = false` or missing entries
+- "Price Mismatch": Products where regional prices differ by >20% from base
+
+---
+
+### Step 5: Update GlobalActionsBar
+
+**File:** `src/components/admin/inventory/GlobalActionsBar.tsx`
+
+Add regional controls to the actions bar.
+
+**New Section Layout:**
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│ [Add Filament] [Add Printer] [Sync All Filaments] [Sync All Printers]│
+│                                                                      │
+│ View: [🇺🇸 US ▼]   Currency: [USD ▼]   ☐ Show All Regions          │
+│                                                   Last sync: 2h ago  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**New Props:**
+```typescript
+interface GlobalActionsBarProps {
+  // Existing props...
+  
+  // New regional props
+  selectedRegion: RegionCode;
+  onRegionChange: (region: RegionCode) => void;
+  viewCurrency: CurrencyCode;
+  onCurrencyChange: (currency: CurrencyCode) => void;
+  showAllRegions: boolean;
+  onShowAllRegionsChange: (show: boolean) => void;
 }
 ```
 
 ---
 
-## Migration Considerations
+### Step 6: Update SearchAndFilterBar
 
-### Existing Data Compatibility
-- The new tables will coexist with existing denormalized columns
-- Existing `product_url_*` and `price_*` columns remain functional
-- Future migration can populate new tables from existing columns
+**File:** `src/components/admin/inventory/SearchAndFilterBar.tsx`
 
-### Relationship to `product_regional_slugs`
-- Existing table handles slug-to-region mapping for URL construction
-- New `product_regional_urls` stores full URLs directly
-- Both can coexist - slugs for URL generation, URLs for direct storage
+Integrate regional filters into the existing filter bar.
 
-### Sync Tracking Enhancement
-- Adding `region_code` to `brand_sync_logs` enables per-region sync tracking
-- `regions_synced` array captures which regions were updated in a sync run
+**Updated Layout:**
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│ 🔍 Search...           Brand: [All ▼]    Regional: [Has URL ▼]      │
+│                                          ☐ Missing URLs             │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**New Props:**
+```typescript
+interface SearchAndFilterBarProps {
+  // Existing props...
+  
+  // New regional filter props
+  regionalUrlFilter: RegionCode | 'any' | null;
+  onRegionalUrlFilterChange: (value: RegionCode | 'any' | null) => void;
+  showMissingUrls: boolean;
+  onShowMissingUrlsChange: (value: boolean) => void;
+}
+```
+
+---
+
+### Step 7: Update BrandSection Header
+
+**File:** `src/components/admin/inventory/BrandSection.tsx`
+
+Add regional coverage display and region-specific sync controls.
+
+**Updated Layout:**
+```text
+┌─ Creality (24 products) ───────────────────────────────────────────┐
+│ Coverage: 🇺🇸 ✓ 🇨🇦 ✓ 🇪🇺 ✓ 🇬🇧 ✗ 🇦🇺 ✗                            │
+│                                     [Sync Brand] [Sync All Regions]│
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**New Props:**
+```typescript
+interface BrandSectionProps {
+  // Existing props...
+  
+  regionalCoverage?: RegionCode[];      // Regions this brand has URLs for
+  onSyncBrandAllRegions?: () => void;   // Sync all regions for brand
+}
+```
+
+---
+
+### Step 8: Update InventoryManagement Page
+
+**File:** `src/pages/admin/InventoryManagement.tsx`
+
+Wrap page content in `AdminRegionProvider` and pass regional state to children.
+
+**Changes:**
+1. Import and wrap with `AdminRegionProvider`
+2. Add regional filter state variables
+3. Pass regional props to `GlobalActionsBar` and `SearchAndFilterBar`
+4. Pass selectedRegion to inventory tabs for data fetching
+
+---
+
+### Step 9: Update FilamentsInventoryTab
+
+**File:** `src/components/admin/inventory/FilamentsInventoryTab.tsx`
+
+Update data fetching to include regional information.
+
+**Query Changes:**
+```typescript
+// Add to select clause:
+.select(`
+  id,
+  product_title,
+  display_name,
+  // ... existing fields
+  primary_region,
+  has_regional_urls,
+  available_regions
+`)
+
+// For regional coverage per brand, aggregate:
+// COUNT products where has_regional_urls = true
+```
+
+**New Props:**
+```typescript
+interface FilamentsInventoryTabProps {
+  searchTerm: string;
+  selectedBrand: string;
+  selectedRegion: RegionCode;        // From AdminRegionContext
+  regionalUrlFilter: RegionCode | 'any' | null;
+  showMissingUrls: boolean;
+}
+```
+
+---
+
+### Step 10: Update PrintersInventoryTab
+
+**File:** `src/components/admin/inventory/PrintersInventoryTab.tsx`
+
+Mirror changes from FilamentsInventoryTab for printer data.
+
+---
+
+## File Summary
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/contexts/AdminRegionContext.tsx` | Create | Admin-specific region context |
+| `src/components/admin/inventory/AdminRegionSelector.tsx` | Create | Region dropdown for admin |
+| `src/components/admin/inventory/RegionalCoverageBadges.tsx` | Create | Visual coverage indicators |
+| `src/components/admin/inventory/RegionalFilters.tsx` | Create | Filter controls for regional data |
+| `src/components/admin/inventory/GlobalActionsBar.tsx` | Update | Add regional controls |
+| `src/components/admin/inventory/SearchAndFilterBar.tsx` | Update | Add regional filter options |
+| `src/components/admin/inventory/BrandSection.tsx` | Update | Add coverage badges and sync buttons |
+| `src/pages/admin/InventoryManagement.tsx` | Update | Integrate AdminRegionContext |
+| `src/components/admin/inventory/FilamentsInventoryTab.tsx` | Update | Add regional data fetching |
+| `src/components/admin/inventory/PrintersInventoryTab.tsx` | Update | Add regional data fetching |
 
 ---
 
 ## Technical Details
 
-### Table Relationships
-```text
-filaments (id) ----< product_regional_urls (product_id)
-                         |
-                         v
-                    product_regional_prices (store_url_id)
+### AdminRegionContext Implementation
+
+```typescript
+interface AdminRegionContextType {
+  // Current viewing selections
+  selectedRegion: RegionCode;
+  viewCurrency: CurrencyCode;
+  showAllRegions: boolean;
+  
+  // Setters
+  setSelectedRegion: (r: RegionCode) => void;
+  setViewCurrency: (c: CurrencyCode) => void;
+  setShowAllRegions: (b: boolean) => void;
+  
+  // Utilities
+  formatAdminPrice: (amount: number, sourceCurrency?: CurrencyCode) => string;
+  regionConfig: RegionConfig;
+}
 ```
 
-### Supported Regions and Currencies
-| Region | Currency | Notes |
-|--------|----------|-------|
-| US | USD | Primary/default region |
-| CA | CAD | Canada |
-| UK | GBP | United Kingdom |
-| EU | EUR | European Union |
-| AU | AUD | Australia |
-| JP | JPY | Japan |
-| CN | CNY | China (new addition) |
+**Storage Key:** `filascope_admin_region_prefs`
+
+**Default Values:**
+- `selectedRegion`: 'US'
+- `viewCurrency`: 'USD'
+- `showAllRegions`: false
+
+### Regional Filter Logic
+
+For "Has URL in [Region]" filter:
+```sql
+-- Query product_regional_urls for matching products
+SELECT DISTINCT product_id 
+FROM product_regional_urls 
+WHERE product_type = 'filament' 
+  AND region_code = 'CA'
+  AND is_verified = true
+```
+
+For "Missing Regional URLs" filter:
+```sql
+-- Products where has_regional_urls is false or null
+WHERE has_regional_urls IS NOT TRUE
+```
+
+### Coverage Calculation Per Brand
+
+Query to get regional coverage for a brand:
+```sql
+SELECT 
+  region_code,
+  COUNT(DISTINCT product_id) as product_count
+FROM product_regional_urls
+WHERE product_type = 'filament'
+  AND product_id IN (SELECT id FROM filaments WHERE vendor = 'Creality')
+GROUP BY region_code
+```
 
 ---
 
-## Verification After Migration
+## Verification Checklist
 
-- [ ] `product_regional_urls` table exists with correct constraints
-- [ ] `product_regional_prices` table exists with correct constraints  
-- [ ] `filaments` has `primary_region` and `has_regional_urls` columns
-- [ ] `printers` has `primary_region`, `has_regional_urls`, and `regional_availability` columns
-- [ ] `brand_sync_logs` has `region_code` and `regions_synced` columns
-- [ ] Views `filaments_with_regional` and `printers_with_regional` work
-- [ ] RLS policies allow public read, service role write
-- [ ] Supabase types regenerated successfully
+After implementation:
+- [ ] AdminRegionContext is created and provides region/currency state
+- [ ] Region selector appears in GlobalActionsBar and persists selection
+- [ ] Currency selector updates price display format
+- [ ] "Show All Regions" toggle is functional
+- [ ] Regional coverage badges appear on BrandSection headers
+- [ ] Regional filter dropdown shows in SearchAndFilterBar
+- [ ] "Missing Regional URLs" filter works correctly
+- [ ] Region selection survives page refresh (localStorage)
+- [ ] Tabs receive and respect selectedRegion prop
 
