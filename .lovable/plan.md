@@ -1,372 +1,359 @@
 
-
-# Admin Inventory Management - Part 5: Add Filament Wizard
+# Admin Inventory Management - Part 7: Price Sync Edge Function
 
 ## Pre-Check Verification
 
-Part 4 has been successfully implemented:
-- **InlineEditableCell**: Fully functional with double-click editing, Enter/Escape keys, validation
-- **EditProductModal**: Complete form with react-hook-form + zod validation, unsaved changes protection
-- **useProductMutations**: Optimistic updates with proper cache invalidation
+Based on my exploration, the filament and printer wizards from Parts 5 & 6 have been successfully implemented:
+- `AddFilamentWizard.tsx` with 5 steps and `useCreateFilament` hook
+- `AddPrinterWizard.tsx` with 6 steps and `useCreatePrinter` hook
+- Both integrated into `InventoryManagement.tsx` via `GlobalActionsBar.tsx`
 
 ## Overview
 
-Create a 5-step wizard modal for adding new filaments to the inventory. The wizard guides admins through entering all required information with validation at each step, smart defaults, and URL-based auto-detection of brand/vendor.
+Create a new `sync-prices` Edge Function that handles price syncing for both filaments and printers. This function will:
+1. Support three sync modes: all, brand, single
+2. Use brand-specific extraction strategies from `automated_brands` table
+3. Track sync runs in `brand_sync_logs` table
+4. Log individual extractions to `price_extraction_logs` table
+5. Handle rate limiting and graceful error recovery
 
 ## Architecture
 
+The function leverages the existing `get-current-price` Edge Function for the actual price extraction logic, reusing its:
+- Shopify JSON endpoint extraction
+- Firecrawl-based HTML scraping
+- Brand config lookup from `automated_brands`
+- Extraction logging to `price_extraction_logs`
+
 ```text
-AddFilamentWizard.tsx (Main modal with step state)
-├── WizardStepIndicator.tsx (Progress bar)
-├── FilamentWizardStep1.tsx (Source Information)
-├── FilamentWizardStep2.tsx (Basic Information)
-├── FilamentWizardStep3.tsx (Pricing)
-├── FilamentWizardStep4.tsx (Details)
-└── FilamentWizardStep5.tsx (Review & Create)
+sync-prices/index.ts
+├── Creates sync run record (brand_sync_logs)
+├── Queries products based on syncType
+├── For each product:
+│   ├── Calls get-current-price or inline extraction
+│   ├── Updates filaments/printers table with new price
+│   └── Logs to price_extraction_logs
+└── Updates sync run with final counts
 ```
 
 ## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/components/admin/inventory/AddFilamentWizard.tsx` | Main wizard modal with step navigation and state management |
-| `src/components/admin/inventory/wizard/WizardStepIndicator.tsx` | Step progress indicator component |
-| `src/components/admin/inventory/wizard/FilamentWizardStep1.tsx` | Source URL and brand selection |
-| `src/components/admin/inventory/wizard/FilamentWizardStep2.tsx` | Basic info (name, material, diameter, weight, color) |
-| `src/components/admin/inventory/wizard/FilamentWizardStep3.tsx` | Pricing (MSRP, current price, compare at) |
-| `src/components/admin/inventory/wizard/FilamentWizardStep4.tsx` | Additional details (description, image, temperatures, notes) |
-| `src/components/admin/inventory/wizard/FilamentWizardStep5.tsx` | Review summary and create buttons |
-| `src/hooks/useCreateFilament.ts` | Mutation hook for creating new filament |
-| `src/lib/brandAutoDetection.ts` | URL-to-brand detection logic |
+| `supabase/functions/sync-prices/index.ts` | Main price sync Edge Function |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/pages/admin/InventoryManagement.tsx` | Add wizard open state, pass to GlobalActionsBar |
-| `src/components/admin/inventory/GlobalActionsBar.tsx` | Remove placeholder, trigger actual wizard |
+| `supabase/config.toml` | Add `[functions.sync-prices]` config with `verify_jwt = false` |
 
 ---
 
-## Component Specifications
+## Edge Function Specification
 
-### 1. AddFilamentWizard.tsx
+### Request Interface
 
-Main wizard container with:
-- 5-step navigation (currentStep state)
-- Form state preserved across steps using single react-hook-form
-- Session storage persistence for resume capability
-- Unsaved changes protection on close
-- Keyboard navigation (Escape to close with confirm)
-
-Props:
 ```typescript
-interface AddFilamentWizardProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: (filamentId: string) => void;
+interface SyncRequest {
+  syncType: 'all' | 'brand' | 'single';
+  productType: 'filament' | 'printer';
+  targetId?: string;      // For 'single' - the product ID
+  brandSlug?: string;     // For 'brand' - the vendor/brand slug
+  triggeredBy?: 'admin' | 'scheduled' | 'api';
+  dryRun?: boolean;       // If true, don't update prices, just log what would happen
 }
 ```
 
-Form Schema (Zod):
-```typescript
-const wizardSchema = z.object({
-  // Step 1: Source
-  product_url: z.string().url('Invalid URL').min(1, 'Product URL is required'),
-  vendor: z.string().min(1, 'Brand/Vendor is required'),
-  source_type: z.enum(['manufacturer', 'retailer', 'amazon', 'other']),
-  
-  // Step 2: Basic Info
-  product_title: z.string().min(1, 'Display name is required').max(255),
-  material: z.string().optional(),
-  diameter: z.enum(['1.75', '2.85']).default('1.75'),
-  net_weight_g: z.coerce.number().min(0).default(1000),
-  color_name: z.string().max(100).optional(),
-  color_hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().or(z.literal('')),
-  
-  // Step 3: Pricing
-  msrp: z.coerce.number().min(0, 'MSRP must be positive'),
-  variant_price: z.coerce.number().min(0).optional(),
-  variant_compare_at_price: z.coerce.number().min(0).optional(),
-  
-  // Step 4: Details
-  featured_image: z.string().url().optional().or(z.literal('')),
-  nozzle_temp_min_c: z.coerce.number().min(150).max(500).optional(),
-  nozzle_temp_max_c: z.coerce.number().min(150).max(500).optional(),
-  bed_temp_min_c: z.coerce.number().min(0).max(150).optional(),
-  bed_temp_max_c: z.coerce.number().min(0).max(150).optional(),
-  admin_notes: z.string().max(1000).optional(),
-});
-```
-
-### 2. WizardStepIndicator.tsx
-
-Visual progress component showing:
-- 5 numbered circles connected by lines
-- Current step highlighted with primary color
-- Completed steps show checkmarks
-- Step labels below circles
-
-```text
-  (1)───(2)───(3)───(4)───(5)
-Source Basic Pricing Details Review
-```
-
-### 3. FilamentWizardStep1.tsx (Source Information)
-
-Fields:
-- **Product URL** (required): Text input with URL validation
-- **Import from URL** button: Shows loading state, triggers URL parsing
-- **Brand/Vendor** dropdown: Auto-populated from `automated_brands` table, auto-detected from URL
-- **Source Type** radio: Manufacturer | Retailer | Amazon | Other
-
-Auto-detection logic (in brandAutoDetection.ts):
-```typescript
-const URL_BRAND_PATTERNS = [
-  { pattern: /store\.creality\.com/i, brand: 'Creality', slug: 'creality' },
-  { pattern: /bambulab\.com/i, brand: 'Bambu Lab', slug: 'bambu-lab' },
-  { pattern: /us\.polymaker\.com|polymaker\.com/i, brand: 'Polymaker', slug: 'polymaker' },
-  { pattern: /store\.anycubic\.com/i, brand: 'Anycubic', slug: 'anycubic' },
-  { pattern: /elegoo\.com/i, brand: 'Elegoo', slug: 'elegoo' },
-  { pattern: /esun3d\.com/i, brand: 'eSun', slug: 'esun' },
-  { pattern: /prusa3d\.com/i, brand: 'Prusament', slug: 'prusament' },
-  { pattern: /colorfabb\.com/i, brand: 'ColorFabb', slug: 'colorfabb' },
-  { pattern: /ninjatek\.com/i, brand: 'NinjaTek', slug: 'ninjatek' },
-  { pattern: /sunlu\.com/i, brand: 'Sunlu', slug: 'sunlu' },
-  { pattern: /amazon\.(com|co\.uk|de|ca|au)/i, brand: null, sourceType: 'amazon' },
-];
-```
-
-### 4. FilamentWizardStep2.tsx (Basic Information)
-
-Fields:
-- **Display Name** (required): Pre-filled if URL import worked
-- **Material** dropdown: PLA, PLA+, ABS, PETG, TPU, ASA, Nylon, PC, PVA, HIPS, CF-PLA, CF-PETG, CF-Nylon, GF-PLA, GF-PETG, Silk PLA, Matte PLA, Wood, Metal, Other
-- **Diameter** radio: 1.75mm (default) | 2.85mm
-- **Weight** number input: Default 1000g
-- **Color Name** text: e.g., "Matte Black"
-- **Color Hex** picker: Optional color input with preview swatch
-
-### 5. FilamentWizardStep3.tsx (Pricing)
-
-Fields:
-- **MSRP** (required): Number with $ prefix, validation for positive
-- **Current Price** (optional): Number with $ prefix, for manual override
-- **Compare At Price** (optional): Original/strikethrough price
-
-Visual feedback:
-- Shows price difference percentage if both MSRP and current price entered
-- Currency note: "All prices in USD"
-
-### 6. FilamentWizardStep4.tsx (Details)
-
-Fields:
-- **Image URL**: URL input with live preview thumbnail
-- **Print Temperature Range**: Two number inputs (min/max) with "°C" suffix
-- **Bed Temperature Range**: Two number inputs (min/max) with "°C" suffix
-- **Admin Notes**: Textarea (max 1000 chars)
-
-Temperature validation:
-- Nozzle temp: 150-500°C, min must be less than max
-- Bed temp: 0-150°C, min must be less than max
-
-### 7. FilamentWizardStep5.tsx (Review & Create)
-
-Summary display:
-- Card sections for each step's data
-- "Edit" buttons to jump back to specific steps
-- Image preview if provided
-- Validation status indicators
-
-Actions:
-- **Create Filament** button: Creates and closes wizard
-- **Create & Add Another** button: Creates and resets wizard for next entry
-
----
-
-## Hook: useCreateFilament
+### Response Interface
 
 ```typescript
-// src/hooks/useCreateFilament.ts
-export function useCreateFilament() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: FilamentInsertData) => {
-      // Map form data to database columns
-      const insertData = {
-        product_title: data.product_title,
-        display_name: data.product_title, // Same as title for new products
-        product_url: data.product_url,
-        vendor: data.vendor,
-        material: data.material,
-        diameter_nominal_mm: parseFloat(data.diameter),
-        net_weight_g: data.net_weight_g,
-        color_name: data.color_name,
-        color_hex: data.color_hex || null,
-        msrp: data.msrp,
-        variant_price: data.variant_price || null,
-        variant_compare_at_price: data.variant_compare_at_price || null,
-        featured_image: data.featured_image || null,
-        nozzle_temp_min_c: data.nozzle_temp_min_c || null,
-        nozzle_temp_max_c: data.nozzle_temp_max_c || null,
-        bed_temp_min_c: data.bed_temp_min_c || null,
-        bed_temp_max_c: data.bed_temp_max_c || null,
-        admin_notes: data.admin_notes || null,
-        sync_enabled: true,
-        auto_created: false,
-      };
-      
-      const { data: result, error } = await supabase
-        .from('filaments')
-        .insert(insertData)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      return result;
-    },
-    onSuccess: (result) => {
-      toast.success('Filament created successfully', {
-        description: result.product_title,
-      });
-    },
-    onError: (err) => {
-      toast.error('Failed to create filament', {
-        description: err instanceof Error ? err.message : 'Unknown error',
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-filaments'] });
-      queryClient.invalidateQueries({ queryKey: ['filaments'] });
-    },
-  });
+interface SyncResponse {
+  success: boolean;
+  syncRunId: string;
+  syncType: string;
+  productType: string;
+  dryRun: boolean;
+  total: number;
+  successful: number;
+  failed: number;
+  skipped: number;
+  priceChanges: number;
+  duration_ms: number;
+  errors?: Array<{ productId: string; error: string }>;
 }
 ```
 
 ---
 
-## Session Storage Persistence
+## Extraction Strategy Selection
 
-The wizard will persist form state to sessionStorage to allow resuming:
+The function will determine extraction strategy based on `automated_brands.extraction_method` and `platform_type`:
+
+| Platform Type | Extraction Method |
+|---------------|-------------------|
+| `shopify` | Try Shopify `.json` endpoint first, fallback to Firecrawl |
+| `woocommerce` | Use Firecrawl HTML scraping |
+| `firecrawl` | Direct Firecrawl scraping |
+| `amazon` | Skip (Amazon prices require different API) |
+| `custom` | Skip or manual-only |
+
+### Extraction Logic
 
 ```typescript
-const WIZARD_STORAGE_KEY = 'add-filament-wizard-progress';
-const STORAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+async function extractPrice(
+  productUrl: string,
+  brandConfig: BrandConfig
+): Promise<{ price: number | null; compareAtPrice: number | null; error?: string }> {
+  
+  // Strategy 1: Shopify JSON (fastest, most reliable for Shopify stores)
+  if (brandConfig.platform_type === 'shopify') {
+    const jsonResult = await tryShopifyJson(productUrl);
+    if (jsonResult.success) return jsonResult;
+  }
+  
+  // Strategy 2: Firecrawl HTML scraping (fallback)
+  if (['shopify', 'woocommerce', 'firecrawl'].includes(brandConfig.platform_type)) {
+    return await tryFirecrawlScrape(productUrl, brandConfig.price_extraction_config);
+  }
+  
+  // Strategy 3: Manual-only (skip)
+  return { price: null, compareAtPrice: null, error: 'Manual extraction only' };
+}
+```
 
-// On mount, check for saved progress
-useEffect(() => {
-  const saved = sessionStorage.getItem(WIZARD_STORAGE_KEY);
-  if (saved) {
-    const { data, step, timestamp } = JSON.parse(saved);
-    if (Date.now() - timestamp < STORAGE_MAX_AGE_MS) {
-      setShowRestorePrompt(true);
-      setSavedData({ data, step });
+---
+
+## Sync Flow
+
+### 1. Initialize Sync Run
+
+```typescript
+// Create brand_sync_logs record
+const { data: syncLog } = await supabase
+  .from('brand_sync_logs')
+  .insert({
+    brand_slug: brandSlug || 'all',
+    sync_type: 'prices',
+    status: 'running',
+    triggered_by: triggeredBy,
+    products_processed: { progress: { stage: 'initializing' } }
+  })
+  .select('id')
+  .single();
+```
+
+### 2. Query Products
+
+```typescript
+// Build query based on syncType
+let query = supabase
+  .from(productType === 'filament' ? 'filaments' : 'printers')
+  .select('id, product_title, product_url, vendor, variant_price, msrp')
+  .eq('sync_enabled', true)
+  .not('product_url', 'is', null);
+
+if (syncType === 'single' && targetId) {
+  query = query.eq('id', targetId);
+} else if (syncType === 'brand' && brandSlug) {
+  query = query.eq('vendor', brandSlug);
+}
+
+// Apply limit to prevent timeouts
+query = query.limit(100);
+```
+
+### 3. Process Products with Rate Limiting
+
+```typescript
+const results = [];
+for (const product of products) {
+  // Get brand config for rate limit
+  const brandConfig = await getBrandConfig(product.vendor);
+  const rateLimitMs = brandConfig?.rate_limit_ms || 2000;
+  
+  // Extract price
+  const startTime = Date.now();
+  const extraction = await extractPrice(product.product_url, brandConfig);
+  const responseTime = Date.now() - startTime;
+  
+  // Log extraction attempt
+  await logExtraction(product, extraction, responseTime);
+  
+  // Update product if price changed and not dry run
+  if (!dryRun && extraction.price !== null) {
+    await updateProductPrice(product, extraction);
+  }
+  
+  results.push({ productId: product.id, ...extraction });
+  
+  // Rate limit
+  await sleep(rateLimitMs);
+}
+```
+
+### 4. Update Sync Run Record
+
+```typescript
+await supabase
+  .from('brand_sync_logs')
+  .update({
+    status: 'completed',
+    completed_at: new Date().toISOString(),
+    duration_seconds: (Date.now() - startTime) / 1000,
+    products_discovered: products.length,
+    products_updated: successCount,
+    products_failed: failCount,
+    price_changes: priceChangeCount,
+  })
+  .eq('id', syncLog.id);
+```
+
+---
+
+## Error Handling
+
+### Individual Product Errors
+
+- Catch and log errors per product
+- Continue to next product (don't abort entire sync)
+- Update product's `last_sync_error` column
+- Include error in response's `errors` array
+
+### Global Timeout
+
+- Set maximum runtime of 5 minutes
+- Use `AbortController` with timeout
+- Mark sync as 'failed' if timeout reached
+- Return partial results
+
+### Rate Limit Handling
+
+- Read `rate_limit_ms` from brand config (default 2000ms)
+- Wait between each product extraction
+- Respect per-brand limits
+
+---
+
+## Database Column Usage
+
+### Filaments Table
+
+| Column | Purpose |
+|--------|---------|
+| `variant_price` | Current price (updated by sync) |
+| `msrp` | MSRP for comparison |
+| `last_scraped_at` | Timestamp of last successful sync |
+| `last_sync_error` | Error message if sync failed |
+| `sync_enabled` | Whether to include in syncs |
+
+### Printers Table
+
+| Column | Purpose |
+|--------|---------|
+| `current_price_usd_store` | Current price (updated by sync) |
+| `msrp_usd` | MSRP for comparison |
+| `last_sync_status` | 'success' or 'failed' |
+| `last_sync_error` | Error message if sync failed |
+| `sync_enabled` | Whether to include in syncs |
+
+---
+
+## Reusing Existing Code
+
+The function will import and reuse extraction logic from `get-current-price`:
+
+```typescript
+// Import Shopify JSON extraction
+async function tryShopifyJson(url: string) {
+  const jsonUrl = url.replace(/\/?$/, '.json');
+  const response = await fetch(jsonUrl);
+  if (!response.ok) return { success: false };
+  
+  const data = await response.json();
+  const variant = data.product?.variants?.[0];
+  return {
+    success: true,
+    price: parseFloat(variant?.price),
+    compareAtPrice: parseFloat(variant?.compare_at_price) || null
+  };
+}
+```
+
+For Firecrawl scraping, the function will call the existing `get-current-price` Edge Function internally:
+
+```typescript
+async function callGetCurrentPrice(productUrl: string) {
+  const response = await fetch(
+    `${Deno.env.get('SUPABASE_URL')}/functions/v1/get-current-price`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+      },
+      body: JSON.stringify({ productUrl })
     }
-  }
-}, []);
-
-// On form change, save progress
-useEffect(() => {
-  if (form.formState.isDirty) {
-    sessionStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({
-      data: form.getValues(),
-      step: currentStep,
-      timestamp: Date.now(),
-    }));
-  }
-}, [form.watch(), currentStep]);
+  );
+  return response.json();
+}
 ```
 
 ---
 
-## UI/UX Details
+## Config.toml Addition
 
-### Modal Layout
-```text
-+--------------------------------------------------+
-| Add New Filament                            [X]  |
-+--------------------------------------------------+
-| Step Indicator: (1)─(2)─(3)─(4)─(5)              |
-|               Source Basic Pricing Details Review |
-+--------------------------------------------------+
-|                                                  |
-| [Step Content Area]                              |
-|                                                  |
-| - Form fields for current step                   |
-| - Validation errors shown inline                 |
-| - Image previews where applicable                |
-|                                                  |
-+--------------------------------------------------+
-| [Back]                          [Next / Create]  |
-+--------------------------------------------------+
+```toml
+[functions.sync-prices]
+verify_jwt = false
 ```
 
-### Styling
-- Modal width: `max-w-2xl` for comfortable form layout
-- Step indicator: Primary color for current/completed, muted for future
-- Form sections: Grouped with subtle headers
-- Validation errors: Red text below fields
-- Success state: Green checkmarks on completed steps
+Setting `verify_jwt = false` allows the function to be called by scheduled jobs and internal services.
 
 ---
 
-## Wiring Up in InventoryManagement
+## Testing
 
-```typescript
-// src/pages/admin/InventoryManagement.tsx
-const [showAddFilamentWizard, setShowAddFilamentWizard] = useState(false);
+### Test Single Product Sync
 
-// Update handler
-const handleAddFilament = () => {
-  setShowAddFilamentWizard(true);
-};
-
-// In JSX, after GlobalActionsBar
-<AddFilamentWizard
-  open={showAddFilamentWizard}
-  onOpenChange={setShowAddFilamentWizard}
-/>
+```bash
+curl -X POST \
+  'https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sync-prices' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "syncType": "single",
+    "productType": "filament",
+    "targetId": "<filament-uuid>",
+    "triggeredBy": "admin"
+  }'
 ```
 
----
+### Test Brand Sync
 
-## Validation Summary
-
-| Step | Required Fields | Validation Rules |
-|------|----------------|------------------|
-| 1 | product_url, vendor | Valid URL format |
-| 2 | product_title | Non-empty, max 255 chars |
-| 3 | msrp | Positive number |
-| 4 | (none) | Temp ranges: min < max, within limits |
-| 5 | (none) | Review only |
-
----
-
-## Technical Notes
-
-1. **Database Schema**: Only `product_title` is required for insert; all other fields are optional
-2. **Brand Auto-Detection**: Uses URL pattern matching against known store domains
-3. **Form Library**: react-hook-form with zod resolver for consistency with EditProductModal
-4. **State Persistence**: sessionStorage for wizard resume, cleared on successful create
-5. **Query Invalidation**: Invalidates both admin and public filament queries on success
+```bash
+curl -X POST \
+  'https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sync-prices' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "syncType": "brand",
+    "productType": "filament",
+    "brandSlug": "bambu-lab",
+    "triggeredBy": "admin",
+    "dryRun": true
+  }'
+```
 
 ---
 
 ## Verification Checklist
 
 After implementation:
-- [ ] "Add Filament" button opens wizard modal
-- [ ] Step indicator shows all 5 steps with current step highlighted
-- [ ] Back/Next navigation works, preserving form data
-- [ ] Step 1: URL input validates, brand auto-detected from URL
-- [ ] Step 2: Material dropdown has all options, diameter defaults to 1.75mm
-- [ ] Step 3: MSRP required, shows error if empty or negative
-- [ ] Step 4: Image URL shows preview, temperature validation works
-- [ ] Step 5: Summary displays all entered data, Edit buttons navigate to steps
-- [ ] Create button inserts into database and closes wizard
-- [ ] Create & Add Another resets form for next entry
-- [ ] New filament appears in Filaments tab after creation
-- [ ] Closing wizard with unsaved changes shows confirmation dialog
-- [ ] Session persistence: closing and reopening offers to restore progress
-
+- [ ] Edge Function deploys without errors
+- [ ] Single product sync returns expected response with price data
+- [ ] Brand sync processes all products of that brand with rate limiting
+- [ ] `brand_sync_logs` table has new record with correct counts
+- [ ] Product `last_scraped_at` / `last_sync_status` updated after sync
+- [ ] `price_extraction_logs` has entries for each extraction attempt
+- [ ] Individual errors are logged but don't crash entire sync
+- [ ] Dry run mode logs actions without updating prices
+- [ ] Function respects 5-minute timeout
