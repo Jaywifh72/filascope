@@ -2032,6 +2032,7 @@ export type Database = {
       }
       filaments: {
         Row: {
+          admin_notes: string | null
           amazon_link_de: string | null
           amazon_link_uk: string | null
           amazon_link_us: string | null
@@ -2057,6 +2058,7 @@ export type Database = {
           density_g_cm3: number | null
           diameter_nominal_mm: number | null
           dimensional_accuracy_score: number | null
+          display_name: string | null
           drying_temp_c: number | null
           drying_time_hours: number | null
           ean: string | null
@@ -2084,6 +2086,7 @@ export type Database = {
           is_nozzle_abrasive: boolean | null
           last_external_sync_at: string | null
           last_scraped_at: string | null
+          last_sync_error: string | null
           light_transmission_percent: number | null
           material: string | null
           material_id: string | null
@@ -2095,6 +2098,7 @@ export type Database = {
           moisture_level_id: string | null
           moisture_sensitivity_level: string | null
           mpn: string | null
+          msrp: number | null
           net_weight_g: number | null
           next_scrape_at: string | null
           notched_izod_j_m: number | null
@@ -2138,6 +2142,7 @@ export type Database = {
           spool_width_mm: number | null
           strength_index: number | null
           surface_resistivity_ohm: number | null
+          sync_enabled: boolean | null
           sync_status: string | null
           tds_url: string | null
           tensile_modulus_xy_mpa: number | null
@@ -2169,6 +2174,7 @@ export type Database = {
           youngs_modulus_mpa: number | null
         }
         Insert: {
+          admin_notes?: string | null
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
@@ -2194,6 +2200,7 @@ export type Database = {
           density_g_cm3?: number | null
           diameter_nominal_mm?: number | null
           dimensional_accuracy_score?: number | null
+          display_name?: string | null
           drying_temp_c?: number | null
           drying_time_hours?: number | null
           ean?: string | null
@@ -2221,6 +2228,7 @@ export type Database = {
           is_nozzle_abrasive?: boolean | null
           last_external_sync_at?: string | null
           last_scraped_at?: string | null
+          last_sync_error?: string | null
           light_transmission_percent?: number | null
           material?: string | null
           material_id?: string | null
@@ -2232,6 +2240,7 @@ export type Database = {
           moisture_level_id?: string | null
           moisture_sensitivity_level?: string | null
           mpn?: string | null
+          msrp?: number | null
           net_weight_g?: number | null
           next_scrape_at?: string | null
           notched_izod_j_m?: number | null
@@ -2275,6 +2284,7 @@ export type Database = {
           spool_width_mm?: number | null
           strength_index?: number | null
           surface_resistivity_ohm?: number | null
+          sync_enabled?: boolean | null
           sync_status?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
@@ -2306,6 +2316,7 @@ export type Database = {
           youngs_modulus_mpa?: number | null
         }
         Update: {
+          admin_notes?: string | null
           amazon_link_de?: string | null
           amazon_link_uk?: string | null
           amazon_link_us?: string | null
@@ -2331,6 +2342,7 @@ export type Database = {
           density_g_cm3?: number | null
           diameter_nominal_mm?: number | null
           dimensional_accuracy_score?: number | null
+          display_name?: string | null
           drying_temp_c?: number | null
           drying_time_hours?: number | null
           ean?: string | null
@@ -2358,6 +2370,7 @@ export type Database = {
           is_nozzle_abrasive?: boolean | null
           last_external_sync_at?: string | null
           last_scraped_at?: string | null
+          last_sync_error?: string | null
           light_transmission_percent?: number | null
           material?: string | null
           material_id?: string | null
@@ -2369,6 +2382,7 @@ export type Database = {
           moisture_level_id?: string | null
           moisture_sensitivity_level?: string | null
           mpn?: string | null
+          msrp?: number | null
           net_weight_g?: number | null
           next_scrape_at?: string | null
           notched_izod_j_m?: number | null
@@ -2412,6 +2426,7 @@ export type Database = {
           spool_width_mm?: number | null
           strength_index?: number | null
           surface_resistivity_ohm?: number | null
+          sync_enabled?: boolean | null
           sync_status?: string | null
           tds_url?: string | null
           tensile_modulus_xy_mpa?: number | null
@@ -3699,6 +3714,7 @@ export type Database = {
           abl_technique: string | null
           abrasive_filament_support: boolean | null
           abrasive_materials_supported: boolean | null
+          admin_notes: string | null
           ai_camera_features: string | null
           ai_spaghetti_detection: boolean | null
           amazon_url_au: string | null
@@ -3732,6 +3748,7 @@ export type Database = {
           common_failure_points: string | null
           common_mods_tags: string | null
           community_popularity_score: number | null
+          compare_at_price_usd: number | null
           compatible_multi_material_systems: string | null
           compatible_plate_types: string | null
           control_knob: boolean | null
@@ -3754,6 +3771,7 @@ export type Database = {
           default_plate_type: string | null
           discontinued: boolean | null
           discontinued_date: string | null
+          display_name: string | null
           door_sensor: boolean | null
           ean_upc: string | null
           enclosure_heated: boolean | null
@@ -3787,6 +3805,8 @@ export type Database = {
           id: string
           input_shaping_supported: boolean | null
           internal_lighting: boolean | null
+          last_sync_error: string | null
+          last_sync_status: string | null
           last_verified_utc: string | null
           layer_height_default_um: number | null
           layer_height_max_um: number | null
@@ -3882,6 +3902,7 @@ export type Database = {
           supported_nozzle_diameters_mm: string | null
           supported_plate_types: string | null
           sustained_nozzle_temp_c: number | null
+          sync_enabled: boolean | null
           target_user_segment: string | null
           temperature_sensors: string | null
           thermal_runaway_protection: boolean | null
@@ -3901,6 +3922,7 @@ export type Database = {
           abl_technique?: string | null
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
+          admin_notes?: string | null
           ai_camera_features?: string | null
           ai_spaghetti_detection?: boolean | null
           amazon_url_au?: string | null
@@ -3934,6 +3956,7 @@ export type Database = {
           common_failure_points?: string | null
           common_mods_tags?: string | null
           community_popularity_score?: number | null
+          compare_at_price_usd?: number | null
           compatible_multi_material_systems?: string | null
           compatible_plate_types?: string | null
           control_knob?: boolean | null
@@ -3956,6 +3979,7 @@ export type Database = {
           default_plate_type?: string | null
           discontinued?: boolean | null
           discontinued_date?: string | null
+          display_name?: string | null
           door_sensor?: boolean | null
           ean_upc?: string | null
           enclosure_heated?: boolean | null
@@ -3989,6 +4013,8 @@ export type Database = {
           id?: string
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
           last_verified_utc?: string | null
           layer_height_default_um?: number | null
           layer_height_max_um?: number | null
@@ -4084,6 +4110,7 @@ export type Database = {
           supported_nozzle_diameters_mm?: string | null
           supported_plate_types?: string | null
           sustained_nozzle_temp_c?: number | null
+          sync_enabled?: boolean | null
           target_user_segment?: string | null
           temperature_sensors?: string | null
           thermal_runaway_protection?: boolean | null
@@ -4103,6 +4130,7 @@ export type Database = {
           abl_technique?: string | null
           abrasive_filament_support?: boolean | null
           abrasive_materials_supported?: boolean | null
+          admin_notes?: string | null
           ai_camera_features?: string | null
           ai_spaghetti_detection?: boolean | null
           amazon_url_au?: string | null
@@ -4136,6 +4164,7 @@ export type Database = {
           common_failure_points?: string | null
           common_mods_tags?: string | null
           community_popularity_score?: number | null
+          compare_at_price_usd?: number | null
           compatible_multi_material_systems?: string | null
           compatible_plate_types?: string | null
           control_knob?: boolean | null
@@ -4158,6 +4187,7 @@ export type Database = {
           default_plate_type?: string | null
           discontinued?: boolean | null
           discontinued_date?: string | null
+          display_name?: string | null
           door_sensor?: boolean | null
           ean_upc?: string | null
           enclosure_heated?: boolean | null
@@ -4191,6 +4221,8 @@ export type Database = {
           id?: string
           input_shaping_supported?: boolean | null
           internal_lighting?: boolean | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
           last_verified_utc?: string | null
           layer_height_default_um?: number | null
           layer_height_max_um?: number | null
@@ -4286,6 +4318,7 @@ export type Database = {
           supported_nozzle_diameters_mm?: string | null
           supported_plate_types?: string | null
           sustained_nozzle_temp_c?: number | null
+          sync_enabled?: boolean | null
           target_user_segment?: string | null
           temperature_sensors?: string | null
           thermal_runaway_protection?: boolean | null
