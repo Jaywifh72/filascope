@@ -12,6 +12,7 @@ import { useUpdateFilament, useUpdatePrinter } from '@/hooks/useProductMutations
 import { RegionalUrlCell } from './RegionalUrlCell';
 import { RegionalPriceCell } from './RegionalPriceCell';
 import { AllRegionsPriceRow } from './AllRegionsPriceRow';
+import { RegionSyncSelector } from './RegionSyncSelector';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 import { REGIONS } from '@/config/regions';
 
@@ -62,14 +63,13 @@ export interface ProductRow {
 interface ProductTableProps {
   products: ProductRow[];
   type: ProductType;
-  onSync?: (id: string) => void;
+  onSync?: (id: string, regions?: RegionCode[] | null) => void;
   syncingIds?: string[];
   // Regional props
   selectedRegion?: RegionCode;
   viewCurrency?: CurrencyCode;
   showAllRegions?: boolean;
   onEditRegionalUrl?: (productId: string, region: RegionCode) => void;
-  onSyncRegion?: (productId: string, region: RegionCode) => void;
 }
 
 type SortField = 'displayName' | 'material' | 'msrp' | 'currentPrice' | 'priceDiff' | 'lastSyncedAt';
@@ -120,7 +120,6 @@ export function ProductTable({
   viewCurrency = 'USD',
   showAllRegions = false,
   onEditRegionalUrl,
-  onSyncRegion,
 }: ProductTableProps) {
   const [sortField, setSortField] = useState<SortField>('displayName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -589,23 +588,32 @@ export function ProductTable({
                           </TooltipTrigger>
                           <TooltipContent>Edit product details</TooltipContent>
                         </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => onSync?.(product.id)}
-                              disabled={isSyncing}
-                              aria-label={isSyncing ? 'Syncing price...' : `Sync price for ${product.displayName}`}
-                            >
-                              <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {isSyncing ? 'Syncing...' : 'Refresh price from source'}
-                          </TooltipContent>
-                        </Tooltip>
+                        {/* Row Sync with Region Selector */}
+                        <RegionSyncSelector
+                          availableRegions={product.availableRegions}
+                          onSync={(regions) => onSync?.(product.id, regions)}
+                          isLoading={isSyncing}
+                          lastSyncByRegion={product.regionalPrices?.reduce((acc, rp) => {
+                            if (rp.lastSyncAt) {
+                              acc.set(rp.region, new Date(rp.lastSyncAt));
+                            }
+                            return acc;
+                          }, new Map<RegionCode, Date>())}
+                          priceByRegion={product.regionalPrices?.reduce((acc, rp) => {
+                            if (rp.price != null) {
+                              acc.set(rp.region, rp.price);
+                            }
+                            return acc;
+                          }, new Map<RegionCode, number | null>())}
+                          currencyByRegion={product.regionalPrices?.reduce((acc, rp) => {
+                            acc.set(rp.region, rp.currency);
+                            return acc;
+                          }, new Map<RegionCode, string>())}
+                          variant="ghost"
+                          size="icon"
+                          showLabel={false}
+                          disabled={isSyncing}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -631,12 +639,12 @@ export function ProductTable({
                                   <span className="text-sm font-medium">
                                     {region?.flag} {regionCode}
                                   </span>
-                                  {regionData?.url && onSyncRegion && (
+                                  {regionData?.url && (
                                     <Button
                                       variant="ghost"
                                       size="icon"
                                       className="h-5 w-5"
-                                      onClick={() => onSyncRegion(product.id, regionCode)}
+                                      onClick={() => onSync?.(product.id, [regionCode])}
                                     >
                                       <RefreshCw className="w-3 h-3" />
                                     </Button>

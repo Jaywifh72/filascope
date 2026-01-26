@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Clock, Package, Globe } from 'lucide-react';
+import { RefreshCw, Clock, Package, Globe, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { REGIONS } from '@/config/regions';
 import { RegionCode } from '@/types/regional';
+
+interface RegionProgress {
+  attempted: number;
+  successful: number;
+  failed: number;
+  priceChanges: number;
+  total?: number;
+}
 
 interface RunningSyncLog {
   id: string;
@@ -20,6 +29,9 @@ interface RunningSyncLog {
   products_failed: number | null;
   region_code: string | null;
   regions_synced: string[] | null;
+  success_details: {
+    regionStats?: Record<string, RegionProgress>;
+  } | null;
 }
 
 export function CurrentSyncStatus() {
@@ -30,7 +42,7 @@ export function CurrentSyncStatus() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('brand_sync_logs')
-        .select('id, brand_slug, sync_type, status, started_at, products_discovered, products_updated, products_failed, region_code, regions_synced')
+        .select('id, brand_slug, sync_type, status, started_at, products_discovered, products_updated, products_failed, region_code, regions_synced, success_details')
         .eq('status', 'running')
         .order('started_at', { ascending: false });
 
@@ -112,6 +124,10 @@ export function CurrentSyncStatus() {
           const totalProcessed = (sync.products_updated || 0) + (sync.products_failed || 0);
           const total = sync.products_discovered || 0;
           const progress = total > 0 ? (totalProcessed / total) * 100 : 0;
+          
+          // Get region stats if available
+          const regionStats = sync.success_details?.regionStats;
+          const hasRegionStats = regionStats && Object.keys(regionStats).length > 0;
 
           return (
             <div key={sync.id} className="space-y-3">
@@ -123,7 +139,7 @@ export function CurrentSyncStatus() {
                     {sync.sync_type}
                   </Badge>
                   {/* Single region badge */}
-                  {sync.region_code && (
+                  {sync.region_code && !hasRegionStats && (
                     <Badge variant="outline" className="text-xs">
                       {REGIONS[sync.region_code as RegionCode]?.flag || '🌐'} {sync.region_code}
                     </Badge>
@@ -137,30 +153,70 @@ export function CurrentSyncStatus() {
                 </div>
               </div>
 
-              {/* Regional progress badges */}
-              {sync.regions_synced && sync.regions_synced.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Globe className="w-3 h-3 text-muted-foreground" />
-                  <div className="flex flex-wrap gap-1">
-                    {sync.regions_synced.map((region) => (
-                      <Badge key={region} variant="outline" className="text-xs py-0">
-                        {REGIONS[region as RegionCode]?.flag || '🌐'} {region}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Per-region progress bars */}
+              {hasRegionStats ? (
+                <div className="space-y-2">
+                  {Object.entries(regionStats!).map(([regionCode, stats]) => {
+                    const regionTotal = stats.total || (stats.attempted || 1);
+                    const regionProcessed = stats.successful + stats.failed;
+                    const regionProgress = regionTotal > 0 ? (regionProcessed / regionTotal) * 100 : 0;
+                    const regionInfo = REGIONS[regionCode as RegionCode];
 
-              {total > 0 && (
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {totalProcessed} of {total} products processed
-                    </span>
-                    <span className="font-medium">{Math.round(progress)}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
+                    return (
+                      <div key={regionCode} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-base">{regionInfo?.flag || '🌐'}</span>
+                            <span className="text-muted-foreground">{regionCode}:</span>
+                          </span>
+                          <span className="flex items-center gap-3 text-muted-foreground">
+                            <span>
+                              {regionProcessed}/{regionTotal}
+                              <span className="ml-1 text-xs">
+                                ({Math.round(regionProgress)}%)
+                              </span>
+                            </span>
+                            {stats.priceChanges > 0 && (
+                              <span className="text-green-500 text-xs">
+                                {stats.priceChanges} changed
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <Progress value={regionProgress} className="h-2" />
+                      </div>
+                    );
+                  })}
                 </div>
+              ) : (
+                <>
+                  {/* Regional progress badges (when no detailed stats) */}
+                  {sync.regions_synced && sync.regions_synced.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-3 h-3 text-muted-foreground" />
+                      <div className="flex flex-wrap gap-1">
+                        {sync.regions_synced.map((region) => (
+                          <Badge key={region} variant="outline" className="text-xs py-0">
+                            {REGIONS[region as RegionCode]?.flag || '🌐'} {region}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Overall progress bar */}
+                  {total > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          {totalProcessed} of {total} products processed
+                        </span>
+                        <span className="font-medium">{Math.round(progress)}%</span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="flex gap-4 text-sm">
