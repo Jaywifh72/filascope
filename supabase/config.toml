@@ -440,3 +440,6 @@ verify_jwt = true
 
 [functions.calculate-filament-scores]
 verify_jwt = true
+
+[functions.sync-prices]
+verify_jwt = false
