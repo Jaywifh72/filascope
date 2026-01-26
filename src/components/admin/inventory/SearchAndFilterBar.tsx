@@ -40,12 +40,12 @@ export function SearchAndFilterBar({
         />
       </div>
 
-      <Select value={selectedBrand} onValueChange={onBrandChange}>
+      <Select value={selectedBrand || 'all'} onValueChange={(val) => onBrandChange(val === 'all' ? '' : val)}>
         <SelectTrigger className="w-full sm:w-[200px]">
           <SelectValue placeholder="All Brands" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Brands</SelectItem>
+          <SelectItem value="all">All Brands</SelectItem>
           {brands.map((brand) => (
             <SelectItem key={brand.brand_slug} value={brand.brand_slug}>
               {brand.brand_name}
