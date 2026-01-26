@@ -6,7 +6,7 @@ import { BrandSection } from './BrandSection';
 import { ProductTable, ProductRow } from './ProductTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { toast } from 'sonner';
+import { usePriceSync } from '@/hooks/usePriceSync';
 
 interface FilamentsInventoryTabProps {
   searchTerm: string;
@@ -31,6 +31,9 @@ export function FilamentsInventoryTab({
   searchTerm,
   selectedBrand,
 }: FilamentsInventoryTabProps) {
+  const { syncBrand, syncSingle, isBrandSyncing, getSyncingIds } = usePriceSync();
+  const syncingIds = getSyncingIds();
+
   const { data: filaments, isLoading, error } = useQuery({
     queryKey: ['admin-filaments'],
     queryFn: async () => {
@@ -99,15 +102,11 @@ export function FilamentsInventoryTab({
   }, [filteredFilaments]);
 
   const handleSyncBrand = (brandSlug: string) => {
-    toast.info('Sync Brand', {
-      description: `Syncing ${brandSlug} - Coming soon in Part 4`,
-    });
+    syncBrand(brandSlug, 'filament');
   };
 
   const handleSyncProduct = (id: string) => {
-    toast.info('Sync Product', {
-      description: `Syncing product ${id} - Coming soon in Part 4`,
-    });
+    syncSingle(id, 'filament');
   };
 
   if (isLoading) {
@@ -160,6 +159,7 @@ export function FilamentsInventoryTab({
         Showing {filteredFilaments.length} filaments across {groupedByBrand.length} brands
       </p>
       {groupedByBrand.map(([brandName, brandFilaments]) => {
+        const brandSlug = brandName.toLowerCase().replace(/\s+/g, '-');
         const products: ProductRow[] = brandFilaments.map((f) => ({
           id: f.id,
           displayName: f.display_name || f.product_title,
@@ -177,15 +177,17 @@ export function FilamentsInventoryTab({
           <BrandSection
             key={brandName}
             brandName={brandName}
-            brandSlug={brandName.toLowerCase().replace(/\s+/g, '-')}
+            brandSlug={brandSlug}
             productCount={brandFilaments.length}
             onSyncBrand={handleSyncBrand}
+            isSyncing={isBrandSyncing(brandSlug, 'filament')}
             defaultExpanded={groupedByBrand.length === 1}
           >
             <ProductTable
               products={products}
               type="filament"
               onSync={handleSyncProduct}
+              syncingIds={syncingIds}
             />
           </BrandSection>
         );

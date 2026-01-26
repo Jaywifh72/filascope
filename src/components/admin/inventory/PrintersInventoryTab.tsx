@@ -6,7 +6,7 @@ import { BrandSection } from './BrandSection';
 import { ProductTable, ProductRow } from './ProductTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { toast } from 'sonner';
+import { usePriceSync } from '@/hooks/usePriceSync';
 
 interface PrintersInventoryTabProps {
   searchTerm: string;
@@ -32,6 +32,9 @@ export function PrintersInventoryTab({
   searchTerm,
   selectedBrand,
 }: PrintersInventoryTabProps) {
+  const { syncBrand, syncSingle, isBrandSyncing, getSyncingIds } = usePriceSync();
+  const syncingIds = getSyncingIds();
+
   const { data: printers, isLoading, error } = useQuery({
     queryKey: ['admin-printers'],
     queryFn: async () => {
@@ -100,15 +103,11 @@ export function PrintersInventoryTab({
   }, [filteredPrinters]);
 
   const handleSyncBrand = (brandSlug: string) => {
-    toast.info('Sync Brand', {
-      description: `Syncing ${brandSlug} - Coming soon in Part 4`,
-    });
+    syncBrand(brandSlug, 'printer');
   };
 
   const handleSyncProduct = (id: string) => {
-    toast.info('Sync Printer', {
-      description: `Syncing printer ${id} - Coming soon in Part 4`,
-    });
+    syncSingle(id, 'printer');
   };
 
   if (isLoading) {
@@ -181,12 +180,14 @@ export function PrintersInventoryTab({
             brandSlug={brandSlug}
             productCount={brandPrinters.length}
             onSyncBrand={handleSyncBrand}
+            isSyncing={isBrandSyncing(brandSlug, 'printer')}
             defaultExpanded={groupedByBrand.length === 1}
           >
             <ProductTable
               products={products}
               type="printer"
               onSync={handleSyncProduct}
+              syncingIds={syncingIds}
             />
           </BrandSection>
         );
