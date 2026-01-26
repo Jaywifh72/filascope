@@ -264,7 +264,7 @@ export function FilamentPurchaseSidebar({
                 showCTA={false}
                 showPerKg={true}
                 filamentId={filamentId}
-                productUrl={affiliateUrl || productUrl || undefined}
+                productUrl={productUrl || undefined}
                 onAdminRefresh={handleAdminRefresh}
               />
               
