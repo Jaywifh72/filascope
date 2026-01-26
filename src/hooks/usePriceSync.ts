@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { RegionCode } from '@/types/regional';
 
 interface SyncRequest {
   syncType: 'all' | 'brand' | 'single';
@@ -15,6 +16,13 @@ interface SyncRequest {
   regionCodes?: string[];
   skipRegions?: string[];
   useRegionalUrls?: boolean;
+}
+
+interface RegionSyncStats {
+  attempted: number;
+  successful: number;
+  failed: number;
+  priceChanges: number;
 }
 
 interface SyncResponse {
@@ -31,12 +39,7 @@ interface SyncResponse {
   skipped: number;
   priceChanges: number;
   duration_ms: number;
-  regionStats?: Record<string, {
-    attempted: number;
-    successful: number;
-    failed: number;
-    priceChanges: number;
-  }>;
+  regionStats?: Record<string, RegionSyncStats>;
   errors?: Array<{ productId: string; regionCode?: string; error: string }>;
 }
 
@@ -47,19 +50,33 @@ export interface SyncStatus {
   productType: 'filament' | 'printer';
   syncType: 'all' | 'brand' | 'single';
   brandSlug?: string;
+  regionCodes?: RegionCode[];
   result?: SyncResponse;
   error?: string;
 }
 
+export interface SyncOptions {
+  regions?: RegionCode[] | null;  // null = all regions
+  limit?: number;
+  dryRun?: boolean;
+}
+
 // Generate a unique key for tracking syncs
-function getSyncKey(productType: string, syncType: string, targetId?: string, brandSlug?: string): string {
+function getSyncKey(
+  productType: string,
+  syncType: string,
+  targetId?: string,
+  brandSlug?: string,
+  regionCodes?: string[]
+): string {
+  const regionSuffix = regionCodes?.length ? `-${regionCodes.join(',')}` : '';
   if (syncType === 'single' && targetId) {
-    return `${productType}-single-${targetId}`;
+    return `${productType}-single-${targetId}${regionSuffix}`;
   }
   if (syncType === 'brand' && brandSlug) {
-    return `${productType}-brand-${brandSlug}`;
+    return `${productType}-brand-${brandSlug}${regionSuffix}`;
   }
-  return `${productType}-${syncType}`;
+  return `${productType}-${syncType}${regionSuffix}`;
 }
 
 export function usePriceSync() {
@@ -67,7 +84,7 @@ export function usePriceSync() {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [activeSyncs, setActiveSyncs] = useState<Map<string, SyncStatus>>(new Map());
 
-  // Subscribe to realtime updates for filaments and printers
+  // Subscribe to realtime updates for filaments, printers, and regional prices
   useEffect(() => {
     const filamentsChannel = supabase
       .channel('filaments-sync-updates')
@@ -103,9 +120,29 @@ export function usePriceSync() {
       )
       .subscribe();
 
+    // Subscribe to regional price updates
+    const regionalPricesChannel = supabase
+      .channel('regional-price-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_regional_prices',
+        },
+        () => {
+          // Invalidate regional price queries
+          queryClient.invalidateQueries({ queryKey: ['product-regional-prices'] });
+          queryClient.invalidateQueries({ queryKey: ['admin-filaments'] });
+          queryClient.invalidateQueries({ queryKey: ['admin-printers'] });
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(filamentsChannel);
       supabase.removeChannel(printersChannel);
+      supabase.removeChannel(regionalPricesChannel);
     };
   }, [queryClient]);
 
@@ -130,7 +167,8 @@ export function usePriceSync() {
         variables.productType,
         variables.syncType,
         variables.targetId,
-        variables.brandSlug
+        variables.brandSlug,
+        variables.regionCodes
       );
       
       setActiveSyncs((prev) => {
@@ -141,6 +179,7 @@ export function usePriceSync() {
           productType: variables.productType,
           syncType: variables.syncType,
           brandSlug: variables.brandSlug,
+          regionCodes: variables.regionCodes as RegionCode[],
         });
         return next;
       });
@@ -158,7 +197,8 @@ export function usePriceSync() {
         variables.productType,
         variables.syncType,
         variables.targetId,
-        variables.brandSlug
+        variables.brandSlug,
+        variables.regionCodes
       );
       
       setActiveSyncs((prev) => {
@@ -170,6 +210,7 @@ export function usePriceSync() {
           productType: variables.productType,
           syncType: variables.syncType,
           brandSlug: variables.brandSlug,
+          regionCodes: variables.regionCodes as RegionCode[],
           result: data,
         });
         // Remove from active syncs after a short delay
@@ -192,8 +233,10 @@ export function usePriceSync() {
         queryClient.invalidateQueries({ queryKey: ['printers'] });
       }
       
-      // Invalidate sync logs
+      // Invalidate sync logs and regional prices
       queryClient.invalidateQueries({ queryKey: ['brand-sync-logs'] });
+      queryClient.invalidateQueries({ queryKey: ['product-regional-prices'] });
+      queryClient.invalidateQueries({ queryKey: ['running-syncs'] });
 
       const duration = (data.duration_ms / 1000).toFixed(1);
       toast.success(`Sync completed in ${duration}s`, {
@@ -213,7 +256,8 @@ export function usePriceSync() {
         variables.productType,
         variables.syncType,
         variables.targetId,
-        variables.brandSlug
+        variables.brandSlug,
+        variables.regionCodes
       );
       
       setActiveSyncs((prev) => {
@@ -225,6 +269,7 @@ export function usePriceSync() {
           productType: variables.productType,
           syncType: variables.syncType,
           brandSlug: variables.brandSlug,
+          regionCodes: variables.regionCodes as RegionCode[],
           error: error.message,
         });
         // Remove from active syncs after a delay
@@ -244,30 +289,41 @@ export function usePriceSync() {
     },
   });
 
-  const syncAll = useCallback((productType: 'filament' | 'printer', limit?: number) => {
+  // Main sync methods with regional options
+  const syncAll = useCallback((productType: 'filament' | 'printer', options?: SyncOptions) => {
     syncMutation.mutate({
       syncType: 'all',
       productType,
       triggeredBy: 'admin',
-      limit: limit || 50,
+      limit: options?.limit || 50,
+      regionCodes: options?.regions || undefined,
+      useRegionalUrls: options?.regions ? true : undefined,
+      dryRun: options?.dryRun,
     });
   }, [syncMutation]);
 
-  const syncAllFilaments = useCallback((limit?: number) => {
-    syncAll('filament', limit);
+  const syncAllFilaments = useCallback((options?: SyncOptions) => {
+    syncAll('filament', options);
   }, [syncAll]);
 
-  const syncAllPrinters = useCallback((limit?: number) => {
-    syncAll('printer', limit);
+  const syncAllPrinters = useCallback((options?: SyncOptions) => {
+    syncAll('printer', options);
   }, [syncAll]);
 
-  const syncBrand = useCallback((brandSlug: string, productType: 'filament' | 'printer', limit?: number) => {
+  const syncBrand = useCallback((
+    brandSlug: string,
+    productType: 'filament' | 'printer',
+    options?: SyncOptions
+  ) => {
     syncMutation.mutate({
       syncType: 'brand',
       productType,
       brandSlug,
       triggeredBy: 'admin',
-      limit: limit || 100,
+      limit: options?.limit || 100,
+      regionCodes: options?.regions || undefined,
+      useRegionalUrls: options?.regions ? true : undefined,
+      dryRun: options?.dryRun,
     });
   }, [syncMutation]);
 

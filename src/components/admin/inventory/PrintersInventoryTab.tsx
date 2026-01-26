@@ -160,17 +160,12 @@ export function PrintersInventoryTab({
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredPrinters]);
 
-  const handleSyncBrand = (brandSlug: string) => {
-    syncBrand(brandSlug, 'printer');
+  const handleSyncBrand = (brandSlug: string, regions?: RegionCode[] | null) => {
+    syncBrand(brandSlug, 'printer', { regions });
   };
 
-  const handleSyncProduct = (id: string) => {
-    syncSingle(id, 'printer');
-  };
-
-  const handleSyncBrandAllRegions = (brandSlug: string) => {
-    // For now, same as regular sync - can be enhanced later
-    syncBrand(brandSlug, 'printer');
+  const handleSyncProduct = (id: string, regions?: RegionCode[] | null) => {
+    syncSingle(id, 'printer', regions || undefined);
   };
 
   if (isLoading) {
@@ -246,7 +241,6 @@ export function PrintersInventoryTab({
             isSyncing={isBrandSyncing(brandSlug, 'printer')}
             defaultExpanded={groupedByBrand.length === 1}
             regionalCoverage={coverage}
-            onSyncBrandAllRegions={handleSyncBrandAllRegions}
           >
             <ProductTable
               products={products}

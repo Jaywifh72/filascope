@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { formatDistanceToNow } from 'date-fns';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 import { AdminRegionSelector, AdminCurrencySelector } from './AdminRegionSelector';
+import { RegionSyncSelector } from './RegionSyncSelector';
 
 interface GlobalActionsBarProps {
-  onSyncFilaments: () => void;
-  onSyncPrinters: () => void;
+  onSyncFilaments: (regions?: RegionCode[] | null) => void;
+  onSyncPrinters: (regions?: RegionCode[] | null) => void;
   onAddFilament: () => void;
   onAddPrinter: () => void;
   lastSyncTime: Date | null;
@@ -46,44 +47,38 @@ export function GlobalActionsBar({
       {/* Action Buttons Row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">
+          {/* Sync Filaments with Region Selector */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                onClick={onSyncFilaments} 
-                variant="default" 
-                size="sm" 
-                disabled={isSyncing}
-                aria-label="Sync all filament prices"
-              >
-                {isSyncing ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                )}
-                <span className="hidden xs:inline">Sync All</span> Filaments
-              </Button>
+              <div>
+                <RegionSyncSelector
+                  onSync={(regions) => onSyncFilaments(regions)}
+                  isLoading={isSyncing}
+                  label="Sync Filaments"
+                  variant="default"
+                  size="sm"
+                  disabled={isSyncing}
+                />
+              </div>
             </TooltipTrigger>
-            <TooltipContent>Refresh prices for all filaments from their source URLs</TooltipContent>
+            <TooltipContent>Sync filament prices by region</TooltipContent>
           </Tooltip>
           
+          {/* Sync Printers with Region Selector */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                onClick={onSyncPrinters} 
-                variant="default" 
-                size="sm" 
-                disabled={isSyncing}
-                aria-label="Sync all printer prices"
-              >
-                {isSyncing ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                )}
-                <span className="hidden xs:inline">Sync All</span> Printers
-              </Button>
+              <div>
+                <RegionSyncSelector
+                  onSync={(regions) => onSyncPrinters(regions)}
+                  isLoading={isSyncing}
+                  label="Sync Printers"
+                  variant="default"
+                  size="sm"
+                  disabled={isSyncing}
+                />
+              </div>
             </TooltipTrigger>
-            <TooltipContent>Refresh prices for all printers from their source URLs</TooltipContent>
+            <TooltipContent>Sync printer prices by region</TooltipContent>
           </Tooltip>
           
           <Tooltip>

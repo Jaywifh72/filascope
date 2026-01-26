@@ -159,17 +159,12 @@ export function FilamentsInventoryTab({
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredFilaments]);
 
-  const handleSyncBrand = (brandSlug: string) => {
-    syncBrand(brandSlug, 'filament');
+  const handleSyncBrand = (brandSlug: string, regions?: RegionCode[] | null) => {
+    syncBrand(brandSlug, 'filament', { regions });
   };
 
-  const handleSyncProduct = (id: string) => {
-    syncSingle(id, 'filament');
-  };
-
-  const handleSyncBrandAllRegions = (brandSlug: string) => {
-    // For now, same as regular sync - can be enhanced later
-    syncBrand(brandSlug, 'filament');
+  const handleSyncProduct = (id: string, regions?: RegionCode[] | null) => {
+    syncSingle(id, 'filament', regions || undefined);
   };
 
   if (isLoading) {
@@ -246,7 +241,6 @@ export function FilamentsInventoryTab({
             isSyncing={isBrandSyncing(brandSlug, 'filament')}
             defaultExpanded={groupedByBrand.length === 1}
             regionalCoverage={coverage}
-            onSyncBrandAllRegions={handleSyncBrandAllRegions}
           >
             <ProductTable
               products={products}

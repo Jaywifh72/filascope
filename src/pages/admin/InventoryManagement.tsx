@@ -80,15 +80,15 @@ function InventoryManagementContent() {
     },
   });
 
-  const handleSyncFilaments = () => {
+  const handleSyncFilaments = (regions?: RegionCode[] | null) => {
     if (!isSyncing) {
-      syncAllFilaments(50);
+      syncAllFilaments({ regions, limit: 50 });
     }
   };
 
-  const handleSyncPrinters = () => {
+  const handleSyncPrinters = (regions?: RegionCode[] | null) => {
     if (!isSyncing) {
-      syncAllPrinters(50);
+      syncAllPrinters({ regions, limit: 50 });
     }
   };
 
