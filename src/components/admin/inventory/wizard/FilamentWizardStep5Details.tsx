@@ -12,11 +12,11 @@ import {
 } from '@/components/ui/form';
 import type { WizardFormValues } from '../AddFilamentWizard';
 
-interface FilamentWizardStep4Props {
+interface FilamentWizardStep5DetailsProps {
   form: UseFormReturn<WizardFormValues>;
 }
 
-export function FilamentWizardStep4({ form }: FilamentWizardStep4Props) {
+export function FilamentWizardStep5Details({ form }: FilamentWizardStep5DetailsProps) {
   const imageUrl = form.watch('featured_image');
 
   return (
