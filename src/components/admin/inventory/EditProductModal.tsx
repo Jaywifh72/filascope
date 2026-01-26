@@ -41,8 +41,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useUpdateFilament, useUpdatePrinter } from '@/hooks/useProductMutations';
+import { useSaveRegionalUrls, useSaveRegionalPrices, useFetchRegionalData } from '@/hooks/useRegionalMutations';
+import { RegionalUrlEditor, RegionalUrlData } from './RegionalUrlEditor';
+import { RegionalPriceEditor, RegionalPriceData } from './RegionalPriceEditor';
+import { RegionCode, CurrencyCode } from '@/types/regional';
 
 const MATERIALS = ['PLA', 'ABS', 'PETG', 'TPU', 'ASA', 'Nylon', 'PC', 'PVA', 'HIPS', 'Carbon Fiber', 'Wood', 'Metal', 'Other'];
 const DIAMETERS = ['1.75mm', '2.85mm'];
@@ -119,13 +124,21 @@ export function EditProductModal({
 }: EditProductModalProps) {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingClose, setPendingClose] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [regionalUrls, setRegionalUrls] = useState<RegionalUrlData[]>([]);
+  const [regionalPrices, setRegionalPrices] = useState<RegionalPriceData[]>([]);
+  const [isLoadingRegional, setIsLoadingRegional] = useState(false);
 
   const updateFilament = useUpdateFilament();
   const updatePrinter = useUpdatePrinter();
+  const saveRegionalUrls = useSaveRegionalUrls();
+  const saveRegionalPrices = useSaveRegionalPrices();
 
   const isFilament = type === 'filament';
   const filamentProduct = product as FilamentProduct | null;
   const printerProduct = product as PrinterProduct | null;
+
+  const { fetchUrls, fetchPrices } = useFetchRegionalData(product?.id || null, type);
 
   const form = useForm<FilamentFormData | PrinterFormData>({
     resolver: zodResolver(isFilament ? filamentSchema : printerSchema),
@@ -172,6 +185,46 @@ export function EditProductModal({
     return { display_name: '' };
   }
 
+  // Load regional data when modal opens
+  useEffect(() => {
+    if (open && product?.id) {
+      setIsLoadingRegional(true);
+      setActiveTab('basic');
+      
+      Promise.all([fetchUrls(), fetchPrices()])
+        .then(([urls, prices]) => {
+          setRegionalUrls(
+            urls.map((u: any) => ({
+              id: u.id,
+              region_code: u.region_code as RegionCode,
+              store_url: u.store_url || '',
+              store_name: u.store_name || '',
+              currency_code: u.currency_code as CurrencyCode,
+              is_primary: u.is_primary || false,
+              is_verified: u.is_verified || false,
+            }))
+          );
+          setRegionalPrices(
+            prices.map((p: any) => ({
+              id: p.id,
+              region_code: p.region_code as RegionCode,
+              currency_code: p.currency_code as CurrencyCode,
+              current_price: p.current_price,
+              msrp: p.msrp,
+              compare_at_price: p.compare_at_price,
+              last_sync_at: p.last_sync_at,
+              last_sync_status: p.last_sync_status,
+              last_sync_error: p.last_sync_error,
+            }))
+          );
+        })
+        .finally(() => setIsLoadingRegional(false));
+    } else if (!open) {
+      setRegionalUrls([]);
+      setRegionalPrices([]);
+    }
+  }, [open, product?.id]);
+
   useEffect(() => {
     if (product) {
       form.reset(getDefaultValues());
@@ -202,6 +255,45 @@ export function EditProductModal({
   const handleReset = () => {
     form.reset(getDefaultValues());
     toast.info('Form reset to original values');
+  };
+
+  const handleSaveRegionalUrls = async () => {
+    if (!product) return;
+    
+    await saveRegionalUrls.mutateAsync({
+      productId: product.id,
+      productType: type,
+      urls: regionalUrls.map((u) => ({
+        product_id: product.id,
+        product_type: type,
+        region_code: u.region_code,
+        store_url: u.store_url,
+        store_name: u.store_name,
+        currency_code: u.currency_code,
+        is_primary: u.is_primary,
+        is_verified: u.is_verified,
+      })),
+    });
+  };
+
+  const handleSaveRegionalPrices = async () => {
+    if (!product) return;
+    
+    await saveRegionalPrices.mutateAsync({
+      productId: product.id,
+      productType: type,
+      prices: regionalPrices
+        .filter((p) => p.current_price != null || p.msrp != null)
+        .map((p) => ({
+          product_id: product.id,
+          product_type: type,
+          region_code: p.region_code,
+          currency_code: p.currency_code,
+          current_price: p.current_price,
+          msrp: p.msrp,
+          compare_at_price: p.compare_at_price,
+        })),
+    });
   };
 
   const onSubmit = async (data: FilamentFormData | PrinterFormData) => {
@@ -245,13 +337,14 @@ export function EditProductModal({
     }
   };
 
-  const isSaving = updateFilament.isPending || updatePrinter.isPending;
+  const isSaving = updateFilament.isPending || updatePrinter.isPending || saveRegionalUrls.isPending || saveRegionalPrices.isPending;
   const imageUrl = form.watch('image_url');
+  const configuredRegions = regionalUrls.map((u) => u.region_code);
 
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Edit {isFilament ? 'Filament' : 'Printer'}
@@ -261,8 +354,16 @@ export function EditProductModal({
             </DialogDescription>
           </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="regional-urls">Regional URLs</TabsTrigger>
+              <TabsTrigger value="regional-prices">Regional Prices</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="mt-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Basic Info Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -596,8 +697,46 @@ export function EditProductModal({
                   Save Changes
                 </Button>
               </DialogFooter>
-            </form>
-          </Form>
+                </form>
+              </Form>
+            </TabsContent>
+
+            <TabsContent value="regional-urls" className="mt-4 space-y-4">
+              <RegionalUrlEditor
+                productId={product?.id || ''}
+                productType={type}
+                urls={regionalUrls}
+                onChange={setRegionalUrls}
+                disabled={isLoadingRegional}
+              />
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={handleClose}>Cancel</Button>
+                <Button onClick={handleSaveRegionalUrls} disabled={isSaving}>
+                  {saveRegionalUrls.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save URLs
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="regional-prices" className="mt-4 space-y-4">
+              <RegionalPriceEditor
+                productId={product?.id || ''}
+                productType={type}
+                prices={regionalPrices}
+                configuredRegions={configuredRegions}
+                baseMsrp={isFilament ? filamentProduct?.msrp || null : printerProduct?.msrp_usd || null}
+                onChange={setRegionalPrices}
+                disabled={isLoadingRegional}
+              />
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={handleClose}>Cancel</Button>
+                <Button onClick={handleSaveRegionalPrices} disabled={isSaving}>
+                  {saveRegionalPrices.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save Prices
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
