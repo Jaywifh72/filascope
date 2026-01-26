@@ -9,6 +9,7 @@ import { SearchAndFilterBar } from '@/components/admin/inventory/SearchAndFilter
 import { FilamentsInventoryTab } from '@/components/admin/inventory/FilamentsInventoryTab';
 import { PrintersInventoryTab } from '@/components/admin/inventory/PrintersInventoryTab';
 import { SyncStatusTab } from '@/components/admin/inventory/SyncStatusTab';
+import { AddFilamentWizard } from '@/components/admin/inventory/AddFilamentWizard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,6 +20,7 @@ export default function InventoryManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
+  const [showAddFilamentWizard, setShowAddFilamentWizard] = useState(false);
 
   // Get active tab from URL, default to filaments
   const activeTab = (searchParams.get('tab') as TabValue) || 'filaments';
@@ -54,9 +56,7 @@ export default function InventoryManagement() {
   };
 
   const handleAddFilament = () => {
-    toast.info('Add Filament', {
-      description: 'Coming soon in Part 3',
-    });
+    setShowAddFilamentWizard(true);
   };
 
   const handleAddPrinter = () => {
@@ -116,6 +116,11 @@ export default function InventoryManagement() {
             <SyncStatusTab />
           </TabsContent>
         </Tabs>
+
+        <AddFilamentWizard
+          open={showAddFilamentWizard}
+          onOpenChange={setShowAddFilamentWizard}
+        />
       </div>
     </AdminLayout>
   );
