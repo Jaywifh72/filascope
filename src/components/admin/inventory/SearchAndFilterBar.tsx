@@ -7,6 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RegionCode } from '@/types/regional';
+import { RegionalFilters } from './RegionalFilters';
 
 interface Brand {
   brand_name: string;
@@ -19,6 +21,11 @@ interface SearchAndFilterBarProps {
   selectedBrand: string;
   onBrandChange: (value: string) => void;
   brands: Brand[];
+  // Regional filter props
+  regionalUrlFilter?: RegionCode | 'any' | null;
+  onRegionalUrlFilterChange?: (value: RegionCode | 'any' | null) => void;
+  showMissingUrls?: boolean;
+  onShowMissingUrlsChange?: (value: boolean) => void;
 }
 
 export function SearchAndFilterBar({
@@ -27,32 +34,50 @@ export function SearchAndFilterBar({
   selectedBrand,
   onBrandChange,
   brands,
+  regionalUrlFilter = null,
+  onRegionalUrlFilterChange,
+  showMissingUrls = false,
+  onShowMissingUrlsChange,
 }: SearchAndFilterBarProps) {
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search name, vendor, URL..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+    <div className="flex flex-col gap-4">
+      {/* Primary Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search name, vendor, URL..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
 
-      <Select value={selectedBrand || 'all'} onValueChange={(val) => onBrandChange(val === 'all' ? '' : val)}>
-        <SelectTrigger className="w-full sm:w-[200px]">
-          <SelectValue placeholder="All Brands" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Brands</SelectItem>
-          {brands.map((brand) => (
-            <SelectItem key={brand.brand_slug} value={brand.brand_slug}>
-              {brand.brand_name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select value={selectedBrand || 'all'} onValueChange={(val) => onBrandChange(val === 'all' ? '' : val)}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="All Brands" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Brands</SelectItem>
+            {brands.map((brand) => (
+              <SelectItem key={brand.brand_slug} value={brand.brand_slug}>
+                {brand.brand_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Regional Filters */}
+        {onRegionalUrlFilterChange && onShowMissingUrlsChange && (
+          <RegionalFilters
+            hasRegionalUrl={regionalUrlFilter}
+            onHasRegionalUrlChange={onRegionalUrlFilterChange}
+            missingRegionalUrls={showMissingUrls}
+            onMissingRegionalUrlsChange={onShowMissingUrlsChange}
+            compact
+          />
+        )}
+      </div>
     </div>
   );
 }

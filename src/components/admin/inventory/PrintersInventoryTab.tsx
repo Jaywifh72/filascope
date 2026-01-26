@@ -7,10 +7,14 @@ import { ProductTable, ProductRow } from './ProductTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { usePriceSync } from '@/hooks/usePriceSync';
+import { RegionCode } from '@/types/regional';
 
 interface PrintersInventoryTabProps {
   searchTerm: string;
   selectedBrand: string;
+  selectedRegion?: RegionCode;
+  regionalUrlFilter?: RegionCode | 'any' | null;
+  showMissingUrls?: boolean;
 }
 
 interface PrinterRecord {
@@ -26,11 +30,18 @@ interface PrinterRecord {
   printer_brands: {
     brand: string;
   } | null;
+  // Regional fields
+  primary_region: string | null;
+  has_regional_urls: boolean | null;
+  regional_availability: string[] | null;
 }
 
 export function PrintersInventoryTab({
   searchTerm,
   selectedBrand,
+  selectedRegion = 'US',
+  regionalUrlFilter = null,
+  showMissingUrls = false,
 }: PrintersInventoryTabProps) {
   const { syncBrand, syncSingle, isBrandSyncing, getSyncingIds } = usePriceSync();
   const syncingIds = getSyncingIds();
@@ -59,7 +70,10 @@ export function PrintersInventoryTab({
             last_sync_error,
             printer_brands (
               brand
-            )
+            ),
+            primary_region,
+            has_regional_urls,
+            regional_availability
           `)
           .order('model_name')
           .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
@@ -79,7 +93,7 @@ export function PrintersInventoryTab({
     },
   });
 
-  // Filter printers based on search term and selected brand
+  // Filter printers based on search term, brand, and regional filters
   const filteredPrinters = useMemo(() => {
     if (!printers) return [];
 
@@ -100,20 +114,46 @@ export function PrintersInventoryTab({
         if (!matchesName && !matchesBrand && !matchesUrl) return false;
       }
 
+      // Regional URL filter
+      if (regionalUrlFilter) {
+        if (regionalUrlFilter === 'any') {
+          // Has any regional URL
+          if (!printer.has_regional_urls) return false;
+        } else {
+          // Has URL for specific region
+          const regions = printer.regional_availability || [];
+          if (!regions.includes(regionalUrlFilter)) return false;
+        }
+      }
+
+      // Missing URLs filter
+      if (showMissingUrls) {
+        if (printer.has_regional_urls === true) return false;
+      }
+
       return true;
     });
-  }, [printers, searchTerm, selectedBrand]);
+  }, [printers, searchTerm, selectedBrand, regionalUrlFilter, showMissingUrls]);
 
-  // Group by brand
+  // Group by brand and calculate regional coverage
   const groupedByBrand = useMemo(() => {
-    const groups: Record<string, PrinterRecord[]> = {};
+    const groups: Record<string, { printers: PrinterRecord[]; coverage: RegionCode[] }> = {};
 
     filteredPrinters.forEach((printer) => {
       const brandName = printer.printer_brands?.brand || 'Unknown';
       if (!groups[brandName]) {
-        groups[brandName] = [];
+        groups[brandName] = { printers: [], coverage: [] };
       }
-      groups[brandName].push(printer);
+      groups[brandName].printers.push(printer);
+      
+      // Aggregate regional coverage for the brand
+      if (printer.regional_availability) {
+        printer.regional_availability.forEach((region) => {
+          if (!groups[brandName].coverage.includes(region as RegionCode)) {
+            groups[brandName].coverage.push(region as RegionCode);
+          }
+        });
+      }
     });
 
     // Sort brands alphabetically
@@ -126,6 +166,11 @@ export function PrintersInventoryTab({
 
   const handleSyncProduct = (id: string) => {
     syncSingle(id, 'printer');
+  };
+
+  const handleSyncBrandAllRegions = (brandSlug: string) => {
+    // For now, same as regular sync - can be enhanced later
+    syncBrand(brandSlug, 'printer');
   };
 
   if (isLoading) {
@@ -162,8 +207,8 @@ export function PrintersInventoryTab({
         <EmptyState
           icon={Printer}
           title="No printers found"
-          message={searchTerm || selectedBrand 
-            ? "No printers match your current filters. Try adjusting your search or brand filter."
+          message={searchTerm || selectedBrand || regionalUrlFilter || showMissingUrls
+            ? "No printers match your current filters. Try adjusting your search or filter options."
             : "No printers in the database yet."
           }
           size="lg"
@@ -177,7 +222,7 @@ export function PrintersInventoryTab({
       <p className="text-sm text-muted-foreground">
         Showing {filteredPrinters.length} printers across {groupedByBrand.length} brands
       </p>
-      {groupedByBrand.map(([brandName, brandPrinters]) => {
+      {groupedByBrand.map(([brandName, { printers: brandPrinters, coverage }]) => {
         const brandSlug = brandName.toLowerCase().replace(/\s+/g, '-');
         const products: ProductRow[] = brandPrinters.map((p) => ({
           id: p.id,
@@ -200,6 +245,8 @@ export function PrintersInventoryTab({
             onSyncBrand={handleSyncBrand}
             isSyncing={isBrandSyncing(brandSlug, 'printer')}
             defaultExpanded={groupedByBrand.length === 1}
+            regionalCoverage={coverage}
+            onSyncBrandAllRegions={handleSyncBrandAllRegions}
           >
             <ProductTable
               products={products}

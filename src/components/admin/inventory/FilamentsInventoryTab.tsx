@@ -7,10 +7,14 @@ import { ProductTable, ProductRow } from './ProductTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { usePriceSync } from '@/hooks/usePriceSync';
+import { RegionCode } from '@/types/regional';
 
 interface FilamentsInventoryTabProps {
   searchTerm: string;
   selectedBrand: string;
+  selectedRegion?: RegionCode;
+  regionalUrlFilter?: RegionCode | 'any' | null;
+  showMissingUrls?: boolean;
 }
 
 interface FilamentRecord {
@@ -25,11 +29,18 @@ interface FilamentRecord {
   sync_status: string | null;
   last_sync_error: string | null;
   vendor: string | null;
+  // Regional fields
+  primary_region: string | null;
+  has_regional_urls: boolean | null;
+  available_regions: string[] | null;
 }
 
 export function FilamentsInventoryTab({
   searchTerm,
   selectedBrand,
+  selectedRegion = 'US',
+  regionalUrlFilter = null,
+  showMissingUrls = false,
 }: FilamentsInventoryTabProps) {
   const { syncBrand, syncSingle, isBrandSyncing, getSyncingIds } = usePriceSync();
   const syncingIds = getSyncingIds();
@@ -57,7 +68,10 @@ export function FilamentsInventoryTab({
             last_scraped_at,
             sync_status,
             last_sync_error,
-            vendor
+            vendor,
+            primary_region,
+            has_regional_urls,
+            available_regions
           `)
           .order('vendor')
           .order('product_title')
@@ -78,7 +92,7 @@ export function FilamentsInventoryTab({
     },
   });
 
-  // Filter filaments based on search term and selected brand
+  // Filter filaments based on search term, brand, and regional filters
   const filteredFilaments = useMemo(() => {
     if (!filaments) return [];
 
@@ -99,20 +113,46 @@ export function FilamentsInventoryTab({
         if (!matchesName && !matchesVendor && !matchesUrl) return false;
       }
 
+      // Regional URL filter
+      if (regionalUrlFilter) {
+        if (regionalUrlFilter === 'any') {
+          // Has any regional URL
+          if (!filament.has_regional_urls) return false;
+        } else {
+          // Has URL for specific region
+          const regions = filament.available_regions || [];
+          if (!regions.includes(regionalUrlFilter)) return false;
+        }
+      }
+
+      // Missing URLs filter
+      if (showMissingUrls) {
+        if (filament.has_regional_urls === true) return false;
+      }
+
       return true;
     });
-  }, [filaments, searchTerm, selectedBrand]);
+  }, [filaments, searchTerm, selectedBrand, regionalUrlFilter, showMissingUrls]);
 
-  // Group by vendor
+  // Group by vendor and calculate regional coverage
   const groupedByBrand = useMemo(() => {
-    const groups: Record<string, FilamentRecord[]> = {};
+    const groups: Record<string, { filaments: FilamentRecord[]; coverage: RegionCode[] }> = {};
 
     filteredFilaments.forEach((filament) => {
       const brand = filament.vendor || 'Unknown';
       if (!groups[brand]) {
-        groups[brand] = [];
+        groups[brand] = { filaments: [], coverage: [] };
       }
-      groups[brand].push(filament);
+      groups[brand].filaments.push(filament);
+      
+      // Aggregate regional coverage for the brand
+      if (filament.available_regions) {
+        filament.available_regions.forEach((region) => {
+          if (!groups[brand].coverage.includes(region as RegionCode)) {
+            groups[brand].coverage.push(region as RegionCode);
+          }
+        });
+      }
     });
 
     // Sort brands alphabetically
@@ -125,6 +165,11 @@ export function FilamentsInventoryTab({
 
   const handleSyncProduct = (id: string) => {
     syncSingle(id, 'filament');
+  };
+
+  const handleSyncBrandAllRegions = (brandSlug: string) => {
+    // For now, same as regular sync - can be enhanced later
+    syncBrand(brandSlug, 'filament');
   };
 
   if (isLoading) {
@@ -161,8 +206,8 @@ export function FilamentsInventoryTab({
         <EmptyState
           icon={Package}
           title="No filaments found"
-          message={searchTerm || selectedBrand 
-            ? "No filaments match your current filters. Try adjusting your search or brand filter."
+          message={searchTerm || selectedBrand || regionalUrlFilter || showMissingUrls
+            ? "No filaments match your current filters. Try adjusting your search or filter options."
             : "No filaments in the database yet."
           }
           size="lg"
@@ -176,7 +221,7 @@ export function FilamentsInventoryTab({
       <p className="text-sm text-muted-foreground">
         Showing {filteredFilaments.length} filaments across {groupedByBrand.length} brands
       </p>
-      {groupedByBrand.map(([brandName, brandFilaments]) => {
+      {groupedByBrand.map(([brandName, { filaments: brandFilaments, coverage }]) => {
         const brandSlug = brandName.toLowerCase().replace(/\s+/g, '-');
         const products: ProductRow[] = brandFilaments.map((f) => ({
           id: f.id,
@@ -200,6 +245,8 @@ export function FilamentsInventoryTab({
             onSyncBrand={handleSyncBrand}
             isSyncing={isBrandSyncing(brandSlug, 'filament')}
             defaultExpanded={groupedByBrand.length === 1}
+            regionalCoverage={coverage}
+            onSyncBrandAllRegions={handleSyncBrandAllRegions}
           >
             <ProductTable
               products={products}
