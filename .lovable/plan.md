@@ -1,43 +1,55 @@
 
 
-# Add Filament Wizard - Regional URLs Integration
-
-## Overview
-This implementation updates the Add Filament Wizard from 5 steps to 6 steps, adding a dedicated Regional URLs step and updating the Pricing step to support regional MSRP overrides. The wizard will now properly set up multi-region product data from the start.
+# Add Filament Wizard - Regional URLs Integration (Part 5)
 
 ## Pre-Check Results
-- Edit modal has Regional URLs tab: **Verified**
-- Can add/edit regional URLs: **Verified** (RegionalUrlEditor.tsx functional)
-- Regional prices tab works: **Verified** (RegionalPriceEditor.tsx functional)
+
+| Check | Status |
+|-------|--------|
+| Edit modal has Regional URLs tab | Verified (EditProductModal.tsx lines 358-362) |
+| Can add/edit regional URLs | Verified (RegionalUrlEditor.tsx functional) |
+| Regional prices tab works | Verified (RegionalPriceEditor.tsx functional) |
+
+All prerequisites from Part 4 are in place.
 
 ---
 
-## Implementation Steps
+## Overview
 
-### Step 1: Update Wizard Schema and Configuration
+Update the Add Filament Wizard from 5 steps to 6 steps by:
+1. Enhancing Step 1 to detect and display the region from the primary URL
+2. Inserting a new Step 3 for Regional URLs configuration
+3. Updating the Pricing step (now Step 4) to include regional MSRP overrides
+4. Updating the Review step (now Step 6) to display regional data
+5. Modifying the creation logic to insert regional data into the new tables
 
-**File:** `src/components/admin/inventory/AddFilamentWizard.tsx`
+---
 
-**Changes:**
-- Add new form fields for regional data:
-  - `detected_region`: Auto-detected region from primary URL
-  - `regional_urls`: Array of regional URL data
-  - `regional_msrps`: Array of regional MSRP overrides
-  - `sync_after_create`: Boolean to trigger immediate sync
-- Update `STEP_LABELS` from 5 to 6 steps:
-  ```typescript
-  const STEP_LABELS = ['Source', 'Basic', 'Regional URLs', 'Pricing', 'Details', 'Review'];
-  const TOTAL_STEPS = 6;
-  ```
-- Update `STEP_FIELDS` mapping for validation
+## File Changes Summary
 
-**Form Schema Additions:**
+| File | Action | Description |
+|------|--------|-------------|
+| `AddFilamentWizard.tsx` | Update | New schema fields, 6 steps, updated creation logic |
+| `wizard/FilamentWizardStep1.tsx` | Update | Display detected region badge |
+| `wizard/FilamentWizardStep3Regional.tsx` | Create | New Regional URLs step |
+| `wizard/FilamentWizardStep4Pricing.tsx` | Create | Enhanced pricing with regional MSRP |
+| `wizard/FilamentWizardStep5Details.tsx` | Rename | Was Step4, now Step5 |
+| `wizard/FilamentWizardStep6Review.tsx` | Create | Enhanced review with regional data |
+| `wizard/autoGenerateUrls.ts` | Create | URL generation utility |
+
+---
+
+## Implementation Details
+
+### Step 1: Update AddFilamentWizard.tsx
+
+**Schema Updates:**
 ```typescript
-// Add to wizardSchema
+// Add new fields to wizardSchema
 detected_region: z.string().optional(),
 regional_urls: z.array(z.object({
   region_code: z.string(),
-  store_url: z.string().url().optional(),
+  store_url: z.string().optional(),
   store_name: z.string().optional(),
   currency_code: z.string(),
   is_primary: z.boolean(),
@@ -51,98 +63,134 @@ regional_msrps: z.array(z.object({
 sync_after_create: z.boolean().optional().default(false),
 ```
 
+**Step Configuration Updates:**
+```typescript
+const STEP_LABELS = ['Source', 'Basic', 'Regional URLs', 'Pricing', 'Details', 'Review'];
+const TOTAL_STEPS = 6;
+
+const STEP_FIELDS: Record<number, (keyof WizardFormValues)[]> = {
+  1: ['product_url', 'vendor', 'source_type'],
+  2: ['product_title', 'material', 'diameter', 'net_weight_g', 'color_name', 'color_hex'],
+  3: ['regional_urls'], // New step
+  4: ['msrp', 'variant_price', 'variant_compare_at_price', 'regional_msrps'],
+  5: ['featured_image', 'nozzle_temp_min_c', 'nozzle_temp_max_c', 'bed_temp_min_c', 'bed_temp_max_c', 'admin_notes'],
+  6: [],
+};
+```
+
+**Updated renderStepContent:**
+```typescript
+const renderStepContent = () => {
+  switch (currentStep) {
+    case 1: return <FilamentWizardStep1 form={form} />;
+    case 2: return <FilamentWizardStep2 form={form} />;
+    case 3: return <FilamentWizardStep3Regional form={form} />;
+    case 4: return <FilamentWizardStep4Pricing form={form} />;
+    case 5: return <FilamentWizardStep5Details form={form} />;
+    case 6: return <FilamentWizardStep6Review form={form} onGoToStep={handleGoToStep} />;
+    default: return null;
+  }
+};
+```
+
+**Updated handleCreate:**
+After creating the filament, insert regional data:
+1. Insert filament record with `has_regional_urls` and `available_regions`
+2. Insert regional URLs via `useSaveRegionalUrls` mutation
+3. Insert regional prices via `useSaveRegionalPrices` mutation
+4. Optionally queue sync if `sync_after_create` is checked
+
 ---
 
-### Step 2: Update FilamentWizardStep1 (Source Information)
+### Step 2: Update FilamentWizardStep1.tsx
 
-**File:** `src/components/admin/inventory/wizard/FilamentWizardStep1.tsx`
+Add region detection display when URL is entered:
 
-**Enhancements:**
-1. Add region auto-detection display when URL is entered
-2. Show detected region badge: "This appears to be a US store URL"
-3. Store detected region in form for use in Step 3
-
-**New UI Elements:**
 ```text
-Product URL: [https://store.creality.com/us/products/...]
+Product URL: [https://store.creality.com/us/products/hyper-abs]
 
-┌────────────────────────────────────────────────────┐
-│ 🇺🇸 Detected: United States store URL             │
-│ This will be set as the primary regional URL      │
-└────────────────────────────────────────────────────┘
+[Banner with flag icon]
+🇺🇸 Detected: United States store URL
+This will be set as the primary regional URL
 ```
 
 **Logic:**
-- Use existing `detectBrandFromUrl` for brand
-- Add `detectRegionFromUrl` function (already exists in RegionalUrlEditor)
-- Auto-set the primary URL's region in form state
+- Reuse `REGION_URL_PATTERNS` from RegionalUrlEditor for detection
+- Auto-set `detected_region` in form when URL changes
+- Show info banner with detected region flag and name
 
 ---
 
-### Step 3: Create FilamentWizardStep3 (Regional URLs - NEW)
-
-**File:** `src/components/admin/inventory/wizard/FilamentWizardStep3Regional.tsx`
-
-A new wizard step dedicated to configuring regional store URLs.
+### Step 3: Create FilamentWizardStep3Regional.tsx (New)
 
 **Layout:**
 ```text
-┌─ Step 3: Regional Store URLs ─────────────────────────────────────┐
-│                                                                    │
-│ Configure where this filament can be purchased in different        │
-│ regions. This helps users find the best local store.               │
-│                                                                    │
-│ Primary URL (from Step 1):                                        │
-│ ┌──────────────────────────────────────────────────────────────┐ │
-│ │ 🇺🇸 https://store.creality.com/us/products/hyper-abs         │ │
-│ │    Creality US (Primary)                                      │ │
-│ └──────────────────────────────────────────────────────────────┘ │
-│                                                                    │
-│ ────────────────────────────────────────────────────────────────── │
-│                                                                    │
-│ Add URLs for other regions:                     [+ Add URL]       │
-│                                                                    │
-│ 🇨🇦 Canada                                                        │
-│ [https://store.creality.com/ca/products/...] [Creality CA] [🗑]   │
-│                                                                    │
-│ 🇪🇺 Europe                                                         │
-│ [https://store.creality.com/eu/products/...] [Creality EU] [🗑]   │
-│                                                                    │
-│ Quick Add: [CA] [EU] [UK] [AU]                                    │
-│                                                                    │
-│ ┌────────────────────────────────────────────────────────────────┐│
-│ │ 💡 Auto-Generate URLs                                          ││
-│ │ Many brands use the same product slug across regions.         ││
-│ │ [🔄 Generate URLs from Primary URL]                            ││
-│ └────────────────────────────────────────────────────────────────┘│
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+Step 3: Regional Store URLs
+
+Configure where this filament can be purchased in different regions.
+
+Primary URL (from Step 1):
+[Banner] 🇺🇸 https://store.creality.com/us/products/hyper-abs
+         Creality US (Primary)
+
+Add URLs for other regions:              [+ Add Region dropdown]
+
+[CA Canada URL input section]
+[EU Europe URL input section]
+
+Quick Add: [CA] [EU] [UK] [AU] buttons
+
+[Tip box]
+Many brands use the same product slug across regions.
+[Auto-Generate URLs button]
 ```
 
 **Features:**
-1. Display primary URL from Step 1 (non-editable, shown as reference)
-2. Add regional URLs with region dropdown
-3. Quick-add buttons for common regions
-4. Auto-generate URLs button with pattern detection
-5. Reuse URL auto-detection and store name extraction logic
+- Display primary URL from Step 1 as read-only reference
+- Reuse components from RegionalUrlEditor (URL input, store name, verified checkbox)
+- Quick-add buttons for common regions (CA, EU, UK, AU)
+- Auto-generate URLs button that creates variants from primary URL
 
-**Auto-Generate URL Logic:**
+---
+
+### Step 4: Create autoGenerateUrls.ts Utility
+
 ```typescript
-function autoGenerateRegionalUrls(primaryUrl: string, sourceRegion: RegionCode): SuggestedUrl[] {
+interface SuggestedUrl {
+  region: RegionCode;
+  url: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export function autoGenerateRegionalUrls(
+  primaryUrl: string, 
+  sourceRegion: RegionCode
+): SuggestedUrl[] {
   const suggestions: SuggestedUrl[] = [];
   
-  // Pattern 1: /us/ → /ca/, /eu/, etc.
+  // Pattern 1: Path segment /us/ -> /ca/, /eu/, etc.
   if (/\/us\//i.test(primaryUrl)) {
-    suggestions.push({ region: 'CA', url: primaryUrl.replace(/\/us\//i, '/ca/') });
-    suggestions.push({ region: 'EU', url: primaryUrl.replace(/\/us\//i, '/eu/') });
-    suggestions.push({ region: 'UK', url: primaryUrl.replace(/\/us\//i, '/uk/') });
-    suggestions.push({ region: 'AU', url: primaryUrl.replace(/\/us\//i, '/au/') });
+    suggestions.push({ 
+      region: 'CA', 
+      url: primaryUrl.replace(/\/us\//i, '/ca/'), 
+      confidence: 'high' 
+    });
+    suggestions.push({ 
+      region: 'EU', 
+      url: primaryUrl.replace(/\/us\//i, '/eu/'), 
+      confidence: 'high' 
+    });
+    // ... UK, AU
   }
   
-  // Pattern 2: subdomain: us.store.com → ca.store.com
+  // Pattern 2: Subdomain us.store.com -> ca.store.com
   if (/^https?:\/\/us\./i.test(primaryUrl)) {
-    suggestions.push({ region: 'CA', url: primaryUrl.replace(/^(https?:\/\/)us\./i, '$1ca.') });
-    // etc.
+    suggestions.push({ 
+      region: 'CA', 
+      url: primaryUrl.replace(/^(https?:\/\/)us\./i, '$1ca.'), 
+      confidence: 'medium' 
+    });
+    // ... other regions
   }
   
   return suggestions;
@@ -151,237 +199,144 @@ function autoGenerateRegionalUrls(primaryUrl: string, sourceRegion: RegionCode):
 
 ---
 
-### Step 4: Update Pricing Step (Now Step 4)
+### Step 5: Create FilamentWizardStep4Pricing.tsx (Enhanced)
 
-**File:** `src/components/admin/inventory/wizard/FilamentWizardStep3.tsx` 
-→ Renamed/updated to `FilamentWizardStep4Pricing.tsx`
+This replaces the old Step 3 with regional MSRP support:
 
-**Enhancements:**
-1. Show base MSRP input (USD) as before
-2. Add regional MSRP override section for configured regions
-3. Show "Sync after create" checkbox
-
-**Updated Layout:**
+**Layout:**
 ```text
-┌─ Step 4: Pricing ─────────────────────────────────────────────────┐
-│                                                                    │
-│ Base MSRP (USD): [$29.99                              ]           │
-│                                                                    │
-│ Current Price:   [$24.99                              ] (optional)│
-│                                                                    │
-│ Compare At:      [$34.99                              ] (optional)│
-│                                                                    │
-│ ────────────────────────────────────────────────────────────────── │
-│                                                                    │
-│ Regional MSRP Overrides:                                          │
-│ ┌────────────────────────────────────────────────────────────────┐│
-│ │ Region       │ Currency │ Regional MSRP                       ││
-│ │──────────────│──────────│─────────────────────────────────────││
-│ │ 🇺🇸 US       │ USD      │ Uses base MSRP                      ││
-│ │ 🇨🇦 CA       │ CAD      │ [C$ 39.99      ]                    ││
-│ │ 🇪🇺 EU       │ EUR      │ [€ 32.99       ]                    ││
-│ └────────────────────────────────────────────────────────────────┘│
-│                                                                    │
-│ ☐ Sync prices from all configured stores after creation          │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+Step 4: Pricing
+
+Base MSRP (USD): [$29.99]
+Current Price:   [$24.99] (optional)
+Compare At:      [$34.99] (optional)
+
+Regional MSRP Overrides:
+[Table showing configured regions]
+| Region    | Currency | Regional MSRP    |
+|-----------|----------|------------------|
+| 🇺🇸 US    | USD      | Uses base MSRP   |
+| 🇨🇦 CA    | CAD      | [C$ 39.99]       |
+| 🇪🇺 EU    | EUR      | [€ 32.99]        |
+
+[Checkbox] Sync prices from all configured stores after creation
 ```
+
+**Logic:**
+- Watch `regional_urls` to know which regions are configured
+- Show regional MSRP input for each configured region (except primary)
+- Primary region uses the base MSRP
 
 ---
 
-### Step 5: Rename Existing Steps
+### Step 6: Rename FilamentWizardStep4.tsx -> FilamentWizardStep5Details.tsx
 
-**File Renames:**
-- `FilamentWizardStep3.tsx` → Keep as is but update import paths
-- `FilamentWizardStep4.tsx` → Keep (becomes Step 5 - Details)
-- `FilamentWizardStep5.tsx` → Keep (becomes Step 6 - Review)
-
-**AddFilamentWizard.tsx Changes:**
-```typescript
-// Update step rendering
-const renderStepContent = () => {
-  switch (currentStep) {
-    case 1:
-      return <FilamentWizardStep1 form={form} />;
-    case 2:
-      return <FilamentWizardStep2 form={form} />;
-    case 3:
-      return <FilamentWizardStep3Regional form={form} />; // NEW
-    case 4:
-      return <FilamentWizardStep4Pricing form={form} />; // Updated
-    case 5:
-      return <FilamentWizardStep5Details form={form} />; // Renamed from Step4
-    case 6:
-      return <FilamentWizardStep6Review form={form} onGoToStep={handleGoToStep} />; // Renamed from Step5
-    default:
-      return null;
-  }
-};
-```
+- Change import path in AddFilamentWizard
+- No content changes needed
+- Update import type reference if needed
 
 ---
 
-### Step 6: Update Review Step (Now Step 6)
+### Step 7: Create FilamentWizardStep6Review.tsx (Enhanced)
 
-**File:** `src/components/admin/inventory/wizard/FilamentWizardStep5.tsx`
-→ Renamed to `FilamentWizardStep6Review.tsx`
+Add new sections for regional data:
 
-**Enhancements:**
-1. Add Regional URLs section showing configured URLs
-2. Add Regional Coverage badges
-3. Show pricing per region
-4. Update step references (Edit buttons now point to correct steps)
-
-**New Section in Review:**
+**Layout:**
 ```text
-┌─ Regional URLs ────────────────────────────────────── [Edit] ─────┐
-│                                                                    │
-│ Coverage: 🇺🇸 ✓  🇨🇦 ✓  🇪🇺 ✓  🇬🇧 ✗  🇦🇺 ✗                        │
-│                                                                    │
-│ 🇺🇸 US: store.creality.com/us/... (Primary)                       │
-│ 🇨🇦 CA: store.creality.com/ca/...                                  │
-│ 🇪🇺 EU: store.creality.com/eu/...                                  │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+Source Information                     [Edit]
+...existing content...
 
-┌─ Pricing ─────────────────────────────────────────── [Edit] ─────┐
-│                                                                    │
-│ Base MSRP: $29.99 USD                                             │
-│                                                                    │
-│ Regional:                                                          │
-│   🇺🇸 US: $29.99 USD                                               │
-│   🇨🇦 CA: C$39.99 CAD                                              │
-│   🇪🇺 EU: €32.99 EUR                                               │
-│                                                                    │
-│ ☑ Will sync prices after creation                                 │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+Basic Information                      [Edit]
+...existing content...
+
+Regional URLs                          [Edit -> Step 3]
+Coverage: 🇺🇸 ✓  🇨🇦 ✓  🇪🇺 ✓  🇬🇧 ✗  🇦🇺 ✗
+
+🇺🇸 US: store.creality.com/us/... (Primary)
+🇨🇦 CA: store.creality.com/ca/...
+🇪🇺 EU: store.creality.com/eu/...
+
+Pricing                                [Edit -> Step 4]
+Base MSRP: $29.99 USD
+
+Regional:
+  🇺🇸 US: $29.99 USD
+  🇨🇦 CA: C$39.99 CAD
+  🇪🇺 EU: €32.99 EUR
+
+[Checkbox indicator] Will sync prices after creation
+
+Additional Details                     [Edit -> Step 5]
+...existing content...
+```
+
+**Uses:**
+- Import `RegionalCoverageBadges` component for visual coverage display
+- Import `REGIONS` for flag display
+- Update step references (Edit buttons point to correct new step numbers)
+
+---
+
+## Data Flow on Creation
+
+```text
+User clicks "Create Filament"
+         |
+         v
+[1] Validate all steps
+         |
+         v
+[2] Build filament insert data
+    - Include: has_regional_urls, available_regions, primary_region
+         |
+         v
+[3] Insert into 'filaments' table
+         |
+    onSuccess: result.id
+         |
+         v
+[4] Insert regional URLs (if any)
+    - Use useSaveRegionalUrls mutation
+    - Skips if regional_urls is empty
+         |
+         v
+[5] Insert regional prices (if any)
+    - Use useSaveRegionalPrices mutation
+    - Map regional_msrps to price records
+         |
+         v
+[6] Optional: Queue sync jobs
+    - If sync_after_create is checked
+    - Show toast: "Price sync queued for configured regions"
+         |
+         v
+[7] Success toast + reset/close
 ```
 
 ---
 
-### Step 7: Update handleCreate for Regional Data
+## Reusable Components & Logic
 
-**File:** `src/components/admin/inventory/AddFilamentWizard.tsx`
-
-Update the creation flow to:
-1. Create the filament record
-2. Insert regional URLs into `product_regional_urls`
-3. Insert regional MSRP data into `product_regional_prices`
-4. Update `has_regional_urls` and `available_regions` on filament
-5. Optionally trigger sync if `sync_after_create` is checked
-
-**Updated handleCreate:**
-```typescript
-const handleCreate = async (addAnother = false) => {
-  const isValid = await form.trigger();
-  if (!isValid) return;
-
-  const values = form.getValues();
-  
-  // 1. Create filament
-  const insertData = {
-    // ... existing fields
-    has_regional_urls: values.regional_urls.length > 0,
-    available_regions: values.regional_urls.map(u => u.region_code),
-    primary_region: values.detected_region || 'US',
-  };
-  
-  createFilament.mutate(insertData, {
-    onSuccess: async (result) => {
-      // 2. Insert regional URLs
-      if (values.regional_urls.length > 0) {
-        await saveRegionalUrls.mutateAsync({
-          productId: result.id,
-          productType: 'filament',
-          urls: values.regional_urls.map(u => ({
-            product_id: result.id,
-            product_type: 'filament',
-            region_code: u.region_code,
-            store_url: u.store_url,
-            store_name: u.store_name,
-            currency_code: u.currency_code,
-            is_primary: u.is_primary,
-            is_verified: u.is_verified,
-          })),
-        });
-      }
-      
-      // 3. Insert regional prices
-      if (values.regional_msrps.length > 0) {
-        await saveRegionalPrices.mutateAsync({
-          productId: result.id,
-          productType: 'filament',
-          prices: values.regional_msrps.map(p => ({
-            product_id: result.id,
-            product_type: 'filament',
-            region_code: p.region_code,
-            currency_code: p.currency_code,
-            msrp: p.msrp,
-            current_price: null,
-          })),
-        });
-      }
-      
-      // 4. Optionally trigger sync
-      if (values.sync_after_create) {
-        // Queue sync job (future implementation)
-        toast.info('Price sync queued for configured regions');
-      }
-      
-      // Continue with existing flow...
-    },
-  });
-};
-```
+From existing code:
+- `REGION_URL_PATTERNS` (RegionalUrlEditor.tsx) for URL detection
+- `extractStoreNameFromUrl` (RegionalUrlEditor.tsx) for store name extraction
+- `REGIONS` config (regions.ts) for flag/name/currency data
+- `RegionalCoverageBadges` component for visual display
+- `useSaveRegionalUrls` / `useSaveRegionalPrices` mutations
 
 ---
 
-## File Summary
+## Technical Considerations
 
-| File | Action | Description |
-|------|--------|-------------|
-| `AddFilamentWizard.tsx` | Update | Add regional form fields, update step count, update creation logic |
-| `wizard/FilamentWizardStep1.tsx` | Update | Add region detection display |
-| `wizard/FilamentWizardStep3Regional.tsx` | **Create** | New regional URLs step |
-| `wizard/FilamentWizardStep4Pricing.tsx` | **Create** | Enhanced pricing step with regional MSRP |
-| `wizard/FilamentWizardStep5Details.tsx` | Rename | Was Step4, now Step5 |
-| `wizard/FilamentWizardStep6Review.tsx` | **Create** | Enhanced review with regional data |
-| `wizard/autoGenerateUrls.ts` | **Create** | URL generation utility |
-
----
-
-## Technical Details
-
-### URL Auto-Generation Patterns
-
-The system will detect common URL patterns and suggest regional variants:
-
-| Pattern Type | Example Primary | Suggested CA | Suggested EU |
-|--------------|-----------------|--------------|--------------|
-| Path segment | `/us/products/x` | `/ca/products/x` | `/eu/products/x` |
-| Subdomain | `us.store.com/x` | `ca.store.com/x` | `eu.store.com/x` |
-| TLD variant | `store.com/x` | `store.ca/x` | `store.de/x` |
-
-### Form State Shape
-
+### Form State Shape Extension
 ```typescript
 interface WizardFormValues {
-  // Step 1: Source
-  product_url: string;
-  vendor: string;
-  source_type: 'manufacturer' | 'retailer' | 'amazon' | 'other';
-  detected_region: RegionCode;          // NEW
-
-  // Step 2: Basic Info
-  product_title: string;
-  material: string;
-  diameter: '1.75' | '2.85';
-  net_weight_g: number;
-  color_name: string;
-  color_hex: string;
-
-  // Step 3: Regional URLs (NEW)
+  // Existing fields...
+  
+  // New Step 1 field
+  detected_region: RegionCode | undefined;
+  
+  // New Step 3 fields
   regional_urls: Array<{
     region_code: RegionCode;
     store_url: string;
@@ -390,51 +345,42 @@ interface WizardFormValues {
     is_primary: boolean;
     is_verified: boolean;
   }>;
-
-  // Step 4: Pricing (enhanced)
-  msrp: number;
-  variant_price?: number;
-  variant_compare_at_price?: number;
-  regional_msrps: Array<{              // NEW
+  
+  // New Step 4 fields
+  regional_msrps: Array<{
     region_code: RegionCode;
     currency_code: CurrencyCode;
     msrp: number | null;
   }>;
-  sync_after_create: boolean;           // NEW
-
-  // Step 5: Details
-  featured_image?: string;
-  nozzle_temp_min_c?: number;
-  nozzle_temp_max_c?: number;
-  bed_temp_min_c?: number;
-  bed_temp_max_c?: number;
-  admin_notes?: string;
+  sync_after_create: boolean;
 }
 ```
 
-### Reusing Existing Components
+### Validation
+- Step 3: No required fields (regional URLs are optional)
+- Step 4: Base MSRP required, regional MSRPs optional
+- Auto-add primary URL from Step 1 to regional_urls when entering Step 3
 
-The implementation will reuse:
-- `REGION_URL_PATTERNS` from `RegionalUrlEditor.tsx` for region detection
-- `extractStoreNameFromUrl` from `RegionalUrlEditor.tsx` for store name extraction
-- `REGIONS` config from `src/config/regions.ts`
-- `RegionalCoverageBadges` from the admin inventory components
+### Session Storage
+Existing sessionStorage mechanism handles new fields automatically since it watches all form values.
 
 ---
 
 ## Verification Checklist
 
 After implementation:
-- [ ] Wizard shows 6 steps with labels: Source, Basic, Regional URLs, Pricing, Details, Review
-- [ ] Step 1 displays detected region from URL with flag badge
-- [ ] Step 3 shows primary URL from Step 1 as read-only reference
+- [ ] Wizard displays 6 steps with correct labels
+- [ ] Step 1 shows detected region badge when URL is entered
+- [ ] Step 3 displays primary URL from Step 1 as reference
 - [ ] Step 3 allows adding regional URLs with dropdown
+- [ ] Quick-add buttons (CA, EU, UK, AU) work
 - [ ] Auto-generate URLs button creates valid suggestions
-- [ ] Quick-add buttons (CA, EU, UK, AU) work correctly
-- [ ] Step 4 shows base MSRP plus regional MSRP overrides for configured regions
-- [ ] "Sync after create" checkbox appears and persists
-- [ ] Step 6 (Review) shows all regional URLs with coverage badges
-- [ ] After creation, records appear in `product_regional_urls` table
-- [ ] After creation, records appear in `product_regional_prices` table
-- [ ] Filament record has `has_regional_urls` = true and populated `available_regions`
+- [ ] Step 4 shows base MSRP plus regional MSRP overrides
+- [ ] "Sync after create" checkbox appears
+- [ ] Step 6 shows regional URLs with coverage badges
+- [ ] Step 6 shows regional pricing summary
+- [ ] Edit buttons navigate to correct step numbers
+- [ ] After creation, records appear in `product_regional_urls`
+- [ ] After creation, records appear in `product_regional_prices`
+- [ ] Filament has `has_regional_urls = true` and `available_regions` populated
 
