@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Package } from 'lucide-react';
+import { Package, Keyboard } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { GlobalActionsBar } from '@/components/admin/inventory/GlobalActionsBar';
@@ -11,9 +11,12 @@ import { PrintersInventoryTab } from '@/components/admin/inventory/PrintersInven
 import { SyncStatusTab } from '@/components/admin/inventory/SyncStatusTab';
 import { AddFilamentWizard } from '@/components/admin/inventory/AddFilamentWizard';
 import { AddPrinterWizard } from '@/components/admin/inventory/AddPrinterWizard';
+import { InventoryErrorBoundary } from '@/components/admin/inventory/InventoryErrorBoundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { usePriceSync } from '@/hooks/usePriceSync';
+import { useInventoryKeyboardShortcuts } from '@/hooks/useInventoryKeyboardShortcuts';
 
 type TabValue = 'filaments' | 'printers' | 'sync';
 
@@ -32,6 +35,21 @@ export default function InventoryManagement() {
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
   };
+
+  // Keyboard shortcuts
+  const handleAddFilament = useCallback(() => {
+    setShowAddFilamentWizard(true);
+  }, []);
+
+  const handleAddPrinter = useCallback(() => {
+    setShowAddPrinterWizard(true);
+  }, []);
+
+  useInventoryKeyboardShortcuts({
+    activeTab,
+    onAddFilament: handleAddFilament,
+    onAddPrinter: handleAddPrinter,
+  });
 
   // Fetch brands for dropdown
   const { data: brands = [] } = useQuery({
@@ -56,14 +74,6 @@ export default function InventoryManagement() {
     if (!isSyncing) {
       syncAllPrinters(50);
     }
-  };
-
-  const handleAddFilament = () => {
-    setShowAddFilamentWizard(true);
-  };
-
-  const handleAddPrinter = () => {
-    setShowAddPrinterWizard(true);
   };
 
   return (
@@ -94,28 +104,53 @@ export default function InventoryManagement() {
         />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="filaments">Filaments</TabsTrigger>
-            <TabsTrigger value="printers">Printers</TabsTrigger>
-            <TabsTrigger value="sync">Sync Status</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between">
+            <TabsList className="grid w-full grid-cols-3 max-w-md">
+              <TabsTrigger value="filaments">Filaments</TabsTrigger>
+              <TabsTrigger value="printers">Printers</TabsTrigger>
+              <TabsTrigger value="sync">Sync Status</TabsTrigger>
+            </TabsList>
+            
+            {/* Keyboard shortcuts hint */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="hidden md:flex items-center gap-1 text-xs text-muted-foreground cursor-help">
+                  <Keyboard className="w-3 h-3" />
+                  <span>Shortcuts</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <div className="space-y-1 text-xs">
+                  <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘N</kbd> Add Filament (Filaments tab)</p>
+                  <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘⇧N</kbd> Add Printer (Printers tab)</p>
+                  <p><kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Esc</kbd> Close modal</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
 
           <TabsContent value="filaments">
-            <FilamentsInventoryTab
-              searchTerm={searchTerm}
-              selectedBrand={selectedBrand}
-            />
+            <InventoryErrorBoundary fallbackTitle="Error loading filaments">
+              <FilamentsInventoryTab
+                searchTerm={searchTerm}
+                selectedBrand={selectedBrand}
+              />
+            </InventoryErrorBoundary>
           </TabsContent>
 
           <TabsContent value="printers">
-            <PrintersInventoryTab
-              searchTerm={searchTerm}
-              selectedBrand={selectedBrand}
-            />
+            <InventoryErrorBoundary fallbackTitle="Error loading printers">
+              <PrintersInventoryTab
+                searchTerm={searchTerm}
+                selectedBrand={selectedBrand}
+              />
+            </InventoryErrorBoundary>
           </TabsContent>
 
           <TabsContent value="sync">
-            <SyncStatusTab />
+            <InventoryErrorBoundary fallbackTitle="Error loading sync status">
+              <SyncStatusTab />
+            </InventoryErrorBoundary>
           </TabsContent>
         </Tabs>
 

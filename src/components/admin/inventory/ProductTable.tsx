@@ -239,8 +239,13 @@ export function ProductTable({
 
   return (
     <>
-      <div className="relative w-full overflow-x-auto">
-        <Table>
+      <div 
+        className="relative w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0"
+        role="region"
+        aria-label={`${type === 'filament' ? 'Filaments' : 'Printers'} inventory table`}
+        tabIndex={0}
+      >
+        <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow>
               <SortableHeader field="displayName">Display Name</SortableHeader>
@@ -312,13 +317,22 @@ export function ProductTable({
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-sm">
-                    <InlineEditableCell
-                      value={product.msrp}
-                      onSave={(value) => handleInlineMsrpSave(product.id, value)}
-                      type="price"
-                      formatDisplay={(v) => formatPrice(v as number | null)}
-                      disabled={isSaving}
-                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <InlineEditableCell
+                            value={product.msrp}
+                            onSave={(value) => handleInlineMsrpSave(product.id, value)}
+                            type="price"
+                            formatDisplay={(v) => formatPrice(v as number | null)}
+                            disabled={isSaving}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Manufacturer's Suggested Retail Price
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     <div className="flex items-center gap-1">
@@ -334,19 +348,34 @@ export function ProductTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {priceDiff !== null ? (
-                      <span
-                        className={cn(
-                          'font-mono text-sm',
-                          priceDiff < 0 && 'text-green-600',
-                          priceDiff > 0 && 'text-destructive'
-                        )}
-                      >
-                        {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(1)}%
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          {priceDiff !== null ? (
+                            <span
+                              className={cn(
+                                'font-mono text-sm cursor-help',
+                                priceDiff < 0 && 'text-green-600',
+                                priceDiff > 0 && 'text-destructive'
+                              )}
+                            >
+                              {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {priceDiff !== null
+                          ? priceDiff < 0
+                            ? `${Math.abs(priceDiff).toFixed(1)}% below MSRP`
+                            : priceDiff > 0
+                            ? `${priceDiff.toFixed(1)}% above MSRP`
+                            : 'At MSRP'
+                          : 'Price difference unavailable'}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {product.lastSyncedAt ? (
@@ -371,24 +400,38 @@ export function ProductTable({
                     </Tooltip>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleEditProduct(product)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onSync?.(product.id)}
-                        disabled={isSyncing}
-                      >
-                        <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
-                      </Button>
+                    <div className="flex items-center justify-end gap-1" role="group" aria-label="Product actions">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEditProduct(product)}
+                            aria-label={`Edit ${product.displayName}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit product details</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => onSync?.(product.id)}
+                            disabled={isSyncing}
+                            aria-label={isSyncing ? 'Syncing price...' : `Sync price for ${product.displayName}`}
+                          >
+                            <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isSyncing ? 'Syncing...' : 'Refresh price from source'}
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>
