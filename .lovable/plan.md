@@ -1,359 +1,321 @@
 
-# Admin Inventory Management - Part 7: Price Sync Edge Function
 
-## Pre-Check Verification
-
-Based on my exploration, the filament and printer wizards from Parts 5 & 6 have been successfully implemented:
-- `AddFilamentWizard.tsx` with 5 steps and `useCreateFilament` hook
-- `AddPrinterWizard.tsx` with 6 steps and `useCreatePrinter` hook
-- Both integrated into `InventoryManagement.tsx` via `GlobalActionsBar.tsx`
+# Regional Database Schema - Part 1 Implementation Plan
 
 ## Overview
+This migration adds normalized regional URL and pricing tables to support multi-region e-commerce, replacing/augmenting the current denormalized column-based approach.
 
-Create a new `sync-prices` Edge Function that handles price syncing for both filaments and printers. This function will:
-1. Support three sync modes: all, brand, single
-2. Use brand-specific extraction strategies from `automated_brands` table
-3. Track sync runs in `brand_sync_logs` table
-4. Log individual extractions to `price_extraction_logs` table
-5. Handle rate limiting and graceful error recovery
+## Current State Analysis
 
-## Architecture
+### Already Exists
+| Component | Status |
+|-----------|--------|
+| `brand_regional_stores` | Complete - stores brand-level regional config |
+| `product_regional_slugs` | Exists for filaments only |
+| Filaments: `product_url_*` columns | 5 regional URL columns exist |
+| Filaments: `price_*` columns | 5 regional price columns exist |
+| Filaments: `available_regions` | Array column exists |
+| Printers: `official_store_url_*` | 5 regional URL columns exist |
+| Printers: regional price columns | 12 regional price columns exist (store + Amazon) |
+| `brand_sync_logs` | Sync tracking (no `price_sync_runs` table) |
 
-The function leverages the existing `get-current-price` Edge Function for the actual price extraction logic, reusing its:
-- Shopify JSON endpoint extraction
-- Firecrawl-based HTML scraping
-- Brand config lookup from `automated_brands`
-- Extraction logging to `price_extraction_logs`
+### What This Migration Adds
+- **Normalized tables** for flexible multi-store per region support
+- **Tracking columns** for verification and sync status
+- **Helper views** for easy querying with regional data included
 
+---
+
+## Database Migration Steps
+
+### Step 1: Create `product_regional_urls` Table
+
+```sql
+CREATE TABLE public.product_regional_urls (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id uuid NOT NULL,
+  product_type text NOT NULL,
+  region_code text NOT NULL,
+  store_url text NOT NULL,
+  store_name text,
+  currency_code text NOT NULL DEFAULT 'USD',
+  is_primary boolean DEFAULT false,
+  is_verified boolean DEFAULT false,
+  last_verified_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  
+  CONSTRAINT product_regional_urls_type_check 
+    CHECK (product_type IN ('filament', 'printer')),
+  CONSTRAINT product_regional_urls_region_check 
+    CHECK (region_code IN ('US', 'CA', 'UK', 'EU', 'AU', 'JP', 'CN')),
+  CONSTRAINT product_regional_urls_unique 
+    UNIQUE (product_id, product_type, region_code, store_url)
+);
+```
+
+**Indexes:**
+- `(product_id, product_type)` - Primary lookup
+- `(region_code)` - Filter by region
+- `(is_verified)` - Find unverified URLs
+
+### Step 2: Create `product_regional_prices` Table
+
+```sql
+CREATE TABLE public.product_regional_prices (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id uuid NOT NULL,
+  product_type text NOT NULL,
+  region_code text NOT NULL,
+  currency_code text NOT NULL,
+  current_price numeric,
+  compare_at_price numeric,
+  msrp numeric,
+  price_source text,
+  last_sync_at timestamptz,
+  last_sync_status text,
+  last_sync_error text,
+  store_url_id uuid REFERENCES product_regional_urls(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  
+  CONSTRAINT product_regional_prices_type_check 
+    CHECK (product_type IN ('filament', 'printer')),
+  CONSTRAINT product_regional_prices_region_check 
+    CHECK (region_code IN ('US', 'CA', 'UK', 'EU', 'AU', 'JP', 'CN')),
+  CONSTRAINT product_regional_prices_unique 
+    UNIQUE (product_id, product_type, region_code)
+);
+```
+
+### Step 3: Add Columns to `filaments` Table
+
+```sql
+ALTER TABLE filaments 
+  ADD COLUMN IF NOT EXISTS primary_region text DEFAULT 'US',
+  ADD COLUMN IF NOT EXISTS has_regional_urls boolean DEFAULT false;
+-- Note: available_regions already exists as text[]
+```
+
+### Step 4: Add Columns to `printers` Table
+
+```sql
+ALTER TABLE printers 
+  ADD COLUMN IF NOT EXISTS primary_region text DEFAULT 'US',
+  ADD COLUMN IF NOT EXISTS has_regional_urls boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS regional_availability text[];
+```
+
+### Step 5: Add Regional Columns to `brand_sync_logs`
+
+```sql
+ALTER TABLE brand_sync_logs
+  ADD COLUMN IF NOT EXISTS region_code text,
+  ADD COLUMN IF NOT EXISTS regions_synced text[];
+```
+
+### Step 6: Create Helper View for Filaments
+
+```sql
+CREATE OR REPLACE VIEW filaments_with_regional AS
+SELECT 
+  f.*,
+  COALESCE(
+    (SELECT jsonb_agg(jsonb_build_object(
+      'region', pru.region_code,
+      'url', pru.store_url,
+      'storeName', pru.store_name,
+      'isVerified', pru.is_verified,
+      'isPrimary', pru.is_primary
+    ))
+    FROM product_regional_urls pru 
+    WHERE pru.product_id = f.id AND pru.product_type = 'filament'),
+    '[]'::jsonb
+  ) as regional_urls,
+  COALESCE(
+    (SELECT jsonb_agg(jsonb_build_object(
+      'region', prp.region_code,
+      'price', prp.current_price,
+      'currency', prp.currency_code,
+      'lastSync', prp.last_sync_at,
+      'status', prp.last_sync_status
+    ))
+    FROM product_regional_prices prp 
+    WHERE prp.product_id = f.id AND prp.product_type = 'filament'),
+    '[]'::jsonb
+  ) as regional_prices
+FROM filaments f;
+```
+
+### Step 7: Create Helper View for Printers
+
+```sql
+CREATE OR REPLACE VIEW printers_with_regional AS
+SELECT 
+  p.*,
+  COALESCE(
+    (SELECT jsonb_agg(jsonb_build_object(
+      'region', pru.region_code,
+      'url', pru.store_url,
+      'storeName', pru.store_name,
+      'isVerified', pru.is_verified,
+      'isPrimary', pru.is_primary
+    ))
+    FROM product_regional_urls pru 
+    WHERE pru.product_id = p.id AND pru.product_type = 'printer'),
+    '[]'::jsonb
+  ) as regional_urls,
+  COALESCE(
+    (SELECT jsonb_agg(jsonb_build_object(
+      'region', prp.region_code,
+      'price', prp.current_price,
+      'currency', prp.currency_code,
+      'lastSync', prp.last_sync_at,
+      'status', prp.last_sync_status
+    ))
+    FROM product_regional_prices prp 
+    WHERE prp.product_id = p.id AND prp.product_type = 'printer'),
+    '[]'::jsonb
+  ) as regional_prices
+FROM printers p;
+```
+
+### Step 8: RLS Policies
+
+```sql
+-- product_regional_urls
+ALTER TABLE product_regional_urls ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read regional URLs"
+  ON product_regional_urls FOR SELECT USING (true);
+
+CREATE POLICY "Service role manages regional URLs"
+  ON product_regional_urls FOR ALL TO service_role
+  USING (true) WITH CHECK (true);
+
+-- product_regional_prices
+ALTER TABLE product_regional_prices ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read regional prices"
+  ON product_regional_prices FOR SELECT USING (true);
+
+CREATE POLICY "Service role manages regional prices"
+  ON product_regional_prices FOR ALL TO service_role
+  USING (true) WITH CHECK (true);
+```
+
+### Step 9: Auto-Update Trigger
+
+```sql
+CREATE OR REPLACE FUNCTION update_regional_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_product_regional_urls_timestamp
+  BEFORE UPDATE ON product_regional_urls
+  FOR EACH ROW EXECUTE FUNCTION update_regional_timestamp();
+
+CREATE TRIGGER update_product_regional_prices_timestamp
+  BEFORE UPDATE ON product_regional_prices
+  FOR EACH ROW EXECUTE FUNCTION update_regional_timestamp();
+```
+
+---
+
+## TypeScript Types Update
+
+After migration, the generated types will include:
+
+```typescript
+interface ProductRegionalUrl {
+  id: string;
+  product_id: string;
+  product_type: 'filament' | 'printer';
+  region_code: 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN';
+  store_url: string;
+  store_name: string | null;
+  currency_code: string;
+  is_primary: boolean;
+  is_verified: boolean;
+  last_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ProductRegionalPrice {
+  id: string;
+  product_id: string;
+  product_type: 'filament' | 'printer';
+  region_code: string;
+  currency_code: string;
+  current_price: number | null;
+  compare_at_price: number | null;
+  msrp: number | null;
+  price_source: string | null;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
+  store_url_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+---
+
+## Migration Considerations
+
+### Existing Data Compatibility
+- The new tables will coexist with existing denormalized columns
+- Existing `product_url_*` and `price_*` columns remain functional
+- Future migration can populate new tables from existing columns
+
+### Relationship to `product_regional_slugs`
+- Existing table handles slug-to-region mapping for URL construction
+- New `product_regional_urls` stores full URLs directly
+- Both can coexist - slugs for URL generation, URLs for direct storage
+
+### Sync Tracking Enhancement
+- Adding `region_code` to `brand_sync_logs` enables per-region sync tracking
+- `regions_synced` array captures which regions were updated in a sync run
+
+---
+
+## Technical Details
+
+### Table Relationships
 ```text
-sync-prices/index.ts
-├── Creates sync run record (brand_sync_logs)
-├── Queries products based on syncType
-├── For each product:
-│   ├── Calls get-current-price or inline extraction
-│   ├── Updates filaments/printers table with new price
-│   └── Logs to price_extraction_logs
-└── Updates sync run with final counts
+filaments (id) ----< product_regional_urls (product_id)
+                         |
+                         v
+                    product_regional_prices (store_url_id)
 ```
 
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `supabase/functions/sync-prices/index.ts` | Main price sync Edge Function |
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `supabase/config.toml` | Add `[functions.sync-prices]` config with `verify_jwt = false` |
+### Supported Regions and Currencies
+| Region | Currency | Notes |
+|--------|----------|-------|
+| US | USD | Primary/default region |
+| CA | CAD | Canada |
+| UK | GBP | United Kingdom |
+| EU | EUR | European Union |
+| AU | AUD | Australia |
+| JP | JPY | Japan |
+| CN | CNY | China (new addition) |
 
 ---
 
-## Edge Function Specification
+## Verification After Migration
 
-### Request Interface
+- [ ] `product_regional_urls` table exists with correct constraints
+- [ ] `product_regional_prices` table exists with correct constraints  
+- [ ] `filaments` has `primary_region` and `has_regional_urls` columns
+- [ ] `printers` has `primary_region`, `has_regional_urls`, and `regional_availability` columns
+- [ ] `brand_sync_logs` has `region_code` and `regions_synced` columns
+- [ ] Views `filaments_with_regional` and `printers_with_regional` work
+- [ ] RLS policies allow public read, service role write
+- [ ] Supabase types regenerated successfully
 
-```typescript
-interface SyncRequest {
-  syncType: 'all' | 'brand' | 'single';
-  productType: 'filament' | 'printer';
-  targetId?: string;      // For 'single' - the product ID
-  brandSlug?: string;     // For 'brand' - the vendor/brand slug
-  triggeredBy?: 'admin' | 'scheduled' | 'api';
-  dryRun?: boolean;       // If true, don't update prices, just log what would happen
-}
-```
-
-### Response Interface
-
-```typescript
-interface SyncResponse {
-  success: boolean;
-  syncRunId: string;
-  syncType: string;
-  productType: string;
-  dryRun: boolean;
-  total: number;
-  successful: number;
-  failed: number;
-  skipped: number;
-  priceChanges: number;
-  duration_ms: number;
-  errors?: Array<{ productId: string; error: string }>;
-}
-```
-
----
-
-## Extraction Strategy Selection
-
-The function will determine extraction strategy based on `automated_brands.extraction_method` and `platform_type`:
-
-| Platform Type | Extraction Method |
-|---------------|-------------------|
-| `shopify` | Try Shopify `.json` endpoint first, fallback to Firecrawl |
-| `woocommerce` | Use Firecrawl HTML scraping |
-| `firecrawl` | Direct Firecrawl scraping |
-| `amazon` | Skip (Amazon prices require different API) |
-| `custom` | Skip or manual-only |
-
-### Extraction Logic
-
-```typescript
-async function extractPrice(
-  productUrl: string,
-  brandConfig: BrandConfig
-): Promise<{ price: number | null; compareAtPrice: number | null; error?: string }> {
-  
-  // Strategy 1: Shopify JSON (fastest, most reliable for Shopify stores)
-  if (brandConfig.platform_type === 'shopify') {
-    const jsonResult = await tryShopifyJson(productUrl);
-    if (jsonResult.success) return jsonResult;
-  }
-  
-  // Strategy 2: Firecrawl HTML scraping (fallback)
-  if (['shopify', 'woocommerce', 'firecrawl'].includes(brandConfig.platform_type)) {
-    return await tryFirecrawlScrape(productUrl, brandConfig.price_extraction_config);
-  }
-  
-  // Strategy 3: Manual-only (skip)
-  return { price: null, compareAtPrice: null, error: 'Manual extraction only' };
-}
-```
-
----
-
-## Sync Flow
-
-### 1. Initialize Sync Run
-
-```typescript
-// Create brand_sync_logs record
-const { data: syncLog } = await supabase
-  .from('brand_sync_logs')
-  .insert({
-    brand_slug: brandSlug || 'all',
-    sync_type: 'prices',
-    status: 'running',
-    triggered_by: triggeredBy,
-    products_processed: { progress: { stage: 'initializing' } }
-  })
-  .select('id')
-  .single();
-```
-
-### 2. Query Products
-
-```typescript
-// Build query based on syncType
-let query = supabase
-  .from(productType === 'filament' ? 'filaments' : 'printers')
-  .select('id, product_title, product_url, vendor, variant_price, msrp')
-  .eq('sync_enabled', true)
-  .not('product_url', 'is', null);
-
-if (syncType === 'single' && targetId) {
-  query = query.eq('id', targetId);
-} else if (syncType === 'brand' && brandSlug) {
-  query = query.eq('vendor', brandSlug);
-}
-
-// Apply limit to prevent timeouts
-query = query.limit(100);
-```
-
-### 3. Process Products with Rate Limiting
-
-```typescript
-const results = [];
-for (const product of products) {
-  // Get brand config for rate limit
-  const brandConfig = await getBrandConfig(product.vendor);
-  const rateLimitMs = brandConfig?.rate_limit_ms || 2000;
-  
-  // Extract price
-  const startTime = Date.now();
-  const extraction = await extractPrice(product.product_url, brandConfig);
-  const responseTime = Date.now() - startTime;
-  
-  // Log extraction attempt
-  await logExtraction(product, extraction, responseTime);
-  
-  // Update product if price changed and not dry run
-  if (!dryRun && extraction.price !== null) {
-    await updateProductPrice(product, extraction);
-  }
-  
-  results.push({ productId: product.id, ...extraction });
-  
-  // Rate limit
-  await sleep(rateLimitMs);
-}
-```
-
-### 4. Update Sync Run Record
-
-```typescript
-await supabase
-  .from('brand_sync_logs')
-  .update({
-    status: 'completed',
-    completed_at: new Date().toISOString(),
-    duration_seconds: (Date.now() - startTime) / 1000,
-    products_discovered: products.length,
-    products_updated: successCount,
-    products_failed: failCount,
-    price_changes: priceChangeCount,
-  })
-  .eq('id', syncLog.id);
-```
-
----
-
-## Error Handling
-
-### Individual Product Errors
-
-- Catch and log errors per product
-- Continue to next product (don't abort entire sync)
-- Update product's `last_sync_error` column
-- Include error in response's `errors` array
-
-### Global Timeout
-
-- Set maximum runtime of 5 minutes
-- Use `AbortController` with timeout
-- Mark sync as 'failed' if timeout reached
-- Return partial results
-
-### Rate Limit Handling
-
-- Read `rate_limit_ms` from brand config (default 2000ms)
-- Wait between each product extraction
-- Respect per-brand limits
-
----
-
-## Database Column Usage
-
-### Filaments Table
-
-| Column | Purpose |
-|--------|---------|
-| `variant_price` | Current price (updated by sync) |
-| `msrp` | MSRP for comparison |
-| `last_scraped_at` | Timestamp of last successful sync |
-| `last_sync_error` | Error message if sync failed |
-| `sync_enabled` | Whether to include in syncs |
-
-### Printers Table
-
-| Column | Purpose |
-|--------|---------|
-| `current_price_usd_store` | Current price (updated by sync) |
-| `msrp_usd` | MSRP for comparison |
-| `last_sync_status` | 'success' or 'failed' |
-| `last_sync_error` | Error message if sync failed |
-| `sync_enabled` | Whether to include in syncs |
-
----
-
-## Reusing Existing Code
-
-The function will import and reuse extraction logic from `get-current-price`:
-
-```typescript
-// Import Shopify JSON extraction
-async function tryShopifyJson(url: string) {
-  const jsonUrl = url.replace(/\/?$/, '.json');
-  const response = await fetch(jsonUrl);
-  if (!response.ok) return { success: false };
-  
-  const data = await response.json();
-  const variant = data.product?.variants?.[0];
-  return {
-    success: true,
-    price: parseFloat(variant?.price),
-    compareAtPrice: parseFloat(variant?.compare_at_price) || null
-  };
-}
-```
-
-For Firecrawl scraping, the function will call the existing `get-current-price` Edge Function internally:
-
-```typescript
-async function callGetCurrentPrice(productUrl: string) {
-  const response = await fetch(
-    `${Deno.env.get('SUPABASE_URL')}/functions/v1/get-current-price`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-      },
-      body: JSON.stringify({ productUrl })
-    }
-  );
-  return response.json();
-}
-```
-
----
-
-## Config.toml Addition
-
-```toml
-[functions.sync-prices]
-verify_jwt = false
-```
-
-Setting `verify_jwt = false` allows the function to be called by scheduled jobs and internal services.
-
----
-
-## Testing
-
-### Test Single Product Sync
-
-```bash
-curl -X POST \
-  'https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sync-prices' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "syncType": "single",
-    "productType": "filament",
-    "targetId": "<filament-uuid>",
-    "triggeredBy": "admin"
-  }'
-```
-
-### Test Brand Sync
-
-```bash
-curl -X POST \
-  'https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sync-prices' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "syncType": "brand",
-    "productType": "filament",
-    "brandSlug": "bambu-lab",
-    "triggeredBy": "admin",
-    "dryRun": true
-  }'
-```
-
----
-
-## Verification Checklist
-
-After implementation:
-- [ ] Edge Function deploys without errors
-- [ ] Single product sync returns expected response with price data
-- [ ] Brand sync processes all products of that brand with rate limiting
-- [ ] `brand_sync_logs` table has new record with correct counts
-- [ ] Product `last_scraped_at` / `last_sync_status` updated after sync
-- [ ] `price_extraction_logs` has entries for each extraction attempt
-- [ ] Individual errors are logged but don't crash entire sync
-- [ ] Dry run mode logs actions without updating prices
-- [ ] Function respects 5-minute timeout
