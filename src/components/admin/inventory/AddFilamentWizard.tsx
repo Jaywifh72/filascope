@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -24,19 +25,40 @@ import { Form } from '@/components/ui/form';
 import { WizardStepIndicator } from './wizard/WizardStepIndicator';
 import { FilamentWizardStep1 } from './wizard/FilamentWizardStep1';
 import { FilamentWizardStep2 } from './wizard/FilamentWizardStep2';
-import { FilamentWizardStep3 } from './wizard/FilamentWizardStep3';
-import { FilamentWizardStep4 } from './wizard/FilamentWizardStep4';
-import { FilamentWizardStep5 } from './wizard/FilamentWizardStep5';
+import { FilamentWizardStep3Regional } from './wizard/FilamentWizardStep3Regional';
+import { FilamentWizardStep4Pricing } from './wizard/FilamentWizardStep4Pricing';
+import { FilamentWizardStep5Details } from './wizard/FilamentWizardStep5Details';
+import { FilamentWizardStep6Review } from './wizard/FilamentWizardStep6Review';
 import { useCreateFilament } from '@/hooks/useCreateFilament';
+import { useSaveRegionalUrls, useSaveRegionalPrices } from '@/hooks/useRegionalMutations';
+import { RegionCode, CurrencyCode } from '@/types/regional';
 
 const WIZARD_STORAGE_KEY = 'add-filament-wizard-progress';
 const STORAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Regional URL schema
+const regionalUrlSchema = z.object({
+  region_code: z.string(),
+  store_url: z.string().optional().default(''),
+  store_name: z.string().optional().default(''),
+  currency_code: z.string().default('USD'),
+  is_primary: z.boolean().default(false),
+  is_verified: z.boolean().default(false),
+});
+
+// Regional MSRP schema
+const regionalMsrpSchema = z.object({
+  region_code: z.string(),
+  currency_code: z.string(),
+  msrp: z.number().nullable(),
+});
 
 const wizardSchema = z.object({
   // Step 1: Source
   product_url: z.string().url('Invalid URL').min(1, 'Product URL is required'),
   vendor: z.string().min(1, 'Brand/Vendor is required'),
   source_type: z.enum(['manufacturer', 'retailer', 'amazon', 'other']),
+  detected_region: z.string().optional(),
 
   // Step 2: Basic Info
   product_title: z.string().min(1, 'Display name is required').max(255),
@@ -50,12 +72,17 @@ const wizardSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  // Step 3: Pricing
+  // Step 3: Regional URLs
+  regional_urls: z.array(regionalUrlSchema).optional().default([]),
+
+  // Step 4: Pricing
   msrp: z.coerce.number().min(0.01, 'MSRP must be greater than 0'),
   variant_price: z.coerce.number().min(0).optional(),
   variant_compare_at_price: z.coerce.number().min(0).optional(),
+  regional_msrps: z.array(regionalMsrpSchema).optional().default([]),
+  sync_after_create: z.boolean().optional().default(false),
 
-  // Step 4: Details
+  // Step 5: Details
   featured_image: z.string().url('Invalid URL').optional().or(z.literal('')),
   nozzle_temp_min_c: z.coerce.number().min(150).max(500).optional(),
   nozzle_temp_max_c: z.coerce.number().min(150).max(500).optional(),
@@ -66,16 +93,17 @@ const wizardSchema = z.object({
 
 export type WizardFormValues = z.infer<typeof wizardSchema>;
 
-const STEP_LABELS = ['Source', 'Basic', 'Pricing', 'Details', 'Review'];
-const TOTAL_STEPS = 5;
+const STEP_LABELS = ['Source', 'Basic', 'Regional URLs', 'Pricing', 'Details', 'Review'];
+const TOTAL_STEPS = 6;
 
 // Validation fields per step
 const STEP_FIELDS: Record<number, (keyof WizardFormValues)[]> = {
   1: ['product_url', 'vendor', 'source_type'],
   2: ['product_title', 'material', 'diameter', 'net_weight_g', 'color_name', 'color_hex'],
-  3: ['msrp', 'variant_price', 'variant_compare_at_price'],
-  4: ['featured_image', 'nozzle_temp_min_c', 'nozzle_temp_max_c', 'bed_temp_min_c', 'bed_temp_max_c', 'admin_notes'],
-  5: [],
+  3: ['regional_urls'],
+  4: ['msrp', 'variant_price', 'variant_compare_at_price'],
+  5: ['featured_image', 'nozzle_temp_min_c', 'nozzle_temp_max_c', 'bed_temp_min_c', 'bed_temp_max_c', 'admin_notes'],
+  6: [],
 };
 
 interface AddFilamentWizardProps {
@@ -95,6 +123,8 @@ export function AddFilamentWizard({
   const [savedData, setSavedData] = useState<{ data: WizardFormValues; step: number } | null>(null);
 
   const createFilament = useCreateFilament();
+  const saveRegionalUrls = useSaveRegionalUrls();
+  const saveRegionalPrices = useSaveRegionalPrices();
 
   const form = useForm<WizardFormValues>({
     resolver: zodResolver(wizardSchema),
@@ -102,15 +132,19 @@ export function AddFilamentWizard({
       product_url: '',
       vendor: '',
       source_type: 'manufacturer',
+      detected_region: undefined,
       product_title: '',
       material: '',
       diameter: '1.75',
       net_weight_g: 1000,
       color_name: '',
       color_hex: '',
+      regional_urls: [],
       msrp: 0,
       variant_price: undefined,
       variant_compare_at_price: undefined,
+      regional_msrps: [],
+      sync_after_create: false,
       featured_image: '',
       nozzle_temp_min_c: undefined,
       nozzle_temp_max_c: undefined,
@@ -219,6 +253,19 @@ export function AddFilamentWizard({
     if (!isValid) return;
 
     const values = form.getValues();
+    const regionalUrls = values.regional_urls || [];
+    
+    // Build available regions array
+    const availableRegions: string[] = [];
+    if (values.detected_region) {
+      availableRegions.push(values.detected_region);
+    }
+    regionalUrls.forEach((u) => {
+      if (u.store_url && !availableRegions.includes(u.region_code)) {
+        availableRegions.push(u.region_code);
+      }
+    });
+
     const insertData = {
       product_url: values.product_url,
       vendor: values.vendor,
@@ -239,9 +286,75 @@ export function AddFilamentWizard({
       bed_temp_max_c: values.bed_temp_max_c,
       admin_notes: values.admin_notes,
     };
+
     createFilament.mutate(insertData, {
-      onSuccess: (result) => {
+      onSuccess: async (result) => {
         sessionStorage.removeItem(WIZARD_STORAGE_KEY);
+
+        // Save regional URLs if any configured
+        const allUrls = [
+          // Primary URL
+          ...(values.detected_region ? [{
+            product_id: result.id,
+            product_type: 'filament' as const,
+            region_code: values.detected_region as RegionCode,
+            store_url: values.product_url,
+            store_name: values.vendor,
+            currency_code: 'USD' as CurrencyCode,
+            is_primary: true,
+            is_verified: true,
+          }] : []),
+          // Additional regional URLs
+          ...regionalUrls.filter((u) => u.store_url).map((u) => ({
+            product_id: result.id,
+            product_type: 'filament' as const,
+            region_code: u.region_code as RegionCode,
+            store_url: u.store_url,
+            store_name: u.store_name || '',
+            currency_code: (u.currency_code || 'USD') as CurrencyCode,
+            is_primary: u.is_primary,
+            is_verified: u.is_verified,
+          })),
+        ];
+
+        if (allUrls.length > 0) {
+          try {
+            await saveRegionalUrls.mutateAsync({
+              productId: result.id,
+              productType: 'filament',
+              urls: allUrls,
+            });
+          } catch (err) {
+            console.error('Failed to save regional URLs:', err);
+          }
+        }
+
+        // Save regional prices if any configured
+        const regionalMsrps = values.regional_msrps || [];
+        if (regionalMsrps.length > 0) {
+          try {
+            await saveRegionalPrices.mutateAsync({
+              productId: result.id,
+              productType: 'filament',
+              prices: regionalMsrps.filter((p) => p.msrp != null).map((p) => ({
+                product_id: result.id,
+                product_type: 'filament' as const,
+                region_code: p.region_code as RegionCode,
+                currency_code: p.currency_code as CurrencyCode,
+                msrp: p.msrp,
+                current_price: null,
+              })),
+            });
+          } catch (err) {
+            console.error('Failed to save regional prices:', err);
+          }
+        }
+
+        // Show sync message if requested
+        if (values.sync_after_create) {
+          toast.info('Price sync queued for configured regions');
+        }
+
         onSuccess?.(result.id);
         if (addAnother) {
           form.reset();
@@ -260,11 +373,13 @@ export function AddFilamentWizard({
       case 2:
         return <FilamentWizardStep2 form={form} />;
       case 3:
-        return <FilamentWizardStep3 form={form} />;
+        return <FilamentWizardStep3Regional form={form} />;
       case 4:
-        return <FilamentWizardStep4 form={form} />;
+        return <FilamentWizardStep4Pricing form={form} />;
       case 5:
-        return <FilamentWizardStep5 form={form} onGoToStep={handleGoToStep} />;
+        return <FilamentWizardStep5Details form={form} />;
+      case 6:
+        return <FilamentWizardStep6Review form={form} onGoToStep={handleGoToStep} />;
       default:
         return null;
     }
