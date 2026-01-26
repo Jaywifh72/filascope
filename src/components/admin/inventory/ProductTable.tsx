@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
-import { ExternalLink, Copy, Pencil, RefreshCw, Check, AlertTriangle, Clock, Minus, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ExternalLink, Copy, Pencil, RefreshCw, Check, AlertTriangle, Clock, Minus, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,8 +9,26 @@ import { toast } from 'sonner';
 import { InlineEditableCell } from './InlineEditableCell';
 import { EditProductModal, FilamentProduct, PrinterProduct } from './EditProductModal';
 import { useUpdateFilament, useUpdatePrinter } from '@/hooks/useProductMutations';
+import { RegionalUrlCell } from './RegionalUrlCell';
+import { RegionalPriceCell } from './RegionalPriceCell';
+import { AllRegionsPriceRow } from './AllRegionsPriceRow';
+import { RegionCode, CurrencyCode } from '@/types/regional';
+import { REGIONS } from '@/config/regions';
 
 export type ProductType = 'filament' | 'printer';
+
+export interface RegionalInfo {
+  region: RegionCode;
+  url?: string | null;
+  storeName?: string | null;
+  isVerified?: boolean;
+  isPrimary?: boolean;
+  price?: number | null;
+  currency: CurrencyCode;
+  msrp?: number | null;
+  lastSyncAt?: string | null;
+  lastSyncStatus?: string | null;
+}
 
 export interface ProductRow {
   id: string;
@@ -33,6 +51,12 @@ export interface ProductRow {
   adminNotes?: string | null;
   buildVolume?: string | null;
   maxPrintSpeed?: number | null;
+  // Regional data
+  regionalUrls?: RegionalInfo[];
+  regionalPrices?: RegionalInfo[];
+  primaryRegion?: RegionCode;
+  hasRegionalUrls?: boolean;
+  availableRegions?: RegionCode[];
 }
 
 interface ProductTableProps {
@@ -40,6 +64,12 @@ interface ProductTableProps {
   type: ProductType;
   onSync?: (id: string) => void;
   syncingIds?: string[];
+  // Regional props
+  selectedRegion?: RegionCode;
+  viewCurrency?: CurrencyCode;
+  showAllRegions?: boolean;
+  onEditRegionalUrl?: (productId: string, region: RegionCode) => void;
+  onSyncRegion?: (productId: string, region: RegionCode) => void;
 }
 
 type SortField = 'displayName' | 'material' | 'msrp' | 'currentPrice' | 'priceDiff' | 'lastSyncedAt';
@@ -79,16 +109,24 @@ function getSyncStatusIcon(status: string | null | undefined, error: string | nu
   }
 }
 
+const DISPLAY_REGIONS: RegionCode[] = ['US', 'CA', 'UK', 'EU', 'AU'];
+
 export function ProductTable({
   products,
   type,
   onSync,
   syncingIds = [],
+  selectedRegion = 'US',
+  viewCurrency = 'USD',
+  showAllRegions = false,
+  onEditRegionalUrl,
+  onSyncRegion,
 }: ProductTableProps) {
   const [sortField, setSortField] = useState<SortField>('displayName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [editingProduct, setEditingProduct] = useState<FilamentProduct | PrinterProduct | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
 
   const updateFilament = useUpdateFilament();
   const updatePrinter = useUpdatePrinter();
@@ -208,6 +246,59 @@ export function ProductTable({
     }
   };
 
+  const toggleProductExpanded = (productId: string) => {
+    setExpandedProducts((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
+  };
+
+  // Helper to get regional data for a product
+  const getRegionalData = (product: ProductRow, region: RegionCode): RegionalInfo | undefined => {
+    // Check regionalUrls first
+    const urlData = product.regionalUrls?.find((r) => r.region === region);
+    const priceData = product.regionalPrices?.find((r) => r.region === region);
+    
+    if (urlData || priceData) {
+      return {
+        region,
+        url: urlData?.url || null,
+        storeName: urlData?.storeName,
+        isVerified: urlData?.isVerified,
+        isPrimary: urlData?.isPrimary,
+        price: priceData?.price || null,
+        currency: priceData?.currency || REGIONS[region]?.defaultCurrency || 'USD',
+        msrp: priceData?.msrp,
+        lastSyncAt: priceData?.lastSyncAt,
+        lastSyncStatus: priceData?.lastSyncStatus,
+      };
+    }
+    return undefined;
+  };
+
+  // Merge all regional data for a product
+  const getMergedRegionalData = (product: ProductRow): RegionalInfo[] => {
+    const result: RegionalInfo[] = [];
+    for (const region of DISPLAY_REGIONS) {
+      const data = getRegionalData(product, region);
+      if (data) {
+        result.push(data);
+      } else {
+        // Add empty entry for the region
+        result.push({
+          region,
+          currency: REGIONS[region]?.defaultCurrency || 'USD',
+        });
+      }
+    }
+    return result;
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <ArrowUpDown className="w-3 h-3 ml-1 text-muted-foreground" />;
@@ -229,6 +320,8 @@ export function ProductTable({
     </TableHead>
   );
 
+  // Calculate column count for row spans
+  const baseColCount = type === 'filament' ? 9 : 8;
   if (products.length === 0) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -245,19 +338,48 @@ export function ProductTable({
         aria-label={`${type === 'filament' ? 'Filaments' : 'Printers'} inventory table`}
         tabIndex={0}
       >
-        <Table className="min-w-[900px]">
+        <Table className={cn('min-w-[900px]', showAllRegions && 'min-w-[1400px]')}>
           <TableHeader>
             <TableRow>
               <SortableHeader field="displayName">Display Name</SortableHeader>
               {type === 'filament' && (
                 <SortableHeader field="material">Material</SortableHeader>
               )}
-              <TableHead>Product URL</TableHead>
-              <SortableHeader field="msrp">MSRP</SortableHeader>
-              <SortableHeader field="currentPrice">Current Price</SortableHeader>
-              <SortableHeader field="priceDiff">Price Diff</SortableHeader>
-              <SortableHeader field="lastSyncedAt">Last Synced</SortableHeader>
-              <TableHead>Status</TableHead>
+              
+              {/* Single region mode */}
+              {!showAllRegions && (
+                <>
+                  <TableHead>
+                    <div className="flex items-center gap-1">
+                      {REGIONS[selectedRegion]?.flag} URL
+                    </div>
+                  </TableHead>
+                  <SortableHeader field="msrp">MSRP</SortableHeader>
+                  <SortableHeader field="currentPrice">
+                    <div className="flex items-center gap-1">
+                      {REGIONS[selectedRegion]?.flag} Price
+                    </div>
+                  </SortableHeader>
+                  <SortableHeader field="priceDiff">Price Diff</SortableHeader>
+                  <SortableHeader field="lastSyncedAt">Last Synced</SortableHeader>
+                  <TableHead>Status</TableHead>
+                </>
+              )}
+              
+              {/* All regions mode */}
+              {showAllRegions && (
+                <>
+                  {DISPLAY_REGIONS.map((region) => (
+                    <TableHead key={`${region}-url`} className="text-center">
+                      <div className="flex flex-col items-center">
+                        <span>{REGIONS[region]?.flag}</span>
+                        <span className="text-xs">{region}</span>
+                      </div>
+                    </TableHead>
+                  ))}
+                </>
+              )}
+              
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -270,171 +392,290 @@ export function ProductTable({
               const hasError = product.syncStatus === 'failed' || product.syncStatus === 'error';
               const isSyncing = syncingIds.includes(product.id);
               const isSaving = updateFilament.isPending || updatePrinter.isPending;
+              const isExpanded = expandedProducts.has(product.id);
+              
+              // Get regional data for current product
+              const selectedRegionData = getRegionalData(product, selectedRegion);
+              const allRegionalData = getMergedRegionalData(product);
 
               return (
-                <TableRow 
-                  key={product.id}
-                  className={cn(hasError && 'bg-destructive/5')}
-                >
-                  <TableCell className="font-medium max-w-[250px]">
-                    <InlineEditableCell
-                      value={product.displayName}
-                      onSave={(value) => handleInlineNameSave(product.id, value)}
-                      validate={(value) => !value.trim() ? 'Name cannot be empty' : null}
-                      disabled={isSaving}
-                    />
-                  </TableCell>
-                  {type === 'filament' && (
-                    <TableCell className="text-muted-foreground">
-                      {product.material || '—'}
+                <Fragment key={product.id}>
+                  <TableRow 
+                    className={cn(hasError && 'bg-destructive/5')}
+                  >
+                    <TableCell className="font-medium max-w-[250px]">
+                      <InlineEditableCell
+                        value={product.displayName}
+                        onSave={(value) => handleInlineNameSave(product.id, value)}
+                        validate={(value) => !value.trim() ? 'Name cannot be empty' : null}
+                        disabled={isSaving}
+                      />
                     </TableCell>
-                  )}
-                  <TableCell>
-                    {product.productUrl ? (
-                      <div className="flex items-center gap-1">
-                        <a
-                          href={product.productUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline inline-flex items-center gap-1 max-w-[150px] truncate"
-                        >
-                          <ExternalLink className="w-3 h-3 shrink-0" />
-                          <span className="truncate">
-                            {new URL(product.productUrl).hostname.replace('www.', '')}
-                          </span>
-                        </a>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => copyUrl(product.productUrl!)}
-                        >
-                          <Copy className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
+                    {type === 'filament' && (
+                      <TableCell className="text-muted-foreground">
+                        {product.material || '—'}
+                      </TableCell>
                     )}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <InlineEditableCell
-                            value={product.msrp}
-                            onSave={(value) => handleInlineMsrpSave(product.id, value)}
-                            type="price"
-                            formatDisplay={(v) => formatPrice(v as number | null)}
-                            disabled={isSaving}
+                    
+                    {/* Single region mode columns */}
+                    {!showAllRegions && (
+                      <>
+                        <TableCell>
+                          <RegionalUrlCell
+                            productId={product.id}
+                            productType={type}
+                            regionCode={selectedRegion}
+                            url={selectedRegionData?.url || product.productUrl}
+                            storeName={selectedRegionData?.storeName}
+                            isVerified={selectedRegionData?.isVerified}
+                            isPrimary={selectedRegionData?.isPrimary}
+                            onEdit={onEditRegionalUrl ? () => onEditRegionalUrl(product.id, selectedRegion) : undefined}
                           />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Manufacturer's Suggested Retail Price
-                      </TooltipContent>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    <div className="flex items-center gap-1">
-                      {formatPrice(product.currentPrice)}
-                      {stalePrice && product.currentPrice != null && (
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <AlertTriangle className="w-3 h-3 text-amber-500" />
-                          </TooltipTrigger>
-                          <TooltipContent>Price is stale (&gt;7 days old)</TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>
-                          {priceDiff !== null ? (
-                            <span
-                              className={cn(
-                                'font-mono text-sm cursor-help',
-                                priceDiff < 0 && 'text-green-600',
-                                priceDiff > 0 && 'text-destructive'
-                              )}
-                            >
-                              {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(1)}%
-                            </span>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <InlineEditableCell
+                                  value={product.msrp}
+                                  onSave={(value) => handleInlineMsrpSave(product.id, value)}
+                                  type="price"
+                                  formatDisplay={(v) => formatPrice(v as number | null)}
+                                  disabled={isSaving}
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Manufacturer's Suggested Retail Price
+                            </TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          <RegionalPriceCell
+                            productId={product.id}
+                            productType={type}
+                            regionCode={selectedRegion}
+                            price={selectedRegionData?.price ?? product.currentPrice}
+                            currency={selectedRegionData?.currency || viewCurrency}
+                            msrp={selectedRegionData?.msrp ?? product.msrp}
+                            lastSyncAt={selectedRegionData?.lastSyncAt || product.lastSyncedAt}
+                            lastSyncStatus={selectedRegionData?.lastSyncStatus || product.syncStatus}
+                            viewCurrency={viewCurrency}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                {priceDiff !== null ? (
+                                  <span
+                                    className={cn(
+                                      'font-mono text-sm cursor-help',
+                                      priceDiff < 0 && 'text-green-600',
+                                      priceDiff > 0 && 'text-destructive'
+                                    )}
+                                  >
+                                    {priceDiff > 0 ? '+' : ''}{priceDiff.toFixed(1)}%
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {priceDiff !== null
+                                ? priceDiff < 0
+                                  ? `${Math.abs(priceDiff).toFixed(1)}% below MSRP`
+                                  : priceDiff > 0
+                                  ? `${priceDiff.toFixed(1)}% above MSRP`
+                                  : 'At MSRP'
+                                : 'Price difference unavailable'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {product.lastSyncedAt ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                {formatDistanceToNow(new Date(product.lastSyncedAt), { addSuffix: true })}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {format(new Date(product.lastSyncedAt), 'PPpp')}
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            '—'
                           )}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {priceDiff !== null
-                          ? priceDiff < 0
-                            ? `${Math.abs(priceDiff).toFixed(1)}% below MSRP`
-                            : priceDiff > 0
-                            ? `${priceDiff.toFixed(1)}% above MSRP`
-                            : 'At MSRP'
-                          : 'Price difference unavailable'}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {product.lastSyncedAt ? (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          {formatDistanceToNow(new Date(product.lastSyncedAt), { addSuffix: true })}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {format(new Date(product.lastSyncedAt), 'PPpp')}
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      '—'
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <StatusIcon className={cn('w-4 h-4', statusInfo.color)} />
+                            </TooltipTrigger>
+                            <TooltipContent>{statusInfo.label}</TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                      </>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <StatusIcon className={cn('w-4 h-4', statusInfo.color)} />
-                      </TooltipTrigger>
-                      <TooltipContent>{statusInfo.label}</TooltipContent>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1" role="group" aria-label="Product actions">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleEditProduct(product)}
-                            aria-label={`Edit ${product.displayName}`}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit product details</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => onSync?.(product.id)}
-                            disabled={isSyncing}
-                            aria-label={isSyncing ? 'Syncing price...' : `Sync price for ${product.displayName}`}
-                          >
-                            <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {isSyncing ? 'Syncing...' : 'Refresh price from source'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                    
+                    {/* All regions mode columns */}
+                    {showAllRegions && (
+                      <>
+                        {allRegionalData.map((regionData) => (
+                          <TableCell key={regionData.region} className="text-center p-2">
+                            <div className="flex flex-col items-center gap-1">
+                              <RegionalUrlCell
+                                productId={product.id}
+                                productType={type}
+                                regionCode={regionData.region}
+                                url={regionData.url}
+                                storeName={regionData.storeName}
+                                isVerified={regionData.isVerified}
+                                onEdit={onEditRegionalUrl ? () => onEditRegionalUrl(product.id, regionData.region) : undefined}
+                                compact
+                              />
+                              <RegionalPriceCell
+                                productId={product.id}
+                                productType={type}
+                                regionCode={regionData.region}
+                                price={regionData.price}
+                                currency={regionData.currency}
+                                lastSyncAt={regionData.lastSyncAt}
+                                lastSyncStatus={regionData.lastSyncStatus}
+                                compact
+                              />
+                            </div>
+                          </TableCell>
+                        ))}
+                      </>
+                    )}
+                    
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1" role="group" aria-label="Product actions">
+                        {/* Expand button for regional details */}
+                        {!showAllRegions && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => toggleProductExpanded(product.id)}
+                                aria-label={isExpanded ? 'Hide regional details' : 'Show regional details'}
+                              >
+                                {isExpanded ? (
+                                  <ChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isExpanded ? 'Hide regional details' : 'Show all regions'}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleEditProduct(product)}
+                              aria-label={`Edit ${product.displayName}`}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit product details</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => onSync?.(product.id)}
+                              disabled={isSyncing}
+                              aria-label={isSyncing ? 'Syncing price...' : `Sync price for ${product.displayName}`}
+                            >
+                              <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {isSyncing ? 'Syncing...' : 'Refresh price from source'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Expandable regional row */}
+                  {!showAllRegions && isExpanded && (
+                    <TableRow className="bg-muted/30 hover:bg-muted/40">
+                      <TableCell colSpan={baseColCount} className="p-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                          {DISPLAY_REGIONS.map((regionCode) => {
+                            const regionData = allRegionalData.find((r) => r.region === regionCode);
+                            const region = REGIONS[regionCode];
+                            
+                            return (
+                              <div
+                                key={regionCode}
+                                className={cn(
+                                  'border rounded-lg p-2 bg-background',
+                                  !regionData?.url && 'border-dashed opacity-60'
+                                )}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium">
+                                    {region?.flag} {regionCode}
+                                  </span>
+                                  {regionData?.url && onSyncRegion && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-5 w-5"
+                                      onClick={() => onSyncRegion(product.id, regionCode)}
+                                    >
+                                      <RefreshCw className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-xs text-muted-foreground">URL</div>
+                                  <RegionalUrlCell
+                                    productId={product.id}
+                                    productType={type}
+                                    regionCode={regionCode}
+                                    url={regionData?.url}
+                                    storeName={regionData?.storeName}
+                                    isVerified={regionData?.isVerified}
+                                    onEdit={onEditRegionalUrl ? () => onEditRegionalUrl(product.id, regionCode) : undefined}
+                                    compact
+                                  />
+                                </div>
+                                <div className="space-y-1 mt-2">
+                                  <div className="text-xs text-muted-foreground">Price</div>
+                                  <RegionalPriceCell
+                                    productId={product.id}
+                                    productType={type}
+                                    regionCode={regionCode}
+                                    price={regionData?.price}
+                                    currency={regionData?.currency || region?.defaultCurrency || 'USD'}
+                                    lastSyncAt={regionData?.lastSyncAt}
+                                    lastSyncStatus={regionData?.lastSyncStatus}
+                                    compact
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
               );
             })}
           </TableBody>

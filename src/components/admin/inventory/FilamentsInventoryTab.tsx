@@ -253,6 +253,7 @@ export function FilamentsInventoryTab({
               type="filament"
               onSync={handleSyncProduct}
               syncingIds={syncingIds}
+              selectedRegion={selectedRegion}
             />
           </BrandSection>
         );

@@ -253,6 +253,7 @@ export function PrintersInventoryTab({
               type="printer"
               onSync={handleSyncProduct}
               syncingIds={syncingIds}
+              selectedRegion={selectedRegion}
             />
           </BrandSection>
         );
