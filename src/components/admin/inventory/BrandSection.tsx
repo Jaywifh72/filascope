@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BrandSectionProps {
   brandName: string;
@@ -44,19 +45,27 @@ export function BrandSection({
               </Badge>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSyncBrand?.(brandSlug);
-            }}
-            disabled={isSyncing}
-            className="gap-2"
-          >
-            <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
-            Sync Brand
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSyncBrand?.(brandSlug);
+                }}
+                disabled={isSyncing}
+                className="gap-2"
+                aria-label={`Sync all ${brandName} products`}
+              >
+                <RefreshCw className={cn('w-4 h-4', isSyncing && 'animate-spin')} />
+                <span className="hidden sm:inline">Sync Brand</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isSyncing ? 'Syncing...' : `Refresh prices for all ${productCount} products`}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
