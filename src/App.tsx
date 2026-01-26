@@ -70,6 +70,7 @@ const AdminPriceVerification = lazy(() => import("./pages/AdminPriceVerification
 const AdminBrandExtraction = lazy(() => import("./pages/AdminBrandExtraction"));
 const AdminBrokenUrls = lazy(() => import("./pages/AdminBrokenUrls"));
 const AdminInventory = lazy(() => import("./pages/admin/InventoryManagement"));
+const AdminExportData = lazy(() => import("./pages/admin/ExportData"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -192,6 +193,7 @@ const App = () => (
                   <Route path="/admin/brand-extraction" element={<AdminBrandExtraction />} />
                   <Route path="/admin/broken-urls" element={<AdminBrokenUrls />} />
                   <Route path="/admin/inventory" element={<AdminInventory />} />
+                  <Route path="/admin/export" element={<AdminExportData />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />
