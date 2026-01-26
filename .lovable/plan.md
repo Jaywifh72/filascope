@@ -1,222 +1,372 @@
 
-# Admin Inventory Management - Part 2: Page Structure & Navigation
+
+# Admin Inventory Management - Part 5: Add Filament Wizard
+
+## Pre-Check Verification
+
+Part 4 has been successfully implemented:
+- **InlineEditableCell**: Fully functional with double-click editing, Enter/Escape keys, validation
+- **EditProductModal**: Complete form with react-hook-form + zod validation, unsaved changes protection
+- **useProductMutations**: Optimistic updates with proper cache invalidation
 
 ## Overview
 
-This implementation creates a unified inventory management page at `/admin/inventory` with tabbed navigation for Filaments, Printers, and Sync Status. The page follows existing admin patterns (AdminLayout, AdminPageHeader) and includes global action buttons, search, and brand filtering.
+Create a 5-step wizard modal for adding new filaments to the inventory. The wizard guides admins through entering all required information with validation at each step, smart defaults, and URL-based auto-detection of brand/vendor.
+
+## Architecture
+
+```text
+AddFilamentWizard.tsx (Main modal with step state)
+├── WizardStepIndicator.tsx (Progress bar)
+├── FilamentWizardStep1.tsx (Source Information)
+├── FilamentWizardStep2.tsx (Basic Information)
+├── FilamentWizardStep3.tsx (Pricing)
+├── FilamentWizardStep4.tsx (Details)
+└── FilamentWizardStep5.tsx (Review & Create)
+```
 
 ## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/pages/admin/InventoryManagement.tsx` | Main page component with tabs |
-| `src/components/admin/inventory/GlobalActionsBar.tsx` | Bulk sync buttons and "Add" actions |
-| `src/components/admin/inventory/SearchAndFilterBar.tsx` | Search input + brand dropdown |
-| `src/components/admin/inventory/FilamentsInventoryTab.tsx` | Placeholder for filaments table |
-| `src/components/admin/inventory/PrintersInventoryTab.tsx` | Placeholder for printers table |
-| `src/components/admin/inventory/SyncStatusTab.tsx` | Placeholder for sync logs view |
+| `src/components/admin/inventory/AddFilamentWizard.tsx` | Main wizard modal with step navigation and state management |
+| `src/components/admin/inventory/wizard/WizardStepIndicator.tsx` | Step progress indicator component |
+| `src/components/admin/inventory/wizard/FilamentWizardStep1.tsx` | Source URL and brand selection |
+| `src/components/admin/inventory/wizard/FilamentWizardStep2.tsx` | Basic info (name, material, diameter, weight, color) |
+| `src/components/admin/inventory/wizard/FilamentWizardStep3.tsx` | Pricing (MSRP, current price, compare at) |
+| `src/components/admin/inventory/wizard/FilamentWizardStep4.tsx` | Additional details (description, image, temperatures, notes) |
+| `src/components/admin/inventory/wizard/FilamentWizardStep5.tsx` | Review summary and create buttons |
+| `src/hooks/useCreateFilament.ts` | Mutation hook for creating new filament |
+| `src/lib/brandAutoDetection.ts` | URL-to-brand detection logic |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add lazy import and route for `/admin/inventory` |
-| `src/components/admin/AdminSidebar.tsx` | Add "Inventory" nav item with Package icon |
+| `src/pages/admin/InventoryManagement.tsx` | Add wizard open state, pass to GlobalActionsBar |
+| `src/components/admin/inventory/GlobalActionsBar.tsx` | Remove placeholder, trigger actual wizard |
 
 ---
 
-## Implementation Details
+## Component Specifications
 
-### 1. InventoryManagement.tsx (Main Page)
+### 1. AddFilamentWizard.tsx
 
-The main page follows the existing AdminDataHealth pattern:
-
-```text
-+--------------------------------------------------+
-| AdminLayout wrapper                               |
-|  +----------------------------------------------+ |
-|  | AdminPageHeader: "Inventory Management"      | |
-|  |   Icon: Package (cyan)                       | |
-|  |   Description: "Manage filaments, printers..." |
-|  +----------------------------------------------+ |
-|  | GlobalActionsBar                             | |
-|  |   [Sync All Filaments] [Sync All Printers]   | |
-|  |   [Add Filament] [Add Printer]               | |
-|  |   Last sync: 5 minutes ago                   | |
-|  +----------------------------------------------+ |
-|  | SearchAndFilterBar                           | |
-|  |   [Search input...] [Brand dropdown ▼]       | |
-|  +----------------------------------------------+ |
-|  | Tabs                                         | |
-|  | [Filaments] [Printers] [Sync Status]         | |
-|  +----------------------------------------------+ |
-|  | TabsContent (based on active tab)            | |
-|  |   - FilamentsInventoryTab (placeholder)     | |
-|  |   - PrintersInventoryTab (placeholder)      | |
-|  |   - SyncStatusTab (placeholder)             | |
-|  +----------------------------------------------+ |
-+--------------------------------------------------+
-```
-
-Key features:
-- Uses `AdminLayout` for consistent sidebar and auth protection
-- Uses `AdminPageHeader` for consistent header styling
-- Tab state stored in URL search params (like PrinterDetail)
-- Search/filter state lifted to parent and passed to tabs
-
-### 2. GlobalActionsBar.tsx
-
-```text
-+--------------------------------------------------------+
-| [🔄 Sync All Filaments] [🔄 Sync All Printers]         |
-| [+ Add Filament] [+ Add Printer]                        |
-|                                          Last sync: ... |
-+--------------------------------------------------------+
-```
+Main wizard container with:
+- 5-step navigation (currentStep state)
+- Form state preserved across steps using single react-hook-form
+- Session storage persistence for resume capability
+- Unsaved changes protection on close
+- Keyboard navigation (Escape to close with confirm)
 
 Props:
-- `onSyncFilaments`: () => void (placeholder, shows toast)
-- `onSyncPrinters`: () => void (placeholder, shows toast)
-- `onAddFilament`: () => void (placeholder, shows toast)
-- `onAddPrinter`: () => void (placeholder, shows toast)
-- `lastSyncTime`: Date | null
-
-### 3. SearchAndFilterBar.tsx
-
-```text
-+--------------------------------------------------------+
-| 🔍 [Search name, vendor, URL...            ]           |
-| Brand: [All Brands ▼]                                   |
-+--------------------------------------------------------+
-```
-
-Props:
-- `searchTerm`: string
-- `onSearchChange`: (value: string) => void
-- `selectedBrand`: string
-- `onBrandChange`: (value: string) => void
-- `brands`: string[] (fetched from automated_brands)
-
-### 4. Tab Placeholder Components
-
-Each tab component receives search/filter props and renders a placeholder:
-
-```text
-FilamentsInventoryTab / PrintersInventoryTab:
-+--------------------------------------------------------+
-| Card with placeholder message                           |
-| "Filaments table coming in Part 3"                     |
-| Shows current search term and brand filter for testing |
-+--------------------------------------------------------+
-
-SyncStatusTab:
-+--------------------------------------------------------+
-| Card with placeholder message                           |
-| "Sync history and status coming in Part 3"             |
-+--------------------------------------------------------+
-```
-
----
-
-## Routing Configuration
-
-Add to `src/App.tsx`:
-
 ```typescript
-// Add lazy import (line ~72, with other admin imports)
-const AdminInventory = lazy(() => import("./pages/admin/InventoryManagement"));
-
-// Add route (line ~192, after other admin routes)
-<Route path="/admin/inventory" element={<AdminInventory />} />
+interface AddFilamentWizardProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: (filamentId: string) => void;
+}
 ```
 
----
-
-## Sidebar Navigation
-
-Add to `src/components/admin/AdminSidebar.tsx` in the "Content" group:
-
+Form Schema (Zod):
 ```typescript
-// In navGroups, Content section (after "Deals")
-{ title: 'Inventory', href: '/admin/inventory', icon: Package },
-```
-
-Position: Place after "Deals" in the Content section as it's a primary management feature.
-
----
-
-## Auth Protection
-
-The page uses `AdminLayout` which already enforces:
-1. User must be authenticated
-2. User must have admin role (checked via `useAuth().isAdmin`)
-3. Redirects to `/auth` if either check fails
-
-No additional auth code needed.
-
----
-
-## Data Fetching
-
-**Brands for dropdown** - Fetched once on mount:
-```typescript
-const { data: brands } = useQuery({
-  queryKey: ['automated-brands-list'],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from('automated_brands')
-      .select('brand_name, brand_slug')
-      .eq('scraping_enabled', true)
-      .order('brand_name');
-    return data || [];
-  }
+const wizardSchema = z.object({
+  // Step 1: Source
+  product_url: z.string().url('Invalid URL').min(1, 'Product URL is required'),
+  vendor: z.string().min(1, 'Brand/Vendor is required'),
+  source_type: z.enum(['manufacturer', 'retailer', 'amazon', 'other']),
+  
+  // Step 2: Basic Info
+  product_title: z.string().min(1, 'Display name is required').max(255),
+  material: z.string().optional(),
+  diameter: z.enum(['1.75', '2.85']).default('1.75'),
+  net_weight_g: z.coerce.number().min(0).default(1000),
+  color_name: z.string().max(100).optional(),
+  color_hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().or(z.literal('')),
+  
+  // Step 3: Pricing
+  msrp: z.coerce.number().min(0, 'MSRP must be positive'),
+  variant_price: z.coerce.number().min(0).optional(),
+  variant_compare_at_price: z.coerce.number().min(0).optional(),
+  
+  // Step 4: Details
+  featured_image: z.string().url().optional().or(z.literal('')),
+  nozzle_temp_min_c: z.coerce.number().min(150).max(500).optional(),
+  nozzle_temp_max_c: z.coerce.number().min(150).max(500).optional(),
+  bed_temp_min_c: z.coerce.number().min(0).max(150).optional(),
+  bed_temp_max_c: z.coerce.number().min(0).max(150).optional(),
+  admin_notes: z.string().max(1000).optional(),
 });
 ```
 
----
+### 2. WizardStepIndicator.tsx
 
-## Component Hierarchy
+Visual progress component showing:
+- 5 numbered circles connected by lines
+- Current step highlighted with primary color
+- Completed steps show checkmarks
+- Step labels below circles
 
 ```text
-InventoryManagement (page)
-├── AdminLayout (wrapper)
-│   └── AdminSidebar (auto-included)
-├── AdminPageHeader
-├── GlobalActionsBar
-├── SearchAndFilterBar
-└── Tabs
-    ├── TabsList
-    │   ├── TabsTrigger "Filaments"
-    │   ├── TabsTrigger "Printers"
-    │   └── TabsTrigger "Sync Status"
-    └── TabsContent
-        ├── FilamentsInventoryTab
-        ├── PrintersInventoryTab
-        └── SyncStatusTab
+  (1)───(2)───(3)───(4)───(5)
+Source Basic Pricing Details Review
+```
+
+### 3. FilamentWizardStep1.tsx (Source Information)
+
+Fields:
+- **Product URL** (required): Text input with URL validation
+- **Import from URL** button: Shows loading state, triggers URL parsing
+- **Brand/Vendor** dropdown: Auto-populated from `automated_brands` table, auto-detected from URL
+- **Source Type** radio: Manufacturer | Retailer | Amazon | Other
+
+Auto-detection logic (in brandAutoDetection.ts):
+```typescript
+const URL_BRAND_PATTERNS = [
+  { pattern: /store\.creality\.com/i, brand: 'Creality', slug: 'creality' },
+  { pattern: /bambulab\.com/i, brand: 'Bambu Lab', slug: 'bambu-lab' },
+  { pattern: /us\.polymaker\.com|polymaker\.com/i, brand: 'Polymaker', slug: 'polymaker' },
+  { pattern: /store\.anycubic\.com/i, brand: 'Anycubic', slug: 'anycubic' },
+  { pattern: /elegoo\.com/i, brand: 'Elegoo', slug: 'elegoo' },
+  { pattern: /esun3d\.com/i, brand: 'eSun', slug: 'esun' },
+  { pattern: /prusa3d\.com/i, brand: 'Prusament', slug: 'prusament' },
+  { pattern: /colorfabb\.com/i, brand: 'ColorFabb', slug: 'colorfabb' },
+  { pattern: /ninjatek\.com/i, brand: 'NinjaTek', slug: 'ninjatek' },
+  { pattern: /sunlu\.com/i, brand: 'Sunlu', slug: 'sunlu' },
+  { pattern: /amazon\.(com|co\.uk|de|ca|au)/i, brand: null, sourceType: 'amazon' },
+];
+```
+
+### 4. FilamentWizardStep2.tsx (Basic Information)
+
+Fields:
+- **Display Name** (required): Pre-filled if URL import worked
+- **Material** dropdown: PLA, PLA+, ABS, PETG, TPU, ASA, Nylon, PC, PVA, HIPS, CF-PLA, CF-PETG, CF-Nylon, GF-PLA, GF-PETG, Silk PLA, Matte PLA, Wood, Metal, Other
+- **Diameter** radio: 1.75mm (default) | 2.85mm
+- **Weight** number input: Default 1000g
+- **Color Name** text: e.g., "Matte Black"
+- **Color Hex** picker: Optional color input with preview swatch
+
+### 5. FilamentWizardStep3.tsx (Pricing)
+
+Fields:
+- **MSRP** (required): Number with $ prefix, validation for positive
+- **Current Price** (optional): Number with $ prefix, for manual override
+- **Compare At Price** (optional): Original/strikethrough price
+
+Visual feedback:
+- Shows price difference percentage if both MSRP and current price entered
+- Currency note: "All prices in USD"
+
+### 6. FilamentWizardStep4.tsx (Details)
+
+Fields:
+- **Image URL**: URL input with live preview thumbnail
+- **Print Temperature Range**: Two number inputs (min/max) with "°C" suffix
+- **Bed Temperature Range**: Two number inputs (min/max) with "°C" suffix
+- **Admin Notes**: Textarea (max 1000 chars)
+
+Temperature validation:
+- Nozzle temp: 150-500°C, min must be less than max
+- Bed temp: 0-150°C, min must be less than max
+
+### 7. FilamentWizardStep5.tsx (Review & Create)
+
+Summary display:
+- Card sections for each step's data
+- "Edit" buttons to jump back to specific steps
+- Image preview if provided
+- Validation status indicators
+
+Actions:
+- **Create Filament** button: Creates and closes wizard
+- **Create & Add Another** button: Creates and resets wizard for next entry
+
+---
+
+## Hook: useCreateFilament
+
+```typescript
+// src/hooks/useCreateFilament.ts
+export function useCreateFilament() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: FilamentInsertData) => {
+      // Map form data to database columns
+      const insertData = {
+        product_title: data.product_title,
+        display_name: data.product_title, // Same as title for new products
+        product_url: data.product_url,
+        vendor: data.vendor,
+        material: data.material,
+        diameter_nominal_mm: parseFloat(data.diameter),
+        net_weight_g: data.net_weight_g,
+        color_name: data.color_name,
+        color_hex: data.color_hex || null,
+        msrp: data.msrp,
+        variant_price: data.variant_price || null,
+        variant_compare_at_price: data.variant_compare_at_price || null,
+        featured_image: data.featured_image || null,
+        nozzle_temp_min_c: data.nozzle_temp_min_c || null,
+        nozzle_temp_max_c: data.nozzle_temp_max_c || null,
+        bed_temp_min_c: data.bed_temp_min_c || null,
+        bed_temp_max_c: data.bed_temp_max_c || null,
+        admin_notes: data.admin_notes || null,
+        sync_enabled: true,
+        auto_created: false,
+      };
+      
+      const { data: result, error } = await supabase
+        .from('filaments')
+        .insert(insertData)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: (result) => {
+      toast.success('Filament created successfully', {
+        description: result.product_title,
+      });
+    },
+    onError: (err) => {
+      toast.error('Failed to create filament', {
+        description: err instanceof Error ? err.message : 'Unknown error',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-filaments'] });
+      queryClient.invalidateQueries({ queryKey: ['filaments'] });
+    },
+  });
+}
 ```
 
 ---
 
-## Styling Notes
+## Session Storage Persistence
 
-Following the established design system:
-- Background: Uses AdminLayout's `bg-background`
-- Cards: `bg-card border-border` with hover states
-- Tabs: Standard shadcn tabs with `TabsList` grid layout
-- Buttons: Primary variant for sync actions, outline for add actions
-- Search: Full-width input with Search icon prefix
-- Spacing: 8px rhythm (gap-4, gap-6 for sections)
+The wizard will persist form state to sessionStorage to allow resuming:
+
+```typescript
+const WIZARD_STORAGE_KEY = 'add-filament-wizard-progress';
+const STORAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// On mount, check for saved progress
+useEffect(() => {
+  const saved = sessionStorage.getItem(WIZARD_STORAGE_KEY);
+  if (saved) {
+    const { data, step, timestamp } = JSON.parse(saved);
+    if (Date.now() - timestamp < STORAGE_MAX_AGE_MS) {
+      setShowRestorePrompt(true);
+      setSavedData({ data, step });
+    }
+  }
+}, []);
+
+// On form change, save progress
+useEffect(() => {
+  if (form.formState.isDirty) {
+    sessionStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({
+      data: form.getValues(),
+      step: currentStep,
+      timestamp: Date.now(),
+    }));
+  }
+}, [form.watch(), currentStep]);
+```
 
 ---
 
-## Verification Steps
+## UI/UX Details
 
-After implementation, verify:
+### Modal Layout
+```text
++--------------------------------------------------+
+| Add New Filament                            [X]  |
++--------------------------------------------------+
+| Step Indicator: (1)─(2)─(3)─(4)─(5)              |
+|               Source Basic Pricing Details Review |
++--------------------------------------------------+
+|                                                  |
+| [Step Content Area]                              |
+|                                                  |
+| - Form fields for current step                   |
+| - Validation errors shown inline                 |
+| - Image previews where applicable                |
+|                                                  |
++--------------------------------------------------+
+| [Back]                          [Next / Create]  |
++--------------------------------------------------+
+```
 
-1. **Navigation**: `/admin/inventory` loads without errors
-2. **Tabs**: All three tabs are visible and switching works
-3. **Sidebar**: "Inventory" link appears in admin sidebar under "Content"
-4. **Auth**: Logging out and visiting `/admin/inventory` redirects to `/auth`
-5. **Search**: Typing in search input updates the displayed search term in tab placeholders
-6. **Brand filter**: Dropdown shows brands from database
-7. **Buttons**: Global action buttons are visible (click shows "Coming soon" toast)
+### Styling
+- Modal width: `max-w-2xl` for comfortable form layout
+- Step indicator: Primary color for current/completed, muted for future
+- Form sections: Grouped with subtle headers
+- Validation errors: Red text below fields
+- Success state: Green checkmarks on completed steps
+
+---
+
+## Wiring Up in InventoryManagement
+
+```typescript
+// src/pages/admin/InventoryManagement.tsx
+const [showAddFilamentWizard, setShowAddFilamentWizard] = useState(false);
+
+// Update handler
+const handleAddFilament = () => {
+  setShowAddFilamentWizard(true);
+};
+
+// In JSX, after GlobalActionsBar
+<AddFilamentWizard
+  open={showAddFilamentWizard}
+  onOpenChange={setShowAddFilamentWizard}
+/>
+```
+
+---
+
+## Validation Summary
+
+| Step | Required Fields | Validation Rules |
+|------|----------------|------------------|
+| 1 | product_url, vendor | Valid URL format |
+| 2 | product_title | Non-empty, max 255 chars |
+| 3 | msrp | Positive number |
+| 4 | (none) | Temp ranges: min < max, within limits |
+| 5 | (none) | Review only |
+
+---
+
+## Technical Notes
+
+1. **Database Schema**: Only `product_title` is required for insert; all other fields are optional
+2. **Brand Auto-Detection**: Uses URL pattern matching against known store domains
+3. **Form Library**: react-hook-form with zod resolver for consistency with EditProductModal
+4. **State Persistence**: sessionStorage for wizard resume, cleared on successful create
+5. **Query Invalidation**: Invalidates both admin and public filament queries on success
+
+---
+
+## Verification Checklist
+
+After implementation:
+- [ ] "Add Filament" button opens wizard modal
+- [ ] Step indicator shows all 5 steps with current step highlighted
+- [ ] Back/Next navigation works, preserving form data
+- [ ] Step 1: URL input validates, brand auto-detected from URL
+- [ ] Step 2: Material dropdown has all options, diameter defaults to 1.75mm
+- [ ] Step 3: MSRP required, shows error if empty or negative
+- [ ] Step 4: Image URL shows preview, temperature validation works
+- [ ] Step 5: Summary displays all entered data, Edit buttons navigate to steps
+- [ ] Create button inserts into database and closes wizard
+- [ ] Create & Add Another resets form for next entry
+- [ ] New filament appears in Filaments tab after creation
+- [ ] Closing wizard with unsaved changes shows confirmation dialog
+- [ ] Session persistence: closing and reopening offers to restore progress
+
