@@ -58,6 +58,7 @@ const navGroups: NavGroup[] = [
       { title: 'Brands', href: '/admin/brands', icon: Store },
       { title: 'Brand Pipeline', href: '/admin/brand-pipeline', icon: FlaskConical },
       { title: 'Deals', href: '/admin/featured-content', icon: Star },
+      { title: 'Inventory', href: '/admin/inventory', icon: Package },
     ],
   },
   {
