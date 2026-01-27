@@ -232,7 +232,7 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
 
   'eSun': {
     pattern: 'global',
-    baseDomain: 'www.esun3dstore.com',
+    baseDomain: 'esun3dstore.com',
     defaultCurrency: 'USD',
   },
 
