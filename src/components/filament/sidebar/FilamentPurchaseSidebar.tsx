@@ -133,6 +133,7 @@ export function FilamentPurchaseSidebar({
   
   // Handler for admin price refresh - invalidates cache and triggers re-fetch
   const handleAdminRefresh = useCallback(() => {
+    console.log('[Sidebar] Admin refresh triggered, invalidating caches...');
     if (productUrl) {
       invalidatePriceCache(productUrl);
     }
@@ -142,6 +143,7 @@ export function FilamentPurchaseSidebar({
     // Force a re-render by incrementing key
     setPriceRefreshKey(prev => prev + 1);
     // Call parent callback to refetch filament data from database
+    console.log('[Sidebar] Calling parent onAdminRefresh callback');
     onAdminRefresh?.();
   }, [productUrl, originalUsUrl, onAdminRefresh]);
 

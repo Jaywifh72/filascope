@@ -251,7 +251,7 @@ const FilamentDetail = () => {
     return () => observer.disconnect();
   }, []);
 
-  const fetchFilament = async () => {
+  const fetchFilament = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("filaments")
@@ -282,12 +282,13 @@ const FilamentDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate, toast]);
 
   // Callback for admin price refresh - refetches filament data to update UI
   const handleAdminRefresh = useCallback(() => {
+    console.log('[AdminRefresh] Refetching filament data after price update');
     fetchFilament();
-  }, [id]);
+  }, [fetchFilament]);
 
   const handleRescrapeImage = async () => {
     if (!id || !filament) return;
