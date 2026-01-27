@@ -48,6 +48,12 @@ export function RetailerCard({
 
   const handleBuyClick = () => {
     if (affiliateUrl) {
+      // DEBUG: Verify Creality URLs are using direct product links, not search
+      if (retailer.name.toLowerCase().includes('creality') || affiliateUrl.includes('creality')) {
+        console.log('🔗 Creality Buy Now URL:', affiliateUrl);
+        console.log('   Expected: Direct product URL (e.g., /products/hyper-rainbow-pla...)');
+        console.log('   Should NOT be: Search URL (/search?keyword=...)');
+      }
       window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
     }
   };
