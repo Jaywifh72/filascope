@@ -79,7 +79,7 @@ export function PrimaryBuyButton({
         onClick={onClick}
         className={cn(
           "group flex items-center justify-between w-full",
-          "h-14 px-5 rounded-lg",
+          "min-h-14 py-3 px-5 rounded-lg",
           "bg-primary text-primary-foreground",
           "font-semibold text-lg",
           "shadow-[0_4px_12px_hsla(187,100%,46%,0.3)]",
@@ -91,13 +91,13 @@ export function PrimaryBuyButton({
           isLoading && "opacity-70 pointer-events-none animate-none"
         )}
       >
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-2 flex-wrap">
           {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
           ) : (
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-5 h-5 flex-shrink-0" />
           )}
-          <span>Buy from {retailerName}</span>
+          <span className="text-left">Buy from {retailerName}</span>
         </span>
         
         {isLoading ? (
