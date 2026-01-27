@@ -46,7 +46,15 @@ function transformUrlSync(
   configs: AffiliateConfig[]
 ): string {
   try {
-    const urlObj = new URL(url);
+    // Fix known broken domains before processing
+    let fixedUrl = url;
+    
+    // eSUN domain fix: esun3d.com is broken, correct domain is esun3dstore.com
+    if (fixedUrl.includes('esun3d.com') && !fixedUrl.includes('esun3dstore.com')) {
+      fixedUrl = fixedUrl.replace(/esun3d\.com/g, 'esun3dstore.com');
+    }
+    
+    const urlObj = new URL(fixedUrl);
     const hostname = urlObj.hostname.toLowerCase();
 
     // Check Amazon links
@@ -91,19 +99,23 @@ function transformUrlSync(
       const pattern = config.affiliate_url_pattern;
 
       if (pattern.includes("{{url}}")) {
-        return pattern.replace("{{url}}", url);
+        return pattern.replace("{{url}}", fixedUrl);
       }
 
       if (pattern.startsWith("?") || pattern.startsWith("&")) {
-        const hasQuery = url.includes("?");
+        const hasQuery = fixedUrl.includes("?");
         const separator = hasQuery ? "&" : "?";
         const params = pattern.substring(1);
-        return `${url}${separator}${params}`;
+        return `${fixedUrl}${separator}${params}`;
       }
     }
 
-    return url;
+    return fixedUrl;
   } catch {
+    // Even on error, try to fix the URL
+    if (url.includes('esun3d.com') && !url.includes('esun3dstore.com')) {
+      return url.replace(/esun3d\.com/g, 'esun3dstore.com');
+    }
     return url;
   }
 }

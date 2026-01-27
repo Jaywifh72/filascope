@@ -6,7 +6,7 @@ export interface UrlValidationResult {
   issue?: string;
 }
 
-// Brand-specific URL patterns that need region prefixes
+// Brand-specific URL patterns that need region prefixes or domain fixes
 const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => string }> = {
   // Creality URLs work without region prefix - removing the old fix that added /us/
   // The global store URL (store.creality.com/products/...) works correctly
@@ -35,6 +35,15 @@ const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => s
       }
       return url;
     }
+  },
+  // eSUN: esun3d.com is broken, correct domain is esun3dstore.com
+  'eSun': {
+    pattern: /^https?:\/\/(www\.)?esun3d\.com\//,
+    fix: (url: string) => url.replace(/esun3d\.com/, 'esun3dstore.com')
+  },
+  'eSUN': {
+    pattern: /^https?:\/\/(www\.)?esun3d\.com\//,
+    fix: (url: string) => url.replace(/esun3d\.com/, 'esun3dstore.com')
   }
 };
 
