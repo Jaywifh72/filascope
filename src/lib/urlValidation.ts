@@ -48,6 +48,29 @@ const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => s
     fix: (url: string) => url
       .replace(/https?:\/\/www\.esun3d\.com/gi, 'https://esun3dstore.com')
       .replace(/https?:\/\/esun3d\.com/gi, 'https://esun3dstore.com')
+  },
+  'FormFutura': {
+    pattern: /^https?:\/\/(www\.)?formfutura\.com\/products\//,
+    fix: (url: string) => {
+      // Extract product slug and redirect to search
+      const match = url.match(/\/products\/([^/?]+)/);
+      if (match) {
+        const productSlug = match[1];
+        return `https://www.formfutura.com/search/?q=${encodeURIComponent(productSlug.replace(/-/g, ' '))}`;
+      }
+      return url;
+    }
+  },
+  'Formfutura': {
+    pattern: /^https?:\/\/(www\.)?formfutura\.com\/products\//,
+    fix: (url: string) => {
+      const match = url.match(/\/products\/([^/?]+)/);
+      if (match) {
+        const productSlug = match[1];
+        return `https://www.formfutura.com/search/?q=${encodeURIComponent(productSlug.replace(/-/g, ' '))}`;
+      }
+      return url;
+    }
   }
 };
 
