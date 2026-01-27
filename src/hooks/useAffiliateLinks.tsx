@@ -63,22 +63,6 @@ function transformUrlSync(
       fixedUrl = fixedUrl.replace('/products/', '/');
     }
     
-    // Creality URL fallback - redirect to search if URL doesn't match expected patterns
-    // Creality uses inconsistent URL slugs that can't be predicted
-    if (fixedUrl.includes('store.creality.com/products/')) {
-      const productSlug = fixedUrl.split('/products/')[1]?.split('?')[0];
-      
-      // Known working slugs (short ones that don't need modification)
-      const shortSlugs = ['hyper-pla-cf', 'hyper-abs'];
-      
-      // If the slug is very short and not in the known list, it's likely broken
-      if (productSlug && !shortSlugs.includes(productSlug) && !productSlug.includes('-filament-')) {
-        // Extract product name from slug for search
-        const searchTerm = productSlug.replace(/-/g, ' ');
-        fixedUrl = `https://store.creality.com/search?keyword=${encodeURIComponent(searchTerm)}&collection=all-1`;
-      }
-    }
-    
     const urlObj = new URL(fixedUrl);
     const hostname = urlObj.hostname.toLowerCase();
 

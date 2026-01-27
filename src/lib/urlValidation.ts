@@ -133,9 +133,6 @@ export function validateAndFixProductUrl(url: string, vendor?: string): string {
     fixedUrl = fixedUrl.replace('store.creality.com/us/', 'store.creality.com/');
   }
   
-  // Creality: Fix broken URLs by redirecting to search
-  fixedUrl = fixCrealityUrl(fixedUrl);
-  
   // FormFutura: /products/{slug} -> /{slug} (root-level product slugs)
   if (fixedUrl.includes('formfutura.com/products/')) {
     fixedUrl = fixedUrl.replace('/products/', '/');
@@ -165,34 +162,4 @@ export const DISCONTINUED_MARKER = 'DISCONTINUED';
 export function isDiscontinuedUrl(url: string | null | undefined): boolean {
   if (!url) return false;
   return url.toUpperCase() === DISCONTINUED_MARKER;
-}
-
-// Validate Creality URL - if it looks broken, redirect to search
-export function fixCrealityUrl(url: string): string {
-  if (!url.includes('store.creality.com/products/')) {
-    return url;
-  }
-  
-  const productSlug = url.split('/products/')[1]?.split('?')[0];
-  
-  if (!productSlug) {
-    return url;
-  }
-  
-  // Known working short slugs that don't follow the pattern
-  const knownShortSlugs = ['hyper-pla-cf', 'hyper-abs'];
-  
-  // If slug doesn't contain common suffixes and isn't a known short slug, it's likely broken
-  const hasValidSuffix = 
-    productSlug.includes('-filament-') || 
-    productSlug.includes('-resin-') ||
-    knownShortSlugs.includes(productSlug);
-  
-  if (!hasValidSuffix) {
-    // Redirect to search
-    const searchTerm = productSlug.replace(/-/g, ' ');
-    return `https://store.creality.com/search?keyword=${encodeURIComponent(searchTerm)}&collection=all-1`;
-  }
-  
-  return url;
 }
