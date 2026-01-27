@@ -49,28 +49,14 @@ const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => s
       .replace(/https?:\/\/www\.esun3d\.com/gi, 'https://esun3dstore.com')
       .replace(/https?:\/\/esun3d\.com/gi, 'https://esun3dstore.com')
   },
+  // FormFutura: /products/{slug} -> /{slug} (root-level product slugs)
   'FormFutura': {
     pattern: /^https?:\/\/(www\.)?formfutura\.com\/products\//,
-    fix: (url: string) => {
-      // Extract product slug and redirect to search
-      const match = url.match(/\/products\/([^/?]+)/);
-      if (match) {
-        const productSlug = match[1];
-        return `https://www.formfutura.com/search/?q=${encodeURIComponent(productSlug.replace(/-/g, ' '))}`;
-      }
-      return url;
-    }
+    fix: (url: string) => url.replace('/products/', '/')
   },
   'Formfutura': {
     pattern: /^https?:\/\/(www\.)?formfutura\.com\/products\//,
-    fix: (url: string) => {
-      const match = url.match(/\/products\/([^/?]+)/);
-      if (match) {
-        const productSlug = match[1];
-        return `https://www.formfutura.com/search/?q=${encodeURIComponent(productSlug.replace(/-/g, ' '))}`;
-      }
-      return url;
-    }
+    fix: (url: string) => url.replace('/products/', '/')
   }
 };
 
@@ -145,6 +131,11 @@ export function validateAndFixProductUrl(url: string, vendor?: string): string {
   // Creality: Remove /us/ regional path (global store URLs work without region)
   if (fixedUrl.includes('store.creality.com/us/')) {
     fixedUrl = fixedUrl.replace('store.creality.com/us/', 'store.creality.com/');
+  }
+  
+  // FormFutura: /products/{slug} -> /{slug} (root-level product slugs)
+  if (fixedUrl.includes('formfutura.com/products/')) {
+    fixedUrl = fixedUrl.replace('/products/', '/');
   }
   
   // Additional brand-specific fixes can be added here
