@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { fixProductUrl } from '@/lib/urlValidation';
 
 interface FilamentRecord {
   vendor: string | null;
@@ -64,11 +65,16 @@ export default function ExportData() {
       const rows = [headers.join(',')];
 
       for (const f of filaments) {
+        const originalUrl = f.product_url || '';
+        const correctedUrl = fixProductUrl(originalUrl, f.vendor);
+        // Show "Verified" if no correction needed, otherwise show the corrected URL
+        const newWorkingUrl = correctedUrl === originalUrl ? 'Verified' : correctedUrl;
+        
         const row = [
           escapeCSV(f.vendor),
           escapeCSV(f.product_title),
           escapeCSV(f.product_url),
-          'Verified',
+          escapeCSV(newWorkingUrl),
           f.variant_price?.toFixed(2) || '',
           f.msrp?.toFixed(2) || ''
         ];
