@@ -51,7 +51,10 @@ function transformUrlSync(
     
     // eSUN domain fix: esun3d.com is broken, correct domain is esun3dstore.com
     if (fixedUrl.includes('esun3d.com') && !fixedUrl.includes('esun3dstore.com')) {
-      fixedUrl = fixedUrl.replace(/esun3d\.com/g, 'esun3dstore.com');
+      // First remove www. prefix if present, then replace domain
+      fixedUrl = fixedUrl
+        .replace(/https?:\/\/www\.esun3d\.com/gi, 'https://esun3dstore.com')
+        .replace(/https?:\/\/esun3d\.com/gi, 'https://esun3dstore.com');
     }
     
     const urlObj = new URL(fixedUrl);
@@ -114,7 +117,9 @@ function transformUrlSync(
   } catch {
     // Even on error, try to fix the URL
     if (url.includes('esun3d.com') && !url.includes('esun3dstore.com')) {
-      return url.replace(/esun3d\.com/g, 'esun3dstore.com');
+      return url
+        .replace(/https?:\/\/www\.esun3d\.com/gi, 'https://esun3dstore.com')
+        .replace(/https?:\/\/esun3d\.com/gi, 'https://esun3dstore.com');
     }
     return url;
   }
