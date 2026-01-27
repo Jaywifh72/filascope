@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 interface AdminPriceRefreshButtonProps {
   productUrl: string;
   filamentId: string;
+  netWeightGrams?: number | null;
   onRefreshComplete?: (success: boolean, newPrice?: number) => void;
   className?: string;
 }
@@ -24,13 +25,15 @@ type VisualState = 'idle' | 'refreshing' | 'success' | 'error';
 export function AdminPriceRefreshButton({
   productUrl,
   filamentId,
+  netWeightGrams,
   onRefreshComplete,
   className,
 }: AdminPriceRefreshButtonProps) {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const { refreshPrice, isRefreshing, lastRefreshError } = useAdminPriceRefresh(
     productUrl,
-    filamentId
+    filamentId,
+    netWeightGrams ?? null
   );
   const [visualState, setVisualState] = useState<VisualState>('idle');
 

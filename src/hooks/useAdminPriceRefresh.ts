@@ -61,7 +61,8 @@ function currencyToRegion(currency: string): string {
  */
 export function useAdminPriceRefresh(
   productUrl: string,
-  filamentId: string
+  filamentId: string,
+  netWeightGrams: number | null = null
 ): UseAdminPriceRefreshReturn {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshError, setLastRefreshError] = useState<string | null>(null);
@@ -82,7 +83,11 @@ export function useAdminPriceRefresh(
 
       while (retryCount <= MAX_RETRIES) {
         const result = await supabase.functions.invoke('get-current-price', {
-          body: { productUrl, forceRefresh: true },
+          body: { 
+            productUrl, 
+            forceRefresh: true,
+            targetWeightGrams: netWeightGrams,
+          },
         });
 
         data = result.data;
@@ -165,7 +170,7 @@ export function useAdminPriceRefresh(
       setIsRefreshing(false);
       return { success: false, error: errorMsg };
     }
-  }, [productUrl, filamentId]);
+  }, [productUrl, filamentId, netWeightGrams]);
 
   return { refreshPrice, isRefreshing, lastRefreshError };
 }

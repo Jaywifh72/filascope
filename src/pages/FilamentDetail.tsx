@@ -284,6 +284,11 @@ const FilamentDetail = () => {
     }
   };
 
+  // Callback for admin price refresh - refetches filament data to update UI
+  const handleAdminRefresh = useCallback(() => {
+    fetchFilament();
+  }, [id]);
+
   const handleRescrapeImage = async () => {
     if (!id || !filament) return;
     
@@ -766,6 +771,7 @@ const FilamentDetail = () => {
             lastScrapedAt={unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
             priceSource={unifiedPricing.priceSource}
             priceConfidence={unifiedPricing.priceConfidence}
+            onAdminRefresh={handleAdminRefresh}
           />
         </div>
       </div>
