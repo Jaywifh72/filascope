@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { DollarSign, ExternalLink, ShoppingCart, AlertTriangle, CheckCircle2, Clock, Info } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { DollarSign, ExternalLink, ShoppingCart, AlertTriangle, CheckCircle2, Clock, Info, RefreshCw, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -8,6 +8,8 @@ import { PriceConfidence, usePriceFreshness } from '@/hooks/usePriceFreshness';
 import { PriceVerificationDialog, usePriceVerification } from './PriceVerificationDialog';
 import { AdminPriceRefreshButton } from '@/components/admin/AdminPriceRefreshButton';
 import { cn } from '@/lib/utils';
+
+type RefreshState = 'idle' | 'refreshing' | 'success' | 'error';
 
 export interface HonestPriceDisplayProps {
   price: number | null;
@@ -123,8 +125,16 @@ export function HonestPriceDisplay({
   netWeightGrams,
 }: HonestPriceDisplayProps) {
   const { formatPrice } = useRegion();
+  const [refreshState, setRefreshState] = useState<RefreshState>('idle');
+  const [localLastVerified, setLocalLastVerified] = useState<Date | null>(null);
+  
+  // Use local override if we just refreshed, otherwise use prop
+  const effectiveLastVerified = localLastVerified || lastVerifiedAt;
+  
   const freshness = usePriceFreshness(
-    lastVerifiedAt instanceof Date ? lastVerifiedAt.toISOString() : lastVerifiedAt
+    effectiveLastVerified instanceof Date 
+      ? effectiveLastVerified.toISOString() 
+      : effectiveLastVerified
   );
   
   // Price verification dialog state
@@ -135,6 +145,25 @@ export function HonestPriceDisplay({
     handleBuyClick,
     handleContinue,
   } = usePriceVerification();
+  
+  // Handle refresh state changes from AdminPriceRefreshButton
+  const handleRefreshStart = useCallback(() => {
+    setRefreshState('refreshing');
+  }, []);
+  
+  const handleRefreshComplete = useCallback((success: boolean) => {
+    if (success) {
+      setRefreshState('success');
+      setLocalLastVerified(new Date());
+      onAdminRefresh?.();
+      // Reset to idle after success display
+      setTimeout(() => setRefreshState('idle'), 2000);
+    } else {
+      setRefreshState('error');
+      // Reset to idle after error display
+      setTimeout(() => setRefreshState('idle'), 2500);
+    }
+  }, [onAdminRefresh]);
   
   const confidence = providedConfidence || freshness.confidence;
   const displayMode = getDisplayMode(confidence, storeName);
@@ -203,10 +232,33 @@ export function HonestPriceDisplay({
               )}
             </div>
 
-            {/* Freshness indicator */}
-            <div className={cn('flex items-center gap-1.5', config.colorClass, sizes.helper)}>
-              <Icon className="h-3 w-3" />
-              <span>{timeAgoText || displayMode.helperText}</span>
+            {/* Freshness indicator with refresh state */}
+            <div className={cn(
+              'flex items-center gap-1.5 transition-all duration-300',
+              refreshState === 'refreshing' && 'text-blue-400',
+              refreshState === 'success' && 'text-green-500',
+              refreshState === 'error' && 'text-destructive',
+              refreshState === 'idle' && config.colorClass,
+              sizes.helper
+            )}>
+              {/* Dynamic icon based on refresh state */}
+              {refreshState === 'refreshing' ? (
+                <RefreshCw className="h-3 w-3 animate-spin" />
+              ) : refreshState === 'success' ? (
+                <Check className="h-3 w-3" />
+              ) : refreshState === 'error' ? (
+                <X className="h-3 w-3" />
+              ) : (
+                <Icon className="h-3 w-3" />
+              )}
+              
+              {/* Dynamic text based on refresh state */}
+              <span className="transition-opacity duration-200">
+                {refreshState === 'refreshing' ? 'Checking price...' :
+                 refreshState === 'success' ? 'Price updated just now' :
+                 refreshState === 'error' ? 'Failed to update' :
+                 (localLastVerified ? 'Updated just now' : (timeAgoText || displayMode.helperText))}
+              </span>
               
               {/* Admin Refresh Button - only shown to admins */}
               {filamentId && productUrl && (
@@ -214,11 +266,8 @@ export function HonestPriceDisplay({
                   productUrl={productUrl}
                   filamentId={filamentId}
                   netWeightGrams={netWeightGrams}
-                  onRefreshComplete={(success) => {
-                    if (success) {
-                      onAdminRefresh?.();
-                    }
-                  }}
+                  onRefreshComplete={handleRefreshComplete}
+                  onRefreshStart={handleRefreshStart}
                   className="ml-1"
                 />
               )}

@@ -17,6 +17,7 @@ interface AdminPriceRefreshButtonProps {
   filamentId: string;
   netWeightGrams?: number | null;
   onRefreshComplete?: (success: boolean, newPrice?: number) => void;
+  onRefreshStart?: () => void;
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export function AdminPriceRefreshButton({
   filamentId,
   netWeightGrams,
   onRefreshComplete,
+  onRefreshStart,
   className,
 }: AdminPriceRefreshButtonProps) {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -46,6 +48,7 @@ export function AdminPriceRefreshButton({
     if (isRefreshing) return;
     
     setVisualState('refreshing');
+    onRefreshStart?.();
     
     const result = await refreshPrice();
     
