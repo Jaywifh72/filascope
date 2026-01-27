@@ -39,11 +39,15 @@ const BRAND_URL_FIXES: Record<string, { pattern: RegExp; fix: (url: string) => s
   // eSUN: esun3d.com is broken, correct domain is esun3dstore.com
   'eSun': {
     pattern: /^https?:\/\/(www\.)?esun3d\.com\//,
-    fix: (url: string) => url.replace(/esun3d\.com/, 'esun3dstore.com')
+    fix: (url: string) => url
+      .replace(/https?:\/\/www\.esun3d\.com/gi, 'https://esun3dstore.com')
+      .replace(/https?:\/\/esun3d\.com/gi, 'https://esun3dstore.com')
   },
   'eSUN': {
     pattern: /^https?:\/\/(www\.)?esun3d\.com\//,
-    fix: (url: string) => url.replace(/esun3d\.com/, 'esun3dstore.com')
+    fix: (url: string) => url
+      .replace(/https?:\/\/www\.esun3d\.com/gi, 'https://esun3dstore.com')
+      .replace(/https?:\/\/esun3d\.com/gi, 'https://esun3dstore.com')
   }
 };
 
