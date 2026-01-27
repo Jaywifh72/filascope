@@ -1,75 +1,110 @@
 
 
-## Database URL Normalization Trigger
+## Fix eSUN URLs Database Migration
 
 ### Summary
-Create a database trigger that automatically fixes known problematic URLs (like eSUN) on insert and update operations to prevent future issues.
+Create a comprehensive migration to fix all remaining eSUN product URLs across multiple tables in the database. While the main `filaments` table already has correct URLs, several configuration and reference tables still contain the broken `www.esun3d.com` domain.
 
-### Database Audit Results
-All current URLs in the database are correctly formatted:
-- eSUN: 360 products using correct `esun3dstore.com` domain
-- No broken `esun3d.com` URLs found
-- No other brands with domain issues detected
+### Database Audit Findings
 
-### Implementation Plan
+| Table | Status | Issues Found |
+|-------|--------|--------------|
+| `filaments` | ✅ Clean | 360 eSUN products already using correct domain |
+| `product_regional_urls` | ✅ Clean | No broken URLs |
+| `filament_listings` | ✅ Clean | No broken URLs |
+| `broken_product_urls` | ❌ Fix needed | 1 URL: `https://www.esun3d.com/products/epla-pro-hs` |
+| `automated_brands` | ❌ Fix needed | eSUN brand has `base_url` and `products_url` pointing to broken domain |
+| `brand_regional_stores` | ❌ Fix needed | 2 entries (US/EU) with `base_url` pointing to broken domain |
 
-#### Step 1: Create URL Normalization Function
-Create a PostgreSQL function `normalize_product_url()` that:
-- Fixes eSUN domain: `esun3d.com` → `esun3dstore.com`
-- Removes `www.` prefix from eSUN URLs
-- Can be extended for other brand-specific fixes in the future
-
-```sql
-CREATE OR REPLACE FUNCTION normalize_product_url()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-BEGIN
-  -- Skip if product_url is null
-  IF NEW.product_url IS NULL THEN
-    RETURN NEW;
-  END IF;
-  
-  -- Fix eSUN domain: esun3d.com → esun3dstore.com
-  IF NEW.product_url LIKE '%esun3d.com%' 
-     AND NEW.product_url NOT LIKE '%esun3dstore.com%' THEN
-    NEW.product_url := REPLACE(
-      REPLACE(NEW.product_url, 'www.esun3d.com', 'esun3dstore.com'),
-      'esun3d.com', 'esun3dstore.com'
-    );
-  END IF;
-  
-  -- Additional brand fixes can be added here
-  
-  RETURN NEW;
-END;
-$$;
-```
-
-#### Step 2: Create Database Triggers
-Attach the function to both INSERT and UPDATE operations:
+### Migration SQL
 
 ```sql
-CREATE TRIGGER normalize_product_url_on_insert
-  BEFORE INSERT ON filaments
-  FOR EACH ROW
-  EXECUTE FUNCTION normalize_product_url();
+-- Migration: fix_esun_urls_www_prefix
+-- Fix all eSUN URLs across the database to use correct domain
 
-CREATE TRIGGER normalize_product_url_on_update
-  BEFORE UPDATE ON filaments
-  FOR EACH ROW
-  WHEN (OLD.product_url IS DISTINCT FROM NEW.product_url)
-  EXECUTE FUNCTION normalize_product_url();
+-- 1. Fix filaments table (defensive - in case any slip through)
+UPDATE filaments 
+SET product_url = REGEXP_REPLACE(
+  REGEXP_REPLACE(product_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+  'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+)
+WHERE (product_url LIKE '%esun3d.com%' OR product_url LIKE '%www.esun3d.com%') 
+  AND product_url NOT LIKE '%esun3dstore.com%';
+
+-- 2. Fix product_regional_urls table
+UPDATE product_regional_urls 
+SET store_url = REGEXP_REPLACE(
+  REGEXP_REPLACE(store_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+  'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+)
+WHERE (store_url LIKE '%esun3d.com%' OR store_url LIKE '%www.esun3d.com%') 
+  AND store_url NOT LIKE '%esun3dstore.com%';
+
+-- 3. Fix broken_product_urls table
+UPDATE broken_product_urls 
+SET product_url = REGEXP_REPLACE(
+  REGEXP_REPLACE(product_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+  'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+)
+WHERE (product_url LIKE '%esun3d.com%' OR product_url LIKE '%www.esun3d.com%') 
+  AND product_url NOT LIKE '%esun3dstore.com%';
+
+-- 4. Fix automated_brands table (base_url and products_url)
+UPDATE automated_brands 
+SET 
+  base_url = REGEXP_REPLACE(
+    REGEXP_REPLACE(base_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+    'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+  ),
+  products_url = REGEXP_REPLACE(
+    REGEXP_REPLACE(products_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+    'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+  ),
+  website_url = REGEXP_REPLACE(
+    REGEXP_REPLACE(website_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+    'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+  ),
+  test_product_url = REGEXP_REPLACE(
+    REGEXP_REPLACE(test_product_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+    'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+  )
+WHERE brand_slug = 'esun' 
+  OR base_url LIKE '%esun3d.com%' 
+  OR products_url LIKE '%esun3d.com%';
+
+-- 5. Fix brand_regional_stores table
+UPDATE brand_regional_stores 
+SET base_url = REGEXP_REPLACE(
+  REGEXP_REPLACE(base_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+  'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+)
+WHERE (base_url LIKE '%esun3d.com%' OR base_url LIKE '%www.esun3d.com%') 
+  AND base_url NOT LIKE '%esun3dstore.com%';
+
+-- 6. Fix filament_listings table (defensive)
+UPDATE filament_listings 
+SET product_url = REGEXP_REPLACE(
+  REGEXP_REPLACE(product_url, 'https?://www\.esun3d\.com', 'https://esun3dstore.com', 'gi'),
+  'https?://esun3d\.com', 'https://esun3dstore.com', 'gi'
+)
+WHERE (product_url LIKE '%esun3d.com%' OR product_url LIKE '%www.esun3d.com%') 
+  AND product_url NOT LIKE '%esun3dstore.com%';
 ```
 
-### Files to Modify
-- **Database Migration**: New SQL migration to create function and triggers
+### Tables Updated
+
+1. **filaments** - Main product URLs (defensive, currently clean)
+2. **product_regional_urls** - Regional store URLs (defensive, currently clean)
+3. **broken_product_urls** - Tracking table for broken URLs (1 record to fix)
+4. **automated_brands** - Brand configuration URLs (1 brand to fix)
+5. **brand_regional_stores** - Regional store configurations (2 records to fix)
+6. **filament_listings** - Retailer listings (defensive, currently clean)
 
 ### Technical Notes
-- Trigger uses `BEFORE INSERT/UPDATE` to fix URLs before they're stored
-- The `WHEN` clause on UPDATE prevents unnecessary trigger execution
-- Function is extensible for future brand-specific URL fixes
-- Matches the runtime fix logic in `src/lib/urlValidation.ts`
+
+- Uses `REGEXP_REPLACE` with `'gi'` flags for case-insensitive global replacement
+- Two-step replacement ensures both `www.esun3d.com` and `esun3d.com` are caught
+- `WHERE` clauses prevent unnecessary updates to already-correct URLs
+- Migration is idempotent - safe to run multiple times
+- Works in conjunction with the existing `normalize_product_url()` trigger to prevent future issues
 
