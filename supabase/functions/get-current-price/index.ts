@@ -1625,6 +1625,74 @@ function parseWeightFromTitle(title: string): number | null {
   return null;
 }
 
+// ===== SMART VARIANT SELECTION =====
+// Prefer consumer-sized spools (750g-1500g) over bulk (10kg) or samples (100g)
+
+/** Preferred weight range for consumer spools (in grams) */
+const PREFERRED_MIN_WEIGHT = 750;
+const PREFERRED_MAX_WEIGHT = 1500;
+const ACCEPTABLE_MAX_WEIGHT = 5500; // Up to 5kg spools are acceptable
+
+interface VariantWithWeight {
+  variant: ShopifyVariant;
+  weightGrams: number | null;
+}
+
+/**
+ * Select the best variant based on weight preference.
+ * Priority: 1) ~1kg variants (750g-1500g), 2) acceptable range (up to 5.5kg), 3) first available
+ */
+function selectBestVariantByWeight(variants: ShopifyVariant[], productTitle: string): ShopifyVariant {
+  // Parse weights for all available variants
+  const variantsWithWeights: VariantWithWeight[] = variants
+    .filter(v => v.available !== false) // Include available or unknown availability
+    .map(v => ({
+      variant: v,
+      weightGrams: parseWeightFromTitle(v.title) || 
+                   (v.grams && v.grams >= 250 && v.grams <= 15000 ? v.grams : null)
+    }));
+  
+  console.log('Variant weights:', variantsWithWeights.map(vw => 
+    `"${vw.variant.title}" → ${vw.weightGrams}g, $${vw.variant.price}`
+  ).join(' | '));
+  
+  // Priority 1: Find variants in preferred range (750g-1500g, typical 1kg spool)
+  const preferredVariants = variantsWithWeights.filter(vw => 
+    vw.weightGrams !== null && 
+    vw.weightGrams >= PREFERRED_MIN_WEIGHT && 
+    vw.weightGrams <= PREFERRED_MAX_WEIGHT
+  );
+  
+  if (preferredVariants.length > 0) {
+    // Pick the one closest to 1000g
+    preferredVariants.sort((a, b) => 
+      Math.abs(a.weightGrams! - 1000) - Math.abs(b.weightGrams! - 1000)
+    );
+    console.log(`✓ Selected preferred variant: "${preferredVariants[0].variant.title}" (${preferredVariants[0].weightGrams}g)`);
+    return preferredVariants[0].variant;
+  }
+  
+  // Priority 2: Find variants in acceptable range (up to 5.5kg) but not bulk
+  const acceptableVariants = variantsWithWeights.filter(vw => 
+    vw.weightGrams !== null && 
+    vw.weightGrams >= 250 && 
+    vw.weightGrams <= ACCEPTABLE_MAX_WEIGHT
+  );
+  
+  if (acceptableVariants.length > 0) {
+    // Pick the smallest acceptable weight (prefer smaller over bulk)
+    acceptableVariants.sort((a, b) => a.weightGrams! - b.weightGrams!);
+    console.log(`✓ Selected acceptable variant: "${acceptableVariants[0].variant.title}" (${acceptableVariants[0].weightGrams}g)`);
+    return acceptableVariants[0].variant;
+  }
+  
+  // Priority 3: Fallback to first available variant (original behavior)
+  const availableVariant = variants.find(v => v.available);
+  const fallback = availableVariant || variants[0];
+  console.log(`⚠ No weight-matched variant found, using fallback: "${fallback.title}"`);
+  return fallback;
+}
+
 // Parse pack quantity from product content
 function parsePackQuantity(title: string, content?: string): number {
   const textToSearch = `${title} ${content || ''}`;
@@ -1765,13 +1833,14 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
         variant = matchedVariant;
         console.log(`Found requested variant ${requestedVariantId}: "${variant.title}"`);
       } else {
-        console.log(`Requested variant ${requestedVariantId} not found, using first available`);
-        const availableVariant = data.product.variants.find(v => v.available);
-        variant = availableVariant || data.product.variants[0];
+        console.log(`Requested variant ${requestedVariantId} not found, using smart weight selection`);
+        variant = selectBestVariantByWeight(data.product.variants, data.product.title);
       }
     } else {
-      const availableVariant = data.product.variants.find(v => v.available);
-      variant = availableVariant || data.product.variants[0];
+      // No variant ID specified - use smart weight-based selection
+      // This prevents picking bulk sizes (10kg @ $450) over consumer sizes (1kg @ $50)
+      console.log(`No variant ID in URL, using smart weight selection for ${data.product.variants.length} variants`);
+      variant = selectBestVariantByWeight(data.product.variants, data.product.title);
     }
     
     const price = parseFloat(variant.price);
