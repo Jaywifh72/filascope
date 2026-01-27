@@ -228,8 +228,9 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     pattern: 'global',
     baseDomain: 'formfutura.com',
     defaultCurrency: 'EUR',
-    // Note: FormFutura uses /filaments/{material-type}/{slug} URL structure
-    // URLs with /products/ path are redirected to search page
+    // Note: FormFutura uses root-level product URLs: formfutura.com/{product-slug}
+    // NOT /products/{slug} or /filaments/{material-type}/{slug}
+    // Example: formfutura.com/easyfil-epla, formfutura.com/volcano-pla
     fallbackRegion: 'EU',
   },
 
