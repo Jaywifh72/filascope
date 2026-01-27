@@ -101,6 +101,30 @@ export function fixProductUrl(url: string, brand?: string | null): string {
   return validation.suggestedUrl || url;
 }
 
+// Validate and fix product URLs before saving to database
+// Use this function in data imports and scraping functions
+export function validateAndFixProductUrl(url: string, vendor?: string): string {
+  if (!url) return url;
+  
+  let fixedUrl = url;
+  
+  // eSUN: esun3d.com → esun3dstore.com
+  if (fixedUrl.includes('esun3d.com') && !fixedUrl.includes('esun3dstore.com')) {
+    fixedUrl = fixedUrl
+      .replace('www.esun3d.com', 'esun3dstore.com')
+      .replace('esun3d.com', 'esun3dstore.com');
+  }
+  
+  // Creality: Remove /us/ regional path (global store URLs work without region)
+  if (fixedUrl.includes('store.creality.com/us/')) {
+    fixedUrl = fixedUrl.replace('store.creality.com/us/', 'store.creality.com/');
+  }
+  
+  // Additional brand-specific fixes can be added here
+  
+  return fixedUrl;
+}
+
 // Batch validate multiple URLs
 export function validateMultipleUrls(items: Array<{ id: string; url: string | null; brand?: string | null }>): Array<{
   id: string;
