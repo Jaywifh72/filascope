@@ -124,8 +124,8 @@ const BRAND_CONFIGS: Record<string, {
     shopifyStore: "https://www.prusa3d.com",
   },
   "eSUN": {
-    shopifyStore: "https://www.esun3d.com",
-    collectionsUrl: "https://www.esun3d.com/collections/all.json",
+    shopifyStore: "https://www.esun3dstore.com",
+    collectionsUrl: "https://www.esun3dstore.com/collections/all.json",
   },
   "Hatchbox": {
     shopifyStore: "https://www.hatchbox3d.com",

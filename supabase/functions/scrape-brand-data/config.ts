@@ -179,8 +179,8 @@ export const BRAND_CONFIGS: Record<string, BrandConfig> = {
   eSun: {
     vendor: "eSun",
     platform: "shopify",
-    baseUrl: "https://www.esun3d.com",
-    apiEndpoint: "https://www.esun3d.com/products.json",
+    baseUrl: "https://www.esun3dstore.com",
+    apiEndpoint: "https://www.esun3dstore.com/products.json",
     currency: "USD",
     exchangeRate: 1,
     productsPerPage: 250,
