@@ -79,11 +79,11 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
     fallbackRegion: 'US',
     regions: {
       US: { subdomain: 'us', currency: 'USD' },
-      CA: { subdomain: 'ca', currency: 'CAD' },
-      UK: { subdomain: 'uk', currency: 'GBP' },
-      EU: { subdomain: 'eu', currency: 'EUR' },
-      AU: { subdomain: 'au', currency: 'AUD' },
-    }
+    },
+    // IMPORTANT: Creality uses inconsistent product URL slugs
+    // Examples: hyper-rainbow-pla-3d-printing-filament-1kg, hyper-abs, cr-silk-1-75mm-pla-3d-printing-filament-1kg
+    // No pattern transformation possible - URLs must be stored correctly in database
+    // Fallback: redirect to search if URL is broken
   },
 
   'Anycubic': {
