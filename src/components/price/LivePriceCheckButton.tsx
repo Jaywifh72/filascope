@@ -77,9 +77,9 @@ export function LivePriceCheckButton({
     }
   };
   const sizeClasses = {
-    sm: 'h-9 text-sm px-3',
-    md: 'h-11 text-base px-4',
-    lg: 'h-14 text-lg px-6'
+    sm: 'min-h-9 text-sm px-3 py-2',
+    md: 'min-h-11 text-base px-4 py-2.5',
+    lg: 'min-h-14 text-lg px-6 py-3'
   };
 
   // Show the fetched price result
@@ -111,9 +111,11 @@ export function LivePriceCheckButton({
           </p>}
 
         {/* Go to Store Button */}
-        <Button onClick={handleGoToStore} disabled={!affiliateUrl} className={cn("w-full font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.4)] transition-all duration-200 text-center", sizeClasses[size])}>
-          Buy Now at {storeName}
-          <ExternalLink className="w-4 h-4 ml-2" />
+        <Button onClick={handleGoToStore} disabled={!affiliateUrl} className={cn("w-full font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.4)] transition-all duration-200", sizeClasses[size])}>
+          <span className="flex items-center justify-center gap-2 flex-wrap text-center">
+            <span>Buy Now at {storeName}</span>
+            <ExternalLink className="w-4 h-4 flex-shrink-0" />
+          </span>
         </Button>
 
         {/* Refresh option */}
