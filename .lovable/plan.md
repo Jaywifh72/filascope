@@ -1,72 +1,69 @@
 
 
-## Fix FormFutura URLs Database Migration
+## Fix FormFutura URLs - Database Migration
 
-### Summary
-Create a migration to fix any FormFutura product URLs with the broken `/products/` path and add a database trigger to prevent future broken URLs.
+### Current State Analysis
 
-### Database Audit Findings
+| Table | Status | Details |
+|-------|--------|---------|
+| `filaments` | ✅ Clean | 460 FormFutura products, 0 with `/products/` path |
+| `broken_product_urls` | ❌ Needs fix | 2 URLs: one with `/products/`, one with `/search/` |
+| `product_regional_urls` | ✅ Clean | No broken FormFutura URLs |
 
-| Table | Status | Issues Found |
-|-------|--------|--------------|
-| `filaments` | ✅ Clean | 460 FormFutura products already using correct `/filaments/` path |
-| `broken_product_urls` | ❌ Fix needed | 1 URL: `https://formfutura.com/products/easyfil-epla` |
-| `product_regional_urls` | ✅ Clean | No broken URLs |
-| `filament_listings` | ✅ Clean | No broken URLs |
-| `brand_regional_stores` | ✅ OK | Base URL only: `https://formfutura.com` |
-| `automated_brands` | ✅ OK | Uses shop/product path (different from /products/) |
+### Issue
+The previous migration converted FormFutura `/products/` URLs to search URLs (`/search/?q=...`), but the correct fix is simpler: just use root-level slugs (`/{slug}`).
 
 ### Migration SQL
 
 ```sql
--- Migration: fix_formfutura_urls
--- Fix FormFutura URLs with broken /products/ path and add trigger for future-proofing
+-- Migration: fix_formfutura_urls_v2
+-- Correct FormFutura URLs to use root-level product slugs
 
--- 1. Fix filaments table (defensive - currently clean)
+-- 1. Fix any remaining /products/ paths in filaments (defensive)
 UPDATE filaments 
-SET product_url = 'https://www.formfutura.com/search/?q=' || 
-  REPLACE(
-    REGEXP_REPLACE(product_url, '^.*/products/([^/?]+).*$', '\1'),
-    '-', ' '
-  )
+SET product_url = REPLACE(product_url, '/products/', '/')
 WHERE product_url LIKE '%formfutura.com/products/%';
 
--- 2. Fix product_regional_urls table (defensive)
+-- 2. Fix search URLs back to root-level slugs in filaments
+UPDATE filaments 
+SET product_url = REGEXP_REPLACE(
+  product_url, 
+  'https://www\.formfutura\.com/search/\?q=(.+)$',
+  'https://www.formfutura.com/\1'
+)
+WHERE product_url LIKE '%formfutura.com/search/?q=%';
+
+-- 3. Fix broken_product_urls table - /products/ path
+UPDATE broken_product_urls 
+SET product_url = REPLACE(product_url, '/products/', '/')
+WHERE product_url LIKE '%formfutura.com/products/%';
+
+-- 4. Fix broken_product_urls table - search URLs
+UPDATE broken_product_urls 
+SET product_url = REGEXP_REPLACE(
+  product_url,
+  'https://www\.formfutura\.com/search/\?q=(.+)$', 
+  'https://www.formfutura.com/\1'
+)
+WHERE product_url LIKE '%formfutura.com/search/?q=%';
+
+-- 5. Fix product_regional_urls (defensive)
 UPDATE product_regional_urls 
-SET store_url = 'https://www.formfutura.com/search/?q=' || 
-  REPLACE(
-    REGEXP_REPLACE(store_url, '^.*/products/([^/?]+).*$', '\1'),
-    '-', ' '
-  )
+SET store_url = REPLACE(store_url, '/products/', '/')
 WHERE store_url LIKE '%formfutura.com/products/%';
 
--- 3. Fix broken_product_urls table (1 record to fix)
-UPDATE broken_product_urls 
-SET product_url = 'https://www.formfutura.com/search/?q=' || 
-  REPLACE(
-    REGEXP_REPLACE(product_url, '^.*/products/([^/?]+).*$', '\1'),
-    '-', ' '
-  )
-WHERE product_url LIKE '%formfutura.com/products/%';
-
--- 4. Fix filament_listings table (defensive)
+-- 6. Fix filament_listings (defensive)
 UPDATE filament_listings 
-SET product_url = 'https://www.formfutura.com/search/?q=' || 
-  REPLACE(
-    REGEXP_REPLACE(product_url, '^.*/products/([^/?]+).*$', '\1'),
-    '-', ' '
-  )
+SET product_url = REPLACE(product_url, '/products/', '/')
 WHERE product_url LIKE '%formfutura.com/products/%';
 
--- 5. Update the normalize_product_url trigger to include FormFutura fix
+-- 7. Update normalize_product_url trigger with simpler FormFutura fix
 CREATE OR REPLACE FUNCTION public.normalize_product_url()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-DECLARE
-  product_slug TEXT;
 BEGIN
   -- Skip if product_url is null
   IF NEW.product_url IS NULL THEN
@@ -82,12 +79,10 @@ BEGIN
     );
   END IF;
   
-  -- Fix FormFutura: /products/ path → search URL
+  -- Fix FormFutura URL: /products/{slug} -> /{slug}
+  -- FormFutura uses root-level product slugs, not /products/ path
   IF NEW.product_url LIKE '%formfutura.com/products/%' THEN
-    -- Extract product slug from URL
-    product_slug := REGEXP_REPLACE(NEW.product_url, '^.*/products/([^/?]+).*$', '\1');
-    -- Convert to search URL with spaces instead of hyphens
-    NEW.product_url := 'https://www.formfutura.com/search/?q=' || REPLACE(product_slug, '-', ' ');
+    NEW.product_url := REPLACE(NEW.product_url, '/products/', '/');
   END IF;
   
   RETURN NEW;
@@ -98,16 +93,23 @@ $function$;
 ### Tables Updated
 
 1. **filaments** - Main product URLs (defensive, currently clean)
-2. **product_regional_urls** - Regional store URLs (defensive, currently clean)
-3. **broken_product_urls** - Tracking table for broken URLs (1 record to fix)
-4. **filament_listings** - Retailer listings (defensive, currently clean)
-5. **normalize_product_url trigger** - Updated to include FormFutura fix
+2. **broken_product_urls** - 2 records to fix
+3. **product_regional_urls** - Regional store URLs (defensive)
+4. **filament_listings** - Retailer listings (defensive)
+5. **normalize_product_url trigger** - Simplified to use root-level slugs
+
+### URL Transformations
+
+| Before | After |
+|--------|-------|
+| `formfutura.com/products/easyfil-epla` | `formfutura.com/easyfil-epla` |
+| `formfutura.com/search/?q=easyfil epla` | `formfutura.com/easyfil epla` |
 
 ### Technical Notes
 
-- Uses `REGEXP_REPLACE` to extract product slug from `/products/{slug}` path
-- Converts hyphens to spaces for better search results
-- The trigger update adds FormFutura handling alongside existing eSUN domain fix
+- Simpler fix: just removes `/products/` from path
+- Also fixes any search URLs created by previous migration
+- Trigger now uses simple `REPLACE()` instead of regex extraction
 - Migration is idempotent - safe to run multiple times
-- Works in conjunction with frontend fixes in `useAffiliateLinks.tsx` and `urlValidation.ts`
+- Aligns with frontend fixes in `useAffiliateLinks.tsx` and `urlValidation.ts`
 
