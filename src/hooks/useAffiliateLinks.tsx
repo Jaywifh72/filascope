@@ -57,15 +57,10 @@ function transformUrlSync(
         .replace(/^(https?:\/\/)esun3d\.com/i, '$1esun3dstore.com');
     }
     
-    // FormFutura URL fix: /products/ path is broken, correct path is /filaments/{material-type}/
-    // Since we don't always have the material type, redirect to the search page as a fallback
+    // Fix FormFutura URL: /products/{slug} -> /{slug}
+    // FormFutura uses root-level product slugs, not /products/ path
     if (fixedUrl.includes('formfutura.com/products/')) {
-      // Extract the product slug from the URL
-      const productSlug = fixedUrl.split('/products/')[1]?.split('?')[0];
-      if (productSlug) {
-        // Use FormFutura's search as a reliable fallback since we don't have material type info
-        fixedUrl = `https://www.formfutura.com/search/?q=${encodeURIComponent(productSlug.replace(/-/g, ' '))}`;
-      }
+      fixedUrl = fixedUrl.replace('/products/', '/');
     }
     
     const urlObj = new URL(fixedUrl);
