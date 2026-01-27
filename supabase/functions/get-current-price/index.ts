@@ -1642,7 +1642,7 @@ interface VariantWithWeight {
  * Select the best variant based on weight preference.
  * Priority: 1) ~1kg variants (750g-1500g), 2) acceptable range (up to 5.5kg), 3) first available
  */
-function selectBestVariantByWeight(variants: ShopifyVariant[], productTitle: string): ShopifyVariant {
+function selectBestVariantByWeight(variants: ShopifyVariant[], productTitle: string, targetWeightGrams: number | null = null): ShopifyVariant {
   // Parse weights for all available variants
   const variantsWithWeights: VariantWithWeight[] = variants
     .filter(v => v.available !== false) // Include available or unknown availability
@@ -1655,6 +1655,20 @@ function selectBestVariantByWeight(variants: ShopifyVariant[], productTitle: str
   console.log('Variant weights:', variantsWithWeights.map(vw => 
     `"${vw.variant.title}" → ${vw.weightGrams}g, $${vw.variant.price}`
   ).join(' | '));
+  
+  // Priority 0: If target weight provided from database, find exact match first
+  if (targetWeightGrams !== null && targetWeightGrams > 0) {
+    const tolerance = targetWeightGrams * 0.1; // 10% tolerance
+    const exactMatch = variantsWithWeights.find(vw => 
+      vw.weightGrams !== null && 
+      Math.abs(vw.weightGrams - targetWeightGrams) <= tolerance
+    );
+    if (exactMatch) {
+      console.log(`✓ Exact weight match: "${exactMatch.variant.title}" (${exactMatch.weightGrams}g ≈ ${targetWeightGrams}g target)`);
+      return exactMatch.variant;
+    }
+    console.log(`No exact match for ${targetWeightGrams}g target, falling back to priority system`);
+  }
   
   // Priority 1: Find variants in preferred range (750g-1500g, typical 1kg spool)
   const preferredVariants = variantsWithWeights.filter(vw => 
@@ -1765,7 +1779,7 @@ function detectCurrencyFromUrl(url: string): string {
 }
 
 // Fetch price from Shopify JSON API
-async function fetchShopifyPrice(productUrl: string, preferredCurrency: string): Promise<PriceResponse> {
+async function fetchShopifyPrice(productUrl: string, preferredCurrency: string, targetWeightGrams: number | null = null): Promise<PriceResponse> {
   const jsonUrl = getShopifyJsonUrl(productUrl);
   console.log(`Fetching Shopify JSON from: ${jsonUrl}`);
   
@@ -1834,13 +1848,13 @@ async function fetchShopifyPrice(productUrl: string, preferredCurrency: string):
         console.log(`Found requested variant ${requestedVariantId}: "${variant.title}"`);
       } else {
         console.log(`Requested variant ${requestedVariantId} not found, using smart weight selection`);
-        variant = selectBestVariantByWeight(data.product.variants, data.product.title);
+        variant = selectBestVariantByWeight(data.product.variants, data.product.title, targetWeightGrams);
       }
     } else {
       // No variant ID specified - use smart weight-based selection
       // This prevents picking bulk sizes (10kg @ $450) over consumer sizes (1kg @ $50)
       console.log(`No variant ID in URL, using smart weight selection for ${data.product.variants.length} variants`);
-      variant = selectBestVariantByWeight(data.product.variants, data.product.title);
+      variant = selectBestVariantByWeight(data.product.variants, data.product.title, targetWeightGrams);
     }
     
     const price = parseFloat(variant.price);
@@ -1897,7 +1911,7 @@ serve(async (req) => {
   }
 
   try {
-    const { productUrl, currency = 'USD', forceRefresh = false } = await req.json();
+    const { productUrl, currency = 'USD', forceRefresh = false, targetWeightGrams = null } = await req.json();
     
     if (!productUrl) {
       return new Response(
@@ -1971,7 +1985,7 @@ serve(async (req) => {
           console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl`);
           result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
         } else {
-          result = await fetchShopifyPrice(productUrl, currency);
+          result = await fetchShopifyPrice(productUrl, currency, targetWeightGrams);
           
           if (!result.success) {
             console.log('Shopify failed, trying Firecrawl as fallback...');

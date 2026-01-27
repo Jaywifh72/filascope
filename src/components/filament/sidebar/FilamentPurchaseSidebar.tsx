@@ -56,6 +56,8 @@ interface FilamentPurchaseSidebarProps {
   lastScrapedAt?: string | null;
   priceSource?: string | null;
   priceConfidence?: PriceConfidence | null;
+  // Callback to refetch filament data after admin price refresh
+  onAdminRefresh?: () => void;
 }
 
 export function FilamentPurchaseSidebar({
@@ -82,6 +84,7 @@ export function FilamentPurchaseSidebar({
   lastScrapedAt,
   priceSource,
   priceConfidence,
+  onAdminRefresh,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
@@ -138,7 +141,9 @@ export function FilamentPurchaseSidebar({
     }
     // Force a re-render by incrementing key
     setPriceRefreshKey(prev => prev + 1);
-  }, [productUrl, originalUsUrl]);
+    // Call parent callback to refetch filament data from database
+    onAdminRefresh?.();
+  }, [productUrl, originalUsUrl, onAdminRefresh]);
 
   const handleLivePriceFetched = (result: LivePriceFetchResult) => {
     setOnDemandLivePrice(result);
@@ -266,6 +271,7 @@ export function FilamentPurchaseSidebar({
                 filamentId={filamentId}
                 productUrl={affiliateUrl || productUrl || undefined}
                 onAdminRefresh={handleAdminRefresh}
+                netWeightGrams={weightGrams}
               />
               
               {/* Compare at price (sale indicator) */}

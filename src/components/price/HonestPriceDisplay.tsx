@@ -27,6 +27,7 @@ export interface HonestPriceDisplayProps {
   filamentId?: string;
   productUrl?: string;
   onAdminRefresh?: () => void;
+  netWeightGrams?: number | null;
 }
 
 interface DisplayMode {
@@ -119,6 +120,7 @@ export function HonestPriceDisplay({
   filamentId,
   productUrl,
   onAdminRefresh,
+  netWeightGrams,
 }: HonestPriceDisplayProps) {
   const { formatPrice } = useRegion();
   const freshness = usePriceFreshness(
@@ -211,6 +213,7 @@ export function HonestPriceDisplay({
                 <AdminPriceRefreshButton
                   productUrl={productUrl}
                   filamentId={filamentId}
+                  netWeightGrams={netWeightGrams}
                   onRefreshComplete={(success) => {
                     if (success) {
                       onAdminRefresh?.();
