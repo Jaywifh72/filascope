@@ -123,7 +123,7 @@ const FilamentDetail = () => {
       name: unifiedPricing.storeName,
       url: unifiedPricing.storeUrl,
       regionCode: unifiedPricing.storeRegion,
-      shipsFrom: null,
+      shipsFrom: unifiedPricing.shipsFromCountry,
       freeShippingThreshold: null,
     } : null,
   } : null;

@@ -298,11 +298,18 @@ export function FilamentPurchaseSidebar({
 
               {/* Fallback region warning - show when price is from a different region */}
               {!isLocalStore && storeRegionCode && (
-                <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
-                  <Globe className="w-3.5 h-3.5" />
-                  <span className="font-medium">
-                    Price from {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
-                  </span>
+                <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1.5 rounded-md">
+                  <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">
+                      {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
+                    </span>
+                    {regionalPriceResult?.store?.shipsFrom && (
+                      <span className="text-amber-400/80">
+                        Ships from {regionalPriceResult.store.shipsFrom}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
