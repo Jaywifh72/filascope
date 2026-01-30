@@ -41,6 +41,7 @@ export interface UnifiedRegionalPricingResult {
   storeName: string;
   isLocalStore: boolean;
   storeFlag: string;
+  shipsFromCountry: string | null;
   
   // Price freshness
   priceConfidence: PriceConfidence;
@@ -373,6 +374,7 @@ const DEFAULT_RESULT: UnifiedRegionalPricingResult = {
   storeName: '',
   isLocalStore: false,
   storeFlag: '🌐',
+  shipsFromCountry: null,
   priceConfidence: 'unknown',
   lastVerifiedAt: null,
   priceSource: null,
@@ -585,6 +587,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
       storeName: matchedStore.store_name,
       isLocalStore: isLocal,
       storeFlag,
+      shipsFromCountry: matchedStore.ships_from_country,
       isConverted: needsConversion && basePrice != null,
       originalPrice: needsConversion ? basePrice : null,
       originalCurrency: needsConversion ? baseCurrency : null,
