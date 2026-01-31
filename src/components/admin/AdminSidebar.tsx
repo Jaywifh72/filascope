@@ -26,6 +26,8 @@ import {
   Sparkles,
   BookOpen,
   Link2Off,
+  MapPin,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -82,6 +84,14 @@ const navGroups: NavGroup[] = [
       { title: 'Price Anomalies', href: '/admin/price-anomalies', icon: TrendingDown },
       { title: 'Product 404s', href: '/admin/broken-urls', icon: Link2Off },
       { title: 'Filament Audit', href: '/admin/filament-audit', icon: FileText },
+    ],
+  },
+  {
+    label: 'Audit Tools',
+    items: [
+      { title: 'Region Testing', href: '/admin/region-test', icon: Globe },
+      { title: 'Regional Expansion', href: '/admin/regional-expansion', icon: MapPin },
+      { title: 'Price Freshness', href: '/admin/price-freshness', icon: Clock },
     ],
   },
   {
