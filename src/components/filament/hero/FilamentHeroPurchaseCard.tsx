@@ -382,8 +382,8 @@ export function FilamentHeroPurchaseCard({
       {stockStatus !== 'out_of_stock' && shippingRule.flatRate > 0 && (
         <div className="mb-5">
           <ShippingCountdown
-            freeShippingThreshold={shippingRule.freeThreshold}
-            currentCartValue={displayPrice || pricePerSpool || 0}
+            freeShippingThresholdUSD={shippingRule.freeThreshold}
+            currentCartValueUSD={pricePerSpool || 0}
           />
         </div>
       )}

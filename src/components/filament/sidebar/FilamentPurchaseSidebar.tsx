@@ -327,8 +327,8 @@ export function FilamentPurchaseSidebar({
           {/* Free Shipping Progress */}
           {shippingRule.flatRate > 0 && (
             <ShippingCountdown
-              freeShippingThreshold={shippingRule.freeThreshold}
-              currentCartValue={displayPrice || pricePerSpool || 0}
+              freeShippingThresholdUSD={shippingRule.freeThreshold}
+              currentCartValueUSD={pricePerSpool || 0}
             />
           )}
 

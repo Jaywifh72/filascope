@@ -4,20 +4,27 @@ import { cn } from '@/lib/utils';
 import { useCurrency } from '@/hooks/useCurrency';
 
 interface ShippingCountdownProps {
-  freeShippingThreshold?: number;
-  currentCartValue?: number;
+  /** Free shipping threshold in USD - will be converted to user's currency */
+  freeShippingThresholdUSD?: number;
+  /** Current cart value in USD - will be converted to user's currency */
+  currentCartValueUSD?: number;
   compact?: boolean;
   className?: string;
 }
 
 export function ShippingCountdown({ 
-  freeShippingThreshold = 50,
-  currentCartValue = 0,
+  freeShippingThresholdUSD = 50,
+  currentCartValueUSD = 0,
   compact = false,
   className
 }: ShippingCountdownProps) {
-  const { formatPrice } = useCurrency();
-  const amountToFreeShipping = freeShippingThreshold - currentCartValue;
+  const { formatPrice, convertPrice } = useCurrency();
+  
+  // Convert both values to user's currency for comparison and display
+  const thresholdConverted = convertPrice(freeShippingThresholdUSD) ?? freeShippingThresholdUSD;
+  const cartValueConverted = convertPrice(currentCartValueUSD) ?? currentCartValueUSD;
+  
+  const amountToFreeShipping = thresholdConverted - cartValueConverted;
   const qualifiesForFreeShipping = amountToFreeShipping <= 0;
 
   if (compact) {
@@ -45,8 +52,12 @@ export function ShippingCountdown({
     );
   }
 
-  // Show progress toward free shipping
-  const progressPercent = Math.min((currentCartValue / freeShippingThreshold) * 100, 100);
+  // Show progress toward free shipping - use formatPrice which formats already-converted values
+  const progressPercent = Math.min((cartValueConverted / thresholdConverted) * 100, 100);
+
+  // Format the amount needed - since it's already converted, use formatRegionalPrice
+  const { formatRegionalPrice } = useCurrency();
+  const formattedAmount = formatRegionalPrice(amountToFreeShipping, false);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -54,7 +65,7 @@ export function ShippingCountdown({
         <Truck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
         <div className="flex-1">
           <div className="text-[13px] font-medium text-muted-foreground mb-1.5">
-            Add <span className="font-bold text-emerald-400">{formatPrice(amountToFreeShipping, false)}</span> for free shipping
+            Add <span className="font-bold text-emerald-400">{formattedAmount}</span> for free shipping
           </div>
           <div className="h-1 bg-white/10 rounded-full overflow-hidden">
             <div 
