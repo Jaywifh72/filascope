@@ -992,6 +992,9 @@ const PrinterDetail = () => {
                 warrantyYears={warrantyYears}
                 warrantyCoverage={warrantyCoverage}
                 getAffiliateUrl={getAffiliateUrl}
+                isLocalStore={unifiedPricing.isLocalStore}
+                storeRegion={unifiedPricing.storeRegion}
+                shipsFromCountry={unifiedPricing.shipsFromCountry}
               />
             );
           })()}
@@ -1012,6 +1015,9 @@ const PrinterDetail = () => {
               isDiscontinued={printer.discontinued}
               priceCurrency={livePriceCurrency}
               isLivePrice={isLivePrice}
+              isLocalStore={unifiedPricing.isLocalStore}
+              storeRegion={unifiedPricing.storeRegion}
+              shipsFromCountry={unifiedPricing.shipsFromCountry}
             />
           );
         })()}

@@ -1,7 +1,9 @@
-import { ArrowRight, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, Shield, Sparkles, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PriceSection } from "./PriceSection";
 import { CTAButtons } from "./CTAButtons";
+import { REGIONS } from "@/config/regions";
+import { RegionCode } from "@/types/regional";
 
 import { PriceConfidence } from "@/hooks/usePriceFreshness";
 
@@ -25,6 +27,9 @@ interface PurchaseSidebarProps {
   warrantyYears: number | null;
   warrantyCoverage: string | null;
   getAffiliateUrl: (url: string | null | undefined, vendor?: string | null) => string | null;
+  isLocalStore?: boolean;
+  storeRegion?: string | null;
+  shipsFromCountry?: string | null;
 }
 
 export function PurchaseSidebar({
@@ -39,6 +44,9 @@ export function PurchaseSidebar({
   warrantyYears,
   warrantyCoverage,
   getAffiliateUrl,
+  isLocalStore,
+  storeRegion,
+  shipsFromCountry,
 }: PurchaseSidebarProps) {
   const navigate = useNavigate();
 
@@ -72,6 +80,23 @@ export function PurchaseSidebar({
             priceConfidence={printer.price_confidence as PriceConfidence | null}
           />
         </div>
+
+        {/* Fallback Region Warning */}
+        {!isLocalStore && storeRegion && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2.5 py-2 rounded-md">
+            <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">
+                {REGIONS[storeRegion as RegionCode]?.flag} {REGIONS[storeRegion as RegionCode]?.name || storeRegion} store
+              </span>
+              {shipsFromCountry && (
+                <span className="text-amber-400/80">
+                  Ships from {shipsFromCountry}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* CTA Buttons */}
         <div className="space-y-3">
