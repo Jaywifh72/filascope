@@ -1,264 +1,297 @@
 
-
-# Plan: Clean Regional Store Data & Create Exchange Rate Updater
+# Regional/Currency Admin Testing Dashboard
 
 ## Overview
 
-This plan addresses two tasks:
-1. **Database Cleanup**: Audit and clean fake regional stores that point to the same URL as the US store
-2. **Edge Function**: Create an automated exchange rate updater using exchangerate-api.com
+Create a comprehensive admin-only dashboard at `/admin/region-test` for verifying regional pricing accuracy across all currencies and stores. This tool will help ensure price consistency between FilaScope's displayed prices and actual store prices.
 
 ---
 
-## Task 1: Clean Regional Store Data
+## Features Summary
 
-### Problem Identified
+| Feature | Description |
+|---------|-------------|
+| Multi-Region Switcher | Test all 7 regions side-by-side (US, CA, EU, UK, AU, JP, CN) |
+| Price Matrix | Compare FilaScope price vs Store price vs Conversion accuracy |
+| Store-Region Audit | Map which stores serve which regions, flag missing coverage |
+| Automated Spot-Check | Random 10 products per region with accuracy verification |
+| Export Report | Download comprehensive CSV/JSON audit report |
 
-The database query revealed multiple "fake" regional stores where the `base_url` is identical to the US store for the same brand. These stores mislead the system into thinking there's a local store when there isn't one.
+---
 
-**Problematic Stores Found:**
+## New Files to Create
 
-| Brand | Region | Issue | Store Name |
-|-------|--------|-------|------------|
-| eSUN | CA | Same URL as US (esun3dstore.com) | eSun Canada |
-| eSUN | UK | Same URL as US (esun3dstore.com) | eSun UK |
-| eSUN | AU | Same URL as US (esun3dstore.com) | eSun Australia |
-| eSUN | EU | Same URL as US (esun3dstore.com) | eSun EU |
-| GEEETECH | EU | Same URL as US (geeetech.com) | GEEETECH EU |
-| Polymaker | CA | Same URL as US (us.polymaker.com) | Polymaker CA |
-| Polymaker | UK | Same URL as US (us.polymaker.com) | Polymaker UK |
-| Sunlu | CA | Same URL as US (sunlu.com) | Sunlu Canada |
-| Sunlu | AU | Same URL as US (sunlu.com) | Sunlu Australia |
+### 1. Main Page: `src/pages/AdminRegionTest.tsx`
 
-**Legitimate "Same URL" Cases (ships from different countries):**
-- AzureFilm (EU-based, ships from Slovenia)
-- ColorFabb (EU-based, ships from Netherlands)
-- Extrudr (EU-based, ships from Austria)
-- Fiberlogy (EU-based, ships from Poland)
-- Fillamentum (EU-based, ships from Czech Republic)
-- FormFutura (EU-based, ships from Netherlands)
-- Matter3D (CA-based, ships from Canada)
-- Prusament (EU-based, ships from Czech Republic)
+The main dashboard page with tabs for each feature:
 
-### Solution Approach
+```text
++----------------------------------------------------------+
+|  🌍 Regional Pricing Test Dashboard                       |
+|  Verify pricing accuracy across all regions and currencies |
++----------------------------------------------------------+
+|  [Region Switcher] [Price Matrix] [Store Audit] [Spot Check] |
++----------------------------------------------------------+
+```
 
-Delete fake regional stores that:
-1. Have the same base_url as the US primary store
-2. Don't have a legitimate `ships_from_country` that differs from US
-3. Are not truly regional (just duplicates to game the system)
+**Tab Structure:**
+- **Region Switcher** - Side-by-side currency comparison
+- **Price Matrix** - Detailed price verification grid
+- **Store Audit** - Brand-region-store mapping
+- **Spot Check** - Automated random product verification
 
-### SQL Migration
+### 2. Components to Create in `src/components/admin/region-test/`:
 
+| Component | Purpose |
+|-----------|---------|
+| `MultiRegionComparison.tsx` | Shows same product in all 7 currencies side-by-side |
+| `PriceVerificationMatrix.tsx` | Grid of FilaScope vs Store price comparisons |
+| `StoreRegionAuditTable.tsx` | Brand → Region → Store mapping with gap flags |
+| `AutomatedSpotCheck.tsx` | Runs random product checks per region |
+| `RegionTestExport.tsx` | Export report functionality |
+
+---
+
+## Technical Implementation
+
+### File 1: `src/pages/AdminRegionTest.tsx`
+
+```tsx
+// Main admin page structure
+- Uses AdminLayout (existing)
+- Uses AdminPageHeader with Globe icon
+- Tabs: Region Switcher | Price Matrix | Store Audit | Spot Check
+- Export button in header actions
+```
+
+### File 2: `src/components/admin/region-test/MultiRegionComparison.tsx`
+
+**Features:**
+- Product search/selector to pick a filament
+- 7-column grid showing price in each region's currency
+- Shows store used, conversion source, and accuracy indicators
+- Color-coded: green (local store), amber (converted), red (missing)
+
+**Data Flow:**
+```text
+Select Product → useUnifiedRegionalPricing (×7 regions)
+                      ↓
+    Display: USD | CAD | EUR | GBP | AUD | JPY | CNY
+              $24.99 | C$33.99 | €22.99 | £19.99 | A$38.99 | ¥3,749 | ¥179
+             [local] [converted] [local] [fallback] ...
+```
+
+### File 3: `src/components/admin/region-test/PriceVerificationMatrix.tsx`
+
+**Grid Structure:**
+
+| Product | Region | FilaScope Price | Store Price | Match | Variance | Last Checked |
+|---------|--------|-----------------|-------------|-------|----------|--------------|
+| PolyTerra PLA | US | $21.99 | $21.99 | ✓ | 0% | 2h ago |
+| PolyTerra PLA | CA | C$29.99 | C$29.99 | ✓ | 0% | 2h ago |
+| PolyTerra PLA | EU | €23.49 | €22.99 | ⚠ | +2.2% | 5d ago |
+
+**Data Sources:**
+- FilaScope Price: From `filaments.variant_price` + currency conversion
+- Store Price: Requires manual input or future scrape comparison
+- Variance Calculation: `abs(filascope - store) / store * 100`
+
+### File 4: `src/components/admin/region-test/StoreRegionAuditTable.tsx`
+
+**Audit Matrix:**
+
+| Brand | US | CA | EU | UK | AU | JP | CN |
+|-------|----|----|----|----|----|----|-----|
+| Polymaker | ✓ us.polymaker.com | ❌ | ✓ eu.polymaker.com | ✓ uk.polymaker.com | ❌ | ❌ | ❌ |
+| eSUN | ✓ esun3dstore.com | ⚠ (fallback) | ✓ (NL warehouse) | ⚠ | ⚠ | ❌ | ❌ |
+| Prusa | ✓ | ⚠ | ✓ prusament.com | ✓ | ⚠ | ❌ | ❌ |
+
+**Legend:**
+- ✓ = Local store configured with distinct URL
+- ⚠ = Uses fallback (shows fallback region)
+- ❌ = No store, no fallback
+
+**Data Query:**
 ```sql
--- Delete eSUN fake regional stores (all use esun3dstore.com, all ship from CN like US)
-DELETE FROM brand_regional_stores 
-WHERE store_name IN ('eSun Canada', 'eSun UK', 'eSun Australia')
-AND base_url = 'https://esun3dstore.com';
-
--- Keep eSun EU - it has ships_from_country = 'NL' (Netherlands warehouse)
--- Update eSun EU to clarify it ships from EU
-UPDATE brand_regional_stores 
-SET notes = 'Ships from EU warehouse (Netherlands)'
-WHERE store_name = 'eSun EU' AND region_code = 'EU';
-
--- Delete GEEETECH EU (same URL as US, both ship from CN)
-DELETE FROM brand_regional_stores 
-WHERE store_name = 'GEEETECH EU' 
-AND base_url = 'https://www.geeetech.com'
-AND ships_from_country = 'CN';
-
--- Delete Polymaker fake stores (CA, UK point to us.polymaker.com)
-DELETE FROM brand_regional_stores 
-WHERE store_name IN ('Polymaker CA', 'Polymaker UK')
-AND base_url = 'https://us.polymaker.com';
-
--- Delete Sunlu fake stores (CA, AU point to global sunlu.com, ship from CN)
-DELETE FROM brand_regional_stores 
-WHERE store_name IN ('Sunlu Canada', 'Sunlu Australia')
-AND base_url = 'https://www.sunlu.com'
-AND ships_from_country = 'CN';
+SELECT 
+  ab.brand_name,
+  ab.brand_slug,
+  brs.region_code,
+  brs.store_name,
+  brs.base_url,
+  brs.ships_from_country
+FROM automated_brands ab
+LEFT JOIN brand_regional_stores brs ON brs.brand_id = ab.id AND brs.is_active = true
+ORDER BY ab.brand_name, brs.region_code;
 ```
 
----
+### File 5: `src/components/admin/region-test/AutomatedSpotCheck.tsx`
 
-## Task 2: Exchange Rate Updater Edge Function
+**Spot Check Process:**
+1. Select region to test (or "All Regions")
+2. Click "Run Spot Check"
+3. System randomly selects 10 products per region
+4. For each product, verify:
+   - Price displays correctly
+   - Currency symbol matches region
+   - Store URL is accessible (optional)
+   - Conversion is within tolerance (±5%)
 
-### API Selection
+**Results Table:**
 
-Using **exchangerate-api.com** free tier:
-- 1,500 requests/month free
-- No API key required for open access endpoint
-- Returns rates based on USD
+| Product | Region | Currency | Price | Store | Status | Notes |
+|---------|--------|----------|-------|-------|--------|-------|
+| eSUN PLA+ Black | CA | CAD | C$28.99 | esun3dstore.com | ⚠ Fallback | Ships from US |
+| Polymaker PolyTerra | EU | EUR | €23.49 | eu.polymaker.com | ✓ OK | Local store |
 
-### Target Currencies
-
-Update rates for: CAD, EUR, GBP, AUD, JPY, CNY, KRW, PLN, CZK, SEK, CHF
-
-### Edge Function Design
-
-**File**: `supabase/functions/update-exchange-rates/index.ts`
-
-**Features**:
-- Fetches latest rates from exchangerate-api.com
-- Updates `currency_exchange_rates` table with new rates
-- Calculates inverse rates automatically
-- Includes CORS headers for web access
-- Error handling with detailed logging
-- Can be triggered manually or via cron
-
-**API Endpoint**: `https://open.er-api.com/v6/latest/USD`
-
-### Function Structure
-
-```typescript
-// CORS headers (standard pattern)
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Target currencies to update
-const TARGET_CURRENCIES = [
-  'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 
-  'CNY', 'KRW', 'PLN', 'CZK', 'SEK', 'CHF'
-];
-
-// Fetch from API, update database
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  // Fetch from exchangerate-api.com
-  // Update/upsert currency_exchange_rates table
-  // Return success/failure response
-});
-```
-
-### Database Update Strategy
-
-For each currency:
-1. Calculate rate (from API response)
-2. Calculate inverse_rate (1 / rate)
-3. Upsert into `currency_exchange_rates` table using target_currency as key
-
----
-
-## Files to Create/Modify
-
-### 1. Database Migration (via migration tool)
-
-**Action**: Delete fake regional stores, keep legitimate ones
-
+**Random Selection Query:**
 ```sql
--- Audit and clean fake regional stores
-
--- 1. Delete eSUN fake stores (CA, UK, AU all use same esun3dstore.com and ship from CN)
-DELETE FROM brand_regional_stores 
-WHERE id IN (
-  '0e1a6438-7af0-4c79-98d5-3b0cb3f00e5e',  -- eSun Canada
-  'e3ed783c-07a6-4d7d-a8cb-cd696c8aa261',  -- eSun UK  
-  'd328090b-3c16-456b-bd2e-01345c644a57'   -- eSun Australia
-);
-
--- 2. Delete GEEETECH EU (same URL, ships from CN like US)
-DELETE FROM brand_regional_stores 
-WHERE id = '217e77e4-cd23-4971-a268-92081af986ce';
-
--- 3. Delete Polymaker fake stores (CA, UK point to US store)
-DELETE FROM brand_regional_stores 
-WHERE id IN (
-  '3f6720ef-c072-4986-a09b-ce2e1f6d...',  -- Need to verify these IDs
-  '...'
-);
-
--- 4. Delete Sunlu fake stores (CA, AU use global URL, ship from CN)
-DELETE FROM brand_regional_stores 
-WHERE id IN (
-  '40a64d48-c5a4-4a59-93a8-811382ceac87',  -- Sunlu Canada
-  '4d6c523b-4a14-417e-a493-466b0fc22cb9'   -- Sunlu Australia
-);
+SELECT id, product_title, vendor, variant_price 
+FROM filaments 
+WHERE variant_price IS NOT NULL AND variant_available = true
+ORDER BY RANDOM()
+LIMIT 10;
 ```
 
-### 2. New Edge Function
+### File 6: `src/components/admin/region-test/RegionTestExport.tsx`
 
-**File**: `supabase/functions/update-exchange-rates/index.ts`
+**Export Options:**
+- **CSV Report**: Full audit with all regions and products
+- **JSON Report**: Structured data for further analysis
+- **Summary PDF**: Executive summary with key metrics
 
-Full implementation with:
-- CORS headers
-- API call to exchangerate-api.com
-- Database upsert logic
-- Error handling
-- Response formatting
-
----
-
-## Technical Details
-
-### Exchange Rate API Response Format
-
+**Export Fields:**
 ```json
 {
-  "result": "success",
-  "base_code": "USD",
-  "rates": {
-    "CAD": 1.36,
-    "EUR": 0.92,
-    "GBP": 0.79,
+  "timestamp": "2026-01-31T16:00:00Z",
+  "summary": {
+    "total_products_tested": 70,
+    "pass_rate": 94.3,
+    "issues_found": 4
+  },
+  "by_region": {
+    "US": { "tested": 10, "passed": 10, "failed": 0 },
+    "CA": { "tested": 10, "passed": 9, "failed": 1 },
     ...
-  }
+  },
+  "issues": [
+    {
+      "product": "eSUN PLA+ White",
+      "region": "CA",
+      "issue": "Fallback to US store, no local pricing",
+      "severity": "warning"
+    }
+  ]
 }
 ```
 
-### Database Upsert Logic
+---
 
-```typescript
-// For each currency, upsert the rate
-for (const currency of TARGET_CURRENCIES) {
-  const rate = apiRates[currency];
-  if (!rate) continue;
-  
-  const { error } = await supabase
-    .from('currency_exchange_rates')
-    .upsert({
-      base_currency: 'USD',
-      target_currency: currency,
-      rate: rate,
-      inverse_rate: 1 / rate,
-      source: 'exchangerate-api.com',
-      fetched_at: new Date().toISOString(),
-    }, {
-      onConflict: 'target_currency'  // Update existing row
-    });
+## Route Registration
+
+Update `src/App.tsx`:
+
+```tsx
+const AdminRegionTest = lazy(() => import("./pages/AdminRegionTest"));
+
+// In Routes:
+<Route path="/admin/region-test" element={<AdminRegionTest />} />
+```
+
+---
+
+## Dashboard Link
+
+Add to `AdminDashboard.tsx` quickActions array:
+
+```tsx
+{ 
+  to: "/admin/region-test", 
+  icon: Globe, 
+  title: "Region Testing", 
+  desc: "Price accuracy verification", 
+  color: "text-cyan-500" 
 }
 ```
 
-### config.toml Update
+---
 
-```toml
-[functions.update-exchange-rates]
-verify_jwt = false
-```
+## Key Dependencies
+
+| Dependency | Usage |
+|------------|-------|
+| `useUnifiedRegionalPricing` | Get regional pricing for products |
+| `useRegion` | Access conversion rates |
+| `REGIONS` / `CURRENCIES` | Config data |
+| `brand_regional_stores` table | Store-region mapping |
+| `filaments` table | Product data |
+| `currency_exchange_rates` table | Conversion rates |
+
+---
+
+## UI Components Used
+
+- `AdminLayout` - Page wrapper with sidebar
+- `AdminPageHeader` - Standard header with actions
+- `Tabs` / `TabsList` / `TabsContent` - Tab navigation
+- `Table` components - Data display
+- `Badge` - Status indicators
+- `Button` - Actions
+- `Card` - Stats cards
+- `Select` - Region/product selectors
+- `Input` - Search functionality
 
 ---
 
 ## Implementation Order
 
-1. **Run database migration** to clean fake regional stores
-2. **Create edge function** for exchange rate updates
-3. **Deploy and test** the edge function
-4. **Verify** cleaned regional stores work correctly
+1. Create directory: `src/components/admin/region-test/`
+2. Create `MultiRegionComparison.tsx` - Core comparison component
+3. Create `StoreRegionAuditTable.tsx` - Store mapping audit
+4. Create `AutomatedSpotCheck.tsx` - Random product verification
+5. Create `PriceVerificationMatrix.tsx` - Detailed price grid
+6. Create `RegionTestExport.tsx` - Export functionality
+7. Create `AdminRegionTest.tsx` - Main page assembling all components
+8. Register route in `App.tsx`
+9. Add link in `AdminDashboard.tsx`
 
 ---
 
-## Testing Plan
+## Sample Data Queries
 
-### Task 1 Testing
-1. Query `brand_regional_stores` to confirm fake stores deleted
-2. Switch to Canada region in the app
-3. Visit eSUN filament - should now show "Ships from USA" warning (no fake CA store)
-4. Visit brands with legitimate regional stores - should work normally
+### Get Random Products for Spot Check
+```sql
+SELECT 
+  f.id, f.product_title, f.vendor, f.variant_price,
+  f.product_handle, f.product_url
+FROM filaments f
+JOIN automated_brands ab ON ab.brand_name ILIKE f.vendor
+WHERE f.variant_price IS NOT NULL 
+  AND f.variant_available = true
+ORDER BY RANDOM()
+LIMIT 10;
+```
 
-### Task 2 Testing
-1. Call the edge function: `POST /update-exchange-rates`
-2. Query `currency_exchange_rates` to verify rates updated
-3. Verify `source` column shows 'exchangerate-api.com'
-4. Verify `fetched_at` is recent timestamp
+### Get Brand-Region Coverage Matrix
+```sql
+SELECT 
+  ab.brand_name,
+  ab.brand_slug,
+  ARRAY_AGG(DISTINCT brs.region_code ORDER BY brs.region_code) as regions,
+  COUNT(DISTINCT brs.id) as store_count
+FROM automated_brands ab
+LEFT JOIN brand_regional_stores brs ON brs.brand_id = ab.id AND brs.is_active = true
+GROUP BY ab.id, ab.brand_name, ab.brand_slug
+ORDER BY ab.brand_name;
+```
 
+### Get Exchange Rate Age
+```sql
+SELECT 
+  target_currency,
+  rate,
+  fetched_at,
+  NOW() - fetched_at as age
+FROM currency_exchange_rates
+ORDER BY fetched_at DESC;
+```
