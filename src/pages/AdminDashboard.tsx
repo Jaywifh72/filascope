@@ -63,6 +63,7 @@ const AdminDashboard = () => {
     { to: "/admin/site-settings", icon: Settings, title: "Site Settings", desc: "Coming soon mode & more", color: "text-orange-500" },
     { to: "/admin/brand-pipeline", icon: Building2, title: "Brand Pipeline", desc: "Unified scraping & sync", color: "text-emerald-500" },
     { to: "/admin/regional-stores", icon: Globe, title: "Regional Stores", desc: "Manage brand storefronts", color: "text-teal-500" },
+    { to: "/admin/region-test", icon: Globe, title: "Region Testing", desc: "Price accuracy verification", color: "text-cyan-500" },
     { to: "/admin/exchange-rates", icon: DollarSign, title: "Exchange Rates", desc: "Currency conversion rates", color: "text-green-500" },
     { to: "/admin/data-health", icon: BarChart3, title: "Data Health", desc: "Quality & completeness", color: "text-cyan-500" },
     { to: "/admin/filament-scraper", icon: Scan, title: "Filament Scraper", desc: "Scrape product pages to DB", color: "text-violet-500" },
