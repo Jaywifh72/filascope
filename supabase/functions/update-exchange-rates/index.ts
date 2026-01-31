@@ -8,7 +8,7 @@ const corsHeaders = {
 // Target currencies to update (USD base)
 const TARGET_CURRENCIES = [
   'CAD', 'EUR', 'GBP', 'AUD', 'JPY',
-  'CNY', 'KRW', 'PLN', 'CZK', 'SEK', 'CHF'
+  'CNY', 'KRW', 'PLN', 'CZK', 'SEK', 'CHF', 'INR'
 ];
 
 interface ExchangeRateApiResponse {
