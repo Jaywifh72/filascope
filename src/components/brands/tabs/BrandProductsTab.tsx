@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { normalizeColorHex } from "@/lib/utils";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalStore } from "@/hooks/useRegionalStore";
 import { BrandProductsFilterSidebar, PRICE_RANGES, SPOOL_SIZES } from "./BrandProductsFilterSidebar";
 import type { Tables } from "@/integrations/supabase/types";
@@ -50,7 +50,7 @@ export function BrandProductsTab({
   onMaterialFilterChange,
 }: BrandProductsTabProps) {
   const navigate = useNavigate();
-  const { formatPrice } = useCurrency();
+  const { formatPrice } = useRegion();
   const { getRegionalUrl } = useRegionalStore();
 
   // Filter states
