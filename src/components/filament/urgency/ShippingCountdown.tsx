@@ -1,7 +1,7 @@
 import React from 'react';
 import { Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCurrency } from '@/hooks/useCurrency';
+import { useRegion } from '@/contexts/RegionContext';
 
 interface ShippingCountdownProps {
   /** Free shipping threshold in USD - will be converted to user's currency */
@@ -18,11 +18,11 @@ export function ShippingCountdown({
   compact = false,
   className
 }: ShippingCountdownProps) {
-  const { formatPrice, convertPrice } = useCurrency();
+  const { formatPrice, convertPrice, currency } = useRegion();
   
-  // Convert both values to user's currency for comparison and display
-  const thresholdConverted = convertPrice(freeShippingThresholdUSD) ?? freeShippingThresholdUSD;
-  const cartValueConverted = convertPrice(currentCartValueUSD) ?? currentCartValueUSD;
+  // Convert both values from USD to user's currency for comparison and display
+  const thresholdConverted = convertPrice(freeShippingThresholdUSD, 'USD');
+  const cartValueConverted = convertPrice(currentCartValueUSD, 'USD');
   
   const amountToFreeShipping = thresholdConverted - cartValueConverted;
   const qualifiesForFreeShipping = amountToFreeShipping <= 0;
@@ -52,12 +52,11 @@ export function ShippingCountdown({
     );
   }
 
-  // Show progress toward free shipping - use formatPrice which formats already-converted values
+  // Show progress toward free shipping
   const progressPercent = Math.min((cartValueConverted / thresholdConverted) * 100, 100);
 
-  // Format the amount needed - since it's already converted, use formatRegionalPrice
-  const { formatRegionalPrice } = useCurrency();
-  const formattedAmount = formatRegionalPrice(amountToFreeShipping, false);
+  // Format the amount using the region context's formatPrice (handles currency symbol correctly)
+  const formattedAmount = formatPrice(amountToFreeShipping);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
