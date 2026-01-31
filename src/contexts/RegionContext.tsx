@@ -39,12 +39,46 @@ interface StoredPreferences {
   timestamp: number;
 }
 
+// Simple function to get initial region - URL first, then localStorage, then detect
+function getInitialRegion(): RegionCode {
+  // Priority 1: URL parameter
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const urlRegion = params.get('region');
+    if (urlRegion && REGIONS[urlRegion as RegionCode]) {
+      return urlRegion as RegionCode;
+    }
+  } catch (e) {
+    // Ignore URL parsing errors
+  }
+  
+  // Priority 2: localStorage
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const prefs: StoredPreferences = JSON.parse(stored);
+      if (Date.now() - prefs.timestamp < 30 * 24 * 60 * 60 * 1000) {
+        if (REGIONS[prefs.region]) {
+          return prefs.region;
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+  
+  // Priority 3: Browser locale detection
+  const browserLocale = navigator.language || 'en-US';
+  return detectRegionFromLocale(browserLocale);
+}
+
 export function RegionProvider({ children }: { children: React.ReactNode }) {
-  const [region, setRegionState] = useState<RegionCode>('US');
-  const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
+  const initialRegion = getInitialRegion();
+  const [region, setRegionState] = useState<RegionCode>(initialRegion);
+  const [currency, setCurrencyState] = useState<CurrencyCode>(REGIONS[initialRegion].defaultCurrency);
   const [isLoading, setIsLoading] = useState(true);
   const [exchangeRates, setExchangeRates] = useState<Map<string, number>>(new Map());
-  const [hasInitialized, setHasInitialized] = useState(false);
+
   // Load exchange rates from Supabase
   const loadExchangeRates = useCallback(async () => {
     try {
@@ -95,92 +129,17 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // CRITICAL: URL parameter sync - listens to popstate and checks on interval
-  // This ensures ?region=XX in URL ALWAYS takes precedence
+  // Initial load - just load exchange rates and save initial prefs
   useEffect(() => {
-    const syncFromUrl = () => {
-      const urlRegion = getRegionFromUrl();
-      if (urlRegion && REGIONS[urlRegion] && urlRegion !== region) {
-        const urlCurrency = REGIONS[urlRegion].defaultCurrency;
-        setRegionState(urlRegion);
-        setCurrencyState(urlCurrency);
-        savePreferences(urlRegion, urlCurrency);
-        console.log(`[RegionContext] URL override: ${urlRegion} (was ${region})`);
-      }
-    };
-
-    // Sync on mount
-    syncFromUrl();
-
-    // Listen for browser back/forward navigation
-    window.addEventListener('popstate', syncFromUrl);
-    
-    // Also check periodically for programmatic URL changes (e.g., history.replaceState)
-    const interval = setInterval(syncFromUrl, 500);
-
-    return () => {
-      window.removeEventListener('popstate', syncFromUrl);
-      clearInterval(interval);
-    };
-  }, [region, savePreferences]);
-
-  // Initial load - only runs once
-  useEffect(() => {
-    if (hasInitialized) return;
-    
     const initialize = async () => {
       setIsLoading(true);
-      
-      // Load exchange rates
       await loadExchangeRates();
-      
-      // Priority 1: Check URL params (for shared links)
-      const urlRegion = getRegionFromUrl();
-      if (urlRegion && REGIONS[urlRegion]) {
-        const urlCurrency = REGIONS[urlRegion].defaultCurrency;
-        setRegionState(urlRegion);
-        setCurrencyState(urlCurrency);
-        savePreferences(urlRegion, urlCurrency);
-        setIsLoading(false);
-        setHasInitialized(true);
-        return;
-      }
-      
-      // Priority 2: Try to load from localStorage
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const prefs: StoredPreferences = JSON.parse(stored);
-          // Check if preferences are less than 30 days old
-          if (Date.now() - prefs.timestamp < 30 * 24 * 60 * 60 * 1000) {
-            setRegionState(prefs.region);
-            setCurrencyState(prefs.currency);
-            setIsLoading(false);
-            setHasInitialized(true);
-            return;
-          }
-        }
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-      
-      // Priority 3: Auto-detect from browser locale
-      const browserLocale = navigator.language || 'en-US';
-      const detectedRegion = detectRegionFromLocale(browserLocale);
-      const defaultCurrency = REGIONS[detectedRegion].defaultCurrency;
-      
-      setRegionState(detectedRegion);
-      setCurrencyState(defaultCurrency);
-      
-      // Save to localStorage
-      savePreferences(detectedRegion, defaultCurrency);
-      
+      savePreferences(region, currency);
       setIsLoading(false);
-      setHasInitialized(true);
     };
-    
     initialize();
-  }, [loadExchangeRates, savePreferences, hasInitialized]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const setRegion = useCallback((newRegion: RegionCode) => {
     setRegionState(newRegion);
