@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 import { REGIONS, detectRegionFromLocale, REGION_FALLBACK_ORDER } from '@/config/regions';
 import { CURRENCIES, formatPrice as formatPriceUtil } from '@/config/currencies';
@@ -40,7 +39,6 @@ interface StoredPreferences {
 }
 
 export function RegionProvider({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
   const [region, setRegionState] = useState<RegionCode>('US');
   const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
   const [isLoading, setIsLoading] = useState(true);
@@ -96,18 +94,34 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // CRITICAL: URL parameter sync - runs on EVERY URL change
+  // CRITICAL: URL parameter sync - listens to popstate and checks on interval
   // This ensures ?region=XX in URL ALWAYS takes precedence
   useEffect(() => {
-    const urlRegion = getRegionFromUrl();
-    if (urlRegion && REGIONS[urlRegion] && urlRegion !== region) {
-      const urlCurrency = REGIONS[urlRegion].defaultCurrency;
-      setRegionState(urlRegion);
-      setCurrencyState(urlCurrency);
-      savePreferences(urlRegion, urlCurrency);
-      console.log(`[RegionContext] URL override: ${urlRegion} (was ${region})`);
-    }
-  }, [location.search, region, savePreferences]);
+    const syncFromUrl = () => {
+      const urlRegion = getRegionFromUrl();
+      if (urlRegion && REGIONS[urlRegion] && urlRegion !== region) {
+        const urlCurrency = REGIONS[urlRegion].defaultCurrency;
+        setRegionState(urlRegion);
+        setCurrencyState(urlCurrency);
+        savePreferences(urlRegion, urlCurrency);
+        console.log(`[RegionContext] URL override: ${urlRegion} (was ${region})`);
+      }
+    };
+
+    // Sync on mount
+    syncFromUrl();
+
+    // Listen for browser back/forward navigation
+    window.addEventListener('popstate', syncFromUrl);
+    
+    // Also check periodically for programmatic URL changes (e.g., history.replaceState)
+    const interval = setInterval(syncFromUrl, 500);
+
+    return () => {
+      window.removeEventListener('popstate', syncFromUrl);
+      clearInterval(interval);
+    };
+  }, [region, savePreferences]);
 
   // Initial load - only runs once
   useEffect(() => {
