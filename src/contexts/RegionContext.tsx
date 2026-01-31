@@ -4,6 +4,7 @@ import { REGIONS, detectRegionFromLocale, REGION_FALLBACK_ORDER } from '@/config
 import { CURRENCIES, formatPrice as formatPriceUtil } from '@/config/currencies';
 import { supabase } from '@/integrations/supabase/client';
 import { getRegionFromUrl, setRegionInUrl } from '@/utils/regionUrl';
+
 interface RegionContextType {
   // Current selections
   region: RegionCode;
