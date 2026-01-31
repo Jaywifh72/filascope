@@ -1,232 +1,264 @@
 
-# Fix Printer Regional Pricing to Match Filaments
 
-## Problem Summary
-`PrinterDetail.tsx` correctly uses `useUnifiedRegionalPricing` hook but doesn't pass the regional metadata (`isLocalStore`, `storeRegion`, `shipsFromCountry`) to `PurchaseSidebar` or `MobileBottomBar`. This means printers don't show "Ships from [Country]" warnings when falling back to non-local stores, unlike filaments which already have this working.
+# Plan: Clean Regional Store Data & Create Exchange Rate Updater
 
-## Reference Implementation (Filaments)
+## Overview
 
-From `FilamentPurchaseSidebar.tsx` (lines 221-227, 299-313):
-```tsx
-// Derive store region from regional price result
-const storeRegionCode = regionalPriceResult?.store?.regionCode;
-const storeRegionFlag = storeRegionCode ? REGIONS[storeRegionCode]?.flag : null;
+This plan addresses two tasks:
+1. **Database Cleanup**: Audit and clean fake regional stores that point to the same URL as the US store
+2. **Edge Function**: Create an automated exchange rate updater using exchangerate-api.com
 
-// Compare to user region
-const { region: userRegion } = useRegion();
-const isLocalStore = storeRegionCode === userRegion;
+---
 
-// Warning UI
-{!isLocalStore && storeRegionCode && (
-  <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1.5 rounded-md">
-    <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-    <div className="flex flex-col">
-      <span className="font-medium">
-        {storeRegionFlag} {REGIONS[storeRegionCode]?.name} store
-      </span>
-      {regionalPriceResult?.store?.shipsFrom && (
-        <span className="text-amber-400/80">
-          Ships from {regionalPriceResult.store.shipsFrom}
-        </span>
-      )}
-    </div>
-  </div>
-)}
+## Task 1: Clean Regional Store Data
+
+### Problem Identified
+
+The database query revealed multiple "fake" regional stores where the `base_url` is identical to the US store for the same brand. These stores mislead the system into thinking there's a local store when there isn't one.
+
+**Problematic Stores Found:**
+
+| Brand | Region | Issue | Store Name |
+|-------|--------|-------|------------|
+| eSUN | CA | Same URL as US (esun3dstore.com) | eSun Canada |
+| eSUN | UK | Same URL as US (esun3dstore.com) | eSun UK |
+| eSUN | AU | Same URL as US (esun3dstore.com) | eSun Australia |
+| eSUN | EU | Same URL as US (esun3dstore.com) | eSun EU |
+| GEEETECH | EU | Same URL as US (geeetech.com) | GEEETECH EU |
+| Polymaker | CA | Same URL as US (us.polymaker.com) | Polymaker CA |
+| Polymaker | UK | Same URL as US (us.polymaker.com) | Polymaker UK |
+| Sunlu | CA | Same URL as US (sunlu.com) | Sunlu Canada |
+| Sunlu | AU | Same URL as US (sunlu.com) | Sunlu Australia |
+
+**Legitimate "Same URL" Cases (ships from different countries):**
+- AzureFilm (EU-based, ships from Slovenia)
+- ColorFabb (EU-based, ships from Netherlands)
+- Extrudr (EU-based, ships from Austria)
+- Fiberlogy (EU-based, ships from Poland)
+- Fillamentum (EU-based, ships from Czech Republic)
+- FormFutura (EU-based, ships from Netherlands)
+- Matter3D (CA-based, ships from Canada)
+- Prusament (EU-based, ships from Czech Republic)
+
+### Solution Approach
+
+Delete fake regional stores that:
+1. Have the same base_url as the US primary store
+2. Don't have a legitimate `ships_from_country` that differs from US
+3. Are not truly regional (just duplicates to game the system)
+
+### SQL Migration
+
+```sql
+-- Delete eSUN fake regional stores (all use esun3dstore.com, all ship from CN like US)
+DELETE FROM brand_regional_stores 
+WHERE store_name IN ('eSun Canada', 'eSun UK', 'eSun Australia')
+AND base_url = 'https://esun3dstore.com';
+
+-- Keep eSun EU - it has ships_from_country = 'NL' (Netherlands warehouse)
+-- Update eSun EU to clarify it ships from EU
+UPDATE brand_regional_stores 
+SET notes = 'Ships from EU warehouse (Netherlands)'
+WHERE store_name = 'eSun EU' AND region_code = 'EU';
+
+-- Delete GEEETECH EU (same URL as US, both ship from CN)
+DELETE FROM brand_regional_stores 
+WHERE store_name = 'GEEETECH EU' 
+AND base_url = 'https://www.geeetech.com'
+AND ships_from_country = 'CN';
+
+-- Delete Polymaker fake stores (CA, UK point to us.polymaker.com)
+DELETE FROM brand_regional_stores 
+WHERE store_name IN ('Polymaker CA', 'Polymaker UK')
+AND base_url = 'https://us.polymaker.com';
+
+-- Delete Sunlu fake stores (CA, AU point to global sunlu.com, ship from CN)
+DELETE FROM brand_regional_stores 
+WHERE store_name IN ('Sunlu Canada', 'Sunlu Australia')
+AND base_url = 'https://www.sunlu.com'
+AND ships_from_country = 'CN';
 ```
 
 ---
 
-## Files to Modify
+## Task 2: Exchange Rate Updater Edge Function
 
-### 1. `src/components/printer/PurchaseSidebar.tsx`
+### API Selection
 
-**Current Interface (lines 8-28):**
-```tsx
-interface PurchaseSidebarProps {
-  printer: { ... };
-  brand: string | null;
-  displayPrice: number | null | undefined;
-  displayMsrp: number | null | undefined;
-  // ... other props
-  // MISSING: Regional props
-}
+Using **exchangerate-api.com** free tier:
+- 1,500 requests/month free
+- No API key required for open access endpoint
+- Returns rates based on USD
+
+### Target Currencies
+
+Update rates for: CAD, EUR, GBP, AUD, JPY, CNY, KRW, PLN, CZK, SEK, CHF
+
+### Edge Function Design
+
+**File**: `supabase/functions/update-exchange-rates/index.ts`
+
+**Features**:
+- Fetches latest rates from exchangerate-api.com
+- Updates `currency_exchange_rates` table with new rates
+- Calculates inverse rates automatically
+- Includes CORS headers for web access
+- Error handling with detailed logging
+- Can be triggered manually or via cron
+
+**API Endpoint**: `https://open.er-api.com/v6/latest/USD`
+
+### Function Structure
+
+```typescript
+// CORS headers (standard pattern)
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Target currencies to update
+const TARGET_CURRENCIES = [
+  'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 
+  'CNY', 'KRW', 'PLN', 'CZK', 'SEK', 'CHF'
+];
+
+// Fetch from API, update database
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  // Fetch from exchangerate-api.com
+  // Update/upsert currency_exchange_rates table
+  // Return success/failure response
+});
 ```
 
-**Changes:**
-- Add 3 new optional props: `isLocalStore`, `storeRegion`, `shipsFromCountry`
-- Import `Globe` icon and `REGIONS` config
-- Add "Ships from [Country]" warning UI between Price Section and CTA Buttons
+### Database Update Strategy
 
-**New Props:**
-```tsx
-isLocalStore?: boolean;
-storeRegion?: string | null;
-shipsFromCountry?: string | null;
-```
-
-**New UI (after line 73, before CTA Buttons):**
-```tsx
-{/* Fallback Region Warning */}
-{!isLocalStore && storeRegion && (
-  <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2.5 py-2 rounded-md">
-    <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-    <div className="flex flex-col gap-0.5">
-      <span className="font-medium">
-        {REGIONS[storeRegion as RegionCode]?.flag} {REGIONS[storeRegion as RegionCode]?.name || storeRegion} store
-      </span>
-      {shipsFromCountry && (
-        <span className="text-amber-400/80">
-          Ships from {shipsFromCountry}
-        </span>
-      )}
-    </div>
-  </div>
-)}
-```
+For each currency:
+1. Calculate rate (from API response)
+2. Calculate inverse_rate (1 / rate)
+3. Upsert into `currency_exchange_rates` table using target_currency as key
 
 ---
 
-### 2. `src/components/printer/MobileBottomBar.tsx`
+## Files to Create/Modify
 
-**Current Interface (lines 6-15):**
-```tsx
-interface MobileBottomBarProps {
-  price: number | null | undefined;
-  msrp?: number | null;
-  // ... other props
-  // MISSING: Regional props
-}
-```
+### 1. Database Migration (via migration tool)
 
-**Changes:**
-- Add 3 new optional props: `isLocalStore`, `storeRegion`, `shipsFromCountry`
-- Import `Globe` icon and `REGIONS` config  
-- Add compact "Ships from" indicator in the price section
+**Action**: Delete fake regional stores, keep legitimate ones
 
-**New Props:**
-```tsx
-isLocalStore?: boolean;
-storeRegion?: string | null;
-shipsFromCountry?: string | null;
-```
+```sql
+-- Audit and clean fake regional stores
 
-**New UI (compact indicator below price, inside line 63-84 section):**
-```tsx
-{/* Fallback region indicator */}
-{!isLocalStore && shipsFromCountry && (
-  <div className="flex items-center gap-1 text-xs text-amber-400 mt-0.5">
-    <Globe className="w-3 h-3" />
-    <span>Ships from {shipsFromCountry}</span>
-  </div>
-)}
-```
+-- 1. Delete eSUN fake stores (CA, UK, AU all use same esun3dstore.com and ship from CN)
+DELETE FROM brand_regional_stores 
+WHERE id IN (
+  '0e1a6438-7af0-4c79-98d5-3b0cb3f00e5e',  -- eSun Canada
+  'e3ed783c-07a6-4d7d-a8cb-cd696c8aa261',  -- eSun UK  
+  'd328090b-3c16-456b-bd2e-01345c644a57'   -- eSun Australia
+);
 
----
+-- 2. Delete GEEETECH EU (same URL, ships from CN like US)
+DELETE FROM brand_regional_stores 
+WHERE id = '217e77e4-cd23-4971-a268-92081af986ce';
 
-### 3. `src/pages/PrinterDetail.tsx`
+-- 3. Delete Polymaker fake stores (CA, UK point to US store)
+DELETE FROM brand_regional_stores 
+WHERE id IN (
+  '3f6720ef-c072-4986-a09b-ce2e1f6d...',  -- Need to verify these IDs
+  '...'
+);
 
-**Current Code (lines 971-996):**
-```tsx
-// Use regional store URL if available, otherwise fall back to original
-const regionalStoreUrl = unifiedPricing.storeUrl || printer.official_store_url;
-
-return (
-  <PurchaseSidebar
-    printer={{...}}
-    brand={brand}
-    displayPrice={displayPrice}
-    // ... other props
-    // MISSING: isLocalStore, storeRegion, shipsFromCountry
-  />
+-- 4. Delete Sunlu fake stores (CA, AU use global URL, ship from CN)
+DELETE FROM brand_regional_stores 
+WHERE id IN (
+  '40a64d48-c5a4-4a59-93a8-811382ceac87',  -- Sunlu Canada
+  '4d6c523b-4a14-417e-a493-466b0fc22cb9'   -- Sunlu Australia
 );
 ```
 
-**Changes:**
-- Pass `unifiedPricing.isLocalStore` as `isLocalStore` prop
-- Pass `unifiedPricing.storeRegion` as `storeRegion` prop
-- Pass `unifiedPricing.shipsFromCountry` as `shipsFromCountry` prop
-- Apply same changes to `MobileBottomBar` (lines 1006-1016)
+### 2. New Edge Function
 
-**Updated PurchaseSidebar call:**
-```tsx
-<PurchaseSidebar
-  printer={{...}}
-  brand={brand}
-  displayPrice={displayPrice}
-  displayMsrp={displayMsrp}
-  // ... existing props
-  isLocalStore={unifiedPricing.isLocalStore}
-  storeRegion={unifiedPricing.storeRegion}
-  shipsFromCountry={unifiedPricing.shipsFromCountry}
-/>
-```
+**File**: `supabase/functions/update-exchange-rates/index.ts`
 
-**Updated MobileBottomBar call:**
-```tsx
-<MobileBottomBar
-  price={displayPrice}
-  msrp={displayMsrp}
-  // ... existing props
-  isLocalStore={unifiedPricing.isLocalStore}
-  storeRegion={unifiedPricing.storeRegion}
-  shipsFromCountry={unifiedPricing.shipsFromCountry}
-/>
-```
+Full implementation with:
+- CORS headers
+- API call to exchangerate-api.com
+- Database upsert logic
+- Error handling
+- Response formatting
 
 ---
 
 ## Technical Details
 
-### Data Flow
-```text
-useUnifiedRegionalPricing hook
-         │
-         ├── isLocalStore: boolean
-         ├── storeRegion: RegionCode
-         └── shipsFromCountry: string | null
-                    │
-    ┌───────────────┴───────────────┐
-    ▼                               ▼
-PurchaseSidebar               MobileBottomBar
-(Desktop)                     (Mobile)
-    │                               │
-    ▼                               ▼
-"Ships from USA"              "Ships from USA"
-warning UI                    compact indicator
+### Exchange Rate API Response Format
+
+```json
+{
+  "result": "success",
+  "base_code": "USD",
+  "rates": {
+    "CAD": 1.36,
+    "EUR": 0.92,
+    "GBP": 0.79,
+    ...
+  }
+}
 ```
 
-### Imports Required
+### Database Upsert Logic
 
-**PurchaseSidebar.tsx:**
-```tsx
-import { Globe } from "lucide-react";
-import { REGIONS } from "@/config/regions";
-import { RegionCode } from "@/types/regional";
+```typescript
+// For each currency, upsert the rate
+for (const currency of TARGET_CURRENCIES) {
+  const rate = apiRates[currency];
+  if (!rate) continue;
+  
+  const { error } = await supabase
+    .from('currency_exchange_rates')
+    .upsert({
+      base_currency: 'USD',
+      target_currency: currency,
+      rate: rate,
+      inverse_rate: 1 / rate,
+      source: 'exchangerate-api.com',
+      fetched_at: new Date().toISOString(),
+    }, {
+      onConflict: 'target_currency'  // Update existing row
+    });
+}
 ```
 
-**MobileBottomBar.tsx:**
-```tsx
-import { Globe } from "lucide-react";
-import { REGIONS } from "@/config/regions";
-import { RegionCode } from "@/types/regional";
+### config.toml Update
+
+```toml
+[functions.update-exchange-rates]
+verify_jwt = false
 ```
-
----
-
-## Testing Plan
-
-After implementation:
-1. Switch to Canada region in the footer selector
-2. Visit a printer from a brand WITHOUT a CA store (e.g., Bambu Lab, Creality)
-3. Verify "🇺🇸 United States store / Ships from USA" warning appears in the sidebar
-4. Verify compact "Ships from USA" indicator appears on mobile view
-5. Verify price still displays in CAD (converted from USD)
-6. Test with a brand that HAS a CA store to confirm no warning appears
 
 ---
 
 ## Implementation Order
 
-1. **PurchaseSidebar.tsx** - Add props and warning UI
-2. **MobileBottomBar.tsx** - Add props and compact indicator
-3. **PrinterDetail.tsx** - Pass the new props from unifiedPricing hook
+1. **Run database migration** to clean fake regional stores
+2. **Create edge function** for exchange rate updates
+3. **Deploy and test** the edge function
+4. **Verify** cleaned regional stores work correctly
+
+---
+
+## Testing Plan
+
+### Task 1 Testing
+1. Query `brand_regional_stores` to confirm fake stores deleted
+2. Switch to Canada region in the app
+3. Visit eSUN filament - should now show "Ships from USA" warning (no fake CA store)
+4. Visit brands with legitimate regional stores - should work normally
+
+### Task 2 Testing
+1. Call the edge function: `POST /update-exchange-rates`
+2. Query `currency_exchange_rates` to verify rates updated
+3. Verify `source` column shows 'exchangerate-api.com'
+4. Verify `fetched_at` is recent timestamp
+
