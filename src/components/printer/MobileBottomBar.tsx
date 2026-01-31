@@ -1,4 +1,4 @@
-import { ShoppingCart, ExternalLink } from "lucide-react";
+import { ShoppingCart, ExternalLink, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
@@ -12,6 +12,9 @@ interface MobileBottomBarProps {
   isDiscontinued?: boolean;
   priceCurrency?: string;
   isLivePrice?: boolean;
+  isLocalStore?: boolean;
+  storeRegion?: string | null;
+  shipsFromCountry?: string | null;
 }
 
 export function MobileBottomBar({
@@ -23,6 +26,8 @@ export function MobileBottomBar({
   isDiscontinued,
   priceCurrency,
   isLivePrice,
+  isLocalStore,
+  shipsFromCountry,
 }: MobileBottomBarProps) {
   const { formatPrice, formatRegionalPrice, currency } = useCurrency();
   const { count: compareCount } = usePrinterCompare();
@@ -76,6 +81,13 @@ export function MobileBottomBar({
                     </span>
                   )}
                 </>
+              )}
+              {/* Fallback region indicator */}
+              {!isLocalStore && shipsFromCountry && (
+                <div className="flex items-center gap-1 text-xs text-amber-400 mt-0.5">
+                  <Globe className="w-3 h-3" />
+                  <span>Ships from {shipsFromCountry}</span>
+                </div>
               )}
             </div>
           ) : (
