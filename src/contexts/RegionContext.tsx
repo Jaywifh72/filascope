@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 import { REGIONS, detectRegionFromLocale, REGION_FALLBACK_ORDER } from '@/config/regions';
 import { CURRENCIES, formatPrice as formatPriceUtil } from '@/config/currencies';
 import { supabase } from '@/integrations/supabase/client';
 import { getRegionFromUrl, setRegionInUrl } from '@/utils/regionUrl';
-
 interface RegionContextType {
   // Current selections
   region: RegionCode;
@@ -40,11 +40,12 @@ interface StoredPreferences {
 }
 
 export function RegionProvider({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
   const [region, setRegionState] = useState<RegionCode>('US');
   const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
   const [isLoading, setIsLoading] = useState(true);
   const [exchangeRates, setExchangeRates] = useState<Map<string, number>>(new Map());
-
+  const [hasInitialized, setHasInitialized] = useState(false);
   // Load exchange rates from Supabase
   const loadExchangeRates = useCallback(async () => {
     try {
@@ -95,8 +96,23 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initialize from URL params, localStorage, or detect from browser
+  // CRITICAL: URL parameter sync - runs on EVERY URL change
+  // This ensures ?region=XX in URL ALWAYS takes precedence
   useEffect(() => {
+    const urlRegion = getRegionFromUrl();
+    if (urlRegion && REGIONS[urlRegion] && urlRegion !== region) {
+      const urlCurrency = REGIONS[urlRegion].defaultCurrency;
+      setRegionState(urlRegion);
+      setCurrencyState(urlCurrency);
+      savePreferences(urlRegion, urlCurrency);
+      console.log(`[RegionContext] URL override: ${urlRegion} (was ${region})`);
+    }
+  }, [location.search, region, savePreferences]);
+
+  // Initial load - only runs once
+  useEffect(() => {
+    if (hasInitialized) return;
+    
     const initialize = async () => {
       setIsLoading(true);
       
@@ -111,6 +127,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
         setCurrencyState(urlCurrency);
         savePreferences(urlRegion, urlCurrency);
         setIsLoading(false);
+        setHasInitialized(true);
         return;
       }
       
@@ -124,6 +141,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
             setRegionState(prefs.region);
             setCurrencyState(prefs.currency);
             setIsLoading(false);
+            setHasInitialized(true);
             return;
           }
         }
@@ -143,10 +161,11 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
       savePreferences(detectedRegion, defaultCurrency);
       
       setIsLoading(false);
+      setHasInitialized(true);
     };
     
     initialize();
-  }, [loadExchangeRates, savePreferences]);
+  }, [loadExchangeRates, savePreferences, hasInitialized]);
 
   const setRegion = useCallback((newRegion: RegionCode) => {
     setRegionState(newRegion);
