@@ -185,7 +185,8 @@ const AdminRegionalExpansion = () => {
     }
   };
 
-  const getMissingRegions = (brand: BrandExpansionData) => {
+  const getMissingRegions = (brand: BrandExpansionData | null) => {
+    if (!brand) return [];
     return REGION_LIST.filter((r) => !brand.regions.includes(r.code));
   };
 
@@ -381,7 +382,7 @@ const AdminRegionalExpansion = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {getMissingRegions(selectedBrand!).map((r) => (
+                        {getMissingRegions(selectedBrand).map((r) => (
                           <SelectItem key={r.code} value={r.code}>
                             {r.flag} {r.name}
                           </SelectItem>
