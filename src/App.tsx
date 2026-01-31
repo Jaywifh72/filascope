@@ -72,6 +72,8 @@ const AdminBrokenUrls = lazy(() => import("./pages/AdminBrokenUrls"));
 const AdminInventory = lazy(() => import("./pages/admin/InventoryManagement"));
 const AdminExportData = lazy(() => import("./pages/admin/ExportData"));
 const AdminRegionTest = lazy(() => import("./pages/AdminRegionTest"));
+const AdminRegionalExpansion = lazy(() => import("./pages/AdminRegionalExpansion"));
+const AdminPriceFreshness = lazy(() => import("./pages/AdminPriceFreshness"));
 const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
@@ -196,6 +198,8 @@ const App = () => (
                   <Route path="/admin/inventory" element={<AdminInventory />} />
                   <Route path="/admin/export" element={<AdminExportData />} />
                   <Route path="/admin/region-test" element={<AdminRegionTest />} />
+                  <Route path="/admin/regional-expansion" element={<AdminRegionalExpansion />} />
+                  <Route path="/admin/price-freshness" element={<AdminPriceFreshness />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />

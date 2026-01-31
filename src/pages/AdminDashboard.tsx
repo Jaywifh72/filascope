@@ -13,8 +13,10 @@ import {
   Database, Users, Package, TrendingUp, Shield, 
   BarChart3, RefreshCw, Building2,
   DollarSign, PieChart, Star, FileText,
-  Scan, Settings, Globe, ClipboardCheck, Calendar
+  Scan, Settings, Globe, ClipboardCheck, Calendar,
+  Clock, MapPin
 } from "lucide-react";
+import { HealthAlertBadges } from '@/components/admin/HealthAlertBadges';
 
 const AdminDashboard = () => {
   const { isAdmin } = useAuth();
@@ -64,6 +66,8 @@ const AdminDashboard = () => {
     { to: "/admin/brand-pipeline", icon: Building2, title: "Brand Pipeline", desc: "Unified scraping & sync", color: "text-emerald-500" },
     { to: "/admin/regional-stores", icon: Globe, title: "Regional Stores", desc: "Manage brand storefronts", color: "text-teal-500" },
     { to: "/admin/region-test", icon: Globe, title: "Region Testing", desc: "Price accuracy verification", color: "text-cyan-500" },
+    { to: "/admin/regional-expansion", icon: MapPin, title: "Regional Expansion", desc: "Add missing regional stores", color: "text-teal-500" },
+    { to: "/admin/price-freshness", icon: Clock, title: "Price Freshness", desc: "Monitor stale prices", color: "text-amber-500" },
     { to: "/admin/exchange-rates", icon: DollarSign, title: "Exchange Rates", desc: "Currency conversion rates", color: "text-green-500" },
     { to: "/admin/data-health", icon: BarChart3, title: "Data Health", desc: "Quality & completeness", color: "text-cyan-500" },
     { to: "/admin/filament-scraper", icon: Scan, title: "Filament Scraper", desc: "Scrape product pages to DB", color: "text-violet-500" },
@@ -81,7 +85,7 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-primary" />
             <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
@@ -90,6 +94,11 @@ const AdminDashboard = () => {
             <RefreshCw className={`w-4 h-4 mr-2 ${healthLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+        </div>
+        
+        {/* Health Alert Badges */}
+        <div className="mb-6">
+          <HealthAlertBadges />
         </div>
 
         {/* Health & Alerts Section */}
