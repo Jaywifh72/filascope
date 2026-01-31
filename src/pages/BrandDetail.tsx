@@ -10,6 +10,7 @@ import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { normalizeColorHex } from "@/lib/utils";
 import { formatProductLineIdForDisplay } from "@/lib/productNameUtils";
 import { BrandHeroSection } from "@/components/brands/BrandHeroSection";
@@ -302,6 +303,7 @@ const BrandDetail = () => {
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<BrandTab>("overview");
   const { isAdmin } = useAuth();
+  const { formatPrice } = useCurrency();
 
   const brandInfo = getBrandInfo(decodedBrand);
   const brandLogo = getBrandLogo(decodedBrand);
@@ -572,7 +574,7 @@ const BrandDetail = () => {
             if (prices.length === 0) return undefined;
             const min = Math.min(...prices);
             const max = Math.max(...prices);
-            return `$${min.toFixed(0)}-${max.toFixed(0)}`;
+            return `${formatPrice(min, false).split('.')[0]}-${formatPrice(max, false).split('.')[0]}`;
           })()}
           rating={null}
         />

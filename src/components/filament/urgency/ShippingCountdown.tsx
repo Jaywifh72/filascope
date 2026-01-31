@@ -1,6 +1,7 @@
 import React from 'react';
 import { Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface ShippingCountdownProps {
   freeShippingThreshold?: number;
@@ -15,6 +16,7 @@ export function ShippingCountdown({
   compact = false,
   className
 }: ShippingCountdownProps) {
+  const { formatPrice } = useCurrency();
   const amountToFreeShipping = freeShippingThreshold - currentCartValue;
   const qualifiesForFreeShipping = amountToFreeShipping <= 0;
 
@@ -52,7 +54,7 @@ export function ShippingCountdown({
         <Truck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
         <div className="flex-1">
           <div className="text-[13px] font-medium text-muted-foreground mb-1.5">
-            Add <span className="font-bold text-emerald-400">${amountToFreeShipping.toFixed(2)}</span> for free shipping
+            Add <span className="font-bold text-emerald-400">{formatPrice(amountToFreeShipping, false)}</span> for free shipping
           </div>
           <div className="h-1 bg-white/10 rounded-full overflow-hidden">
             <div 
