@@ -74,9 +74,12 @@ const FilamentDetail = () => {
   const { formatPrice, formatRegionalPrice } = useCurrency();
   const { incrementStat } = useAchievements();
   const { trackStoreClick } = useConversionTracking();
-  const { getRegionalUrl, regionShortName, currentRegion } = useRegionalStore();
+  const { getRegionalUrl, regionShortName } = useRegionalStore();
   
-  // Use the extracted color variants hook
+  // Get region from the correct source (URL parameter-based)
+  const { region: currentRegionCode } = useRegion();
+  
+  // Use the extracted color variants hook with CORRECT region from RegionContext
   const {
     colorVariants,
     selectedVariant,
@@ -84,7 +87,7 @@ const FilamentDetail = () => {
     productLineAvailableInRegion,
     getColorFromTitle: getColorName,
     getBaseProductName: getBaseName,
-  } = useFilamentColorVariants(filament, currentRegion);
+  } = useFilamentColorVariants(filament, currentRegionCode as any);
   
   // The filament to display - either the selected color variant or the base filament from URL
   const displayFilament = selectedVariant || filament;
@@ -92,8 +95,7 @@ const FilamentDetail = () => {
   // IMPORTANT: Use the BASE filament (not selected variant) for pricing, URLs, and regional availability
   const pricingFilament = filament;
   
-  // Get region context
-  const { region: currentRegionCode } = useRegion();
+  // currentRegionCode already defined above from useRegion()
   
   // Get regional price and URL using the unified hook
   const unifiedPricing = useUnifiedRegionalPricing({
@@ -501,7 +503,7 @@ const FilamentDetail = () => {
   // Check if this product is available in the user's region
   const isAvailableInRegion = productLineAvailableInRegion || isFilamentAvailableInRegion(
     displayFilament as FilamentWithRegion,
-    currentRegion
+    currentRegionCode
   );
   
   // Show "Not Available" message for regional products not available in user's region
@@ -518,7 +520,7 @@ const FilamentDetail = () => {
             productTitle={displayFilament.product_title}
             vendor={displayFilament.vendor}
             material={displayFilament.material}
-            regionName={getRegionDisplayName(currentRegion)}
+            regionName={getRegionDisplayName(currentRegionCode as any)}
           />
         </div>
       </div>
