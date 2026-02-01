@@ -114,13 +114,33 @@ function transformDirectUrl(
         url.hostname = hostParts.join('.');
         return url.toString();
       }
-    } else if (config.pattern === 'path' && regionConfig.pathPrefix) {
-      const pathParts = url.pathname.split('/');
-      if (pathParts.length > 1 && /^[a-z]{2}(-[a-z]{2})?$/i.test(pathParts[1])) {
-        pathParts[1] = regionConfig.pathPrefix;
-        url.pathname = pathParts.join('/');
-        return url.toString();
+    } else if (config.pattern === 'path' && regionConfig.pathPrefix !== undefined) {
+      // Path-based regional URLs (e.g., store.creality.com/eu/products/slug)
+      const pathParts = url.pathname.split('/').filter(Boolean); // Remove empty strings
+      
+      // Check if current URL already has a regional path prefix (e.g., /eu/, /uk/, /au/)
+      // Common patterns: /eu, /uk, /au, /us, 2-letter codes
+      const hasRegionalPrefix = pathParts.length > 0 && /^[a-z]{2}$/i.test(pathParts[0]);
+      
+      if (hasRegionalPrefix) {
+        // Replace existing regional prefix with target region
+        if (regionConfig.pathPrefix) {
+          // Strip leading slash from pathPrefix if present
+          const cleanPrefix = regionConfig.pathPrefix.replace(/^\//, '');
+          pathParts[0] = cleanPrefix;
+        } else {
+          // Target region has no prefix (e.g., US), remove the regional segment
+          pathParts.shift();
+        }
+      } else if (regionConfig.pathPrefix) {
+        // No regional prefix exists, but target needs one - insert it
+        const cleanPrefix = regionConfig.pathPrefix.replace(/^\//, '');
+        pathParts.unshift(cleanPrefix);
       }
+      // If no regional prefix exists and target doesn't need one, leave unchanged
+      
+      url.pathname = '/' + pathParts.join('/');
+      return url.toString();
     }
   } catch (e) {
     console.warn('Failed to transform direct URL:', originalUrl, e);
