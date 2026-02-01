@@ -185,6 +185,14 @@ const PrinterDetail = () => {
     priceLastVerifiedAt: (printer as any)?.prices_last_updated_at,
     priceSource: (printer as any)?.price_source,
     priceConfidence: (printer as any)?.price_confidence,
+    // Pass actual regional store prices for printers (prioritize actual prices over MSRP conversion)
+    regionalPrices: {
+      price_cad: (printer as any)?.current_price_cad_store ?? (printer as any)?.msrp_cad,
+      price_eur: (printer as any)?.current_price_eur_store ?? (printer as any)?.msrp_eur,
+      price_gbp: (printer as any)?.current_price_gbp_store,
+      price_aud: (printer as any)?.current_price_aud_store,
+      price_jpy: (printer as any)?.current_price_jpy_store,
+    },
   });
 
   // Fetch brandId from automated_brands for regional store lookups

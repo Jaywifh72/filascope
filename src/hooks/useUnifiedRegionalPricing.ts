@@ -103,6 +103,15 @@ export interface UnifiedProductData {
   
   /** Freshness: pre-calculated confidence level */
   priceConfidence?: string | null;
+  
+  /** Actual regional prices from database (NOT converted) */
+  regionalPrices?: {
+    price_cad?: number | null;
+    price_eur?: number | null;
+    price_gbp?: number | null;
+    price_aud?: number | null;
+    price_jpy?: number | null;
+  };
 }
 
 interface BrandRegionalStoreRow {
@@ -394,6 +403,36 @@ const DEFAULT_RESULT: UnifiedRegionalPricingResult = {
   error: null,
 };
 
+/**
+ * Get the actual regional price for the target currency if available.
+ * Returns { price, hasActualPrice } where hasActualPrice indicates if this is
+ * a real regional price (not conversion needed) or null (needs conversion).
+ */
+function getActualRegionalPrice(
+  regionalPrices: UnifiedProductData['regionalPrices'],
+  targetCurrency: CurrencyCode
+): { price: number | null; hasActualPrice: boolean } {
+  if (!regionalPrices) return { price: null, hasActualPrice: false };
+  
+  const currencyToField: Record<string, keyof NonNullable<typeof regionalPrices>> = {
+    'CAD': 'price_cad',
+    'EUR': 'price_eur',
+    'GBP': 'price_gbp',
+    'AUD': 'price_aud',
+    'JPY': 'price_jpy',
+  };
+  
+  const field = currencyToField[targetCurrency];
+  if (!field) return { price: null, hasActualPrice: false };
+  
+  const actualPrice = regionalPrices[field];
+  if (actualPrice != null && actualPrice > 0) {
+    return { price: actualPrice, hasActualPrice: true };
+  }
+  
+  return { price: null, hasActualPrice: false };
+}
+
 export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedRegionalPricingResult {
   const { region, currency, convertPrice, getConversionRate } = useRegion();
   
@@ -408,6 +447,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     priceLastVerifiedAt,
     priceSource,
     priceConfidence: preCalculatedConfidence,
+    regionalPrices,
   } = product;
   
   // Resolve slug using fallback chain: explicit slug → URL extraction → name slugification
@@ -503,10 +543,22 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     
     // No stores found - fall back to original URL
     if (!matchedStore) {
-      const needsConversion = baseCurrency !== currency;
-      const displayPrice = basePrice != null 
-        ? (needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice)
-        : null;
+      // Check for actual regional price first
+      const { price: actualRegionalPrice, hasActualPrice } = getActualRegionalPrice(regionalPrices, currency);
+      
+      let displayPrice: number | null = null;
+      let needsConversion = false;
+      
+      if (hasActualPrice && actualRegionalPrice != null) {
+        // Use actual regional price - NO conversion needed
+        displayPrice = actualRegionalPrice;
+        needsConversion = false;
+      } else if (basePrice != null) {
+        // Fall back to USD conversion
+        needsConversion = baseCurrency !== currency;
+        displayPrice = needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice;
+      }
+      
       const rate = needsConversion ? getConversionRate(baseCurrency, currency) : null;
       
       return {
@@ -522,7 +574,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
         storeName: brandName || 'Store',
         isLocalStore: false,
         storeFlag: '🌐',
-        isConverted: needsConversion && basePrice != null,
+        isConverted: needsConversion && displayPrice != null,
         originalPrice: needsConversion ? basePrice : null,
         originalCurrency: needsConversion ? baseCurrency : null,
         conversionRate: rate,
@@ -567,11 +619,22 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     const storeRegion = matchedStore.region_code as RegionCode;
     const storeFlag = REGION_CONFIGS[storeRegion]?.flag || REGIONS[storeRegion]?.flag || '🌐';
     
-    // Calculate price conversion
-    const needsConversion = baseCurrency !== currency;
-    const displayPrice = basePrice != null
-      ? (needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice)
-      : null;
+    // PRIORITY: Check for actual regional price first (e.g., price_eur for EU store)
+    const { price: actualRegionalPrice, hasActualPrice } = getActualRegionalPrice(regionalPrices, currency);
+    
+    let displayPrice: number | null = null;
+    let needsConversion = false;
+    
+    if (hasActualPrice && actualRegionalPrice != null) {
+      // Use actual regional price - NO conversion, this is the real store price!
+      displayPrice = actualRegionalPrice;
+      needsConversion = false;
+    } else if (basePrice != null) {
+      // Fall back to USD conversion (with ~ prefix to indicate approximation)
+      needsConversion = baseCurrency !== currency;
+      displayPrice = needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice;
+    }
+    
     const rate = needsConversion ? getConversionRate(baseCurrency, currency) : null;
     
     return {
@@ -588,7 +651,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
       isLocalStore: isLocal,
       storeFlag,
       shipsFromCountry: matchedStore.ships_from_country,
-      isConverted: needsConversion && basePrice != null,
+      isConverted: needsConversion && displayPrice != null,
       originalPrice: needsConversion ? basePrice : null,
       originalCurrency: needsConversion ? baseCurrency : null,
       conversionRate: rate,
@@ -616,6 +679,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     priceLastVerifiedAt,
     priceSource,
     preCalculatedConfidence,
+    regionalPrices,
   ]);
   
   return result;
