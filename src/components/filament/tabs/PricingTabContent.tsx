@@ -179,6 +179,14 @@ export function PricingTabContent({
     priceLastVerifiedAt: filament.last_scraped_at,
     priceSource: filament.price_source,
     priceConfidence: filament.price_confidence,
+    // Pass actual regional prices to prioritize over conversion
+    regionalPrices: {
+      price_cad: (filament as any)?.price_cad,
+      price_eur: (filament as any)?.price_eur,
+      price_gbp: (filament as any)?.price_gbp,
+      price_aud: (filament as any)?.price_aud,
+      price_jpy: (filament as any)?.price_jpy,
+    },
   });
 
   const { 

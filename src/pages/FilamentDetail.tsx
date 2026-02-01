@@ -109,6 +109,14 @@ const FilamentDetail = () => {
     priceLastVerifiedAt: pricingFilament?.last_scraped_at,
     priceSource: (pricingFilament as any)?.price_source,
     priceConfidence: (pricingFilament as any)?.price_confidence,
+    // Pass actual regional prices to prioritize over conversion
+    regionalPrices: {
+      price_cad: (pricingFilament as any)?.price_cad,
+      price_eur: (pricingFilament as any)?.price_eur,
+      price_gbp: (pricingFilament as any)?.price_gbp,
+      price_aud: (pricingFilament as any)?.price_aud,
+      price_jpy: (pricingFilament as any)?.price_jpy,
+    },
   });
   
   // Extract values for backward compatibility with existing code
