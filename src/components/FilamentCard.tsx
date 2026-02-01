@@ -192,13 +192,21 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     fallbackUrl 
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
-  // Fetch live price (same as detail page) for accurate pricing
+  // Only fetch live price if we DON'T have an actual regional price
+  // This prevents the card from showing converted USD when we have accurate EUR/GBP/etc prices
+  const shouldFetchLivePrice = !isActualRegionalPrice;
+  
+  // Fetch live price only for products without actual regional pricing
   const {
     currentPrice: livePrice,
     isLoading: isLivePriceLoading,
-    isLivePrice,
+    isLivePrice: hasLivePriceData,
     weightGrams: liveWeightGrams,
-  } = useCurrentPrice(regionalUrl || filament.product_url, regionalPrice, fallbackUrl);
+  } = useCurrentPrice(
+    shouldFetchLivePrice ? (regionalUrl || filament.product_url) : null,
+    shouldFetchLivePrice ? regionalPrice : null,
+    shouldFetchLivePrice ? fallbackUrl : null
+  );
   
   const { 
     addItem, 
@@ -216,9 +224,17 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const isPendingSelection = isPending(filament.id);
   const isCompareDisabled = isFull && !isSelected;
 
-  // Use live price if available, otherwise fall back to regional price
-  const effectivePrice = isLivePrice && livePrice ? livePrice : regionalPrice;
-  const effectiveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : (filament.net_weight_g ? filament.net_weight_g / 1000 : null);
+  // PRIORITY: Use actual regional price from database when available
+  // This ensures €22.99 (price_eur) is used instead of converted $18.99 -> ~€16.81
+  // Only fall back to live price fetching when we don't have actual regional data
+  const isLivePrice = shouldFetchLivePrice && hasLivePriceData;
+  const effectivePrice = isActualRegionalPrice 
+    ? regionalPrice  // Trust the database regional price
+    : (isLivePrice && livePrice ? livePrice : regionalPrice);
+  
+  const effectiveWeightKg = (isLivePrice && liveWeightGrams) 
+    ? liveWeightGrams / 1000 
+    : (filament.net_weight_g ? filament.net_weight_g / 1000 : null);
 
   // Calculate price per kg using the best available price
   const packQty = filament.pack_quantity || 1;
