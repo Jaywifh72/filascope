@@ -1246,6 +1246,31 @@ function validateFilamentPrice(price: number, min = 10, max = 150): boolean {
   return price >= min && price <= max;
 }
 
+// Detect if a page indicates the product is sold out / out of stock
+// Returns true if sold-out patterns are detected in the page content
+function detectSoldOutStatus(markdown: string): boolean {
+  const soldOutPatterns = [
+    /sold\s*out/i,
+    /out\s*of\s*stock/i,
+    /currently\s*unavailable/i,
+    /notify\s*(me\s*)?(when\s*)?(available|in\s*stock)/i,
+    /back\s*in\s*stock\s*soon/i,
+    /temporarily\s*out/i,
+    /no\s*longer\s*available/i,
+    /stock:\s*0/i,
+    /availability:\s*(?:out\s*of\s*stock|unavailable)/i,
+    /item\s*is\s*(?:currently\s*)?(?:unavailable|sold\s*out)/i,
+  ];
+  
+  const isSoldOut = soldOutPatterns.some(pattern => pattern.test(markdown));
+  
+  if (isSoldOut) {
+    console.log('⚠️ Detected sold-out status in page content');
+  }
+  
+  return isSoldOut;
+}
+
 // Legacy: Extract price specifically from Creality store pages
 function extractCrealityPrice(markdown: string): {
   price: number | null;
@@ -1852,7 +1877,11 @@ async function fetchPriceWithFirecrawl(
       };
     }
     
-    console.log(`Firecrawl price extracted: ${priceData.price} ${priceData.currency} (compare: ${priceData.compareAtPrice})`);
+    // Check stock availability from page content (in addition to price extraction)
+    const isSoldOut = detectSoldOutStatus(markdown);
+    const available = priceData.available && !isSoldOut;
+    
+    console.log(`Firecrawl price extracted: ${priceData.price} ${priceData.currency} (compare: ${priceData.compareAtPrice}, available: ${available}${isSoldOut ? ' - SOLD OUT detected' : ''})`);
     
     return {
       success: true,
@@ -1862,7 +1891,7 @@ async function fetchPriceWithFirecrawl(
       diameterMm,
       variantTitle: null,
       currency: priceData.currency,
-      available: priceData.available,
+      available: available,
       source: 'firecrawl',
       fetchedAt: new Date().toISOString(),
       rawSample: markdown.substring(0, 500),
