@@ -74,16 +74,18 @@ export const BRAND_REGIONAL_STORES: Record<string, BrandStoreConfig> = {
   },
 
   'Creality': {
-    pattern: 'subdomain',
+    pattern: 'path',  // Creality uses path-based regional URLs: store.creality.com/{region}/products/{slug}
     baseDomain: 'store.creality.com',
     fallbackRegion: 'US',
     regions: {
-      US: { subdomain: 'us', currency: 'USD' },
+      US: { pathPrefix: '', currency: 'USD' },      // store.creality.com/products/slug
+      EU: { pathPrefix: '/eu', currency: 'EUR' },   // store.creality.com/eu/products/slug
+      UK: { pathPrefix: '/uk', currency: 'GBP' },   // store.creality.com/uk/products/slug
+      AU: { pathPrefix: '/au', currency: 'AUD' },   // store.creality.com/au/products/slug
     },
-    // IMPORTANT: Creality uses inconsistent product URL slugs
-    // Examples: hyper-rainbow-pla-3d-printing-filament-1kg, hyper-abs, cr-silk-1-75mm-pla-3d-printing-filament-1kg
-    // No pattern transformation possible - URLs must be stored correctly in database
-    // Fallback: redirect to search if URL is broken
+    // IMPORTANT: Creality EU slugs are DIFFERENT from US slugs!
+    // Example: US = hyper-pla-rfid-stardust-3d-printing-filament-1kg, EU = hyper-pla-rfid-stardust
+    // Regional URLs MUST be stored in product_url_eu column - no automatic transformation possible
   },
 
   'Anycubic': {
