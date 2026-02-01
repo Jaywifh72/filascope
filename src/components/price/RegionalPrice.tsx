@@ -1,4 +1,4 @@
-import { Info, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Store, CheckCircle2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -30,6 +30,10 @@ interface RegionalPriceProps {
   variant?: 'default' | 'sale' | 'muted';
   /** Show currency code after price */
   showCurrencyCode?: boolean;
+  /** Whether this is an actual regional store price (not converted) */
+  isActualRegionalPrice?: boolean;
+  /** Store name for attribution */
+  storeName?: string;
 }
 
 const sizeClasses = {
@@ -40,7 +44,7 @@ const sizeClasses = {
 };
 
 const variantClasses = {
-  default: 'text-white font-bold',
+  default: 'text-foreground font-bold',
   sale: 'text-green-400 font-bold',
   muted: 'text-muted-foreground',
 };
@@ -72,14 +76,16 @@ export function RegionalPrice({
   suffix,
   variant = 'default',
   showCurrencyCode = false,
+  isActualRegionalPrice = false,
+  storeName,
 }: RegionalPriceProps) {
   const { currency, getConversionRate, exchangeRates } = useRegion();
   
   // Use target currency from props or fall back to user's selected currency
   const displayCurrency = targetCurrency || currency;
   
-  // Check if conversion is needed
-  const needsConversion = sourceCurrency !== displayCurrency;
+  // Check if conversion is needed - but respect explicit isActualRegionalPrice flag
+  const needsConversion = !isActualRegionalPrice && sourceCurrency !== displayCurrency;
   
   // Get conversion rate
   const rate = needsConversion 
@@ -109,7 +115,7 @@ export function RegionalPrice({
       className={cn(
         sizeClasses[size],
         variantClasses[variant],
-        needsConversion && showConversionIndicator && 'cursor-help',
+        (needsConversion || isActualRegionalPrice) && showTooltip && 'cursor-help',
         className
       )}
     >
@@ -126,8 +132,48 @@ export function RegionalPrice({
     </span>
   );
 
-  // If no conversion or tooltip disabled, just return the price
-  if (!needsConversion || !showTooltip) {
+  // If tooltip disabled, just return the price
+  if (!showTooltip) {
+    return priceContent;
+  }
+  
+  // For actual regional prices, show a positive tooltip
+  if (isActualRegionalPrice && !needsConversion) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {priceContent}
+          </TooltipTrigger>
+          <TooltipContent 
+            side="top" 
+            className="max-w-[250px] bg-card border border-border p-3"
+          >
+            <div className="space-y-2">
+              {/* Direct store price indicator */}
+              <div className="flex items-center gap-1.5 text-xs text-green-500">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span className="font-medium">Direct store price</span>
+              </div>
+              
+              {storeName && (
+                <p className="text-xs text-muted-foreground">
+                  from {storeName}
+                </p>
+              )}
+              
+              <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
+                This is the actual price listed on the regional store, not an estimate
+              </p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  // If no conversion needed and not actual regional, just return the price
+  if (!needsConversion) {
     return priceContent;
   }
 
@@ -143,10 +189,14 @@ export function RegionalPrice({
         >
           <div className="space-y-2">
             {/* Conversion indicator header */}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-xs text-amber-500">
               <ArrowRightLeft className="w-3 h-3" />
-              <span>Converted from {CURRENCY_CONFIGS[sourceCurrency].name}</span>
+              <span>Estimated price</span>
             </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Converted from {CURRENCY_CONFIGS[sourceCurrency]?.name || sourceCurrency}
+            </p>
             
             {/* Original price */}
             <div className="flex justify-between items-center text-sm">
@@ -167,10 +217,14 @@ export function RegionalPrice({
             {/* Last updated */}
             {lastUpdatedFormatted && (
               <div className="flex justify-between items-center text-xs text-muted-foreground pt-1 border-t border-border/50">
-                <span>Updated:</span>
+                <span>Rate updated:</span>
                 <span>{lastUpdatedFormatted}</span>
               </div>
             )}
+            
+            <p className="text-xs text-amber-400/80 pt-1">
+              Actual store price may differ slightly
+            </p>
           </div>
         </TooltipContent>
       </Tooltip>
