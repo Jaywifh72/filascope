@@ -19,6 +19,12 @@ export interface LivePriceFetchResult {
   urlStatus?: 'ok' | 'not_found' | 'error';
   /** Human-readable error message when URL fails */
   errorMessage?: string;
+  /** The actual URL that was scraped (may differ from input after regional transformation) */
+  sourceUrl?: string;
+  /** True if detected currency doesn't match expected currency */
+  currencyMismatch?: boolean;
+  /** The currency detected from the scraped page */
+  detectedCurrency?: CurrencyCode;
 }
 
 export interface UseLivePriceFetchReturn {
@@ -69,22 +75,22 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
     setIsLoading(false);
   }, []);
 
-  const fetchFromUrl = useCallback(async (url: string, retryCount = 0): Promise<{ data: any; error: any }> => {
+  const fetchFromUrl = useCallback(async (url: string, currency: string, retryCount = 0): Promise<{ data: any; error: any }> => {
     try {
       const result = await supabase.functions.invoke('get-current-price', {
-        body: { productUrl: url },
+        body: { productUrl: url, currency },
       });
       
       if (isTransientError(result.error) && retryCount < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1)));
-        return fetchFromUrl(url, retryCount + 1);
+        return fetchFromUrl(url, currency, retryCount + 1);
       }
       
       return result;
     } catch (err) {
       if (retryCount < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1)));
-        return fetchFromUrl(url, retryCount + 1);
+        return fetchFromUrl(url, currency, retryCount + 1);
       }
       return { data: null, error: err };
     }
@@ -127,7 +133,7 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
       }
 
       // First try the primary URL (or cached redirect)
-      let { data, error: fetchError } = await fetchFromUrl(urlToTry);
+      let { data, error: fetchError } = await fetchFromUrl(urlToTry, userCurrency);
 
       // Detect 404 errors
       const is404Error = data?.error?.includes('404') || 
@@ -137,7 +143,7 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
       // If 404 and we used a cached redirect, try original URL
       if (is404Error && cachedRedirectUrl && urlToTry === cachedRedirectUrl) {
         console.log('Cached redirect failed, trying original URL');
-        const originalResult = await fetchFromUrl(productUrl);
+        const originalResult = await fetchFromUrl(productUrl, userCurrency);
         if (originalResult.data?.success) {
           data = originalResult.data;
           fetchError = originalResult.error;
@@ -146,7 +152,7 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
       
       // If 404 and fallback exists, try fallback
       if (is404Error && fallbackUrl && fallbackUrl !== productUrl && fallbackUrl !== urlToTry) {
-        const fallbackResult = await fetchFromUrl(fallbackUrl);
+        const fallbackResult = await fetchFromUrl(fallbackUrl, userCurrency);
         // Only use fallback if it succeeds
         const fallbackIs404 = fallbackResult.data?.error?.includes('404') ||
                               fallbackResult.data?.error?.includes('HTTP 404');
@@ -201,6 +207,9 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
         const rawPrice = data.price;
         const rawCompareAtPrice = data.compareAtPrice;
         const rawCurrency = (data.currency as CurrencyCode) || 'USD';
+        const detectedCurrency = (data.detectedCurrency as CurrencyCode) || rawCurrency;
+        const currencyMismatch = data.currencyMismatch || false;
+        const sourceUrl = data.sourceUrl || productUrl;
         
         // SANITY CHECK: Validate price is within reasonable range
         const priceIsSuspicious = !isReasonableFilamentPrice(rawPrice);
@@ -209,6 +218,11 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           setError('Price may be inaccurate');
           setIsLoading(false);
           return null;
+        }
+        
+        // Check for currency mismatch - if we requested EUR but got USD, show warning
+        if (currencyMismatch) {
+          console.warn(`Currency mismatch: requested ${userCurrency} but got ${rawCurrency} from ${sourceUrl}`);
         }
         
         const needsConversion = rawCurrency !== userCurrency;
@@ -233,7 +247,12 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           weightGrams: data.weightGrams || null,
           isSuspicious: false,
           urlStatus: 'ok',
-          errorMessage: undefined,
+          errorMessage: currencyMismatch 
+            ? `Price in ${rawCurrency} - ${userCurrency} price unavailable` 
+            : undefined,
+          sourceUrl,
+          currencyMismatch,
+          detectedCurrency,
         };
 
         setLastResult(result);
