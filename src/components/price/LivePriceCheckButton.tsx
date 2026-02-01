@@ -26,7 +26,8 @@ export function LivePriceCheckButton({
   size = 'md'
 }: LivePriceCheckButtonProps) {
   const {
-    formatPrice
+    formatPrice,
+    region
   } = useRegion();
   const {
     fetchLivePrice,
@@ -37,6 +38,13 @@ export function LivePriceCheckButton({
   } = useLivePriceFetch();
   const [buttonState, setButtonState] = useState<ButtonState>('idle');
   const [showResult, setShowResult] = useState(false);
+
+  // Reset all state when region changes to prevent stale currency values
+  useEffect(() => {
+    reset();
+    setButtonState('idle');
+    setShowResult(false);
+  }, [region, reset]);
 
   // Reset after showing success/error
   useEffect(() => {
