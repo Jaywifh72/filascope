@@ -4,6 +4,9 @@ import { useRegion } from '@/contexts/RegionContext';
 import { CurrencyCode } from '@/types/regional';
 import { formatPrice } from '@/config/currencies';
 
+/** Granular stock status for display */
+export type StockStatus = 'in_stock' | 'out_of_stock' | 'low_stock' | 'preorder' | 'unknown';
+
 export interface LivePriceFetchResult {
   price: number | null;
   compareAtPrice: number | null;
@@ -27,6 +30,8 @@ export interface LivePriceFetchResult {
   detectedCurrency?: CurrencyCode;
   /** Stock availability - false means product is sold out */
   available?: boolean;
+  /** Granular stock status: in_stock, out_of_stock, low_stock, preorder, unknown */
+  stockStatus?: StockStatus;
 }
 
 export interface UseLivePriceFetchReturn {
@@ -243,6 +248,11 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           }
         }
 
+        // Determine stock status from response
+        const rawStockStatus = data.stockStatus as StockStatus | undefined;
+        const isAvailable = data.available !== false;
+        const stockStatus: StockStatus = rawStockStatus || (isAvailable ? 'in_stock' : 'out_of_stock');
+
         const result: LivePriceFetchResult = {
           price: convertedPrice,
           compareAtPrice: convertedCompareAtPrice,
@@ -261,7 +271,9 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           currencyMismatch,
           detectedCurrency,
           // Stock availability - defaults to true if not explicitly returned
-          available: data.available !== false,
+          available: isAvailable,
+          // Granular stock status for UI display
+          stockStatus,
         };
 
         setLastResult(result);

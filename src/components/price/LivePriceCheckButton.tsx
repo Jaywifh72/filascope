@@ -1,9 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Check, ExternalLink, AlertCircle, Loader2, AlertTriangle, Search, XCircle } from 'lucide-react';
+import { RefreshCw, Check, ExternalLink, AlertCircle, Loader2, AlertTriangle, Search, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useLivePriceFetch, LivePriceFetchResult } from '@/hooks/useLivePriceFetch';
+import { useLivePriceFetch, LivePriceFetchResult, StockStatus } from '@/hooks/useLivePriceFetch';
 import { useRegion } from '@/contexts/RegionContext';
 import { cn } from '@/lib/utils';
+import { LucideIcon } from 'lucide-react';
+
+// Helper to get stock display configuration based on status
+interface StockDisplayConfig {
+  icon: LucideIcon;
+  colorClass: string;
+  badgeClass: string;
+  label: string | null;
+  canBuy: boolean;
+}
+
+function getStockDisplay(result: LivePriceFetchResult): StockDisplayConfig {
+  const status = result.stockStatus || (result.available === false ? 'out_of_stock' : 'in_stock');
+  
+  switch (status) {
+    case 'out_of_stock':
+      return { 
+        icon: XCircle, 
+        colorClass: 'text-red-400', 
+        badgeClass: 'bg-red-500/20 text-red-300',
+        label: 'OUT OF STOCK', 
+        canBuy: false 
+      };
+    case 'low_stock':
+      return { 
+        icon: AlertTriangle, 
+        colorClass: 'text-amber-400', 
+        badgeClass: 'bg-amber-500/20 text-amber-300',
+        label: 'LOW STOCK', 
+        canBuy: true 
+      };
+    case 'preorder':
+      return { 
+        icon: Clock, 
+        colorClass: 'text-blue-400', 
+        badgeClass: 'bg-blue-500/20 text-blue-300',
+        label: 'PRE-ORDER', 
+        canBuy: true 
+      };
+    default:
+      return { 
+        icon: Check, 
+        colorClass: 'text-emerald-400', 
+        badgeClass: 'bg-emerald-500/20 text-emerald-300',
+        label: null, 
+        canBuy: true 
+      };
+  }
+}
+
 interface LivePriceCheckButtonProps {
   productUrl: string;
   fallbackUrl?: string | null;
@@ -93,8 +143,18 @@ export function LivePriceCheckButton({
   // Show the fetched price result
   if (showResult && lastResult) {
     const discount = lastResult.compareAtPrice && lastResult.price ? Math.round((1 - lastResult.price / lastResult.compareAtPrice) * 100) : null;
-    const showCurrencyWarning = lastResult.currencyMismatch || lastResult.isConverted;
-    const isOutOfStock = lastResult.available === false;
+    const stockDisplay = getStockDisplay(lastResult);
+    const StatusIcon = stockDisplay.icon;
+    const isOutOfStock = !stockDisplay.canBuy;
+    
+    // Determine background/border colors based on stock status
+    const containerColorClass = isOutOfStock 
+      ? "bg-red-500/10 border border-red-500/30"
+      : lastResult.stockStatus === 'low_stock'
+        ? "bg-amber-500/10 border border-amber-500/30"
+        : lastResult.stockStatus === 'preorder'
+          ? "bg-blue-500/10 border border-blue-500/30"
+          : "bg-emerald-500/10 border border-emerald-500/30";
     
     return <div className={cn("space-y-2 animate-in fade-in duration-200", className)}>
         {/* Currency mismatch warning */}
@@ -108,25 +168,21 @@ export function LivePriceCheckButton({
         {/* Live Price Display - changes color based on stock status */}
         <div className={cn(
           "flex items-center justify-between p-3 rounded-lg animate-in slide-in-from-top-2 duration-300",
-          isOutOfStock 
-            ? "bg-red-500/10 border border-red-500/30" 
-            : "bg-emerald-500/10 border border-emerald-500/30"
+          containerColorClass
         )}>
           <div className="flex items-center gap-2">
-            {isOutOfStock ? (
-              <XCircle className="w-4 h-4 text-red-400" />
-            ) : (
-              <Check className="w-4 h-4 text-emerald-400" />
-            )}
+            <StatusIcon className={cn("w-4 h-4", stockDisplay.colorClass)} />
             <span className={cn(
               "text-sm",
-              isOutOfStock ? "text-red-400" : "text-muted-foreground"
+              isOutOfStock ? stockDisplay.colorClass : "text-muted-foreground"
             )}>
               {isOutOfStock 
                 ? 'Sold Out' 
-                : lastResult.isConverted 
-                  ? 'Estimated price:' 
-                  : 'Live price:'}
+                : lastResult.stockStatus === 'preorder'
+                  ? 'Pre-order:'
+                  : lastResult.isConverted 
+                    ? 'Estimated price:' 
+                    : 'Live price:'}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -135,13 +191,13 @@ export function LivePriceCheckButton({
               </span>}
             <span className={cn(
               "text-lg font-bold",
-              isOutOfStock ? "text-red-400" : "text-emerald-400"
+              stockDisplay.colorClass
             )}>
               {lastResult.isConverted ? '~' : ''}{formatPrice(lastResult.price || 0)}
             </span>
-            {isOutOfStock ? (
-              <span className="text-xs font-bold text-red-300 bg-red-500/20 px-1.5 py-0.5 rounded">
-                OUT OF STOCK
+            {stockDisplay.label ? (
+              <span className={cn("text-xs font-bold px-1.5 py-0.5 rounded", stockDisplay.badgeClass)}>
+                {stockDisplay.label}
               </span>
             ) : (
               discount && discount > 0 && <span className="text-xs font-bold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded">

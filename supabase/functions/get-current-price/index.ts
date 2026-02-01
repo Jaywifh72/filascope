@@ -23,6 +23,9 @@ interface ShopifyProduct {
   };
 }
 
+// Stock status types for granular reporting
+type StockStatus = 'in_stock' | 'out_of_stock' | 'low_stock' | 'preorder' | 'unknown';
+
 interface PriceResponse {
   success: boolean;
   price: number | null;
@@ -32,6 +35,7 @@ interface PriceResponse {
   variantTitle: string | null;
   currency: string;
   available: boolean;
+  stockStatus?: StockStatus; // Granular stock status for UI display
   source: 'shopify' | 'firecrawl' | 'html' | 'cached';
   fetchedAt: string;
   error?: string;
@@ -1246,9 +1250,39 @@ function validateFilamentPrice(price: number, min = 10, max = 150): boolean {
   return price >= min && price <= max;
 }
 
-// Detect if a page indicates the product is sold out / out of stock
-// Returns true if sold-out patterns are detected in the page content
-function detectSoldOutStatus(markdown: string): boolean {
+// Detect granular stock status from page content
+// Returns: 'preorder', 'low_stock', 'out_of_stock', or 'unknown'
+function detectStockStatus(markdown: string): StockStatus {
+  const content = markdown.toLowerCase();
+  
+  // Check for preorder patterns first (highest priority)
+  const preorderPatterns = [
+    /pre[- ]?order/i,
+    /coming\s*soon/i,
+    /available\s*for\s*pre[- ]?order/i,
+    /reserve\s*now/i,
+    /launching\s*soon/i,
+  ];
+  if (preorderPatterns.some(p => p.test(content))) {
+    console.log('📦 Detected preorder status');
+    return 'preorder';
+  }
+  
+  // Check for low stock patterns
+  const lowStockPatterns = [
+    /only\s*\d+\s*left/i,
+    /low\s*stock/i,
+    /limited\s*(?:stock|quantity|availability)/i,
+    /few\s*(?:remaining|left)/i,
+    /hurry[,!]?\s*(?:only|just)/i,
+    /almost\s*(?:gone|sold\s*out)/i,
+  ];
+  if (lowStockPatterns.some(p => p.test(content))) {
+    console.log('⚠️ Detected low stock status');
+    return 'low_stock';
+  }
+  
+  // Check for sold out patterns
   const soldOutPatterns = [
     /sold\s*out/i,
     /out\s*of\s*stock/i,
@@ -1261,14 +1295,78 @@ function detectSoldOutStatus(markdown: string): boolean {
     /availability:\s*(?:out\s*of\s*stock|unavailable)/i,
     /item\s*is\s*(?:currently\s*)?(?:unavailable|sold\s*out)/i,
   ];
-  
-  const isSoldOut = soldOutPatterns.some(pattern => pattern.test(markdown));
-  
-  if (isSoldOut) {
-    console.log('⚠️ Detected sold-out status in page content');
+  if (soldOutPatterns.some(p => p.test(content))) {
+    console.log('❌ Detected out of stock status');
+    return 'out_of_stock';
   }
   
-  return isSoldOut;
+  // No specific status detected
+  return 'unknown';
+}
+
+// Legacy wrapper for backward compatibility
+function detectSoldOutStatus(markdown: string): boolean {
+  const status = detectStockStatus(markdown);
+  return status === 'out_of_stock';
+}
+
+// Update filament stock status in database when live check detects changes
+async function updateFilamentStockStatus(
+  productUrl: string,
+  available: boolean,
+  stockStatus: StockStatus,
+  price: number | null
+): Promise<void> {
+  try {
+    const supabase = getSupabaseClient();
+    
+    // Find the filament by URL (try both exact match and partial match)
+    const { data: filament } = await supabase
+      .from('filaments')
+      .select('id, variant_available, variant_price')
+      .eq('product_url', productUrl)
+      .maybeSingle();
+    
+    if (!filament) {
+      console.log('No filament found for URL, skipping DB update:', productUrl);
+      return;
+    }
+    
+    // Determine if we need to update
+    const stockChanged = filament.variant_available !== available;
+    const priceDiffersSignificantly = price !== null && 
+      filament.variant_price !== null && 
+      Math.abs(price - filament.variant_price) > 0.50;
+    
+    if (!stockChanged && !priceDiffersSignificantly) {
+      console.log('No significant changes detected, skipping DB update');
+      return;
+    }
+    
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      variant_available: available,
+      last_scraped_at: new Date().toISOString(),
+    };
+    
+    // Only update price if it changed significantly and we got a valid price
+    if (priceDiffersSignificantly && price !== null) {
+      updateData.variant_price = price;
+    }
+    
+    const { error } = await supabase
+      .from('filaments')
+      .update(updateData)
+      .eq('id', filament.id);
+    
+    if (error) {
+      console.error('Failed to update filament stock status:', error);
+    } else {
+      console.log(`✓ Updated filament ${filament.id}: available=${available}, stockStatus=${stockStatus}${priceDiffersSignificantly ? `, price=${price}` : ''}`);
+    }
+  } catch (err) {
+    console.error('Error updating filament stock status:', err);
+  }
 }
 
 // Legacy: Extract price specifically from Creality store pages
@@ -1878,10 +1976,11 @@ async function fetchPriceWithFirecrawl(
     }
     
     // Check stock availability from page content (in addition to price extraction)
-    const isSoldOut = detectSoldOutStatus(markdown);
+    const stockStatus = detectStockStatus(markdown);
+    const isSoldOut = stockStatus === 'out_of_stock';
     const available = priceData.available && !isSoldOut;
     
-    console.log(`Firecrawl price extracted: ${priceData.price} ${priceData.currency} (compare: ${priceData.compareAtPrice}, available: ${available}${isSoldOut ? ' - SOLD OUT detected' : ''})`);
+    console.log(`Firecrawl price extracted: ${priceData.price} ${priceData.currency} (compare: ${priceData.compareAtPrice}, available: ${available}, stockStatus: ${stockStatus})`);
     
     return {
       success: true,
@@ -1892,6 +1991,7 @@ async function fetchPriceWithFirecrawl(
       variantTitle: null,
       currency: priceData.currency,
       available: available,
+      stockStatus: isSoldOut ? 'out_of_stock' : (stockStatus !== 'unknown' ? stockStatus : (available ? 'in_stock' : 'out_of_stock')),
       source: 'firecrawl',
       fetchedAt: new Date().toISOString(),
       rawSample: markdown.substring(0, 500),
@@ -2324,6 +2424,17 @@ serve(async (req) => {
     } else if (result.success) {
       result.currencyMismatch = false;
       result.detectedCurrency = result.currency;
+    }
+
+    // Update database with fresh stock status if successful (async, non-blocking)
+    if (result.success) {
+      // Fire and forget - don't block the response
+      updateFilamentStockStatus(
+        productUrl, // Use original URL for DB lookup
+        result.available,
+        result.stockStatus || (result.available ? 'in_stock' : 'out_of_stock'),
+        result.price
+      ).catch(err => console.error('Background stock update failed:', err));
     }
 
     // Log manual refresh and add refreshedAt to response
