@@ -1,169 +1,84 @@
 
-# Fix: Hide "Buy Now" Button When Live Price Check Returns Sold-Out Status
+# Fix: Live Price Display Retains Old Currency Value After Region Switch
 
-## Problem Summary
-After a live price check completes, the UI always displays a "Buy Now" button regardless of stock status. The edge function already returns an `available` field, but it's not being passed through to the UI.
+## Problem
+When a user views a product price in one region (e.g., EU with €31.12), then switches to another region (e.g., US), the displayed price incorrectly shows "$31.12" instead of being cleared or recalculated. The currency symbol updates, but the numeric value from the old region persists.
 
-## Technical Analysis
+## Root Cause
+The `LivePriceCheckButton` component maintains local state (`buttonState`, `showResult`) and uses `lastResult` from the `useLivePriceFetch` hook. When the region changes:
+- Neither the hook nor the component resets their state
+- The `formatPrice` function uses the new currency symbol
+- But the raw price value (`lastResult.price`) is still the EUR amount (31.12) not the USD amount (37.00)
 
-### Current Data Flow
-```
-Edge Function (available: boolean) → Hook (missing field) → UI (ignores stock)
-```
+## Solution: Option A - Clear Cache on Region Change
 
-### Files to Modify
-1. `src/hooks/useLivePriceFetch.ts` - Add `available` to interface and response handling
-2. `src/components/price/LivePriceCheckButton.tsx` - Render conditionally based on stock
-3. `supabase/functions/get-current-price/index.ts` - Enhance Firecrawl stock detection
+### File 1: `src/components/price/LivePriceCheckButton.tsx`
 
----
+Add a `useEffect` that monitors region changes and resets all state when it occurs:
 
-## Implementation Plan
+```typescript
+// Add at the top of the component, after the useRegion hook
+const { formatPrice, region } = useRegion();
 
-### Step 1: Update LivePriceFetchResult Interface
-**File:** `src/hooks/useLivePriceFetch.ts`
-
-Add the `available` field to track stock status:
-- Add `available?: boolean` to the `LivePriceFetchResult` interface
-- Add `stockStatus?: 'in_stock' | 'out_of_stock' | 'unknown'` for more granular status
-
-### Step 2: Extract Stock Status in Hook
-**File:** `src/hooks/useLivePriceFetch.ts`
-
-Update the response parsing logic to:
-- Extract `data.available` from the edge function response
-- Map it to the result object
-- Default to `true` if not provided (backwards compatibility)
-
-### Step 3: Update LivePriceCheckButton UI
-**File:** `src/components/price/LivePriceCheckButton.tsx`
-
-When `lastResult.available === false`:
-1. Change the green price display container from `bg-emerald-500/10` to `bg-red-500/10`
-2. Replace the check icon with an X or alert icon
-3. Show "OUT OF STOCK" badge next to the price
-4. Replace "Buy Now at [Store]" button with:
-   - A disabled button showing "Out of Stock"
-   - OR a secondary "View at Store" button (outline variant)
-5. Keep the "Check again" link visible for re-verification
-
-When `lastResult.available === true` (or undefined):
-- Keep current behavior (green checkmark, active Buy button)
-
-### Step 4: Enhance Stock Detection in Edge Function
-**File:** `supabase/functions/get-current-price/index.ts`
-
-Add a function to detect out-of-stock status from scraped content:
-- Search for patterns like "sold out", "out of stock", "unavailable", "notify me"
-- Check for missing "Add to Cart" button indicators
-- Return `available: false` when sold-out patterns are detected
-
-Common patterns to detect:
-- "sold out" / "soldout"
-- "out of stock"
-- "currently unavailable"
-- "notify me when available"
-- "back in stock"
-- Button text: "Sold Out" instead of "Add to Cart"
-
----
-
-## UI Mockup: Out of Stock State
-
-Current (broken):
-```
-+------------------------------------------+
-| [checkmark] Live price: €22.99           |  (green)
-+------------------------------------------+
-| [cart] Buy Now at Bambu Lab [ext]        |  (primary button)
-+------------------------------------------+
-|           Check again                    |
-+------------------------------------------+
+// Add new effect to reset on region change
+useEffect(() => {
+  // Reset all state when region changes
+  reset();
+  setButtonState('idle');
+  setShowResult(false);
+}, [region]); // Only trigger on region change
 ```
 
-Fixed (sold out):
-```
-+------------------------------------------+
-| [x] €22.99  [OUT OF STOCK]               |  (red/amber)
-+------------------------------------------+
-| [x] Out of Stock                         |  (disabled button)
-+------------------------------------------+
-|           Check again                    |
-+------------------------------------------+
+**Changes:**
+- Line ~28-30: Destructure `region` from `useRegion()` in addition to `formatPrice`
+- Add new `useEffect` after line 49 that resets state when `region` changes
+
+### File 2: `src/hooks/useLivePriceFetch.ts` (Optional Enhancement)
+
+Add region awareness to the hook itself as a defensive measure:
+
+```typescript
+// Add region to the hook's state awareness
+const { currency: userCurrency, region, convertPrice, getConversionRate } = useRegion();
+
+// Add effect to reset when region/currency changes
+useEffect(() => {
+  reset();
+}, [region]);
 ```
 
-OR (alternative with view option):
-```
-+------------------------------------------+
-| [alert] €22.99  [SOLD OUT]               |  (amber)
-+------------------------------------------+
-| View at Store [ext]                      |  (outline button)
-+------------------------------------------+
-|           Check again                    |
-+------------------------------------------+
-```
+**Changes:**
+- Line 68: Also destructure `region` from `useRegion()`
+- Add new `useEffect` that calls `reset()` when region changes
 
 ---
 
 ## Technical Details
 
-### Interface Changes
-```typescript
-// useLivePriceFetch.ts
-export interface LivePriceFetchResult {
-  // ... existing fields
-  available?: boolean;  // NEW: stock availability from store
-}
+### State Reset Flow
+```
+User changes region → RegionContext updates →
+  → useLivePriceFetch effect fires → calls reset() →
+  → LivePriceCheckButton effect fires → resets button state →
+  → UI shows "Check Current Price" button (idle state)
 ```
 
-### Stock Detection Regex
-```typescript
-// get-current-price/index.ts
-function detectSoldOutStatus(markdown: string): boolean {
-  const soldOutPatterns = [
-    /sold\s*out/i,
-    /out\s*of\s*stock/i,
-    /currently\s*unavailable/i,
-    /notify\s*(me\s*)?(when\s*)?(available|in\s*stock)/i,
-    /back\s*in\s*stock\s*soon/i,
-    /temporarily\s*out/i,
-  ];
-  
-  return soldOutPatterns.some(pattern => pattern.test(markdown));
-}
-```
-
-### Conditional UI Logic
-```tsx
-// LivePriceCheckButton.tsx
-const isOutOfStock = lastResult && lastResult.available === false;
-
-{isOutOfStock ? (
-  <div className="...bg-red-500/10 border-red-500/30...">
-    <XCircle className="text-red-400" />
-    <span>Sold Out</span>
-    <span className="font-bold">{formatPrice(lastResult.price)}</span>
-  </div>
-) : (
-  // Existing green "Live price" display
-)}
-```
+### Why Option A (Clear) vs Option B (Recalculate)
+- **Simpler**: No need to store/track original currency and re-convert
+- **More accurate**: A fresh live check will get the actual regional price (e.g., €22.99 vs $24.99) rather than a conversion
+- **Clearer UX**: User sees "Check Current Price" button again, making it obvious they need to re-check
 
 ---
 
-## Testing Scenarios
+## Files Modified
+1. `src/components/price/LivePriceCheckButton.tsx` - Add region-change effect
+2. `src/hooks/useLivePriceFetch.ts` - Add defensive reset on region change
 
-1. **Shopify store (in stock)**: Should show green price + Buy button
-2. **Shopify store (sold out variant)**: Should show red/amber + disabled button
-3. **Firecrawl store with "Sold Out" text**: Should detect and show out-of-stock UI
-4. **404 error**: Should continue to show existing "Product page has moved" UI
-5. **Price not found**: Should continue to show existing error UI
-
----
-
-## Edge Cases Handled
-
-- Variant-level sold out (Shopify): Uses `variant.available` from API
-- Page-level sold out (Firecrawl): Detects text patterns in markdown
-- Backwards compatibility: If `available` is undefined, assume in stock
-- Pre-order status: Could extend to show "Pre-order" instead of "Out of Stock"
+## Testing
+After implementation:
+1. Navigate to a product detail page
+2. Set region to EU
+3. Click "Check Current Price" - should show €XX.XX
+4. Switch region to US via header dropdown
+5. **Expected**: UI resets to show "Check Current Price" button (idle state)
+6. Click "Check Current Price" again - should show $XX.XX with correct USD value
