@@ -309,6 +309,10 @@ export function FilamentPurchaseSidebar({
                         Ships from {regionalPriceResult.store.shipsFrom}
                       </span>
                     )}
+                    {/* International shipping notice */}
+                    <span className="text-amber-400/60 text-[10px]">
+                      International shipping • Duties may apply
+                    </span>
                   </div>
                 </div>
               )}

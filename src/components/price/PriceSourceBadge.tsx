@@ -214,13 +214,21 @@ export function PriceSourceIndicator({
 
 /**
  * Region badge showing where the price ships from
+ * Shows additional international shipping notice when user region doesn't match store region
  */
 interface ShipsFromBadgeProps {
   country: string;
+  /** User's current region code (e.g., 'EU', 'UK', 'CA') */
+  userRegion?: string;
+  /** Store's region code (e.g., 'US') */
+  storeRegion?: string;
   className?: string;
 }
 
-export function ShipsFromBadge({ country, className }: ShipsFromBadgeProps) {
+export function ShipsFromBadge({ country, userRegion, storeRegion, className }: ShipsFromBadgeProps) {
+  // Determine if this is international shipping
+  const isInternationalShipping = userRegion && storeRegion && userRegion !== storeRegion;
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -229,8 +237,10 @@ export function ShipsFromBadge({ country, className }: ShipsFromBadgeProps) {
             variant="outline"
             className={cn(
               'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5',
-              'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800',
-              'text-blue-600 dark:text-blue-400 cursor-help',
+              isInternationalShipping
+                ? 'bg-amber-100 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400'
+                : 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400',
+              'cursor-help',
               className
             )}
           >
@@ -238,9 +248,16 @@ export function ShipsFromBadge({ country, className }: ShipsFromBadgeProps) {
             <span>Ships from {country}</span>
           </Badge>
         </TooltipTrigger>
-        <TooltipContent side="top" className="text-xs">
+        <TooltipContent side="top" className="text-xs max-w-[220px]">
           <p>This product ships from {country}</p>
-          <p className="text-muted-foreground">Shipping costs and times may vary</p>
+          {isInternationalShipping ? (
+            <>
+              <p className="text-amber-400 mt-1">International shipping required</p>
+              <p className="text-muted-foreground">Duties and customs fees may apply</p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">Shipping costs and times may vary</p>
+          )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

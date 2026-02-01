@@ -210,9 +210,12 @@ export function EnhancedPriceDisplay({
         
         {/* Ships from warning */}
         {isUsingFallback && shipsFromCountry && (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20">
+          <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20">
             <span className="text-xs text-amber-400">
               ⚠️ Ships from {shipsFromCountry} - local store not available
+            </span>
+            <span className="text-[10px] text-amber-400/60">
+              International shipping • Duties may apply
             </span>
           </div>
         )}
