@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Check, ExternalLink, AlertCircle, Loader2, AlertTriangle, Search } from 'lucide-react';
+import { RefreshCw, Check, ExternalLink, AlertCircle, Loader2, AlertTriangle, Search, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLivePriceFetch, LivePriceFetchResult } from '@/hooks/useLivePriceFetch';
 import { useRegion } from '@/contexts/RegionContext';
@@ -86,6 +86,7 @@ export function LivePriceCheckButton({
   if (showResult && lastResult) {
     const discount = lastResult.compareAtPrice && lastResult.price ? Math.round((1 - lastResult.price / lastResult.compareAtPrice) * 100) : null;
     const showCurrencyWarning = lastResult.currencyMismatch || lastResult.isConverted;
+    const isOutOfStock = lastResult.available === false;
     
     return <div className={cn("space-y-2 animate-in fade-in duration-200", className)}>
         {/* Currency mismatch warning */}
@@ -96,24 +97,49 @@ export function LivePriceCheckButton({
           </div>
         )}
         
-        {/* Live Price Display */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 animate-in slide-in-from-top-2 duration-300">
+        {/* Live Price Display - changes color based on stock status */}
+        <div className={cn(
+          "flex items-center justify-between p-3 rounded-lg animate-in slide-in-from-top-2 duration-300",
+          isOutOfStock 
+            ? "bg-red-500/10 border border-red-500/30" 
+            : "bg-emerald-500/10 border border-emerald-500/30"
+        )}>
           <div className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm text-muted-foreground">
-              {lastResult.isConverted ? 'Estimated price:' : 'Live price:'}
+            {isOutOfStock ? (
+              <XCircle className="w-4 h-4 text-red-400" />
+            ) : (
+              <Check className="w-4 h-4 text-emerald-400" />
+            )}
+            <span className={cn(
+              "text-sm",
+              isOutOfStock ? "text-red-400" : "text-muted-foreground"
+            )}>
+              {isOutOfStock 
+                ? 'Sold Out' 
+                : lastResult.isConverted 
+                  ? 'Estimated price:' 
+                  : 'Live price:'}
             </span>
           </div>
           <div className="flex items-center gap-2">
             {lastResult.compareAtPrice && discount && discount > 0 && <span className="text-xs text-muted-foreground line-through">
                 {lastResult.isConverted ? '~' : ''}{formatPrice(lastResult.compareAtPrice)}
               </span>}
-            <span className="text-lg font-bold text-emerald-400">
+            <span className={cn(
+              "text-lg font-bold",
+              isOutOfStock ? "text-red-400" : "text-emerald-400"
+            )}>
               {lastResult.isConverted ? '~' : ''}{formatPrice(lastResult.price || 0)}
             </span>
-            {discount && discount > 0 && <span className="text-xs font-bold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded">
-                {discount}% OFF
-              </span>}
+            {isOutOfStock ? (
+              <span className="text-xs font-bold text-red-300 bg-red-500/20 px-1.5 py-0.5 rounded">
+                OUT OF STOCK
+              </span>
+            ) : (
+              discount && discount > 0 && <span className="text-xs font-bold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded">
+                  {discount}% OFF
+                </span>
+            )}
           </div>
         </div>
 
@@ -123,13 +149,27 @@ export function LivePriceCheckButton({
             {lastResult.currencyMismatch && ' (regional store unavailable)'}
           </p>}
 
-        {/* Go to Store Button */}
-        <Button onClick={handleGoToStore} disabled={!affiliateUrl} className={cn("w-full font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.4)] transition-all duration-200", sizeClasses[size])}>
-          <span className="flex items-center justify-center gap-2 flex-wrap text-center">
-            <span>Buy Now at {storeName}</span>
-            <ExternalLink className="w-4 h-4 flex-shrink-0" />
-          </span>
-        </Button>
+        {/* Go to Store Button - disabled when out of stock */}
+        {isOutOfStock ? (
+          <Button 
+            variant="outline" 
+            onClick={handleGoToStore} 
+            disabled={!affiliateUrl} 
+            className={cn("w-full", sizeClasses[size])}
+          >
+            <span className="flex items-center justify-center gap-2 flex-wrap text-center">
+              <span>View at {storeName}</span>
+              <ExternalLink className="w-4 h-4 flex-shrink-0" />
+            </span>
+          </Button>
+        ) : (
+          <Button onClick={handleGoToStore} disabled={!affiliateUrl} className={cn("w-full font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_8px_24px_rgba(16,185,129,0.4)] transition-all duration-200", sizeClasses[size])}>
+            <span className="flex items-center justify-center gap-2 flex-wrap text-center">
+              <span>Buy Now at {storeName}</span>
+              <ExternalLink className="w-4 h-4 flex-shrink-0" />
+            </span>
+          </Button>
+        )}
 
         {/* Refresh option */}
         <button onClick={() => {

@@ -25,6 +25,8 @@ export interface LivePriceFetchResult {
   currencyMismatch?: boolean;
   /** The currency detected from the scraped page */
   detectedCurrency?: CurrencyCode;
+  /** Stock availability - false means product is sold out */
+  available?: boolean;
 }
 
 export interface UseLivePriceFetchReturn {
@@ -253,6 +255,8 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
           sourceUrl,
           currencyMismatch,
           detectedCurrency,
+          // Stock availability - defaults to true if not explicitly returned
+          available: data.available !== false,
         };
 
         setLastResult(result);
