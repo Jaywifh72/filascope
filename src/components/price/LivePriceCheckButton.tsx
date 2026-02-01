@@ -85,19 +85,31 @@ export function LivePriceCheckButton({
   // Show the fetched price result
   if (showResult && lastResult) {
     const discount = lastResult.compareAtPrice && lastResult.price ? Math.round((1 - lastResult.price / lastResult.compareAtPrice) * 100) : null;
+    const showCurrencyWarning = lastResult.currencyMismatch || lastResult.isConverted;
+    
     return <div className={cn("space-y-2 animate-in fade-in duration-200", className)}>
+        {/* Currency mismatch warning */}
+        {lastResult.currencyMismatch && (
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-400">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{lastResult.errorMessage || `Price in ${lastResult.originalCurrency} - regional price unavailable`}</span>
+          </div>
+        )}
+        
         {/* Live Price Display */}
         <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 animate-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-2">
             <Check className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm text-muted-foreground">Live price:</span>
+            <span className="text-sm text-muted-foreground">
+              {lastResult.isConverted ? 'Estimated price:' : 'Live price:'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {lastResult.compareAtPrice && discount && discount > 0 && <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(lastResult.compareAtPrice)}
+                {lastResult.isConverted ? '~' : ''}{formatPrice(lastResult.compareAtPrice)}
               </span>}
             <span className="text-lg font-bold text-emerald-400">
-              {formatPrice(lastResult.price || 0)}
+              {lastResult.isConverted ? '~' : ''}{formatPrice(lastResult.price || 0)}
             </span>
             {discount && discount > 0 && <span className="text-xs font-bold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded">
                 {discount}% OFF
@@ -108,6 +120,7 @@ export function LivePriceCheckButton({
         {/* Converted price info */}
         {lastResult.isConverted && lastResult.originalPrice && <p className="text-xs text-muted-foreground text-center">
             Original: {lastResult.originalCurrency} {lastResult.originalPrice.toFixed(2)}
+            {lastResult.currencyMismatch && ' (regional store unavailable)'}
           </p>}
 
         {/* Go to Store Button */}
