@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useCurrency, CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
+import { useRegion } from '@/contexts/RegionContext';
+import { CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
 import { useRegionalStore } from '@/hooks/useRegionalStore';
 import { isRegionalBrand as checkIsRegionalBrand } from '@/hooks/useRegionalFiltering';
 import { getBrandConfig } from '@/lib/brandRegionalStores';
@@ -246,7 +247,8 @@ export interface RegionalPriceResult {
  * Also detects vendor native currency to avoid incorrect conversions
  */
 export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): RegionalPriceResult {
-  const { currency, convertPrice } = useCurrency();
+  // Use RegionContext for proper currency sync with ?region= URL param
+  const { currency, convertPrice } = useRegion();
   const { getRegionalUrl, currentRegion } = useRegionalStore();
 
   return useMemo(() => {
@@ -370,7 +372,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       // we can't accurately convert (we don't have cross-currency rates)
       // In this case, we still convert from variant_price as if it were USD
       // This may not be accurate, but it's the best we can do without more data
-      const convertedPrice = convertPrice(filament.variant_price);
+      const convertedPrice = convertPrice(filament.variant_price, 'USD');
       return {
         regionalPrice: convertedPrice,
         isActualRegionalPrice: false,
