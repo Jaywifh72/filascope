@@ -4892,13 +4892,16 @@ export type Database = {
           id: string
           is_primary: boolean | null
           is_verified: boolean | null
+          last_validated_at: string | null
           last_verified_at: string | null
           product_id: string
           product_type: string
           region_code: string
           store_name: string | null
           store_url: string
+          suggested_url: string | null
           updated_at: string | null
+          validation_error: string | null
         }
         Insert: {
           created_at?: string | null
@@ -4906,13 +4909,16 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           is_verified?: boolean | null
+          last_validated_at?: string | null
           last_verified_at?: string | null
           product_id: string
           product_type: string
           region_code: string
           store_name?: string | null
           store_url: string
+          suggested_url?: string | null
           updated_at?: string | null
+          validation_error?: string | null
         }
         Update: {
           created_at?: string | null
@@ -4920,13 +4926,16 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           is_verified?: boolean | null
+          last_validated_at?: string | null
           last_verified_at?: string | null
           product_id?: string
           product_type?: string
           region_code?: string
           store_name?: string | null
           store_url?: string
+          suggested_url?: string | null
           updated_at?: string | null
+          validation_error?: string | null
         }
         Relationships: []
       }
