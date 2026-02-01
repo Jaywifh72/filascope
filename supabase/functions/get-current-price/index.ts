@@ -1449,6 +1449,35 @@ function extractOpenCartPrice(markdown: string): {
   return { price: null, compareAtPrice: null, currency: 'USD', available: false };
 }
 
+// Get currency symbol for a given currency code
+function getCurrencySymbol(currency: string): string {
+  const symbols: Record<string, string> = {
+    'USD': '$',
+    'CAD': 'CA$',
+    'GBP': '£',
+    'EUR': '€',
+    'AUD': 'A$',
+    'JPY': '¥',
+    'CNY': '¥',
+  };
+  return symbols[currency] || '$';
+}
+
+// Build regex pattern for a specific currency
+function buildCurrencyPricePattern(currency: string): RegExp {
+  // Match: €22.99 EUR, $22.99 USD, From €22.99 EUR, etc.
+  // Note: Bambu Lab EU format is "From €22.99 EUR" or "€22.99 EUR"
+  const symbol = getCurrencySymbol(currency);
+  const escapedSymbol = symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
+  // Pattern: symbol + price + optional currency code
+  // OR: "From" + symbol + price + optional currency code
+  return new RegExp(
+    `(?:From\\s*)?${escapedSymbol}\\s*([\\d,]+(?:\\.\\d{2})?)(?:\\s*${currency})?`,
+    'gi'
+  );
+}
+
 // Legacy: Extract price from Bambu Lab and generic stores
 function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
   price: number | null;
@@ -1458,9 +1487,90 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
 } {
   console.log(`Extracting price from content, preferred currency: ${preferredCurrency}`);
   
-  const currencyPatterns = ['CAD', 'USD', 'GBP', 'EUR', 'AUD', 'JPY'];
+  const currencyPatterns = ['EUR', 'GBP', 'CAD', 'USD', 'AUD', 'JPY'];
   
-  // Pattern 1: Shopify multi-currency format
+  // PRIORITY 1: Look for prices in the preferred currency FIRST
+  // This handles formats like "From €22.99 EUR" or "€22.99"
+  const preferredSymbol = getCurrencySymbol(preferredCurrency);
+  
+  // EUR-specific patterns for Bambu Lab EU store
+  if (preferredCurrency === 'EUR') {
+    // Pattern: "From €22.99 EUR" or "€22.99 EUR" or just "€22.99"
+    const eurPatterns = [
+      /From\s*€\s*([\d,]+(?:\.\d{2})?)\s*EUR/gi,
+      /€\s*([\d,]+(?:\.\d{2})?)\s*EUR/gi,
+      /€\s*([\d,]+(?:\.\d{2})?)/g,
+    ];
+    
+    for (const pattern of eurPatterns) {
+      const matches = [...markdown.matchAll(pattern)];
+      if (matches.length > 0) {
+        const prices = matches
+          .map(m => parseFloat(m[1].replace(',', '.')))
+          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+          .sort((a, b) => a - b);
+        
+        if (prices.length > 0) {
+          const price = prices[0];
+          const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
+          console.log(`Found EUR price: €${price}${compareAt ? `, compare-at: €${compareAt}` : ''}`);
+          return { price, compareAtPrice: compareAt, currency: 'EUR', available: true };
+        }
+      }
+    }
+  }
+  
+  // GBP-specific patterns
+  if (preferredCurrency === 'GBP') {
+    const gbpPatterns = [
+      /From\s*£\s*([\d,]+(?:\.\d{2})?)\s*GBP/gi,
+      /£\s*([\d,]+(?:\.\d{2})?)\s*GBP/gi,
+      /£\s*([\d,]+(?:\.\d{2})?)/g,
+    ];
+    
+    for (const pattern of gbpPatterns) {
+      const matches = [...markdown.matchAll(pattern)];
+      if (matches.length > 0) {
+        const prices = matches
+          .map(m => parseFloat(m[1].replace(',', '.')))
+          .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+          .sort((a, b) => a - b);
+        
+        if (prices.length > 0) {
+          const price = prices[0];
+          const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
+          console.log(`Found GBP price: £${price}${compareAt ? `, compare-at: £${compareAt}` : ''}`);
+          return { price, compareAtPrice: compareAt, currency: 'GBP', available: true };
+        }
+      }
+    }
+  }
+  
+  // Pattern for USD/CAD/AUD with $ symbol and currency code
+  if (['USD', 'CAD', 'AUD'].includes(preferredCurrency)) {
+    // Look for "$22.99 USD" format first
+    const dollarWithCodePattern = new RegExp(
+      `From\\s*\\$\\s*([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}|\\$\\s*([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}`,
+      'gi'
+    );
+    
+    const matches = [...markdown.matchAll(dollarWithCodePattern)];
+    if (matches.length > 0) {
+      const prices = matches
+        .map(m => parseFloat((m[1] || m[2]).replace(',', '')))
+        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+        .sort((a, b) => a - b);
+      
+      if (prices.length > 0) {
+        const price = prices[0];
+        const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
+        console.log(`Found ${preferredCurrency} price: $${price}${compareAt ? `, compare-at: $${compareAt}` : ''}`);
+        return { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
+      }
+    }
+  }
+  
+  // PRIORITY 2: Shopify multi-currency format (legacy)
   const shopifySaleRegex = new RegExp(
     `Sale\\s*price\\s*\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}[^\\d]*Regular\\s*price\\s*\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}`,
     'i'
@@ -1473,62 +1583,41 @@ function extractBambuLabPrice(markdown: string, preferredCurrency: string): {
     return { price: salePrice, compareAtPrice: regularPrice, currency: preferredCurrency, available: true };
   }
   
-  // Pattern 2: Bambu Lab style back-to-back prices
-  const preferredPriceRegex = new RegExp(
-    `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${preferredCurrency})?`,
-    'i'
-  );
-  
-  const preferredMatch = markdown.match(preferredPriceRegex);
-  if (preferredMatch) {
-    const price1 = parseFloat(preferredMatch[1].replace(',', ''));
-    const price2 = preferredMatch[2] ? parseFloat(preferredMatch[2].replace(',', '')) : null;
-    
-    if (price2 !== null) {
-      const salePrice = Math.min(price1, price2);
-      const comparePrice = Math.max(price1, price2);
-      console.log(`Found ${preferredCurrency} sale price: $${salePrice}, compare-at: $${comparePrice}`);
-      return { price: salePrice, compareAtPrice: comparePrice, currency: preferredCurrency, available: true };
-    }
-    
-    console.log(`Found ${preferredCurrency} price: $${price1}`);
-    return { price: price1, compareAtPrice: null, currency: preferredCurrency, available: true };
-  }
-  
-  // Try other currencies as fallback
+  // PRIORITY 3: Try other currencies as fallback
   for (const cur of currencyPatterns) {
-    const priceRegex = new RegExp(
-      `\\$([\\d,]+(?:\\.\\d{2})?)\\s*${cur}(?:\\$([\\d,]+(?:\\.\\d{2})?)\\s*${cur})?`,
-      'i'
-    );
-    const match = markdown.match(priceRegex);
-    if (match) {
-      const price1 = parseFloat(match[1].replace(',', ''));
-      const price2 = match[2] ? parseFloat(match[2].replace(',', '')) : null;
+    if (cur === preferredCurrency) continue; // Already tried
+    
+    const symbol = getCurrencySymbol(cur);
+    const escapedSymbol = symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const fallbackPattern = new RegExp(`${escapedSymbol}\\s*([\\d,]+(?:\\.\\d{2})?)(?:\\s*${cur})?`, 'g');
+    
+    const matches = [...markdown.matchAll(fallbackPattern)];
+    if (matches.length > 0) {
+      const prices = matches
+        .map(m => parseFloat(m[1].replace(',', '.')))
+        .filter(p => !isNaN(p) && p > 0 && validateFilamentPrice(p))
+        .sort((a, b) => a - b);
       
-      if (price2 !== null) {
-        const salePrice = Math.min(price1, price2);
-        const comparePrice = Math.max(price1, price2);
-        console.log(`Found ${cur} sale price: $${salePrice}, compare-at: $${comparePrice} (fallback)`);
-        return { price: salePrice, compareAtPrice: comparePrice, currency: cur, available: true };
+      if (prices.length > 0) {
+        const price = prices[0];
+        const compareAt = prices.length > 1 && prices[1] > price * 1.1 ? prices[1] : null;
+        console.log(`Found ${cur} price (fallback): ${symbol}${price}${compareAt ? `, compare-at: ${symbol}${compareAt}` : ''}`);
+        return { price, compareAtPrice: compareAt, currency: cur, available: true };
       }
-      
-      console.log(`Found ${cur} price: $${price1} (fallback)`);
-      return { price: price1, compareAtPrice: null, currency: cur, available: true };
     }
   }
   
-  // Last resort: any price pattern with validation
-  const allPrices = [...markdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
+  // PRIORITY 4: Last resort - any price with $ symbol and validation
+  const allDollarPrices = [...markdown.matchAll(/\$([0-9,]+(?:\.[0-9]{2})?)/g)]
     .map(m => parseFloat(m[1].replace(',', '')))
     .filter(p => validateFilamentPrice(p))
     .sort((a, b) => a - b);
   
-  if (allPrices.length > 0) {
-    const price = allPrices[0];
-    const compareAtPrice = allPrices.length > 1 && allPrices[1] > price * 1.1 ? allPrices[1] : null;
-    console.log(`Found generic price (filtered): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''}`);
-    return { price, compareAtPrice, currency: preferredCurrency, available: true };
+  if (allDollarPrices.length > 0) {
+    const price = allDollarPrices[0];
+    const compareAtPrice = allDollarPrices.length > 1 && allDollarPrices[1] > price * 1.1 ? allDollarPrices[1] : null;
+    console.log(`Found generic USD price (filtered): $${price}${compareAtPrice ? `, compare-at: $${compareAtPrice}` : ''}`);
+    return { price, compareAtPrice, currency: 'USD', available: true };
   }
   
   console.log('No valid price found in content');
