@@ -1,440 +1,281 @@
 
-# Comprehensive Regional Store & Pricing Audit Report
 
-## Executive Summary
+# Regional Price Sync Pipeline - Implementation Plan
 
-This audit covers the database state, URL construction logic, price display accuracy, and identifies gaps in the regional pricing system.
+## Overview
 
----
+This plan addresses the EU pricing issues and establishes an automated regional price synchronization system. The goal is to ensure FilaScope displays accurate native currency prices from regional stores, not USD conversions.
 
-## TASK 1: DATABASE AUDIT
+## Current State Analysis
 
-### 1.1 Complete Brand-Region Store Mapping
+### What Works
+- **Database schema**: Regional price columns (`price_eur`, `price_gbp`, `price_cad`, `price_aud`, `price_jpy`) exist on the `filaments` table
+- **Data exists**: Bambu Lab has 227 products with EUR prices, Creality has 122 with EUR prices
+- **UI hook fixed**: `useRegionalPrice.ts` now uses `RegionContext` for proper region synchronization
+- **Existing edge functions**: `sync-regional-prices` and `sync-prices` provide foundational sync logic
 
-| Brand | Regions Covered | Ships From | Total Stores |
-|-------|-----------------|------------|--------------|
-| 3D-Fuel | US | US | 1 |
-| 3DHOJOR | US | US | 1 |
-| 3DXTech | US | US | 1 |
-| Amazon Basics | AU, CA, EU, JP, UK, US | AU, CA, DE, JP, UK, US | 6 |
-| Amolen | US | US | 1 |
-| Anycubic | AU, CA, EU, UK, US | AU, CA, DE, UK, US | 5 |
-| Atomic Filament | US | US | 1 |
-| AzureFilm | EU, US | SI (Slovenia) | 2 |
-| Bambu Lab | AU, CA, CN, EU, JP, UK, US | AU, CA, CN, DE, JP, UK, US | 7 |
-| ColorFabb | EU, US | NL | 2 |
-| Creality | AU, CA, EU, UK, US | AU, CA, DE, UK, US | 5 |
-| Duramic 3D | US | US | 1 |
-| Elegoo | AU, CA, EU, UK, US | AU, CA, DE, UK, US | 5 |
-| Eryone | EU, US | CN, DE | 2 |
-| eSun | EU, US | NL, US | 2 |
-| Extrudr | EU, US | AT | 2 |
-| Fiberlogy | EU, US | PL | 2 |
-| Fillamentum | EU, US | CZ | 2 |
-| FormFutura | EU, US | NL | 2 |
-| Fusion Filaments | US | US | 1 |
-| Geeetech | US | CN | 1 |
-| Gizmo Dorks | US | US | 1 |
-| Hatchbox | CA, UK, US | US | 3 |
-| IC3D Printers | US | US | 1 |
-| Kingroon | EU, US | CN, DE | 2 |
-| Matter3D | CA, US | CA | 2 |
-| NinjaTek | US | US | 1 |
-| Numakers | US | US | 1 |
-| Overture | CA, US | US | 2 |
-| Paramount 3D | US | US | 1 |
-| Polymaker | CA, EU, UK, US | CA, NL, UK, US | 4 |
-| Proto-Pasta | US | US | 1 |
-| Prusa | EU, US | CZ | 2 |
-| Prusament | EU, US | CZ | 2 |
-| Push Plastic | US | US | 1 |
-| Recreus | EU, US | ES | 2 |
-| Siraya Tech | US | US | 1 |
-| Sovol | EU, US | DE, US | 2 |
-| Spectrum Filaments | EU | PL | 1 |
-| Sunlu | EU, UK, US | DE, UK, US | 3 |
-| TreeD Filaments | EU | IT | 1 |
-| Ultimaker | EU, US | NL, US | 2 |
-| VoxelPLA | US | US | 1 |
-| **Yousu** | **NONE** | **NONE** | **0** |
-| Ziro | US | CN | 1 |
+### Critical Issues
+1. **product_regional_urls table is EMPTY** (0 rows) - no regional store URLs stored
+2. **product_url_eu columns are NULL** - regional URLs not in legacy columns either
+3. **No URL construction for EU routing** - system can't build regional URLs
+4. **Creality URL 404s** - EU product slugs don't match US slugs
+5. **Price validation needed** - no mechanism to verify scraped prices match actual store prices
 
-### 1.2 Brands with NO Regional Stores
+## Implementation Plan
 
-| Brand | Status | Action Required |
-|-------|--------|-----------------|
-| Yousu | No stores defined | Add at least US store |
+### Phase 1: Fix Immediate EUR Display Issues
 
-### 1.3 Potential Duplicate/Fake Stores Analysis
+**Step 1.1: Verify useRegionalPrice fix**
+- The recent fix to use `RegionContext` instead of `useCurrency` should now correctly prioritize `price_eur` column
+- Test that Bambu Lab products show €22.99 (actual) instead of ~€16.81 (converted)
 
-These stores have the same base_url as the US store but are marked as legitimate because they ship from different countries (EU warehouses):
-
-| Brand | Region | Store Name | Base URL | Ships From | Status |
-|-------|--------|------------|----------|------------|--------|
-| AzureFilm | EU | AzureFilm | azurefilm.com | SI (Slovenia) | **VALID** - EU-based brand |
-| ColorFabb | EU | ColorFabb | colorfabb.com | NL | **VALID** - EU warehouse |
-| eSun | EU | eSun EU | esun3dstore.com | NL | **VALID** - NL warehouse |
-| Extrudr | EU | Extrudr | extrudr.com | AT | **VALID** - EU-based brand |
-| Fiberlogy | EU | Fiberlogy | fiberlogy.com | PL | **VALID** - EU-based brand |
-| Fillamentum | EU | Fillamentum | fillamentum.com | CZ | **VALID** - EU-based brand |
-
-**Result**: No fake stores detected. Previous cleanup successfully removed duplicates.
-
-### 1.4 Regional Currency Data Coverage
-
-| Metric | Count | Percentage |
-|--------|-------|------------|
-| Total products with USD price | 7,545 | 100% |
-| Products with CAD price | 661 | 8.8% |
-| Products with EUR price | 698 | 9.3% |
-| Products with GBP price | 0 | 0% |
-| Products with AUD price | 0 | 0% |
-
-**Brands with Native CAD Pricing**:
-- Polymaker: 561 products
-- Elegoo: 100 products
-
-**Brands with Native EUR Pricing**:
-- Fiberlogy: 274 products
-- Fillamentum: 194 products
-- Extrudr: 131 products
-- AzureFilm: 99 products
-
-### 1.5 Exchange Rate Status
-
-| Currency | Rate (USD→) | Source | Age |
-|----------|-------------|--------|-----|
-| AUD | 1.432478 | exchangerate-api.com | 1.5 hours |
-| CAD | 1.357377 | exchangerate-api.com | 1.5 hours |
-| CHF | 0.771093 | exchangerate-api.com | 1.5 hours |
-| CNY | 6.964556 | exchangerate-api.com | 1.5 hours |
-| CZK | 20.454948 | exchangerate-api.com | 1.5 hours |
-| EUR | 0.841017 | exchangerate-api.com | 1.5 hours |
-| GBP | 0.728755 | exchangerate-api.com | 1.5 hours |
-| JPY | 154.382329 | exchangerate-api.com | 1.5 hours |
-| KRW | 1444.326478 | exchangerate-api.com | 1.5 hours |
-| PLN | 3.539545 | exchangerate-api.com | 1.5 hours |
-| SEK | 8.876910 | exchangerate-api.com | 1.5 hours |
-| INR | 83.12 | **manual** | **162.9 hours (stale)** |
-
-**Issue Found**: INR rate is 6.8 days old (manual entry)
+**Step 1.2: Add regional URL generation for EU routing**
+Create a utility that constructs regional URLs from base URLs using brand store configurations:
+- Bambu Lab: `us.store.bambulab.com` -> `eu.store.bambulab.com`
+- Creality: `store.creality.com` -> `store.creality.com/eu`
+- Polymaker: `us.polymaker.com` -> `eu.polymaker.com`
 
 ---
 
-## TASK 2: CODE AUDIT - STORE URL LOGIC
+### Phase 2: Populate Regional URLs Table
 
-### 2.1 useUnifiedRegionalPricing.ts (Lines 397-621)
-
-**URL Construction Flow**:
+**Step 2.1: Create edge function `populate-regional-urls`**
 ```text
-1. Brand name → fetchBrandByName() → brand_id
-2. Brand ID → fetchRegionalStores() → BrandRegionalStoreRow[]
-3. User region → findBestStore() → { store, isLocal }
-4. Product slug + store.product_url_pattern → buildRegionalUrl() → final URL
+Purpose: Populate product_regional_urls table from brand store configurations
+
+Logic:
+1. For each filament with a product_url and brand_id
+2. Look up brand in BRAND_REGIONAL_STORES config
+3. For each supported region in brand config:
+   - Transform base URL to regional URL
+   - Validate URL exists (HEAD request)
+   - Insert into product_regional_urls
+4. Mark filament.has_regional_urls = true
 ```
 
-**Key Functions**:
-
-| Function | Line | Purpose |
-|----------|------|---------|
-| `resolveProductSlugFromData()` | 134-185 | Extract slug from product_handle, URL, or name |
-| `findBestStore()` | 253-284 | Match region with fallback chain |
-| `buildRegionalUrl()` | 226-248 | Apply pattern: `{slug}`, `{sku}`, `{product}`, `{handle}` |
-
-**Fallback Logic** (Lines 268-274):
-```typescript
-const fallbacks = REGION_FALLBACK_ORDER[userRegion] || [];
-for (const fallbackRegion of fallbacks) {
-  const fallbackStore = stores.find(s => s.region_code === fallbackRegion);
-  if (fallbackStore) {
-    return { store: fallbackStore, isLocal: false };
-  }
-}
-```
-
-**Fallback Order** (from `config/regions.ts`):
-- US → [CA, UK, EU, AU]
-- CA → [US, UK, EU, AU]
-- UK → [EU, US, CA, AU]
-- EU → [UK, US, CA, AU]
-- AU → [US, UK, EU, CA]
-- JP → [US, CN, AU, EU]
-- CN → [US, JP, EU, AU]
-
-### 2.2 FilamentPurchaseSidebar.tsx (Lines 63-469)
-
-**Price Priority** (Lines 175-185):
-```typescript
-// PRIORITY 1: Regional pricing from parent (already converted)
-// PRIORITY 2: Live price (automatically converted by useCurrentPrice)
-// PRIORITY 3: Fall back to passed-in pricePerSpool
-
-const displayPrice = hasValidRegionalPrice 
-  ? regionalPriceResult.displayPrice 
-  : hasValidLivePrice 
-    ? livePrice 
-    : pricePerSpool;
-```
-
-**Buy Button URL** (Lines 122-132):
-```typescript
-const handleBuyClick = () => {
-  if (!affiliateUrl) return;
-  trackStoreClick({...});
-  window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
-};
-```
-
-**Issue**: `affiliateUrl` is passed as a prop - the URL is constructed upstream in `FilamentDetail.tsx`
-
-### 2.3 PurchaseSidebar.tsx (Printers) (Lines 35-159)
-
-**URL Construction** (Lines 47-49):
-```typescript
-const affiliateUrl = officialStoreUrl && getAffiliateUrl
-  ? getAffiliateUrl(officialStoreUrl, brand)
-  : officialStoreUrl;
-```
-
-**Regional Warning Display** (Lines 84-99):
-```typescript
-{!isLocalStore && storeRegion && (
-  <div className="...text-amber-400...">
-    <Globe className="w-3.5 h-3.5" />
-    <div>
-      <span>{REGIONS[storeRegion]?.flag} {REGIONS[storeRegion]?.name} store</span>
-      {shipsFromCountry && <span>Ships from {shipsFromCountry}</span>}
-    </div>
-  </div>
-)}
-```
-
-### 2.4 Product URL Pattern Analysis
-
-From database query, patterns found:
-
-| Brand | Pattern | Example |
-|-------|---------|---------|
-| 3D-Fuel | `https://3dfuel.com/products/{sku}` | Standard Shopify |
-| Bambu Lab | `https://{region}.store.bambulab.com/products/{slug}` | Subdomain-based |
-| Anycubic | `https://store.anycubic.com/en-{locale}/products/{slug}` | Locale path |
-| Creality | `https://store.creality.com/{region}/products/{slug}` | Region path |
-| Amazon Basics | `null` (no pattern) | **Issue**: No product-level URLs |
+**Step 2.2: Handle brand-specific URL patterns**
+- **Bambu Lab**: Subdomain swap (`us.` -> `eu.`)
+- **Creality**: Path prefix (`/products/` -> `/eu/products/`)
+- **Polymaker**: Subdomain swap
+- **Global brands** (eSUN, Prusa): Single URL, no transformation needed
 
 ---
 
-## TASK 3: PRICE DISPLAY LOGIC VERIFICATION
+### Phase 3: Build Regional Price Sync Pipeline
 
-### 3.1 Scenario: Region Has Local Store
+**Step 3.1: Enhance `sync-regional-prices` edge function**
+```text
+Input parameters:
+- brandSlug: string (required)
+- regions: string[] (e.g., ['EU', 'UK', 'CA'])
+- dryRun: boolean
+- limit: number
+- forceRefresh: boolean
 
-**Code Path** (useUnifiedRegionalPricing.ts, Lines 577-601):
-```typescript
-return {
-  displayPrice,
-  displayCurrency: currency,
-  formattedPrice: formatPrice(displayPrice, currency, { showApproximate: needsConversion }),
-  isLocalStore: isLocal,
-  storeFlag,
-  shipsFromCountry: matchedStore.ships_from_country,
-  isConverted: needsConversion && basePrice != null,
-  ...
-};
+Process per region:
+1. Fetch products for brand from filaments table
+2. For each product:
+   a. Get regional URL from product_regional_urls table
+   b. If no regional URL, construct from brand config
+   c. Fetch product page using Firecrawl (via get-current-price)
+   d. Extract native currency price
+   e. Validate price ratio vs USD (sanity check)
+   f. Update filaments.price_[currency] column
+   g. Log result to brand_sync_logs
+
+Rate limiting:
+- 500ms delay between requests
+- 2s delay between brands
+- Respect Cloudflare/bot detection
 ```
 
-**Verification**: Shows local price when `isLocal: true`, no tilde prefix.
+**Step 3.2: Create scheduling system**
+```text
+Daily schedule (high-priority brands):
+- Bambu Lab: 6 AM UTC
+- Creality: 7 AM UTC  
+- Prusa Research: 8 AM UTC
+- Polymaker: 9 AM UTC
+- Elegoo: 10 AM UTC
 
-### 3.2 Scenario: Region Has No Store (Fallback)
+Weekly schedule (other brands):
+- All other brands with regional stores
+- Runs Sunday 3 AM UTC
 
-**Code Path** (Lines 504-537):
-```typescript
-if (!matchedStore) {
-  const needsConversion = baseCurrency !== currency;
-  const displayPrice = basePrice != null 
-    ? (needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice)
-    : null;
-  
-  return {
-    ...DEFAULT_RESULT,
-    formattedPrice: displayPrice != null 
-      ? formatPrice(displayPrice, currency, { showApproximate: needsConversion })
-      : 'Price unavailable',
-    isLocalStore: false,
-    ...
-  };
-}
+Implementation:
+- Use pg_cron with net.http_post to invoke edge function
+- Store schedule in automated_brands.regional_sync_cron
 ```
-
-**Verification**: Converts price and shows `~` prefix for converted prices.
-
-### 3.3 Currency Symbol Verification
-
-**formatPrice()** from `config/currencies.ts` (Lines 85-112):
-```typescript
-export function formatPrice(amount, currencyCode, options) {
-  const config = CURRENCIES[currencyCode];
-  const prefix = options?.showApproximate ? '~' : '';
-  
-  if (config.symbolPosition === 'before') {
-    return `${prefix}${config.symbol}${formatted}`;
-  } else {
-    return `${prefix}${formatted} ${config.symbol}`;
-  }
-}
-```
-
-**Currency Symbols**:
-| Currency | Symbol | Position |
-|----------|--------|----------|
-| USD | $ | before |
-| CAD | C$ | before |
-| EUR | € | before |
-| GBP | £ | before |
-| AUD | A$ | before |
-| JPY | ¥ | before |
-| CNY | ¥ | before |
-| SEK | kr | **after** |
-
-### 3.4 "Ships From" Warning Display
-
-**FilamentPurchaseSidebar.tsx** (Lines 299-314):
-```typescript
-{!isLocalStore && storeRegionCode && (
-  <div className="...text-amber-400...">
-    <Globe className="w-3.5 h-3.5" />
-    <div className="flex flex-col">
-      <span className="font-medium">
-        {storeRegionFlag} {REGIONS[storeRegionCode]?.name} store
-      </span>
-      {regionalPriceResult?.store?.shipsFrom && (
-        <span className="text-amber-400/80">
-          Ships from {regionalPriceResult.store.shipsFrom}
-        </span>
-      )}
-    </div>
-  </div>
-)}
-```
-
-**Verification**: Warning displays correctly when `isLocalStore: false`.
 
 ---
 
-## TASK 4: IDENTIFIED GAPS
+### Phase 4: URL Validation and Repair
 
-### 4.1 Brands with Missing Regional Coverage
+**Step 4.1: Create `validate-regional-urls` edge function**
+```text
+Purpose: Detect broken URLs and suggest repairs
 
-**High Priority** (Popular brands needing expansion):
+Process:
+1. Query products with regional URLs
+2. For each URL, send HEAD request
+3. If 404:
+   - Check for redirects (store valid redirect targets)
+   - Try slug variations (e.g., hyper-pla -> hyper-pla-refill)
+   - Mark as needs_repair in product_regional_urls
+4. Log validation results
 
-| Brand | Products | Current Regions | Missing Regions |
-|-------|----------|-----------------|-----------------|
-| eSun | 360 | EU, US | CA, UK, AU |
-| Hatchbox | 174 | CA, UK, US | EU, AU |
-| Overture | 180 | CA, US | EU, UK, AU |
-| Sunlu | 88 | EU, UK, US | CA, AU |
-| Proto-Pasta | 359 | US | CA, UK, EU, AU |
-| Eryone | 318 | EU, US | CA, UK, AU |
+Run weekly on Saturday night
+```
 
-**Medium Priority** (US-only brands):
+**Step 4.2: Handle Creality slug inconsistencies**
+```text
+Problem: Creality EU uses different slugs than US store
 
-| Brand | Products | Action |
-|-------|----------|--------|
-| 3D-Fuel | 244 | Add CA, EU (ships international) |
-| 3DXTech | 174 | Add EU (engineering materials demand) |
-| Atomic Filament | 164 | US specialty - OK as-is |
-| Amolen | 276 | Amazon-heavy - add regional Amazon links |
-| Gizmo Dorks | 132 | US specialty - OK as-is |
-| Push Plastic | 155 | Add CA (ships to CA) |
-| NinjaTek | varies | Add EU (Fenner Drives is global) |
+Solution:
+1. Create slug mapping table (us_slug -> eu_slug)
+2. When syncing Creality EU:
+   - Look up EU-specific slug from mapping
+   - If not found, try common transformations:
+     * Remove color suffixes
+     * Add/remove "3d-printing-filament" suffix
+   - Store successful mappings for future use
+```
 
-### 4.2 Amazon Basics URL Issue
+---
 
-**Problem**: Amazon Basics has 6 regional stores configured but **NO product_url_pattern**.
+### Phase 5: Price Anomaly Detection and Alerts
 
+**Step 5.1: Add price validation rules**
+```text
+Expected price ratios (vs USD):
+- EUR: 0.85 - 1.25x
+- GBP: 0.70 - 1.15x
+- CAD: 1.1 - 1.6x
+- AUD: 1.3 - 1.9x
+- JPY: 100 - 160x
+
+If price ratio outside range:
+- Flag for manual review
+- Don't auto-update database
+- Log to admin_activity_log
+```
+
+**Step 5.2: Detect price changes >20%**
+```text
+When updating price:
+1. Compare new price to existing price
+2. If change > 20%:
+   - Log to price_history with flag
+   - Create alert in admin dashboard
+   - Don't block update (prices do change)
+```
+
+---
+
+### Phase 6: Admin UI Integration
+
+**Step 6.1: Add Regional Sync tab to Admin Dashboard**
+Location: `/admin/inventory?tab=regional`
+
+Components:
+- Brand coverage matrix (brand x region)
+- Sync status per brand/region
+- Last sync time and success rate
+- "Sync Now" button per brand or region
+- Price validation alerts
+
+**Step 6.2: Sync monitoring dashboard**
+```text
+Display:
+- Current sync status (running, completed, failed)
+- Products synced / total
+- Price changes detected
+- URLs validated / broken
+- Error logs with retry actions
+```
+
+---
+
+## Technical Implementation Details
+
+### Database Changes Required
 ```sql
--- Current state
-brand_name: Amazon Basics
-product_url_pattern: NULL (all regions)
-base_url: https://www.amazon.com/stores/AmazonBasics
+-- None required - existing schema is sufficient:
+-- filaments: price_eur, price_gbp, price_cad, price_aud, price_jpy
+-- product_regional_urls: already exists, needs population
+-- product_regional_prices: already exists, optional future use
 ```
 
-**Impact**: "Buy Now" links go to Amazon storefront, not specific products.
+### New Edge Functions
+1. `populate-regional-urls` - One-time population of regional URLs
+2. Enhanced `sync-regional-prices` - Main sync pipeline
+3. `validate-regional-urls` - URL health checking
 
-**Fix Required**: Amazon product URLs use ASIN format: `https://www.amazon.com/dp/{ASIN}`
-- Need to store ASIN in `product_handle` column
-- Add pattern: `https://www.amazon.{tld}/dp/{slug}`
+### Files to Modify
+1. `src/hooks/useRegionalPrice.ts` - Already fixed to use RegionContext
+2. `src/hooks/useRegionalStore.ts` - Add EU URL construction logic
+3. `src/lib/brandRegionalStores.ts` - Add Creality EU path pattern
+4. `supabase/functions/sync-regional-prices/index.ts` - Enhance sync logic
 
-### 4.3 Missing GBP and AUD Native Pricing
+### Cron Schedule Setup
+```sql
+-- Daily syncs for high-priority brands
+SELECT cron.schedule(
+  'sync-bambulab-regional-daily',
+  '0 6 * * *',
+  $$SELECT net.http_post(
+    url := '{SUPABASE_URL}/functions/v1/sync-regional-prices',
+    body := '{"brandSlug": "bambu-lab", "regions": ["EU", "UK", "CA", "AU"]}'::jsonb
+  )$$
+);
 
-**Current State**:
-- 0 products have native GBP prices
-- 0 products have native AUD prices
-
-**Impact**: All UK and AU users see converted prices (~£XX, ~A$XX).
-
-**Brands that should have native UK/AU pricing**:
-- Polymaker (has UK store, 573 products)
-- Bambu Lab (has UK/AU stores, 227 products)
-- Creality (has UK/AU stores, 122 products)
-- Anycubic (has UK/AU stores, 685 products)
-- Elegoo (has UK/AU stores, 100 products)
-
-### 4.4 Yousu Brand - No Configuration
-
-**Issue**: Brand "Yousu" exists in `automated_brands` but has zero stores.
-
-**Action**: Either:
-1. Add store configuration (likely Amazon/AliExpress)
-2. Mark brand as inactive if products were removed
-
-### 4.5 Stale Exchange Rate
-
-**Issue**: INR (Indian Rupee) rate is 162.9 hours old (manual entry).
-
-**Action**: Add INR to the `update-exchange-rates` Edge Function target currencies.
+-- Weekly syncs for other brands
+SELECT cron.schedule(
+  'sync-regional-weekly',
+  '0 3 * * 0',
+  $$SELECT net.http_post(
+    url := '{SUPABASE_URL}/functions/v1/sync-regional-prices',
+    body := '{"brandSlug": "all", "regions": ["EU", "UK"]}'::jsonb
+  )$$
+);
+```
 
 ---
 
-## IMPLEMENTATION RECOMMENDATIONS
+## Testing Strategy
 
-### Priority 1: Critical Fixes
-1. **Add Amazon ASIN support** - Fix Amazon Basics product URLs
-2. **Update INR exchange rate** - Add to automated updater
-3. **Configure Yousu brand** - Add store or mark inactive
+### Phase 1 Verification
+1. Load Bambu Lab product in EU region
+2. Confirm price shows €22.99 (not ~€16.81)
+3. Confirm no tilde (~) prefix on actual EUR prices
 
-### Priority 2: Coverage Expansion
-1. **Add UK/AU native pricing** - Scrape prices from regional stores for major brands
-2. **Expand eSun regional stores** - Add CA, UK, AU with appropriate fallback
-3. **Expand Hatchbox** - Add EU, AU via Amazon links
+### Phase 2 Verification  
+1. Run `populate-regional-urls` for Bambu Lab
+2. Query product_regional_urls - should have entries
+3. Verify URL transformation correctness
 
-### Priority 3: Data Quality
-1. **Populate price_gbp/price_aud columns** - Via regional scraping
-2. **Add product_url_pattern for Amazon** - Enable direct product links
-3. **Regular duplicate store audits** - Prevent fake store re-creation
+### Phase 3 Verification
+1. Trigger sync for Bambu Lab EU
+2. Check price_eur values updated with fresh data
+3. Verify sync logs show success
 
 ---
 
-## DATABASE QUERIES FOR REFERENCE
+## Rollout Plan
 
-**Find products by brand without regional pricing**:
-```sql
-SELECT vendor, COUNT(*) as count
-FROM filaments 
-WHERE variant_price IS NOT NULL 
-  AND price_cad IS NULL 
-  AND price_eur IS NULL
-GROUP BY vendor 
-ORDER BY count DESC;
-```
+1. **Week 1**: Deploy Phase 1 fix, verify EUR display works
+2. **Week 2**: Deploy Phase 2, populate URLs for top 5 brands
+3. **Week 3**: Deploy Phase 3 sync pipeline, run manually
+4. **Week 4**: Deploy Phase 4 validation, enable cron schedules
+5. **Week 5**: Deploy Phase 5-6 monitoring and alerts
 
-**Find brands needing expansion**:
-```sql
-SELECT 
-  ab.brand_name,
-  (SELECT COUNT(*) FROM filaments f WHERE f.vendor ILIKE ab.brand_name) as product_count,
-  ARRAY_AGG(brs.region_code) as regions
-FROM automated_brands ab
-LEFT JOIN brand_regional_stores brs ON brs.brand_id = ab.id AND brs.is_active = true
-GROUP BY ab.id, ab.brand_name
-HAVING COUNT(brs.id) < 3
-ORDER BY product_count DESC;
-```
+---
+
+## Success Metrics
+
+- EUR prices show actual store values (verified for top 10 Bambu Lab products)
+- Regional URL coverage: >80% for brands with regional stores
+- Sync success rate: >95% for verified URLs
+- Price freshness: <7 days for high-priority brands
+- Zero 404 errors on "Buy Now" clicks
+
