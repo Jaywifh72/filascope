@@ -37,6 +37,11 @@ interface PriceResponse {
   error?: string;
   is404?: boolean; // Indicates product page not found
   refreshedAt?: string; // ISO timestamp when forceRefresh was used
+  // New fields for currency validation
+  sourceUrl?: string; // The actual URL that was scraped (may differ from input after regional transformation)
+  detectedCurrency?: string; // Currency detected from page content (may differ from expected)
+  currencyMismatch?: boolean; // True if detected currency doesn't match expected
+  requestedCurrency?: string; // The currency the caller requested
 }
 
 interface BrandExtractionConfig {
@@ -57,6 +62,188 @@ interface BrandConfig {
   price_extraction_config: BrandExtractionConfig;
   extraction_working: boolean;
   default_currency: string | null;
+}
+
+// Regional store URL patterns for major brands
+interface RegionalStoreConfig {
+  pattern: 'subdomain' | 'path' | 'global';
+  baseDomain: string;
+  regions: Record<string, { subdomain?: string; pathPrefix?: string; domain?: string; currency: string }>;
+  fallbackRegion?: string;
+}
+
+const REGIONAL_STORE_CONFIGS: Record<string, RegionalStoreConfig> = {
+  'bambulab': {
+    pattern: 'subdomain',
+    baseDomain: 'store.bambulab.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'us', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
+      JP: { subdomain: 'jp', currency: 'JPY' },
+    }
+  },
+  'polymaker': {
+    pattern: 'subdomain',
+    baseDomain: 'polymaker.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'us', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+    }
+  },
+  'elegoo': {
+    pattern: 'subdomain',
+    baseDomain: 'elegoo.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'us', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { subdomain: 'au', currency: 'AUD' },
+    }
+  },
+  'anycubic': {
+    pattern: 'subdomain',
+    baseDomain: 'anycubic.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'store', currency: 'USD' },
+      CA: { subdomain: 'ca', currency: 'CAD' },
+      UK: { subdomain: 'uk', currency: 'GBP' },
+      EU: { subdomain: 'eu', currency: 'EUR' },
+      AU: { domain: 'www.anycubic.au', currency: 'AUD' },
+    }
+  },
+  'creality': {
+    pattern: 'subdomain',
+    baseDomain: 'store.creality.com',
+    fallbackRegion: 'US',
+    regions: {
+      US: { subdomain: 'us', currency: 'USD' },
+    }
+  },
+};
+
+// Currency to region code mapping
+const CURRENCY_TO_REGION: Record<string, string> = {
+  'USD': 'US',
+  'CAD': 'CA',
+  'GBP': 'UK',
+  'EUR': 'EU',
+  'AUD': 'AU',
+  'JPY': 'JP',
+  'CNY': 'CN',
+};
+
+// Transform URL to regional store URL based on currency
+function transformToRegionalUrl(url: string, requestedCurrency: string): { url: string; expectedCurrency: string; transformed: boolean } {
+  const urlLower = url.toLowerCase();
+  const regionCode = CURRENCY_TO_REGION[requestedCurrency] || 'US';
+  
+  // Find matching brand config
+  for (const [brandKey, config] of Object.entries(REGIONAL_STORE_CONFIGS)) {
+    if (!urlLower.includes(config.baseDomain.toLowerCase())) continue;
+    
+    const regionConfig = config.regions[regionCode];
+    if (!regionConfig) {
+      // No regional store for this region, use fallback
+      const fallbackConfig = config.regions[config.fallbackRegion || 'US'];
+      console.log(`No ${regionCode} regional store for ${brandKey}, using fallback`);
+      return { url, expectedCurrency: fallbackConfig?.currency || 'USD', transformed: false };
+    }
+    
+    try {
+      const urlObj = new URL(url);
+      const originalHost = urlObj.hostname;
+      
+      if (config.pattern === 'subdomain') {
+        // Replace subdomain: us.store.bambulab.com -> eu.store.bambulab.com
+        if (regionConfig.domain) {
+          // Full domain replacement (e.g., anycubic.au)
+          urlObj.hostname = regionConfig.domain;
+        } else if (regionConfig.subdomain) {
+          // Subdomain replacement
+          const hostParts = originalHost.split('.');
+          if (hostParts.length >= 3) {
+            hostParts[0] = regionConfig.subdomain;
+          } else {
+            hostParts.unshift(regionConfig.subdomain);
+          }
+          urlObj.hostname = hostParts.join('.');
+        }
+        
+        const newUrl = urlObj.toString();
+        if (newUrl !== url) {
+          console.log(`Regional URL transformation: ${url} -> ${newUrl}`);
+          return { url: newUrl, expectedCurrency: regionConfig.currency, transformed: true };
+        }
+      }
+      // Add path prefix pattern handling here if needed
+      
+    } catch (e) {
+      console.error('URL transformation error:', e);
+    }
+    
+    return { url, expectedCurrency: regionConfig.currency, transformed: false };
+  }
+  
+  // No transformation needed (global store or unknown brand)
+  return { url, expectedCurrency: requestedCurrency, transformed: false };
+}
+
+// Detect currency from scraped page content
+function detectCurrencyFromContent(markdown: string): string | null {
+  // Look for explicit currency indicators
+  const currencyPatterns: [RegExp, string][] = [
+    [/\$[\d,]+(?:\.\d{2})?\s*EUR/i, 'EUR'],
+    [/\€[\d,]+(?:\.\d{2})?/g, 'EUR'],
+    [/EUR\s*\$?[\d,]+(?:\.\d{2})?/i, 'EUR'],
+    [/\$[\d,]+(?:\.\d{2})?\s*CAD/i, 'CAD'],
+    [/CA\$[\d,]+(?:\.\d{2})?/g, 'CAD'],
+    [/CAD\s*\$?[\d,]+(?:\.\d{2})?/i, 'CAD'],
+    [/\$[\d,]+(?:\.\d{2})?\s*GBP/i, 'GBP'],
+    [/£[\d,]+(?:\.\d{2})?/g, 'GBP'],
+    [/GBP\s*\$?[\d,]+(?:\.\d{2})?/i, 'GBP'],
+    [/\$[\d,]+(?:\.\d{2})?\s*AUD/i, 'AUD'],
+    [/AU\$[\d,]+(?:\.\d{2})?/g, 'AUD'],
+    [/AUD\s*\$?[\d,]+(?:\.\d{2})?/i, 'AUD'],
+    [/¥[\d,]+/g, 'JPY'], // Could also be CNY, context needed
+    [/\$[\d,]+(?:\.\d{2})?\s*JPY/i, 'JPY'],
+    [/JPY\s*\$?[\d,]+/i, 'JPY'],
+    [/\$[\d,]+(?:\.\d{2})?\s*USD/i, 'USD'],
+    [/US\$[\d,]+(?:\.\d{2})?/g, 'USD'],
+  ];
+  
+  // Count currency occurrences
+  const currencyCounts: Record<string, number> = {};
+  
+  for (const [pattern, currency] of currencyPatterns) {
+    const matches = markdown.match(pattern);
+    if (matches) {
+      currencyCounts[currency] = (currencyCounts[currency] || 0) + matches.length;
+    }
+  }
+  
+  // Return the most common currency, or null if only $ with no currency code
+  const entries = Object.entries(currencyCounts);
+  if (entries.length === 0) return null;
+  
+  entries.sort((a, b) => b[1] - a[1]);
+  const [topCurrency, topCount] = entries[0];
+  
+  // Only return if we have reasonable confidence
+  if (topCount >= 2) {
+    console.log(`Detected currency from content: ${topCurrency} (${topCount} occurrences)`);
+    return topCurrency;
+  }
+  
+  return null;
 }
 
 // Initialize Supabase client for brand config lookup
@@ -1922,6 +2109,14 @@ serve(async (req) => {
 
     console.log(`Getting current price for: ${productUrl} (preferred currency: ${currency}${forceRefresh ? ', FORCE REFRESH' : ''})`);
     
+    // Transform URL to regional store if applicable
+    const { url: regionalUrl, expectedCurrency, transformed } = transformToRegionalUrl(productUrl, currency);
+    const urlToFetch = regionalUrl;
+    
+    if (transformed) {
+      console.log(`Transformed to regional URL: ${urlToFetch} (expected currency: ${expectedCurrency})`);
+    }
+    
     // Rate limit check for manual refresh
     if (forceRefresh) {
       const canRefresh = await canForceRefresh(productUrl);
@@ -1940,6 +2135,7 @@ serve(async (req) => {
             available: false,
             source: 'firecrawl',
             fetchedAt: new Date().toISOString(),
+            requestedCurrency: currency,
           }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -1948,7 +2144,7 @@ serve(async (req) => {
     }
     
     // Look up brand config from database
-    const brandConfig = await findBrandConfigByUrl(productUrl);
+    const brandConfig = await findBrandConfigByUrl(urlToFetch);
     if (brandConfig) {
       console.log(`Found brand config: ${brandConfig.brand_name} (method: ${brandConfig.extraction_method}, working: ${brandConfig.extraction_working})`);
       
@@ -1961,41 +2157,55 @@ serve(async (req) => {
     const startTime = Date.now();
     
     // Check for custom storefronts first (they don't support Shopify JSON)
-    const customStorefront = detectCustomStorefront(productUrl);
+    const customStorefront = detectCustomStorefront(urlToFetch);
     let result: PriceResponse;
     
     if (customStorefront) {
       console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl`);
-      result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
-    } else if (shouldAlwaysUseFirecrawl(productUrl)) {
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+    } else if (shouldAlwaysUseFirecrawl(urlToFetch)) {
       console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing`);
-      result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
     } else if (brandConfig && brandConfig.extraction_method === 'firecrawl') {
       // Brand config explicitly requests Firecrawl
       console.log(`Brand config requests Firecrawl extraction`);
-      result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
     } else {
       // Try Shopify JSON API for standard stores
-      const platform = detectPlatform(productUrl);
+      const platform = detectPlatform(urlToFetch);
       
       if (platform === 'shopify') {
-        const isMultiCurrency = isMultiCurrencyShopifyStore(productUrl);
+        const isMultiCurrency = isMultiCurrencyShopifyStore(urlToFetch);
         
         if (isMultiCurrency && currency !== 'USD') {
           console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl`);
-          result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+          result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
         } else {
-          result = await fetchShopifyPrice(productUrl, currency, targetWeightGrams);
+          result = await fetchShopifyPrice(urlToFetch, expectedCurrency, targetWeightGrams);
           
           if (!result.success) {
             console.log('Shopify failed, trying Firecrawl as fallback...');
-            result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+            result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
           }
         }
       } else {
         console.log('Unknown platform, trying Firecrawl...');
-        result = await fetchPriceWithFirecrawl(productUrl, currency, brandConfig);
+        result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
       }
+    }
+
+    // Add currency validation metadata to response
+    result.sourceUrl = urlToFetch;
+    result.requestedCurrency = currency;
+    
+    // Check for currency mismatch
+    if (result.success && result.currency !== expectedCurrency) {
+      result.currencyMismatch = true;
+      result.detectedCurrency = result.currency;
+      console.log(`⚠️ Currency mismatch: expected ${expectedCurrency} but got ${result.currency}`);
+    } else if (result.success) {
+      result.currencyMismatch = false;
+      result.detectedCurrency = result.currency;
     }
 
     // Log manual refresh and add refreshedAt to response
@@ -2004,7 +2214,7 @@ serve(async (req) => {
       await logExtractionAttempt(
         brandConfig?.id || null,
         brandConfig?.brand_slug || null,
-        productUrl,
+        urlToFetch,
         'manual_refresh',
         result.success,
         result.price,

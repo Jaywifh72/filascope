@@ -2,6 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from './useCurrency';
 
+interface PriceApiResponse {
+  success: boolean;
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  fetchedAt: string;
+  sourceUrl?: string;
+  requestedCurrency?: string;
+  detectedCurrency?: string;
+  currencyMismatch?: boolean;
+  error?: string;
+}
+
 interface PrinterCurrentPriceResult {
   currentPrice: number | null;
   compareAtPrice: number | null;
@@ -10,6 +23,10 @@ interface PrinterCurrentPriceResult {
   isLivePrice: boolean;
   error: string | null;
   fetchedAt: string | null;
+  /** True if the scraped currency doesn't match the requested currency */
+  currencyMismatch: boolean;
+  /** The URL that was actually scraped (may differ after regional transformation) */
+  sourceUrl: string | null;
 }
 
 // Simple in-memory cache for the session
@@ -19,6 +36,8 @@ const printerPriceCache = new Map<string, {
   currency: string;
   fetchedAt: string;
   expiresAt: number;
+  currencyMismatch: boolean;
+  sourceUrl: string | null;
 }>();
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -47,6 +66,8 @@ export function usePrinterCurrentPrice(
     isLivePrice: false,
     error: null,
     fetchedAt: null,
+    currencyMismatch: false,
+    sourceUrl: null,
   });
   
   const fetchedUrlRef = useRef<string | null>(null);
@@ -81,6 +102,8 @@ export function usePrinterCurrentPrice(
         isLivePrice: true,
         error: null,
         fetchedAt: cached.fetchedAt,
+        currencyMismatch: cached.currencyMismatch,
+        sourceUrl: cached.sourceUrl,
       });
       fetchedUrlRef.current = productUrl;
       return;
@@ -92,7 +115,7 @@ export function usePrinterCurrentPrice(
     }
     abortControllerRef.current = new AbortController();
 
-    const fetchPriceWithRetry = async (retryCount = 0): Promise<{ data: any; error: any }> => {
+    const fetchPriceWithRetry = async (retryCount = 0): Promise<{ data: PriceApiResponse | null; error: any }> => {
       try {
         const result = await supabase.functions.invoke('get-current-price', {
           body: { productUrl, currency },
@@ -137,6 +160,13 @@ export function usePrinterCurrentPrice(
         }
 
         if (data?.success && data.price !== null) {
+          const hasCurrencyMismatch = data.currencyMismatch === true;
+          
+          // If currency mismatch, log warning but still use the price
+          if (hasCurrencyMismatch) {
+            console.warn(`Currency mismatch for ${productUrl}: expected ${currency} but got ${data.detectedCurrency}`);
+          }
+          
           // Cache the result
           printerPriceCache.set(cacheKey, {
             price: data.price,
@@ -144,6 +174,8 @@ export function usePrinterCurrentPrice(
             currency: data.currency,
             fetchedAt: data.fetchedAt,
             expiresAt: Date.now() + CACHE_TTL_MS,
+            currencyMismatch: hasCurrencyMismatch,
+            sourceUrl: data.sourceUrl || null,
           });
 
           setState({
@@ -154,6 +186,8 @@ export function usePrinterCurrentPrice(
             isLivePrice: true,
             error: null,
             fetchedAt: data.fetchedAt,
+            currencyMismatch: hasCurrencyMismatch,
+            sourceUrl: data.sourceUrl || null,
           });
         } else {
           // Fall back to stored price silently
