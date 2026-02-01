@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRegion } from '@/contexts/RegionContext';
 import { CurrencyCode } from '@/types/regional';
@@ -65,7 +65,7 @@ function isTransientError(error: any): boolean {
  * Unlike useCurrentPrice which fetches on mount, this hook provides a manual trigger function.
  */
 export function useLivePriceFetch(): UseLivePriceFetchReturn {
-  const { currency: userCurrency, convertPrice, getConversionRate } = useRegion();
+  const { currency: userCurrency, region, convertPrice, getConversionRate } = useRegion();
   const [isLoading, setIsLoading] = useState(false);
   const [lastResult, setLastResult] = useState<LivePriceFetchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +76,11 @@ export function useLivePriceFetch(): UseLivePriceFetchReturn {
     setError(null);
     setIsLoading(false);
   }, []);
+
+  // Reset cached results when region changes to prevent stale currency values
+  useEffect(() => {
+    reset();
+  }, [region, reset]);
 
   const fetchFromUrl = useCallback(async (url: string, currency: string, retryCount = 0): Promise<{ data: any; error: any }> => {
     try {
