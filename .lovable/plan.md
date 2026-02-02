@@ -1,200 +1,125 @@
 
-# Enhancement: Include Stock Status in Live Price Check and Display
+# Fix: Broken Amazon Product URLs for 3DHOJOR Filaments
 
-## Summary
-The core infrastructure for stock status is already implemented. This enhancement will add database updates when live price checks detect out-of-stock status, and add a more granular `stockStatus` field for better reporting.
+## Root Cause Analysis
 
----
+Two separate data issues in the database are causing broken Amazon URLs:
 
-## Current State (Already Implemented)
+### Issue 1: Missing Product URL Pattern
+The `brand_regional_stores` entry for 3DHOJOR has:
+- **base_url**: `https://www.amazon.com` (just the homepage)
+- **product_url_pattern**: `NULL` (missing!)
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Edge Function | ✅ Complete | Returns `available: boolean`, has `detectSoldOutStatus()` with 10+ regex patterns |
-| useLivePriceFetch Hook | ✅ Complete | Extracts and returns `available` field |
-| LivePriceCheckButton UI | ✅ Complete | Shows OUT OF STOCK badge, red styling, disabled Buy button |
-| Database Schema | ⚠️ Partial | Has `variant_available` but no auto-update from live checks |
+When there's no pattern, `buildRegionalUrl()` just returns the homepage.
 
----
+### Issue 2: Malformed Affiliate Tags
+The `affiliate_configs` table has incorrectly formatted Amazon tags:
+- **Current value**: `?tag=yourstore-20`
+- **Should be**: `filascope-20` (just the tag ID)
 
-## Implementation Plan
-
-### Step 1: Add Stock Status Update to Edge Function
-**File:** `supabase/functions/get-current-price/index.ts`
-
-Add a new function to update the database when stock status differs from current value:
-
-```typescript
-async function updateFilamentStockStatus(
-  productUrl: string,
-  available: boolean,
-  price: number | null
-): Promise<void> {
-  const supabase = getSupabaseClient();
-  
-  // Find the filament by URL
-  const { data: filament } = await supabase
-    .from('filaments')
-    .select('id, variant_available, variant_price')
-    .eq('product_url', productUrl)
-    .maybeSingle();
-  
-  if (!filament) return;
-  
-  // Only update if stock status changed or price differs significantly
-  const stockChanged = filament.variant_available !== available;
-  const priceDiffersSignificantly = price && filament.variant_price && 
-    Math.abs(price - filament.variant_price) > 0.50;
-  
-  if (stockChanged || priceDiffersSignificantly) {
-    await supabase
-      .from('filaments')
-      .update({
-        variant_available: available,
-        last_scraped_at: new Date().toISOString(),
-        ...(price !== null ? { variant_price: price } : {})
-      })
-      .eq('id', filament.id);
-    
-    console.log(`Updated filament ${filament.id}: available=${available}, price=${price}`);
-  }
-}
+The code does `urlObj.searchParams.set("tag", amazon_us_tag)`, which results in:
 ```
-
-Call this function after successful price extraction in the main handler (before returning the response).
-
-### Step 2: Add Granular Stock Status to Response
-**File:** `supabase/functions/get-current-price/index.ts`
-
-Extend the `PriceResponse` interface:
-
-```typescript
-interface PriceResponse {
-  // ... existing fields ...
-  available: boolean;
-  stockStatus?: 'in_stock' | 'out_of_stock' | 'low_stock' | 'preorder' | 'unknown';
-}
-```
-
-Update `detectSoldOutStatus` to return a more granular status:
-
-```typescript
-function detectStockStatus(markdown: string): 'in_stock' | 'out_of_stock' | 'low_stock' | 'preorder' | 'unknown' {
-  // Check for preorder patterns first
-  const preorderPatterns = [/pre[- ]?order/i, /coming\s*soon/i];
-  if (preorderPatterns.some(p => p.test(markdown))) return 'preorder';
-  
-  // Check for low stock patterns
-  const lowStockPatterns = [/only\s*\d+\s*left/i, /low\s*stock/i, /limited\s*quantity/i];
-  if (lowStockPatterns.some(p => p.test(markdown))) return 'low_stock';
-  
-  // Check for sold out patterns (existing logic)
-  const soldOutPatterns = [/* existing patterns */];
-  if (soldOutPatterns.some(p => p.test(markdown))) return 'out_of_stock';
-  
-  // If no patterns matched and we got a price, assume in stock
-  return 'unknown'; // Let the caller determine based on other factors
-}
-```
-
-### Step 3: Update Hook Interface
-**File:** `src/hooks/useLivePriceFetch.ts`
-
-Add `stockStatus` to the result interface:
-
-```typescript
-export interface LivePriceFetchResult {
-  // ... existing fields ...
-  available?: boolean;
-  stockStatus?: 'in_stock' | 'out_of_stock' | 'low_stock' | 'preorder' | 'unknown';
-}
-```
-
-Extract from response:
-
-```typescript
-const result: LivePriceFetchResult = {
-  // ... existing fields ...
-  available: data.available !== false,
-  stockStatus: data.stockStatus || (data.available === false ? 'out_of_stock' : 'in_stock'),
-};
-```
-
-### Step 4: Enhance UI for Different Stock States
-**File:** `src/components/price/LivePriceCheckButton.tsx`
-
-Add support for low_stock and preorder states:
-
-```tsx
-const getStockDisplay = (result: LivePriceFetchResult) => {
-  const status = result.stockStatus || (result.available === false ? 'out_of_stock' : 'in_stock');
-  
-  switch (status) {
-    case 'out_of_stock':
-      return { icon: XCircle, color: 'red', label: 'OUT OF STOCK', canBuy: false };
-    case 'low_stock':
-      return { icon: AlertTriangle, color: 'amber', label: 'LOW STOCK', canBuy: true };
-    case 'preorder':
-      return { icon: Clock, color: 'blue', label: 'PRE-ORDER', canBuy: true };
-    default:
-      return { icon: Check, color: 'emerald', label: null, canBuy: true };
-  }
-};
+?tag=%3Ftag%3Dyourstore-20  (URL-encoded ?tag=yourstore-20)
 ```
 
 ---
 
-## Technical Flow
+## Solution
 
-```text
-User clicks "Check Current Price"
-        ↓
-Edge Function fetches price + detects stock status
-        ↓
-Response includes: { price, available, stockStatus }
-        ↓
-Edge Function updates database if stock changed
-        ↓
-Hook receives and stores result
-        ↓
-UI displays appropriate badge + enables/disables Buy button
-```
+### Step 1: Fix the Affiliate Config Tags
 
----
-
-## Database Updates (Optional Enhancement)
-
-If we want a dedicated `stock_checked_at` timestamp separate from `last_scraped_at`:
+Update the `affiliate_configs` table to store just the tag value, not the full parameter:
 
 ```sql
--- Migration to add stock-specific tracking
-ALTER TABLE filaments 
-ADD COLUMN IF NOT EXISTS stock_checked_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS stock_status VARCHAR(20) DEFAULT 'unknown';
+UPDATE affiliate_configs 
+SET 
+  amazon_us_tag = 'filascope-20',
+  amazon_uk_tag = 'filascope-20',
+  amazon_de_tag = 'filascope-20',
+  amazon_ca_tag = 'filascope-20',
+  amazon_au_tag = 'filascope-20',
+  amazon_jp_tag = 'filascope-20'
+WHERE vendor_name = 'Amazon';
 ```
 
-This would allow:
-- Separate tracking of price vs stock freshness
-- More granular stock status in the database
-- Admin dashboard filtering by stock status
+Note: Replace `filascope-20` with your actual Amazon Associates tag if different.
+
+### Step 2: Add Product URL Pattern for 3DHOJOR
+
+Update the `brand_regional_stores` entry to include Amazon's product URL pattern using ASINs:
+
+```sql
+UPDATE brand_regional_stores 
+SET product_url_pattern = '/dp/{slug}'
+WHERE id = 'e782a7f1-7205-4b7a-9bc8-8b012441f241';
+```
+
+This requires the `product_handle` field in the `filaments` table to contain the Amazon ASIN for each product.
+
+### Step 3: Populate Amazon ASINs for 3DHOJOR Products
+
+The current `product_handle` values are from the 3DHOJOR website (e.g., `3dprinting-petg-filament`), not Amazon ASINs.
+
+We need to either:
+- **Option A**: Research and manually add ASINs for each product
+- **Option B**: Use the 3DHOJOR store URL directly (their products seem available on their own Shopify store)
+
+---
+
+## Recommended Approach
+
+Given that 3DHOJOR has their own functional Shopify store (`https://3dhojor.com/products/...`), the simplest fix is:
+
+**Option 1: Use 3DHOJOR's Direct Store (Recommended)**
+
+Remove the Amazon-based regional store and use the existing `product_url` from the filaments table:
+
+```sql
+-- Delete the Amazon-based regional store entry
+DELETE FROM brand_regional_stores 
+WHERE id = 'e782a7f1-7205-4b7a-9bc8-8b012441f241';
+```
+
+This will cause the system to fall back to the original `product_url` in the filaments table, which correctly points to `https://3dhojor.com/products/...`.
+
+**Option 2: Add 3DHOJOR's Own Store as Regional Store**
+
+Create a proper regional store entry for 3DHOJOR's own website:
+
+```sql
+UPDATE brand_regional_stores 
+SET 
+  base_url = 'https://3dhojor.com',
+  product_url_pattern = '/products/{slug}',
+  store_name = '3DHOJOR Store'
+WHERE id = 'e782a7f1-7205-4b7a-9bc8-8b012441f241';
+```
+
+This will use the existing `product_handle` values which are already 3DHOJOR Shopify slugs.
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/get-current-price/index.ts` | Add `updateFilamentStockStatus()`, add `stockStatus` to response |
-| `src/hooks/useLivePriceFetch.ts` | Add `stockStatus` to interface and extraction |
-| `src/components/price/LivePriceCheckButton.tsx` | Add low_stock and preorder badge styling |
+| File | Change |
+|------|--------|
+| Database: `affiliate_configs` | Fix Amazon tags (remove `?tag=` prefix) |
+| Database: `brand_regional_stores` | Either delete the 3DHOJOR Amazon entry OR update to use 3DHOJOR's own store URL |
 
 ---
 
-## Testing Checklist
+## Testing
 
-1. **In-stock product**: Green checkmark, "Buy Now" button active
-2. **Sold-out product**: Red X, "OUT OF STOCK" badge, "View at Store" button
-3. **Low stock product**: Amber warning, "LOW STOCK" badge, "Buy Now" active
-4. **Pre-order product**: Blue clock, "PRE-ORDER" badge, "Buy Now" active
-5. **Stock change detection**: Database updates when status changes
-6. **Region switch**: Resets and requires fresh check (already implemented)
+After applying fixes:
+1. Navigate to a 3DHOJOR product page (e.g., `/filament/d3e3c6fe-a7ab-4a90-b7cd-e7e85b1a8bd7`)
+2. Click "Buy Now" or "View at Store"
+3. Verify redirect goes to correct product page (either 3dhojor.com or amazon.com/dp/ASIN)
+4. Verify affiliate tag is properly formatted (not double-encoded)
+
+---
+
+## Implementation Priority
+
+1. **Immediate**: Fix the `affiliate_configs` Amazon tags (affects all Amazon links site-wide)
+2. **Immediate**: Fix or remove the 3DHOJOR regional store entry
+3. **Optional**: Research ASINs if Amazon integration is preferred over 3DHOJOR's store
