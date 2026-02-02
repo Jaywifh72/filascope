@@ -107,9 +107,12 @@ export function FilamentPurchaseSidebar({
   // Determine the primary retailer name
   const displayRetailer = retailerName || vendor || 'Store';
   
-  // Check if this is an Amazon link
-  const isAmazon = affiliateUrl?.includes('amazon');
-  const finalRetailerName = isAmazon ? 'Amazon' : displayRetailer;
+  // Check if this is actually an Amazon link (must contain amazon domain)
+  const isAmazon = affiliateUrl?.toLowerCase().includes('amazon.com') || 
+                   affiliateUrl?.toLowerCase().includes('amazon.co.') ||
+                   affiliateUrl?.toLowerCase().includes('amazon.de') ||
+                   affiliateUrl?.toLowerCase().includes('amzn.');
+  const finalRetailerName = isAmazon ? 'Amazon' : `${displayRetailer} Store`;
 
   const isComparing = isInCompare(filamentId);
 
