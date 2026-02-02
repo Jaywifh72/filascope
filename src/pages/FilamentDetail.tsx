@@ -180,12 +180,16 @@ const FilamentDetail = () => {
     });
     
     for (const amazon of sortedAmazon) {
+      // Defensive check: Only add Amazon retailer if URL construction succeeds
+      const affiliateUrl = getAmazonUrl(amazon.link);
+      if (!affiliateUrl) continue;
+      
       result.push({
         id: amazon.id,
         name: amazon.name,
         price: amazon.price,
         inStock: true,
-        url: getAmazonUrl(amazon.link!),
+        url: affiliateUrl,
         shippingEstimate: 'Prime eligible',
       });
     }

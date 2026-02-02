@@ -637,6 +637,18 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     
     const rate = needsConversion ? getConversionRate(baseCurrency, currency) : null;
     
+    // Debug logging for 3DHOJOR URLs to help diagnose future issues
+    if (brandName?.toLowerCase().includes('3dhojor')) {
+      console.log('🔗 3DHOJOR URL Debug:', {
+        storeUrl,
+        effectiveSlug,
+        originalUrl,
+        isLocal,
+        storeRegion: matchedStore?.region_code,
+        storeName: matchedStore?.store_name,
+      });
+    }
+    
     return {
       ...DEFAULT_RESULT,
       ...baseResult,
