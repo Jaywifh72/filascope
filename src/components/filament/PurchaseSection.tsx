@@ -131,19 +131,23 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
       });
     }
     
-    // Legacy Amazon links
-    if (filament.amazon_link_us) {
-      retailers.push({
-        id: 'amazon_us',
-        name: 'Amazon',
-        region: 'US',
-        url: getAffiliateUrl(filament.amazon_link_us, 'Amazon') || filament.amazon_link_us,
-        price: null,
-        currency: 'USD',
-        isPrimary: false,
-        available: true,
-        flag: '🇺🇸',
-      });
+    // Legacy Amazon links - validate URL before adding
+    if (filament.amazon_link_us?.trim()) {
+      const amazonUrl = getAffiliateUrl(filament.amazon_link_us, 'Amazon');
+      // Only add if URL is valid and points to an Amazon product page
+      if (amazonUrl && (amazonUrl.includes('amazon.com/dp/') || amazonUrl.includes('amazon.com/gp/'))) {
+        retailers.push({
+          id: 'amazon_us',
+          name: 'Amazon',
+          region: 'US',
+          url: amazonUrl,
+          price: null,
+          currency: 'USD',
+          isPrimary: false,
+          available: true,
+          flag: '🇺🇸',
+        });
+      }
     }
   }
   
