@@ -512,7 +512,7 @@ export const BRAND_REGIONAL_AVAILABILITY: Record<string, BrandRegions> = {
     JP: { store: false, amazon: false },
   },
   '3DHOJOR': {
-    US: { store: false, amazon: true },
+    US: { store: true, amazon: true },  // Has Shopify store + Amazon
     CA: { store: false, amazon: false },
     UK: { store: false, amazon: false },
     EU: { store: false, amazon: false },
