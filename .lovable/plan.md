@@ -1,177 +1,142 @@
-# ✅ COMPLETED: Fix 3DHOJOR Store Links to Use Shopify URL When Amazon is Unavailable
 
-## Implementation Status: COMPLETE
+# Plan: Populate Amazon ASINs for Remaining 3DHOJOR Products
 
 ## Summary
 
-The implementation now correctly handles 3DHOJOR products:
+The `discover-amazon-products` Edge Function already exists and has populated 95 of 118 (80.5%) 3DHOJOR products with Amazon links. We need to run it again with a focus on the remaining 23 products.
 
-1. **Defensive code improvements** - Added null/empty validation for Amazon links in FilamentDetail.tsx and PurchaseSection.tsx
-2. **Live price check works** - The `get-current-price` edge function correctly scrapes 3DHOJOR Shopify URLs (tested: returns $14.99 for PETG, $16.99 for PLA Pro)
-3. **URL priority chain** - `selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url` correctly falls back to Shopify
+## Current State
 
----
+| Metric | Value |
+|--------|-------|
+| Total 3DHOJOR products | 118 |
+| With Amazon US link | 95 (80.5%) |
+| Missing Amazon link | 23 |
 
-## Current State Analysis
+### Products Still Missing Amazon Links
 
-### What's Working Correctly
-
-| Component | Status | Details |
-|-----------|--------|---------|
-| `brand_regional_stores` | ✅ | 3DHOJOR configured with `base_url: https://3dhojor.com`, pattern: `/products/{slug}` |
-| `affiliate_configs` | ✅ | Amazon tag stored correctly as `filascope-20` (no URL parameters) |
-| `useUnifiedRegionalPricing` | ✅ | Generates correct `storeUrl` from brand_regional_stores |
-| `FilamentDetail.tsx` | ✅ | Uses priority chain: `selectedVariant?.product_url` → `unifiedPricing.storeUrl` → `pricingFilament.product_url` |
-| Amazon link filtering | ✅ | `.filter(a => a.link)` at line 172 prevents null Amazon links from being processed |
-
-### Database State for 3DHOJOR
-
-```text
-Products: 118 total
-├── product_url: ✅ All have valid Shopify URLs (https://3dhojor.com/products/{handle})
-├── amazon_link_us: ⚠️ 75 populated, 43 still NULL
-└── filament_listings: ✅ Empty (no stale data)
-```
+- **TPU 95A Flexible** (4 colors: Grey, White, Transparent Red, Clear)
+- **Silk Dual/Tri Color PLA** (12 variants)
+- **Crystal Rainbow PLA** (2 variants)
+- **PLA Pro** (4 colors: Red, Grey, Bone White, Peak Green)
+- **Matte PLA** (2 colors: Light Blue, Almond Yellow)
+- **Rapid PLA** (2 colors: Black, Yellow)
 
 ---
 
-## Proposed Improvements
+## Implementation Plan
 
-### 1. Add Explicit Null Check in Retailers Array Builder
+### Step 1: Run Discovery Function for Remaining Products
 
-**File:** `src/pages/FilamentDetail.tsx`
-
-Add an explicit check to ensure we never add a retailer with a null/empty URL to the retailers array.
+Call the `discover-amazon-products` Edge Function to process the 23 remaining products:
 
 ```typescript
-// Current (lines 182-191)
-for (const amazon of sortedAmazon) {
-  result.push({
-    id: amazon.id,
-    name: amazon.name,
-    price: amazon.price,
-    inStock: true,
-    url: getAmazonUrl(amazon.link!),  // Non-null assertion
-    shippingEstimate: 'Prime eligible',
-  });
-}
-
-// Improved
-for (const amazon of sortedAmazon) {
-  const affiliateUrl = getAmazonUrl(amazon.link);
-  if (!affiliateUrl) continue;  // Skip if URL construction fails
-  
-  result.push({
-    id: amazon.id,
-    name: amazon.name,
-    price: amazon.price,
-    inStock: true,
-    url: affiliateUrl,
-    shippingEstimate: 'Prime eligible',
-  });
-}
-```
-
-### 2. Add URL Validation in PurchaseSection
-
-**File:** `src/components/filament/PurchaseSection.tsx`
-
-Add defensive check when building legacy Amazon retailer entry.
-
-```typescript
-// Current (lines 135-147)
-if (filament.amazon_link_us) {
-  retailers.push({
-    id: 'amazon_us',
-    name: 'Amazon',
-    region: 'US',
-    url: getAffiliateUrl(filament.amazon_link_us, 'Amazon') || filament.amazon_link_us,
-    // ...
-  });
-}
-
-// Improved - validate the URL before adding
-if (filament.amazon_link_us?.trim()) {
-  const amazonUrl = getAffiliateUrl(filament.amazon_link_us, 'Amazon');
-  if (amazonUrl && amazonUrl.includes('amazon.com/dp/')) {
-    retailers.push({
-      id: 'amazon_us',
-      name: 'Amazon',
-      region: 'US',
-      url: amazonUrl,
-      // ...
-    });
+// Execute via Edge Function
+await supabase.functions.invoke('discover-amazon-products', {
+  body: {
+    vendor: '3DHOJOR',
+    limit: 30  // Process all remaining (23 + buffer)
   }
-}
+});
 ```
 
-### 3. Add Debug Logging for 3DHOJOR URLs
-
-**File:** `src/hooks/useUnifiedRegionalPricing.ts`
-
-Add conditional logging to help diagnose any future URL issues with specific brands.
-
-```typescript
-// After storeUrl is computed (around line 648)
-if (product.brandName?.toLowerCase().includes('3dhojor')) {
-  console.log('🔗 3DHOJOR URL Debug:', {
-    storeUrl,
-    effectiveSlug,
-    originalUrl,
-    isLocal,
-    storeRegion: matchedStore?.region_code,
-  });
-}
-```
+The function automatically:
+1. Fetches filaments where `amazon_link_us IS NULL` or `amazon_match_confidence < 70`
+2. Searches Amazon using multiple strategies (barcode, MPN, SKU, text)
+3. Calculates match confidence scores
+4. Updates database with high-confidence matches (≥70%)
 
 ---
 
-## Verification Steps
+### Step 2: Review Results
 
-After implementing these changes:
+Check the response for:
+- **High confidence matches**: Automatically updated in database
+- **Low confidence matches**: May need manual verification
+- **No results**: Products not available on Amazon US
 
-1. **Test 3DHOJOR Product Page**
-   - Navigate to `/filament/d3e3c6fe-a7ab-4a90-b7cd-e7e85b1a8bd7`
-   - Verify "Buy Now" button links to `https://3dhojor.com/products/...`
-   - Verify no Amazon links appear in retailers modal (unless `amazon_link_us` is populated)
+### Step 3: Manual ASIN Research (If Needed)
 
-2. **Test Product With Amazon Link**
-   - Navigate to `/filament/93244b83-78a7-4fe2-8a51-673bf7e73380` (has Amazon link)
-   - Verify both Shopify store and Amazon appear as options
-   - Verify Amazon link includes `?tag=filascope-20`
+For products that couldn't be auto-matched, perform manual Amazon searches:
 
-3. **Console Check**
-   - Verify debug logging shows correct Shopify URL
-   - No malformed URLs in network tab
+| Product Category | Recommended Search Query |
+|-----------------|-------------------------|
+| TPU 95A | `3DHOJOR TPU 95A 1.75mm flexible` |
+| Silk Dual/Tri Color | `3DHOJOR silk PLA dual color` |
+| Crystal Rainbow | `3DHOJOR rainbow transparent PLA` |
+| PLA Pro | `3DHOJOR PLA+ PLA Pro 1.75mm` |
+| Matte PLA | `3DHOJOR matte PLA filament` |
+| Rapid PLA | `3DHOJOR high speed PLA` |
+
+### Step 4: Update Database for Manual Finds
+
+For any manually discovered ASINs:
+
+```sql
+UPDATE filaments
+SET 
+  amazon_link_us = 'https://www.amazon.com/dp/{ASIN}',
+  amazon_match_confidence = 100,  -- Manual verification
+  amazon_prices_last_updated_at = NOW()
+WHERE id = '{filament_id}';
+```
 
 ---
 
 ## Technical Details
 
-### Files to Modify
+### Edge Function Behavior
 
-| File | Change Type | Purpose |
-|------|-------------|---------|
-| `src/pages/FilamentDetail.tsx` | Defensive check | Prevent null URL retailers |
-| `src/components/filament/PurchaseSection.tsx` | URL validation | Validate Amazon URLs before adding |
-| `src/hooks/useUnifiedRegionalPricing.ts` | Debug logging | Help diagnose future issues |
+The `discover-amazon-products` function uses a priority-based matching strategy:
 
-### Risk Assessment
+1. **Barcode Search** (Priority 1) - Uses UPC/EAN/GTIN for exact matches (+30 bonus)
+2. **MPN Search** (Priority 2) - Uses manufacturer part number (+20 bonus)
+3. **SKU Search** (Priority 3) - Uses variant SKU (+15 bonus)
+4. **Store Search** (Priority 4) - Uses brand's Amazon store URL (+10 bonus)
+5. **Text Search** (Priority 5) - Fallback using product title
 
-- **Low Risk**: These are defensive improvements that add validation without changing core logic
-- **Backward Compatible**: No changes to data structures or API contracts
-- **Easily Reversible**: Debug logging can be removed after verification
+### Match Confidence Scoring
+
+- Brand name match: 40 points
+- Material match: 25 points
+- Title word overlap: 25 points
+- Price sanity check: 10 points
+- Method bonus: 10-30 points
+
+**Threshold**: Only matches with ≥70% confidence are automatically saved.
+
+### Rate Limiting
+
+- 2 seconds between API requests
+- SerpAPI primary, ScrapingDog fallback on quota errors
 
 ---
 
 ## Expected Outcome
 
-After implementation:
+| Scenario | Expected Result |
+|----------|-----------------|
+| Products available on Amazon | Auto-matched and updated |
+| Niche variants (Crystal Rainbow) | May need manual search |
+| Products not on Amazon | Will show `no_results` status |
 
-| Scenario | Behavior |
-|----------|----------|
-| 3DHOJOR product without Amazon link | Shows only "3DHOJOR Store" with Shopify URL |
-| 3DHOJOR product with Amazon link | Shows both "3DHOJOR Store" and "Amazon US" options |
-| Invalid Amazon URL in database | Gracefully skipped, falls back to Shopify |
-| All other brands | No change in behavior |
+After completion:
+- Target: 100+ products with Amazon links
+- Remaining products likely not available on Amazon US marketplace
 
+---
+
+## Alternative: Use find-amazon-products Function
+
+If `discover-amazon-products` doesn't find certain products, we can also use the `find-amazon-products` function with specific search terms:
+
+```typescript
+await supabase.functions.invoke('find-amazon-products', {
+  body: {
+    product_name: '3DHOJOR TPU 95A flexible filament',
+    country_codes: ['US']
+  }
+});
+```
+
+This is a more targeted search that can be used for individual products.
