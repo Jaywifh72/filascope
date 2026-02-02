@@ -66,25 +66,44 @@ function transformUrlSync(
     const urlObj = new URL(fixedUrl);
     const hostname = urlObj.hostname.toLowerCase();
 
-    // Check Amazon links
-    if (hostname.includes("amazon.com")) {
-      const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
-      if (amazonConfig?.amazon_us_tag) {
-        urlObj.searchParams.set("tag", amazonConfig.amazon_us_tag);
-        return urlObj.toString();
+    // Check Amazon links - only process valid product URLs
+    const isAmazonDomain = hostname.includes("amazon.com") || 
+                           hostname.includes("amazon.co.") ||
+                           hostname.includes("amazon.de") ||
+                           hostname.includes("amzn.");
+    
+    if (isAmazonDomain) {
+      const pathname = urlObj.pathname.toLowerCase();
+      const isProductPage = pathname.includes('/dp/') || pathname.includes('/gp/product/');
+      
+      // Only add affiliate tag to valid product pages
+      if (!isProductPage) {
+        console.warn('[transformUrlSync] Invalid Amazon URL (not a product page):', fixedUrl);
+        return fixedUrl; // Return as-is without modification
       }
-    } else if (hostname.includes("amazon.co.uk")) {
+      
       const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
-      if (amazonConfig?.amazon_uk_tag) {
-        urlObj.searchParams.set("tag", amazonConfig.amazon_uk_tag);
-        return urlObj.toString();
+      if (amazonConfig) {
+        let tag: string | null = null;
+        if (hostname.includes("amazon.com") && !hostname.includes(".co.")) {
+          tag = amazonConfig.amazon_us_tag;
+        } else if (hostname.includes("amazon.co.uk")) {
+          tag = amazonConfig.amazon_uk_tag;
+        } else if (hostname.includes("amazon.de")) {
+          tag = amazonConfig.amazon_de_tag;
+        } else {
+          // Default to US tag for other Amazon domains
+          tag = amazonConfig.amazon_us_tag;
+        }
+        
+        if (tag) {
+          // Clean the tag to prevent double-encoding issues
+          const cleanTag = tag.replace(/^\?tag=/i, '').replace(/^tag=/i, '');
+          urlObj.searchParams.set("tag", cleanTag);
+          return urlObj.toString();
+        }
       }
-    } else if (hostname.includes("amazon.de")) {
-      const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
-      if (amazonConfig?.amazon_de_tag) {
-        urlObj.searchParams.set("tag", amazonConfig.amazon_de_tag);
-        return urlObj.toString();
-      }
+      return fixedUrl;
     }
 
     // Find config by vendor or hostname
@@ -157,14 +176,41 @@ export const useAffiliateLinks = () => {
   }, [configs]);
 
   // Convenience function for Amazon links specifically
+  // Returns null if URL is invalid, missing, or not a valid Amazon product page
   const getAmazonUrl = useCallback((
     url: string | null | undefined, 
     region: "us" | "uk" | "de" = "us"
   ): string | null => {
-    if (!url) return null;
+    // Guard against null/empty URLs
+    if (!url || url.trim() === '') return null;
 
     try {
       const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+      
+      // Validate this is actually an Amazon domain
+      const isAmazonDomain = hostname.includes('amazon.com') || 
+                             hostname.includes('amazon.co.') ||
+                             hostname.includes('amazon.de') ||
+                             hostname.includes('amazon.fr') ||
+                             hostname.includes('amazon.it') ||
+                             hostname.includes('amazon.es') ||
+                             hostname.includes('amzn.');
+      
+      if (!isAmazonDomain) {
+        console.warn('[getAmazonUrl] Not an Amazon domain:', hostname);
+        return null;
+      }
+      
+      // Validate this is a product page (must contain /dp/ or /gp/product/)
+      const pathname = urlObj.pathname.toLowerCase();
+      const isProductPage = pathname.includes('/dp/') || pathname.includes('/gp/product/');
+      
+      if (!isProductPage) {
+        console.warn('[getAmazonUrl] Not a valid Amazon product URL (missing /dp/ or /gp/product/):', url);
+        return null;
+      }
+      
       const amazonConfig = configs.find(c => c.vendor_name.toLowerCase() === "amazon");
 
       if (amazonConfig) {
@@ -175,14 +221,17 @@ export const useAffiliateLinks = () => {
             : amazonConfig.amazon_de_tag;
 
         if (tag) {
-          urlObj.searchParams.set("tag", tag);
+          // Ensure tag doesn't already contain ?tag= prefix (prevent double-encoding)
+          const cleanTag = tag.replace(/^\?tag=/i, '').replace(/^tag=/i, '');
+          urlObj.searchParams.set("tag", cleanTag);
           return urlObj.toString();
         }
       }
 
       return url;
-    } catch {
-      return url;
+    } catch (err) {
+      console.warn('[getAmazonUrl] Failed to parse URL:', url, err);
+      return null;
     }
   }, [configs]);
 
