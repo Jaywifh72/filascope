@@ -29,6 +29,8 @@ import { PriceConfidence } from '@/hooks/usePriceFreshness';
 import { HonestPriceDisplay, getCtaText, shouldUsePrimaryCta } from '@/components/price/HonestPriceDisplay';
 import { LivePriceCheckButton } from '@/components/price/LivePriceCheckButton';
 import { LivePriceFetchResult } from '@/hooks/useLivePriceFetch';
+import type { StorePrice } from '@/hooks/useFilamentStorePricing';
+import { StorePricingDisplay } from './StorePricingDisplay';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -58,6 +60,10 @@ interface FilamentPurchaseSidebarProps {
   priceConfidence?: PriceConfidence | null;
   // Callback to refetch filament data after admin price refresh
   onAdminRefresh?: () => void;
+  // NEW: Store-based pricing from filament_prices table
+  storePricing?: StorePrice | null;
+  // Flag to indicate if using store pricing vs legacy fallback
+  hasStorePricing?: boolean;
 }
 
 export function FilamentPurchaseSidebar({
@@ -85,6 +91,8 @@ export function FilamentPurchaseSidebar({
   priceSource,
   priceConfidence,
   onAdminRefresh,
+  storePricing,
+  hasStorePricing = false,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();

@@ -43,6 +43,7 @@ import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
+import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -119,8 +120,33 @@ const FilamentDetail = () => {
     },
   });
   
+  // NEW: Get store-based pricing from filament_prices table (primary source)
+  const { 
+    bestPrice: storeBestPrice, 
+    allPrices: storeAllPrices, 
+    hasPriceData: hasStorePriceData,
+    isLoading: storePriceLoading 
+  } = useFilamentStorePricing(pricingFilament?.id);
+  
   // Extract values for backward compatibility with existing code
-  const regionalPriceResult = unifiedPricing.displayPrice != null ? {
+  // PRIORITY: 1. Store pricing (filament_prices), 2. Unified pricing (brand_regional_stores), 3. variant_price fallback
+  const regionalPriceResult = storeBestPrice ? {
+    displayPrice: storeBestPrice.priceDisplay,
+    displayCurrency: storeBestPrice.currencyCode,
+    formattedPrice: storeBestPrice.formattedPrice,
+    originalPrice: storeBestPrice.originalPrice ?? storeBestPrice.priceDisplay,
+    originalCurrency: storeBestPrice.originalCurrency ?? storeBestPrice.currencyCode,
+    isConverted: storeBestPrice.isConverted,
+    conversionRate: null, // Not available from store pricing
+    store: {
+      id: storeBestPrice.storeSlug,
+      name: storeBestPrice.storeName,
+      url: storeBestPrice.productUrl || '',
+      regionCode: storeBestPrice.storeRegion,
+      shipsFrom: storeBestPrice.shipsFrom?.[0] || null,
+      freeShippingThreshold: null,
+    },
+  } : unifiedPricing.displayPrice != null ? {
     displayPrice: unifiedPricing.displayPrice,
     displayCurrency: unifiedPricing.displayCurrency,
     formattedPrice: unifiedPricing.formattedPrice,
@@ -137,9 +163,9 @@ const FilamentDetail = () => {
       freeShippingThreshold: null,
     } : null,
   } : null;
-  const regionalPriceLoading = unifiedPricing.isLoading;
+  const regionalPriceLoading = unifiedPricing.isLoading || storePriceLoading;
   const regionalStores = unifiedPricing.allStores;
-  const hasLocalStore = unifiedPricing.isLocalStore;
+  const hasLocalStore = storeBestPrice?.isLocalStore ?? unifiedPricing.isLocalStore;
 
   const compatibility = selectedPrinter && displayFilament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, displayFilament)
@@ -768,25 +794,27 @@ const FilamentDetail = () => {
             pricePerSpool={rawPricePerSpool}
             weightGrams={pricingFilament.net_weight_g}
             affiliateUrl={getAffiliateUrl(
-              selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
+              storeBestPrice?.productUrl || selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
               pricingFilament.vendor
             )}
-            productUrl={selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
+            productUrl={storeBestPrice?.productUrl || selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
             originalUsUrl={pricingFilament.product_url || undefined}
-            retailerName={unifiedPricing.storeName || pricingFilament.vendor || undefined}
+            retailerName={storeBestPrice?.storeName || unifiedPricing.storeName || pricingFilament.vendor || undefined}
             retailerCount={retailers.length}
             onViewRetailers={handleViewRetailers}
-            hasActualRegionalPrice={hasActualRegionalPrice}
-            isUsingFallbackRegion={!unifiedPricing.isLocalStore}
+            hasActualRegionalPrice={hasActualRegionalPrice || hasStorePriceData}
+            isUsingFallbackRegion={!hasLocalStore}
             actualUrlCurrency={unifiedPricing.originalCurrency || null}
-            isAvailableInUserRegion={unifiedPricing.isLocalStore}
-            isRegionalBrand={unifiedPricing.allStores.length > 0}
+            isAvailableInUserRegion={hasLocalStore}
+            isRegionalBrand={unifiedPricing.allStores.length > 0 || hasStorePriceData}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
             regionalPriceResult={regionalPriceResult}
-            lastScrapedAt={unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
+            lastScrapedAt={storeBestPrice?.lastVerifiedAt ?? unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
             priceSource={unifiedPricing.priceSource}
             priceConfidence={unifiedPricing.priceConfidence}
             onAdminRefresh={handleAdminRefresh}
+            storePricing={storeBestPrice}
+            hasStorePricing={hasStorePriceData}
           />
         </div>
       </div>
