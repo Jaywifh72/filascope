@@ -21,7 +21,7 @@ export interface UseStoresOptions {
  * Get all stores with optional filtering
  */
 export function useStores(options: UseStoresOptions = {}) {
-  const { region, storeType, isActive = true } = options;
+  const { region, storeType, isActive } = options;
 
   return useQuery({
     queryKey: ['stores', { region, storeType, isActive }],
@@ -31,6 +31,7 @@ export function useStores(options: UseStoresOptions = {}) {
         .select('*')
         .order('name');
 
+      // Only filter by is_active if explicitly set (undefined means fetch all)
       if (isActive !== undefined) {
         query = query.eq('is_active', isActive);
       }
