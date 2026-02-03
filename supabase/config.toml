@@ -446,3 +446,6 @@ verify_jwt = false
 
 [functions.sync-prices]
 verify_jwt = false
+
+[functions.migrate-amazon-links]
+verify_jwt = true
