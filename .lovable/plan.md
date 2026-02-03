@@ -1,216 +1,200 @@
 
-# Plan: Add Regional Pricing Infrastructure - Phase 1
+# Plan: Migrate Amazon Links & Create Regional Pricing RPC Functions
 
 ## Summary
 
-This migration adds four new tables to support enhanced regional pricing capabilities. While FilaScope already has some regional infrastructure (`currency_exchange_rates`, `brand_regional_stores`, `retailers`, `filament_listings`), these new tables provide a more normalized and flexible structure for multi-store pricing.
+This plan implements Phase 2 of the regional pricing infrastructure:
+1. An Edge Function to migrate existing Amazon links from the `filaments` table to the new normalized `filament_prices` table
+2. Two PostgreSQL RPC functions for regional price lookups with currency conversion
 
----
+## Current State
 
-## Current State Analysis
-
-| Existing Table | Purpose | Records |
-|----------------|---------|---------|
-| `currency_exchange_rates` | USD-based exchange rates | 10+ currencies |
-| `brand_regional_stores` | Brand-specific regional storefronts | Active |
-| `retailers` | General retailer info (Amazon, Bambu Lab, etc.) | 10+ retailers |
-| `filament_listings` | Filament prices per retailer/region | 21 listings |
-
-The new tables will complement (not replace) this infrastructure, providing:
-- A simpler `exchange_rates` lookup table (currency as PK)
-- A unified `stores` table with marketplace/brand/retailer typing
-- A normalized `filament_prices` table for multi-store pricing
-- A `region_config` table for regional defaults and preferences
-
----
-
-## Database Changes
-
-### Migration 1: Create exchange_rates Table
-
-```sql
-CREATE TABLE exchange_rates (
-  currency_code TEXT PRIMARY KEY,
-  currency_name TEXT NOT NULL,
-  currency_symbol TEXT NOT NULL,
-  rate_to_usd NUMERIC NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE exchange_rates ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public read exchange rates" 
-  ON exchange_rates FOR SELECT USING (true);
-
-INSERT INTO exchange_rates (currency_code, currency_name, currency_symbol, rate_to_usd) VALUES
-  ('USD', 'US Dollar', '$', 1.00),
-  ('CAD', 'Canadian Dollar', 'C$', 0.71),
-  ('EUR', 'Euro', '€', 1.04),
-  ('GBP', 'British Pound', '£', 1.24),
-  ('AUD', 'Australian Dollar', 'A$', 0.62),
-  ('JPY', 'Japanese Yen', '¥', 0.0064),
-  ('CNY', 'Chinese Yuan', '¥', 0.14),
-  ('INR', 'Indian Rupee', '₹', 0.012),
-  ('SEK', 'Swedish Krona', 'kr', 0.091),
-  ('PLN', 'Polish Zloty', 'zł', 0.24),
-  ('MXN', 'Mexican Peso', '$', 0.049);
-```
-
-### Migration 2: Create stores Table
-
-```sql
-CREATE TABLE stores (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  store_type TEXT NOT NULL CHECK (store_type IN ('marketplace', 'brand_direct', 'retailer')),
-  region TEXT NOT NULL,
-  country_code TEXT,
-  currency_code TEXT REFERENCES exchange_rates(currency_code),
-  base_url TEXT NOT NULL,
-  affiliate_tag TEXT,
-  affiliate_network TEXT,
-  ships_from TEXT[],
-  ships_to TEXT[],
-  logo_url TEXT,
-  is_active BOOLEAN DEFAULT true,
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public read stores" 
-  ON stores FOR SELECT USING (is_active = true);
-
--- Create updated_at trigger
-CREATE TRIGGER update_stores_updated_at
-  BEFORE UPDATE ON stores
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-
-INSERT INTO stores (name, slug, store_type, region, country_code, currency_code, base_url, ships_from, ships_to) VALUES
-  ('Amazon US', 'amazon-us', 'marketplace', 'US', 'US', 'USD', 'https://amazon.com', ARRAY['US'], ARRAY['US', 'CA', 'MX']),
-  ('Amazon Canada', 'amazon-ca', 'marketplace', 'CA', 'CA', 'CAD', 'https://amazon.ca', ARRAY['CA'], ARRAY['CA']),
-  ('Amazon UK', 'amazon-uk', 'marketplace', 'UK', 'GB', 'GBP', 'https://amazon.co.uk', ARRAY['GB'], ARRAY['UK', 'EU']),
-  ('Amazon Germany', 'amazon-de', 'marketplace', 'EU', 'DE', 'EUR', 'https://amazon.de', ARRAY['DE'], ARRAY['EU']),
-  ('Amazon France', 'amazon-fr', 'marketplace', 'EU', 'FR', 'EUR', 'https://amazon.fr', ARRAY['FR'], ARRAY['EU']),
-  ('Amazon Italy', 'amazon-it', 'marketplace', 'EU', 'IT', 'EUR', 'https://amazon.it', ARRAY['IT'], ARRAY['EU']),
-  ('Amazon Spain', 'amazon-es', 'marketplace', 'EU', 'ES', 'EUR', 'https://amazon.es', ARRAY['ES'], ARRAY['EU']),
-  ('Amazon Australia', 'amazon-au', 'marketplace', 'AU', 'AU', 'AUD', 'https://amazon.com.au', ARRAY['AU'], ARRAY['AU']),
-  ('Amazon Japan', 'amazon-jp', 'marketplace', 'JP', 'JP', 'JPY', 'https://amazon.co.jp', ARRAY['JP'], ARRAY['JP']),
-  ('Polymaker US', 'polymaker-us', 'brand_direct', 'US', 'US', 'USD', 'https://us.polymaker.com', ARRAY['US', 'CN'], ARRAY['US', 'CA', 'GLOBAL']),
-  ('Prusament', 'prusament', 'brand_direct', 'EU', 'CZ', 'EUR', 'https://www.prusa3d.com/product-category/prusament/', ARRAY['CZ'], ARRAY['EU', 'GLOBAL']),
-  ('Bambu Lab', 'bambu-lab', 'brand_direct', 'GLOBAL', NULL, 'USD', 'https://store.bambulab.com', ARRAY['CN', 'US', 'EU'], ARRAY['GLOBAL']),
-  ('PrintedSolid', 'printedsolid', 'retailer', 'US', 'US', 'USD', 'https://www.printedsolid.com', ARRAY['US'], ARRAY['US', 'CA']),
-  ('Filaments.ca', 'filaments-ca', 'retailer', 'CA', 'CA', 'CAD', 'https://filaments.ca', ARRAY['CA'], ARRAY['CA']),
-  ('3DJake EU', '3djake-eu', 'retailer', 'EU', 'AT', 'EUR', 'https://www.3djake.com', ARRAY['AT', 'DE'], ARRAY['EU']),
-  ('3DJake UK', '3djake-uk', 'retailer', 'UK', 'GB', 'GBP', 'https://www.3djake.co.uk', ARRAY['GB'], ARRAY['UK']),
-  ('ColorFabb', 'colorfabb', 'brand_direct', 'EU', 'NL', 'EUR', 'https://colorfabb.com', ARRAY['NL'], ARRAY['EU', 'GLOBAL']);
-```
-
-### Migration 3: Create filament_prices Table
-
-```sql
-CREATE TABLE filament_prices (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  filament_id UUID NOT NULL REFERENCES filaments(id) ON DELETE CASCADE,
-  store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
-  price_cents INTEGER NOT NULL,
-  currency_code TEXT NOT NULL REFERENCES exchange_rates(currency_code),
-  product_url TEXT,
-  affiliate_url TEXT,
-  in_stock BOOLEAN DEFAULT true,
-  last_verified_at TIMESTAMPTZ DEFAULT now(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(filament_id, store_id)
-);
-
-ALTER TABLE filament_prices ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public read filament prices" 
-  ON filament_prices FOR SELECT USING (true);
-
-CREATE INDEX idx_filament_prices_filament ON filament_prices(filament_id);
-CREATE INDEX idx_filament_prices_store ON filament_prices(store_id);
-CREATE INDEX idx_filament_prices_in_stock ON filament_prices(in_stock) WHERE in_stock = true;
-
--- Create updated_at trigger
-CREATE TRIGGER update_filament_prices_updated_at
-  BEFORE UPDATE ON filament_prices
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-```
-
-### Migration 4: Create region_config Table
-
-```sql
-CREATE TABLE region_config (
-  region_code TEXT PRIMARY KEY,
-  region_name TEXT NOT NULL,
-  currency_code TEXT REFERENCES exchange_rates(currency_code),
-  flag_emoji TEXT,
-  default_store_priority TEXT[],
-  amazon_domain TEXT,
-  is_active BOOLEAN DEFAULT true
-);
-
-ALTER TABLE region_config ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Public read region config" 
-  ON region_config FOR SELECT USING (is_active = true);
-
-INSERT INTO region_config VALUES
-  ('US', 'United States', 'USD', '🇺🇸', ARRAY['amazon-us', 'printedsolid'], 'amazon.com', true),
-  ('CA', 'Canada', 'CAD', '🇨🇦', ARRAY['amazon-ca', 'filaments-ca'], 'amazon.ca', true),
-  ('UK', 'United Kingdom', 'GBP', '🇬🇧', ARRAY['amazon-uk', '3djake-uk'], 'amazon.co.uk', true),
-  ('EU', 'European Union', 'EUR', '🇪🇺', ARRAY['amazon-de', '3djake-eu', 'prusament'], 'amazon.de', true),
-  ('AU', 'Australia', 'AUD', '🇦🇺', ARRAY['amazon-au'], 'amazon.com.au', true),
-  ('JP', 'Japan', 'JPY', '🇯🇵', ARRAY['amazon-jp'], 'amazon.co.jp', true);
-```
+| Metric | Value |
+|--------|-------|
+| Filaments with US Amazon links | 115 |
+| Filaments with UK Amazon links | 3 |
+| Filaments with DE Amazon links | 1 |
+| Records in `filament_prices` | 0 (empty, ready for migration) |
+| Stores table | 17 stores seeded (includes all Amazon regions) |
 
 ---
 
 ## Implementation Steps
 
-1. **Run database migration** - Execute all four table creations with RLS policies and seed data
-2. **Verify data integrity** - Confirm all foreign key references are valid
-3. **Test RLS policies** - Ensure public read access works correctly
+### Step 1: Create `migrate-amazon-links` Edge Function
+
+**File**: `supabase/functions/migrate-amazon-links/index.ts`
+
+This function will:
+- Query all filaments with non-null Amazon links (US, UK, DE columns exist)
+- Map each link to the corresponding store in the `stores` table
+- Insert/upsert records into `filament_prices` with proper foreign keys
+- Log results to `sync_logs` table
+
+**Key adjustments from provided code**:
+- Only 3 Amazon link columns exist: `amazon_link_us`, `amazon_link_uk`, `amazon_link_de`
+- Use the existing `sync_logs` table schema (different from user's example - no `error_details` field)
+- Add CORS headers for web access
+
+```text
+Edge Function Flow:
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Query stores   │────>│ Query filaments │────>│ Upsert to       │
+│  for ID mapping │     │ with amazon_*   │     │ filament_prices │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                         │
+                                                         ▼
+                                                ┌─────────────────┐
+                                                │ Log to sync_logs│
+                                                └─────────────────┘
+```
+
+### Step 2: Create `get_filament_regional_prices` RPC Function
+
+**Database Migration**: SQL function that:
+- Accepts a `filament_id` and `user_region` parameter
+- Joins `filament_prices` → `stores` → `exchange_rates`
+- Converts all prices to user's local currency
+- Returns prices sorted by: local stores first, ships-to-user second, lowest price third
+- Includes formatted display strings with currency symbols
+
+**Return columns**:
+- `store_name`, `store_slug`, `store_type`
+- `region`, `country_code`
+- `price_cents` (original), `price_local` (converted), `price_display` (formatted)
+- `currency_code`, `currency_symbol`
+- `product_url`
+- `is_local_store`, `ships_to_user`, `ships_from[]`
+- `converted_price` (boolean flag)
+
+### Step 3: Create `get_filament_best_price` Helper Function
+
+A simple wrapper that calls `get_filament_regional_prices` and returns only the first (best) result.
+
+---
+
+## Database Changes
+
+### Migration 1: Regional Pricing RPC Functions
+
+```sql
+-- Main function: Get all regional prices for a filament
+CREATE OR REPLACE FUNCTION get_filament_regional_prices(
+  p_filament_id UUID,
+  p_user_region TEXT DEFAULT 'US'
+)
+RETURNS TABLE (
+  store_name TEXT,
+  store_slug TEXT,
+  store_type TEXT,
+  region TEXT,
+  country_code TEXT,
+  price_cents INTEGER,
+  price_local NUMERIC,
+  price_display TEXT,
+  currency_code TEXT,
+  currency_symbol TEXT,
+  product_url TEXT,
+  is_local_store BOOLEAN,
+  ships_to_user BOOLEAN,
+  ships_from TEXT[],
+  converted_price BOOLEAN
+) 
+LANGUAGE plpgsql
+AS $$
+-- Implementation with currency conversion logic
+$$;
+
+-- Helper function: Get single best price
+CREATE OR REPLACE FUNCTION get_filament_best_price(
+  p_filament_id UUID,
+  p_user_region TEXT DEFAULT 'US'
+)
+RETURNS TABLE (...)
+LANGUAGE sql
+AS $$
+  SELECT ... FROM get_filament_regional_prices(...) LIMIT 1;
+$$;
+
+-- Grant execute permissions
+GRANT EXECUTE ON FUNCTION get_filament_regional_prices TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_filament_best_price TO anon, authenticated;
+```
+
+---
+
+## Files to Create/Modify
+
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/functions/migrate-amazon-links/index.ts` | Create | Edge function for data migration |
+| `supabase/config.toml` | Modify | Add config for new edge function |
+| Database migration | Create | SQL for RPC functions |
+
+---
+
+## Edge Function Configuration
+
+Add to `supabase/config.toml`:
+```toml
+[functions.migrate-amazon-links]
+verify_jwt = true  # Admin-only migration
+```
 
 ---
 
 ## Technical Notes
 
-### Relationship to Existing Tables
+### Amazon Link Column Mapping
 
-| New Table | Related Existing Table | Relationship |
-|-----------|----------------------|--------------|
-| `exchange_rates` | `currency_exchange_rates` | Simpler lookup; can coexist |
-| `stores` | `retailers` + `brand_regional_stores` | Unified view; can coexist |
-| `filament_prices` | `filament_listings` | Alternative structure; can coexist |
-| `region_config` | Static `REGIONS` config | Database-driven version |
+| Column | Store Slug | Currency |
+|--------|------------|----------|
+| `amazon_link_us` | `amazon-us` | USD |
+| `amazon_link_uk` | `amazon-uk` | GBP |
+| `amazon_link_de` | `amazon-de` | EUR |
 
-### Key Design Differences
+Note: The original request included CA, FR, ES, IT, AU, JP columns, but these don't exist in the current schema. Only US, UK, DE links are present.
 
-- **exchange_rates**: Uses `currency_code` as PK (simpler lookup) vs. `currency_exchange_rates` which uses base/target pairs
-- **stores**: Combines marketplace/brand/retailer concepts with shipping info
-- **filament_prices**: Uses cents (integer) vs. decimal for price precision
-- **region_config**: Moves static TypeScript config to database for runtime flexibility
+### Price Handling
 
-### Indexes Created
+- `amazon_price_usd` (only 3 records have this) will be used as the default USD price
+- For UK/DE links, `price_cents` will be set to 0 initially (needs separate price scraping)
+- The `in_stock` field defaults to `true`
 
-- `idx_filament_prices_filament` - Fast lookup by filament
-- `idx_filament_prices_store` - Fast lookup by store
-- `idx_filament_prices_in_stock` - Partial index for available products
+### sync_logs Schema Adaptation
+
+The existing `sync_logs` table uses:
+- `records_updated` instead of a generic counter
+- `success_details` (JSONB) for additional info
+- `error_message` (TEXT) instead of `error_details` (JSONB)
 
 ---
 
-## Phase 2 Preview
+## Post-Implementation Steps
 
-After confirming these tables work, Phase 2 will likely include:
-- TypeScript types for new tables
-- React hooks for querying stores/prices
-- UI components for store selection
-- Migration utilities to sync existing data
+1. Deploy edge function
+2. Run migration once: `POST /functions/v1/migrate-amazon-links`
+3. Verify data in `filament_prices` table
+4. Test RPC functions with sample queries
+
+---
+
+## Testing Queries
+
+After implementation:
+```sql
+-- Check migrated data
+SELECT COUNT(*) FROM filament_prices;
+
+-- Test regional pricing function
+SELECT * FROM get_filament_regional_prices(
+  '00000000-0000-0000-0000-000000000000'::uuid,  -- replace with real ID
+  'US'
+);
+
+-- Test best price function
+SELECT * FROM get_filament_best_price(
+  '00000000-0000-0000-0000-000000000000'::uuid,
+  'EU'
+);
+```
