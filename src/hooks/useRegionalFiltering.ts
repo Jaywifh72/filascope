@@ -20,6 +20,8 @@ const CURRENCY_TO_REGION: Record<CurrencyCode, RegionCode> = {
   MXN: 'MX',
   BRL: 'BR',
   NZD: 'NZ',
+  PLN: 'EU',
+  CZK: 'EU',
 };
 
 /**

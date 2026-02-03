@@ -23,6 +23,8 @@ const CURRENCY_TO_REGION_CODE: Record<CurrencyCode, string> = {
   MXN: 'US',
   BRL: 'US',
   NZD: 'AU',
+  PLN: 'EU',
+  CZK: 'EU',
 };
 
 /**
@@ -43,6 +45,8 @@ const CURRENCY_TO_PRICE_COLUMN: Record<CurrencyCode, string> = {
   MXN: 'variant_price', // Fallback to USD
   BRL: 'variant_price', // Fallback to USD
   NZD: 'price_aud', // NZ falls back to AUD
+  PLN: 'price_eur', // Poland falls back to EUR
+  CZK: 'price_eur', // Czech Republic falls back to EUR
 };
 
 /**
@@ -63,6 +67,8 @@ const CURRENCY_TO_URL_COLUMN: Record<CurrencyCode, string> = {
   MXN: 'product_url',
   BRL: 'product_url',
   NZD: 'product_url_au',
+  PLN: 'product_url_eu',
+  CZK: 'product_url_eu',
 };
 
 /**
@@ -89,6 +95,8 @@ const URL_FALLBACK_ORDERS: Record<CurrencyCode, RegionCode[]> = {
   INR: ['USD', 'UK', 'EU', 'AU', 'CAD', 'JP'],           // India → US → UK
   MXN: ['USD', 'CAD', 'EU', 'UK', 'AU', 'JP'],           // Mexico → US → Canada → EU
   BRL: ['USD', 'CAD', 'EU', 'UK', 'AU', 'JP'],           // Brazil → US → Canada → EU
+  PLN: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Poland → EU
+  CZK: ['EU', 'UK', 'USD', 'CAD', 'AU', 'JP'],           // Czech Republic → EU
 };
 
 /**
