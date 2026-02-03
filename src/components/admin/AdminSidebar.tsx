@@ -95,6 +95,14 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'Regional Pricing',
+    items: [
+      { title: 'Price Import', href: '/admin/price-import', icon: Package },
+      { title: 'Store Registry', href: '/admin/stores', icon: Store },
+      { title: 'Exchange Rates', href: '/admin/exchange-rates', icon: DollarSign },
+    ],
+  },
+  {
     label: 'Operations',
     items: [
       { title: 'Import', href: '/admin/import', icon: Package },
