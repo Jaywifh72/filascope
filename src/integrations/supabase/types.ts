@@ -1491,6 +1491,30 @@ export type Database = {
         }
         Relationships: []
       }
+      exchange_rates: {
+        Row: {
+          currency_code: string
+          currency_name: string
+          currency_symbol: string
+          rate_to_usd: number
+          updated_at: string | null
+        }
+        Insert: {
+          currency_code: string
+          currency_name: string
+          currency_symbol: string
+          rate_to_usd: number
+          updated_at?: string | null
+        }
+        Update: {
+          currency_code?: string
+          currency_name?: string
+          currency_symbol?: string
+          rate_to_usd?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       featured_content: {
         Row: {
           content_type: string
@@ -1838,6 +1862,105 @@ export type Database = {
             columns: ["retailer_id"]
             isOneToOne: false
             referencedRelation: "retailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filament_prices: {
+        Row: {
+          affiliate_url: string | null
+          created_at: string | null
+          currency_code: string
+          filament_id: string
+          id: string
+          in_stock: boolean | null
+          last_verified_at: string | null
+          price_cents: number
+          product_url: string | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_url?: string | null
+          created_at?: string | null
+          currency_code: string
+          filament_id: string
+          id?: string
+          in_stock?: boolean | null
+          last_verified_at?: string | null
+          price_cents: number
+          product_url?: string | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_url?: string | null
+          created_at?: string | null
+          currency_code?: string
+          filament_id?: string
+          id?: string
+          in_stock?: boolean | null
+          last_verified_at?: string | null
+          price_cents?: number
+          product_url?: string | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filament_prices_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "exchange_rates"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "all_time_low_prices"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "filaments_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "price_trends_90d"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "recent_price_drops"
+            referencedColumns: ["filament_id"]
+          },
+          {
+            foreignKeyName: "filament_prices_filament_id_fkey"
+            columns: ["filament_id"]
+            isOneToOne: false
+            referencedRelation: "v_filaments_normalized"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_prices_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -5144,6 +5267,44 @@ export type Database = {
         }
         Relationships: []
       }
+      region_config: {
+        Row: {
+          amazon_domain: string | null
+          currency_code: string | null
+          default_store_priority: string[] | null
+          flag_emoji: string | null
+          is_active: boolean | null
+          region_code: string
+          region_name: string
+        }
+        Insert: {
+          amazon_domain?: string | null
+          currency_code?: string | null
+          default_store_priority?: string[] | null
+          flag_emoji?: string | null
+          is_active?: boolean | null
+          region_code: string
+          region_name: string
+        }
+        Update: {
+          amazon_domain?: string | null
+          currency_code?: string | null
+          default_store_priority?: string[] | null
+          flag_emoji?: string | null
+          is_active?: boolean | null
+          region_code?: string
+          region_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "region_config_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "exchange_rates"
+            referencedColumns: ["currency_code"]
+          },
+        ]
+      }
       retailers: {
         Row: {
           created_at: string | null
@@ -5821,6 +5982,74 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      stores: {
+        Row: {
+          affiliate_network: string | null
+          affiliate_tag: string | null
+          base_url: string
+          country_code: string | null
+          created_at: string | null
+          currency_code: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          region: string
+          ships_from: string[] | null
+          ships_to: string[] | null
+          slug: string
+          store_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_network?: string | null
+          affiliate_tag?: string | null
+          base_url: string
+          country_code?: string | null
+          created_at?: string | null
+          currency_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          region: string
+          ships_from?: string[] | null
+          ships_to?: string[] | null
+          slug: string
+          store_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_network?: string | null
+          affiliate_tag?: string | null
+          base_url?: string
+          country_code?: string | null
+          created_at?: string | null
+          currency_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          region?: string
+          ships_from?: string[] | null
+          ships_to?: string[] | null
+          slug?: string
+          store_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "exchange_rates"
+            referencedColumns: ["currency_code"]
+          },
+        ]
       }
       sync_activity_log: {
         Row: {
