@@ -1,9 +1,9 @@
 
-# Plan: TypeScript Types and React Hooks for Regional Pricing Tables
+# Plan: Admin Price Import Page
 
 ## Summary
 
-This plan creates TypeScript type definitions and React hooks for the regional pricing infrastructure created in Phases 1-3. The types will map to the actual database schema, and the hooks will follow existing patterns in the codebase.
+This plan implements a comprehensive admin page at `/admin/price-import` for uploading scraped price data in JSON format. The page will validate uploaded files, display a preview of products, support dry-run testing, import data to `filament_prices` table, and show import history.
 
 ---
 
@@ -11,188 +11,382 @@ This plan creates TypeScript type definitions and React hooks for the regional p
 
 | Component | Status |
 |-----------|--------|
-| `src/types/regional.ts` | Exists with legacy types (BrandRegionalStore, CurrencyExchangeRate) |
-| `src/config/currencies.ts` | Exists with `formatPrice()` utility |
-| `src/hooks/useExchangeRateRefresh.ts` | Exists (Phase 3) |
-| `src/hooks/useFilamentListings.ts` | Example hook pattern for listings with joins |
-| `src/hooks/useRegionalMutations.ts` | Example mutation pattern |
-
-### Actual Database Schema (from Phase 1)
-
-| Table | Key Fields |
-|-------|------------|
-| `stores` | id, name, slug, store_type, region, country_code, currency_code, base_url, ships_from[], ships_to[], is_active |
-| `filament_prices` | id, filament_id, store_id, price_cents, currency_code, product_url, affiliate_url, in_stock |
-| `exchange_rates` | currency_code (PK), currency_name, currency_symbol, rate_to_usd, updated_at |
-| `region_config` | region_code (PK), region_name, currency_code, flag_emoji, default_store_priority[], amazon_domain, is_active |
-
-Note: User requested `store_listings` and `scrape_imports` tables, but these don't exist in the database. Will create types for actual tables and note the discrepancy.
+| `AdminPriceImport.tsx` | Exists as placeholder with "Coming soon..." |
+| `stores` table | 17 stores seeded (Amazon regions + brand stores) |
+| `filament_prices` table | 119 records from Amazon migration |
+| `sync_logs` table | Tracks import operations |
+| `react-dropzone` | NOT installed - will use native input file handling |
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Extend `src/types/regional.ts` with New Table Types
+### Step 1: Create Type Definitions for Import
 
-Add interfaces that map directly to the Phase 1 database tables:
+**File**: `src/types/priceImport.ts`
+
+Define types for the scraped product JSON format and import results:
 
 ```typescript
-// New interfaces to add:
-
-/** Maps to: stores table (Phase 1) */
-export interface Store {
-  id: string;
-  name: string;
-  slug: string;
-  store_type: 'marketplace' | 'brand_direct' | 'retailer';
+// Expected JSON format from local scraper
+export interface ScrapedProduct {
+  brand: string;
   region: string;
-  country_code: string | null;
-  currency_code: string | null;
-  base_url: string;
-  affiliate_tag: string | null;
-  affiliate_network: string | null;
-  ships_from: string[] | null;
-  ships_to: string[] | null;
-  logo_url: string | null;
-  is_active: boolean;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
+  currency: string;
+  shopify_product_id?: string;
+  shopify_variant_id?: string;
+  sku?: string;
+  product_title: string;
+  variant_title?: string;
+  full_title: string;
+  price: number;
+  compare_at_price?: number;
+  available: boolean;
+  product_url: string;
+  variant_url?: string;
+  image_url?: string;
+  scraped_at: string;
+  source_type: string;
 }
 
-/** Maps to: filament_prices table (Phase 1) */
-export interface FilamentPrice {
+export interface ImportResult {
+  total: number;
+  created: number;
+  updated: number;
+  matched: number;
+  skipped: number;
+  errors: ImportError[];
+}
+
+export interface ImportError {
+  product: string;
+  reason: string;
+}
+
+export interface ParsedFile {
+  filename: string;
+  fileSize: number;
+  products: ScrapedProduct[];
+  brands: string[];
+  regions: string[];
+  currencies: string[];
+  isValid: boolean;
+  parseError?: string;
+}
+
+export interface ImportHistoryEntry {
   id: string;
-  filament_id: string;
-  store_id: string;
-  price_cents: number;
-  currency_code: string;
-  product_url: string | null;
-  affiliate_url: string | null;
-  in_stock: boolean;
-  last_verified_at: string | null;
-  created_at: string;
-  updated_at: string;
-  // Joined data
-  store?: Store;
-}
-
-/** Maps to: exchange_rates table (Phase 1) */
-export interface ExchangeRate {
-  currency_code: string;
-  currency_name: string;
-  currency_symbol: string;
-  rate_to_usd: number;
-  updated_at: string | null;
-}
-
-/** Maps to: region_config table (Phase 1) */
-export interface RegionConfigDb {
-  region_code: string;
-  region_name: string;
-  currency_code: string | null;
-  flag_emoji: string | null;
-  default_store_priority: string[] | null;
-  amazon_domain: string | null;
-  is_active: boolean;
-}
-
-/** Joined result for filament price display */
-export interface FilamentPriceWithStore extends FilamentPrice {
-  store: Store;
-  price_display: number; // price_cents / 100
-  price_local: number; // Converted to user's currency
-  is_local_store: boolean;
-  ships_to_user: boolean;
+  started_at: string;
+  completed_at: string | null;
+  sync_type: string;
+  data_source: string;
+  status: string;
+  records_updated: number;
+  records_failed: number;
+  error_message: string | null;
+  success_details: {
+    filename?: string;
+    brands?: string[];
+    regions?: string[];
+    created?: number;
+    updated?: number;
+    skipped?: number;
+    errors?: ImportError[];
+  } | null;
 }
 ```
 
-### Step 2: Create `src/hooks/useStores.ts`
+### Step 2: Create usePriceImport Hook
 
-Query and mutation hooks for the stores table:
+**File**: `src/hooks/usePriceImport.ts`
 
-```typescript
-// useStores() - Get all active stores
-// useStore(id) - Get single store by ID
-// useStoreBySlug(slug) - Get store by slug
-// useStoresByRegion(region) - Get stores for a region
-// useCreateStore() - Admin mutation
-// useUpdateStore() - Admin mutation
-// useDeleteStore() - Admin mutation
+A hook that handles the import logic:
+
+```text
+Key functions:
+- parseFile(file: File) → ParsedFile
+- validateProducts(products: ScrapedProduct[]) → validation errors
+- importPrices(products, dryRun: boolean) → ImportResult
+- matchFilament(brand, title, sku) → filament_id or null
+- findStore(brand, region) → store_id or null
 ```
 
-Features:
-- Filter by `region`, `store_type`, `is_active`
-- Order by `name`
-- 30-minute stale time for list queries
-- Query cache invalidation on mutations
+Import process for each product:
+1. Find store by brand slug + region (e.g., "polymaker-us")
+2. If no store found, try region-only (e.g., "amazon-us")
+3. Convert price to cents: `Math.round(price * 100)`
+4. Try to match filament by: 
+   - First: SKU match against `variant_sku` or `mpn`
+   - Second: vendor + product_title fuzzy match
+5. Upsert into `filament_prices` table
+6. Track counts: created, updated, skipped, errors
 
-### Step 3: Create `src/hooks/useFilamentPrices.ts`
+### Step 3: Create Import History Hook
 
-Query hooks for the filament_prices table:
+**File**: `src/hooks/usePriceImportHistory.ts`
 
-```typescript
-// useFilamentPrices(filamentId, options) - Get all prices for a filament
-// useFilamentBestPrice(filamentId, userRegion) - Get best price using RPC
-// useFilamentRegionalPrices(filamentId, userRegion) - Use get_filament_regional_prices RPC
-```
-
-Features:
-- Join with `stores` table for complete data
-- Use Phase 2 RPC functions for smart regional pricing
-- Filter by `in_stock`
-- Convert price_cents to display price
-
-### Step 4: Create `src/hooks/useExchangeRates.ts`
-
-Query hooks for exchange rates:
+Hook for fetching and displaying past imports:
 
 ```typescript
-// useExchangeRates() - Get all rates from exchange_rates table
-// useExchangeRateStatus() - Get from exchange_rate_status view
-// useConvertPrice(amount, fromCurrency, toCurrency) - Client-side conversion
-// useShouldRefreshRates() - Check if rates need refresh
+// Query sync_logs where sync_type = 'price_import'
+export function usePriceImportHistory(limit = 20)
 ```
 
-Features:
-- Use `exchange_rate_status` view for freshness info
-- 1-hour stale time (rates don't change often)
-- Provide conversion helper that uses cached rates
+### Step 4: Create UI Components
 
-### Step 5: Create `src/hooks/useRegionConfig.ts`
+**Components to create**:
 
-Query hook for region configuration:
+| Component | Purpose |
+|-----------|---------|
+| `FileDropzone.tsx` | Drag & drop zone for JSON files |
+| `ImportFileSummary.tsx` | Shows parsed file stats (brands, regions, count) |
+| `ImportPreviewTable.tsx` | Table showing first 50 products |
+| `ImportProgressBar.tsx` | Progress indicator during import |
+| `ImportHistoryTable.tsx` | Shows past imports with expandable errors |
+
+### Step 5: Update AdminPriceImport Page
+
+**File**: `src/pages/AdminPriceImport.tsx`
+
+Complete rewrite with:
+- File upload zone at top
+- File summary card when file is loaded
+- Preview table with sorting
+- Dry Run + Import buttons
+- Progress bar during import
+- Import history section at bottom
+
+---
+
+## File Structure
+
+```text
+src/
+├── types/
+│   └── priceImport.ts                    # New - Type definitions
+├── hooks/
+│   ├── usePriceImport.ts                 # New - Import logic hook
+│   └── usePriceImportHistory.ts          # New - History query hook
+├── components/
+│   └── admin/
+│       └── price-import/
+│           ├── FileDropzone.tsx          # New - Drag & drop zone
+│           ├── ImportFileSummary.tsx     # New - File stats display
+│           ├── ImportPreviewTable.tsx    # New - Preview table
+│           ├── ImportProgressBar.tsx     # New - Progress indicator
+│           └── ImportHistoryTable.tsx    # New - History table
+└── pages/
+    └── AdminPriceImport.tsx              # Modify - Full implementation
+```
+
+---
+
+## UI Layout
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  [Upload] Price Import                                          │
+│  Upload scraped price data to update product prices             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                                                           │  │
+│  │        [📁 icon]                                          │  │
+│  │        Drag & drop a JSON file here, or click to browse  │  │
+│  │        Accepts .json files only                          │  │
+│  │                                                           │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌─ File Summary ─────────────────────────────────────────────┐ │
+│  │  polymaker-us-2026-02-03.json (2.4 MB)                    │ │
+│  │                                                           │ │
+│  │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐          │ │
+│  │  │ 1,234  │  │   3    │  │   2    │  │  USD   │          │ │
+│  │  │Products│  │ Brands │  │Regions │  │Currency│          │ │
+│  │  └────────┘  └────────┘  └────────┘  └────────┘          │ │
+│  │                                                           │ │
+│  │  Brands: Polymaker, Bambu Lab, Elegoo                     │ │
+│  │  Regions: 🇺🇸 US  🇨🇦 CA                                    │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│  ┌─ Preview (showing 50 of 1,234) ────────────────────────────┐ │
+│  │ Brand    │ Region │ Product Title       │ Price  │ Stock  │ │
+│  ├──────────┼────────┼─────────────────────┼────────┼────────┤ │
+│  │ Polymaker│ 🇺🇸 US  │ PolyLite PLA Black  │ $24.99 │   ●    │ │
+│  │ Polymaker│ 🇺🇸 US  │ PolyLite PLA White  │ $24.99 │   ●    │ │
+│  │ ...      │ ...    │ ...                 │ ...    │  ...   │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+│          [Dry Run]  [Import 1,234 Prices]                       │
+│                                                                 │
+│  ┌─ Import Progress ──────────────────────────────────────────┐ │
+│  │  ████████████████░░░░░░░░░░  Processing 634 of 1,234...    │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─ Import History ───────────────────────────────────────────┐ │
+│  │ Date       │ Filename          │ Total │ Updated │ Status  │ │
+│  ├────────────┼───────────────────┼───────┼─────────┼─────────┤ │
+│  │ Feb 3, 26  │ polymaker-us.json │ 1,234 │   892   │ ✓ Done  │ │
+│  │ Feb 2, 26  │ bambulab-all.json │   456 │   456   │ ✓ Done  │ │
+│  │ Feb 1, 26  │ elegoo-us.json    │   234 │    12   │ ⚠ Partial│ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Technical Details
+
+### Store Matching Logic
+
+The scraper provides `brand` and `region`. We need to map this to a `store_id`:
 
 ```typescript
-// useRegionConfigs() - Get all active region configs
-// useRegionConfig(regionCode) - Get single region config
+async function findStore(brand: string, region: string): Promise<string | null> {
+  // 1. Try exact match: brand-slug + region
+  const brandSlug = brand.toLowerCase().replace(/\s+/g, '-');
+  const exactSlug = `${brandSlug}-${region.toLowerCase()}`;
+  
+  const { data: exactMatch } = await supabase
+    .from('stores')
+    .select('id')
+    .eq('slug', exactSlug)
+    .eq('is_active', true)
+    .single();
+  
+  if (exactMatch) return exactMatch.id;
+  
+  // 2. Try region's Amazon store as fallback
+  const amazonSlug = `amazon-${region.toLowerCase()}`;
+  const { data: amazonMatch } = await supabase
+    .from('stores')
+    .select('id')
+    .eq('slug', amazonSlug)
+    .eq('is_active', true)
+    .single();
+  
+  return amazonMatch?.id || null;
+}
 ```
 
-Features:
-- Filter by `is_active`
-- Use for populating region dropdowns
-- Includes default store priority array
+### Filament Matching Logic
 
-### Step 6: Create/Update `src/utils/formatPrice.ts`
-
-Enhanced price formatting utilities:
+Match scraped products to existing filaments:
 
 ```typescript
-// Currency configuration with locale support
-const currencyConfig: Record<string, CurrencyFormatConfig> = {
-  USD: { symbol: '$', locale: 'en-US', decimals: 2 },
-  CAD: { symbol: 'C$', locale: 'en-CA', decimals: 2 },
-  EUR: { symbol: '€', locale: 'de-DE', decimals: 2 },
-  GBP: { symbol: '£', locale: 'en-GB', decimals: 2 },
-  AUD: { symbol: 'A$', locale: 'en-AU', decimals: 2 },
-  JPY: { symbol: '¥', locale: 'ja-JP', decimals: 0 },
-  CNY: { symbol: '¥', locale: 'zh-CN', decimals: 2 },
-};
-
-// formatPrice(amount, currency) - Format with symbol
-// formatCents(cents, currency) - Convert cents to formatted price
-// convertPrice(amount, fromRate, toRate) - Currency conversion
+async function matchFilament(
+  brand: string, 
+  title: string, 
+  sku?: string
+): Promise<string | null> {
+  // 1. Try SKU match first (most reliable)
+  if (sku) {
+    const { data: skuMatch } = await supabase
+      .from('filaments')
+      .select('id')
+      .or(`variant_sku.eq.${sku},mpn.eq.${sku}`)
+      .single();
+    
+    if (skuMatch) return skuMatch.id;
+  }
+  
+  // 2. Try vendor + title match
+  const { data: titleMatch } = await supabase
+    .from('filaments')
+    .select('id, product_title')
+    .eq('vendor', brand)
+    .ilike('product_title', `%${title.substring(0, 30)}%`)
+    .limit(1)
+    .single();
+  
+  return titleMatch?.id || null;
+}
 ```
+
+### Batch Processing
+
+For large imports (1000+ products), process in batches:
+
+```typescript
+const BATCH_SIZE = 50;
+
+for (let i = 0; i < products.length; i += BATCH_SIZE) {
+  const batch = products.slice(i, i + BATCH_SIZE);
+  
+  // Process batch in parallel
+  await Promise.all(batch.map(async (product) => {
+    const storeId = await findStore(product.brand, product.region);
+    const filamentId = await matchFilament(product.brand, product.product_title, product.sku);
+    
+    if (!storeId) {
+      errors.push({ product: product.full_title, reason: 'Store not found' });
+      return;
+    }
+    
+    if (!filamentId) {
+      skipped++;
+      return;
+    }
+    
+    // Upsert to filament_prices
+    await supabase.from('filament_prices').upsert({
+      filament_id: filamentId,
+      store_id: storeId,
+      price_cents: Math.round(product.price * 100),
+      currency_code: product.currency,
+      product_url: product.product_url,
+      in_stock: product.available,
+      last_verified_at: product.scraped_at,
+    }, {
+      onConflict: 'filament_id,store_id'
+    });
+  }));
+  
+  // Update progress
+  setProgress({ current: i + batch.length, total: products.length });
+}
+```
+
+### Sync Log Entry
+
+After import completes:
+
+```typescript
+await supabase.from('sync_logs').insert({
+  sync_type: 'price_import',
+  data_source: filename,
+  status: errors.length > 0 ? 'partial' : 'completed',
+  records_updated: updated + created,
+  records_failed: errors.length,
+  success_details: {
+    filename,
+    brands: [...new Set(products.map(p => p.brand))],
+    regions: [...new Set(products.map(p => p.region))],
+    created,
+    updated,
+    skipped,
+    errors: errors.slice(0, 50), // Limit error storage
+  },
+});
+```
+
+---
+
+## Region Badge Colors
+
+For consistent region display:
+
+| Region | Color | Emoji |
+|--------|-------|-------|
+| US | blue | 🇺🇸 |
+| CA | red | 🇨🇦 |
+| UK | purple | 🇬🇧 |
+| EU | yellow | 🇪🇺 |
+| AU | green | 🇦🇺 |
+| JP | pink | 🇯🇵 |
 
 ---
 
@@ -200,83 +394,38 @@ const currencyConfig: Record<string, CurrencyFormatConfig> = {
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/types/regional.ts` | Modify | Add Store, FilamentPrice, ExchangeRate, RegionConfigDb types |
-| `src/hooks/useStores.ts` | Create | CRUD hooks for stores table |
-| `src/hooks/useFilamentPrices.ts` | Create | Query hooks for filament_prices with RPC |
-| `src/hooks/useExchangeRates.ts` | Create | Query hooks for exchange rates |
-| `src/hooks/useRegionConfig.ts` | Create | Query hooks for region_config |
-| `src/utils/formatPrice.ts` | Create | Enhanced price formatting utilities |
+| `src/types/priceImport.ts` | Create | Type definitions for import |
+| `src/hooks/usePriceImport.ts` | Create | Import logic and processing |
+| `src/hooks/usePriceImportHistory.ts` | Create | Query past imports |
+| `src/components/admin/price-import/FileDropzone.tsx` | Create | Drag & drop file upload |
+| `src/components/admin/price-import/ImportFileSummary.tsx` | Create | Parsed file statistics |
+| `src/components/admin/price-import/ImportPreviewTable.tsx` | Create | Preview table with sorting |
+| `src/components/admin/price-import/ImportProgressBar.tsx` | Create | Progress during import |
+| `src/components/admin/price-import/ImportHistoryTable.tsx` | Create | Past imports display |
+| `src/pages/AdminPriceImport.tsx` | Modify | Complete page implementation |
 
 ---
 
-## Technical Notes
+## Validation Rules
 
-### Type Strategy
+The JSON file must:
+1. Be valid JSON (parseable)
+2. Be an array at the root level
+3. Each object must have: `brand`, `region`, `currency`, `product_title`, `full_title`, `price`, `available`, `product_url`
+4. `price` must be a positive number
+5. `currency` must be a known currency code (USD, CAD, EUR, GBP, etc.)
+6. `region` must be a known region code (US, CA, UK, EU, AU, JP)
 
-The types will:
-1. Use the Supabase-generated types from `src/integrations/supabase/types.ts` as the source of truth
-2. Create convenient wrapper types in `src/types/regional.ts` for easier use
-3. Add computed/joined types for complex queries
-
-### Hook Patterns
-
-Following existing patterns:
-- Use `@tanstack/react-query` for all data fetching
-- Use `supabase` client from `@/integrations/supabase/client`
-- Return `{ data, isLoading, error }` structure
-- Use `useQueryClient` for cache invalidation
-- Mutations return promises and show toasts
-
-### RPC Integration
-
-The hooks will leverage the Phase 2 RPC functions:
-- `get_filament_regional_prices(filament_id, user_region)` - Returns sorted, converted prices
-- `get_filament_best_price(filament_id, user_region)` - Returns single best price
-- `should_refresh_exchange_rates()` - Returns boolean for refresh check
-
-### Query Keys
-
-Consistent naming:
-- `['stores']` - All stores
-- `['stores', storeId]` - Single store
-- `['stores', 'region', regionCode]` - Stores by region
-- `['filament-prices', filamentId]` - Prices for filament
-- `['filament-prices', 'regional', filamentId, region]` - Regional prices
-- `['exchange-rates']` - All rates
-- `['exchange-rate-status']` - Rate status view
-- `['region-config']` - All region configs
+Invalid files show an error message in the dropzone area.
 
 ---
 
-## Note on Requested Tables
+## No Database Changes Required
 
-The user requested types for `store_listings` and `scrape_imports` tables. These tables don't exist in the current database schema. The actual Phase 1 tables are:
-- `stores` (not `store_listings`)
-- `filament_prices` (contains listing-like data)
-- `exchange_rates` (simple currency lookup)
-- `region_config` (region settings)
+All needed tables exist:
+- `stores` - For store lookups
+- `filament_prices` - For upserting prices
+- `sync_logs` - For logging import runs
+- `filaments` - For matching products
 
-The implementation will use the actual table structures. If `store_listings` or `scrape_imports` tables are needed, they should be created first via database migration.
-
----
-
-## Example Usage
-
-After implementation:
-
-```typescript
-// Get all stores for a region
-const { data: stores } = useStores({ region: 'US' });
-
-// Get regional prices for a filament
-const { data: prices } = useFilamentRegionalPrices(filamentId, 'CA');
-
-// Get exchange rates
-const { data: rates } = useExchangeRates();
-
-// Format a price from cents
-const display = formatCents(2499, 'USD'); // "$24.99"
-
-// Convert price between currencies
-const converted = convertPrice(24.99, rates['USD'], rates['CAD']);
-```
+The `filament_prices` table already has a unique constraint on `(filament_id, store_id)` which supports upsert operations.
