@@ -1911,6 +1911,13 @@ export type Database = {
             foreignKeyName: "filament_prices_currency_code_fkey"
             columns: ["currency_code"]
             isOneToOne: false
+            referencedRelation: "exchange_rate_status"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "filament_prices_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
             referencedRelation: "exchange_rates"
             referencedColumns: ["currency_code"]
           },
@@ -5300,6 +5307,13 @@ export type Database = {
             foreignKeyName: "region_config_currency_code_fkey"
             columns: ["currency_code"]
             isOneToOne: false
+            referencedRelation: "exchange_rate_status"
+            referencedColumns: ["currency_code"]
+          },
+          {
+            foreignKeyName: "region_config_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
             referencedRelation: "exchange_rates"
             referencedColumns: ["currency_code"]
           },
@@ -6042,6 +6056,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stores_currency_code_fkey"
+            columns: ["currency_code"]
+            isOneToOne: false
+            referencedRelation: "exchange_rate_status"
+            referencedColumns: ["currency_code"]
+          },
           {
             foreignKeyName: "stores_currency_code_fkey"
             columns: ["currency_code"]
@@ -7232,6 +7253,36 @@ export type Database = {
           product_title: string | null
           product_url: string | null
           vendor: string | null
+        }
+        Relationships: []
+      }
+      exchange_rate_status: {
+        Row: {
+          currency_code: string | null
+          currency_name: string | null
+          currency_symbol: string | null
+          hours_since_update: number | null
+          rate_to_usd: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          currency_code?: string | null
+          currency_name?: string | null
+          currency_symbol?: string | null
+          hours_since_update?: never
+          rate_to_usd?: number | null
+          status?: never
+          updated_at?: string | null
+        }
+        Update: {
+          currency_code?: string | null
+          currency_name?: string | null
+          currency_symbol?: string | null
+          hours_since_update?: never
+          rate_to_usd?: number | null
+          status?: never
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -8968,6 +9019,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      should_refresh_exchange_rates: { Args: never; Returns: boolean }
       start_brand_scrape: { Args: { p_brand_slug: string }; Returns: boolean }
       test_price_extraction: { Args: { p_url: string }; Returns: Json }
       update_brand_enrichment_counts: {
