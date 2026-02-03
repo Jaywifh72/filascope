@@ -1,145 +1,192 @@
 
-# Plan: Admin Store Registry Page
+
+# Plan: Integrate Store Listings into Filament Detail Page
 
 ## Summary
 
-Build out the Store Registry admin page at `/admin/stores` with a full CRUD interface for managing stores across regions. This page will display all stores in a filterable, sortable table with inline active toggle and modal-based add/edit functionality.
+Update the filament detail page to display regional prices from the `filament_prices` table (store listings). When a user views a filament, they will see the price from a store in their selected region (if available), or fall back to a converted USD price with an "International shipping" warning.
 
 ---
 
-## Current State
+## Current State Analysis
 
 | Component | Status |
 |-----------|--------|
-| `AdminStores.tsx` | Placeholder with "Coming soon..." |
-| `useStores.ts` | Complete with CRUD hooks |
-| `stores` table | 17 stores seeded (Amazon regions + brand stores) |
-| `Store` type | Defined in `src/types/regional.ts` |
-| `REGIONS` config | Defined in `src/config/regions.ts` |
+| `filament_prices` table | 119 records, 3 with prices > 0 |
+| `get_filament_regional_prices` RPC | Already implemented and working |
+| `useFilamentRegionalPrices` hook | Already exists in `useFilamentPrices.ts` |
+| `useUnifiedRegionalPricing` hook | Uses `brand_regional_stores`, NOT `filament_prices` |
+| `FilamentPurchaseSidebar` | Receives pricing via props from parent |
+
+**Key finding**: The RPC function and hook already exist but aren't being used by the detail page. The `useUnifiedRegionalPricing` hook uses a different table (`brand_regional_stores`) for URL generation but doesn't query actual store prices.
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Create Store Form Modal Component
+### Step 1: Create `useFilamentStorePricing` Hook
 
-**File**: `src/components/admin/stores/StoreFormModal.tsx`
+**File**: `src/hooks/useFilamentStorePricing.ts` (new)
 
-A reusable modal for both Add and Edit operations:
-
-**Form fields:**
-- **Name** (text, required)
-- **Slug** (text, auto-generated from name + region, editable)
-- **Store Type** (select: marketplace, brand_direct, retailer)
-- **Region** (select: US, CA, EU, UK, AU, JP, CN, GLOBAL)
-- **Country Code** (select, filtered by region)
-- **Currency** (auto-filled from region, editable)
-- **Base URL** (text, required, URL validation)
-- **Ships From** (multi-select country codes)
-- **Ships To** (multi-select: region codes or "GLOBAL")
-- **Active** (toggle, default on)
-
-**Affiliate section (collapsible):**
-- Affiliate Tag (text)
-- Affiliate Network (text)
-- Preview URL with affiliate params
-
-**Behavior:**
-- Auto-generate slug from name + region: `"Amazon Canada"` + `"CA"` → `"amazon-canada"`
-- Auto-set currency when region changes
-- Validate URL format
-- Check unique constraint on submit
-
-### Step 2: Create Store Table Component
-
-**File**: `src/components/admin/stores/StoreTable.tsx`
-
-A sortable, filterable data table:
-
-**Columns:**
-| Column | Content | Sortable |
-|--------|---------|----------|
-| Store | Name + logo (if available) | Yes |
-| Type | Badge (marketplace/brand_direct/retailer) | Yes |
-| Region | Flag emoji + code | Yes |
-| Currency | Currency code | Yes |
-| Ships From | Country badges | No |
-| Active | Toggle switch (inline update) | Yes |
-| Actions | Edit, Delete buttons | No |
-
-**Filters (above table):**
-- Search input (filters by name)
-- Region dropdown (All, US, CA, EU, UK, AU, JP, CN, GLOBAL)
-- Type dropdown (All, marketplace, brand_direct, retailer)
-
-**Features:**
-- Inline toggle for active status (immediate database update)
-- Click row to expand with full details
-- Sortable by any column header
-- Empty state when no stores match filters
-
-### Step 3: Create Delete Confirmation Dialog
-
-**File**: `src/components/admin/stores/DeleteStoreDialog.tsx`
-
-Alert dialog for confirming store deletion:
-- Title: "Delete [Store Name]?"
-- Warning: "This will also delete all price listings associated with this store. This action cannot be undone."
-- Buttons: Cancel, Delete (destructive)
-
-### Step 4: Update AdminStores Page
-
-**File**: `src/pages/AdminStores.tsx`
-
-Complete rewrite:
-
-```text
-Layout:
-┌─────────────────────────────────────────────────────────────────┐
-│  [Store] Store Registry                           [+ Add Store] │
-│  Manage stores and retailers for regional pricing               │
-├─────────────────────────────────────────────────────────────────┤
-│  [Search...        ]  [Region ▼]  [Type ▼]      17 stores       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Store Name      │ Type       │ Region │ Currency │ Active │ ⋮ │
-│  ─────────────────────────────────────────────────────────────  │
-│  Amazon US       │ marketplace│ 🇺🇸 US  │ USD      │   ●    │ ⋮ │
-│  Amazon Canada   │ marketplace│ 🇨🇦 CA  │ CAD      │   ●    │ ⋮ │
-│  3DJake EU       │ retailer   │ 🇪🇺 EU  │ EUR      │   ●    │ ⋮ │
-│  Bambu Lab       │ brand_direct│ 🌐 GLOBAL│ USD     │   ●    │ ⋮ │
-│  ...                                                            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Step 5: Add Region/Country Configuration
-
-**File**: `src/config/countries.ts` (new)
-
-Country codes grouped by region for form dropdowns:
+A unified hook that combines store listings with the user's region:
 
 ```typescript
-export const REGION_COUNTRIES = {
-  US: [{ code: 'US', name: 'United States' }],
-  CA: [{ code: 'CA', name: 'Canada' }],
-  EU: [
-    { code: 'DE', name: 'Germany' },
-    { code: 'FR', name: 'France' },
-    { code: 'IT', name: 'Italy' },
-    { code: 'ES', name: 'Spain' },
-    { code: 'NL', name: 'Netherlands' },
-    { code: 'AT', name: 'Austria' },
-    { code: 'BE', name: 'Belgium' },
-    { code: 'PL', name: 'Poland' },
-    { code: 'CZ', name: 'Czech Republic' },
-  ],
-  UK: [{ code: 'GB', name: 'United Kingdom' }],
-  AU: [{ code: 'AU', name: 'Australia' }],
-  JP: [{ code: 'JP', name: 'Japan' }],
-  CN: [{ code: 'CN', name: 'China' }],
-  GLOBAL: [], // No specific country
-};
+interface StorePrice {
+  priceCents: number;
+  priceDisplay: number;       // price_cents / 100
+  currencyCode: string;
+  storeName: string;
+  storeSlug: string;
+  storeType: string;          // marketplace, brand_direct, retailer
+  region: string;
+  productUrl: string | null;
+  shipsFrom: string[] | null;
+  shipsToUser: boolean;
+  isLocalStore: boolean;
+  isConverted: boolean;
+  inStock: boolean;
+  lastVerifiedAt: string | null;
+}
+
+interface UseFilamentStorePricingResult {
+  bestPrice: StorePrice | null;
+  allPrices: StorePrice[];
+  isLoading: boolean;
+  error: string | null;
+  hasPriceData: boolean;
+}
+```
+
+**Logic flow**:
+1. Call `useFilamentRegionalPrices(filamentId, userRegion)` (already exists)
+2. Transform RPC results to `StorePrice[]` format
+3. Return best price (first result) and all prices
+4. Provide `hasPriceData` flag for fallback detection
+
+### Step 2: Create `StorePricingDisplay` Component
+
+**File**: `src/components/filament/sidebar/StorePricingDisplay.tsx` (new)
+
+A component that displays store-based pricing with:
+- Price in user's currency (auto-converted if needed)
+- Store name badge with store type indicator
+- "Local" badge for same-region stores
+- "Ships from [Country]" warning for international
+- "Duties may apply" notice for cross-region
+
+```text
+┌────────────────────────────────────┐
+│  $24.99/kg                         │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│  [Amazon US] [Marketplace]         │
+│  ──────────────────────────────── │
+│  [🇺🇸 US Store] [Local]            │
+└────────────────────────────────────┘
+
+OR (for international):
+
+┌────────────────────────────────────┐
+│  ~€22.99/kg                        │
+│  Converted from $24.99 USD         │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+│  [Amazon US] [Marketplace]         │
+│  ──────────────────────────────── │
+│  ⚠️ Ships from United States       │
+│  International shipping • Duties   │
+└────────────────────────────────────┘
+```
+
+### Step 3: Modify FilamentDetail.tsx
+
+Update the detail page to use the new hook alongside existing unified pricing:
+
+**Current flow** (keep as fallback):
+```
+useUnifiedRegionalPricing() → brand_regional_stores → URL generation
+```
+
+**New flow** (primary):
+```
+useFilamentStorePricing() → filament_prices + stores → actual store prices
+```
+
+**Priority order**:
+1. `useFilamentStorePricing` - actual store listings from `filament_prices`
+2. `useUnifiedRegionalPricing` - brand store URL patterns (for URL generation when no listing)
+3. Filament's `variant_price` column - legacy fallback with conversion
+
+### Step 4: Update FilamentPurchaseSidebar Props
+
+Extend sidebar to receive store pricing data:
+
+```typescript
+interface FilamentPurchaseSidebarProps {
+  // ... existing props ...
+  
+  // NEW: Store-based pricing (from filament_prices table)
+  storePricing?: {
+    priceCents: number;
+    currencyCode: string;
+    storeName: string;
+    storeType: 'marketplace' | 'brand_direct' | 'retailer';
+    region: string;
+    productUrl: string | null;
+    shipsFrom: string[] | null;
+    isLocalStore: boolean;
+    isConverted: boolean;
+    lastVerifiedAt: string | null;
+  } | null;
+  
+  // Flag to indicate if using store pricing vs fallback
+  hasStorePricing?: boolean;
+}
+```
+
+### Step 5: Enhance HonestPriceDisplay for Store Sources
+
+Update the existing `HonestPriceDisplay` component to show store source info:
+- Store name and type badge
+- "Ships from" country when international
+- Clearer conversion indicators
+
+---
+
+## Data Flow Diagram
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    FilamentDetail.tsx                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────┐    ┌───────────────────────────┐  │
+│  │ useFilamentStorePricing  │    │ useUnifiedRegionalPricing │  │
+│  │   (NEW - Primary)        │    │   (Existing - Fallback)   │  │
+│  └─────────┬────────────────┘    └─────────────┬─────────────┘  │
+│            │                                    │                │
+│            ▼                                    ▼                │
+│  ┌──────────────────────────┐    ┌───────────────────────────┐  │
+│  │ get_filament_regional    │    │ brand_regional_stores     │  │
+│  │ _prices RPC              │    │ (URL patterns)            │  │
+│  │                          │    │                           │  │
+│  │ filament_prices + stores │    │                           │  │
+│  └─────────┬────────────────┘    └─────────────┬─────────────┘  │
+│            │                                    │                │
+│            ▼                                    ▼                │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                   Price Priority Logic                     │  │
+│  │  1. Store listing price (from filament_prices)            │  │
+│  │  2. Regional URL + conversion (from brand_regional_stores)│  │
+│  │  3. Filament variant_price (legacy USD)                   │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │              FilamentPurchaseSidebar                       │  │
+│  │  - StorePricingDisplay (if hasStorePricing)               │  │
+│  │  - HonestPriceDisplay (fallback)                          │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -148,147 +195,92 @@ export const REGION_COUNTRIES = {
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/config/countries.ts` | Create | Country codes grouped by region |
-| `src/components/admin/stores/StoreFormModal.tsx` | Create | Add/Edit store form modal |
-| `src/components/admin/stores/StoreTable.tsx` | Create | Sortable/filterable store table |
-| `src/components/admin/stores/DeleteStoreDialog.tsx` | Create | Delete confirmation dialog |
-| `src/pages/AdminStores.tsx` | Modify | Complete page implementation |
-| `src/hooks/useStores.ts` | Modify | Add `isActive: undefined` option to fetch all |
+| `src/hooks/useFilamentStorePricing.ts` | Create | New hook using `useFilamentRegionalPrices` |
+| `src/components/filament/sidebar/StorePricingDisplay.tsx` | Create | Store pricing display component |
+| `src/pages/FilamentDetail.tsx` | Modify | Integrate new hook with priority logic |
+| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Modify | Add store pricing props and display |
 
 ---
 
 ## Technical Details
 
-### Store Type Badges
+### Store Type Badge Colors
 
-| Type | Badge Color | Label |
-|------|-------------|-------|
+| Type | Color | Label |
+|------|-------|-------|
 | marketplace | blue | Marketplace |
-| brand_direct | green | Brand Direct |
+| brand_direct | green | Official Store |
 | retailer | purple | Retailer |
 
-### Region Display
+### Shipping Warning Logic
 
 ```typescript
-const REGION_DISPLAY = {
-  US: { flag: '🇺🇸', name: 'United States' },
-  CA: { flag: '🇨🇦', name: 'Canada' },
-  EU: { flag: '🇪🇺', name: 'European Union' },
-  UK: { flag: '🇬🇧', name: 'United Kingdom' },
-  AU: { flag: '🇦🇺', name: 'Australia' },
-  JP: { flag: '🇯🇵', name: 'Japan' },
-  CN: { flag: '🇨🇳', name: 'China' },
-  GLOBAL: { flag: '🌐', name: 'Global' },
-};
-```
+// Show shipping warning when:
+const showShippingWarning = !storePrice.isLocalStore && storePrice.shipsFrom;
 
-### Slug Generation
-
-Auto-generate slug from name:
-```typescript
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+// Warning content based on ships_to_user:
+if (storePrice.shipsToUser) {
+  // "Ships from [Country] • International shipping"
+} else {
+  // "May not ship to your region"
 }
 ```
 
-### Inline Active Toggle
-
-When toggling active status:
-1. Optimistically update UI
-2. Call `useUpdateStore` mutation
-3. Rollback on error with toast
-
-### useStores Hook Update
-
-Modify to support fetching all stores (active and inactive):
+### Price Conversion Display
 
 ```typescript
-export function useStores(options: UseStoresOptions = {}) {
-  const { region, storeType, isActive } = options; // Remove default true
-  
-  // If isActive is undefined, don't filter by is_active
-  if (isActive !== undefined) {
-    query = query.eq('is_active', isActive);
-  }
-}
+// For converted prices (isConverted = true):
+// - Show tilde prefix: ~€22.99
+// - Show conversion source tooltip: "Converted from $24.99 USD"
+// - Show "Exchange rate may vary" disclaimer
+
+// For native prices (isConverted = false):
+// - Show direct price: €22.99
+// - No conversion notice needed
 ```
 
----
-
-## Form Validation
-
-| Field | Validation |
-|-------|------------|
-| Name | Required, min 2 chars |
-| Slug | Required, unique, lowercase alphanumeric + hyphens |
-| Base URL | Required, valid URL format |
-| Region | Required |
-| Store Type | Required |
-| Currency | Required (auto-set from region) |
-
----
-
-## Component Structure
-
-```text
-AdminStores (page)
-├── AdminLayout
-│   └── Card
-│       ├── CardHeader
-│       │   ├── Title + Description
-│       │   └── Add Store Button
-│       └── CardContent
-│           ├── Filters Row
-│           │   ├── Input (search)
-│           │   ├── Select (region)
-│           │   └── Select (type)
-│           └── StoreTable
-│               ├── TableHeader (sortable)
-│               └── TableBody
-│                   └── StoreRow (for each store)
-│                       ├── Name cell
-│                       ├── Type badge
-│                       ├── Region + flag
-│                       ├── Currency
-│                       ├── Active toggle
-│                       └── Actions menu
-│
-├── StoreFormModal (dialog)
-│   └── Form fields...
-│
-└── DeleteStoreDialog (alert dialog)
-```
-
----
-
-## Existing Hooks Usage
-
-The hooks in `useStores.ts` are already complete and will be used:
+### Fallback Chain
 
 ```typescript
-// Fetch all stores (no active filter)
-const { data: stores, isLoading } = useStores({ isActive: undefined });
+// In FilamentDetail.tsx
+const { bestPrice, hasPriceData } = useFilamentStorePricing(filamentId, region);
+const unifiedPricing = useUnifiedRegionalPricing(product);
 
-// Create new store
-const createStore = useCreateStore();
+// Priority resolution:
+const effectivePrice = hasPriceData 
+  ? bestPrice 
+  : (unifiedPricing.displayPrice ? unifiedPricing : null);
 
-// Update store (including toggle active)
-const updateStore = useUpdateStore();
-
-// Delete store
-const deleteStore = useDeleteStore();
+// Final fallback to variant_price if nothing else
+const fallbackPrice = !effectivePrice && filament.variant_price
+  ? { price: filament.variant_price, currency: 'USD', isConverted: true }
+  : null;
 ```
+
+---
+
+## Component Visibility Logic
+
+**Show StorePricingDisplay when:**
+- `useFilamentStorePricing` returns `hasPriceData = true`
+- Best price has `priceCents > 0`
+- Store is active
+
+**Show existing HonestPriceDisplay when:**
+- No store pricing available
+- Falling back to unified pricing or variant_price
+- Add "~" prefix for converted prices
+- Show "Price may vary" badge
 
 ---
 
 ## No Database Changes Required
 
-All needed tables and fields already exist:
-- `stores` table with all required columns
-- `useStores` hooks already implemented
-- RLS policies already in place
+All needed infrastructure exists:
+- `filament_prices` table with store relationships
+- `stores` table with region and shipping info
+- `get_filament_regional_prices` RPC function
+- `exchange_rates` table for currency conversion
 
-The implementation is purely frontend component work.
+The implementation is purely frontend integration work.
+
