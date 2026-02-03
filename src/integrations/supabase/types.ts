@@ -8875,6 +8875,16 @@ export type Database = {
           vendor: string
         }[]
       }
+      get_filament_best_price: {
+        Args: { p_filament_id: string; p_user_region?: string }
+        Returns: {
+          is_local: boolean
+          price_display: string
+          product_url: string
+          ships_to_user: boolean
+          store_name: string
+        }[]
+      }
       get_filament_price_history: {
         Args: { days_back?: number; p_filament_id: string }
         Returns: {
@@ -8888,6 +8898,26 @@ export type Database = {
       get_filament_price_stats: {
         Args: { p_filament_id: string }
         Returns: Json
+      }
+      get_filament_regional_prices: {
+        Args: { p_filament_id: string; p_user_region?: string }
+        Returns: {
+          converted_price: boolean
+          country_code: string
+          currency_code: string
+          currency_symbol: string
+          is_local_store: boolean
+          price_cents: number
+          price_display: string
+          price_local: number
+          product_url: string
+          region: string
+          ships_from: string[]
+          ships_to_user: boolean
+          store_name: string
+          store_slug: string
+          store_type: string
+        }[]
       }
       get_missing_regional_urls: {
         Args: { limit_count?: number }
