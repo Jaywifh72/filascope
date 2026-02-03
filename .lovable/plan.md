@@ -1,392 +1,146 @@
 
-# Plan: Admin Price Import Page
+# Plan: Admin Store Registry Page
 
 ## Summary
 
-This plan implements a comprehensive admin page at `/admin/price-import` for uploading scraped price data in JSON format. The page will validate uploaded files, display a preview of products, support dry-run testing, import data to `filament_prices` table, and show import history.
+Build out the Store Registry admin page at `/admin/stores` with a full CRUD interface for managing stores across regions. This page will display all stores in a filterable, sortable table with inline active toggle and modal-based add/edit functionality.
 
 ---
 
-## Current State Analysis
+## Current State
 
 | Component | Status |
 |-----------|--------|
-| `AdminPriceImport.tsx` | Exists as placeholder with "Coming soon..." |
+| `AdminStores.tsx` | Placeholder with "Coming soon..." |
+| `useStores.ts` | Complete with CRUD hooks |
 | `stores` table | 17 stores seeded (Amazon regions + brand stores) |
-| `filament_prices` table | 119 records from Amazon migration |
-| `sync_logs` table | Tracks import operations |
-| `react-dropzone` | NOT installed - will use native input file handling |
+| `Store` type | Defined in `src/types/regional.ts` |
+| `REGIONS` config | Defined in `src/config/regions.ts` |
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Create Type Definitions for Import
+### Step 1: Create Store Form Modal Component
 
-**File**: `src/types/priceImport.ts`
+**File**: `src/components/admin/stores/StoreFormModal.tsx`
 
-Define types for the scraped product JSON format and import results:
+A reusable modal for both Add and Edit operations:
 
-```typescript
-// Expected JSON format from local scraper
-export interface ScrapedProduct {
-  brand: string;
-  region: string;
-  currency: string;
-  shopify_product_id?: string;
-  shopify_variant_id?: string;
-  sku?: string;
-  product_title: string;
-  variant_title?: string;
-  full_title: string;
-  price: number;
-  compare_at_price?: number;
-  available: boolean;
-  product_url: string;
-  variant_url?: string;
-  image_url?: string;
-  scraped_at: string;
-  source_type: string;
-}
+**Form fields:**
+- **Name** (text, required)
+- **Slug** (text, auto-generated from name + region, editable)
+- **Store Type** (select: marketplace, brand_direct, retailer)
+- **Region** (select: US, CA, EU, UK, AU, JP, CN, GLOBAL)
+- **Country Code** (select, filtered by region)
+- **Currency** (auto-filled from region, editable)
+- **Base URL** (text, required, URL validation)
+- **Ships From** (multi-select country codes)
+- **Ships To** (multi-select: region codes or "GLOBAL")
+- **Active** (toggle, default on)
 
-export interface ImportResult {
-  total: number;
-  created: number;
-  updated: number;
-  matched: number;
-  skipped: number;
-  errors: ImportError[];
-}
+**Affiliate section (collapsible):**
+- Affiliate Tag (text)
+- Affiliate Network (text)
+- Preview URL with affiliate params
 
-export interface ImportError {
-  product: string;
-  reason: string;
-}
+**Behavior:**
+- Auto-generate slug from name + region: `"Amazon Canada"` + `"CA"` → `"amazon-canada"`
+- Auto-set currency when region changes
+- Validate URL format
+- Check unique constraint on submit
 
-export interface ParsedFile {
-  filename: string;
-  fileSize: number;
-  products: ScrapedProduct[];
-  brands: string[];
-  regions: string[];
-  currencies: string[];
-  isValid: boolean;
-  parseError?: string;
-}
+### Step 2: Create Store Table Component
 
-export interface ImportHistoryEntry {
-  id: string;
-  started_at: string;
-  completed_at: string | null;
-  sync_type: string;
-  data_source: string;
-  status: string;
-  records_updated: number;
-  records_failed: number;
-  error_message: string | null;
-  success_details: {
-    filename?: string;
-    brands?: string[];
-    regions?: string[];
-    created?: number;
-    updated?: number;
-    skipped?: number;
-    errors?: ImportError[];
-  } | null;
-}
-```
+**File**: `src/components/admin/stores/StoreTable.tsx`
 
-### Step 2: Create usePriceImport Hook
+A sortable, filterable data table:
 
-**File**: `src/hooks/usePriceImport.ts`
+**Columns:**
+| Column | Content | Sortable |
+|--------|---------|----------|
+| Store | Name + logo (if available) | Yes |
+| Type | Badge (marketplace/brand_direct/retailer) | Yes |
+| Region | Flag emoji + code | Yes |
+| Currency | Currency code | Yes |
+| Ships From | Country badges | No |
+| Active | Toggle switch (inline update) | Yes |
+| Actions | Edit, Delete buttons | No |
 
-A hook that handles the import logic:
+**Filters (above table):**
+- Search input (filters by name)
+- Region dropdown (All, US, CA, EU, UK, AU, JP, CN, GLOBAL)
+- Type dropdown (All, marketplace, brand_direct, retailer)
+
+**Features:**
+- Inline toggle for active status (immediate database update)
+- Click row to expand with full details
+- Sortable by any column header
+- Empty state when no stores match filters
+
+### Step 3: Create Delete Confirmation Dialog
+
+**File**: `src/components/admin/stores/DeleteStoreDialog.tsx`
+
+Alert dialog for confirming store deletion:
+- Title: "Delete [Store Name]?"
+- Warning: "This will also delete all price listings associated with this store. This action cannot be undone."
+- Buttons: Cancel, Delete (destructive)
+
+### Step 4: Update AdminStores Page
+
+**File**: `src/pages/AdminStores.tsx`
+
+Complete rewrite:
 
 ```text
-Key functions:
-- parseFile(file: File) → ParsedFile
-- validateProducts(products: ScrapedProduct[]) → validation errors
-- importPrices(products, dryRun: boolean) → ImportResult
-- matchFilament(brand, title, sku) → filament_id or null
-- findStore(brand, region) → store_id or null
-```
-
-Import process for each product:
-1. Find store by brand slug + region (e.g., "polymaker-us")
-2. If no store found, try region-only (e.g., "amazon-us")
-3. Convert price to cents: `Math.round(price * 100)`
-4. Try to match filament by: 
-   - First: SKU match against `variant_sku` or `mpn`
-   - Second: vendor + product_title fuzzy match
-5. Upsert into `filament_prices` table
-6. Track counts: created, updated, skipped, errors
-
-### Step 3: Create Import History Hook
-
-**File**: `src/hooks/usePriceImportHistory.ts`
-
-Hook for fetching and displaying past imports:
-
-```typescript
-// Query sync_logs where sync_type = 'price_import'
-export function usePriceImportHistory(limit = 20)
-```
-
-### Step 4: Create UI Components
-
-**Components to create**:
-
-| Component | Purpose |
-|-----------|---------|
-| `FileDropzone.tsx` | Drag & drop zone for JSON files |
-| `ImportFileSummary.tsx` | Shows parsed file stats (brands, regions, count) |
-| `ImportPreviewTable.tsx` | Table showing first 50 products |
-| `ImportProgressBar.tsx` | Progress indicator during import |
-| `ImportHistoryTable.tsx` | Shows past imports with expandable errors |
-
-### Step 5: Update AdminPriceImport Page
-
-**File**: `src/pages/AdminPriceImport.tsx`
-
-Complete rewrite with:
-- File upload zone at top
-- File summary card when file is loaded
-- Preview table with sorting
-- Dry Run + Import buttons
-- Progress bar during import
-- Import history section at bottom
-
----
-
-## File Structure
-
-```text
-src/
-├── types/
-│   └── priceImport.ts                    # New - Type definitions
-├── hooks/
-│   ├── usePriceImport.ts                 # New - Import logic hook
-│   └── usePriceImportHistory.ts          # New - History query hook
-├── components/
-│   └── admin/
-│       └── price-import/
-│           ├── FileDropzone.tsx          # New - Drag & drop zone
-│           ├── ImportFileSummary.tsx     # New - File stats display
-│           ├── ImportPreviewTable.tsx    # New - Preview table
-│           ├── ImportProgressBar.tsx     # New - Progress indicator
-│           └── ImportHistoryTable.tsx    # New - History table
-└── pages/
-    └── AdminPriceImport.tsx              # Modify - Full implementation
-```
-
----
-
-## UI Layout
-
-```text
+Layout:
 ┌─────────────────────────────────────────────────────────────────┐
-│  [Upload] Price Import                                          │
-│  Upload scraped price data to update product prices             │
+│  [Store] Store Registry                           [+ Add Store] │
+│  Manage stores and retailers for regional pricing               │
+├─────────────────────────────────────────────────────────────────┤
+│  [Search...        ]  [Region ▼]  [Type ▼]      17 stores       │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │                                                           │  │
-│  │        [📁 icon]                                          │  │
-│  │        Drag & drop a JSON file here, or click to browse  │  │
-│  │        Accepts .json files only                          │  │
-│  │                                                           │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌─ File Summary ─────────────────────────────────────────────┐ │
-│  │  polymaker-us-2026-02-03.json (2.4 MB)                    │ │
-│  │                                                           │ │
-│  │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐          │ │
-│  │  │ 1,234  │  │   3    │  │   2    │  │  USD   │          │ │
-│  │  │Products│  │ Brands │  │Regions │  │Currency│          │ │
-│  │  └────────┘  └────────┘  └────────┘  └────────┘          │ │
-│  │                                                           │ │
-│  │  Brands: Polymaker, Bambu Lab, Elegoo                     │ │
-│  │  Regions: 🇺🇸 US  🇨🇦 CA                                    │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                                                                 │
-│  ┌─ Preview (showing 50 of 1,234) ────────────────────────────┐ │
-│  │ Brand    │ Region │ Product Title       │ Price  │ Stock  │ │
-│  ├──────────┼────────┼─────────────────────┼────────┼────────┤ │
-│  │ Polymaker│ 🇺🇸 US  │ PolyLite PLA Black  │ $24.99 │   ●    │ │
-│  │ Polymaker│ 🇺🇸 US  │ PolyLite PLA White  │ $24.99 │   ●    │ │
-│  │ ...      │ ...    │ ...                 │ ...    │  ...   │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                                                                 │
-│          [Dry Run]  [Import 1,234 Prices]                       │
-│                                                                 │
-│  ┌─ Import Progress ──────────────────────────────────────────┐ │
-│  │  ████████████████░░░░░░░░░░  Processing 634 of 1,234...    │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─ Import History ───────────────────────────────────────────┐ │
-│  │ Date       │ Filename          │ Total │ Updated │ Status  │ │
-│  ├────────────┼───────────────────┼───────┼─────────┼─────────┤ │
-│  │ Feb 3, 26  │ polymaker-us.json │ 1,234 │   892   │ ✓ Done  │ │
-│  │ Feb 2, 26  │ bambulab-all.json │   456 │   456   │ ✓ Done  │ │
-│  │ Feb 1, 26  │ elegoo-us.json    │   234 │    12   │ ⚠ Partial│ │
-│  └───────────────────────────────────────────────────────────┘ │
+│  Store Name      │ Type       │ Region │ Currency │ Active │ ⋮ │
+│  ─────────────────────────────────────────────────────────────  │
+│  Amazon US       │ marketplace│ 🇺🇸 US  │ USD      │   ●    │ ⋮ │
+│  Amazon Canada   │ marketplace│ 🇨🇦 CA  │ CAD      │   ●    │ ⋮ │
+│  3DJake EU       │ retailer   │ 🇪🇺 EU  │ EUR      │   ●    │ ⋮ │
+│  Bambu Lab       │ brand_direct│ 🌐 GLOBAL│ USD     │   ●    │ ⋮ │
+│  ...                                                            │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Step 5: Add Region/Country Configuration
 
-## Technical Details
+**File**: `src/config/countries.ts` (new)
 
-### Store Matching Logic
-
-The scraper provides `brand` and `region`. We need to map this to a `store_id`:
+Country codes grouped by region for form dropdowns:
 
 ```typescript
-async function findStore(brand: string, region: string): Promise<string | null> {
-  // 1. Try exact match: brand-slug + region
-  const brandSlug = brand.toLowerCase().replace(/\s+/g, '-');
-  const exactSlug = `${brandSlug}-${region.toLowerCase()}`;
-  
-  const { data: exactMatch } = await supabase
-    .from('stores')
-    .select('id')
-    .eq('slug', exactSlug)
-    .eq('is_active', true)
-    .single();
-  
-  if (exactMatch) return exactMatch.id;
-  
-  // 2. Try region's Amazon store as fallback
-  const amazonSlug = `amazon-${region.toLowerCase()}`;
-  const { data: amazonMatch } = await supabase
-    .from('stores')
-    .select('id')
-    .eq('slug', amazonSlug)
-    .eq('is_active', true)
-    .single();
-  
-  return amazonMatch?.id || null;
-}
+export const REGION_COUNTRIES = {
+  US: [{ code: 'US', name: 'United States' }],
+  CA: [{ code: 'CA', name: 'Canada' }],
+  EU: [
+    { code: 'DE', name: 'Germany' },
+    { code: 'FR', name: 'France' },
+    { code: 'IT', name: 'Italy' },
+    { code: 'ES', name: 'Spain' },
+    { code: 'NL', name: 'Netherlands' },
+    { code: 'AT', name: 'Austria' },
+    { code: 'BE', name: 'Belgium' },
+    { code: 'PL', name: 'Poland' },
+    { code: 'CZ', name: 'Czech Republic' },
+  ],
+  UK: [{ code: 'GB', name: 'United Kingdom' }],
+  AU: [{ code: 'AU', name: 'Australia' }],
+  JP: [{ code: 'JP', name: 'Japan' }],
+  CN: [{ code: 'CN', name: 'China' }],
+  GLOBAL: [], // No specific country
+};
 ```
-
-### Filament Matching Logic
-
-Match scraped products to existing filaments:
-
-```typescript
-async function matchFilament(
-  brand: string, 
-  title: string, 
-  sku?: string
-): Promise<string | null> {
-  // 1. Try SKU match first (most reliable)
-  if (sku) {
-    const { data: skuMatch } = await supabase
-      .from('filaments')
-      .select('id')
-      .or(`variant_sku.eq.${sku},mpn.eq.${sku}`)
-      .single();
-    
-    if (skuMatch) return skuMatch.id;
-  }
-  
-  // 2. Try vendor + title match
-  const { data: titleMatch } = await supabase
-    .from('filaments')
-    .select('id, product_title')
-    .eq('vendor', brand)
-    .ilike('product_title', `%${title.substring(0, 30)}%`)
-    .limit(1)
-    .single();
-  
-  return titleMatch?.id || null;
-}
-```
-
-### Batch Processing
-
-For large imports (1000+ products), process in batches:
-
-```typescript
-const BATCH_SIZE = 50;
-
-for (let i = 0; i < products.length; i += BATCH_SIZE) {
-  const batch = products.slice(i, i + BATCH_SIZE);
-  
-  // Process batch in parallel
-  await Promise.all(batch.map(async (product) => {
-    const storeId = await findStore(product.brand, product.region);
-    const filamentId = await matchFilament(product.brand, product.product_title, product.sku);
-    
-    if (!storeId) {
-      errors.push({ product: product.full_title, reason: 'Store not found' });
-      return;
-    }
-    
-    if (!filamentId) {
-      skipped++;
-      return;
-    }
-    
-    // Upsert to filament_prices
-    await supabase.from('filament_prices').upsert({
-      filament_id: filamentId,
-      store_id: storeId,
-      price_cents: Math.round(product.price * 100),
-      currency_code: product.currency,
-      product_url: product.product_url,
-      in_stock: product.available,
-      last_verified_at: product.scraped_at,
-    }, {
-      onConflict: 'filament_id,store_id'
-    });
-  }));
-  
-  // Update progress
-  setProgress({ current: i + batch.length, total: products.length });
-}
-```
-
-### Sync Log Entry
-
-After import completes:
-
-```typescript
-await supabase.from('sync_logs').insert({
-  sync_type: 'price_import',
-  data_source: filename,
-  status: errors.length > 0 ? 'partial' : 'completed',
-  records_updated: updated + created,
-  records_failed: errors.length,
-  success_details: {
-    filename,
-    brands: [...new Set(products.map(p => p.brand))],
-    regions: [...new Set(products.map(p => p.region))],
-    created,
-    updated,
-    skipped,
-    errors: errors.slice(0, 50), // Limit error storage
-  },
-});
-```
-
----
-
-## Region Badge Colors
-
-For consistent region display:
-
-| Region | Color | Emoji |
-|--------|-------|-------|
-| US | blue | 🇺🇸 |
-| CA | red | 🇨🇦 |
-| UK | purple | 🇬🇧 |
-| EU | yellow | 🇪🇺 |
-| AU | green | 🇦🇺 |
-| JP | pink | 🇯🇵 |
 
 ---
 
@@ -394,38 +148,147 @@ For consistent region display:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/types/priceImport.ts` | Create | Type definitions for import |
-| `src/hooks/usePriceImport.ts` | Create | Import logic and processing |
-| `src/hooks/usePriceImportHistory.ts` | Create | Query past imports |
-| `src/components/admin/price-import/FileDropzone.tsx` | Create | Drag & drop file upload |
-| `src/components/admin/price-import/ImportFileSummary.tsx` | Create | Parsed file statistics |
-| `src/components/admin/price-import/ImportPreviewTable.tsx` | Create | Preview table with sorting |
-| `src/components/admin/price-import/ImportProgressBar.tsx` | Create | Progress during import |
-| `src/components/admin/price-import/ImportHistoryTable.tsx` | Create | Past imports display |
-| `src/pages/AdminPriceImport.tsx` | Modify | Complete page implementation |
+| `src/config/countries.ts` | Create | Country codes grouped by region |
+| `src/components/admin/stores/StoreFormModal.tsx` | Create | Add/Edit store form modal |
+| `src/components/admin/stores/StoreTable.tsx` | Create | Sortable/filterable store table |
+| `src/components/admin/stores/DeleteStoreDialog.tsx` | Create | Delete confirmation dialog |
+| `src/pages/AdminStores.tsx` | Modify | Complete page implementation |
+| `src/hooks/useStores.ts` | Modify | Add `isActive: undefined` option to fetch all |
 
 ---
 
-## Validation Rules
+## Technical Details
 
-The JSON file must:
-1. Be valid JSON (parseable)
-2. Be an array at the root level
-3. Each object must have: `brand`, `region`, `currency`, `product_title`, `full_title`, `price`, `available`, `product_url`
-4. `price` must be a positive number
-5. `currency` must be a known currency code (USD, CAD, EUR, GBP, etc.)
-6. `region` must be a known region code (US, CA, UK, EU, AU, JP)
+### Store Type Badges
 
-Invalid files show an error message in the dropzone area.
+| Type | Badge Color | Label |
+|------|-------------|-------|
+| marketplace | blue | Marketplace |
+| brand_direct | green | Brand Direct |
+| retailer | purple | Retailer |
+
+### Region Display
+
+```typescript
+const REGION_DISPLAY = {
+  US: { flag: '🇺🇸', name: 'United States' },
+  CA: { flag: '🇨🇦', name: 'Canada' },
+  EU: { flag: '🇪🇺', name: 'European Union' },
+  UK: { flag: '🇬🇧', name: 'United Kingdom' },
+  AU: { flag: '🇦🇺', name: 'Australia' },
+  JP: { flag: '🇯🇵', name: 'Japan' },
+  CN: { flag: '🇨🇳', name: 'China' },
+  GLOBAL: { flag: '🌐', name: 'Global' },
+};
+```
+
+### Slug Generation
+
+Auto-generate slug from name:
+```typescript
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+```
+
+### Inline Active Toggle
+
+When toggling active status:
+1. Optimistically update UI
+2. Call `useUpdateStore` mutation
+3. Rollback on error with toast
+
+### useStores Hook Update
+
+Modify to support fetching all stores (active and inactive):
+
+```typescript
+export function useStores(options: UseStoresOptions = {}) {
+  const { region, storeType, isActive } = options; // Remove default true
+  
+  // If isActive is undefined, don't filter by is_active
+  if (isActive !== undefined) {
+    query = query.eq('is_active', isActive);
+  }
+}
+```
+
+---
+
+## Form Validation
+
+| Field | Validation |
+|-------|------------|
+| Name | Required, min 2 chars |
+| Slug | Required, unique, lowercase alphanumeric + hyphens |
+| Base URL | Required, valid URL format |
+| Region | Required |
+| Store Type | Required |
+| Currency | Required (auto-set from region) |
+
+---
+
+## Component Structure
+
+```text
+AdminStores (page)
+├── AdminLayout
+│   └── Card
+│       ├── CardHeader
+│       │   ├── Title + Description
+│       │   └── Add Store Button
+│       └── CardContent
+│           ├── Filters Row
+│           │   ├── Input (search)
+│           │   ├── Select (region)
+│           │   └── Select (type)
+│           └── StoreTable
+│               ├── TableHeader (sortable)
+│               └── TableBody
+│                   └── StoreRow (for each store)
+│                       ├── Name cell
+│                       ├── Type badge
+│                       ├── Region + flag
+│                       ├── Currency
+│                       ├── Active toggle
+│                       └── Actions menu
+│
+├── StoreFormModal (dialog)
+│   └── Form fields...
+│
+└── DeleteStoreDialog (alert dialog)
+```
+
+---
+
+## Existing Hooks Usage
+
+The hooks in `useStores.ts` are already complete and will be used:
+
+```typescript
+// Fetch all stores (no active filter)
+const { data: stores, isLoading } = useStores({ isActive: undefined });
+
+// Create new store
+const createStore = useCreateStore();
+
+// Update store (including toggle active)
+const updateStore = useUpdateStore();
+
+// Delete store
+const deleteStore = useDeleteStore();
+```
 
 ---
 
 ## No Database Changes Required
 
-All needed tables exist:
-- `stores` - For store lookups
-- `filament_prices` - For upserting prices
-- `sync_logs` - For logging import runs
-- `filaments` - For matching products
+All needed tables and fields already exist:
+- `stores` table with all required columns
+- `useStores` hooks already implemented
+- RLS policies already in place
 
-The `filament_prices` table already has a unique constraint on `(filament_id, store_id)` which supports upsert operations.
+The implementation is purely frontend component work.
