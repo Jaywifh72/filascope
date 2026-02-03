@@ -13,9 +13,130 @@ export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN';
 
 export type CurrencyCode = 
   | 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'JPY' | 'CNY' 
-  | 'CHF' | 'SEK' | 'KRW' | 'INR';
+  | 'CHF' | 'SEK' | 'KRW' | 'INR' | 'PLN' | 'MXN' | 'CZK';
 
 export type DetectionMethod = 'geolocation' | 'ip' | 'browser_locale' | 'manual';
+
+export type StoreType = 'marketplace' | 'brand_direct' | 'retailer';
+
+// =============================================
+// Phase 1 Database Table Interfaces
+// =============================================
+
+/**
+ * Represents a store/retailer in the regional pricing system
+ * Maps to: stores table (Phase 1)
+ */
+export interface Store {
+  id: string;
+  name: string;
+  slug: string;
+  store_type: StoreType;
+  region: string;
+  country_code: string | null;
+  currency_code: string | null;
+  base_url: string;
+  affiliate_tag: string | null;
+  affiliate_network: string | null;
+  ships_from: string[] | null;
+  ships_to: string[] | null;
+  logo_url: string | null;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Represents a filament price listing at a specific store
+ * Maps to: filament_prices table (Phase 1)
+ */
+export interface FilamentPrice {
+  id: string;
+  filament_id: string;
+  store_id: string;
+  price_cents: number;
+  currency_code: string;
+  product_url: string | null;
+  affiliate_url: string | null;
+  in_stock: boolean;
+  last_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined data (optional)
+  store?: Store;
+}
+
+/**
+ * Exchange rate from a currency to USD
+ * Maps to: exchange_rates table (Phase 1)
+ */
+export interface ExchangeRate {
+  currency_code: string;
+  currency_name: string;
+  currency_symbol: string;
+  rate_to_usd: number;
+  updated_at: string | null;
+}
+
+/**
+ * Region configuration from database
+ * Maps to: region_config table (Phase 1)
+ */
+export interface RegionConfigDb {
+  region_code: string;
+  region_name: string;
+  currency_code: string | null;
+  flag_emoji: string | null;
+  default_store_priority: string[] | null;
+  amazon_domain: string | null;
+  is_active: boolean;
+}
+
+/**
+ * Joined result for filament price display with computed fields
+ */
+export interface FilamentPriceWithStore extends FilamentPrice {
+  store: Store;
+  price_display: number; // price_cents / 100
+  price_local: number; // Converted to user's currency
+  is_local_store: boolean;
+  ships_to_user: boolean;
+}
+
+/**
+ * Result from get_filament_regional_prices RPC
+ * Matches the actual PostgreSQL function return type
+ */
+export interface RegionalPriceRpcResult {
+  store_name: string;
+  store_slug: string;
+  store_type: string;
+  region: string;
+  country_code: string | null;
+  price_cents: number;
+  price_local: number;
+  price_display: string;
+  currency_code: string;
+  currency_symbol: string;
+  product_url: string | null;
+  is_local_store: boolean;
+  ships_to_user: boolean;
+  ships_from: string[] | null;
+  converted_price: boolean;
+}
+
+/**
+ * Result from get_filament_best_price RPC
+ * Returns the top result from get_filament_regional_prices
+ */
+export interface BestPriceRpcResult {
+  store_name: string;
+  price_display: string;
+  product_url: string | null;
+  is_local_store: boolean;
+  ships_to_user: boolean;
+}
 
 // =============================================
 // Database Row Interfaces
@@ -269,6 +390,27 @@ export const CURRENCY_CONFIGS: Record<CurrencyCode, CurrencyConfig> = {
     decimalPlaces: 2,
     symbolPosition: 'before',
   },
+  PLN: {
+    code: 'PLN',
+    symbol: 'zł',
+    name: 'Polish Zloty',
+    decimalPlaces: 2,
+    symbolPosition: 'after',
+  },
+  MXN: {
+    code: 'MXN',
+    symbol: 'MX$',
+    name: 'Mexican Peso',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+  },
+  CZK: {
+    code: 'CZK',
+    symbol: 'Kč',
+    name: 'Czech Koruna',
+    decimalPlaces: 2,
+    symbolPosition: 'after',
+  },
 };
 
 // =============================================
@@ -286,7 +428,7 @@ export function isValidRegionCode(code: string): code is RegionCode {
  * Check if a string is a valid CurrencyCode
  */
 export function isValidCurrencyCode(code: string): code is CurrencyCode {
-  return ['USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'CHF', 'SEK', 'KRW', 'INR'].includes(code);
+  return ['USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'CHF', 'SEK', 'KRW', 'INR', 'PLN', 'MXN', 'CZK'].includes(code);
 }
 
 /**
@@ -328,4 +470,7 @@ export const CURRENCY_TO_PRIMARY_REGION: Record<CurrencyCode, RegionCode> = {
   SEK: 'EU', // Sweden often uses EU stores
   KRW: 'JP', // Korea often falls back to JP stores
   INR: 'US', // India often falls back to US stores
+  PLN: 'EU', // Poland uses EU stores
+  MXN: 'US', // Mexico often falls back to US stores
+  CZK: 'EU', // Czech Republic uses EU stores
 };

@@ -78,6 +78,27 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     decimalPlaces: 2,
     symbolPosition: 'before',
   },
+  PLN: {
+    code: 'PLN',
+    symbol: 'zł',
+    name: 'Polish Zloty',
+    decimalPlaces: 2,
+    symbolPosition: 'after',
+  },
+  MXN: {
+    code: 'MXN',
+    symbol: 'MX$',
+    name: 'Mexican Peso',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+  },
+  CZK: {
+    code: 'CZK',
+    symbol: 'Kč',
+    name: 'Czech Koruna',
+    decimalPlaces: 2,
+    symbolPosition: 'after',
+  },
 };
 
 export const CURRENCY_LIST = Object.values(CURRENCIES);

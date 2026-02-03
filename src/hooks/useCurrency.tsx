@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CHF' | 'SEK' | 'CNY' | 'KRW' | 'INR' | 'MXN' | 'BRL' | 'NZD';
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CHF' | 'SEK' | 'CNY' | 'KRW' | 'INR' | 'MXN' | 'BRL' | 'NZD' | 'PLN' | 'CZK';
 
 interface CurrencyInfo {
   code: CurrencyCode;
@@ -25,6 +25,8 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyInfo> = {
   MXN: { code: 'MXN', symbol: '$', name: 'Mexican Peso', rate: 17.15 },
   BRL: { code: 'BRL', symbol: 'R$', name: 'Brazilian Real', rate: 4.97 },
   NZD: { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar', rate: 1.62 },
+  PLN: { code: 'PLN', symbol: 'zł', name: 'Polish Zloty', rate: 4.05 },
+  CZK: { code: 'CZK', symbol: 'Kč', name: 'Czech Koruna', rate: 23.50 },
 };
 
 interface CurrencyContextType {

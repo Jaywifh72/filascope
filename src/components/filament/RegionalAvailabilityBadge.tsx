@@ -21,6 +21,8 @@ const CURRENCY_TO_REGION_NAME: Record<CurrencyCode, string> = {
   MXN: 'Mexico',
   BRL: 'Brazil',
   NZD: 'New Zealand',
+  PLN: 'Poland',
+  CZK: 'Czech Republic',
 };
 
 interface RegionalAvailabilityBadgeProps {
