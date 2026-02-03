@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DollarSign, RefreshCw, Plus, Clock, TrendingUp, AlertCircle, Download } from 'lucide-react';
+import { DollarSign, RefreshCw, Plus, Clock, TrendingUp, AlertCircle, Download, Loader2, CloudDownload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,12 +14,13 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { CURRENCIES, CURRENCY_LIST } from '@/config/currencies';
 import { CurrencyCode, CurrencyExchangeRate } from '@/types/regional';
 import { formatDistanceToNow } from 'date-fns';
-
+import { useExchangeRateRefresh } from '@/hooks/useExchangeRateRefresh';
 export default function AdminExchangeRates() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingRate, setEditingRate] = useState<CurrencyExchangeRate | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { refreshRates, isRefreshing } = useExchangeRateRefresh();
 
   // Fetch all exchange rates
   const { data: exchangeRates, isLoading, refetch } = useQuery({
@@ -110,6 +111,19 @@ export default function AdminExchangeRates() {
           iconColor="text-green-500"
           actions={
             <>
+              <Button 
+                variant="outline" 
+                onClick={refreshRates} 
+                disabled={isRefreshing}
+                className="gap-2"
+              >
+                {isRefreshing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CloudDownload className="w-4 h-4" />
+                )}
+                Fetch Latest Rates
+              </Button>
               <Button variant="outline" onClick={handleExportJSON} className="gap-2">
                 <Download className="w-4 h-4" />
                 Export JSON
