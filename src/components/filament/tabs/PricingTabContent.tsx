@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,19 +6,13 @@ import {
   ExternalLink, 
   TrendingDown, 
   Store, 
-  ShoppingCart,
-  ChevronRight,
   CheckCircle2,
   Loader2,
   Bell,
   ArrowDown,
-  Clock,
-  MapPin,
-  Info,
   Globe,
-  AlertTriangle,
   Truck,
-  ShoppingBag
+  ShoppingCart
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { useRegion } from '@/contexts/RegionContext';
@@ -26,13 +20,13 @@ import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { usePriceHistory } from '@/hooks/usePriceHistory';
 import { usePriceAlerts } from '@/hooks/usePriceAlerts';
 import { useUnifiedRegionalPricing, RegionalStoreData } from '@/hooks/useUnifiedRegionalPricing';
-import { PriceFreshnessText } from '@/components/price/PriceFreshnessIndicator';
 import { cn } from '@/lib/utils';
 import type { Retailer } from '../hero/RetailersModal';
 import { PriceHistoryChart } from '../PriceHistoryChart';
 import { PriceAlertModal } from '../PriceAlertModal';
 import { REGIONS } from '@/config/regions';
 import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
+import type { CurrencyCode } from '@/types/regional';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -51,99 +45,135 @@ interface PricingTabContentProps {
   productSku?: string | null;
 }
 
-// Store Card Component - Focus on links rather than prices
-interface StoreCardProps {
-  store: RegionalStoreData;
-  productSku: string | null | undefined;
-  userRegion: string;
-  brandName: string;
+// Currency symbols map
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: '$',
+  CAD: 'C$',
+  EUR: '€',
+  GBP: '£',
+  AUD: 'A$',
+  JPY: '¥',
+  CNY: '¥',
+  KRW: '₩',
+  PLN: 'zł',
+  CZK: 'Kč',
+  SEK: 'kr',
+  CHF: 'CHF',
+  INR: '₹',
+  MXN: 'MX$',
+};
+
+// Unified store item for the list
+interface UnifiedStoreItem {
+  id: string;
+  name: string;
+  regionCode: string;
+  regionFlag: string;
+  nativePrice: number | null;
+  nativeCurrency: string;
+  convertedPrice: number | null;
+  userCurrency: string;
+  isLocal: boolean;
+  url: string;
+  type: 'official' | 'marketplace' | 'retailer';
+  inStock: boolean;
 }
 
-function StoreCard({ store, productSku, userRegion, brandName }: StoreCardProps) {
-  const isUserRegion = store.regionCode === userRegion;
-  const storeRegionConfig = REGIONS[store.regionCode as keyof typeof REGIONS];
+// Store Row Component
+function StoreRow({ store, userCurrencySymbol }: { store: UnifiedStoreItem; userCurrencySymbol: string }) {
+  const nativeSymbol = CURRENCY_SYMBOLS[store.nativeCurrency] || store.nativeCurrency;
   
-  // Generate product-specific URL
-  const storeUrl = store.productUrlPattern && productSku
-    ? interpolateProductUrl(store.productUrlPattern, productSku)
-    : store.baseUrl;
-
   const handleClick = () => {
-    window.open(storeUrl, '_blank', 'noopener,noreferrer');
+    window.open(store.url, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div 
       className={cn(
-        "p-4 rounded-lg border transition-all cursor-pointer group",
-        isUserRegion 
-          ? "border-primary bg-primary/5 hover:bg-primary/10" 
-          : "border-border hover:border-primary/50 hover:bg-muted/30"
+        "flex items-center justify-between p-3 rounded-lg border transition-all",
+        store.isLocal 
+          ? "border-primary/30 bg-primary/5" 
+          : "border-border bg-muted/10 hover:bg-muted/20",
+        !store.inStock && "opacity-60"
       )}
-      onClick={handleClick}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{store.flag}</span>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{store.storeName}</span>
-              {isUserRegion && (
-                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
-                  Your Region
-                </Badge>
-              )}
-            </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <span>{storeRegionConfig?.name || store.regionCode}</span>
-              <span>•</span>
-              <span>{store.currencyCode}</span>
-            </div>
-          </div>
+      {/* Store Info */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {/* Store Icon/Logo placeholder */}
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+          store.type === 'official' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        )}>
+          <Store className="w-4 h-4" />
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button 
-            size="sm"
-            variant={isUserRegion ? "default" : "outline"}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}
-            className={cn(
-              "gap-1",
-              isUserRegion && [
-                "bg-gradient-to-r from-primary to-primary/80",
-                "hover:from-primary/90 hover:to-primary/70",
-              ]
+        {/* Name & Region */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm truncate">{store.name}</span>
+            {store.isLocal && (
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0">
+                Local
+              </Badge>
             )}
-          >
-            Buy
-            <ExternalLink className="w-3 h-3" />
-          </Button>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>{store.regionFlag}</span>
+            <span>{REGIONS[store.regionCode as keyof typeof REGIONS]?.name || store.regionCode}</span>
+            {!store.isLocal && (
+              <>
+                <span>•</span>
+                <span className="flex items-center gap-0.5">
+                  <Truck className="w-3 h-3" />
+                  International
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
-      
-      {/* Shipping info */}
-      <div className="mt-2 flex flex-wrap gap-2">
-        {store.shipsFrom && (
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            Ships from {store.shipsFrom}
-          </span>
-        )}
-        {store.estimatedShippingDays && (
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Truck className="w-3 h-3" />
-            {store.estimatedShippingDays} days
-          </span>
-        )}
-        {store.freeShippingThreshold && (
-          <span className="text-xs text-emerald-400 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            Free shipping over {store.currencyCode === 'USD' ? '$' : store.currencyCode}{store.freeShippingThreshold}
-          </span>
-        )}
+
+      {/* Price */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="text-right">
+          {store.nativePrice !== null ? (
+            <>
+              {store.isLocal ? (
+                <div className="font-semibold text-sm">
+                  {nativeSymbol}{store.nativePrice.toFixed(2)}/kg
+                </div>
+              ) : (
+                <>
+                  <div className="font-semibold text-sm">
+                    ~{userCurrencySymbol}{store.convertedPrice?.toFixed(2) || '—'}/kg
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    ({nativeSymbol}{store.nativePrice.toFixed(2)})
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="text-xs text-muted-foreground">
+              {store.inStock ? 'Check price' : 'Out of stock'}
+            </div>
+          )}
+        </div>
+        
+        {/* Buy Button */}
+        <Button 
+          size="sm"
+          variant={store.isLocal ? "default" : "outline"}
+          onClick={handleClick}
+          disabled={!store.inStock}
+          className={cn(
+            "gap-1 min-w-[60px]",
+            store.isLocal && "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+          )}
+        >
+          Buy
+          <ExternalLink className="w-3 h-3" />
+        </Button>
       </div>
     </div>
   );
@@ -167,7 +197,7 @@ export function PricingTabContent({
   const { hasAlert, getAlert } = usePriceAlerts();
   const [priceAlertModalOpen, setPriceAlertModalOpen] = useState(false);
 
-  // Use unified regional pricing for stores and freshness
+  // Use unified regional pricing for stores
   const unifiedPricing = useUnifiedRegionalPricing({
     brandName: filament.vendor || '',
     basePrice: pricePerSpool,
@@ -179,7 +209,6 @@ export function PricingTabContent({
     priceLastVerifiedAt: filament.last_scraped_at,
     priceSource: filament.price_source,
     priceConfidence: filament.price_confidence,
-    // Pass actual regional prices to prioritize over conversion
     regionalPrices: {
       price_cad: (filament as any)?.price_cad,
       price_eur: (filament as any)?.price_eur,
@@ -191,25 +220,13 @@ export function PricingTabContent({
 
   const { 
     allStores, 
-    isLocalStore: hasRegionalStore,
     isLoading: storesLoading,
-    priceConfidence,
-    lastVerifiedAt,
-    timeAgo: freshnessTimeAgo,
   } = unifiedPricing;
-
-  // Sort stores: user's region first
-  const sortedStores = [...allStores].sort((a, b) => {
-    if (a.regionCode === region) return -1;
-    if (b.regionCode === region) return 1;
-    return 0;
-  });
 
   // Fetch live price for chart/alert purposes
   const { 
     currentPrice: livePrice, 
     weightGrams: liveWeightGrams,
-    isLoading: priceLoading, 
     isLivePrice,
     currency: livePriceCurrency
   } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
@@ -217,7 +234,6 @@ export function PricingTabContent({
   // Get price history data
   const { 
     min: historicalLow,
-    isBestIn6Months,
     isLoading: historyLoading
   } = usePriceHistory(filament.id, pricePerKg, 180);
 
@@ -238,81 +254,169 @@ export function PricingTabContent({
   const existingAlert = getAlert(filament.id);
   const alertExists = hasAlert(filament.id);
 
-  // Currency symbol
-  const currencySymbol = isLivePrice 
-    ? ({ 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' }[livePriceCurrency] || '$')
+  // Currency symbol for user's currency
+  const userCurrencySymbol = CURRENCY_SYMBOLS[currency] || currency;
+  
+  // For price history display
+  const historyCurrencySymbol = isLivePrice 
+    ? (CURRENCY_SYMBOLS[livePriceCurrency] || '$')
     : '$';
+
+  // Combine official stores and retailers into unified list
+  const unifiedStoreList = useMemo((): UnifiedStoreItem[] => {
+    const items: UnifiedStoreItem[] = [];
+    
+    // Add official stores from unified pricing
+    allStores.forEach((store: RegionalStoreData) => {
+      const storeUrl = store.productUrlPattern && (productSku || filament.product_handle)
+        ? interpolateProductUrl(store.productUrlPattern, productSku || filament.product_handle || '')
+        : store.baseUrl;
+      
+      const isLocal = store.regionCode === region;
+      const regionConfig = REGIONS[store.regionCode as keyof typeof REGIONS];
+      
+      // Get native price (if available) or estimate from pricePerKg
+      const nativePrice = pricePerKg; // This would ideally come from store-specific pricing
+      const convertedPrice = nativePrice && !isLocal 
+        ? convertPrice(nativePrice, store.currencyCode as CurrencyCode)
+        : nativePrice;
+      
+      items.push({
+        id: store.id,
+        name: store.storeName,
+        regionCode: store.regionCode,
+        regionFlag: regionConfig?.flag || '🌐',
+        nativePrice: nativePrice,
+        nativeCurrency: store.currencyCode,
+        convertedPrice: convertedPrice,
+        userCurrency: currency,
+        isLocal,
+        url: storeUrl,
+        type: 'official',
+        inStock: true,
+      });
+    });
+    
+    // Add retailers
+    retailers.forEach((retailer) => {
+      // Determine retailer region from name (simple heuristic)
+      let retailerRegion = 'US';
+      let retailerCurrency = 'USD';
+      if (retailer.name.includes('UK') || retailer.name.includes('🇬🇧')) {
+        retailerRegion = 'UK';
+        retailerCurrency = 'GBP';
+      } else if (retailer.name.includes('EU') || retailer.name.includes('DE') || retailer.name.includes('🇪🇺')) {
+        retailerRegion = 'EU';
+        retailerCurrency = 'EUR';
+      } else if (retailer.name.includes('CA') || retailer.name.includes('🇨🇦')) {
+        retailerRegion = 'CA';
+        retailerCurrency = 'CAD';
+      } else if (retailer.name.includes('AU') || retailer.name.includes('🇦🇺')) {
+        retailerRegion = 'AU';
+        retailerCurrency = 'AUD';
+      }
+      
+      const isLocal = retailerRegion === region;
+      const regionConfig = REGIONS[retailerRegion as keyof typeof REGIONS];
+      
+      // Use retailer price if available
+      const nativePrice = retailer.price || pricePerKg;
+      const convertedPrice = nativePrice && !isLocal
+        ? convertPrice(nativePrice, retailerCurrency as CurrencyCode)
+        : nativePrice;
+      
+      items.push({
+        id: retailer.id,
+        name: retailer.name,
+        regionCode: retailerRegion,
+        regionFlag: regionConfig?.flag || '🌐',
+        nativePrice: nativePrice,
+        nativeCurrency: retailerCurrency,
+        convertedPrice: convertedPrice,
+        userCurrency: currency,
+        isLocal,
+        url: retailer.url || '',
+        type: retailer.name.toLowerCase().includes('amazon') ? 'marketplace' : 'retailer',
+        inStock: retailer.inStock ?? true,
+      });
+    });
+    
+    // Sort: local stores first, then by converted price (lowest first)
+    return items.sort((a, b) => {
+      // Local stores first
+      if (a.isLocal && !b.isLocal) return -1;
+      if (!a.isLocal && b.isLocal) return 1;
+      
+      // Then by converted price (nulls last)
+      const priceA = a.isLocal ? a.nativePrice : a.convertedPrice;
+      const priceB = b.isLocal ? b.nativePrice : b.convertedPrice;
+      
+      if (priceA === null && priceB === null) return 0;
+      if (priceA === null) return 1;
+      if (priceB === null) return -1;
+      
+      return priceA - priceB;
+    });
+  }, [allStores, retailers, region, currency, pricePerKg, productSku, filament.product_handle, convertPrice]);
 
   return (
     <div className="space-y-6">
-      {/* Where to Buy - Regional Stores */}
+      {/* Where to Buy - Unified Store List */}
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <Globe className="w-5 h-5" />
+                <ShoppingCart className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Where to Buy</h3>
-                <p className="text-xs text-muted-foreground">Official {filament.vendor} stores</p>
+                <p className="text-xs text-muted-foreground">
+                  {unifiedStoreList.length} store{unifiedStoreList.length !== 1 ? 's' : ''} available
+                </p>
               </div>
             </div>
-            {hasRegionalStore && (
-              <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                Available in {REGIONS[region]?.name}
-              </Badge>
-            )}
           </div>
 
           {storesLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : sortedStores.length === 0 ? (
+          ) : unifiedStoreList.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="mb-2">No regional stores found for {filament.vendor}</p>
+              <Globe className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="mb-2">No stores found for this product</p>
               {productUrl && (
                 <Button 
                   variant="outline" 
                   onClick={() => window.open(productUrl, '_blank', 'noopener,noreferrer')}
                   className="gap-2"
                 >
-                  Visit Product Page
+                  View Product Page
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Button>
               )}
             </div>
           ) : (
-            <div className="space-y-3">
-              {sortedStores.map((store) => (
-                <StoreCard
-                  key={store.id}
-                  store={store}
-                  productSku={productSku || filament.product_handle}
-                  userRegion={region}
-                  brandName={filament.vendor || 'Store'}
+            <div className="space-y-2">
+              {unifiedStoreList.map((store) => (
+                <StoreRow 
+                  key={store.id} 
+                  store={store} 
+                  userCurrencySymbol={userCurrencySymbol}
                 />
               ))}
             </div>
           )}
 
-          {/* No Local Store Notice */}
-          {!hasRegionalStore && sortedStores.length > 0 && (
-            <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-              <p className="text-sm text-amber-400 flex items-center gap-2">
-                <Info className="w-4 h-4 shrink-0" />
-                {filament.vendor} doesn't have a dedicated store in {REGIONS[region]?.name}. 
-                You may need to order from another region.
-              </p>
-            </div>
-          )}
+          {/* Disclaimer */}
+          <p className="text-xs text-muted-foreground mt-4 text-center">
+            Prices may vary. Click "Buy" to see current pricing at each store.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Price Alerts - Still useful for tracking */}
+      {/* Price Alerts */}
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
@@ -342,14 +446,14 @@ export function PricingTabContent({
             <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
               <p className="text-sm text-primary flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                Alert set for {currencySymbol}{existingAlert.targetPrice.toFixed(2)}/kg
+                Alert set for {userCurrencySymbol}{existingAlert.targetPrice.toFixed(2)}/kg
               </p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Price History Chart - Still valuable context */}
+      {/* Price History Chart */}
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -369,14 +473,14 @@ export function PricingTabContent({
                 <ArrowDown className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm text-emerald-400">Lowest recorded in 6 months:</span>
               </div>
-              <span className="font-bold text-emerald-400">{currencySymbol}{historicalLow.toFixed(2)}/kg</span>
+              <span className="font-bold text-emerald-400">{historyCurrencySymbol}{historicalLow.toFixed(2)}/kg</span>
             </div>
           )}
           
           <PriceHistoryChart
             filamentId={filament.id}
             currentPrice={displayPricePerKg}
-            currencySymbol={currencySymbol}
+            currencySymbol={historyCurrencySymbol}
           />
           
           <p className="text-xs text-muted-foreground mt-4 text-center">
@@ -385,62 +489,6 @@ export function PricingTabContent({
         </CardContent>
       </Card>
 
-      {/* Other Retailers - Keep but simplify */}
-      {retailers.length > 0 && (
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Store className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Other Retailers</h3>
-                  <p className="text-xs text-muted-foreground">Amazon and third-party sellers</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {retailers.map((retailer) => (
-                <div 
-                  key={retailer.id}
-                  className={cn(
-                    "flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer",
-                    "bg-muted/20 border-border hover:bg-muted/40 hover:border-primary/30"
-                  )}
-                  onClick={() => {
-                    onRetailerClick(retailer);
-                    if (retailer.url) window.open(retailer.url, '_blank', 'noopener,noreferrer');
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-2 h-2 rounded-full shrink-0",
-                      retailer.inStock ? "bg-emerald-500" : "bg-red-500"
-                    )} />
-                    <div>
-                      <div className="font-medium text-sm">{retailer.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {retailer.inStock ? retailer.shippingEstimate : 'Check availability'}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1"
-                  >
-                    Buy
-                    <ExternalLink className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Price Alert Modal */}
       <PriceAlertModal
         filamentId={filament.id}
@@ -448,7 +496,7 @@ export function PricingTabContent({
         currentPrice={displayPricePerKg}
         isOpen={priceAlertModalOpen}
         onClose={() => setPriceAlertModalOpen(false)}
-        currencySymbol={currencySymbol}
+        currencySymbol={userCurrencySymbol}
       />
     </div>
   );
