@@ -27,6 +27,7 @@ import { RegionalPriceResult, CurrencyCode, RegionCode } from '@/types/regional'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
 import { HonestPriceDisplay, getCtaText } from '@/components/price/HonestPriceDisplay';
+import { ShippingThreshold } from '@/components/ShippingThreshold';
 import type { StorePrice } from '@/hooks/useFilamentStorePricing';
 import { StorePricingDisplay } from './StorePricingDisplay';
 
@@ -439,7 +440,7 @@ export function FilamentPurchaseSidebar({
               <span>
                 {shippingRule.flatRate === 0 
                   ? 'Free shipping available' 
-                  : `Free shipping on orders $${shippingRule.freeThreshold}+`}
+                  : <ShippingThreshold thresholdUSD={shippingRule.freeThreshold} />}
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">

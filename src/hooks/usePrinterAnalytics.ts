@@ -129,7 +129,7 @@ export function generateTrustSignals(brandData: {
   const signals: string[] = [];
   
   if (brandData?.free_shipping_threshold) {
-    signals.push(`Free shipping on orders over $${brandData.free_shipping_threshold}`);
+    signals.push(`Free shipping on orders over ${brandData.free_shipping_threshold}`);
   }
   
   if (brandData?.return_policy_days) {
@@ -147,7 +147,7 @@ export function generateTrustSignals(brandData: {
   // Default signals if no brand data
   if (signals.length === 0) {
     return [
-      'Free shipping on orders over $500',
+      'Free shipping available',
       '30-day return policy',
       '1-year manufacturer warranty',
       'Expert customer support'
