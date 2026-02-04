@@ -1,220 +1,307 @@
 
+# Plan: Add Store Name and Region Info to Deal Cards
 
-# Plan: Fix "Local" Badge Consistency on Filament Cards
+## Overview
 
-## Problem Summary
-
-The "Local" badge appears inconsistently across filament cards. When a UK user browses:
-- FormFutura shows: "£9.99 /kg 🇬🇧 at FormFutura" (missing "Local" badge)
-- Creality shows: "£24.83 /kg 🇬🇧 at Creality Local" (has badge)
-
-**Root cause**: The current logic determines "local" based on whether regional price data exists in the database (`isActualRegionalPrice && !isUsingFallbackRegion`), rather than whether the store's region matches the user's region.
+This plan adds store/region context to each deal card on the Deals page, showing users which region the deal comes from and whether it's local or international to them.
 
 ---
 
-## Current vs Correct Logic
+## What You'll See After These Changes
 
-### Current (Incorrect)
-```typescript
-// In LabReadoutCard.tsx
-const hasLocalStore = isActualRegionalPrice && !isUsingFallbackRegion;
+**Current deal card:**
+```
+76% OFF
+Amolen PEBA 90A Flexible - White
+~£14.62  ~£61.46  -76%
+Found 2 days ago
 ```
 
-This fails when:
-- Store IS in user's region (UK FormFutura store)
-- But `price_gbp` column is NULL (no scraped price yet)
-- Result: Badge hidden even though store is local
+**After changes:**
+```
+76% OFF
+Amolen PEBA 90A Flexible - White
+~£14.62  ~£61.46  -76%
+🇺🇸 Amazon US • International
+Found 2 days ago
+```
 
-### Correct Logic
+Plus a new "Show Local Only" toggle button in the filters section.
+
+---
+
+## Technical Implementation
+
+### Step 1: Create Store Region Helper Utility
+
+**New file:** `src/lib/dealStoreRegion.ts`
+
+This utility will:
+- Detect store region from product URL patterns (Amazon country domains, regional store URLs)
+- Look up brand regional availability to determine if a brand serves the user's region
+- Return store name, region code, flag, and local/international status
+
 ```typescript
-const isLocalStore = (storeRegion: string | null, userRegion: string): boolean => {
-  if (!storeRegion) return false;
-  if (storeRegion === userRegion) return true;
-  if (storeRegion === 'GLOBAL') return true;  // Global stores are always "local"
+// Key exports:
+interface DealStoreInfo {
+  storeName: string;           // "Amazon US", "Amolen Store", etc.
+  storeRegion: RegionCode;     // 'US' | 'UK' | 'EU' | etc.
+  regionFlag: string;          // 🇺🇸, 🇬🇧, etc.
+  isLocal: boolean;            // true if store region matches user region
+  isAmazon: boolean;           // true if Amazon link
+}
+
+function getDealStoreInfo(
+  productUrl: string | null,
+  vendor: string | null,
+  userRegion: RegionCode
+): DealStoreInfo
+```
+
+URL pattern detection logic:
+- `amazon.com` → US
+- `amazon.co.uk` → UK
+- `amazon.de`, `amazon.fr`, `amazon.it`, `amazon.es` → EU
+- `amazon.ca` → CA
+- `amazon.com.au` → AU
+- `amazon.co.jp` → JP
+- Store URLs with `.co.uk`, `-uk.`, `/uk/` → UK
+- Store URLs with `.eu`, `-eu.`, `/eu/` → EU
+- Default to US for standard `.com` stores
+
+### Step 2: Update DealWithMeta Interface
+
+**File:** `src/hooks/useDealsWithFilters.ts`
+
+Add store region fields to the deal data:
+
+```typescript
+export interface DealWithMeta extends DealFilament {
+  discount: number;
+  savings: number;
+  expiresIn?: string | null;
+  stockStatus?: "in_stock" | "low_stock" | "limited" | null;
+  viewsToday?: number;
+  // NEW: Store region info
+  storeName: string;
+  storeRegion: string;
+  regionFlag: string;
+}
+```
+
+### Step 3: Add "Show Local Only" Filter State
+
+**File:** `src/hooks/useDealsWithFilters.ts`
+
+Add filter state and logic:
+
+```typescript
+const [showLocalOnly, setShowLocalOnly] = useState(false);
+
+// In filter logic:
+if (showLocalOnly && !deal.isLocal) {
   return false;
+}
+
+// Return new state
+return {
+  // ... existing
+  showLocalOnly,
+  setShowLocalOnly,
+  localDealCount: rawDeals.filter(d => d.isLocal).length,
 };
 ```
 
----
+### Step 4: Update DealCard Component
 
-## Implementation Steps
+**File:** `src/components/deals/DealCard.tsx`
 
-### Step 1: Add `storeRegion` to `useRegionalPrice` Hook
+Add store region display after the price section:
 
-**File**: `src/hooks/useRegionalPrice.ts`
-
-The hook needs to return which region the store belongs to, not just whether prices exist.
-
-1. **Add `storeRegion` to return interface**:
-```typescript
-export interface RegionalPriceResult {
-  // ... existing fields ...
-  /** The region code of the store being used */
-  storeRegion: RegionCode | null;
-  /** Whether this is a local store for the user */
-  isLocalStore: boolean;
+```tsx
+interface DealCardProps {
+  deal: DealFilament;
+  discount: number;
+  savings: number;
+  expiresIn?: string | null;
+  stockStatus?: "in_stock" | "low_stock" | "limited" | null;
+  viewsToday?: number;
+  // NEW props
+  storeName?: string;
+  storeRegion?: string;
+  regionFlag?: string;
+  isLocal?: boolean;
 }
-```
 
-2. **Compute store region** based on:
-   - If actual regional URL exists → that region
-   - If vendor has regional stores → check user's region
-   - If global brand → return 'GLOBAL'
-   - If using fallback → return fallback region
-
-3. **Return `isLocalStore`**:
-```typescript
-const storeRegion = /* computed */;
-const isLocalStore = storeRegion === userRegion || storeRegion === 'GLOBAL';
-```
-
-### Step 2: Update FilamentCard to Show "Local" Badge
-
-**File**: `src/components/FilamentCard.tsx`
-
-Currently the price section shows:
-```
-£9.99/kg
-🇬🇧 at FormFutura
-```
-
-Add badge logic in Element 3 (Price section):
-
-```typescript
-// Add to hook destructuring
-const {
-  regionalPrice,
-  isActualRegionalPrice,
-  regionalUrl,
-  fallbackUrl,
-  isLocalStore,      // NEW
-  storeRegion,       // NEW  
-} = useRegionalPrice(filament as FilamentWithRegionalPrices);
-
-// In the price display section, after the vendor text
-{isLocalStore && (
-  <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded">
-    Local
-  </span>
+// In the card content, after price section:
+{storeName && (
+  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+    <span>{regionFlag}</span>
+    <span>{storeName}</span>
+    <span>•</span>
+    {isLocal ? (
+      <span className="text-emerald-400 font-medium">Local</span>
+    ) : (
+      <span className="text-muted-foreground">International</span>
+    )}
+  </div>
 )}
 ```
 
-### Step 3: Fix LabReadoutCard Logic
+### Step 5: Update DealFilters Component
 
-**File**: `src/components/LabReadoutCard.tsx`
+**File:** `src/components/deals/DealFilters.tsx`
 
-Replace the incorrect logic:
+Add "Show Local Only" toggle button:
 
-```typescript
-// OLD (incorrect)
-const hasLocalStore = isActualRegionalPrice && !isUsingFallbackRegion;
+```tsx
+interface DealFiltersProps {
+  // ... existing props
+  showLocalOnly: boolean;
+  onShowLocalOnlyChange: (show: boolean) => void;
+  localDealCount: number;
+  userRegionFlag: string;
+}
 
-// NEW (correct)
+// Add toggle before the clear button:
+<Button
+  variant={showLocalOnly ? "default" : "outline"}
+  size="sm"
+  onClick={() => onShowLocalOnlyChange(!showLocalOnly)}
+  className="gap-2 min-h-[44px]"
+>
+  {userRegionFlag} Local Only
+  {showLocalOnly && (
+    <Badge className="ml-1 h-5 px-1.5 text-xs">
+      {localDealCount}
+    </Badge>
+  )}
+</Button>
+```
+
+### Step 6: Update MobileDealsFilterSheet Component
+
+**File:** `src/components/deals/MobileDealsFilterSheet.tsx`
+
+Add "Show Local Only" as a prominent toggle at the top of the filter sheet:
+
+```tsx
+// Add after SheetHeader, before Material filter:
+<div className="px-4 py-3 border-b border-border">
+  <button
+    onClick={() => onShowLocalOnlyChange(!showLocalOnly)}
+    className={cn(
+      "flex items-center justify-between w-full py-3 px-4 rounded-lg",
+      showLocalOnly 
+        ? "bg-emerald-500/10 border border-emerald-500/30"
+        : "bg-muted/30"
+    )}
+  >
+    <div className="flex items-center gap-3">
+      <span className="text-lg">{userRegionFlag}</span>
+      <span className="font-medium">Show Local Deals Only</span>
+    </div>
+    <Switch checked={showLocalOnly} />
+  </button>
+  <p className="text-xs text-muted-foreground mt-2">
+    {localDealCount} deals ship from your region
+  </p>
+</div>
+```
+
+### Step 7: Update Deals Page
+
+**File:** `src/pages/Deals.tsx`
+
+Pass new props to filter components and DealCard:
+
+```tsx
+const { region } = useRegion();
 const { 
-  regionalPrice, 
-  regionalUrl,
-  fallbackUrl,
-  isActualRegionalPrice,
-  isLocalStore,      // Use new field
-  storeRegion,       // For flag display
-} = useRegionalPrice(filament as FilamentWithRegionalPrices);
+  // ... existing
+  showLocalOnly,
+  setShowLocalOnly,
+  localDealCount,
+} = useDealsWithFilters();
+
+// Pass to DealFilters
+<DealFilters
+  {...existingProps}
+  showLocalOnly={showLocalOnly}
+  onShowLocalOnlyChange={setShowLocalOnly}
+  localDealCount={localDealCount}
+  userRegionFlag={REGIONS[region].flag}
+/>
+
+// DealCard already receives deal with store info
+<DealCard
+  key={deal.id}
+  deal={deal}
+  {...existingProps}
+  storeName={deal.storeName}
+  storeRegion={deal.storeRegion}
+  regionFlag={deal.regionFlag}
+  isLocal={deal.isLocal}
+/>
 ```
 
-The badge display already exists:
-```typescript
-{hasLocalStore && (
-  <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-primary/20 border border-primary/30 text-primary rounded">
-    Local
-  </span>
+### Step 8: Add "No Local Deals" Empty State
+
+**File:** `src/pages/Deals.tsx`
+
+Add special message when local filter is on but no results:
+
+```tsx
+{deals.length === 0 && showLocalOnly ? (
+  <div className="text-center py-16">
+    <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+    <h2 className="text-xl font-semibold mb-2">No Local Deals Found</h2>
+    <p className="text-muted-foreground mb-6">
+      We don't have any deals shipping from your region ({region}) right now.
+      Try browsing international deals.
+    </p>
+    <Button variant="outline" onClick={() => setShowLocalOnly(false)}>
+      Show International Deals
+    </Button>
+  </div>
+) : (
+  // ... existing empty state
 )}
 ```
-
-Just rename `hasLocalStore` to `isLocalStore` and use the hook value.
 
 ---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/lib/dealStoreRegion.ts` | Helper to detect store region from URL/vendor |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/hooks/useRegionalPrice.ts` | Add `storeRegion` and `isLocalStore` to return interface and compute them |
-| `src/components/FilamentCard.tsx` | Add "Local" badge display using `isLocalStore` from hook |
-| `src/components/LabReadoutCard.tsx` | Replace `hasLocalStore` computation with `isLocalStore` from hook |
-
----
-
-## Visual Result
-
-### Before
-```
-£9.99/kg
-🇬🇧 at FormFutura
-```
-
-### After  
-```
-£9.99/kg
-🇬🇧 at FormFutura Local
-```
-
-Badge styling:
-- Background: `bg-emerald-500/10`
-- Border: `border border-emerald-500/20`
-- Text: `text-emerald-400`
-- Font: `text-[9px] font-medium`
-
----
-
-## Edge Cases
-
-| Scenario | Expected Badge |
-|----------|----------------|
-| UK user, UK store (FormFutura UK) | ✅ Show "Local" |
-| UK user, US store (Polymaker US) | ❌ No badge, show 🇺🇸 flag |
-| UK user, EU store (Prusa) | ❌ No badge, show 🇪🇺 flag |
-| UK user, GLOBAL brand (eSun) | ✅ Show "Local" (ships globally) |
-| UK user, no store data | ❌ No badge, no flag |
-
----
-
-## Technical Details
-
-### Store Region Detection Logic (in `useRegionalPrice`)
-
-```typescript
-// Determine store region based on best available data
-let storeRegion: RegionCode | null = null;
-
-// 1. If we have actual regional price for user's currency
-if (actualRegionalPrice && actualRegionalPrice > 0) {
-  storeRegion = userRegionCode; // e.g., 'UK' for GBP user
-}
-// 2. If brand has a store configured for user's region
-else if (brandHasRegionalStore) {
-  storeRegion = userRegionCode;
-}
-// 3. If using fallback URL from different region
-else if (fallbackUrlCurrency) {
-  storeRegion = CURRENCY_TO_REGION_CODE[fallbackUrlCurrency];
-}
-// 4. Global brands
-else if (!isRegionalBrand) {
-  storeRegion = 'GLOBAL';
-}
-// 5. Default to USD/US
-else if (filament.product_url) {
-  storeRegion = 'US';
-}
-
-// Compute isLocalStore
-const isLocalStore = storeRegion === userRegionCode || 
-                     storeRegion === 'GLOBAL' ||
-                     (!isRegionalBrand && !!storeRegion);
-```
+| File | Changes |
+|------|---------|
+| `src/hooks/useDealsWithFilters.ts` | Add store info to deals, add local filter state |
+| `src/components/deals/DealCard.tsx` | Display store name, flag, Local/International badge |
+| `src/components/deals/DealFilters.tsx` | Add "Show Local Only" toggle |
+| `src/components/deals/MobileDealsFilterSheet.tsx` | Add "Show Local Only" toggle |
+| `src/pages/Deals.tsx` | Pass new props, add "no local deals" empty state |
 
 ---
 
 ## No Database Changes Required
 
-All changes are frontend-only.
+Store region is derived from existing `product_url` and `vendor` fields using URL pattern detection and the existing `BRAND_REGIONAL_AVAILABILITY` lookup table.
 
+---
+
+## Edge Cases Handled
+
+| Scenario | Behavior |
+|----------|----------|
+| No product URL | Show vendor name only, no region badge |
+| Unknown URL pattern | Default to US region |
+| Amazon link detected | Show "Amazon {region}" as store name |
+| User in UK, deal from UK | Show "🇬🇧 Store Name • Local" |
+| User in UK, deal from US | Show "🇺🇸 Store Name • International" |
+| Local filter on, no local deals | Show helpful message with button to clear filter |
