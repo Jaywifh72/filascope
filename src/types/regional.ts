@@ -221,6 +221,45 @@ export interface CurrencyConfig {
 }
 
 // =============================================
+// Static Pricing Display Types
+// =============================================
+
+/**
+ * Simplified store price for static pricing display
+ * Used in "Where to Buy" sections and price comparisons
+ * All prices are from periodic scrapes, not live data
+ */
+export interface StorePrice {
+  store_id: string;
+  store_name: string;
+  store_logo_url?: string;
+  store_url: string;           // Direct product URL
+  region: RegionCode;          // Store's region
+  currency: CurrencyCode;      // Store's native currency
+  price_cents: number;         // Price in store's native currency (cents)
+  price_per_kg_cents: number;  // Normalized to per-kg for comparison
+  scraped_at: string;          // ISO date of last scrape
+  is_local: boolean;           // Computed: matches user's region
+  // Optional converted price (computed client-side)
+  converted_price_cents?: number;
+  converted_currency?: CurrencyCode;
+}
+
+/**
+ * Helper to convert StorePrice cents to display dollars
+ */
+export function storePriceToDisplay(price: StorePrice): number {
+  return price.price_cents / 100;
+}
+
+/**
+ * Helper to convert StorePrice per-kg cents to display
+ */
+export function storePricePerKgToDisplay(price: StorePrice): number {
+  return price.price_per_kg_cents / 100;
+}
+
+// =============================================
 // Runtime/Result Types
 // =============================================
 
