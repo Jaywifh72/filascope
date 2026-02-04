@@ -1244,10 +1244,132 @@ function detectCustomStorefront(url: string): 'bambulab' | 'prusa' | 'opencart' 
   return null;
 }
 
-// Validate that a price is within reasonable range for filament products
-// Minimum raised to $10 to avoid capturing weights, discount amounts, or shipping costs
+// Product type for price validation (filament default, printer has higher range)
+type ProductType = 'filament' | 'printer';
+
+// Price range configurations per product type
+const PRICE_RANGES: Record<ProductType, { min: number; max: number }> = {
+  filament: { min: 10, max: 150 },
+  printer: { min: 99, max: 10000 },
+};
+
+// Validate that a price is within reasonable range for the product type
+// Minimum raised to $10 for filaments to avoid capturing weights, discount amounts, or shipping costs
+// Printers use $99-$10000 range to avoid capturing accessory prices
+function validateProductPrice(price: number, productType: ProductType = 'filament'): boolean {
+  const range = PRICE_RANGES[productType];
+  return price >= range.min && price <= range.max;
+}
+
+// Legacy wrapper for backward compatibility
 function validateFilamentPrice(price: number, min = 10, max = 150): boolean {
   return price >= min && price <= max;
+}
+
+// Extract printer price from page content
+// Uses higher price range ($99-$10000) appropriate for 3D printers
+// NOTE: For printers, we use a different strategy than filaments:
+// - Look for "From $XXX" patterns (Bambu Lab format)
+// - Look for prices near the product title (first prominent price)
+// - Avoid accessory/bundle prices that are usually lower
+function extractPrinterPrice(markdown: string, preferredCurrency: string): {
+  price: number | null;
+  compareAtPrice: number | null;
+  currency: string;
+  available: boolean;
+} {
+  console.log(`Extracting PRINTER price from content, preferred currency: ${preferredCurrency}`);
+  const range = PRICE_RANGES.printer;
+  
+  // Currency-specific patterns
+  const currencySymbols: Record<string, { symbol: string; symbolEscaped: string }> = {
+    USD: { symbol: '$', symbolEscaped: '\\$' },
+    EUR: { symbol: '€', symbolEscaped: '€' },
+    GBP: { symbol: '£', symbolEscaped: '£' },
+    CAD: { symbol: 'CA$', symbolEscaped: '(?:CA)?\\$' },
+    AUD: { symbol: 'A$', symbolEscaped: '(?:A)?\\$' },
+    JPY: { symbol: '¥', symbolEscaped: '¥' },
+  };
+  
+  const config = currencySymbols[preferredCurrency] || currencySymbols.USD;
+  
+  // STRATEGY 1: Look for "From $XXX" pattern (Bambu Lab, Prusa, etc.)
+  // This is the main product starting price
+  const fromPattern = new RegExp(`From\\s*${config.symbolEscaped}\\s*([\\d,]+(?:\\.\\d{2})?)`, 'gi');
+  const fromMatches = [...markdown.matchAll(fromPattern)];
+  if (fromMatches.length > 0) {
+    const fromPrices = fromMatches
+      .map(m => parseFloat(m[1].replace(',', '')))
+      .filter(p => !isNaN(p) && p >= range.min && p <= range.max);
+    
+    if (fromPrices.length > 0) {
+      // Take the first "From $XXX" price found (usually the main product)
+      const price = fromPrices[0];
+      console.log(`Found printer "From" price: ${config.symbol}${price}`);
+      return { price, compareAtPrice: null, currency: preferredCurrency, available: true };
+    }
+  }
+  
+  // STRATEGY 2: Look near "Add to Cart" button - the price just before it is usually the main price
+  // Focus on a smaller window to avoid accessory prices
+  const addToCartMatch = markdown.match(/Add\s*to\s*Cart/i);
+  if (addToCartMatch && addToCartMatch.index) {
+    // Look in the 500 chars before "Add to Cart" for prices
+    const beforeCartStart = Math.max(0, addToCartMatch.index - 500);
+    const beforeCart = markdown.slice(beforeCartStart, addToCartMatch.index);
+    
+    const pricePattern = new RegExp(`${config.symbolEscaped}\\s*([\\d,]+(?:\\.\\d{2})?)`, 'g');
+    const cartPrices = [...beforeCart.matchAll(pricePattern)]
+      .map(m => parseFloat(m[1].replace(',', '')))
+      .filter(p => !isNaN(p) && p >= range.min && p <= range.max);
+    
+    if (cartPrices.length > 0) {
+      // Take the LAST price before Add to Cart (usually the current price)
+      const price = cartPrices[cartPrices.length - 1];
+      // Look for a compare-at price (strikethrough/original price is usually before the current)
+      const compareAt = cartPrices.length > 1 && cartPrices[cartPrices.length - 2] > price * 1.05 
+        ? cartPrices[cartPrices.length - 2] 
+        : null;
+      console.log(`Found printer price near Add to Cart: ${config.symbol}${price}${compareAt ? `, compare: ${config.symbol}${compareAt}` : ''}`);
+      return { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
+    }
+  }
+  
+  // STRATEGY 3: Look for the first prominent price in the upper portion of the page
+  // Split markdown into lines and look for prices in the first 30%
+  const lines = markdown.split('\n');
+  const upperContent = lines.slice(0, Math.floor(lines.length * 0.3)).join('\n');
+  
+  const pricePattern = new RegExp(`${config.symbolEscaped}\\s*([\\d,]+(?:\\.\\d{2})?)`, 'g');
+  const upperPrices = [...upperContent.matchAll(pricePattern)]
+    .map(m => parseFloat(m[1].replace(',', '')))
+    .filter(p => !isNaN(p) && p >= range.min && p <= range.max);
+  
+  console.log(`Found ${upperPrices.length} valid printer prices in upper content:`, upperPrices.slice(0, 5));
+  
+  if (upperPrices.length > 0) {
+    // For printers, take the FIRST valid price (main product price appears first)
+    const price = upperPrices[0];
+    // Compare-at is usually the second price if it's higher
+    const compareAt = upperPrices.length > 1 && upperPrices[1] > price * 1.05 ? upperPrices[1] : null;
+    console.log(`Printer price (first in upper content): ${config.symbol}${price}${compareAt ? `, compare: ${config.symbol}${compareAt}` : ''}`);
+    return { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
+  }
+  
+  // STRATEGY 4: Full page fallback - take first valid price
+  const allPrices = [...markdown.matchAll(pricePattern)]
+    .map(m => parseFloat(m[1].replace(',', '')))
+    .filter(p => !isNaN(p) && p >= range.min && p <= range.max);
+  
+  if (allPrices.length > 0) {
+    const price = allPrices[0];
+    const compareAt = allPrices.length > 1 && allPrices[1] > price * 1.05 ? allPrices[1] : null;
+    console.log(`Printer price (full page first): ${config.symbol}${price}${compareAt ? `, compare: ${config.symbol}${compareAt}` : ''}`);
+    return { price, compareAtPrice: compareAt, currency: preferredCurrency, available: true };
+  }
+  
+  console.log('No valid printer price found');
+  return { price: null, compareAtPrice: null, currency: preferredCurrency, available: false };
 }
 
 // Detect granular stock status from page content
@@ -1771,11 +1893,13 @@ function extractDiameterFromContent(markdown: string, url: string): number | nul
 
 // Fetch price using Firecrawl API
 // skipResolution: set to true when called from resolution retry to prevent infinite loops
+// productType: 'filament' (default) or 'printer' - affects price validation ranges
 async function fetchPriceWithFirecrawl(
   productUrl: string, 
   preferredCurrency: string,
   brandConfig?: BrandConfig | null,
-  skipResolution = false
+  skipResolution = false,
+  productType: ProductType = 'filament'
 ): Promise<PriceResponse & { rawSample?: string }> {
   const startTime = Date.now();
   const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
@@ -1913,8 +2037,13 @@ async function fetchPriceWithFirecrawl(
     
     let priceData: { price: number | null; compareAtPrice: number | null; currency: string; available: boolean };
     
+    // For printers, use dedicated printer extraction with higher price range
+    if (productType === 'printer') {
+      console.log('Using PRINTER extraction (price range $99-$10000)');
+      priceData = extractPrinterPrice(markdown, preferredCurrency);
+    }
     // Use configured extraction if available and working
-    if (brandConfig && brandConfig.extraction_working && brandConfig.extraction_method !== 'auto') {
+    else if (brandConfig && brandConfig.extraction_working && brandConfig.extraction_method !== 'auto') {
       console.log(`Using configured extraction for ${brandConfig.brand_name}`);
       const configResult = extractPriceWithConfig(
         markdown,
@@ -1927,7 +2056,7 @@ async function fetchPriceWithFirecrawl(
         console.log(`Config extraction matched pattern: ${configResult.matchedPattern}`);
       }
     } else {
-      // Legacy extraction logic
+      // Legacy extraction logic for filaments
       const isOpenCart = productUrl.includes('geeetech.com');
       const isCreality = productUrl.includes('store.creality.com');
       
@@ -2316,7 +2445,7 @@ serve(async (req) => {
   }
 
   try {
-    const { productUrl, currency = 'USD', forceRefresh = false, targetWeightGrams = null } = await req.json();
+    const { productUrl, currency = 'USD', forceRefresh = false, targetWeightGrams = null, productType = 'filament' } = await req.json();
     
     if (!productUrl) {
       return new Response(
@@ -2379,15 +2508,15 @@ serve(async (req) => {
     let result: PriceResponse;
     
     if (customStorefront) {
-      console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl`);
-      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+      console.log(`Detected custom storefront: ${customStorefront}, using Firecrawl (productType: ${productType})`);
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
     } else if (shouldAlwaysUseFirecrawl(urlToFetch)) {
-      console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing`);
-      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+      console.log(`Store has unreliable JSON API, using Firecrawl for accurate pricing (productType: ${productType})`);
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
     } else if (brandConfig && brandConfig.extraction_method === 'firecrawl') {
       // Brand config explicitly requests Firecrawl
-      console.log(`Brand config requests Firecrawl extraction`);
-      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+      console.log(`Brand config requests Firecrawl extraction (productType: ${productType})`);
+      result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
     } else {
       // Try Shopify JSON API for standard stores
       const platform = detectPlatform(urlToFetch);
@@ -2396,19 +2525,19 @@ serve(async (req) => {
         const isMultiCurrency = isMultiCurrencyShopifyStore(urlToFetch);
         
         if (isMultiCurrency && currency !== 'USD') {
-          console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl`);
-          result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+          console.log(`Multi-currency Shopify store detected (${currency} requested), using Firecrawl (productType: ${productType})`);
+          result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
         } else {
           result = await fetchShopifyPrice(urlToFetch, expectedCurrency, targetWeightGrams);
           
           if (!result.success) {
-            console.log('Shopify failed, trying Firecrawl as fallback...');
-            result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+            console.log(`Shopify failed, trying Firecrawl as fallback... (productType: ${productType})`);
+            result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
           }
         }
       } else {
-        console.log('Unknown platform, trying Firecrawl...');
-        result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig);
+        console.log(`Unknown platform, trying Firecrawl... (productType: ${productType})`);
+        result = await fetchPriceWithFirecrawl(urlToFetch, expectedCurrency, brandConfig, false, productType);
       }
     }
 
