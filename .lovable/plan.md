@@ -1,286 +1,333 @@
 
 
-# Plan: Integrate Store Listings into Filament Detail Page
+# Plan: Simplify Pricing Display for Static/Scraped Data
 
 ## Summary
 
-Update the filament detail page to display regional prices from the `filament_prices` table (store listings). When a user views a filament, they will see the price from a store in their selected region (if available), or fall back to a converted USD price with an "International shipping" warning.
+Refactor the pricing display across the filament detail page to be honest about the static/scraped nature of the data. Remove terminology that implies live price checking, simplify freshness messaging, and create a cleaner "Where to Buy" experience.
 
 ---
 
 ## Current State Analysis
 
-| Component | Status |
-|-----------|--------|
-| `filament_prices` table | 119 records, 3 with prices > 0 |
-| `get_filament_regional_prices` RPC | Already implemented and working |
-| `useFilamentRegionalPrices` hook | Already exists in `useFilamentPrices.ts` |
-| `useUnifiedRegionalPricing` hook | Uses `brand_regional_stores`, NOT `filament_prices` |
-| `FilamentPurchaseSidebar` | Receives pricing via props from parent |
+| Component | Current State | Issues |
+|-----------|--------------|--------|
+| `HonestPriceDisplay` | Shows "Estimated price", "Last checked X days ago", "May have changed - verify at store" | Overly complex messaging |
+| `LivePriceCheckButton` | "Check Current Price" button with live fetching | Implies real-time when most data is scraped |
+| `FilamentPurchaseSidebar` | "Check Current Price" CTA for low-confidence prices | Confusing dual behavior |
+| `PricingTabContent` | "Check Price" buttons, "Other Retailers" section | Redundant sections |
+| `StorePricingDisplay` | Clean store-based display | Good baseline to build on |
 
-**Key finding**: The RPC function and hook already exist but aren't being used by the detail page. The `useUnifiedRegionalPricing` hook uses a different table (`brand_regional_stores`) for URL generation but doesn't query actual store prices.
+---
+
+## Terminology Changes
+
+| Current | New |
+|---------|-----|
+| "Check Current Price" | "Buy at [Store Name]" |
+| "Estimated price" | "Last Known Price" or just show price |
+| "Last checked X days ago" | "Price from [date]" |
+| "May have changed - verify at store" | Remove (implied by static nature) |
+| "Verified today" | "Updated today" |
+| "Check Price" button | "Buy" button |
+| "View at Store" | "Buy at [Store Name]" |
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Create `useFilamentStorePricing` Hook
+### Step 1: Update HonestPriceDisplay Component
 
-**File**: `src/hooks/useFilamentStorePricing.ts` (new)
+**File**: `src/components/price/HonestPriceDisplay.tsx`
 
-A unified hook that combines store listings with the user's region:
+**Changes**:
 
-```typescript
-interface StorePrice {
-  priceCents: number;
-  priceDisplay: number;       // price_cents / 100
-  currencyCode: string;
-  storeName: string;
-  storeSlug: string;
-  storeType: string;          // marketplace, brand_direct, retailer
-  region: string;
-  productUrl: string | null;
-  shipsFrom: string[] | null;
-  shipsToUser: boolean;
-  isLocalStore: boolean;
-  isConverted: boolean;
-  inStock: boolean;
-  lastVerifiedAt: string | null;
-}
+1. **Simplify display modes**:
+   - Remove `pricePrefix` distinction (always show `~` for converted only)
+   - Change labels from "Estimated" to "Last Known"
+   - Simplify helper text to just show date
 
-interface UseFilamentStorePricingResult {
-  bestPrice: StorePrice | null;
-  allPrices: StorePrice[];
-  isLoading: boolean;
-  error: string | null;
-  hasPriceData: boolean;
-}
-```
+2. **Update CTA text**:
+   - Always use "Buy at [Store]" pattern
+   - Remove "Check Current Price" variant
 
-**Logic flow**:
-1. Call `useFilamentRegionalPrices(filamentId, userRegion)` (already exists)
-2. Transform RPC results to `StorePrice[]` format
-3. Return best price (first result) and all prices
-4. Provide `hasPriceData` flag for fallback detection
+3. **Streamline freshness messaging**:
+   ```typescript
+   // OLD: "Last checked 3 days ago"
+   // NEW: "Price from Jan 30, 2026"
+   
+   function formatPriceDate(date: Date): string {
+     return format(date, 'MMM d, yyyy');
+   }
+   ```
 
-### Step 2: Create `StorePricingDisplay` Component
+4. **Remove warning text**:
+   - Remove "May have changed - verify at store"
+   - Keep color-coded freshness indicators (green/yellow/red)
 
-**File**: `src/components/filament/sidebar/StorePricingDisplay.tsx` (new)
+### Step 2: Simplify LivePriceCheckButton
 
-A component that displays store-based pricing with:
-- Price in user's currency (auto-converted if needed)
-- Store name badge with store type indicator
-- "Local" badge for same-region stores
-- "Ships from [Country]" warning for international
-- "Duties may apply" notice for cross-region
+**File**: `src/components/price/LivePriceCheckButton.tsx`
+
+**Changes**:
+
+1. **Change idle state button text**:
+   - From: "Check Current Price"
+   - To: "Buy at [Store Name]" (direct link, no price fetch)
+
+2. **Convert to simple buy button**:
+   - Remove the price fetching functionality
+   - Make it a direct "Buy at Store" button
+   - Keep stock status indicators if already fetched
+
+3. **OR deprecate entirely**:
+   - Since we're being honest about static data, this button's "live check" purpose is misleading
+   - Replace all usages with simple buy buttons
+
+### Step 3: Refactor FilamentPurchaseSidebar
+
+**File**: `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`
+
+**New simplified structure**:
 
 ```text
 ┌────────────────────────────────────┐
-│  $24.99/kg                         │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│  [Amazon US] [Marketplace]         │
-│  ──────────────────────────────── │
-│  [🇺🇸 US Store] [Local]            │
+│  [PLA]                             │
+│                                    │
+│  £13.05/kg                         │
+│  £9.99 per spool                   │
+│                                    │
+│  from Polymaker UK 🇬🇧              │
+│  Price from Feb 2, 2026            │
+│                                    │
+│  ┌──────────────────────────────┐  │
+│  │  🛒 Buy at Polymaker UK      │  │
+│  │     → Opens in new tab       │  │
+│  └──────────────────────────────┘  │
+│                                    │
+│  [Compare] button                  │
+│                                    │
+│  ─────────────────────────────────│
+│  Also available at:                │
+│  🇺🇸 Amazon US  £12.50  [Buy]      │
+│  🇪🇺 Amazon DE  ~£11.99  [Buy]     │
+│                                    │
+│  ─────────────────────────────────│
+│  [Open Print Calculator]           │
 └────────────────────────────────────┘
-
-OR (for international):
-
-┌────────────────────────────────────┐
-│  ~€22.99/kg                        │
-│  Converted from $24.99 USD         │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
-│  [Amazon US] [Marketplace]         │
-│  ──────────────────────────────── │
-│  ⚠️ Ships from United States       │
-│  International shipping • Duties   │
-└────────────────────────────────────┘
 ```
 
-### Step 3: Modify FilamentDetail.tsx
+**Removals**:
+- "Check Current Price" button entirely
+- "Add £X for free shipping" progress bar
+- "Free shipping on orders $X+" messaging
+- "Easy returns policy" trust signal
 
-Update the detail page to use the new hook alongside existing unified pricing:
+**Simplifications**:
+- Remove confidence-based CTA switching
+- Always show "Buy at [Store]" button
+- Keep international shipping warnings
 
-**Current flow** (keep as fallback):
-```
-useUnifiedRegionalPricing() → brand_regional_stores → URL generation
-```
+### Step 4: Update StorePricingDisplay
 
-**New flow** (primary):
-```
-useFilamentStorePricing() → filament_prices + stores → actual store prices
-```
+**File**: `src/components/filament/sidebar/StorePricingDisplay.tsx`
 
-**Priority order**:
-1. `useFilamentStorePricing` - actual store listings from `filament_prices`
-2. `useUnifiedRegionalPricing` - brand store URL patterns (for URL generation when no listing)
-3. Filament's `variant_price` column - legacy fallback with conversion
+**Changes**:
 
-### Step 4: Update FilamentPurchaseSidebar Props
+1. **Add original price for conversions**:
+   ```typescript
+   // Show: ~£13.05 ($16.99 USD)
+   {storePrice.isConverted && storePrice.originalPrice && (
+     <span className="text-sm text-muted-foreground ml-2">
+       ({storePrice.originalCurrency} {storePrice.originalPrice.toFixed(2)})
+     </span>
+   )}
+   ```
 
-Extend sidebar to receive store pricing data:
+2. **Add "from [Store]" text below price**:
+   ```typescript
+   <div className="text-sm text-muted-foreground">
+     from {storePrice.storeName} {regionConfig?.flag}
+   </div>
+   ```
+
+3. **Add price date**:
+   ```typescript
+   {storePrice.lastVerifiedAt && (
+     <div className="text-xs text-muted-foreground">
+       Price from {format(new Date(storePrice.lastVerifiedAt), 'MMM d, yyyy')}
+     </div>
+   )}
+   ```
+
+### Step 5: Refactor PricingTabContent
+
+**File**: `src/components/filament/tabs/PricingTabContent.tsx`
+
+**Changes**:
+
+1. **Merge "Where to Buy" and "Other Retailers" into single section**:
+   - Title: "Where to Buy"
+   - List all stores (official + third-party) together
+   - Sort: Local stores first, then international by price
+
+2. **Update StoreCard buttons**:
+   - From: "Check Price"
+   - To: "Buy" (simple, direct)
+
+3. **Remove disclaimer card** at top:
+   - The "Prices change frequently" warning is noise
+   - Users understand prices are dynamic
+
+4. **Simplify store card display**:
+   ```text
+   ┌─────────────────────────────────────────┐
+   │ 🇺🇸 Polymaker US                        │
+   │ Official Store • Ships from CA, USA    │
+   │                                         │
+   │                    [Buy] →              │
+   └─────────────────────────────────────────┘
+   ```
+
+5. **Keep Price History section** (valuable context)
+
+6. **Keep Price Alerts section** (per user preference)
+
+### Step 6: Update FilamentMobileBottomBar
+
+**File**: `src/components/filament/sidebar/FilamentMobileBottomBar.tsx`
+
+**Changes**:
+
+1. **Always show "Buy at Store" button**:
+   - Remove confidence-based text switching
+   - Always use: "Buy at [Store Name]"
+
+2. **Simplify price display**:
+   - Show price without "Estimated" label
+   - Show "from [Store]" below
+   - Remove "Verify at store" helper text
+
+### Step 7: Update getCtaText Helper
+
+**File**: `src/components/price/HonestPriceDisplay.tsx`
+
+**Update the helper function**:
 
 ```typescript
-interface FilamentPurchaseSidebarProps {
-  // ... existing props ...
-  
-  // NEW: Store-based pricing (from filament_prices table)
-  storePricing?: {
-    priceCents: number;
-    currencyCode: string;
-    storeName: string;
-    storeType: 'marketplace' | 'brand_direct' | 'retailer';
-    region: string;
-    productUrl: string | null;
-    shipsFrom: string[] | null;
-    isLocalStore: boolean;
-    isConverted: boolean;
-    lastVerifiedAt: string | null;
-  } | null;
-  
-  // Flag to indicate if using store pricing vs fallback
-  hasStorePricing?: boolean;
+// OLD
+export function getCtaText(confidence: PriceConfidence | null | undefined, storeName: string = 'Store'): string {
+  switch (confidence) {
+    case 'high':
+    case 'medium':
+      return 'Buy Now';
+    case 'low':
+      return 'Check Current Price';
+    case 'stale':
+    case 'unknown':
+    default:
+      return `View at ${storeName}`;
+  }
+}
+
+// NEW - Always "Buy at [Store]"
+export function getCtaText(storeName: string = 'Store'): string {
+  return `Buy at ${storeName}`;
 }
 ```
 
-### Step 5: Enhance HonestPriceDisplay for Store Sources
-
-Update the existing `HonestPriceDisplay` component to show store source info:
-- Store name and type badge
-- "Ships from" country when international
-- Clearer conversion indicators
-
 ---
 
-## Data Flow Diagram
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    FilamentDetail.tsx                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────────────────┐    ┌───────────────────────────┐  │
-│  │ useFilamentStorePricing  │    │ useUnifiedRegionalPricing │  │
-│  │   (NEW - Primary)        │    │   (Existing - Fallback)   │  │
-│  └─────────┬────────────────┘    └─────────────┬─────────────┘  │
-│            │                                    │                │
-│            ▼                                    ▼                │
-│  ┌──────────────────────────┐    ┌───────────────────────────┐  │
-│  │ get_filament_regional    │    │ brand_regional_stores     │  │
-│  │ _prices RPC              │    │ (URL patterns)            │  │
-│  │                          │    │                           │  │
-│  │ filament_prices + stores │    │                           │  │
-│  └─────────┬────────────────┘    └─────────────┬─────────────┘  │
-│            │                                    │                │
-│            ▼                                    ▼                │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │                   Price Priority Logic                     │  │
-│  │  1. Store listing price (from filament_prices)            │  │
-│  │  2. Regional URL + conversion (from brand_regional_stores)│  │
-│  │  3. Filament variant_price (legacy USD)                   │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                              │                                   │
-│                              ▼                                   │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │              FilamentPurchaseSidebar                       │  │
-│  │  - StorePricingDisplay (if hasStorePricing)               │  │
-│  │  - HonestPriceDisplay (fallback)                          │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Files to Create/Modify
+## Files to Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useFilamentStorePricing.ts` | Create | New hook using `useFilamentRegionalPrices` |
-| `src/components/filament/sidebar/StorePricingDisplay.tsx` | Create | Store pricing display component |
-| `src/pages/FilamentDetail.tsx` | Modify | Integrate new hook with priority logic |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Modify | Add store pricing props and display |
+| `src/components/price/HonestPriceDisplay.tsx` | Modify | Simplify labels, remove "Check Current Price" |
+| `src/components/price/LivePriceCheckButton.tsx` | Modify | Convert to simple buy button or deprecate |
+| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Modify | Simplify layout, remove shipping progress |
+| `src/components/filament/sidebar/StorePricingDisplay.tsx` | Modify | Add original price display, date format |
+| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Modify | Simplify CTA text |
+| `src/components/filament/tabs/PricingTabContent.tsx` | Modify | Merge sections, update buttons |
+| `src/components/filament/SecondaryRetailers.tsx` | Minor | Update button text to "Buy" |
 
 ---
 
-## Technical Details
+## Visual Comparison
 
-### Store Type Badge Colors
+### Before (Current Sidebar)
 
-| Type | Color | Label |
-|------|-------|-------|
-| marketplace | blue | Marketplace |
-| brand_direct | green | Official Store |
-| retailer | purple | Retailer |
-
-### Shipping Warning Logic
-
-```typescript
-// Show shipping warning when:
-const showShippingWarning = !storePrice.isLocalStore && storePrice.shipsFrom;
-
-// Warning content based on ships_to_user:
-if (storePrice.shipsToUser) {
-  // "Ships from [Country] • International shipping"
-} else {
-  // "May not ship to your region"
-}
+```text
+┌────────────────────────────────────┐
+│  [PLA]                             │
+│                                    │
+│  Estimated price                   │
+│  ~£13.05/kg                        │
+│  ⚠️ Last checked 3 days ago        │
+│  May have changed - verify at store│
+│                                    │
+│  ┌──────────────────────────────┐  │
+│  │  🔄 Check Current Price      │  │
+│  └──────────────────────────────┘  │
+│                                    │
+│  ━━━━━━━━━━━━━━━░░░░░░░░░░░░░░     │
+│  Add £15 for free shipping         │
+│                                    │
+│  [Compare]                         │
+│                                    │
+│  Best Price: Polymaker Store       │
+│                                    │
+│  View All 3 Retailers              │
+│  ─────────────────────────────────│
+│  ✓ Free shipping available         │
+│  ↻ Easy returns policy             │
+└────────────────────────────────────┘
 ```
 
-### Price Conversion Display
+### After (Simplified Sidebar)
 
-```typescript
-// For converted prices (isConverted = true):
-// - Show tilde prefix: ~€22.99
-// - Show conversion source tooltip: "Converted from $24.99 USD"
-// - Show "Exchange rate may vary" disclaimer
-
-// For native prices (isConverted = false):
-// - Show direct price: €22.99
-// - No conversion notice needed
-```
-
-### Fallback Chain
-
-```typescript
-// In FilamentDetail.tsx
-const { bestPrice, hasPriceData } = useFilamentStorePricing(filamentId, region);
-const unifiedPricing = useUnifiedRegionalPricing(product);
-
-// Priority resolution:
-const effectivePrice = hasPriceData 
-  ? bestPrice 
-  : (unifiedPricing.displayPrice ? unifiedPricing : null);
-
-// Final fallback to variant_price if nothing else
-const fallbackPrice = !effectivePrice && filament.variant_price
-  ? { price: filament.variant_price, currency: 'USD', isConverted: true }
-  : null;
+```text
+┌────────────────────────────────────┐
+│  [PLA]                             │
+│                                    │
+│  £13.05/kg                         │
+│  £9.99 per spool                   │
+│                                    │
+│  from Polymaker UK 🇬🇧              │
+│  Price from Feb 2, 2026            │
+│                                    │
+│  ┌──────────────────────────────┐  │
+│  │  🛒 Buy at Polymaker UK   →  │  │
+│  └──────────────────────────────┘  │
+│                                    │
+│  [Compare]                         │
+│                                    │
+│  ─────────────────────────────────│
+│  Also available at:                │
+│  🇺🇸 Amazon US  ~£12.50 ($15.99) [Buy]│
+│  🇪🇺 3DJake EU  ~£11.99 (€13.99) [Buy]│
+│                                    │
+│  [Open Print Calculator]           │
+└────────────────────────────────────┘
 ```
 
 ---
 
-## Component Visibility Logic
+## Converted Price Display
 
-**Show StorePricingDisplay when:**
-- `useFilamentStorePricing` returns `hasPriceData = true`
-- Best price has `priceCents > 0`
-- Store is active
+For international stores, show original price in parentheses:
 
-**Show existing HonestPriceDisplay when:**
-- No store pricing available
-- Falling back to unified pricing or variant_price
-- Add "~" prefix for converted prices
-- Show "Price may vary" badge
+```text
+~£13.05 ($16.99 USD)
+from Amazon US 🇺🇸
+Ships internationally • Duties may apply
+```
 
 ---
 
 ## No Database Changes Required
 
-All needed infrastructure exists:
-- `filament_prices` table with store relationships
-- `stores` table with region and shipping info
-- `get_filament_regional_prices` RPC function
-- `exchange_rates` table for currency conversion
-
-The implementation is purely frontend integration work.
+All changes are frontend-only:
+- Component refactoring
+- Text/label changes
+- Layout simplification
 
