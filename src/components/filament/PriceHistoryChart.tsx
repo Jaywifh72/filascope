@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingDown, TrendingUp, Calendar, ArrowDown, Minus } from 'lucide-react';
+import { TrendingDown, TrendingUp, Calendar, ArrowDown, Minus, Clock, Bell } from 'lucide-react';
 import { usePriceHistory, PricePoint } from '@/hooks/usePriceHistory';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -59,10 +59,21 @@ export function PriceHistoryChart({
 
   if (!prices || prices.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center bg-muted/20 rounded-lg border border-dashed border-border">
-        <p className="text-muted-foreground text-sm">
-          No price history available yet
-        </p>
+      <div className="space-y-4">
+        {/* Header */}
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Price History</h3>
+          <p className="text-sm text-muted-foreground">Track price trends over time</p>
+        </div>
+        
+        {/* Empty state */}
+        <div className="py-10 text-center bg-muted/10 rounded-lg border border-dashed border-border">
+          <Clock className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+          <p className="font-medium text-foreground">No Price History Yet</p>
+          <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+            We'll start tracking prices for this filament soon. Set a price alert to get notified of changes.
+          </p>
+        </div>
       </div>
     );
   }
