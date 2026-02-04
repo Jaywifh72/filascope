@@ -118,7 +118,7 @@ function StoreCard({ store, productSku, userRegion, brandName }: StoreCardProps)
               ]
             )}
           >
-            Check Price
+            Buy
             <ExternalLink className="w-3 h-3" />
           </Button>
         </div>
@@ -245,22 +245,6 @@ export function PricingTabContent({
 
   return (
     <div className="space-y-6">
-      {/* Honest Pricing Disclaimer */}
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-sm text-amber-200 font-medium">
-              Prices change frequently
-            </p>
-            <p className="text-sm text-amber-200/80 mt-1">
-              We track prices for reference, but stores run sales and promotions that we can't always capture in real-time. 
-              Click on a store below to see the current price.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Where to Buy - Regional Stores */}
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
@@ -447,7 +431,7 @@ export function PricingTabContent({
                     size="sm"
                     className="gap-1"
                   >
-                    View
+                    Buy
                     <ExternalLink className="w-3 h-3" />
                   </Button>
                 </div>

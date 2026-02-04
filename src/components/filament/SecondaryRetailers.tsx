@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -61,13 +61,17 @@ export function SecondaryRetailers({ retailers, onRetailerClick }: SecondaryReta
               {retailer.region && <span className="text-muted-foreground">{retailer.region}</span>}
             </span>
             
-            {retailer.price !== null ? (
-              <span className="font-semibold tabular-nums">
-                {formatPrice(retailer.price)}
-              </span>
-            ) : !retailer.available ? (
-              <span className="text-xs text-muted-foreground">Out of Stock</span>
-            ) : null}
+            <span className="flex items-center gap-2">
+              {retailer.price !== null ? (
+                <span className="font-semibold tabular-nums">
+                  {formatPrice(retailer.price)}
+                </span>
+              ) : !retailer.available ? (
+                <span className="text-xs text-muted-foreground">Out of Stock</span>
+              ) : null}
+              <span className="text-xs font-medium">Buy</span>
+              <ExternalLink className="w-3 h-3 opacity-70" />
+            </span>
           </a>
         ))}
       </div>

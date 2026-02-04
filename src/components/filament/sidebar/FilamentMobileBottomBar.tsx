@@ -126,16 +126,16 @@ export function FilamentMobileBottomBar({
             </Button>
           )}
           
-          {/* Buy button - dynamic based on confidence */}
+          {/* Buy button - always primary */}
           {affiliateUrl ? (
             <Button 
               size="lg" 
               onClick={handleBuyClick}
-              variant={shouldUsePrimaryCta(priceConfidence as PriceConfidence) ? 'default' : 'outline'}
+              variant="default"
               className="gap-2 px-6"
             >
-              {shouldUsePrimaryCta(priceConfidence as PriceConfidence) && <ShoppingCart className="h-4 w-4" />}
-              <span>{getCtaText(priceConfidence as PriceConfidence, 'Store')}</span>
+              <ShoppingCart className="h-4 w-4" />
+              <span>Buy Now</span>
               <ExternalLink className="h-3 w-3 opacity-70" />
             </Button>
           ) : (

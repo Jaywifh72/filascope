@@ -26,9 +26,7 @@ import { REGIONS } from '@/config/regions';
 import { RegionalPriceResult, CurrencyCode, RegionCode } from '@/types/regional';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
-import { HonestPriceDisplay, getCtaText, shouldUsePrimaryCta } from '@/components/price/HonestPriceDisplay';
-import { LivePriceCheckButton } from '@/components/price/LivePriceCheckButton';
-import { LivePriceFetchResult } from '@/hooks/useLivePriceFetch';
+import { HonestPriceDisplay, getCtaText } from '@/components/price/HonestPriceDisplay';
 import type { StorePrice } from '@/hooks/useFilamentStorePricing';
 import { StorePricingDisplay } from './StorePricingDisplay';
 
@@ -123,9 +121,6 @@ export function FilamentPurchaseSidebar({
   const finalRetailerName = isAmazon ? 'Amazon' : `${displayRetailer} Store`;
 
   const isComparing = isInCompare(filamentId);
-
-  // Track if live price was fetched on-demand
-  const [onDemandLivePrice, setOnDemandLivePrice] = useState<LivePriceFetchResult | null>(null);
   
   // State to force re-fetch after admin refresh
   const [priceRefreshKey, setPriceRefreshKey] = useState(0);
@@ -157,15 +152,6 @@ export function FilamentPurchaseSidebar({
     console.log('[Sidebar] Calling parent onAdminRefresh callback');
     onAdminRefresh?.();
   }, [productUrl, originalUsUrl, onAdminRefresh]);
-
-  const handleLivePriceFetched = (result: LivePriceFetchResult) => {
-    setOnDemandLivePrice(result);
-    trackStoreClick({
-      moduleName: 'sidebar_live_price_check',
-      entityId: filamentId,
-      entityType: 'filament',
-    });
-  };
 
   const handleCompareToggle = () => {
     if (isComparing) {
@@ -347,41 +333,25 @@ export function FilamentPurchaseSidebar({
             />
           )}
 
-          {/* Primary CTA - Dynamic based on confidence */}
-          {/* For low/stale confidence: show live price check button */}
-          {(priceConfidence === 'low' || priceConfidence === 'stale' || priceConfidence === 'unknown') && productUrl ? (
-            <LivePriceCheckButton
-              productUrl={productUrl}
-              fallbackUrl={originalUsUrl}
-              affiliateUrl={affiliateUrl}
-              storeName={regionalPriceResult?.store?.name || finalRetailerName}
-              productName={productTitle || `${vendor} ${material}`}
-              onPriceFetched={handleLivePriceFetched}
-              size="lg"
-            />
-          ) : (
-            /* For high/medium confidence: standard buy button */
-            <Button
-              onClick={handleBuyClick}
-              disabled={!affiliateUrl}
-              variant={shouldUsePrimaryCta(priceConfidence) ? 'default' : 'outline'}
-              className={cn(
-                "w-full h-14 text-lg font-bold tracking-wide",
-                shouldUsePrimaryCta(priceConfidence) && [
-                  "bg-gradient-to-r from-primary to-primary/80",
-                  "hover:from-primary/90 hover:to-primary/70",
-                  "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
-                  "hover:shadow-[0_8px_24px_rgba(0,212,212,0.35)]",
-                ],
-                "hover:-translate-y-0.5 transition-all duration-200",
-                "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
-              )}
-            >
-              {shouldUsePrimaryCta(priceConfidence) && <ShoppingCart className="w-5 h-5 mr-2" />}
-              {getCtaText(priceConfidence, regionalPriceResult?.store?.name || finalRetailerName)}
-              <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
-            </Button>
-          )}
+          {/* Primary CTA - Always "Buy at [Store]" */}
+          <Button
+            onClick={handleBuyClick}
+            disabled={!affiliateUrl}
+            variant="default"
+            className={cn(
+              "w-full h-14 text-lg font-bold tracking-wide",
+              "bg-gradient-to-r from-primary to-primary/80",
+              "hover:from-primary/90 hover:to-primary/70",
+              "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
+              "hover:shadow-[0_8px_24px_rgba(0,212,212,0.35)]",
+              "hover:-translate-y-0.5 transition-all duration-200",
+              "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
+            )}
+          >
+            <ShoppingCart className="w-5 h-5 mr-2" />
+            {getCtaText(regionalPriceResult?.store?.name || finalRetailerName)}
+            <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
+          </Button>
 
           {/* Compare Button */}
           <Button
