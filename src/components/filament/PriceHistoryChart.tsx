@@ -30,7 +30,8 @@ export function PriceHistoryChart({
   currentPrice,
   currencySymbol = '$'
 }: PriceHistoryChartProps) {
-  const [timeRange, setTimeRange] = useState<TimeRange>(30);
+  // Default to 6M (180 days) for best historical context
+  const [timeRange, setTimeRange] = useState<TimeRange>(180);
   
   const { 
     prices, 
@@ -44,6 +45,9 @@ export function PriceHistoryChart({
     minPoint,
     maxPoint
   } = usePriceHistory(filamentId, currentPrice, timeRange);
+
+  // Get the most recent scraped price point
+  const latestPoint = prices.length > 0 ? prices[prices.length - 1] : null;
 
   if (isLoading) {
     return (
@@ -119,8 +123,23 @@ export function PriceHistoryChart({
 
   const trendInfo = getTrendInfo();
 
+  // Format date for stats display
+  const formatStatDate = (dateStr: string) => {
+    try {
+      return format(parseISO(dateStr), 'MMM d');
+    } catch {
+      return '';
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Header */}
+      <div>
+        <h3 className="text-lg font-semibold text-foreground">Price History</h3>
+        <p className="text-sm text-muted-foreground">Historical prices from our periodic scrapes</p>
+      </div>
+
       {/* Time Range Toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -260,16 +279,27 @@ export function PriceHistoryChart({
         <div className="text-center p-3 bg-muted/20 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">Lowest</div>
           <div className="text-sm font-semibold text-emerald-400">{formatPrice(min)}</div>
+          {minPoint && (
+            <div className="text-xs text-muted-foreground mt-0.5">{formatStatDate(minPoint.date)}</div>
+          )}
         </div>
         <div className="text-center p-3 bg-muted/20 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">Average</div>
           <div className="text-sm font-semibold">{formatPrice(avg)}</div>
         </div>
         <div className="text-center p-3 bg-muted/20 rounded-lg">
-          <div className="text-xs text-muted-foreground mb-1">Highest</div>
-          <div className="text-sm font-semibold text-red-400">{formatPrice(max)}</div>
+          <div className="text-xs text-muted-foreground mb-1">Current</div>
+          <div className="text-sm font-semibold">{latestPoint ? formatPrice(latestPoint.price) : formatPrice(currentPrice || 0)}</div>
+          {latestPoint && (
+            <div className="text-xs text-muted-foreground mt-0.5">{formatStatDate(latestPoint.date)}</div>
+          )}
         </div>
       </div>
+
+      {/* Disclaimer */}
+      <p className="text-xs text-muted-foreground text-center pt-2">
+        Prices scraped weekly from store websites. Current store prices may differ.
+      </p>
     </div>
   );
 }
