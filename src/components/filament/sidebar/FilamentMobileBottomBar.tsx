@@ -1,94 +1,52 @@
 import { ShoppingCart, Calculator, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCurrency } from "@/hooks/useCurrency";
 import { useCompare } from "@/hooks/useCompare";
-import { useCurrentPrice } from "@/hooks/useCurrentPrice";
-import { PriceConfidence } from "@/hooks/usePriceFreshness";
-import { HonestPriceDisplayCompact, getCtaText, shouldUsePrimaryCta } from "@/components/price/HonestPriceDisplay";
+import { useRegion } from "@/contexts/RegionContext";
+import { cn } from "@/lib/utils";
 
 interface FilamentMobileBottomBarProps {
   filamentId: string;
   pricePerKg: number | null;
-  pricePerSpool: number | null;
-  weightGrams: number | null;
   affiliateUrl: string | null;
-  productUrl: string | null;
-  originalUsUrl?: string;
-  hasActualRegionalPrice?: boolean;
-  priceCurrency?: string;
+  storeName?: string;
+  storeRegion?: string;
+  isConverted?: boolean;
   onOpenCalculator?: () => void;
-  lastScrapedAt?: string | null;
-  priceConfidence?: PriceConfidence | string | null;
 }
 
 export function FilamentMobileBottomBar({
   filamentId,
   pricePerKg,
-  pricePerSpool,
-  weightGrams,
   affiliateUrl,
-  productUrl,
-  originalUsUrl,
-  hasActualRegionalPrice = false,
-  priceCurrency,
+  storeName = 'Store',
+  storeRegion,
+  isConverted = false,
   onOpenCalculator,
-  lastScrapedAt,
-  priceConfidence,
 }: FilamentMobileBottomBarProps) {
-  const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { formatPrice, region: userRegion } = useRegion();
   const { count: compareCount } = useCompare();
-
-  // Fetch live price
-  const { 
-    currentPrice, 
-    compareAtPrice,
-    weightGrams: liveWeightGrams,
-    isLivePrice,
-    currency: livePriceCurrency
-  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
 
   // Don't show if compare bar is active
   if (compareCount > 0) return null;
 
-  // Calculate display price
-  const displayPrice = isLivePrice && currentPrice !== null ? currentPrice : pricePerSpool;
-  const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
-  const fallbackWeightKg = weightGrams ? weightGrams / 1000 : null;
-  
-  let displayPricePerKg: number | null = null;
-  if (isLivePrice && currentPrice !== null && liveWeightKg) {
-    displayPricePerKg = currentPrice / liveWeightKg;
-  } else if (displayPrice && fallbackWeightKg) {
-    displayPricePerKg = displayPrice / fallbackWeightKg;
-  } else {
-    displayPricePerKg = pricePerKg;
-  }
-
-  // Format price
-  const formatDisplayPrice = (p: number | null | undefined): string | null => {
-    if (p === null || p === undefined) return null;
-    if (isLivePrice && livePriceCurrency) {
-      const symbols: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'EUR': '€', 'GBP': '£', 'AUD': 'A$', 'JPY': '¥' };
-      const symbol = symbols[livePriceCurrency] || '$';
-      return `${symbol}${p.toFixed(2)}`;
-    }
-    if (hasActualRegionalPrice) {
-      return formatRegionalPrice(p);
-    }
-    return formatPrice(p);
+  // Region flags for display
+  const regionFlags: Record<string, string> = {
+    US: '🇺🇸', CA: '🇨🇦', UK: '🇬🇧', EU: '🇪🇺', AU: '🇦🇺', JP: '🇯🇵', CN: '🇨🇳', GLOBAL: '🌐'
   };
-
-  const formattedPrice = formatDisplayPrice(displayPricePerKg);
   
-  // Calculate discount
-  const discountPercent = isLivePrice && compareAtPrice && currentPrice && compareAtPrice > currentPrice
-    ? Math.round((1 - currentPrice / compareAtPrice) * 100)
-    : null;
+  // Show flag if store region differs from user region
+  const showRegionFlag = storeRegion && storeRegion !== userRegion && storeRegion !== 'GLOBAL';
+  const regionFlag = storeRegion ? regionFlags[storeRegion] || '' : '';
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
   };
+
+  // Format price with tilde for converted prices
+  const formattedPrice = pricePerKg 
+    ? `${isConverted ? '~' : ''}${formatPrice(pricePerKg, { showApproximate: false })}`
+    : null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
@@ -100,15 +58,26 @@ export function FilamentMobileBottomBar({
         className="relative bg-card border-t border-border/60 px-4 py-3 flex items-center justify-between gap-4"
         style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
-        {/* Price section - Honest Display */}
+        {/* Price section - Simple display */}
         <div className="flex-1 min-w-0">
-          <HonestPriceDisplayCompact
-            price={displayPricePerKg}
-            confidence={priceConfidence as PriceConfidence | undefined}
-            lastVerifiedAt={lastScrapedAt}
-            storeName="Store"
-            isConverted={false}
-          />
+          {formattedPrice ? (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-bold text-foreground">
+                  {formattedPrice}
+                </span>
+                <span className="text-sm text-muted-foreground">/kg</span>
+              </div>
+              <span className="text-xs text-muted-foreground truncate">
+                from {storeName} {showRegionFlag && regionFlag}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-base font-medium text-muted-foreground">Price varies</span>
+              <span className="text-xs text-muted-foreground">Check at store</span>
+            </div>
+          )}
         </div>
 
         {/* Action buttons */}
@@ -126,20 +95,25 @@ export function FilamentMobileBottomBar({
             </Button>
           )}
           
-          {/* Buy button - always primary */}
+          {/* Buy button - always "Buy at [Store]" */}
           {affiliateUrl ? (
             <Button 
               size="lg" 
               onClick={handleBuyClick}
               variant="default"
-              className="gap-2 px-6"
+              className={cn(
+                "gap-2 px-4 min-h-11",
+                "bg-gradient-to-r from-primary to-primary/80",
+                "hover:from-primary/90 hover:to-primary/70",
+                "shadow-[0_2px_8px_rgba(0,212,212,0.2)]"
+              )}
             >
-              <ShoppingCart className="h-4 w-4" />
-              <span>Buy Now</span>
-              <ExternalLink className="h-3 w-3 opacity-70" />
+              <ShoppingCart className="h-4 w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Buy at {storeName}</span>
+              <ExternalLink className="h-3 w-3 opacity-70 flex-shrink-0" />
             </Button>
           ) : (
-            <Button size="lg" disabled className="gap-2 px-6 opacity-50">
+            <Button size="lg" disabled className="gap-2 px-4 opacity-50">
               <ShoppingCart className="h-4 w-4" />
               <span>Unavailable</span>
             </Button>
