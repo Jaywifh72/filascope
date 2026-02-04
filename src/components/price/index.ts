@@ -8,3 +8,4 @@ export { PriceWithFreshness, PriceWithFreshnessCompact } from './PriceWithFreshn
 export { LivePriceCheckButton } from './LivePriceCheckButton';
 export { PriceVerificationDialog, usePriceVerification } from './PriceVerificationDialog';
 export { BrokenUrlReport } from './BrokenUrlReport';
+export { StorePriceDisplay, StorePriceInline, StorePriceBadge } from './StorePriceDisplay';
