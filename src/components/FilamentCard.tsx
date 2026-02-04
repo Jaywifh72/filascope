@@ -610,7 +610,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <div className="flex items-center gap-3">
               <div className="flex items-baseline gap-1">
                 <span className="text-xl font-bold text-foreground leading-none">
-                  {formatPrice(pricePerKg, { showApproximate: isConvertedPrice && !isLivePrice })}
+                  {formatPrice(pricePerKg, { showApproximate: isConvertedPrice })}
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">/kg</span>
               </div>
