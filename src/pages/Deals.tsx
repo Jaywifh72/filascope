@@ -1,19 +1,18 @@
-import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe } from "lucide-react";
-import { differenceInDays } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
 import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterSheet";
 import { DealNotificationSignup } from "@/components/deals/DealNotificationSignup";
-import { DealCard } from "@/components/deals/DealCard";
+import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
 
 const Deals = () => {
   const {
     deals,
+    groupedDeals,
     totalDeals,
     isLoading,
     selectedMaterials,
@@ -44,40 +43,6 @@ const Deals = () => {
     priceRange[1] < maxPrice ||
     showLocalOnly;
 
-  // Categorize deals by freshness (for display info, not filtering)
-  const { freshCount, olderCount } = useMemo(() => {
-    const MAX_FRESH_AGE_DAYS = 7;
-    
-    let fresh = 0;
-    let older = 0;
-    
-    deals.forEach((deal) => {
-      const capturedAt = deal.last_scraped_at || deal.created_at;
-      if (!capturedAt) {
-        fresh++; // Include if no date (can't determine age)
-        return;
-      }
-      const daysSinceCapture = differenceInDays(new Date(), new Date(capturedAt));
-      if (daysSinceCapture < MAX_FRESH_AGE_DAYS) {
-        fresh++;
-      } else {
-        older++;
-      }
-    });
-    
-    return { freshCount: fresh, olderCount: older };
-  }, [deals]);
-
-  // Helper to determine if a deal needs a warning
-  const getDealWarningLevel = (deal: typeof deals[0]): 'none' | 'caution' | 'stale' => {
-    const capturedAt = deal.last_scraped_at || deal.created_at;
-    if (!capturedAt) return 'caution';
-    const daysSinceCapture = differenceInDays(new Date(), new Date(capturedAt));
-    if (daysSinceCapture >= 5) return 'stale';
-    if (daysSinceCapture >= 3) return 'caution';
-    return 'none';
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
@@ -107,9 +72,9 @@ const Deals = () => {
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-green-400" />
                 <span>
-                  <span className="text-foreground font-medium">{deals.length}</span> deals
-                  {olderCount > 0 && freshCount > 0 && (
-                    <span className="text-muted-foreground"> • {freshCount} this week</span>
+                  <span className="text-foreground font-medium">{groupedDeals.length}</span> deals
+                  {deals.length !== groupedDeals.length && (
+                    <span className="text-muted-foreground"> ({deals.length} variants)</span>
                   )}
                 </span>
               </div>
@@ -145,7 +110,7 @@ const Deals = () => {
                 onDiscountChange={setMinDiscount}
                 onPriceRangeChange={setPriceRange}
                 onClearAll={clearAllFilters}
-                resultCount={deals.length}
+                resultCount={groupedDeals.length}
                 showLocalOnly={showLocalOnly}
                 onShowLocalOnlyChange={setShowLocalOnly}
                 localDealCount={localDealCount}
@@ -186,8 +151,11 @@ const Deals = () => {
           <section className="px-6 md:px-10 pb-4">
             <div className="max-w-[1600px] mx-auto">
               <p className="text-sm text-muted-foreground">
-                Showing <span className="text-foreground font-medium">{deals.length}</span> of{" "}
-                <span className="text-foreground font-medium">{totalDeals}</span> deals
+                Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> deals
+                {deals.length !== groupedDeals.length && (
+                  <span> ({deals.length} variants)</span>
+                )}{" "}
+                of <span className="text-foreground font-medium">{totalDeals}</span> total
               </p>
             </div>
           </section>
@@ -220,10 +188,10 @@ const Deals = () => {
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
-                  <Card key={i} className="h-80 animate-pulse bg-gray-800/50" />
+                  <Card key={i} className="h-80 animate-pulse bg-muted/30" />
                 ))}
               </div>
-            ) : deals.length === 0 ? (
+            ) : groupedDeals.length === 0 ? (
               <div className="text-center py-16">
                 {showLocalOnly ? (
                   <>
@@ -263,26 +231,14 @@ const Deals = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {deals.map((deal) => (
-                  <DealCard
-                    key={deal.id}
-                    deal={deal}
-                    discount={deal.discount}
-                    savings={deal.savings}
-                    expiresIn={deal.expiresIn}
-                    stockStatus={deal.stockStatus}
-                    viewsToday={deal.viewsToday}
-                    storeName={deal.storeName}
-                    storeRegion={deal.storeRegion}
-                    regionFlag={deal.regionFlag}
-                    isLocal={deal.isLocal}
-                  />
+                {groupedDeals.map((group) => (
+                  <GroupedDealCard key={group.groupKey} group={group} />
                 ))}
               </div>
             )}
 
             {/* CTA */}
-            {deals.length > 0 && (
+            {groupedDeals.length > 0 && (
               <div className="text-center mt-12">
                 <Button variant="outline" size="lg" asChild>
                   <Link to="/finder" className="gap-2">

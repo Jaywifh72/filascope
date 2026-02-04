@@ -5,6 +5,7 @@ import { useDealsCount } from "@/hooks/useDealsCount";
 import { useRegion } from "@/contexts/RegionContext";
 import { getDealStoreInfo } from "@/lib/dealStoreRegion";
 import { RegionCode } from "@/types/regional";
+import { groupDealsByProduct, type GroupedDeal } from "@/lib/groupDealsByProduct";
 
 export interface DealFilament {
   id: string;
@@ -18,6 +19,7 @@ export interface DealFilament {
   net_weight_g: number | null;
   last_scraped_at?: string | null;
   created_at?: string | null;
+  color_hex?: string | null;
 }
 
 export interface DealWithMeta extends DealFilament {
@@ -64,7 +66,7 @@ export function useDealsWithFilters() {
       const { data, error } = await supabase
         .from("filaments")
         .select(
-          "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g, last_scraped_at, created_at"
+          "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g, last_scraped_at, created_at, color_hex"
         )
         .not("variant_compare_at_price", "is", null)
         .not("variant_price", "is", null)
@@ -179,6 +181,11 @@ export function useDealsWithFilters() {
       .sort((a, b) => b.discount - a.discount);
   }, [dealsWithStoreInfo, selectedMaterials, selectedBrands, minDiscount, priceRange, showLocalOnly]);
 
+  // Group deals by product (color variants combined)
+  const groupedDeals = useMemo(() => {
+    return groupDealsByProduct(filteredDeals);
+  }, [filteredDeals]);
+
   const clearAllFilters = () => {
     setSelectedMaterials([]);
     setSelectedBrands([]);
@@ -189,6 +196,7 @@ export function useDealsWithFilters() {
 
   return {
     deals: filteredDeals,
+    groupedDeals,
     totalDeals: totalDealsCount, // Use accurate count from shared hook
     isLoading,
     // Filter state
