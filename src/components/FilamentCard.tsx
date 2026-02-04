@@ -192,7 +192,14 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     fallbackUrl,
     isLocalStore,
     isUsingFallbackRegion,
+    priceSource,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
+  
+  // Determine if the price is converted (needs tilde prefix)
+  // Show tilde when: using fallback region, or price currency differs from user's currency, or price source is 'converted'
+  const isConvertedPrice = isUsingFallbackRegion || 
+                           priceSource === 'converted' || 
+                           (priceCurrency && priceCurrency !== userCurrency);
   
   // Only fetch live price if we DON'T have an actual regional price
   // This prevents the card from showing converted USD when we have accurate EUR/GBP/etc prices
@@ -603,7 +610,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <div className="flex items-center gap-3">
               <div className="flex items-baseline gap-1">
                 <span className="text-xl font-bold text-foreground leading-none">
-                  {formatPrice(pricePerKg, { showApproximate: !isActualRegionalPrice && !isLivePrice })}
+                  {formatPrice(pricePerKg, { showApproximate: isConvertedPrice && !isLivePrice })}
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">/kg</span>
               </div>
