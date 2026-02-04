@@ -366,14 +366,14 @@ export function LabReadoutCard({
                     {formatPrice(originalPricePerKg)}/kg
                   </span>
                 )}
-                {/* Current/Sale price with "From" prefix */}
+                {/* Current/Sale price with "From" prefix and tilde for converted */}
                 <div className="flex items-baseline gap-1">
                   <span className="text-xs text-muted-foreground">From</span>
                   <span className={cn(
                     "text-xl font-bold",
                     isOnSale ? "text-green-400" : "text-foreground"
                   )}>
-                    {formatPrice(pricePerKg)}
+                    {formatPrice(pricePerKg, { showApproximate: isConverted })}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     /kg
