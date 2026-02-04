@@ -247,6 +247,10 @@ export interface RegionalPriceResult {
   isAvailableInUserRegion: boolean;
   /** Whether the vendor has regional stores (vs global shipping) */
   isRegionalBrand: boolean;
+  /** The region code of the store being used (e.g., 'UK', 'EU', 'US', 'GLOBAL') */
+  storeRegion: string | null;
+  /** Whether this is a local store for the user's region */
+  isLocalStore: boolean;
 }
 
 /**
@@ -273,8 +277,13 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         actualUrlCurrency: null,
         isAvailableInUserRegion: false,
         isRegionalBrand: false,
+        storeRegion: null,
+        isLocalStore: false,
       };
     }
+
+    // Get user's region code for local store detection
+    const userRegionCode = CURRENCY_TO_REGION_CODE[currency];
 
     // Check if this is a regional brand (has regional stores vs ships globally)
     const isRegionalBrand = checkIsRegionalBrand(filament.vendor);
@@ -327,7 +336,6 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     
     // Check if brand has a regional store configured for user's currency
     const brandConfig = getBrandConfig(filament.vendor);
-    const userRegionCode = CURRENCY_TO_REGION_CODE[currency];
     const brandHasRegionalStore = brandConfig?.regions?.[userRegionCode] !== undefined;
     
     // If brand has regional store for user's region, we're not using a fallback
@@ -338,9 +346,48 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     
     const isAvailableInUserRegion = !isRegionalBrand || hasDirectRegionalUrl || hasDirectRegionalPrice || brandHasRegionalStore;
 
+    // Helper function to compute store region and isLocalStore
+    const computeStoreInfo = (
+      hasActualRegionalPrice: boolean,
+      hasBrandRegionalStore: boolean,
+      fallbackCurrency: CurrencyCode | null,
+      isGlobalBrand: boolean
+    ): { storeRegion: string | null; isLocalStore: boolean } => {
+      let storeRegion: string | null = null;
+      
+      // 1. If we have actual regional price for user's currency, store is in user's region
+      if (hasActualRegionalPrice) {
+        storeRegion = userRegionCode;
+      }
+      // 2. If brand has a store configured for user's region
+      else if (hasBrandRegionalStore) {
+        storeRegion = userRegionCode;
+      }
+      // 3. If using fallback URL from different region
+      else if (fallbackCurrency) {
+        storeRegion = CURRENCY_TO_REGION_CODE[fallbackCurrency];
+      }
+      // 4. Global brands ship everywhere - consider them "local"
+      else if (!isGlobalBrand === false) {
+        storeRegion = 'GLOBAL';
+      }
+      // 5. Default to USD/US if we have a product URL
+      else if (filament.product_url) {
+        storeRegion = 'US';
+      }
+      
+      // Compute isLocalStore: matches user's region OR is a global brand
+      const isLocalStore = storeRegion === userRegionCode || 
+                           storeRegion === 'GLOBAL' ||
+                           (!isRegionalBrand && !!storeRegion);
+      
+      return { storeRegion, isLocalStore };
+    };
+
     // Determine the best price to use
     // Priority 1: Actual scraped regional price from database for user's currency
     if (actualRegionalPrice && actualRegionalPrice > 0) {
+      const { storeRegion, isLocalStore } = computeStoreInfo(true, brandHasRegionalStore, null, !isRegionalBrand);
       return {
         regionalPrice: actualRegionalPrice,
         isActualRegionalPrice: true,
@@ -353,12 +400,15 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         actualUrlCurrency: currency,
         isAvailableInUserRegion: true,
         isRegionalBrand,
+        storeRegion,
+        isLocalStore,
       };
     }
     
     // Priority 2: If vendor's native currency matches user's selected currency,
     // use variant_price directly (it's already in the right currency)
     if (vendorCurrency && vendorCurrency === currency && filament.variant_price && filament.variant_price > 0) {
+      const { storeRegion, isLocalStore } = computeStoreInfo(false, brandHasRegionalStore, null, !isRegionalBrand);
       return {
         regionalPrice: filament.variant_price,
         isActualRegionalPrice: true, // It's a native price, not converted
@@ -371,6 +421,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         actualUrlCurrency: fallbackUrlCurrency || currency,
         isAvailableInUserRegion,
         isRegionalBrand,
+        storeRegion,
+        isLocalStore,
       };
     }
     
@@ -381,6 +433,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       // In this case, we still convert from variant_price as if it were USD
       // This may not be accurate, but it's the best we can do without more data
       const convertedPrice = convertPrice(filament.variant_price, 'USD');
+      const { storeRegion, isLocalStore } = computeStoreInfo(false, brandHasRegionalStore, fallbackUrlCurrency, !isRegionalBrand);
       return {
         regionalPrice: convertedPrice,
         isActualRegionalPrice: false,
@@ -393,6 +446,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         actualUrlCurrency: fallbackUrlCurrency || 'USD',
         isAvailableInUserRegion,
         isRegionalBrand,
+        storeRegion,
+        isLocalStore,
       };
     }
     
@@ -412,6 +467,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         
         // If the fallback currency matches user's currency, use it directly
         if (fallback.cur === currency) {
+          const storeInfo = computeStoreInfo(true, brandHasRegionalStore, null, !isRegionalBrand);
           return {
             regionalPrice: fallback.price,
             isActualRegionalPrice: true,
@@ -424,6 +480,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
             actualUrlCurrency: fallback.cur,
             isAvailableInUserRegion: true,
             isRegionalBrand,
+            storeRegion: storeInfo.storeRegion,
+            isLocalStore: storeInfo.isLocalStore,
           };
         }
         
@@ -432,6 +490,7 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         const targetRate = CURRENCIES[currency]?.rate || 1;
         const convertedPrice = (fallback.price / sourceRate) * targetRate;
         
+        const storeInfo = computeStoreInfo(false, brandHasRegionalStore, fallback.cur, !isRegionalBrand);
         return {
           regionalPrice: convertedPrice,
           isActualRegionalPrice: true, // Mark as true so FilamentCard uses formatRegionalPrice (no double conversion)
@@ -444,12 +503,15 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
           actualUrlCurrency: fallback.cur,
           isAvailableInUserRegion: false,
           isRegionalBrand,
+          storeRegion: storeInfo.storeRegion,
+          isLocalStore: storeInfo.isLocalStore,
         };
       }
     }
     
     // Priority 5: No price in DB, but we have a URL - return null price so live fetch can work
     if (regionalUrl) {
+      const { storeRegion, isLocalStore } = computeStoreInfo(false, brandHasRegionalStore, fallbackUrlCurrency, !isRegionalBrand);
       return {
         regionalPrice: null,
         isActualRegionalPrice: false,
@@ -462,10 +524,13 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
         actualUrlCurrency: fallbackUrlCurrency,
         isAvailableInUserRegion,
         isRegionalBrand,
+        storeRegion,
+        isLocalStore,
       };
     }
     
     // No price or URL available
+    const { storeRegion, isLocalStore } = computeStoreInfo(false, brandHasRegionalStore, null, !isRegionalBrand);
     return {
       regionalPrice: null,
       isActualRegionalPrice: false,
@@ -478,6 +543,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       actualUrlCurrency: null,
       isAvailableInUserRegion: false,
       isRegionalBrand,
+      storeRegion,
+      isLocalStore,
     };
   }, [filament, currency, convertPrice, getRegionalUrl, currentRegion]);
 }

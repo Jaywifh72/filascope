@@ -89,10 +89,10 @@ export function LabReadoutCard({
     isActualRegionalPrice,
     isUsingFallbackRegion,
     currency: priceCurrency,
+    isLocalStore,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
-  // Check if we have a local regional store
-  const hasLocalStore = isActualRegionalPrice && !isUsingFallbackRegion;
+  // Use isLocalStore from the hook instead of computing locally
   const isConverted = isUsingFallbackRegion || (priceCurrency && priceCurrency !== userCurrency);
   
   const {
@@ -406,9 +406,9 @@ export function LabReadoutCard({
                       </TooltipContent>
                     </Tooltip>
                   )}
-                  {/* Local badge */}
-                  {hasLocalStore && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-primary/20 border border-primary/30 text-primary rounded">
+                  {/* Local badge - use isLocalStore from hook */}
+                  {isLocalStore && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded">
                       Local
                     </span>
                   )}
