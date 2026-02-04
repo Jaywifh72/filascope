@@ -1,333 +1,220 @@
 
 
-# Plan: Simplify Pricing Display for Static/Scraped Data
+# Plan: Fix "Local" Badge Consistency on Filament Cards
 
-## Summary
+## Problem Summary
 
-Refactor the pricing display across the filament detail page to be honest about the static/scraped nature of the data. Remove terminology that implies live price checking, simplify freshness messaging, and create a cleaner "Where to Buy" experience.
+The "Local" badge appears inconsistently across filament cards. When a UK user browses:
+- FormFutura shows: "£9.99 /kg 🇬🇧 at FormFutura" (missing "Local" badge)
+- Creality shows: "£24.83 /kg 🇬🇧 at Creality Local" (has badge)
 
----
-
-## Current State Analysis
-
-| Component | Current State | Issues |
-|-----------|--------------|--------|
-| `HonestPriceDisplay` | Shows "Estimated price", "Last checked X days ago", "May have changed - verify at store" | Overly complex messaging |
-| `LivePriceCheckButton` | "Check Current Price" button with live fetching | Implies real-time when most data is scraped |
-| `FilamentPurchaseSidebar` | "Check Current Price" CTA for low-confidence prices | Confusing dual behavior |
-| `PricingTabContent` | "Check Price" buttons, "Other Retailers" section | Redundant sections |
-| `StorePricingDisplay` | Clean store-based display | Good baseline to build on |
+**Root cause**: The current logic determines "local" based on whether regional price data exists in the database (`isActualRegionalPrice && !isUsingFallbackRegion`), rather than whether the store's region matches the user's region.
 
 ---
 
-## Terminology Changes
+## Current vs Correct Logic
 
-| Current | New |
-|---------|-----|
-| "Check Current Price" | "Buy at [Store Name]" |
-| "Estimated price" | "Last Known Price" or just show price |
-| "Last checked X days ago" | "Price from [date]" |
-| "May have changed - verify at store" | Remove (implied by static nature) |
-| "Verified today" | "Updated today" |
-| "Check Price" button | "Buy" button |
-| "View at Store" | "Buy at [Store Name]" |
+### Current (Incorrect)
+```typescript
+// In LabReadoutCard.tsx
+const hasLocalStore = isActualRegionalPrice && !isUsingFallbackRegion;
+```
+
+This fails when:
+- Store IS in user's region (UK FormFutura store)
+- But `price_gbp` column is NULL (no scraped price yet)
+- Result: Badge hidden even though store is local
+
+### Correct Logic
+```typescript
+const isLocalStore = (storeRegion: string | null, userRegion: string): boolean => {
+  if (!storeRegion) return false;
+  if (storeRegion === userRegion) return true;
+  if (storeRegion === 'GLOBAL') return true;  // Global stores are always "local"
+  return false;
+};
+```
 
 ---
 
 ## Implementation Steps
 
-### Step 1: Update HonestPriceDisplay Component
+### Step 1: Add `storeRegion` to `useRegionalPrice` Hook
 
-**File**: `src/components/price/HonestPriceDisplay.tsx`
+**File**: `src/hooks/useRegionalPrice.ts`
 
-**Changes**:
+The hook needs to return which region the store belongs to, not just whether prices exist.
 
-1. **Simplify display modes**:
-   - Remove `pricePrefix` distinction (always show `~` for converted only)
-   - Change labels from "Estimated" to "Last Known"
-   - Simplify helper text to just show date
-
-2. **Update CTA text**:
-   - Always use "Buy at [Store]" pattern
-   - Remove "Check Current Price" variant
-
-3. **Streamline freshness messaging**:
-   ```typescript
-   // OLD: "Last checked 3 days ago"
-   // NEW: "Price from Jan 30, 2026"
-   
-   function formatPriceDate(date: Date): string {
-     return format(date, 'MMM d, yyyy');
-   }
-   ```
-
-4. **Remove warning text**:
-   - Remove "May have changed - verify at store"
-   - Keep color-coded freshness indicators (green/yellow/red)
-
-### Step 2: Simplify LivePriceCheckButton
-
-**File**: `src/components/price/LivePriceCheckButton.tsx`
-
-**Changes**:
-
-1. **Change idle state button text**:
-   - From: "Check Current Price"
-   - To: "Buy at [Store Name]" (direct link, no price fetch)
-
-2. **Convert to simple buy button**:
-   - Remove the price fetching functionality
-   - Make it a direct "Buy at Store" button
-   - Keep stock status indicators if already fetched
-
-3. **OR deprecate entirely**:
-   - Since we're being honest about static data, this button's "live check" purpose is misleading
-   - Replace all usages with simple buy buttons
-
-### Step 3: Refactor FilamentPurchaseSidebar
-
-**File**: `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`
-
-**New simplified structure**:
-
-```text
-┌────────────────────────────────────┐
-│  [PLA]                             │
-│                                    │
-│  £13.05/kg                         │
-│  £9.99 per spool                   │
-│                                    │
-│  from Polymaker UK 🇬🇧              │
-│  Price from Feb 2, 2026            │
-│                                    │
-│  ┌──────────────────────────────┐  │
-│  │  🛒 Buy at Polymaker UK      │  │
-│  │     → Opens in new tab       │  │
-│  └──────────────────────────────┘  │
-│                                    │
-│  [Compare] button                  │
-│                                    │
-│  ─────────────────────────────────│
-│  Also available at:                │
-│  🇺🇸 Amazon US  £12.50  [Buy]      │
-│  🇪🇺 Amazon DE  ~£11.99  [Buy]     │
-│                                    │
-│  ─────────────────────────────────│
-│  [Open Print Calculator]           │
-└────────────────────────────────────┘
+1. **Add `storeRegion` to return interface**:
+```typescript
+export interface RegionalPriceResult {
+  // ... existing fields ...
+  /** The region code of the store being used */
+  storeRegion: RegionCode | null;
+  /** Whether this is a local store for the user */
+  isLocalStore: boolean;
+}
 ```
 
-**Removals**:
-- "Check Current Price" button entirely
-- "Add £X for free shipping" progress bar
-- "Free shipping on orders $X+" messaging
-- "Easy returns policy" trust signal
+2. **Compute store region** based on:
+   - If actual regional URL exists → that region
+   - If vendor has regional stores → check user's region
+   - If global brand → return 'GLOBAL'
+   - If using fallback → return fallback region
 
-**Simplifications**:
-- Remove confidence-based CTA switching
-- Always show "Buy at [Store]" button
-- Keep international shipping warnings
+3. **Return `isLocalStore`**:
+```typescript
+const storeRegion = /* computed */;
+const isLocalStore = storeRegion === userRegion || storeRegion === 'GLOBAL';
+```
 
-### Step 4: Update StorePricingDisplay
+### Step 2: Update FilamentCard to Show "Local" Badge
 
-**File**: `src/components/filament/sidebar/StorePricingDisplay.tsx`
+**File**: `src/components/FilamentCard.tsx`
 
-**Changes**:
+Currently the price section shows:
+```
+£9.99/kg
+🇬🇧 at FormFutura
+```
 
-1. **Add original price for conversions**:
-   ```typescript
-   // Show: ~£13.05 ($16.99 USD)
-   {storePrice.isConverted && storePrice.originalPrice && (
-     <span className="text-sm text-muted-foreground ml-2">
-       ({storePrice.originalCurrency} {storePrice.originalPrice.toFixed(2)})
-     </span>
-   )}
-   ```
-
-2. **Add "from [Store]" text below price**:
-   ```typescript
-   <div className="text-sm text-muted-foreground">
-     from {storePrice.storeName} {regionConfig?.flag}
-   </div>
-   ```
-
-3. **Add price date**:
-   ```typescript
-   {storePrice.lastVerifiedAt && (
-     <div className="text-xs text-muted-foreground">
-       Price from {format(new Date(storePrice.lastVerifiedAt), 'MMM d, yyyy')}
-     </div>
-   )}
-   ```
-
-### Step 5: Refactor PricingTabContent
-
-**File**: `src/components/filament/tabs/PricingTabContent.tsx`
-
-**Changes**:
-
-1. **Merge "Where to Buy" and "Other Retailers" into single section**:
-   - Title: "Where to Buy"
-   - List all stores (official + third-party) together
-   - Sort: Local stores first, then international by price
-
-2. **Update StoreCard buttons**:
-   - From: "Check Price"
-   - To: "Buy" (simple, direct)
-
-3. **Remove disclaimer card** at top:
-   - The "Prices change frequently" warning is noise
-   - Users understand prices are dynamic
-
-4. **Simplify store card display**:
-   ```text
-   ┌─────────────────────────────────────────┐
-   │ 🇺🇸 Polymaker US                        │
-   │ Official Store • Ships from CA, USA    │
-   │                                         │
-   │                    [Buy] →              │
-   └─────────────────────────────────────────┘
-   ```
-
-5. **Keep Price History section** (valuable context)
-
-6. **Keep Price Alerts section** (per user preference)
-
-### Step 6: Update FilamentMobileBottomBar
-
-**File**: `src/components/filament/sidebar/FilamentMobileBottomBar.tsx`
-
-**Changes**:
-
-1. **Always show "Buy at Store" button**:
-   - Remove confidence-based text switching
-   - Always use: "Buy at [Store Name]"
-
-2. **Simplify price display**:
-   - Show price without "Estimated" label
-   - Show "from [Store]" below
-   - Remove "Verify at store" helper text
-
-### Step 7: Update getCtaText Helper
-
-**File**: `src/components/price/HonestPriceDisplay.tsx`
-
-**Update the helper function**:
+Add badge logic in Element 3 (Price section):
 
 ```typescript
-// OLD
-export function getCtaText(confidence: PriceConfidence | null | undefined, storeName: string = 'Store'): string {
-  switch (confidence) {
-    case 'high':
-    case 'medium':
-      return 'Buy Now';
-    case 'low':
-      return 'Check Current Price';
-    case 'stale':
-    case 'unknown':
-    default:
-      return `View at ${storeName}`;
-  }
-}
+// Add to hook destructuring
+const {
+  regionalPrice,
+  isActualRegionalPrice,
+  regionalUrl,
+  fallbackUrl,
+  isLocalStore,      // NEW
+  storeRegion,       // NEW  
+} = useRegionalPrice(filament as FilamentWithRegionalPrices);
 
-// NEW - Always "Buy at [Store]"
-export function getCtaText(storeName: string = 'Store'): string {
-  return `Buy at ${storeName}`;
-}
+// In the price display section, after the vendor text
+{isLocalStore && (
+  <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded">
+    Local
+  </span>
+)}
 ```
+
+### Step 3: Fix LabReadoutCard Logic
+
+**File**: `src/components/LabReadoutCard.tsx`
+
+Replace the incorrect logic:
+
+```typescript
+// OLD (incorrect)
+const hasLocalStore = isActualRegionalPrice && !isUsingFallbackRegion;
+
+// NEW (correct)
+const { 
+  regionalPrice, 
+  regionalUrl,
+  fallbackUrl,
+  isActualRegionalPrice,
+  isLocalStore,      // Use new field
+  storeRegion,       // For flag display
+} = useRegionalPrice(filament as FilamentWithRegionalPrices);
+```
+
+The badge display already exists:
+```typescript
+{hasLocalStore && (
+  <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-primary/20 border border-primary/30 text-primary rounded">
+    Local
+  </span>
+)}
+```
+
+Just rename `hasLocalStore` to `isLocalStore` and use the hook value.
 
 ---
 
 ## Files to Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/price/HonestPriceDisplay.tsx` | Modify | Simplify labels, remove "Check Current Price" |
-| `src/components/price/LivePriceCheckButton.tsx` | Modify | Convert to simple buy button or deprecate |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Modify | Simplify layout, remove shipping progress |
-| `src/components/filament/sidebar/StorePricingDisplay.tsx` | Modify | Add original price display, date format |
-| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Modify | Simplify CTA text |
-| `src/components/filament/tabs/PricingTabContent.tsx` | Modify | Merge sections, update buttons |
-| `src/components/filament/SecondaryRetailers.tsx` | Minor | Update button text to "Buy" |
+| File | Change |
+|------|--------|
+| `src/hooks/useRegionalPrice.ts` | Add `storeRegion` and `isLocalStore` to return interface and compute them |
+| `src/components/FilamentCard.tsx` | Add "Local" badge display using `isLocalStore` from hook |
+| `src/components/LabReadoutCard.tsx` | Replace `hasLocalStore` computation with `isLocalStore` from hook |
 
 ---
 
-## Visual Comparison
+## Visual Result
 
-### Before (Current Sidebar)
-
-```text
-┌────────────────────────────────────┐
-│  [PLA]                             │
-│                                    │
-│  Estimated price                   │
-│  ~£13.05/kg                        │
-│  ⚠️ Last checked 3 days ago        │
-│  May have changed - verify at store│
-│                                    │
-│  ┌──────────────────────────────┐  │
-│  │  🔄 Check Current Price      │  │
-│  └──────────────────────────────┘  │
-│                                    │
-│  ━━━━━━━━━━━━━━━░░░░░░░░░░░░░░     │
-│  Add £15 for free shipping         │
-│                                    │
-│  [Compare]                         │
-│                                    │
-│  Best Price: Polymaker Store       │
-│                                    │
-│  View All 3 Retailers              │
-│  ─────────────────────────────────│
-│  ✓ Free shipping available         │
-│  ↻ Easy returns policy             │
-└────────────────────────────────────┘
+### Before
+```
+£9.99/kg
+🇬🇧 at FormFutura
 ```
 
-### After (Simplified Sidebar)
-
-```text
-┌────────────────────────────────────┐
-│  [PLA]                             │
-│                                    │
-│  £13.05/kg                         │
-│  £9.99 per spool                   │
-│                                    │
-│  from Polymaker UK 🇬🇧              │
-│  Price from Feb 2, 2026            │
-│                                    │
-│  ┌──────────────────────────────┐  │
-│  │  🛒 Buy at Polymaker UK   →  │  │
-│  └──────────────────────────────┘  │
-│                                    │
-│  [Compare]                         │
-│                                    │
-│  ─────────────────────────────────│
-│  Also available at:                │
-│  🇺🇸 Amazon US  ~£12.50 ($15.99) [Buy]│
-│  🇪🇺 3DJake EU  ~£11.99 (€13.99) [Buy]│
-│                                    │
-│  [Open Print Calculator]           │
-└────────────────────────────────────┘
+### After  
 ```
+£9.99/kg
+🇬🇧 at FormFutura Local
+```
+
+Badge styling:
+- Background: `bg-emerald-500/10`
+- Border: `border border-emerald-500/20`
+- Text: `text-emerald-400`
+- Font: `text-[9px] font-medium`
 
 ---
 
-## Converted Price Display
+## Edge Cases
 
-For international stores, show original price in parentheses:
+| Scenario | Expected Badge |
+|----------|----------------|
+| UK user, UK store (FormFutura UK) | ✅ Show "Local" |
+| UK user, US store (Polymaker US) | ❌ No badge, show 🇺🇸 flag |
+| UK user, EU store (Prusa) | ❌ No badge, show 🇪🇺 flag |
+| UK user, GLOBAL brand (eSun) | ✅ Show "Local" (ships globally) |
+| UK user, no store data | ❌ No badge, no flag |
 
-```text
-~£13.05 ($16.99 USD)
-from Amazon US 🇺🇸
-Ships internationally • Duties may apply
+---
+
+## Technical Details
+
+### Store Region Detection Logic (in `useRegionalPrice`)
+
+```typescript
+// Determine store region based on best available data
+let storeRegion: RegionCode | null = null;
+
+// 1. If we have actual regional price for user's currency
+if (actualRegionalPrice && actualRegionalPrice > 0) {
+  storeRegion = userRegionCode; // e.g., 'UK' for GBP user
+}
+// 2. If brand has a store configured for user's region
+else if (brandHasRegionalStore) {
+  storeRegion = userRegionCode;
+}
+// 3. If using fallback URL from different region
+else if (fallbackUrlCurrency) {
+  storeRegion = CURRENCY_TO_REGION_CODE[fallbackUrlCurrency];
+}
+// 4. Global brands
+else if (!isRegionalBrand) {
+  storeRegion = 'GLOBAL';
+}
+// 5. Default to USD/US
+else if (filament.product_url) {
+  storeRegion = 'US';
+}
+
+// Compute isLocalStore
+const isLocalStore = storeRegion === userRegionCode || 
+                     storeRegion === 'GLOBAL' ||
+                     (!isRegionalBrand && !!storeRegion);
 ```
 
 ---
 
 ## No Database Changes Required
 
-All changes are frontend-only:
-- Component refactoring
-- Text/label changes
-- Layout simplification
+All changes are frontend-only.
 
