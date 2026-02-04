@@ -26,6 +26,11 @@ interface DealFiltersProps {
   onDiscountChange: (min: number) => void;
   onPriceRangeChange: (range: [number, number]) => void;
   onClearAll: () => void;
+  // Local filter props
+  showLocalOnly?: boolean;
+  onShowLocalOnlyChange?: (show: boolean) => void;
+  localDealCount?: number;
+  userRegionFlag?: string;
 }
 
 const DISCOUNT_OPTIONS = [
@@ -48,6 +53,10 @@ export function DealFilters({
   onDiscountChange,
   onPriceRangeChange,
   onClearAll,
+  showLocalOnly,
+  onShowLocalOnlyChange,
+  localDealCount,
+  userRegionFlag,
 }: DealFiltersProps) {
   const [priceOpen, setPriceOpen] = useState(false);
   
@@ -55,7 +64,8 @@ export function DealFilters({
     selectedMaterials.length +
     selectedBrands.length +
     (minDiscount > 0 ? 1 : 0) +
-    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
+    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) +
+    (showLocalOnly ? 1 : 0);
 
   const toggleMaterial = (material: string) => {
     if (selectedMaterials.includes(material)) {
@@ -221,6 +231,26 @@ export function DealFilters({
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Local Only Filter */}
+      {onShowLocalOnlyChange && userRegionFlag && (
+        <Button
+          variant={showLocalOnly ? "default" : "outline"}
+          size="sm"
+          onClick={() => onShowLocalOnlyChange(!showLocalOnly)}
+          className={cn(
+            "gap-2 min-h-[44px]",
+            showLocalOnly && "bg-emerald-600 hover:bg-emerald-700 border-emerald-600"
+          )}
+        >
+          {userRegionFlag} Local Only
+          {showLocalOnly && localDealCount !== undefined && (
+            <Badge className="ml-1 h-5 px-1.5 text-xs bg-emerald-800/50 text-emerald-100 border-0">
+              {localDealCount}
+            </Badge>
+          )}
+        </Button>
+      )}
 
       {/* Clear All */}
       {activeFilterCount > 0 && (

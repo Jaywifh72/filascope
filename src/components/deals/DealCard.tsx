@@ -32,6 +32,11 @@ interface DealCardProps {
   expiresIn?: string | null;
   stockStatus?: "in_stock" | "low_stock" | "limited" | null;
   viewsToday?: number;
+  // Store region info
+  storeName?: string;
+  storeRegion?: string;
+  regionFlag?: string;
+  isLocal?: boolean;
 }
 
 export function DealCard({
@@ -41,6 +46,10 @@ export function DealCard({
   expiresIn,
   stockStatus,
   viewsToday,
+  storeName,
+  storeRegion,
+  regionFlag,
+  isLocal,
 }: DealCardProps) {
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -160,6 +169,20 @@ export function DealCard({
                     <AlertTriangle className="h-3 w-3" />
                     {stockStatus === "low_stock" ? "Low Stock" : "Limited Stock"}
                   </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Store Region Info */}
+            {storeName && regionFlag && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+                <span>{regionFlag}</span>
+                <span>{storeName}</span>
+                <span>•</span>
+                {isLocal ? (
+                  <span className="text-emerald-400 font-medium">Local</span>
+                ) : (
+                  <span className="text-muted-foreground">International</span>
                 )}
               </div>
             )}

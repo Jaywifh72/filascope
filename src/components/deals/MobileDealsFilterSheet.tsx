@@ -12,8 +12,10 @@ import {
 } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Z_INDEX } from "@/lib/z-index";
+import { cn } from "@/lib/utils";
 
 interface MobileDealsFilterSheetProps {
   materials: string[];
@@ -29,6 +31,11 @@ interface MobileDealsFilterSheetProps {
   onPriceRangeChange: (range: [number, number]) => void;
   onClearAll: () => void;
   resultCount: number;
+  // Local filter props
+  showLocalOnly?: boolean;
+  onShowLocalOnlyChange?: (show: boolean) => void;
+  localDealCount?: number;
+  userRegionFlag?: string;
 }
 
 const DISCOUNT_OPTIONS = [
@@ -52,6 +59,10 @@ export function MobileDealsFilterSheet({
   onPriceRangeChange,
   onClearAll,
   resultCount,
+  showLocalOnly,
+  onShowLocalOnlyChange,
+  localDealCount,
+  userRegionFlag,
 }: MobileDealsFilterSheetProps) {
   const [open, setOpen] = useState(false);
   const [materialOpen, setMaterialOpen] = useState(true);
@@ -63,7 +74,8 @@ export function MobileDealsFilterSheet({
     selectedMaterials.length +
     selectedBrands.length +
     (minDiscount > 0 ? 1 : 0) +
-    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
+    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) +
+    (showLocalOnly ? 1 : 0);
 
   const toggleMaterial = (material: string) => {
     if (selectedMaterials.includes(material)) {
@@ -121,6 +133,30 @@ export function MobileDealsFilterSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ paddingBottom: '120px' }}>
+          {/* Local Only Toggle */}
+          {onShowLocalOnlyChange && userRegionFlag && (
+            <div className="pb-4 border-b border-border">
+              <button
+                onClick={() => onShowLocalOnlyChange(!showLocalOnly)}
+                className={cn(
+                  "flex items-center justify-between w-full py-3 px-4 rounded-lg transition-colors",
+                  showLocalOnly 
+                    ? "bg-emerald-500/10 border border-emerald-500/30"
+                    : "bg-muted/30 border border-transparent"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{userRegionFlag}</span>
+                  <span className="font-medium">Show Local Deals Only</span>
+                </div>
+                <Switch checked={showLocalOnly} />
+              </button>
+              <p className="text-xs text-muted-foreground mt-2 px-1">
+                {localDealCount} deals ship from your region
+              </p>
+            </div>
+          )}
+
           {/* Material Filter */}
           <Collapsible open={materialOpen} onOpenChange={setMaterialOpen}>
             <CollapsibleTrigger className="flex items-center justify-between w-full py-3 text-left min-h-[48px] touch-manipulation">
