@@ -823,18 +823,14 @@ const FilamentDetail = () => {
       <FilamentMobileBottomBar
         filamentId={displayFilament.id}
         pricePerKg={rawPricePerKg}
-        pricePerSpool={rawPricePerSpool}
-        weightGrams={pricingFilament.net_weight_g}
         affiliateUrl={getAffiliateUrl(
           selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
           pricingFilament.vendor
         )}
-        productUrl={selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
-        originalUsUrl={pricingFilament.product_url || undefined}
-        hasActualRegionalPrice={hasActualRegionalPrice}
+        storeName={storeBestPrice?.storeName || unifiedPricing.storeName || pricingFilament.vendor || 'Store'}
+        storeRegion={unifiedPricing.storeRegion}
+        isConverted={unifiedPricing.isConverted}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
-        lastScrapedAt={unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
-        priceConfidence={unifiedPricing.priceConfidence}
       />
 
       {/* Admin Edit Image Dialog */}
