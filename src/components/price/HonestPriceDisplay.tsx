@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { DollarSign, ExternalLink, ShoppingCart, AlertTriangle, CheckCircle2, Clock, Info, RefreshCw, Check, X } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useRegion } from '@/contexts/RegionContext';
@@ -18,6 +18,8 @@ export interface HonestPriceDisplayProps {
   storeName: string;
   storeUrl: string | null;
   isConverted?: boolean;
+  originalPrice?: number | null;
+  originalCurrency?: string | null;
   currency?: string;
   conversionTooltip?: string | null;
   onBuyClick?: () => void;
@@ -40,43 +42,44 @@ interface DisplayMode {
   ctaText: string;
   ctaVariant: 'primary' | 'outline' | 'secondary';
   showPrice: boolean;
-  showWarning: boolean;
 }
 
-function getDisplayMode(confidence: PriceConfidence, storeName: string): DisplayMode {
+function getDisplayMode(confidence: PriceConfidence, storeName: string, lastVerifiedDate: Date | null): DisplayMode {
+  // Format date for display
+  const dateText = lastVerifiedDate 
+    ? `Price from ${format(lastVerifiedDate, 'MMM d, yyyy')}`
+    : '';
+  
   switch (confidence) {
     case 'high':
       return {
         mode: 'exact',
-        label: 'Current price',
+        label: '',
         pricePrefix: '',
-        helperText: 'Verified today',
-        ctaText: 'Buy Now',
+        helperText: dateText || 'Updated today',
+        ctaText: `Buy at ${storeName}`,
         ctaVariant: 'primary',
         showPrice: true,
-        showWarning: false,
       };
     case 'medium':
       return {
         mode: 'approximate',
-        label: 'Recent price',
-        pricePrefix: '~',
-        helperText: 'Last checked this week',
-        ctaText: 'Buy Now',
+        label: '',
+        pricePrefix: '',
+        helperText: dateText || 'Updated recently',
+        ctaText: `Buy at ${storeName}`,
         ctaVariant: 'primary',
         showPrice: true,
-        showWarning: false,
       };
     case 'low':
       return {
         mode: 'estimated',
-        label: 'Estimated price',
-        pricePrefix: '~',
-        helperText: 'May have changed - verify at store',
-        ctaText: 'Check Current Price',
+        label: 'Last Known Price',
+        pricePrefix: '',
+        helperText: dateText || 'Price may have changed',
+        ctaText: `Buy at ${storeName}`,
         ctaVariant: 'outline',
         showPrice: true,
-        showWarning: true,
       };
     case 'stale':
     case 'unknown':
@@ -86,10 +89,9 @@ function getDisplayMode(confidence: PriceConfidence, storeName: string): Display
         label: 'Price varies',
         pricePrefix: '',
         helperText: `Check ${storeName} for current pricing`,
-        ctaText: `View at ${storeName}`,
+        ctaText: `Buy at ${storeName}`,
         ctaVariant: 'secondary',
         showPrice: false,
-        showWarning: false,
       };
   }
 }
@@ -112,6 +114,8 @@ export function HonestPriceDisplay({
   storeName,
   storeUrl,
   isConverted = false,
+  originalPrice,
+  originalCurrency,
   currency,
   conversionTooltip,
   onBuyClick,
@@ -166,7 +170,7 @@ export function HonestPriceDisplay({
   }, [onAdminRefresh]);
   
   const confidence = providedConfidence || freshness.confidence;
-  const displayMode = getDisplayMode(confidence, storeName);
+  const displayMode = getDisplayMode(confidence, storeName, freshness.lastVerifiedDate);
   const config = confidenceConfig[confidence];
   const Icon = config.icon;
 
@@ -194,33 +198,37 @@ export function HonestPriceDisplay({
     }
   };
 
-  // Format the time ago text
-  const timeAgoText = freshness.lastVerifiedDate 
-    ? `Last checked ${formatDistanceToNow(freshness.lastVerifiedDate)} ago`
-    : null;
-
   return (
     <TooltipProvider>
       <div className={cn('space-y-3', className)}>
-        {/* Price Label */}
-        <div className={cn('text-muted-foreground font-medium', sizes.label)}>
-          {displayMode.label}
-        </div>
+        {/* Price Label - only show if we have a specific label */}
+        {displayMode.label && (
+          <div className={cn('text-muted-foreground font-medium', sizes.label)}>
+            {displayMode.label}
+          </div>
+        )}
 
         {/* Price Display */}
         {displayMode.showPrice && price !== null ? (
           <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-2 flex-wrap">
               <span className={cn('font-bold text-foreground', sizes.price)}>
-                {displayMode.pricePrefix}
+                {isConverted ? '~' : ''}
                 {formatPrice(price, { showApproximate: false })}
               </span>
               {showPerKg && (
                 <span className="text-muted-foreground text-sm font-medium">/kg</span>
               )}
               
+              {/* Original price for conversions */}
+              {isConverted && originalPrice && originalCurrency && (
+                <span className="text-sm text-muted-foreground">
+                  ({originalCurrency} {originalPrice.toFixed(2)})
+                </span>
+              )}
+              
               {/* Conversion tooltip */}
-              {isConverted && conversionTooltip && (
+              {isConverted && conversionTooltip && !originalPrice && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="w-4 h-4 text-muted-foreground cursor-help" />
@@ -232,13 +240,13 @@ export function HonestPriceDisplay({
               )}
             </div>
 
-            {/* Freshness indicator with refresh state */}
+            {/* Price date / freshness indicator with refresh state */}
             <div className={cn(
               'flex items-center gap-1.5 transition-all duration-300',
               refreshState === 'refreshing' && 'text-blue-400',
               refreshState === 'success' && 'text-green-500',
               refreshState === 'error' && 'text-destructive',
-              refreshState === 'idle' && config.colorClass,
+              refreshState === 'idle' && 'text-muted-foreground',
               sizes.helper
             )}>
               {/* Dynamic icon based on refresh state */}
@@ -248,16 +256,14 @@ export function HonestPriceDisplay({
                 <Check className="h-3 w-3" />
               ) : refreshState === 'error' ? (
                 <X className="h-3 w-3" />
-              ) : (
-                <Icon className="h-3 w-3" />
-              )}
+              ) : null}
               
               {/* Dynamic text based on refresh state */}
               <span className="transition-opacity duration-200">
                 {refreshState === 'refreshing' ? 'Checking price...' :
                  refreshState === 'success' ? 'Price updated just now' :
                  refreshState === 'error' ? 'Failed to update' :
-                 (localLastVerified ? 'Updated just now' : (timeAgoText || displayMode.helperText))}
+                 (localLastVerified ? 'Updated just now' : displayMode.helperText)}
               </span>
               
               {/* Admin Refresh Button - only shown to admins */}
@@ -272,13 +278,6 @@ export function HonestPriceDisplay({
                 />
               )}
             </div>
-
-            {/* Warning for low confidence */}
-            {displayMode.showWarning && (
-              <p className={cn('text-amber-400/80 mt-1', sizes.helper)}>
-                {displayMode.helperText}
-              </p>
-            )}
           </div>
         ) : (
           /* Stale/Unknown price display */
@@ -363,9 +362,7 @@ export function HonestPriceDisplayCompact({
   );
   
   const confidence = providedConfidence || freshness.confidence;
-  const displayMode = getDisplayMode(confidence, storeName);
-  const config = confidenceConfig[confidence];
-  const Icon = config.icon;
+  const displayMode = getDisplayMode(confidence, storeName, freshness.lastVerifiedDate);
 
   if (!displayMode.showPrice || price === null) {
     return (
@@ -380,43 +377,28 @@ export function HonestPriceDisplayCompact({
     <div className={cn('flex flex-col gap-0.5', className)}>
       <div className="flex items-baseline gap-1.5">
         <span className="text-xl font-bold text-foreground">
-          {displayMode.pricePrefix}
+          {isConverted ? '~' : ''}
           {formatPrice(price, { showApproximate: false })}
         </span>
         <span className="text-sm text-muted-foreground">/kg</span>
       </div>
-      <span className={cn('inline-flex items-center gap-1 text-xs', config.colorClass)}>
-        <Icon className="h-3 w-3" />
-        <span>
-          {confidence === 'high' || confidence === 'medium' 
-            ? (freshness.timeAgo ? `Updated ${freshness.timeAgo}` : 'Recent')
-            : 'Verify at store'}
-        </span>
+      <span className="text-xs text-muted-foreground">
+        from {storeName}
       </span>
     </div>
   );
 }
 
 /**
- * Get CTA button text based on price confidence
+ * Get CTA button text - always "Buy at [Store]" for honesty
  */
-export function getCtaText(confidence: PriceConfidence | null | undefined, storeName: string = 'Store'): string {
-  switch (confidence) {
-    case 'high':
-    case 'medium':
-      return 'Buy Now';
-    case 'low':
-      return 'Check Current Price';
-    case 'stale':
-    case 'unknown':
-    default:
-      return `View at ${storeName}`;
-  }
+export function getCtaText(storeName: string = 'Store'): string {
+  return `Buy at ${storeName}`;
 }
 
 /**
- * Check if CTA should use primary styling
+ * Check if CTA should use primary styling - always true for buy buttons
  */
-export function shouldUsePrimaryCta(confidence: PriceConfidence | null | undefined): boolean {
-  return confidence === 'high' || confidence === 'medium';
+export function shouldUsePrimaryCta(): boolean {
+  return true;
 }

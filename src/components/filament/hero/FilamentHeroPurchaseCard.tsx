@@ -446,21 +446,19 @@ export function FilamentHeroPurchaseCard({
         <Button
           onClick={handleBuyClick}
           disabled={!affiliateUrl || stockStatus === 'out_of_stock'}
-          variant={shouldUsePrimaryCta(priceConfidence as PriceConfidence) ? 'default' : 'outline'}
+          variant="default"
           className={cn(
             "w-full h-16 text-xl font-extrabold tracking-wide",
-            shouldUsePrimaryCta(priceConfidence as PriceConfidence) && [
-              "bg-gradient-to-r from-primary to-primary/80",
-              "hover:from-primary/90 hover:to-primary/70",
-              "shadow-[0_8px_24px_rgba(0,212,212,0.3),inset_0_2px_0_rgba(255,255,255,0.2)]",
-              "hover:shadow-[0_12px_32px_rgba(0,212,212,0.4)]",
-            ],
+            "bg-gradient-to-r from-primary to-primary/80",
+            "hover:from-primary/90 hover:to-primary/70",
+            "shadow-[0_8px_24px_rgba(0,212,212,0.3),inset_0_2px_0_rgba(255,255,255,0.2)]",
+            "hover:shadow-[0_12px_32px_rgba(0,212,212,0.4)]",
             "hover:-translate-y-0.5 transition-all duration-200",
             "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
           )}
         >
-          {shouldUsePrimaryCta(priceConfidence as PriceConfidence) && <ShoppingCart className="w-5 h-5 mr-3" />}
-          {getCtaText(priceConfidence as PriceConfidence, finalRetailerName)}
+          <ShoppingCart className="w-5 h-5 mr-3" />
+          {getCtaText(finalRetailerName)}
           <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
         </Button>
       )}

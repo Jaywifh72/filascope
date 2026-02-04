@@ -6,11 +6,12 @@
  * - Store name badge with store type indicator
  * - "Local" badge for same-region stores
  * - "Ships from [Country]" warning for international
- * - Conversion indicators for estimated prices
+ * - Original currency shown in parentheses for conversions
  */
 
 import React from 'react';
-import { ExternalLink, Globe, Truck, Store, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, Globe, Truck, Store, CheckCircle2, ShoppingCart } from 'lucide-react';
+import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -55,9 +56,14 @@ export function StorePricingDisplay({
     ? storePrice.priceDisplay / (weightGrams / 1000)
     : null;
   
-  // Format price per kg
+  // Format price per kg with ~ for converted
   const formattedPerKg = pricePerKg !== null
     ? `${storePrice.isConverted ? '~' : ''}${storePrice.formattedPrice.charAt(0)}${pricePerKg.toFixed(2)}/kg`
+    : null;
+  
+  // Format price date
+  const priceDate = storePrice.lastVerifiedAt 
+    ? format(new Date(storePrice.lastVerifiedAt), 'MMM d, yyyy')
     : null;
   
   const handleBuyClick = () => {
@@ -94,34 +100,35 @@ export function StorePricingDisplay({
       <div className="space-y-3">
         {/* Price Display */}
         <div className="space-y-1">
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2 flex-wrap">
             <span className={cn(classes.price, 'text-foreground')}>
               {showPerKg && formattedPerKg ? formattedPerKg : storePrice.formattedPrice}
             </span>
-            {storePrice.isConverted && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-xs text-muted-foreground cursor-help">
-                    (converted)
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">
-                    Converted from {storePrice.originalCurrency}{' '}
-                    {storePrice.originalPrice?.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Exchange rate may vary
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+            
+            {/* Original price for conversions */}
+            {storePrice.isConverted && storePrice.originalPrice && (
+              <span className="text-sm text-muted-foreground">
+                ({storePrice.originalCurrency} {storePrice.originalPrice.toFixed(2)})
+              </span>
             )}
+          </div>
+          
+          {/* Store name and price date */}
+          <div className="text-sm text-muted-foreground">
+            from {storePrice.storeName} {regionConfig?.flag}
           </div>
           
           {/* Show spool price if displaying per-kg */}
           {showPerKg && formattedPerKg && (
             <div className="text-sm text-muted-foreground">
               {storePrice.formattedPrice} per spool
+            </div>
+          )}
+          
+          {/* Price date */}
+          {priceDate && (
+            <div className="text-xs text-muted-foreground">
+              Price from {priceDate}
             </div>
           )}
         </div>
@@ -196,16 +203,14 @@ export function StorePricingDisplay({
               size === 'lg' && "h-14 text-lg",
               size === 'md' && "h-12 text-base",
               size === 'sm' && "h-10 text-sm",
-              storePrice.isLocalStore && [
-                "bg-gradient-to-r from-primary to-primary/80",
-                "hover:from-primary/90 hover:to-primary/70",
-                "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
-                "hover:shadow-[0_8px_24px_rgba(0,212,212,0.35)]",
-              ],
+              "bg-gradient-to-r from-primary to-primary/80",
+              "hover:from-primary/90 hover:to-primary/70",
+              "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
+              "hover:shadow-[0_8px_24px_rgba(0,212,212,0.35)]",
               "hover:-translate-y-0.5 transition-all duration-200"
             )}
-            variant={storePrice.isLocalStore ? 'default' : 'outline'}
           >
+            <ShoppingCart className="w-4 h-4 mr-2" />
             Buy at {storePrice.storeName}
             <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
           </Button>
