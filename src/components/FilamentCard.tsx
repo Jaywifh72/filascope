@@ -189,7 +189,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     isActualRegionalPrice, 
     currency: priceCurrency,
     regionalUrl,
-    fallbackUrl 
+    fallbackUrl,
+    isLocalStore,
+    isUsingFallbackRegion,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
   // Only fetch live price if we DON'T have an actual regional price
@@ -617,9 +619,23 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             
             {/* Price freshness indicator */}
             {timeAgo && !isLivePrice && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{timeAgo}</span>
+                {/* Local badge */}
+                {isLocalStore && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded ml-1">
+                    Local
+                  </span>
+                )}
+              </div>
+            )}
+            {/* Show Local badge even without freshness indicator */}
+            {(!timeAgo || isLivePrice) && isLocalStore && (
+              <div className="flex items-center gap-1 text-xs">
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded">
+                  Local
+                </span>
               </div>
             )}
           </div>
