@@ -1,374 +1,254 @@
 
-# Plan: Group Deal Color Variants into Single Cards
 
-## Overview
+# Regional Store Coverage Expansion Plan
 
-Transform the Deals page from showing 80+ individual cards (one per color variant) to ~20-30 grouped product cards showing all available colors. This dramatically improves usability by consolidating deals like "Anycubic TPU Filament" with 20 color variants into a single card.
+## Current State Analysis
 
----
+### Stores Table Schema
+The `stores` table has the following structure:
+| Column | Type | Required |
+|--------|------|----------|
+| id | uuid | Yes (auto-generated) |
+| name | text | Yes |
+| slug | text | Yes (unique) |
+| store_type | text | Yes ('marketplace', 'brand_direct', 'retailer') |
+| region | text | Yes ('US', 'CA', 'UK', 'EU', 'AU', 'JP', 'GLOBAL') |
+| country_code | text | No |
+| currency_code | text | No |
+| base_url | text | Yes |
+| affiliate_tag | text | No |
+| affiliate_network | text | No |
+| ships_from | text[] | No |
+| ships_to | text[] | No |
+| logo_url | text | No |
+| is_active | boolean | Yes (default: true) |
+| notes | text | No |
 
-## What You'll See After These Changes
+### Current Store Distribution
+| Region | Count | Stores |
+|--------|-------|--------|
+| EU | 8 | 3DJake EU, Amazon (FR/DE/IT/ES), ColorFabb, FormFutura, Prusament |
+| US | 3 | Amazon US, Polymaker US, PrintedSolid |
+| UK | 2 | 3DJake UK, Amazon UK |
+| CA | 2 | Amazon Canada, Filaments.ca |
+| GLOBAL | 1 | Bambu Lab |
+| AU | 1 | Amazon Australia |
+| JP | 1 | Amazon Japan |
 
-**Before (80+ cards):**
-```
-49% OFF - Anycubic TPU Filament (Red)
-49% OFF - Anycubic TPU Filament (Blue)
-49% OFF - Anycubic TPU Filament (Black)
-... (17 more identical cards)
-```
+### Priority Brands - Current Coverage
 
-**After (~25 cards):**
-```
-49% OFF - Anycubic TPU Filament
-~£20.48 - ~£24.49
-[●] [●] [●] [●] [●] +15 more
-🇺🇸 Amazon US • International
-```
+| Brand | Current Stores | Missing Regions |
+|-------|----------------|-----------------|
+| **Bambu Lab** | GLOBAL (1) | Need regional stores: US, CA, UK, EU, AU, JP |
+| **Prusa/Prusament** | EU (1) | Need: US warehouse shipping |
+| **Creality** | None | Need: US, EU, UK, AU |
+| **Anycubic** | None | Need: US, CA, UK, EU, AU |
+| **Polymaker** | US (1) | Need: CA, EU |
+| **Elegoo** | None | Need: US, CA, UK, EU, AU |
 
----
-
-## Technical Approach
-
-### Key Decision: Reuse Existing Infrastructure
-
-The codebase already has robust color variant handling in `useFilamentColorVariants.ts`:
-- `getBaseProductName()` - Strips colors from titles
-- `getColorFromTitle()` - Extracts color names
-- Color swatch display in `FilamentCard` with HoverCard
-
-We'll leverage these for grouping deals.
-
----
-
-## Implementation Steps
-
-### Step 1: Create Grouping Utility
-
-**New file:** `src/lib/groupDealsByProduct.ts`
-
-```typescript
-import { getBaseProductName } from '@/hooks/useFilamentColorVariants';
-import type { DealWithMeta } from '@/hooks/useDealsWithFilters';
-
-export interface GroupedDeal {
-  groupKey: string;           // Unique key for the group
-  baseName: string;           // Product name without color
-  representativeDeal: DealWithMeta;  // First/best deal for image etc.
-  variants: DealWithMeta[];   // All color variants
-  // Aggregated data
-  bestDiscount: number;       // Highest discount in group
-  priceRange: { min: number; max: number };
-  colorHexes: string[];       // Unique color hex values
-  colorCount: number;         // Total unique colors
-  // Store info from representative deal
-  storeName: string;
-  storeRegion: string;
-  regionFlag: string;
-  isLocal: boolean;
-}
-
-export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
-  const groups = new Map<string, DealWithMeta[]>();
-  
-  // Group deals by vendor + base product name
-  for (const deal of deals) {
-    const baseName = getBaseProductName(deal.product_title);
-    const groupKey = `${(deal.vendor || 'unknown').toLowerCase()}-${baseName.toLowerCase()}`;
-    
-    if (!groups.has(groupKey)) {
-      groups.set(groupKey, []);
-    }
-    groups.get(groupKey)!.push(deal);
-  }
-  
-  // Convert to grouped deals
-  return Array.from(groups.entries()).map(([groupKey, variants]) => {
-    // Sort by discount (best first)
-    const sorted = [...variants].sort((a, b) => b.discount - a.discount);
-    const representative = sorted[0];
-    
-    // Calculate aggregates
-    const prices = variants
-      .map(v => v.variant_price)
-      .filter((p): p is number => p !== null);
-    
-    const colorHexes = [...new Set(
-      variants
-        .map(v => (v as any).color_hex as string | null)
-        .filter((hex): hex is string => !!hex)
-    )];
-    
-    return {
-      groupKey,
-      baseName: getBaseProductName(representative.product_title),
-      representativeDeal: representative,
-      variants: sorted,
-      bestDiscount: representative.discount,
-      priceRange: {
-        min: Math.min(...prices),
-        max: Math.max(...prices),
-      },
-      colorHexes,
-      colorCount: variants.length,
-      storeName: representative.storeName,
-      storeRegion: representative.storeRegion,
-      regionFlag: representative.regionFlag,
-      isLocal: representative.isLocal,
-    };
-  }).sort((a, b) => b.bestDiscount - a.bestDiscount);
-}
-```
-
-### Step 2: Create GroupedDealCard Component
-
-**New file:** `src/components/deals/GroupedDealCard.tsx`
-
-Design features:
-- Discount badge showing best discount
-- Base product name (without color)
-- Price range display when variants have different prices
-- Color swatches (first 5 + "+X more" clickable to expand)
-- Clicking a color swatch navigates to that variant's detail page
-- Store region info (same as current DealCard)
-- Share button for the group
-
-```typescript
-interface GroupedDealCardProps {
-  group: GroupedDeal;
-}
-
-export function GroupedDealCard({ group }: GroupedDealCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  
-  // Show price range if prices differ
-  const hasPriceRange = group.priceRange.min !== group.priceRange.max;
-  
-  return (
-    <Card className="relative h-full overflow-hidden hover:scale-[1.02] ...">
-      {/* Best Discount Badge */}
-      <div className="absolute top-3 left-3 z-10 ...">
-        {group.bestDiscount}% OFF
-      </div>
-      
-      {/* Image from representative deal */}
-      <div className="relative h-40 bg-gray-800/50 ...">
-        <OptimizedImage src={group.representativeDeal.featured_image} ... />
-      </div>
-      
-      <CardContent className="p-4">
-        {/* Vendor */}
-        <div className="text-xs text-muted-foreground mb-1">
-          {group.representativeDeal.vendor}
-        </div>
-        
-        {/* Base Product Name (without color) */}
-        <h3 className="font-medium text-sm mb-3 line-clamp-2">
-          {group.baseName}
-        </h3>
-        
-        {/* Price Range or Single Price */}
-        {hasPriceRange ? (
-          <div className="flex items-center gap-1 mb-2">
-            <RegionalPrice amount={group.priceRange.min} ... />
-            <span>-</span>
-            <RegionalPrice amount={group.priceRange.max} ... />
-          </div>
-        ) : (
-          <RegionalPricePair 
-            saleAmount={group.priceRange.min}
-            originalAmount={group.representativeDeal.variant_compare_at_price}
-            ...
-          />
-        )}
-        
-        {/* Color Swatches */}
-        <div className="flex flex-wrap items-center gap-1.5 mb-3">
-          {group.colorHexes.slice(0, 5).map((hex, i) => (
-            <Link 
-              key={i}
-              to={`/filament/${group.variants.find(v => v.color_hex === hex)?.id}`}
-              className="w-5 h-5 rounded-full border border-white/20 hover:scale-110"
-              style={{ backgroundColor: hex }}
-            />
-          ))}
-          {group.colorCount > 5 && (
-            <button 
-              onClick={() => setExpanded(!expanded)}
-              className="text-xs text-muted-foreground hover:text-primary"
-            >
-              +{group.colorCount - 5} more
-            </button>
-          )}
-        </div>
-        
-        {/* Expanded Color Grid (when clicked) */}
-        {expanded && (
-          <div className="grid grid-cols-6 gap-1.5 mb-3 p-2 bg-muted/30 rounded">
-            {group.colorHexes.map((hex, i) => (
-              <Link 
-                key={i}
-                to={`/filament/${group.variants.find(v => v.color_hex === hex)?.id}`}
-                className="w-6 h-6 rounded-full border border-white/20 hover:scale-110"
-                style={{ backgroundColor: hex }}
-              />
-            ))}
-          </div>
-        )}
-        
-        {/* Variant Count Badge */}
-        <div className="text-xs text-muted-foreground mb-2">
-          Available in {group.colorCount} colors
-        </div>
-        
-        {/* Store Region Info */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span>{group.regionFlag}</span>
-          <span>{group.storeName}</span>
-          <span>•</span>
-          {group.isLocal ? (
-            <span className="text-emerald-400 font-medium">Local</span>
-          ) : (
-            <span>International</span>
-          )}
-        </div>
-        
-        {/* CTA Button - links to representative deal */}
-        <Button variant="outline" size="sm" className="w-full mt-3" asChild>
-          <Link to={`/filament/${group.representativeDeal.id}`}>
-            View Deal
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-```
-
-### Step 3: Update useDealsWithFilters Hook
-
-**File:** `src/hooks/useDealsWithFilters.ts`
-
-Add `color_hex` to the query and provide both raw and grouped deals:
-
-```typescript
-// Update select to include color_hex
-const { data, error } = await supabase
-  .from("filaments")
-  .select(
-    "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g, last_scraped_at, created_at, color_hex"
-  )
-  ...
-
-// Add to return:
-return {
-  deals: filteredDeals,
-  groupedDeals: useMemo(() => 
-    groupDealsByProduct(filteredDeals), 
-    [filteredDeals]
-  ),
-  ...
-}
-```
-
-### Step 4: Update Deals Page
-
-**File:** `src/pages/Deals.tsx`
-
-Replace the deal cards grid with grouped cards:
-
-```typescript
-import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
-
-// In the component:
-const { deals, groupedDeals, ... } = useDealsWithFilters();
-
-// Stats Row - show grouped count
-<span>
-  <span className="text-foreground font-medium">{groupedDeals.length}</span> deals
-  <span className="text-muted-foreground"> ({deals.length} variants)</span>
-</span>
-
-// Grid - render grouped cards
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-  {groupedDeals.map((group) => (
-    <GroupedDealCard key={group.groupKey} group={group} />
-  ))}
-</div>
-```
+### Secondary Data Source
+The `brand_regional_stores` table contains regional URL patterns for brands (Eryone, Kingroon, Sovol, Sunlu, Matter3D). This is used for URL transformation but separate from the main `stores` table.
 
 ---
 
-## Files to Create
+## Implementation Approach
 
-| File | Purpose |
-|------|---------|
-| `src/lib/groupDealsByProduct.ts` | Grouping logic and types |
-| `src/components/deals/GroupedDealCard.tsx` | New grouped card component |
+### Strategy: Direct SQL Inserts
+Use SQL INSERT statements with `ON CONFLICT DO NOTHING` to safely add stores without duplicates. This is preferred over a seed script because:
+1. One-time bulk operation
+2. Easy to verify results immediately
+3. No code maintenance overhead
 
-## Files to Modify
+### Phase 1: Priority Brand Stores (High Impact)
 
-| File | Changes |
-|------|---------|
-| `src/hooks/useDealsWithFilters.ts` | Add `color_hex` to query, return `groupedDeals` |
-| `src/pages/Deals.tsx` | Use `groupedDeals` and `GroupedDealCard` |
+#### 1.1 Bambu Lab Regional Stores
+Replace GLOBAL entry with specific regional stores for accurate pricing:
 
----
-
-## Visual Design
-
-**Card Layout:**
 ```text
-┌─────────────────────────────────┐
-│ [49% OFF]              [Share]  │
-│                                 │
-│      [Product Image]            │
-│                                 │
-├─────────────────────────────────┤
-│ Anycubic                        │
-│ TPU Filament                    │
-│                                 │
-│ ~£20.48 - ~£24.49               │
-│                                 │
-│ [●][●][●][●][●] +15 more        │
-│ Available in 20 colors          │
-│                                 │
-│ 🇺🇸 Amazon US • International   │
-│                                 │
-│ [      View Deal      ]         │
-└─────────────────────────────────┘
++------------------+--------+----------+---------------------+
+| Store Name       | Region | Currency | Base URL            |
++------------------+--------+----------+---------------------+
+| Bambu Lab US     | US     | USD      | us.store.bambulab.com |
+| Bambu Lab CA     | CA     | CAD      | ca.store.bambulab.com |
+| Bambu Lab UK     | UK     | GBP      | uk.store.bambulab.com |
+| Bambu Lab EU     | EU     | EUR      | eu.store.bambulab.com |
+| Bambu Lab AU     | AU     | AUD      | au.store.bambulab.com |
+| Bambu Lab JP     | JP     | JPY      | jp.store.bambulab.com |
++------------------+--------+----------+---------------------+
 ```
 
-**Color Swatch Behavior:**
-- First 5 colors shown as clickable dots
-- "+X more" expands to show all colors in a grid
-- Each color dot links to that variant's detail page
-- Hover tooltip shows color name if available
+#### 1.2 Creality Regional Stores
+
+```text
++------------------+--------+----------+-------------------------+
+| Store Name       | Region | Currency | Base URL                |
++------------------+--------+----------+-------------------------+
+| Creality US      | US     | USD      | store.creality.com      |
+| Creality EU      | EU     | EUR      | store.creality.com/eu   |
+| Creality UK      | UK     | GBP      | store.creality.com/uk   |
+| Creality AU      | AU     | AUD      | store.creality.com/au   |
++------------------+--------+----------+-------------------------+
+```
+
+#### 1.3 Anycubic Regional Stores
+
+```text
++------------------+--------+----------+-------------------------+
+| Store Name       | Region | Currency | Base URL                |
++------------------+--------+----------+-------------------------+
+| Anycubic US      | US     | USD      | store.anycubic.com      |
+| Anycubic CA      | CA     | CAD      | ca.anycubic.com         |
+| Anycubic UK      | UK     | GBP      | uk.anycubic.com         |
+| Anycubic EU      | EU     | EUR      | eu.anycubic.com         |
+| Anycubic AU      | AU     | AUD      | www.anycubic.au         |
++------------------+--------+----------+-------------------------+
+```
+
+#### 1.4 Polymaker Regional Stores (Expand from US)
+
+```text
++------------------+--------+----------+---------------------+
+| Store Name       | Region | Currency | Base URL            |
++------------------+--------+----------+---------------------+
+| Polymaker CA     | CA     | CAD      | ca.polymaker.com    |
+| Polymaker EU     | EU     | EUR      | eu.polymaker.com    |
++------------------+--------+----------+---------------------+
+```
+
+#### 1.5 Elegoo Regional Stores
+
+```text
++------------------+--------+----------+---------------------+
+| Store Name       | Region | Currency | Base URL            |
++------------------+--------+----------+---------------------+
+| Elegoo US        | US     | USD      | us.elegoo.com       |
+| Elegoo CA        | CA     | CAD      | ca.elegoo.com       |
+| Elegoo UK        | UK     | GBP      | uk.elegoo.com       |
+| Elegoo EU        | EU     | EUR      | eu.elegoo.com       |
+| Elegoo AU        | AU     | AUD      | au.elegoo.com       |
++------------------+--------+----------+---------------------+
+```
 
 ---
 
-## Edge Cases
+### Phase 2: Update Existing Entries
 
-| Scenario | Handling |
-|----------|----------|
-| Single color variant | Show as normal card (no "Available in X colors") |
-| No color_hex data | Still group by base name, show "Available in X variants" |
-| Price range is same | Show single price instead of range |
-| All variants same discount | Show single discount percentage |
-| Discount range | Show best discount with note "up to X% off" |
+#### 2.1 Bambu Lab GLOBAL to Regional Migration
+- Keep GLOBAL entry as fallback
+- Add regional-specific stores with proper currency/country codes
+- Mark GLOBAL as `is_active = false` after regionals are verified
+
+---
+
+## Technical Details
+
+### SQL Migration Script
+
+```sql
+-- =====================================================
+-- PHASE 1: ADD PRIORITY BRAND REGIONAL STORES
+-- =====================================================
+
+-- 1.1 BAMBU LAB REGIONAL STORES
+INSERT INTO stores (name, slug, store_type, region, country_code, currency_code, base_url, is_active, ships_from, ships_to)
+VALUES 
+  ('Bambu Lab US', 'bambu-lab-us', 'brand_direct', 'US', 'US', 'USD', 'https://us.store.bambulab.com', true, ARRAY['US'], ARRAY['US', 'CA']),
+  ('Bambu Lab CA', 'bambu-lab-ca', 'brand_direct', 'CA', 'CA', 'CAD', 'https://ca.store.bambulab.com', true, ARRAY['CA'], ARRAY['CA']),
+  ('Bambu Lab UK', 'bambu-lab-uk', 'brand_direct', 'UK', 'GB', 'GBP', 'https://uk.store.bambulab.com', true, ARRAY['GB'], ARRAY['GB']),
+  ('Bambu Lab EU', 'bambu-lab-eu', 'brand_direct', 'EU', 'DE', 'EUR', 'https://eu.store.bambulab.com', true, ARRAY['DE'], ARRAY['EU']),
+  ('Bambu Lab AU', 'bambu-lab-au', 'brand_direct', 'AU', 'AU', 'AUD', 'https://au.store.bambulab.com', true, ARRAY['AU'], ARRAY['AU', 'NZ']),
+  ('Bambu Lab JP', 'bambu-lab-jp', 'brand_direct', 'JP', 'JP', 'JPY', 'https://jp.store.bambulab.com', true, ARRAY['JP'], ARRAY['JP'])
+ON CONFLICT (slug) DO NOTHING;
+
+-- 1.2 CREALITY REGIONAL STORES
+INSERT INTO stores (name, slug, store_type, region, country_code, currency_code, base_url, is_active, ships_from)
+VALUES 
+  ('Creality US', 'creality-us', 'brand_direct', 'US', 'US', 'USD', 'https://store.creality.com', true, ARRAY['US', 'CN']),
+  ('Creality EU', 'creality-eu', 'brand_direct', 'EU', 'DE', 'EUR', 'https://store.creality.com/eu', true, ARRAY['DE']),
+  ('Creality UK', 'creality-uk', 'brand_direct', 'UK', 'GB', 'GBP', 'https://store.creality.com/uk', true, ARRAY['GB']),
+  ('Creality AU', 'creality-au', 'brand_direct', 'AU', 'AU', 'AUD', 'https://store.creality.com/au', true, ARRAY['AU'])
+ON CONFLICT (slug) DO NOTHING;
+
+-- 1.3 ANYCUBIC REGIONAL STORES
+INSERT INTO stores (name, slug, store_type, region, country_code, currency_code, base_url, is_active, ships_from)
+VALUES 
+  ('Anycubic US', 'anycubic-us', 'brand_direct', 'US', 'US', 'USD', 'https://store.anycubic.com', true, ARRAY['US', 'CN']),
+  ('Anycubic CA', 'anycubic-ca', 'brand_direct', 'CA', 'CA', 'CAD', 'https://ca.anycubic.com', true, ARRAY['CA']),
+  ('Anycubic UK', 'anycubic-uk', 'brand_direct', 'UK', 'GB', 'GBP', 'https://uk.anycubic.com', true, ARRAY['GB']),
+  ('Anycubic EU', 'anycubic-eu', 'brand_direct', 'EU', 'DE', 'EUR', 'https://eu.anycubic.com', true, ARRAY['DE']),
+  ('Anycubic AU', 'anycubic-au', 'brand_direct', 'AU', 'AU', 'AUD', 'https://www.anycubic.au', true, ARRAY['AU'])
+ON CONFLICT (slug) DO NOTHING;
+
+-- 1.4 POLYMAKER REGIONAL STORES (expand existing)
+INSERT INTO stores (name, slug, store_type, region, country_code, currency_code, base_url, is_active, ships_from)
+VALUES 
+  ('Polymaker CA', 'polymaker-ca', 'brand_direct', 'CA', 'CA', 'CAD', 'https://ca.polymaker.com', true, ARRAY['CA']),
+  ('Polymaker EU', 'polymaker-eu', 'brand_direct', 'EU', 'NL', 'EUR', 'https://eu.polymaker.com', true, ARRAY['NL'])
+ON CONFLICT (slug) DO NOTHING;
+
+-- 1.5 ELEGOO REGIONAL STORES
+INSERT INTO stores (name, slug, store_type, region, country_code, currency_code, base_url, is_active, ships_from)
+VALUES 
+  ('Elegoo US', 'elegoo-us', 'brand_direct', 'US', 'US', 'USD', 'https://us.elegoo.com', true, ARRAY['US', 'CN']),
+  ('Elegoo CA', 'elegoo-ca', 'brand_direct', 'CA', 'CA', 'CAD', 'https://ca.elegoo.com', true, ARRAY['CA']),
+  ('Elegoo UK', 'elegoo-uk', 'brand_direct', 'UK', 'GB', 'GBP', 'https://uk.elegoo.com', true, ARRAY['GB']),
+  ('Elegoo EU', 'elegoo-eu', 'brand_direct', 'EU', 'DE', 'EUR', 'https://eu.elegoo.com', true, ARRAY['DE']),
+  ('Elegoo AU', 'elegoo-au', 'brand_direct', 'AU', 'AU', 'AUD', 'https://au.elegoo.com', true, ARRAY['AU'])
+ON CONFLICT (slug) DO NOTHING;
+
+-- =====================================================
+-- PHASE 2: DEACTIVATE OLD GLOBAL ENTRY
+-- =====================================================
+UPDATE stores SET is_active = false WHERE slug = 'bambu-lab' AND region = 'GLOBAL';
+```
+
+### Verification Queries
+
+```sql
+-- Check new distribution
+SELECT region, COUNT(*) as count FROM stores WHERE is_active = true GROUP BY region ORDER BY count DESC;
+
+-- Verify priority brands
+SELECT name, slug, region, currency_code FROM stores 
+WHERE slug LIKE '%bambu%' OR slug LIKE '%creality%' OR slug LIKE '%anycubic%' 
+   OR slug LIKE '%polymaker%' OR slug LIKE '%elegoo%'
+ORDER BY name, region;
+```
 
 ---
 
 ## Expected Results
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Cards displayed | 80+ | ~25 |
-| Page load time | Slower (more cards) | Faster |
-| User findability | Hard to scan | Easy to scan |
-| Color discovery | Must scroll through all | See all at glance |
+### After Implementation
+
+| Region | Before | After | Change |
+|--------|--------|-------|--------|
+| US | 3 | 8 | +5 (Bambu, Creality, Anycubic, Elegoo, Polymaker) |
+| EU | 8 | 13 | +5 (Bambu, Creality, Anycubic, Elegoo, Polymaker) |
+| UK | 2 | 6 | +4 (Bambu, Creality, Anycubic, Elegoo) |
+| CA | 2 | 6 | +4 (Bambu, Anycubic, Elegoo, Polymaker) |
+| AU | 1 | 5 | +4 (Bambu, Creality, Anycubic, Elegoo) |
+| JP | 1 | 2 | +1 (Bambu) |
+| GLOBAL | 1 | 0 | -1 (Bambu moved to regional) |
+
+**Total Active Stores: 18 to 40 (+22)**
 
 ---
 
-## No Database Changes Required
+## Implementation Steps
 
-Uses existing `color_hex` column already in filaments table.
+1. **Run SQL migration** via database migration tool
+2. **Verify inserts** with distribution query
+3. **Deactivate Bambu Lab GLOBAL** entry
+4. **Test in application** - verify stores appear in price comparison UI
+5. **Optional: Add logo URLs** for new stores
+
+---
+
+## Future Considerations
+
+- Add eSun regional stores (US, EU)
+- Add Sunlu regional stores (already in `brand_regional_stores`)
+- Consider adding more marketplace variants (Amazon NL, Amazon PL)
+- Implement automated store validation (check base_url is reachable)
+
