@@ -44,21 +44,28 @@ const Deals = () => {
     priceRange[1] < maxPrice ||
     showLocalOnly;
 
-  // Filter and categorize deals by freshness
-  const { freshDeals, staleCount } = useMemo(() => {
-    const MAX_DEAL_AGE_DAYS = 7;
+  // Categorize deals by freshness (for display info, not filtering)
+  const { freshCount, olderCount } = useMemo(() => {
+    const MAX_FRESH_AGE_DAYS = 7;
     
-    const fresh = deals.filter((deal) => {
+    let fresh = 0;
+    let older = 0;
+    
+    deals.forEach((deal) => {
       const capturedAt = deal.last_scraped_at || deal.created_at;
-      if (!capturedAt) return true; // Include if no date (can't determine age)
+      if (!capturedAt) {
+        fresh++; // Include if no date (can't determine age)
+        return;
+      }
       const daysSinceCapture = differenceInDays(new Date(), new Date(capturedAt));
-      return daysSinceCapture < MAX_DEAL_AGE_DAYS;
+      if (daysSinceCapture < MAX_FRESH_AGE_DAYS) {
+        fresh++;
+      } else {
+        older++;
+      }
     });
     
-    return {
-      freshDeals: fresh,
-      staleCount: deals.length - fresh.length,
-    };
+    return { freshCount: fresh, olderCount: older };
   }, [deals]);
 
   // Helper to determine if a deal needs a warning
@@ -100,9 +107,9 @@ const Deals = () => {
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-green-400" />
                 <span>
-                  <span className="text-foreground font-medium">{freshDeals.length}</span> active deals
-                  {staleCount > 0 && (
-                    <span className="text-muted-foreground"> ({staleCount} older deals hidden)</span>
+                  <span className="text-foreground font-medium">{deals.length}</span> deals
+                  {olderCount > 0 && freshCount > 0 && (
+                    <span className="text-muted-foreground"> • {freshCount} this week</span>
                   )}
                 </span>
               </div>
