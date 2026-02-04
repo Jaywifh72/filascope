@@ -2,14 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { 
   ShoppingCart, 
   ExternalLink, 
-  Truck, 
-  RotateCcw, 
   ChevronRight,
   RefreshCw,
   Globe,
   Calculator,
   GitCompare,
-  Info,
   AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,9 +14,7 @@ import { MaterialBadge } from '@/components/MaterialBadge';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
 import { useCurrentPrice, invalidatePriceCache } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
-import { getShippingRule } from '@/lib/pricingRules';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
-import { ShippingCountdown } from '../urgency/ShippingCountdown';
 import { useCompare } from '@/hooks/useCompare';
 import { useRegion } from '@/contexts/RegionContext';
 import { REGIONS } from '@/config/regions';
@@ -27,7 +22,6 @@ import { RegionalPriceResult, CurrencyCode, RegionCode } from '@/types/regional'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
 import { HonestPriceDisplay, getCtaText } from '@/components/price/HonestPriceDisplay';
-import { ShippingThreshold } from '@/components/ShippingThreshold';
 import type { StorePrice } from '@/hooks/useFilamentStorePricing';
 import { StorePricingDisplay } from './StorePricingDisplay';
 
@@ -212,8 +206,7 @@ export function FilamentPurchaseSidebar({
     ? formatPrice(displayPricePerKg, { showApproximate: isConvertedPrice })
     : null;
 
-  // Get vendor-specific shipping rules
-  const shippingRule = getShippingRule(vendor || 'default');
+  // Store region info for display
 
   // Store region info for display
   const storeRegionCode = regionalPriceResult?.store?.regionCode;
@@ -326,13 +319,6 @@ export function FilamentPurchaseSidebar({
             </div>
           )}
 
-          {/* Free Shipping Progress */}
-          {shippingRule.flatRate > 0 && (
-            <ShippingCountdown
-              freeShippingThresholdUSD={shippingRule.freeThreshold}
-              currentCartValueUSD={pricePerSpool || 0}
-            />
-          )}
 
           {/* Primary CTA - Always "Buy at [Store]" */}
           <Button
@@ -429,24 +415,12 @@ export function FilamentPurchaseSidebar({
             </button>
           )}
 
-          {/* Trust Signals */}
-          <div className="pt-4 border-t border-border/40 space-y-2">
+          {/* Disclaimer */}
+          <div className="pt-4 border-t border-border/40">
             <p className="text-[10px] text-muted-foreground leading-relaxed">
               Prices shown are from our database and may not reflect current store prices. 
-              Click "Buy Now" to verify the latest price.
+              Click "Buy" to verify the latest price.
             </p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Truck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span>
-                {shippingRule.flatRate === 0 
-                  ? 'Free shipping available' 
-                  : <ShippingThreshold thresholdUSD={shippingRule.freeThreshold} />}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <RotateCcw className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-              <span>Easy returns policy</span>
-            </div>
           </div>
         </div>
       </aside>
