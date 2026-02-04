@@ -2,6 +2,9 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDealsCount } from "@/hooks/useDealsCount";
+import { useRegion } from "@/contexts/RegionContext";
+import { getDealStoreInfo } from "@/lib/dealStoreRegion";
+import { RegionCode } from "@/types/regional";
 
 export interface DealFilament {
   id: string;
@@ -23,6 +26,11 @@ export interface DealWithMeta extends DealFilament {
   expiresIn?: string | null;
   stockStatus?: "in_stock" | "low_stock" | "limited" | null;
   viewsToday?: number;
+  // Store region info
+  storeName: string;
+  storeRegion: string;
+  regionFlag: string;
+  isLocal: boolean;
 }
 
 // Simulated urgency data (in a real app, this would come from the database)
@@ -39,10 +47,14 @@ function generateUrgencyData(dealId: string): { expiresIn?: string; stockStatus?
 }
 
 export function useDealsWithFilters() {
+  const { region } = useRegion();
+  const userRegion = region as RegionCode;
+  
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [minDiscount, setMinDiscount] = useState(0);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
+  const [showLocalOnly, setShowLocalOnly] = useState(false);
   
   // Use shared deals count for accurate total (not limited by query limit)
   const { data: totalDealsCount = 0 } = useDealsCount();
@@ -71,7 +83,7 @@ export function useDealsWithFilters() {
           item.variant_compare_at_price > item.variant_price
       ) as DealFilament[];
 
-      // Add discount calculation and urgency data
+      // Add discount calculation, urgency data, and store info
       return onSaleItems.map((item) => {
         const discount = Math.round(
           ((item.variant_compare_at_price! - item.variant_price!) / item.variant_compare_at_price!) * 100
@@ -84,11 +96,30 @@ export function useDealsWithFilters() {
           discount,
           savings,
           ...urgency,
+          // Placeholder store info - will be enriched with user region in useMemo
+          storeName: "",
+          storeRegion: "",
+          regionFlag: "",
+          isLocal: false,
         } as DealWithMeta;
       });
     },
     staleTime: 1000 * 60 * 5,
   });
+
+  // Enrich deals with store region info based on user's region
+  const dealsWithStoreInfo = useMemo(() => {
+    return rawDeals.map((deal) => {
+      const storeInfo = getDealStoreInfo(deal.product_url, deal.vendor, userRegion);
+      return {
+        ...deal,
+        storeName: storeInfo.storeName,
+        storeRegion: storeInfo.storeRegion,
+        regionFlag: storeInfo.regionFlag,
+        isLocal: storeInfo.isLocal,
+      };
+    });
+  }, [rawDeals, userRegion]);
 
   // Extract unique materials and brands for filters
   const availableMaterials = useMemo(() => {
@@ -114,9 +145,14 @@ export function useDealsWithFilters() {
     return Math.ceil(max / 10) * 10; // Round up to nearest 10
   }, [rawDeals]);
 
+  // Count local deals for filter badge
+  const localDealCount = useMemo(() => {
+    return dealsWithStoreInfo.filter((deal) => deal.isLocal).length;
+  }, [dealsWithStoreInfo]);
+
   // Apply filters
   const filteredDeals = useMemo(() => {
-    return rawDeals
+    return dealsWithStoreInfo
       .filter((deal) => {
         // Material filter
         if (selectedMaterials.length > 0 && (!deal.material || !selectedMaterials.includes(deal.material))) {
@@ -134,16 +170,21 @@ export function useDealsWithFilters() {
         if (deal.variant_price && (deal.variant_price < priceRange[0] || deal.variant_price > priceRange[1])) {
           return false;
         }
+        // Local only filter
+        if (showLocalOnly && !deal.isLocal) {
+          return false;
+        }
         return true;
       })
       .sort((a, b) => b.discount - a.discount);
-  }, [rawDeals, selectedMaterials, selectedBrands, minDiscount, priceRange]);
+  }, [dealsWithStoreInfo, selectedMaterials, selectedBrands, minDiscount, priceRange, showLocalOnly]);
 
   const clearAllFilters = () => {
     setSelectedMaterials([]);
     setSelectedBrands([]);
     setMinDiscount(0);
     setPriceRange([0, maxPrice]);
+    setShowLocalOnly(false);
   };
 
   return {
@@ -159,10 +200,14 @@ export function useDealsWithFilters() {
     setMinDiscount,
     priceRange,
     setPriceRange,
+    showLocalOnly,
+    setShowLocalOnly,
     // Filter options
     availableMaterials,
     availableBrands,
     maxPrice,
+    localDealCount,
+    userRegion,
     // Actions
     clearAllFilters,
   };

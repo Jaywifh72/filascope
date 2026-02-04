@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle } from "lucide-react";
+import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe } from "lucide-react";
 import { differenceInDays } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterShee
 import { DealNotificationSignup } from "@/components/deals/DealNotificationSignup";
 import { DealCard } from "@/components/deals/DealCard";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
+import { getRegionFlag } from "@/lib/dealStoreRegion";
 
 const Deals = () => {
   const {
@@ -23,18 +24,25 @@ const Deals = () => {
     setMinDiscount,
     priceRange,
     setPriceRange,
+    showLocalOnly,
+    setShowLocalOnly,
     availableMaterials,
     availableBrands,
     maxPrice,
+    localDealCount,
+    userRegion,
     clearAllFilters,
   } = useDealsWithFilters();
+
+  const userRegionFlag = getRegionFlag(userRegion);
 
   const hasActiveFilters =
     selectedMaterials.length > 0 ||
     selectedBrands.length > 0 ||
     minDiscount > 0 ||
     priceRange[0] > 0 ||
-    priceRange[1] < maxPrice;
+    priceRange[1] < maxPrice ||
+    showLocalOnly;
 
   // Filter and categorize deals by freshness
   const { freshDeals, staleCount } = useMemo(() => {
@@ -131,6 +139,10 @@ const Deals = () => {
                 onPriceRangeChange={setPriceRange}
                 onClearAll={clearAllFilters}
                 resultCount={deals.length}
+                showLocalOnly={showLocalOnly}
+                onShowLocalOnlyChange={setShowLocalOnly}
+                localDealCount={localDealCount}
+                userRegionFlag={userRegionFlag}
               />
             </div>
             
@@ -153,6 +165,10 @@ const Deals = () => {
                 onDiscountChange={setMinDiscount}
                 onPriceRangeChange={setPriceRange}
                 onClearAll={clearAllFilters}
+                showLocalOnly={showLocalOnly}
+                onShowLocalOnlyChange={setShowLocalOnly}
+                localDealCount={localDealCount}
+                userRegionFlag={userRegionFlag}
               />
             </div>
           </div>
@@ -202,9 +218,21 @@ const Deals = () => {
               </div>
             ) : deals.length === 0 ? (
               <div className="text-center py-16">
-                <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                {hasActiveFilters ? (
+                {showLocalOnly ? (
                   <>
+                    <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold mb-2">No Local Deals Found</h2>
+                    <p className="text-muted-foreground mb-6">
+                      We don't have any deals shipping from your region right now.
+                      Try browsing international deals.
+                    </p>
+                    <Button variant="outline" onClick={() => setShowLocalOnly(false)}>
+                      Show International Deals
+                    </Button>
+                  </>
+                ) : hasActiveFilters ? (
+                  <>
+                    <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h2 className="text-xl font-semibold mb-2">No Matching Deals</h2>
                     <p className="text-muted-foreground mb-6">
                       Try adjusting your filters to see more results.
@@ -215,6 +243,7 @@ const Deals = () => {
                   </>
                 ) : (
                   <>
+                    <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h2 className="text-xl font-semibold mb-2">No Active Deals</h2>
                     <p className="text-muted-foreground mb-6">
                       Check back soon! New deals are added daily.
@@ -236,6 +265,10 @@ const Deals = () => {
                     expiresIn={deal.expiresIn}
                     stockStatus={deal.stockStatus}
                     viewsToday={deal.viewsToday}
+                    storeName={deal.storeName}
+                    storeRegion={deal.storeRegion}
+                    regionFlag={deal.regionFlag}
+                    isLocal={deal.isLocal}
                   />
                 ))}
               </div>
