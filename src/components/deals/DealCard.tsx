@@ -8,7 +8,10 @@ import { DealShareModal } from "./DealShareModal";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
+import { StorePriceBadge } from "@/components/price/StorePriceDisplay";
+import { useRegion } from "@/contexts/RegionContext";
 import { formatDistanceToNow } from "date-fns";
+import type { CurrencyCode } from "@/types/regional";
 
 export interface DealFilament {
   id: string;

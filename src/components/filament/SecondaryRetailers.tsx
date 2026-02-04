@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { StorePriceBadge } from "@/components/price/StorePriceDisplay";
+import type { CurrencyCode } from "@/types/regional";
 
 interface RetailerInfo {
   id: string;
@@ -23,7 +25,7 @@ interface SecondaryRetailersProps {
 
 export function SecondaryRetailers({ retailers, onRetailerClick }: SecondaryRetailersProps) {
   const [expanded, setExpanded] = useState(false);
-  const { formatPrice } = useCurrency();
+  const { currency: userCurrency } = useRegion();
   
   // On mobile, show first 2, collapse rest
   const visibleRetailers = expanded ? retailers : retailers.slice(0, 2);
@@ -63,9 +65,14 @@ export function SecondaryRetailers({ retailers, onRetailerClick }: SecondaryReta
             
             <span className="flex items-center gap-2">
               {retailer.price !== null ? (
-                <span className="font-semibold tabular-nums">
-                  {formatPrice(retailer.price)}
-                </span>
+                <StorePriceBadge
+                  price={retailer.price}
+                  isDollars={true}
+                  currency={userCurrency}
+                  originalCurrency={retailer.currency as CurrencyCode}
+                  size="sm"
+                  className="tabular-nums"
+                />
               ) : !retailer.available ? (
                 <span className="text-xs text-muted-foreground">Out of Stock</span>
               ) : null}
