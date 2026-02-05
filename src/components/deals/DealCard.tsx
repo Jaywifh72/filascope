@@ -10,6 +10,7 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { StorePriceBadge } from "@/components/price/StorePriceDisplay";
 import { useRegion } from "@/contexts/RegionContext";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { formatDistanceToNow } from "date-fns";
 import type { CurrencyCode } from "@/types/regional";
 
@@ -55,6 +56,7 @@ export function DealCard({
   isLocal,
 }: DealCardProps) {
   const [shareOpen, setShareOpen] = useState(false);
+  const { getAffiliateUrl } = useAffiliateLinks();
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -66,7 +68,8 @@ export function DealCard({
     e.preventDefault();
     e.stopPropagation();
     if (deal.product_url) {
-      window.open(deal.product_url, '_blank', 'noopener,noreferrer');
+      const affiliateUrl = getAffiliateUrl(deal.product_url, deal.vendor);
+      window.open(affiliateUrl || deal.product_url, '_blank', 'noopener,noreferrer');
     }
   };
 
