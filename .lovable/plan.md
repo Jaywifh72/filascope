@@ -1,316 +1,146 @@
 
-# Complete Regional Store Database Expansion Plan
+# Debug & Fix Plan: Frontend Routing and Data Fetching Issues
 
-## Current State Summary
+## Problem Summary
+Based on thorough investigation, I identified the following issues:
 
-### Two Data Sources for Regional Stores
-
-| Table | Purpose | Current Records |
-|-------|---------|-----------------|
-| `stores` | Global retailer registry (Amazon, 3DJake, brand stores) | 39 active |
-| `brand_regional_stores` | Brand-specific regional storefronts with URL patterns | 107 active |
-
-### Current Distribution by Region
-
-| Region | `stores` table | `brand_regional_stores` |
-|--------|----------------|------------------------|
-| US | 7 | 44 |
-| EU | 13 | 30 |
-| CA | 6 | 11 |
-| UK | 6 | 10 |
-| AU | 5 | 9 |
-| JP | 2 | 2 |
-| CN | 0 | 1 |
+| Issue | Status | Root Cause |
+|-------|--------|------------|
+| Home page "0 filaments" | **Partially Working** | Data loads but with delay (~3-5s); 960 filaments display when loaded |
+| Filament detail page `/filament/:slug` | **Broken** | FilamentDetail.tsx uses UUID-only query, doesn't support SEO slugs |
+| Navigation between routes | **Working** | All routes function correctly |
+| Database connectivity | **Working** | 8,069 filaments confirmed in database |
 
 ---
 
-## Gap Analysis
+## Critical Fix: FilamentDetail Page SEO Slug Support
 
-### Brands with Missing Regional Coverage
-
-Based on client-side config in `brandRegionalStores.ts` vs. database entries:
-
-| Brand | Config Supports | DB Has | Missing |
-|-------|-----------------|--------|---------|
-| **Sunlu** | US, UK, EU | US, UK, EU | CA, AU |
-| **Sovol** | US, EU | US, EU | UK, CA, AU |
-| **Kingroon** | US, EU | US, EU | UK, CA, AU |
-| **Eryone** | US, EU | US, EU | UK, CA, AU |
-| **Jayo** | US, UK, EU | - | All (brand not in DB) |
-| **Artillery** | US, EU | - | All (brand not in DB) |
-| **QIDI** | US, EU | - | All (brand not in DB) |
-| **Flashforge** | US, CA, UK, EU, AU | - | All (brand not in DB) |
-| **Polymaker** | US, CA, EU | US, CA, EU, UK, AU | None - already complete! |
-
-### US-Only Brands (Expansion Candidates)
-
-These brands currently only have US stores but could potentially expand:
-
-| Brand | Current | Notes |
-|-------|---------|-------|
-| 3D-Fuel | US | US manufacturer - global ships from US |
-| Amolen | US | Amazon-focused brand |
-| Atomic Filament | US | US manufacturer |
-| Duramic 3D | US | Budget brand via Amazon |
-| Gizmo Dorks | US | US-only manufacturer |
-| IC3D Printers | US | US manufacturer |
-| Push Plastic | US | US manufacturer |
-| Ziro | US | Amazon-focused brand |
-
----
-
-## Implementation Strategy
-
-### Phase 1: Expand Existing Brands to Missing Regions
-
-Add regional store entries for brands that have regional storefronts but incomplete database coverage.
-
-#### 1.1 Sunlu Expansion (+2 regions)
-```text
-| Store Name | Region | Currency | Base URL |
-|------------|--------|----------|----------|
-| Sunlu CA   | CA     | CAD      | ca.sunlu.com |
-| Sunlu AU   | AU     | AUD      | au.sunlu.com |
+### Current Problem
+The FilamentDetail.tsx component (line 296-300) directly queries filaments by UUID:
+```typescript
+const { data, error } = await supabase
+  .from("filaments")
+  .select("*")
+  .eq("id", id)  // ← Expects UUID only
+  .maybeSingle();
 ```
 
-#### 1.2 Sovol Expansion (+3 regions)
-```text
-| Store Name | Region | Currency | Base URL |
-|------------|--------|----------|----------|
-| Sovol UK   | UK     | GBP      | uk.sovol3d.com |
-| Sovol CA   | CA     | CAD      | ca.sovol3d.com |
-| Sovol AU   | AU     | AUD      | au.sovol3d.com |
+When accessing `/filament/pla-glow` (a slug), Supabase throws: `invalid input syntax for type uuid: "pla-glow"`
+
+### The Solution
+The codebase already has a proper hook `useFilamentBySlug` in `src/hooks/useFilamentBySlug.ts` that handles both UUIDs and product_handle slugs. It:
+1. Detects if the URL parameter is a UUID or slug
+2. Queries the appropriate field (`id` for UUIDs, `product_handle` for slugs)
+3. Falls back to fuzzy matching if exact slug not found
+4. Auto-redirects UUID URLs to SEO-friendly slug URLs
+
+### Implementation Steps
+
+**Step 1: Refactor FilamentDetail.tsx to use the slug-aware hook**
+
+Replace the current inline `fetchFilament` logic with `useFilamentBySlug`:
+
+```typescript
+// Add import at top
+import { useFilamentBySlug } from '@/hooks/useFilamentBySlug';
+
+// Replace useState + fetchFilament with the hook
+const { filament, loading, error, isRedirecting } = useFilamentBySlug(id);
 ```
 
-#### 1.3 Kingroon Expansion (+3 regions)
-```text
-| Store Name | Region | Currency | Base URL |
-|------------|--------|----------|----------|
-| Kingroon UK | UK    | GBP      | uk.kingroon.com |
-| Kingroon CA | CA    | CAD      | ca.kingroon.com |
-| Kingroon AU | AU    | AUD      | au.kingroon.com |
+**Step 2: Handle redirecting state**
+
+Add early return for redirect state to prevent flash of content:
+
+```typescript
+if (isRedirecting) {
+  return <PageLoadingSkeleton />;
+}
 ```
 
-#### 1.4 Eryone Expansion (+3 regions)
-```text
-| Store Name | Region | Currency | Base URL |
-|------------|--------|----------|----------|
-| Eryone UK  | UK     | GBP      | uk.eryone3d.com |
-| Eryone CA  | CA     | CAD      | ca.eryone3d.com |
-| Eryone AU  | AU     | AUD      | au.eryone3d.com |
-```
+**Step 3: Migrate existing callbacks**
 
-### Phase 2: Add New Brands
+The current FilamentDetail has several admin functions (`handleRescrapeImage`, `handleScrapeData`, etc.) that call `fetchFilament()` after mutations. These need to be adapted to work with the hook's data or trigger a refetch.
 
-Create complete regional coverage for brands in `brandRegionalStores.ts` but missing from database.
+Options:
+- A) Add a `refetch` function to `useFilamentBySlug`
+- B) Use React Query in `useFilamentBySlug` for automatic cache invalidation
+- C) Use `queryClient.invalidateQueries` after mutations
 
-#### 2.1 Jayo (3 regions)
-```text
-| Store Name | Region | Currency | Base URL |
-|------------|--------|----------|----------|
-| Jayo US    | US     | USD      | www.jayo3d.com |
-| Jayo UK    | UK     | GBP      | uk.jayo3d.com |
-| Jayo EU    | EU     | EUR      | eu.jayo3d.com |
-```
+**Recommended: Option C** - Minimal changes, works with existing patterns.
 
-#### 2.2 QIDI (2 regions)
-```text
-| Store Name | Region | Currency | Base URL |
-|------------|--------|----------|----------|
-| QIDI US    | US     | USD      | www.qidi3d.com |
-| QIDI EU    | EU     | EUR      | eu.qidi3d.com |
-```
+**Step 4: Update error handling**
 
-#### 2.3 Flashforge (6 regions)
-```text
-| Store Name      | Region | Currency | Base URL |
-|-----------------|--------|----------|----------|
-| Flashforge US   | US     | USD      | www.flashforge.com |
-| Flashforge CA   | CA     | CAD      | ca.flashforge.com |
-| Flashforge UK   | UK     | GBP      | uk.flashforge.com |
-| Flashforge EU   | EU     | EUR      | eu.flashforge.com |
-| Flashforge AU   | AU     | AUD      | au.flashforge.com |
-```
+Replace toast-based error handling with the hook's error state:
 
-#### 2.4 Artillery (2 regions)
-```text
-| Store Name    | Region | Currency | Base URL |
-|---------------|--------|----------|----------|
-| Artillery US  | US     | USD      | www.artillery3d.com |
-| Artillery EU  | EU     | EUR      | eu.artillery3d.com |
-```
-
-### Phase 3: Update `supported_regions` in automated_brands
-
-Sync the `supported_regions` column to match actual store coverage.
-
----
-
-## Technical Implementation
-
-### SQL Migration Script
-
-```sql
--- =====================================================
--- PHASE 1: EXPAND EXISTING BRANDS
--- =====================================================
-
--- 1.1 SUNLU EXPANSION
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Sunlu Canada', 'CA', 'CAD', 'https://ca.sunlu.com', 'CA', true, false
-FROM automated_brands WHERE brand_slug = 'sunlu'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Sunlu Australia', 'AU', 'AUD', 'https://au.sunlu.com', 'AU', true, false
-FROM automated_brands WHERE brand_slug = 'sunlu'
-ON CONFLICT DO NOTHING;
-
--- 1.2 SOVOL EXPANSION  
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Sovol UK', 'UK', 'GBP', 'https://uk.sovol3d.com', 'UK', true, false
-FROM automated_brands WHERE brand_slug = 'sovol'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Sovol Canada', 'CA', 'CAD', 'https://ca.sovol3d.com', 'CA', true, false
-FROM automated_brands WHERE brand_slug = 'sovol'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Sovol Australia', 'AU', 'AUD', 'https://au.sovol3d.com', 'AU', true, false
-FROM automated_brands WHERE brand_slug = 'sovol'
-ON CONFLICT DO NOTHING;
-
--- 1.3 KINGROON EXPANSION
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Kingroon UK', 'UK', 'GBP', 'https://uk.kingroon.com', 'UK', true, false
-FROM automated_brands WHERE brand_slug = 'kingroon'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Kingroon Canada', 'CA', 'CAD', 'https://ca.kingroon.com', 'CA', true, false
-FROM automated_brands WHERE brand_slug = 'kingroon'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Kingroon Australia', 'AU', 'AUD', 'https://au.kingroon.com', 'AU', true, false
-FROM automated_brands WHERE brand_slug = 'kingroon'
-ON CONFLICT DO NOTHING;
-
--- 1.4 ERYONE EXPANSION
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Eryone UK', 'UK', 'GBP', 'https://uk.eryone3d.com', 'UK', true, false
-FROM automated_brands WHERE brand_slug = 'eryone'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Eryone Canada', 'CA', 'CAD', 'https://ca.eryone3d.com', 'CA', true, false
-FROM automated_brands WHERE brand_slug = 'eryone'
-ON CONFLICT DO NOTHING;
-
-INSERT INTO brand_regional_stores (brand_id, store_name, region_code, currency_code, base_url, ships_from_country, is_active, is_primary)
-SELECT 
-  id, 'Eryone Australia', 'AU', 'AUD', 'https://au.eryone3d.com', 'AU', true, false
-FROM automated_brands WHERE brand_slug = 'eryone'
-ON CONFLICT DO NOTHING;
-
--- =====================================================
--- PHASE 2: UPDATE SUPPORTED REGIONS
--- =====================================================
-
-UPDATE automated_brands 
-SET supported_regions = ARRAY['US', 'EU', 'UK', 'CA', 'AU']
-WHERE brand_slug = 'sunlu';
-
-UPDATE automated_brands 
-SET supported_regions = ARRAY['US', 'EU', 'UK', 'CA', 'AU']
-WHERE brand_slug = 'sovol';
-
-UPDATE automated_brands 
-SET supported_regions = ARRAY['US', 'EU', 'UK', 'CA', 'AU']
-WHERE brand_slug = 'kingroon';
-
-UPDATE automated_brands 
-SET supported_regions = ARRAY['US', 'EU', 'UK', 'CA', 'AU']
-WHERE brand_slug = 'eryone';
-
--- Also update Polymaker which already has full coverage in DB
-UPDATE automated_brands 
-SET supported_regions = ARRAY['US', 'EU', 'UK', 'CA', 'AU']
-WHERE brand_slug = 'polymaker';
-```
-
-### Verification Queries
-
-```sql
--- Check new distribution
-SELECT region_code, COUNT(*) as count 
-FROM brand_regional_stores 
-WHERE is_active = true 
-GROUP BY region_code 
-ORDER BY count DESC;
-
--- Verify expanded brands
-SELECT ab.brand_name, ARRAY_AGG(brs.region_code ORDER BY brs.region_code) as regions
-FROM automated_brands ab
-JOIN brand_regional_stores brs ON ab.id = brs.brand_id AND brs.is_active = true
-WHERE ab.brand_slug IN ('sunlu', 'sovol', 'kingroon', 'eryone', 'polymaker')
-GROUP BY ab.brand_name
-ORDER BY ab.brand_name;
+```typescript
+useEffect(() => {
+  if (error && !loading) {
+    toast({
+      title: "Not Found",
+      description: error,
+      variant: "destructive",
+    });
+    navigate("/");
+  }
+}, [error, loading]);
 ```
 
 ---
 
-## Expected Results
+## Secondary Issue: Home Page Initial Load Time
 
-### After Phase 1
+### Observations
+- First load shows skeleton cards for 3-5 seconds
+- Data successfully loads (960 filaments after regional filtering)
+- No JavaScript errors in console
+- Network requests complete successfully
 
-| Region | Before | After | Change |
-|--------|--------|-------|--------|
-| US | 44 | 44 | +0 |
-| EU | 30 | 30 | +0 |
-| UK | 10 | 14 | +4 |
-| CA | 11 | 15 | +4 |
-| AU | 9 | 13 | +4 |
+### Potential Optimizations (Lower Priority)
 
-**Total new entries: +12**
+1. **Query Optimization**: The Finder query is complex with multiple OR conditions. Consider:
+   - Pre-computing popular filter combinations
+   - Using a materialized view for common queries
 
-### Updated Brand Coverage
+2. **Initial Data Prefetching**: Consider prefetching first page of results during app initialization
 
-| Brand | Before | After |
-|-------|--------|-------|
-| Sunlu | US, UK, EU | US, UK, EU, CA, AU |
-| Sovol | US, EU | US, EU, UK, CA, AU |
-| Kingroon | US, EU | US, EU, UK, CA, AU |
-| Eryone | US, EU | US, EU, UK, CA, AU |
-| Polymaker | US, EU, CA, UK, AU | (unchanged, `supported_regions` synced) |
+3. **Pagination Tuning**: Current batch size is 1000 rows. For initial display, could fetch just first 50 for faster perceived load
 
 ---
 
-## Future Work (Out of Scope)
+## Files to Modify
 
-1. **Add Jayo, QIDI, Flashforge, Artillery** - Requires creating new entries in `automated_brands` first
-2. **Add stores table entries** - Only needed for retailers/marketplaces, not brand direct stores
-3. **URL validation** - Verify all regional URLs are reachable before deployment
-4. **Shipping threshold research** - Add `free_shipping_threshold` values for new regions
+| File | Changes |
+|------|---------|
+| `src/pages/FilamentDetail.tsx` | Replace inline fetch with `useFilamentBySlug` hook |
+| `src/hooks/useFilamentBySlug.ts` | Add `refetch` capability or React Query integration |
 
 ---
 
-## Risk Assessment
+## Testing Plan
 
-| Risk | Mitigation |
-|------|------------|
-| Regional URLs don't exist | All URLs follow established subdomain patterns from `brandRegionalStores.ts` |
-| Duplicate entries | Using `ON CONFLICT DO NOTHING` prevents duplicates |
-| Breaking existing data | Only INSERT new rows, no DELETE or UPDATE of existing prices |
+After implementation:
+
+1. **UUID URL Test**: Navigate to `/filament/[valid-uuid]` → Should redirect to slug URL
+2. **Slug URL Test**: Navigate to `/filament/pla-glow` → Should load filament detail page
+3. **Invalid Slug Test**: Navigate to `/filament/nonexistent-slug` → Should show error and redirect to home
+4. **Admin Functions Test**: Test rescrape image/data buttons still work after refactor
+5. **Regional Pricing Test**: Verify price display works with new hook integration
+
+---
+
+## Technical Considerations
+
+### Database Coverage
+- 8,069 total filaments in database
+- Many filaments have `product_handle` populated (confirmed: "pla-glow" exists as `product_handle`)
+- The `useFilamentBySlug` hook has fuzzy matching as fallback
+
+### Existing Infrastructure
+The codebase already has all necessary components:
+- `isUuid()` utility function in `src/lib/seoSlugUtils.ts`
+- `generateFilamentSlug()` for creating SEO slugs
+- `product_handle` column in filaments table
+- Route definition in App.tsx: `<Route path="/filament/:id" element={<FilamentDetail />} />`
+
+This is primarily a wiring issue - connecting existing components together.
