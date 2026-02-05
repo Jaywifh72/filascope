@@ -228,7 +228,8 @@ export function LabReadoutCard({
       )}
       style={{
         // Animation respects prefers-reduced-motion via CSS media query
-        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.08}s both`,
+        // Cap animation delay to first 12 cards to avoid long waits
+        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${Math.min(index, 12) * 0.05}s both`,
         background: "rgba(10, 12, 16, 0.6)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
@@ -337,6 +338,31 @@ export function LabReadoutCard({
         {/* Subtle bottom border instead of scan line */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          PRODUCT IMAGE SECTION - Shows featured_image thumbnail
+          ═══════════════════════════════════════════════════════════════ */}
+      {filament.featured_image && !imageError && (
+        <div className="relative h-28 bg-black/30 border-b border-gray-700/50 flex items-center justify-center">
+          <OptimizedImage
+            src={filament.featured_image}
+            alt={getDisplayTitle()}
+            className="h-full w-full"
+            objectFit="contain"
+            width={200}
+            height={112}
+            onError={() => setImageError(true)}
+          />
+          {/* Color swatch overlay - bottom right */}
+          {filament.color_hex && (
+            <div 
+              className="absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-white/30 shadow-sm"
+              style={{ backgroundColor: filament.color_hex }}
+              title={`Color: ${filament.color_hex}`}
+            />
+          )}
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════
           BODY: Material Name, Badge, Price, Temp

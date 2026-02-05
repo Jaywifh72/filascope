@@ -7,9 +7,10 @@ interface FilamentCardSkeletonProps {
 export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
   return (
     <div 
-      className="relative rounded-2xl bg-card/50 border border-border/50 min-h-[380px] skeleton-animated"
+      className="relative rounded-2xl bg-card/60 border border-border/40 min-h-[420px] skeleton-animated overflow-hidden"
       style={{ 
-        animationDelay: `${index * 50}ms`,
+        // Cap animation delay to first 12 cards
+        animationDelay: `${Math.min(index, 12) * 40}ms`,
       }}
     >
       {/* Checkbox placeholder - top right */}

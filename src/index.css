@@ -417,11 +417,12 @@ All colors MUST be HSL.
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Enhanced skeleton with shimmer effect */
+/* Enhanced skeleton with shimmer effect - improved visibility */
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
-  background-color: hsl(var(--muted));
+  background-color: hsl(var(--muted) / 0.4);
+  border: 1px dashed hsl(var(--muted-foreground) / 0.15);
 }
 
 .skeleton-shimmer::after {
@@ -430,9 +431,11 @@ All colors MUST be HSL.
   inset: 0;
   background: linear-gradient(
     90deg,
-    transparent,
-    hsl(var(--muted-foreground) / 0.08),
-    transparent
+    transparent 0%,
+    hsl(var(--primary) / 0.08) 25%,
+    hsl(var(--primary) / 0.15) 50%,
+    hsl(var(--primary) / 0.08) 75%,
+    transparent 100%
   );
   animation: shimmer 2s ease-in-out infinite;
   background-size: 200% 100%;
