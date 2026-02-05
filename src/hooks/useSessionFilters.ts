@@ -111,9 +111,14 @@ export function useSessionFilters(urlHexSearch?: string | null, urlColorToleranc
     setFilters(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  // Reset all filters to defaults
+  // Reset all filters to defaults and clear sessionStorage
   const resetFilters = useCallback(() => {
     setFilters(defaultFilters);
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch (e) {
+      console.error("Error clearing session filters:", e);
+    }
   }, []);
 
   // Check if any filters are active (non-default)

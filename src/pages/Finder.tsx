@@ -1389,10 +1389,11 @@ const Finder = () => {
   const totalCount = groupedFilaments.length;
   const hasMore = displayCount < totalCount;
 
-  // Check if any filters are active
+  // Check if any filters are active (including search term)
   const hasActiveFilters = useMemo(() => {
     const hasColorSearch = searchTerm ? extractColorFromText(searchTerm) !== null : false;
     return (
+      searchTerm !== "" ||  // Include search term in active filters check
       !selectedMaterials.includes("All") ||
       selectedBrands.length > 0 ||
       priceRange[0] > 0 ||
@@ -1404,7 +1405,7 @@ const Finder = () => {
       hexSearch !== "" ||
       hasColorSearch
     );
-  }, [selectedMaterials, selectedBrands, priceRange, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, selectedColorFamilies, hexSearch, searchTerm]);
+  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, selectedColorFamilies, hexSearch]);
 
   // Clear all filters function
   const handleClearAllFilters = () => {
@@ -1505,6 +1506,7 @@ const Finder = () => {
         }
         sortBy={sortBy}
         onSortChange={setSortBy}
+        onClearAll={handleClearAllFilters}
       />
 
       {/* Active Filter Tags */}
@@ -1762,6 +1764,7 @@ const Finder = () => {
           onWoodFilledChange={setWoodFilled}
           spoolSize={largeSpools ? "large" : "standard"}
           onSpoolSizeChange={(size) => setLargeSpools(size === "large")}
+          onClearAll={handleClearAllFilters}
         />
 
         {/* Main Content */}
@@ -1797,11 +1800,17 @@ const Finder = () => {
 
         {/* Filaments Display */}
         {isLoading ? (
-          <LoadingProgress
-            loaded={loadingProgress.loaded}
-            total={loadingProgress.total}
-            phase={loadingProgress.phase}
-          />
+          <div className="space-y-6">
+            {/* Show skeleton grid immediately for visual feedback */}
+            <FilamentCardSkeletonGrid count={8} />
+            {/* Progress indicator overlay */}
+            <LoadingProgress
+              loaded={loadingProgress.loaded}
+              total={loadingProgress.total}
+              phase={loadingProgress.phase}
+              className="!py-4"
+            />
+          </div>
         ) : displayedGroups.length > 0 ? (
           <>
           {

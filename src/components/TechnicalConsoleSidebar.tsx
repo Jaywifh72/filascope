@@ -84,6 +84,7 @@ interface TechnicalConsoleSidebarProps {
   onWoodFilledChange?: (checked: boolean) => void;
   spoolSize?: string;
   onSpoolSizeChange?: (size: string) => void;
+  onClearAll?: () => void;
 }
 
 export function TechnicalConsoleSidebar({
@@ -99,6 +100,7 @@ export function TechnicalConsoleSidebar({
   onWoodFilledChange,
   spoolSize = "standard",
   onSpoolSizeChange,
+  onClearAll,
 }: TechnicalConsoleSidebarProps) {
   const { 
     selectedPrinter, 
@@ -202,7 +204,18 @@ export function TechnicalConsoleSidebar({
   };
 
   const handleClearAllFilters = () => {
-    // Clear materials
+    // Use parent's clear all if provided (includes search term reset)
+    if (onClearAll) {
+      onClearAll();
+      // Also reset local state
+      setLocalMaterials([]);
+      setLocalBrands([]);
+      setLocalReinforced([]);
+      setLocalSpoolSize("standard");
+      return;
+    }
+    
+    // Fallback: Clear materials
     localMaterials.forEach(m => {
       if (onMaterialChange) onMaterialChange(m, false);
     });
