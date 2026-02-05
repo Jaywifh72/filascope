@@ -1,155 +1,97 @@
 
-# Fix: Search Suggestion Click Navigation to Filament Detail Page
+# Implementation Plan: Legal Pages (Privacy, Terms, Affiliate Disclosure)
 
-## Problem Summary
-Clicking on a product-type search suggestion (showing "PRODUCT" badge) fills the input with the product name instead of navigating to the filament detail page. The user expects clicking on a specific product to take them directly to that product's detail page.
+## Overview
+Create three legal pages linked from the site footer that are currently returning 404 errors. Each page will use a shared layout component for consistency and follow the established dark theme design patterns.
 
-## Root Cause Analysis
-Two issues prevent navigation:
+## Files to Create
 
-1. **Missing product ID**: The `useSearchSuggestions` hook only fetches `product_title` and `vendor` - it does not include the `id` or `product_handle` fields needed to construct a navigation URL.
+### 1. Shared Layout Component
+**File**: `src/components/legal/LegalPageLayout.tsx`
 
-2. **No navigation logic**: The `handleSelect` function in `SearchInputWithHistory.tsx` treats all suggestion types identically - it just updates the input value. There's no conditional logic to navigate for product-type suggestions.
+A reusable layout wrapper for all legal pages providing:
+- Centered content container with `max-w-3xl`
+- Page title as H1 with gradient text styling
+- "Last Updated" date line in muted text
+- Dark-theme prose styling for body content (gray-300 body text, white headings)
+- Consistent padding and spacing following the 8px rhythm system
+- Helmet integration for SEO
 
-## Solution Design
+### 2. Privacy Policy Page
+**File**: `src/pages/PrivacyPolicy.tsx`
 
-### Change 1: Extend SearchSuggestion Interface
-Add optional `id` and `productHandle` fields to the `SearchSuggestion` interface to support navigation for product suggestions.
+Sections to include:
+- **Information We Collect**: Email for newsletter subscription, region/currency preferences (localStorage), analytics data
+- **Cookies**: Description of cookie usage for preferences and analytics
+- **Third-Party Services**: Affiliate links to retailers (Amazon, brand stores)
+- **Your Rights**: Data access, deletion requests
+- **Contact**: hello@filascope.com
+- **Changes to Policy**: How updates are communicated
 
-**File**: `src/hooks/useSearchSuggestions.ts`
+### 3. Terms of Service Page
+**File**: `src/pages/TermsOfService.tsx`
 
+Sections to include:
+- **Description of Service**: Filament database with pricing aggregated from third-party retailers
+- **Accuracy Disclaimer**: Prices are scraped periodically and may not reflect real-time prices; verify on retailer sites
+- **Affiliate Disclosure**: Brief mention that FilaScope earns commissions
+- **Intellectual Property**: Content ownership and usage rights
+- **Limitation of Liability**: Standard liability limitations
+- **Governing Law**: Placeholder for jurisdiction
+
+### 4. Affiliate Disclosure Page
+**File**: `src/pages/AffiliateDisclosure.tsx`
+
+Sections to include:
+- **Transparency Statement**: Clear statement that FilaScope earns commissions from retailer links
+- **Independence**: Commissions don't affect product scoring or rankings
+- **Affiliate Programs**: List of participating programs (Amazon Associates, brand partnerships)
+- **Pricing Information**: Prices fetched from retailers, may vary from actual prices
+- **Questions**: Contact information for inquiries
+
+## Router Configuration Update
+**File**: `src/App.tsx`
+
+Add three new lazy-loaded routes before the catch-all `*` route:
 ```typescript
-export interface SearchSuggestion {
-  type: "brand" | "material" | "product" | "typo";
-  value: string;
-  displayText: string;
-  subtitle?: string;
-  count?: number;
-  id?: string;           // Product ID for navigation
-  productHandle?: string; // SEO slug for navigation
-}
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
+
+// In Routes:
+<Route path="/privacy" element={<PrivacyPolicy />} />
+<Route path="/terms" element={<TermsOfService />} />
+<Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
 ```
 
-### Change 2: Fetch Product IDs in Query
-Update the product suggestions query to include `id` and `product_handle` fields.
+## Design Specifications
 
-**File**: `src/hooks/useSearchSuggestions.ts` (lines 143-156)
+### Typography
+- Page title: `text-3xl md:text-4xl font-bold` with gradient text
+- Section headings (H2): `text-xl font-semibold text-white`
+- Body text: `text-base text-gray-300 leading-relaxed`
+- Lists: Bullet points with primary-colored dots
 
-```typescript
-// Before
-const { data, error } = await supabase
-  .from("filaments")
-  .select("product_title, vendor")
-  .ilike("product_title", `%${debouncedQuery}%`)
-  .limit(5);
+### Layout
+- Full-height background: `min-h-screen bg-background`
+- Container: `max-w-3xl mx-auto px-4 py-12 md:py-16`
+- Section spacing: `space-y-8` between major sections
+- Paragraph spacing: `space-y-4` within sections
 
-// After
-const { data, error } = await supabase
-  .from("filaments")
-  .select("id, product_title, vendor, product_handle")
-  .ilike("product_title", `%${debouncedQuery}%`)
-  .limit(5);
+### Visual Elements
+- Subtle gradient hero area matching ReferenceMethodology pattern
+- "Last updated" timestamp below title in muted text
+- Back-to-home link at bottom of each page
 
-return (data || []).map((item) => ({
-  type: "product" as const,
-  value: item.product_title,
-  displayText: item.product_title,
-  subtitle: item.vendor || undefined,
-  id: item.id,                    // Include ID
-  productHandle: item.product_handle, // Include slug
-}));
-```
+## Implementation Order
+1. Create `LegalPageLayout.tsx` component
+2. Create `PrivacyPolicy.tsx` page
+3. Create `TermsOfService.tsx` page
+4. Create `AffiliateDisclosure.tsx` page
+5. Update `App.tsx` with new routes
 
-### Change 3: Add Navigation Logic for Products
-Modify the `SearchInputWithHistory` component to navigate to the filament detail page when a product suggestion is clicked.
-
-**File**: `src/components/search/SearchInputWithHistory.tsx`
-
-Add import:
-```typescript
-import { useNavigate } from "react-router-dom";
-```
-
-Add hook inside component:
-```typescript
-const navigate = useNavigate();
-```
-
-Modify `handleSelect` to check suggestion type:
-```typescript
-const handleSelect = (selectedValue: string, suggestion?: SearchSuggestion) => {
-  // If this is a product suggestion with an ID, navigate to detail page
-  if (suggestion?.type === "product" && suggestion.id) {
-    trackSearch(selectedValue);
-    setShowDropdown(false);
-    onChange(""); // Clear input after navigation
-    
-    // Navigate using product_handle or ID
-    const slug = suggestion.productHandle || suggestion.id;
-    navigate(`/filament/${slug}`);
-    return;
-  }
-  
-  // For brands, materials, and typos - update search input (existing behavior)
-  onChange(selectedValue);
-  trackSearch(selectedValue);
-  setShowDropdown(false);
-  onSelect?.(selectedValue);
-  inputRef.current?.blur();
-};
-```
-
-### Change 4: Pass Suggestion Object to handleSelect
-Update the button onClick and keyboard Enter handlers to pass the full suggestion object.
-
-**For suggestion buttons** (line 219):
-```typescript
-onClick={() => handleSelect(suggestion.value, suggestion)}
-```
-
-**For keyboard Enter handling** (lines 76-81):
-```typescript
-case "Enter":
-  e.preventDefault();
-  if (selectedIndex >= 0 && allItems[selectedIndex]) {
-    // Find the corresponding suggestion if in suggestion mode
-    const selectedSuggestion = value.length >= 2 
-      ? suggestions[selectedIndex] 
-      : undefined;
-    handleSelect(allItems[selectedIndex], selectedSuggestion);
-  } else if (value) {
-    trackSearch(value);
-    setShowDropdown(false);
-  }
-  break;
-```
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/hooks/useSearchSuggestions.ts` | Add `id` and `productHandle` to interface; update product query to fetch these fields |
-| `src/components/search/SearchInputWithHistory.tsx` | Add `useNavigate`; modify `handleSelect` for product navigation; update onClick/onKeyDown handlers |
-
-## Behavior After Fix
-
-| Suggestion Type | Click Behavior |
-|-----------------|----------------|
-| **Product** | Navigate to `/filament/{slug}` (detail page) |
-| **Brand** | Fill input, filter results by brand |
-| **Material** | Fill input, filter results by material |
-| **Typo** | Fill corrected term, search for it |
-
-## Edge Cases Handled
-
-1. **Product without product_handle**: Falls back to using the UUID for navigation
-2. **Keyboard navigation**: Enter key on highlighted product will navigate (same code path)
-3. **Clear input after navigation**: Prevents stale search term when user returns to homepage
-
-## Testing Checklist
-
-- Type "carbon fiber PETG" and click a product suggestion - should navigate to detail page
-- Use arrow keys to highlight a product suggestion, press Enter - should navigate
-- Click a brand suggestion (e.g., "Bambu") - should fill input and filter
-- Click a material suggestion (e.g., "PETG") - should fill input and filter
-- Navigate to detail page, press back - search input should be clear
+## Technical Notes
+- All pages use `react-helmet-async` for SEO meta tags
+- Follows existing lazy-loading pattern for route components
+- No external dependencies required
+- No database or API calls needed (static content pages)
