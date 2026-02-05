@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { isUuid, generateFilamentSlug } from '@/lib/seoSlugUtils';
@@ -11,6 +11,7 @@ interface UseFilamentBySlugResult {
   loading: boolean;
   error: string | null;
   isRedirecting: boolean;
+  refetch: () => Promise<void>;
 }
 
 /**
@@ -24,103 +25,107 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
   const [error, setError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  useEffect(() => {
+  const fetchFilament = useCallback(async () => {
     if (!idOrSlug) {
       setLoading(false);
       setError('No filament ID provided');
       return;
     }
 
-    const fetchFilament = async () => {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        let data: Filament | null = null;
+    try {
+      let data: Filament | null = null;
 
-        if (isUuid(idOrSlug)) {
-          // Fetch by UUID
-          const { data: uuidData, error: uuidError } = await supabase
-            .from('filaments')
-            .select('*')
-            .eq('id', idOrSlug)
-            .maybeSingle();
+      if (isUuid(idOrSlug)) {
+        // Fetch by UUID
+        const { data: uuidData, error: uuidError } = await supabase
+          .from('filaments')
+          .select('*')
+          .eq('id', idOrSlug)
+          .maybeSingle();
 
-          if (uuidError) throw uuidError;
-          data = uuidData;
+        if (uuidError) throw uuidError;
+        data = uuidData;
 
-          // If found and has product_handle, redirect to slug URL
-          if (data?.product_handle) {
+        // If found and has product_handle, redirect to slug URL
+        if (data?.product_handle) {
+          setIsRedirecting(true);
+          navigate(`/filament/${data.product_handle}`, { replace: true });
+          return;
+        }
+        
+        // Generate and redirect to SEO-friendly slug
+        if (data) {
+          const slug = generateFilamentSlug(
+            data.vendor,
+            data.material,
+            data.product_title,
+            data.color_family
+          );
+          
+          if (slug && slug !== idOrSlug) {
+            // Update the product_handle in DB for future use
+            await supabase
+              .from('filaments')
+              .update({ product_handle: slug })
+              .eq('id', data.id);
+            
             setIsRedirecting(true);
-            navigate(`/filament/${data.product_handle}`, { replace: true });
+            navigate(`/filament/${slug}`, { replace: true });
             return;
           }
-          
-          // Generate and redirect to SEO-friendly slug
-          if (data) {
-            const slug = generateFilamentSlug(
-              data.vendor,
-              data.material,
-              data.product_title,
-              data.color_family
-            );
-            
-            if (slug && slug !== idOrSlug) {
-              // Update the product_handle in DB for future use
-              await supabase
-                .from('filaments')
-                .update({ product_handle: slug })
-                .eq('id', data.id);
-              
-              setIsRedirecting(true);
-              navigate(`/filament/${slug}`, { replace: true });
-              return;
-            }
-          }
-        } else {
-          // Fetch by product_handle (slug)
-          const { data: slugData, error: slugError } = await supabase
+        }
+      } else {
+        // Fetch by product_handle (slug)
+        const { data: slugData, error: slugError } = await supabase
+          .from('filaments')
+          .select('*')
+          .eq('product_handle', idOrSlug)
+          .maybeSingle();
+
+        if (slugError) throw slugError;
+        data = slugData;
+
+        // If not found by product_handle, try fuzzy matching
+        if (!data) {
+          // Try matching by vendor + material pattern
+          const { data: fuzzyData, error: fuzzyError } = await supabase
             .from('filaments')
             .select('*')
-            .eq('product_handle', idOrSlug)
+            .ilike('product_handle', `%${idOrSlug}%`)
+            .limit(1)
             .maybeSingle();
 
-          if (slugError) throw slugError;
-          data = slugData;
-
-          // If not found by product_handle, try fuzzy matching
-          if (!data) {
-            // Try matching by vendor + material pattern
-            const { data: fuzzyData, error: fuzzyError } = await supabase
-              .from('filaments')
-              .select('*')
-              .ilike('product_handle', `%${idOrSlug}%`)
-              .limit(1)
-              .maybeSingle();
-
-            if (!fuzzyError) {
-              data = fuzzyData;
-            }
+          if (!fuzzyError) {
+            data = fuzzyData;
           }
         }
-
-        if (!data) {
-          setError('Filament not found');
-        }
-
-        setFilament(data);
-      } catch (err: any) {
-        console.error('Error fetching filament:', err);
-        setError(err.message || 'Failed to load filament');
-      } finally {
-        setLoading(false);
       }
-    };
 
-    fetchFilament();
+      if (!data) {
+        setError('Filament not found');
+      }
+
+      setFilament(data);
+    } catch (err: any) {
+      console.error('Error fetching filament:', err);
+      setError(err.message || 'Failed to load filament');
+    } finally {
+      setLoading(false);
+    }
   }, [idOrSlug, navigate]);
 
-  return { filament, loading, error, isRedirecting };
+  useEffect(() => {
+    fetchFilament();
+  }, [fetchFilament]);
+
+  const refetch = useCallback(async () => {
+    await fetchFilament();
+  }, [fetchFilament]);
+
+  return { filament, loading, error, isRedirecting, refetch };
 }
 
 /**
