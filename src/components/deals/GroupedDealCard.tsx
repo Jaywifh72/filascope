@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { DealShareModal } from "./DealShareModal";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 interface GroupedDealCardProps {
@@ -17,6 +18,7 @@ interface GroupedDealCardProps {
 export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const { getAffiliateUrl } = useAffiliateLinks();
 
   const hasPriceRange = group.priceRange.min !== group.priceRange.max;
   const hasColors = group.colorHexes.length > 0;
@@ -32,7 +34,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (group.representativeDeal.product_url) {
-      window.open(group.representativeDeal.product_url, '_blank', 'noopener,noreferrer');
+      const affiliateUrl = getAffiliateUrl(
+        group.representativeDeal.product_url, 
+        group.representativeDeal.vendor
+      );
+      window.open(affiliateUrl || group.representativeDeal.product_url, '_blank', 'noopener,noreferrer');
     }
   };
 
