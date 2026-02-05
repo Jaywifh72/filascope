@@ -1,9 +1,9 @@
-import { useMemo, useEffect, useState, useRef } from "react"; // v4
+import { useMemo, useEffect, useState, useRef, useCallback } from "react"; // v4
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAllFilaments } from "@/lib/supabaseHelpers";
+import { fetchAllFilaments, type FetchProgressCallback } from "@/lib/supabaseHelpers";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
@@ -56,6 +56,7 @@ import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFi
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
+import { LoadingProgress } from "@/components/LoadingProgress";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -138,6 +139,18 @@ const Finder = () => {
   
   // Scroll restoration for back/forward navigation
   const { savePaginationState, restorePaginationState } = useScrollRestoration('finder');
+  
+  // Loading progress state for progressive feedback
+  const [loadingProgress, setLoadingProgress] = useState<{ loaded: number; total: number | null; phase: "fetching" | "processing" | "rendering" }>({
+    loaded: 0,
+    total: null,
+    phase: "fetching",
+  });
+  
+  // Progress callback for data fetching - memoized to prevent rerenders
+  const handleLoadingProgress = useCallback<FetchProgressCallback>((progress) => {
+    setLoadingProgress(progress);
+  }, []);
   
   // Search analytics tracking
   const { startSearchTimer, trackSearch } = useFilterAnalytics();
@@ -804,7 +817,12 @@ const Finder = () => {
       };
 
       // Use pagination to fetch all matching filaments (bypasses 1000-row limit)
-      const data = await fetchAllFilaments(buildQuery);
+      // Pass progress callback for loading indicator
+      const data = await fetchAllFilaments(buildQuery, 1000, handleLoadingProgress);
+      
+      // Update progress to rendering phase
+      handleLoadingProgress({ loaded: data.length, total: data.length, phase: "rendering" });
+      
       return data;
     },
   });
@@ -1779,7 +1797,11 @@ const Finder = () => {
 
         {/* Filaments Display */}
         {isLoading ? (
-          <FilamentCardSkeletonGrid count={12} />
+          <LoadingProgress
+            loaded={loadingProgress.loaded}
+            total={loadingProgress.total}
+            phase={loadingProgress.phase}
+          />
         ) : displayedGroups.length > 0 ? (
           <>
           {
