@@ -248,17 +248,9 @@ const FilamentDetail = () => {
     }
   };
 
-  // Handle fetch error from slug hook
-  useEffect(() => {
-    if (fetchError && !loading && !isRedirecting) {
-      toast({
-        title: "Not Found",
-        description: fetchError,
-        variant: "destructive",
-      });
-      navigate("/");
-    }
-  }, [fetchError, loading, isRedirecting, toast, navigate]);
+  // Handle fetch error from slug hook - show not found UI instead of redirecting
+  // This preserves deep links and allows users to search from the error page
+  const showNotFound = fetchError && !loading && !isRedirecting;
 
   // Fetch brandId from automated_brands table based on vendor name
   useEffect(() => {
@@ -524,7 +516,39 @@ const FilamentDetail = () => {
     );
   }
 
-  if (!filament || !displayFilament || !pricingFilament) return null;
+  // Show not found UI with search capability instead of redirecting
+  if (showNotFound || !filament || !displayFilament || !pricingFilament) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+        <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-accent/50 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          
+          <Card className="max-w-2xl mx-auto bg-card/50 border-border/50">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
+                <Printer className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Filament Not Found</h1>
+              <p className="text-muted-foreground mb-6">
+                {fetchError || "We couldn't find a filament matching this URL. It may have been removed or the URL might be incorrect."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate("/")} variant="default">
+                  Browse All Filaments
+                </Button>
+                <Button onClick={() => navigate("/wizard")} variant="outline">
+                  Try Quick Match
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Check if this product is available in the user's region
   const isAvailableInRegion = productLineAvailableInRegion || isFilamentAvailableInRegion(
