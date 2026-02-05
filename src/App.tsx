@@ -144,6 +144,7 @@ const App = () => (
                   <main id="main-content" tabIndex={-1} className="outline-none">
                   <Routes>
                   <Route path="/" element={<Finder />} />
+                  <Route path="/finder" element={<Finder />} />
                   <Route path="/filaments" element={<Navigate to="/" replace />} />
                   <Route path="/brands" element={<Brands />} />
                   <Route path="/brands/compare" element={<BrandComparePage />} />
