@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { isUuid, generateFilamentSlug } from '@/lib/seoSlugUtils';
+import { isUuid, generateFilamentSlug, parseFilamentSlug } from '@/lib/seoSlugUtils';
 import type { Database } from '@/integrations/supabase/types';
 
 type Filament = Database['public']['Tables']['filaments']['Row'];
@@ -100,6 +100,57 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
 
           if (!fuzzyError && fuzzyData?.[0]) {
             data = fuzzyData[0];
+          }
+        }
+
+        // If still not found, try to parse the slug and search by components
+        // This handles cases where product_handle is NULL but slug can be matched
+        if (!data) {
+          const parsed = parseFilamentSlug(idOrSlug);
+          
+          if (parsed.brand || parsed.material || parsed.color) {
+            // Build a query that matches the slug components
+            let query = supabase.from('filaments').select('*');
+            
+            // Match vendor (brand)
+            if (parsed.brand) {
+              // Handle common brand name variations
+              const brandNormalized = parsed.brand.replace(/-/g, ' ');
+              query = query.ilike('vendor', `%${brandNormalized}%`);
+            }
+            
+            // Match material
+            if (parsed.material) {
+              query = query.ilike('material', `%${parsed.material}%`);
+            }
+            
+            // Match color in color_family or product_title
+            if (parsed.color) {
+              const colorNormalized = parsed.color.replace(/-/g, ' ');
+              query = query.or(`color_family.ilike.%${colorNormalized}%,product_title.ilike.%${colorNormalized}%`);
+            }
+            
+            const { data: componentData, error: componentError } = await query.limit(5);
+            
+            if (!componentError && componentData?.length) {
+              // Find best match by scoring how well the generated slug matches
+              const bestMatch = componentData.find(f => {
+                const generatedSlug = generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
+                return generatedSlug === idOrSlug;
+              });
+              
+              if (bestMatch) {
+                data = bestMatch;
+                // Update the product_handle for future lookups
+                await supabase
+                  .from('filaments')
+                  .update({ product_handle: idOrSlug })
+                  .eq('id', bestMatch.id);
+              } else if (componentData.length === 1) {
+                // If only one match found, use it
+                data = componentData[0];
+              }
+            }
           }
         }
       }
