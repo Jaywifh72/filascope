@@ -1,146 +1,188 @@
 
-# Debug & Fix Plan: Frontend Routing and Data Fetching Issues
+# Comprehensive Fix Plan: FilaScope Product Display Issues
 
-## Problem Summary
-Based on thorough investigation, I identified the following issues:
+## Investigation Summary
 
-| Issue | Status | Root Cause |
-|-------|--------|------------|
-| Home page "0 filaments" | **✅ FIXED** | Data loads successfully; 960 filaments display after regional filtering |
-| Filament detail page `/filament/:slug` | **✅ FIXED** | Refactored to use `useFilamentBySlug` hook; fixed duplicate `product_handle` issue |
-| Navigation between routes | **✅ Working** | All routes function correctly |
-| Database connectivity | **✅ Working** | 8,069 filaments confirmed in database |
+After thorough debugging, I identified the following:
+
+| Component | Status | Root Cause |
+|-----------|--------|------------|
+| **Data Fetching** | ✅ Working | 8,001 filaments load across 9 pages (~23 seconds) |
+| **Card Rendering** | ✅ Working | Cards display correctly after data loads |
+| **Skeleton Display** | ⚠️ Confusing | Dark placeholders appear for extended period |
+| **Product Images** | ⚠️ Missing | LabReadoutCard shows brand logos only, no product images |
+| **Loading UX** | ❌ Poor | No progress indication during 23-second load |
 
 ---
 
-## Critical Fix: FilamentDetail Page SEO Slug Support
+## Identified Issues & Fixes
 
-### Current Problem
-The FilamentDetail.tsx component (line 296-300) directly queries filaments by UUID:
+### Issue 1: Extended Skeleton Display (23+ seconds)
+**Problem**: During initial load, users see dark rectangular placeholders for ~23 seconds, creating the impression that content failed to load.
+
+**Solution**: Add progressive loading indicator with:
+- Item count progress (`Loading 4,000 of 8,069...`)
+- Phase indicators (Fetching → Processing → Rendering)
+- Earlier display of partial results
+
+**Files to Modify**:
+- `src/pages/Finder.tsx` - Add loading progress state
+- `src/components/FilamentCardSkeleton.tsx` - Enhance loading feedback
+
+---
+
+### Issue 2: Missing Product Images in Cards
+**Problem**: `LabReadoutCard` only displays brand logos in the header area. Unlike `FilamentCard`, it doesn't show `featured_image`.
+
+**Solution**: Add product image display to the card layout:
+- Add thumbnail image from `filament.featured_image`
+- Show color swatch alongside
+- Maintain compact card design
+
+**Files to Modify**:
+- `src/components/LabReadoutCard.tsx` - Add image area to card layout
+
+---
+
+### Issue 3: Poor Loading Progress Visibility
+**Problem**: Skeleton cards use subtle shimmer animation on dark background, making them nearly invisible.
+
+**Solution**: Enhance skeleton visibility:
+- Increase shimmer contrast
+- Add pulsing glow effect
+- Show count of loaded items
+
+**Files to Modify**:
+- `src/index.css` - Enhance `.skeleton-shimmer` styles
+- `src/components/ui/skeleton.tsx` - Add visibility class options
+
+---
+
+### Issue 4: Staggered Card Animation Delay
+**Problem**: Cards animate in with `index * 0.08s` delay (80ms per card). For 100+ cards, later cards appear seconds after the first.
+
+**Solution**: Cap animation delay and use intersection-based reveal:
+- Limit stagger to first 20 cards
+- Use instant display for remaining cards
+- Add batch reveal for visible viewport
+
+**Files to Modify**:
+- `src/components/LabReadoutCard.tsx` - Update animation delay logic
+
+---
+
+## Implementation Details
+
+### Step 1: Add Progressive Loading State to Finder
+
+Update `Finder.tsx` to show loading progress:
+
 ```typescript
-const { data, error } = await supabase
-  .from("filaments")
-  .select("*")
-  .eq("id", id)  // ← Expects UUID only
-  .maybeSingle();
+// Add loading progress tracking
+const { data: filaments, isLoading, progress } = useQuery({
+  queryKey: ['filaments', filters],
+  queryFn: () => fetchAllFilaments({ onProgress: setProgress }),
+});
+
+// Show progress during load
+{isLoading && (
+  <LoadingProgress 
+    loaded={progress.loaded}
+    total={progress.total}
+    phase={progress.phase}
+  />
+)}
 ```
 
-When accessing `/filament/pla-glow` (a slug), Supabase throws: `invalid input syntax for type uuid: "pla-glow"`
+### Step 2: Add Product Image to LabReadoutCard
 
-### The Solution
-The codebase already has a proper hook `useFilamentBySlug` in `src/hooks/useFilamentBySlug.ts` that handles both UUIDs and product_handle slugs. It:
-1. Detects if the URL parameter is a UUID or slug
-2. Queries the appropriate field (`id` for UUIDs, `product_handle` for slugs)
-3. Falls back to fuzzy matching if exact slug not found
-4. Auto-redirects UUID URLs to SEO-friendly slug URLs
+Add image section after header:
 
-### Implementation Steps
-
-**Step 1: Refactor FilamentDetail.tsx to use the slug-aware hook**
-
-Replace the current inline `fetchFilament` logic with `useFilamentBySlug`:
-
-```typescript
-// Add import at top
-import { useFilamentBySlug } from '@/hooks/useFilamentBySlug';
-
-// Replace useState + fetchFilament with the hook
-const { filament, loading, error, isRedirecting } = useFilamentBySlug(id);
+```tsx
+{/* Product Image Thumbnail */}
+{filament.featured_image && (
+  <div className="relative h-24 bg-black/30 border-b border-gray-700/50">
+    <OptimizedImage
+      src={filament.featured_image}
+      alt={getDisplayTitle()}
+      className="h-full w-full object-contain p-2"
+      width={200}
+      height={96}
+    />
+  </div>
+)}
 ```
 
-**Step 2: Handle redirecting state**
+### Step 3: Enhance Skeleton Visibility
 
-Add early return for redirect state to prevent flash of content:
+Update `src/index.css`:
 
-```typescript
-if (isRedirecting) {
-  return <PageLoadingSkeleton />;
+```css
+.skeleton-shimmer {
+  background-color: hsl(var(--muted) / 0.3); /* More visible */
+  border: 1px dashed hsl(var(--muted-foreground) / 0.2);
+}
+
+.skeleton-shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--primary) / 0.1), /* Teal tint for visibility */
+    transparent
+  );
 }
 ```
 
-**Step 3: Migrate existing callbacks**
+### Step 4: Cap Animation Delay
 
-The current FilamentDetail has several admin functions (`handleRescrapeImage`, `handleScrapeData`, etc.) that call `fetchFilament()` after mutations. These need to be adapted to work with the hook's data or trigger a refetch.
+Update animation logic:
 
-Options:
-- A) Add a `refetch` function to `useFilamentBySlug`
-- B) Use React Query in `useFilamentBySlug` for automatic cache invalidation
-- C) Use `queryClient.invalidateQueries` after mutations
-
-**Recommended: Option C** - Minimal changes, works with existing patterns.
-
-**Step 4: Update error handling**
-
-Replace toast-based error handling with the hook's error state:
-
-```typescript
-useEffect(() => {
-  if (error && !loading) {
-    toast({
-      title: "Not Found",
-      description: error,
-      variant: "destructive",
-    });
-    navigate("/");
-  }
-}, [error, loading]);
+```tsx
+style={{
+  animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${Math.min(index, 12) * 0.05}s both`,
+}}
 ```
 
 ---
 
-## Secondary Issue: Home Page Initial Load Time
+## Files to Create/Modify
 
-### Observations
-- First load shows skeleton cards for 3-5 seconds
-- Data successfully loads (960 filaments after regional filtering)
-- No JavaScript errors in console
-- Network requests complete successfully
-
-### Potential Optimizations (Lower Priority)
-
-1. **Query Optimization**: The Finder query is complex with multiple OR conditions. Consider:
-   - Pre-computing popular filter combinations
-   - Using a materialized view for common queries
-
-2. **Initial Data Prefetching**: Consider prefetching first page of results during app initialization
-
-3. **Pagination Tuning**: Current batch size is 1000 rows. For initial display, could fetch just first 50 for faster perceived load
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/pages/Finder.tsx` | Modify | Add loading progress tracking |
+| `src/components/LabReadoutCard.tsx` | Modify | Add product image section |
+| `src/components/FilamentCardSkeleton.tsx` | Modify | Add loading count display |
+| `src/index.css` | Modify | Enhance skeleton visibility |
+| `src/components/LoadingProgress.tsx` | Create | New loading progress component |
 
 ---
 
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/FilamentDetail.tsx` | Replace inline fetch with `useFilamentBySlug` hook |
-| `src/hooks/useFilamentBySlug.ts` | Add `refetch` capability or React Query integration |
-
----
-
-## Testing Plan
+## Success Criteria Verification
 
 After implementation:
-
-1. **UUID URL Test**: Navigate to `/filament/[valid-uuid]` → Should redirect to slug URL
-2. **Slug URL Test**: Navigate to `/filament/pla-glow` → Should load filament detail page
-3. **Invalid Slug Test**: Navigate to `/filament/nonexistent-slug` → Should show error and redirect to home
-4. **Admin Functions Test**: Test rescrape image/data buttons still work after refactor
-5. **Regional Pricing Test**: Verify price display works with new hook integration
+- [ ] Product cards show images, titles, prices, brands
+- [ ] Loading state shows progress indicator
+- [ ] Skeleton cards are visibly animated
+- [ ] Cards appear within 1-2 seconds of data availability
+- [ ] Clicking cards navigates to detail pages
+- [ ] Regional pricing displays correctly
 
 ---
 
-## Technical Considerations
+## Technical Notes
 
-### Database Coverage
-- 8,069 total filaments in database
-- Many filaments have `product_handle` populated (confirmed: "pla-glow" exists as `product_handle`)
-- The `useFilamentBySlug` hook has fuzzy matching as fallback
+### Current Data Flow
+```
+Finder.tsx
+  └─→ fetchAllFilaments() - 9 pages × 1000 rows = ~23s
+      └─→ useRegionalFiltering() - Filters to 7,855 products
+          └─→ groupFilamentsByProduct() - Groups variants
+              └─→ LabReadoutCard × displayCount
+                  └─→ useRegionalPrice() - Per-card pricing
+```
 
-### Existing Infrastructure
-The codebase already has all necessary components:
-- `isUuid()` utility function in `src/lib/seoSlugUtils.ts`
-- `generateFilamentSlug()` for creating SEO slugs
-- `product_handle` column in filaments table
-- Route definition in App.tsx: `<Route path="/filament/:id" element={<FilamentDetail />} />`
-
-This is primarily a wiring issue - connecting existing components together.
+### Performance Consideration
+The 23-second load time is due to fetching 8,001 rows in 9 batches of 1,000. Consider:
+- Initial display with first batch (1,000 items)
+- Background loading of remaining batches
+- Server-side pagination for faster initial load
