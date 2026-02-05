@@ -9,6 +9,8 @@ export interface SearchSuggestion {
   displayText: string;
   subtitle?: string;
   count?: number;
+  id?: string;           // Product ID for navigation
+  productHandle?: string; // SEO slug for navigation
 }
 
 interface UseSearchSuggestionsOptions {
@@ -142,7 +144,7 @@ export function useSearchSuggestions(
       if (context === "filaments" || context === "all") {
         const { data, error } = await supabase
           .from("filaments")
-          .select("product_title, vendor")
+          .select("id, product_title, vendor, product_handle")
           .ilike("product_title", `%${debouncedQuery}%`)
           .limit(5);
 
@@ -153,6 +155,8 @@ export function useSearchSuggestions(
           value: item.product_title,
           displayText: item.product_title,
           subtitle: item.vendor || undefined,
+          id: item.id,
+          productHandle: item.product_handle,
         }));
       }
 

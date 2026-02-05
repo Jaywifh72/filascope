@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Clock, X, ArrowUpRight, Package, Tag, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchContext } from "@/hooks/useSearchContext";
@@ -24,6 +25,7 @@ export function SearchInputWithHistory({
   inputClassName,
   onSelect,
 }: SearchInputWithHistoryProps) {
+  const navigate = useNavigate();
   const [isFocused, setIsFocused] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -74,7 +76,11 @@ export function SearchInputWithHistory({
       case "Enter":
         e.preventDefault();
         if (selectedIndex >= 0 && allItems[selectedIndex]) {
-          handleSelect(allItems[selectedIndex]);
+          // Find the corresponding suggestion for keyboard navigation
+          const selectedSuggestion = value.length >= 2 
+            ? suggestions[selectedIndex] 
+            : undefined;
+          handleSelect(allItems[selectedIndex], selectedSuggestion);
         } else if (value) {
           trackSearch(value);
           setShowDropdown(false);
@@ -87,7 +93,20 @@ export function SearchInputWithHistory({
     }
   }, [showDropdown, selectedIndex, allItems, value, trackSearch]);
 
-  const handleSelect = (selectedValue: string) => {
+  const handleSelect = (selectedValue: string, suggestion?: SearchSuggestion) => {
+    // If this is a product suggestion with an ID, navigate to detail page
+    if (suggestion?.type === "product" && suggestion.id) {
+      trackSearch(selectedValue);
+      setShowDropdown(false);
+      onChange(""); // Clear input after navigation
+      
+      // Navigate using product_handle or ID
+      const slug = suggestion.productHandle || suggestion.id;
+      navigate(`/filament/${slug}`);
+      return;
+    }
+    
+    // For brands, materials, typos, and recent searches - update search input
     onChange(selectedValue);
     trackSearch(selectedValue);
     setShowDropdown(false);
@@ -216,7 +235,7 @@ export function SearchInputWithHistory({
               {suggestions.map((suggestion, index) => (
                 <button
                   key={`${suggestion.type}-${suggestion.value}`}
-                  onClick={() => handleSelect(suggestion.value)}
+                  onClick={() => handleSelect(suggestion.value, suggestion)}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
                     selectedIndex === index
