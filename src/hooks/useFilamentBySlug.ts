@@ -79,14 +79,15 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
         }
       } else {
         // Fetch by product_handle (slug)
+        // Use .limit(1) instead of .maybeSingle() since product_handle is not unique
         const { data: slugData, error: slugError } = await supabase
           .from('filaments')
           .select('*')
           .eq('product_handle', idOrSlug)
-          .maybeSingle();
+          .limit(1);
 
         if (slugError) throw slugError;
-        data = slugData;
+        data = slugData?.[0] ?? null;
 
         // If not found by product_handle, try fuzzy matching
         if (!data) {
@@ -95,11 +96,10 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
             .from('filaments')
             .select('*')
             .ilike('product_handle', `%${idOrSlug}%`)
-            .limit(1)
-            .maybeSingle();
+            .limit(1);
 
-          if (!fuzzyError) {
-            data = fuzzyData;
+          if (!fuzzyError && fuzzyData?.[0]) {
+            data = fuzzyData[0];
           }
         }
       }
