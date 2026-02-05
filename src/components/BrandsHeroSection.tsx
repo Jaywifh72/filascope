@@ -15,6 +15,7 @@ interface BrandsHeroSectionProps {
   onSearchChange: (value: string) => void;
   brandCount: number;
   productCount: number;
+  isLoading?: boolean;
   onOpenQuiz?: () => void;
   brandSuggestions?: BrandSuggestion[];
 }
@@ -24,6 +25,7 @@ const BrandsHeroSection = ({
   onSearchChange, 
   brandCount,
   productCount,
+  isLoading = false,
   onOpenQuiz,
   brandSuggestions = []
 }: BrandsHeroSectionProps) => {
@@ -114,8 +116,17 @@ const BrandsHeroSection = ({
               className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed mb-6 sm:mb-8 md:mb-10 max-w-[480px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s" }}
             >
-              <span className="text-primary">{brandCount}</span> filament brands tracked with{" "}
-              <span className="text-primary">{productCount.toLocaleString()}</span> products. 
+              {isLoading ? (
+                <>
+                  <span className="inline-block w-8 h-4 bg-primary/20 rounded animate-pulse" /> filament brands tracked with{" "}
+                  <span className="inline-block w-12 h-4 bg-primary/20 rounded animate-pulse" /> products.
+                </>
+              ) : (
+                <>
+                  <span className="text-primary">{brandCount}</span> filament brands tracked with{" "}
+                  <span className="text-primary">{productCount.toLocaleString()}</span> products.
+                </>
+              )}
               <span className="hidden sm:inline"> Find your perfect manufacturer with live pricing and verified data.</span>
             </p>
             
@@ -317,13 +328,13 @@ const BrandsHeroSection = ({
                 
                 {/* Floating Telemetry Tags */}
                 <div className="absolute top-4 right-0 font-mono text-[9px] uppercase tracking-wider text-primary/70 bg-primary/5 border border-primary/20 px-2 py-1 rounded">
-                  BRANDS_ACTIVE: {brandCount}
+                  BRANDS_ACTIVE: {isLoading ? "..." : brandCount}
                 </div>
                 <div className="absolute bottom-8 left-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground bg-white/5 border border-white/10 px-2 py-1 rounded">
-                  SYNC_STATUS: OK
+                  SYNC_STATUS: {isLoading ? "LOADING" : "OK"}
                 </div>
                 <div className="absolute top-1/2 right-0 font-mono text-[9px] uppercase tracking-wider text-[#FF0055]/70 bg-[#FF0055]/5 border border-[#FF0055]/20 px-2 py-1 rounded">
-                  PRODUCTS: {productCount.toLocaleString()}
+                  PRODUCTS: {isLoading ? "..." : productCount.toLocaleString()}
                 </div>
               </div>
               

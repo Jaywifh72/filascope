@@ -317,9 +317,9 @@ const Brands = () => {
                           filters.hasLivePricing || 
                           filters.filamentCountRange !== null;
 
-  // Stats
-  const totalProducts = brands?.reduce((sum, b) => sum + b.count, 0) || 0;
-  const brandCount = automatedBrands?.length || 0;
+  // Stats - use mergedBrands which is the canonical data source
+  const totalProducts = mergedBrands.reduce((sum, b) => sum + b.count, 0);
+  const brandCount = mergedBrands.length;
 
   const handleOpenQuiz = () => {
     toast.info("Brand Quiz coming soon!", {
@@ -345,6 +345,7 @@ const Brands = () => {
         onSearchChange={setSearchQuery}
         brandCount={brandCount}
         productCount={totalProducts}
+        isLoading={isLoading || !automatedBrands}
         onOpenQuiz={handleOpenQuiz}
         brandSuggestions={brandSuggestions}
       />
