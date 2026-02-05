@@ -1426,8 +1426,8 @@ const Finder = () => {
       <HeroSection 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        filamentCount={filamentCount || 1881}
-        brandCount={brands?.length || 28}
+        filamentCount={totalCount || 976}
+        brandCount={brands?.length || 23}
         compatibleCount={totalCount}
       />
 
