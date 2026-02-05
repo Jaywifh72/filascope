@@ -253,22 +253,64 @@ export function isColorName(text: string): boolean {
   return normalized in COLOR_NAME_MAP;
 }
 
+// Terms that should NOT be treated as color searches even if they match color names
+// These are common 3D printing terms that happen to match color names
+const NON_COLOR_SEARCH_TERMS = new Set([
+  // Materials that match color names
+  "gold", "golden", "silver", "bronze", "copper", "brass", "chrome", "platinum",
+  "wood", "marble", "natural", "clear", "transparent",
+  // Brand/product terms that could match
+  "silk", "matte", "galaxy", "rainbow", "multicolor", "neon",
+  // Common material abbreviations - ensure these don't get matched
+  "pla", "abs", "petg", "asa", "tpu", "pc", "pa", "cf", "gf",
+]);
+
+// Words that indicate the search is NOT a pure color search
+// (i.e., user is searching for products, not filtering by color)
+const PRODUCT_SEARCH_INDICATORS = new Set([
+  // Materials
+  "pla", "abs", "petg", "asa", "tpu", "pc", "pa", "nylon", "carbon", "fiber", "filament",
+  // Brands (common ones)
+  "bambu", "polymaker", "prusament", "esun", "hatchbox", "overture", "sunlu", "elegoo",
+  "inland", "amazon", "eryone", "duramic", "gst3d", "amolen", "mika3d", "creality",
+  // Product terms
+  "basic", "pro", "plus", "lite", "matte", "silk", "glitter", "sparkle", "glow",
+  "high", "speed", "tough", "flex", "soft", "hard", "strong",
+]);
+
 /**
  * Extract color name from text if present
  * Returns the color name and its hex code, or null if not found
+ * 
+ * IMPORTANT: This function is intentionally conservative to avoid
+ * treating product searches as color searches. For example:
+ * - "bambu pla" should NOT match (contains brand/material)
+ * - "red" should match (pure color search)
+ * - "red pla" should NOT match (color + material = product search)
  */
 export function extractColorFromText(text: string): { colorName: string; hex: string } | null {
   if (!text || text.length < 2) return null;
   const normalized = text.toLowerCase().trim();
+  const words = normalized.split(/\s+/);
   
-  // Direct match first
-  if (normalized in COLOR_NAME_MAP) {
+  // If any word indicates a product search, don't treat as color search
+  // This prevents "bambu pla", "red pla", "gold silk" from being color-only searches
+  if (words.some(word => PRODUCT_SEARCH_INDICATORS.has(word))) {
+    return null;
+  }
+  
+  // If the term is in the non-color search terms, skip color extraction
+  if (words.some(word => NON_COLOR_SEARCH_TERMS.has(word))) {
+    return null;
+  }
+  
+  // Direct match first - only if single word or pure color phrase
+  if (normalized in COLOR_NAME_MAP && words.length === 1) {
     return { colorName: normalized, hex: COLOR_NAME_MAP[normalized] };
   }
   
   // Check for compound colors (e.g., "light blue", "dark red")
-  const words = normalized.split(/\s+/);
-  if (words.length >= 2) {
+  if (words.length === 2) {
     // Try joining first two words
     const compound = words.slice(0, 2).join(" ");
     if (compound in COLOR_NAME_MAP) {
@@ -281,13 +323,13 @@ export function extractColorFromText(text: string): { colorName: string; hex: st
     }
   }
   
-  // Check each word individually
-  for (const word of words) {
-    if (word in COLOR_NAME_MAP) {
-      return { colorName: word, hex: COLOR_NAME_MAP[word] };
-    }
+  // For single-word searches, check if it's a color
+  if (words.length === 1 && words[0] in COLOR_NAME_MAP) {
+    return { colorName: words[0], hex: COLOR_NAME_MAP[words[0]] };
   }
   
+  // Don't extract colors from multi-word searches unless it's a compound color
+  // This prevents "bambu red" from being treated as a color-only search
   return null;
 }
 
