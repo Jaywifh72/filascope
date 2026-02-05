@@ -105,6 +105,9 @@ const GuidePrintSettings = lazy(() => import("./pages/GuidePrintSettings"));
 const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 const Install = lazy(() => import("./pages/Install"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 
@@ -222,6 +225,9 @@ const App = () => (
                   <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
                   <Route path="/resources/profiles" element={<ResourcesProfiles />} />
                   <Route path="/install" element={<Install />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
