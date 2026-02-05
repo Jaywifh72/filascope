@@ -79,6 +79,9 @@ interface HorizontalFilterBarProps {
   sortBy: string;
   onSortChange: (sort: string) => void;
 
+  // Clear all filters (includes search term)
+  onClearAll?: () => void;
+
   // Sticky state
   isSticky?: boolean;
   filterBarRef?: React.RefObject<HTMLDivElement>;
@@ -113,6 +116,7 @@ export function HorizontalFilterBar({
   moreFiltersCount,
   sortBy,
   onSortChange,
+  onClearAll,
   isSticky = false,
   filterBarRef
 }: HorizontalFilterBarProps) {
@@ -213,10 +217,15 @@ export function HorizontalFilterBar({
   };
 
   const handleClearAllFilters = () => {
+    // Use parent's clear all if provided (includes search term reset)
+    if (onClearAll) {
+      onClearAll();
+      return;
+    }
+    // Fallback: clear local filters only
     onMaterialChange("All");
     onBrandsChange([]);
     onPriceRangeChange([0, maxPriceLimit]);
-    // Note: More filters clearing would need to be handled by parent
   };
 
   const getSelectedMaterialLabel = () => {

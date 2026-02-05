@@ -16,7 +16,7 @@ export interface FetchProgressCallback {
  */
 export async function fetchAllFilaments(
   queryBuilder: () => any,
-  pageSize: number = 1000,
+  pageSize: number = 500, // Reduced from 1000 for faster initial render
   onProgress?: FetchProgressCallback
 ): Promise<any[]> {
   let allData: any[] = [];
