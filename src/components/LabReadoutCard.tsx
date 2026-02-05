@@ -7,6 +7,7 @@ import {
   Thermometer,
   Plus,
   Info,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -340,29 +341,55 @@ export function LabReadoutCard({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          PRODUCT IMAGE SECTION - Shows featured_image thumbnail
+          PRODUCT IMAGE SECTION - Always shows with fallback for missing images
           ═══════════════════════════════════════════════════════════════ */}
-      {filament.featured_image && !imageError && (
-        <div className="relative h-28 bg-black/30 border-b border-gray-700/50 flex items-center justify-center">
+      <div className="relative h-32 bg-gradient-to-b from-black/20 to-black/40 border-b border-gray-700/50 flex items-center justify-center overflow-hidden">
+        {filament.featured_image && !imageError ? (
           <OptimizedImage
             src={filament.featured_image}
             alt={getDisplayTitle()}
             className="h-full w-full"
             objectFit="contain"
             width={200}
-            height={112}
+            height={128}
             onError={() => setImageError(true)}
+            fallback={
+              <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                <Package className="w-8 h-8 opacity-40" />
+                <span className="text-[10px] uppercase tracking-wider opacity-60">No Image</span>
+              </div>
+            }
           />
-          {/* Color swatch overlay - bottom right */}
-          {filament.color_hex && (
-            <div 
-              className="absolute bottom-2 right-2 w-5 h-5 rounded-full border-2 border-white/30 shadow-sm"
-              style={{ backgroundColor: filament.color_hex }}
-              title={`Color: ${filament.color_hex}`}
-            />
-          )}
-        </div>
-      )}
+        ) : (
+          /* Fallback placeholder when no image or error */
+          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            {/* Color swatch as main visual when no image */}
+            {filament.color_hex ? (
+              <div 
+                className="w-16 h-16 rounded-xl shadow-lg border border-white/10"
+                style={{ backgroundColor: filament.color_hex }}
+              />
+            ) : (
+              <Package className="w-10 h-10 opacity-30" />
+            )}
+            <span className="text-[10px] uppercase tracking-wider opacity-50">
+              {filament.material || 'Filament'}
+            </span>
+          </div>
+        )}
+        
+        {/* Color swatch overlay - bottom right (only when image is shown) */}
+        {filament.featured_image && !imageError && filament.color_hex && (
+          <div 
+            className="absolute bottom-2 right-2 w-6 h-6 rounded-full border-2 border-white/40 shadow-md ring-1 ring-black/20"
+            style={{ backgroundColor: filament.color_hex }}
+            title={`Color: ${filament.color_hex}`}
+          />
+        )}
+        
+        {/* Subtle gradient overlay for better text contrast below */}
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════
           BODY: Material Name, Badge, Price, Temp
