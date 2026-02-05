@@ -250,7 +250,8 @@ const FilamentDetail = () => {
 
   // Handle fetch error from slug hook - show not found UI instead of redirecting
   // This preserves deep links and allows users to search from the error page
-  const showNotFound = fetchError && !loading && !isRedirecting;
+  // Note: isRedirecting is now deprecated (always false) but kept for API compatibility
+  const showNotFound = fetchError && !loading;
 
   // Fetch brandId from automated_brands table based on vendor name
   useEffect(() => {
