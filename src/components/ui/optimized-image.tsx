@@ -179,12 +179,17 @@ export const OptimizedImage = memo(function OptimizedImage({
       <div
         ref={imgRef}
         className={cn(
-          "bg-muted/50 flex items-center justify-center",
+          "bg-muted/30 flex items-center justify-center",
           aspectRatioClasses[aspectRatio],
           className
         )}
       >
-        {fallback || <span className="text-2xl text-muted-foreground">📦</span>}
+        {fallback || (
+          <div className="flex flex-col items-center gap-1 text-muted-foreground">
+            <span className="text-2xl">📦</span>
+            <span className="text-[10px] opacity-50">No image</span>
+          </div>
+        )}
       </div>
     );
   }
