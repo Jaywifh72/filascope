@@ -20,10 +20,13 @@ import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/score
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { generateFilamentSlug } from "@/lib/seoSlugUtils";
 
 interface Filament {
   id: string;
   product_title: string;
+  product_handle?: string | null;
+  color_family?: string | null;
   vendor?: string | null;
   material?: string | null;
   color_hex?: string | null;
@@ -52,6 +55,7 @@ interface Filament {
   price_aud?: number | null;
   price_jpy?: number | null;
 }
+
 
 interface VariantIndicators {
   colors: string[];
@@ -518,7 +522,7 @@ export function LabReadoutCard({
 
         {/* View Details Button - Full width, solid bg-primary */}
         <Link
-          to={`/filament/${filament.id}`}
+          to={`/filament/${filament.product_handle || generateFilamentSlug(filament.vendor, filament.material, filament.product_title, filament.color_family) || filament.id}`}
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all duration-150"
         >
           <span>View Details</span>
