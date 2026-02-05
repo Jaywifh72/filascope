@@ -1,188 +1,95 @@
 
-# Comprehensive Fix Plan: FilaScope Product Display Issues
+# Fix: Filament Detail Page Redirect Loop
 
-## Investigation Summary
+## Problem Summary
+Clicking "View Details" on any filament card navigates to a UUID-based URL. The page shows "Redirecting..." text and then redirects to the homepage, never displaying the product details.
 
-After thorough debugging, I identified the following:
+## Root Cause
+The `useFilamentBySlug` hook has a redirect loop when:
+1. A UUID URL is detected
+2. The product has no `product_handle` stored (2,031 of 8,069 products)
+3. The hook attempts to redirect to a generated SEO slug
+4. The redirect causes the component to remount, but the slug lookup fails because the database still has no matching `product_handle`
 
-| Component | Status | Root Cause |
-|-----------|--------|------------|
-| **Data Fetching** | ✅ Working | 8,001 filaments load across 9 pages (~23 seconds) |
-| **Card Rendering** | ✅ Working | Cards display correctly after data loads |
-| **Skeleton Display** | ⚠️ Confusing | Dark placeholders appear for extended period |
-| **Product Images** | ⚠️ Missing | LabReadoutCard shows brand logos only, no product images |
-| **Loading UX** | ❌ Poor | No progress indication during 23-second load |
+## Technical Fix Strategy
 
----
+### Change 1: Stop Automatic Redirects for UUID URLs
+Instead of redirecting UUID URLs to slug URLs, **render the page directly** when fetching by UUID succeeds. This ensures the page always works, regardless of `product_handle` availability.
 
-## Identified Issues & Fixes
+- Remove the automatic redirect logic when a UUID is detected
+- Simply fetch by UUID and render the filament data
+- Optionally update `product_handle` in the background for future SEO benefit, but don't redirect
 
-### Issue 1: Extended Skeleton Display (23+ seconds)
-**Problem**: During initial load, users see dark rectangular placeholders for ~23 seconds, creating the impression that content failed to load.
+### Change 2: Reset State When URL Parameter Changes  
+Add a reset mechanism when `idOrSlug` changes to prevent stale `isRedirecting` state from persisting across navigations.
 
-**Solution**: Add progressive loading indicator with:
-- Item count progress (`Loading 4,000 of 8,069...`)
-- Phase indicators (Fetching → Processing → Rendering)
-- Earlier display of partial results
+### Change 3: Add Timeout Protection for Redirect State
+If `isRedirecting` is ever true, add a 3-second timeout that shows an error message instead of leaving users stuck on "Redirecting..." forever.
 
-**Files to Modify**:
-- `src/pages/Finder.tsx` - Add loading progress state
-- `src/components/FilamentCardSkeleton.tsx` - Enhance loading feedback
+### Change 4: Improve Slug Lookup Fallback
+When fetching by slug fails, the fallback component-based search should be more robust:
+- Use case-insensitive matching
+- Check if the filament was found by UUID in a previous request
 
----
+## Files to Modify
 
-### Issue 2: Missing Product Images in Cards
-**Problem**: `LabReadoutCard` only displays brand logos in the header area. Unlike `FilamentCard`, it doesn't show `featured_image`.
+### `src/hooks/useFilamentBySlug.ts`
+- Remove redirect logic from UUID branch (lines 52-78)
+- Keep filament data and set loading to false, don't navigate away
+- Add state reset in useEffect when `idOrSlug` changes
+- Optionally update `product_handle` in background without redirecting
 
-**Solution**: Add product image display to the card layout:
-- Add thumbnail image from `filament.featured_image`
-- Show color swatch alongside
-- Maintain compact card design
-
-**Files to Modify**:
-- `src/components/LabReadoutCard.tsx` - Add image area to card layout
-
----
-
-### Issue 3: Poor Loading Progress Visibility
-**Problem**: Skeleton cards use subtle shimmer animation on dark background, making them nearly invisible.
-
-**Solution**: Enhance skeleton visibility:
-- Increase shimmer contrast
-- Add pulsing glow effect
-- Show count of loaded items
-
-**Files to Modify**:
-- `src/index.css` - Enhance `.skeleton-shimmer` styles
-- `src/components/ui/skeleton.tsx` - Add visibility class options
-
----
-
-### Issue 4: Staggered Card Animation Delay
-**Problem**: Cards animate in with `index * 0.08s` delay (80ms per card). For 100+ cards, later cards appear seconds after the first.
-
-**Solution**: Cap animation delay and use intersection-based reveal:
-- Limit stagger to first 20 cards
-- Use instant display for remaining cards
-- Add batch reveal for visible viewport
-
-**Files to Modify**:
-- `src/components/LabReadoutCard.tsx` - Update animation delay logic
-
----
+### `src/pages/FilamentDetail.tsx`
+- Add timeout protection for redirect state
+- Show proper error message if redirect state persists beyond 3 seconds
 
 ## Implementation Details
 
-### Step 1: Add Progressive Loading State to Finder
-
-Update `Finder.tsx` to show loading progress:
-
+**Before (broken):**
 ```typescript
-// Add loading progress tracking
-const { data: filaments, isLoading, progress } = useQuery({
-  queryKey: ['filaments', filters],
-  queryFn: () => fetchAllFilaments({ onProgress: setProgress }),
-});
-
-// Show progress during load
-{isLoading && (
-  <LoadingProgress 
-    loaded={progress.loaded}
-    total={progress.total}
-    phase={progress.phase}
-  />
-)}
-```
-
-### Step 2: Add Product Image to LabReadoutCard
-
-Add image section after header:
-
-```tsx
-{/* Product Image Thumbnail */}
-{filament.featured_image && (
-  <div className="relative h-24 bg-black/30 border-b border-gray-700/50">
-    <OptimizedImage
-      src={filament.featured_image}
-      alt={getDisplayTitle()}
-      className="h-full w-full object-contain p-2"
-      width={200}
-      height={96}
-    />
-  </div>
-)}
-```
-
-### Step 3: Enhance Skeleton Visibility
-
-Update `src/index.css`:
-
-```css
-.skeleton-shimmer {
-  background-color: hsl(var(--muted) / 0.3); /* More visible */
-  border: 1px dashed hsl(var(--muted-foreground) / 0.2);
-}
-
-.skeleton-shimmer::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    hsl(var(--primary) / 0.1), /* Teal tint for visibility */
-    transparent
-  );
+if (isUuid(idOrSlug)) {
+  // Fetch by UUID
+  const { data } = await supabase.from('filaments').select('*').eq('id', idOrSlug);
+  
+  if (data?.product_handle) {
+    setIsRedirecting(true);
+    navigate(`/filament/${data.product_handle}`, { replace: true });
+    return; // <-- Returns without setting filament!
+  }
+  
+  // Generate slug and redirect
+  const slug = generateFilamentSlug(...);
+  setIsRedirecting(true);
+  navigate(`/filament/${slug}`, { replace: true });
+  return; // <-- Returns without setting filament!
 }
 ```
 
-### Step 4: Cap Animation Delay
-
-Update animation logic:
-
-```tsx
-style={{
-  animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${Math.min(index, 12) * 0.05}s both`,
-}}
+**After (fixed):**
+```typescript
+if (isUuid(idOrSlug)) {
+  // Fetch by UUID
+  const { data } = await supabase.from('filaments').select('*').eq('id', idOrSlug);
+  
+  if (data) {
+    // Always set the filament data - page will render
+    setFilament(data);
+    
+    // Optionally update URL for SEO (without blocking render)
+    if (data.product_handle) {
+      // Use history.replaceState for clean URL without navigation
+      const slug = data.product_handle;
+      window.history.replaceState(null, '', `/filament/${slug}`);
+    }
+  }
+}
 ```
 
----
+## Expected Outcome
+- UUID-based URLs will work immediately and show the filament detail page
+- No redirect loop or "Redirecting..." message
+- Clean SEO-friendly URLs in browser history via `replaceState`
+- Fallback search will still work for slug-based URLs from external links
 
-## Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/pages/Finder.tsx` | Modify | Add loading progress tracking |
-| `src/components/LabReadoutCard.tsx` | Modify | Add product image section |
-| `src/components/FilamentCardSkeleton.tsx` | Modify | Add loading count display |
-| `src/index.css` | Modify | Enhance skeleton visibility |
-| `src/components/LoadingProgress.tsx` | Create | New loading progress component |
-
----
-
-## Success Criteria Verification
-
-After implementation:
-- [ ] Product cards show images, titles, prices, brands
-- [ ] Loading state shows progress indicator
-- [ ] Skeleton cards are visibly animated
-- [ ] Cards appear within 1-2 seconds of data availability
-- [ ] Clicking cards navigates to detail pages
-- [ ] Regional pricing displays correctly
-
----
-
-## Technical Notes
-
-### Current Data Flow
-```
-Finder.tsx
-  └─→ fetchAllFilaments() - 9 pages × 1000 rows = ~23s
-      └─→ useRegionalFiltering() - Filters to 7,855 products
-          └─→ groupFilamentsByProduct() - Groups variants
-              └─→ LabReadoutCard × displayCount
-                  └─→ useRegionalPrice() - Per-card pricing
-```
-
-### Performance Consideration
-The 23-second load time is due to fetching 8,001 rows in 9 batches of 1,000. Consider:
-- Initial display with first batch (1,000 items)
-- Background loading of remaining batches
-- Server-side pagination for faster initial load
+## Rollback Plan
+If issues arise, revert `useFilamentBySlug.ts` changes. The fix is isolated to this single hook.
