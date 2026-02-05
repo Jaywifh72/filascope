@@ -44,6 +44,7 @@ import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
+import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -53,8 +54,10 @@ const FilamentDetail = () => {
   const { toast } = useToast();
   const { isAdmin } = useAuth();
   const { selectedPrinter, printerLoading } = usePrinterSelection();
-  const [filament, setFilament] = useState<Filament | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // Use the slug-aware hook instead of inline fetch
+  const { filament, loading, error: fetchError, isRedirecting, refetch } = useFilamentBySlug(id);
+  
   const [rescrapingImage, setRescrapingImage] = useState(false);
   const [scrapingData, setScrapingData] = useState(false);
   const [scrapingColors, setScrapingColors] = useState(false);
@@ -245,9 +248,17 @@ const FilamentDetail = () => {
     }
   };
 
+  // Handle fetch error from slug hook
   useEffect(() => {
-    fetchFilament();
-  }, [id]);
+    if (fetchError && !loading && !isRedirecting) {
+      toast({
+        title: "Not Found",
+        description: fetchError,
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [fetchError, loading, isRedirecting, toast, navigate]);
 
   // Fetch brandId from automated_brands table based on vendor name
   useEffect(() => {
@@ -291,44 +302,12 @@ const FilamentDetail = () => {
     return () => observer.disconnect();
   }, []);
 
-  const fetchFilament = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("filaments")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-      
-      if (!data) {
-        toast({
-          title: "Not Found",
-          description: "Filament not found",
-          variant: "destructive",
-        });
-        navigate("/");
-        return;
-      }
-      
-      setFilament(data);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to load filament details",
-        variant: "destructive",
-      });
-      navigate("/");
-    } finally {
-      setLoading(false);
-    }
-  }, [id, navigate, toast]);
-
   // Callback for admin price refresh - refetches filament data to update UI
   const handleAdminRefresh = useCallback(() => {
     console.log('[AdminRefresh] Refetching filament data after price update');
-    fetchFilament();
-  }, [fetchFilament]);
+    refetch();
+  }, [refetch]);
+
 
   const handleRescrapeImage = async () => {
     if (!id || !filament) return;
@@ -364,7 +343,7 @@ const FilamentDetail = () => {
         duration: 5000,
       });
 
-      await fetchFilament();
+      await refetch();
     } catch (error: any) {
       toast({
         title: "Rescrape failed",
@@ -411,7 +390,7 @@ const FilamentDetail = () => {
         duration: 5000,
       });
 
-      await fetchFilament();
+      await refetch();
     } catch (error: any) {
       toast({
         title: "Scrape failed",
@@ -455,7 +434,7 @@ const FilamentDetail = () => {
         duration: 5000,
       });
 
-      await fetchFilament();
+      await refetch();
     } catch (error: any) {
       toast({
         title: "Scrape failed",
@@ -486,7 +465,7 @@ const FilamentDetail = () => {
       });
 
       setEditImageOpen(false);
-      await fetchFilament();
+      await refetch();
     } catch (error: any) {
       toast({
         title: "Update failed",
@@ -516,7 +495,7 @@ const FilamentDetail = () => {
       });
 
       setEditUrlOpen(false);
-      await fetchFilament();
+      await refetch();
     } catch (error: any) {
       toast({
         title: "Update failed",
@@ -527,6 +506,15 @@ const FilamentDetail = () => {
       setSavingUrl(false);
     }
   };
+
+  // Show loading state while redirecting from UUID to slug
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Redirecting...</div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
