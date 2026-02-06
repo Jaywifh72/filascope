@@ -10,7 +10,7 @@ import { FilamentKeySpecsBar } from './FilamentKeySpecsBar';
 import { FilamentQuickSpecsGrid } from './FilamentQuickSpecsGrid';
 import { normalizeColorHex } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
-import { cleanFilamentDisplayName } from '@/lib/productNameUtils';
+import { getProductLineName } from '@/lib/productNameUtils';
 import { getBrandLogo } from '@/lib/brandLogos';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -65,6 +65,9 @@ export function FilamentHeroSection({
   onScrapeData,
   onScrapeColors,
 }: FilamentHeroSectionProps) {
+  // Get the best product line name (e.g., "PLA High Speed" instead of just "PLA")
+  const productLineName = getProductLineName(pricingFilament.material, pricingFilament.product_title);
+  // Keep baseName for color extraction compatibility
   const baseName = baseProductName;
 
   return (
@@ -138,10 +141,10 @@ export function FilamentHeroSection({
               </Link>
             </div>
             
-            {/* Product Title */}
+            {/* Product Line Name - Primary Heading */}
             <div className="flex items-start gap-4">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-                {cleanFilamentDisplayName(baseName)}
+                {productLineName}
               </h1>
               {isAdmin && (
                 <div className="flex gap-2 flex-shrink-0">

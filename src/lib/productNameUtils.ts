@@ -867,3 +867,70 @@ export function groupFilamentsByProduct<T extends FilamentBase>(filaments: T[]):
   
   return Array.from(groups.values());
 }
+
+/**
+ * Get the best "product line" name for display on product detail pages.
+ * 
+ * Priority:
+ * 1. If `material` field is more descriptive than base material (e.g., "Premium PLA High Speed"),
+ *    use the material field
+ * 2. Otherwise, use the cleaned product title (via getBaseProductName)
+ * 
+ * This ensures users see "PLA High Speed" instead of just "PLA" for specialized product lines.
+ * 
+ * @param material - The material field from the filament record (e.g., "Premium PLA High Speed")
+ * @param productTitle - The product_title field (e.g., "Spectrum ReFill Premium PLA High Speed 1.75mm TRUE YELLOW 1kg")
+ * @returns The best product line name for display
+ */
+export function getProductLineName(
+  material: string | null | undefined,
+  productTitle: string | null | undefined
+): string {
+  const title = productTitle || '';
+  
+  // Get the base product name from title (strips color, size, etc.)
+  const baseFromTitle = getBaseProductName(title, material);
+  
+  // Base material types that are NOT descriptive product lines
+  const baseMaterialTypes = [
+    'PLA', 'PLA+', 'PETG', 'ABS', 'ASA', 'TPU', 'TPE', 'PC', 'PA', 'PA6', 'HIPS', 
+    'PVA', 'Nylon', 'PP', 'PCTG', 'PEEK', 'PEI', 'PPSU', 'CPE',
+    'TPU-95A', 'TPU-85A', 'TPU 95A', 'TPU 85A',
+  ];
+  
+  // Check if material field is more descriptive than base types
+  if (material) {
+    const materialNormalized = material.trim();
+    const isJustBaseMaterial = baseMaterialTypes.some(
+      base => materialNormalized.toLowerCase() === base.toLowerCase()
+    );
+    
+    // If material is more descriptive (contains modifiers like "High Speed", "Silk", "Matte", etc.)
+    if (!isJustBaseMaterial && materialNormalized.length > 2) {
+      // Clean up common prefixes/suffixes that aren't useful for display
+      let cleanedMaterial = materialNormalized
+        .replace(/^Premium\s+/i, '') // "Premium PLA High Speed" → "PLA High Speed"
+        .replace(/\s+Filament$/i, '') // Remove trailing "Filament"
+        .trim();
+      
+      // If after cleaning it's still more descriptive than base, use it
+      if (cleanedMaterial.length > baseFromTitle.length || 
+          cleanedMaterial.toLowerCase() !== baseFromTitle.toLowerCase()) {
+        // Check if it contains modifiers that make it more descriptive
+        const modifiers = ['High Speed', 'HS', 'Matte', 'Silk', 'Marble', 'Wood', 'Carbon', 
+          'Glass', 'Glow', 'Galaxy', 'Metal', 'Sparkle', 'Tough', 'Pro', 'Plus', 'Basic',
+          'Translucent', 'Clear', 'Flexible', 'Impact', 'Aero', 'HF', 'Lite'];
+        const hasModifier = modifiers.some(mod => 
+          materialNormalized.toLowerCase().includes(mod.toLowerCase())
+        );
+        
+        if (hasModifier) {
+          return cleanedMaterial;
+        }
+      }
+    }
+  }
+  
+  // Fall back to the cleaned base product name from title
+  return cleanFilamentDisplayName(baseFromTitle);
+}

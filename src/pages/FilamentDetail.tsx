@@ -41,7 +41,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
-import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
@@ -619,9 +619,12 @@ const FilamentDetail = () => {
     : null;
 
   const baseProductName = getBaseName(filament.product_title);
+  
+  // Get the best product line name for SEO and display
+  const productLineName = getProductLineName(displayFilament.material, displayFilament.product_title);
 
-  // Build SEO description
-  const seoDescription = `${displayFilament.vendor || ''} ${displayFilament.material || ''} filament${displayFilament.transmission_distance ? ` with TD ${displayFilament.transmission_distance} for HueForge` : ''}. ${
+  // Build SEO description with product line name
+  const seoDescription = `${displayFilament.vendor || ''} ${productLineName} filament${displayFilament.transmission_distance ? ` with TD ${displayFilament.transmission_distance} for HueForge` : ''}. ${
     displayFilament.nozzle_temp_min_c && displayFilament.nozzle_temp_max_c
       ? `Nozzle: ${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C. `
       : ''
@@ -642,13 +645,13 @@ const FilamentDetail = () => {
           { name: 'Home', url: 'https://filascope.com/' },
           { name: 'Materials', url: 'https://filascope.com/' },
           ...(displayFilament.vendor ? [{ name: displayFilament.vendor, url: `https://filascope.com/brands/${brandSlug}` }] : []),
-          { name: cleanFilamentDisplayName(baseProductName), url: `https://filascope.com/filament/${displayFilament.id}` },
+          { name: productLineName, url: `https://filascope.com/filament/${displayFilament.id}` },
         ]}
       />
 
-      {/* SEO Meta Tags */}
+      {/* SEO Meta Tags - Uses product line name for better SEO */}
       <ProductSEO
-        title={`${displayFilament.vendor || ''} ${cleanFilamentDisplayName(baseProductName)}`}
+        title={`${displayFilament.vendor || ''} ${productLineName}`}
         description={seoDescription}
         canonicalUrl={`/filament/${displayFilament.id}`}
         image={displayFilament.featured_image}
@@ -662,7 +665,7 @@ const FilamentDetail = () => {
       
       {/* JSON-LD Structured Data */}
       <ProductJsonLd
-        name={`${displayFilament.vendor || ''} ${cleanFilamentDisplayName(baseProductName)}`}
+        name={`${displayFilament.vendor || ''} ${productLineName}`}
         description={seoDescription}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
