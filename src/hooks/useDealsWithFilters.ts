@@ -64,27 +64,43 @@ export function useDealsWithFilters() {
   const { data: rawDeals = [], isLoading } = useQuery({
     queryKey: ["deals-page-enhanced"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("filaments")
-        .select(
-          "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g, last_scraped_at, created_at, color_hex"
-        )
-        .not("variant_compare_at_price", "is", null)
-        .not("variant_price", "is", null)
-        .gt("variant_compare_at_price", 0)
-        .or("net_weight_g.is.null,net_weight_g.gte.300")
-        .order("variant_compare_at_price", { ascending: false })
-        .limit(200);
+      // Paginate through ALL deals to match useDealsCount totals
+      let allData: DealFilament[] = [];
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("filaments")
+          .select(
+            "id, product_title, vendor, material, featured_image, variant_price, variant_compare_at_price, product_url, net_weight_g, last_scraped_at, created_at, color_hex"
+          )
+          .not("variant_compare_at_price", "is", null)
+          .not("variant_price", "is", null)
+          .gt("variant_compare_at_price", 0)
+          .or("net_weight_g.is.null,net_weight_g.gte.300")
+          .order("variant_compare_at_price", { ascending: false })
+          .range(offset, offset + batchSize - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
 
       // Filter to only show items where compare_at_price > variant_price
-      const onSaleItems = (data || []).filter(
+      const onSaleItems = allData.filter(
         (item) =>
           item.variant_compare_at_price !== null &&
           item.variant_price !== null &&
           item.variant_compare_at_price > item.variant_price
-      ) as DealFilament[];
+      );
 
       // Add discount calculation, urgency data, and store info
       return onSaleItems.map((item) => {
