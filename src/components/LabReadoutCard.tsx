@@ -16,7 +16,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
-import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor } from "@/lib/unifiedFilamentScore";
+import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor, SCORE_EXPLANATION } from "@/lib/unifiedFilamentScore";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
