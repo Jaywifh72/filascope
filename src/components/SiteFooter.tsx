@@ -101,7 +101,6 @@ export function SiteFooter() {
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Slicer Directory", href: "/reference/slicers" },
     { name: "Model Repositories", href: "/reference/repos" },
-    { name: "Print Calculator", href: "/wizard" },
     { name: "Quick Match", href: "/wizard" },
   ];
 
