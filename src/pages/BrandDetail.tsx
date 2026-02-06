@@ -575,8 +575,9 @@ const BrandDetail = () => {
           location={brandInfo?.location}
           founded={brandInfo?.founded}
           website={brandInfo?.website}
-          productCount={filaments?.length ?? 0}
-          topMaterials={availableMaterials.slice(0, 3)}
+          productLineCount={groupedProducts.length}
+          variantCount={filaments?.length ?? 0}
+          topMaterials={availableMaterials}
           avgPriceRange={(() => {
             if (!filaments || filaments.length === 0) return undefined;
             const prices = filaments

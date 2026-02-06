@@ -1,6 +1,12 @@
 import { Package, Layers, Tag, Star, Globe, ExternalLink, MapPin, Calendar, BadgeCheck, Heart, ShieldCheck, TrendingUp, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface BrandHeroSectionProps {
   brandName: string;
@@ -9,7 +15,8 @@ interface BrandHeroSectionProps {
   location?: string;
   founded?: string;
   website?: string;
-  productCount: number;
+  productLineCount: number;
+  variantCount: number;
   topMaterials: string[];
   avgPriceRange?: string;
   rating?: number | null;
@@ -20,20 +27,36 @@ interface SpecCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
+  tooltip?: string;
 }
 
-function SpecCard({ icon, label, value }: SpecCardProps) {
-  return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3">
+function SpecCard({ icon, label, value, tooltip }: SpecCardProps) {
+  const card = (
+    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0">
       <div className="text-primary flex-shrink-0 mt-0.5">
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 overflow-hidden">
         <p className="text-xs text-gray-400 mb-1">{label}</p>
         <p className="text-base font-semibold text-white leading-tight truncate">{value}</p>
       </div>
     </div>
   );
+
+  if (tooltip && tooltip !== value) {
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>{card}</TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <p className="text-sm">{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return card;
 }
 
 function TrustIndicator({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
@@ -52,15 +75,32 @@ export function BrandHeroSection({
   location,
   founded,
   website,
-  productCount,
+  productLineCount,
+  variantCount,
   topMaterials,
   avgPriceRange,
   rating,
   className,
 }: BrandHeroSectionProps) {
-  const materialsDisplay = topMaterials.length > 0 
-    ? topMaterials.slice(0, 3).join(', ')
-    : '—';
+  // Build materials display: show up to 3 + count
+  const materialsDisplay = (() => {
+    if (topMaterials.length === 0) return '—';
+    const shown = topMaterials.slice(0, 3).join(', ');
+    if (topMaterials.length > 3) {
+      return `${shown} +${topMaterials.length - 3}`;
+    }
+    return shown;
+  })();
+
+  const materialsTooltip = topMaterials.length > 3
+    ? topMaterials.join(', ')
+    : undefined;
+
+  // Build products display: "40 Products (227 variants)"
+  const productsDisplay = variantCount > productLineCount
+    ? `${productLineCount} (${variantCount} variants)`
+    : `${productLineCount}`;
+
 
   return (
     <div className={cn("mb-8", className)}>
@@ -134,12 +174,13 @@ export function BrandHeroSection({
             <SpecCard
               icon={<Package className="w-5 h-5" />}
               label="Products"
-              value={productCount.toString()}
+              value={productsDisplay}
             />
             <SpecCard
               icon={<Layers className="w-5 h-5" />}
               label="Materials"
               value={materialsDisplay}
+              tooltip={materialsTooltip}
             />
             <SpecCard
               icon={<Tag className="w-5 h-5" />}
