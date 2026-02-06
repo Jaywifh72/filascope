@@ -24,6 +24,7 @@ import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analyt
 import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
+import { CanonicalLink } from "./components/seo/CanonicalLink";
 
 // Initialize global error handlers for uncaught errors
 initializeGlobalErrorHandler();
@@ -134,6 +135,8 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                {/* SEO: Canonical link for all pages */}
+                <CanonicalLink />
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
