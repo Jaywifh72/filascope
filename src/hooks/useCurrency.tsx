@@ -1,3 +1,16 @@
+/**
+ * @deprecated — For price formatting and conversion, use `useRegion()` from `@/contexts/RegionContext` instead.
+ * 
+ * This hook uses hardcoded fallback exchange rates that diverge from the live DB rates
+ * in RegionContext, causing subtle price inconsistencies across views.
+ * 
+ * All price display should use:
+ *   - `useRegion().formatPrice(amount, { showApproximate })` for formatting
+ *   - `useRegion().convertPrice(amount, fromCurrency)` for conversion
+ *   - `resolveFilamentPrice()` from `@/lib/resolveFilamentPrice` for full resolution
+ * 
+ * This hook is kept for backward compatibility with non-pricing uses (e.g., user currency preference storage).
+ */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 

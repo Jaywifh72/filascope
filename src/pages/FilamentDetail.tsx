@@ -1131,7 +1131,7 @@ const FilamentDetail = () => {
           affiliateUrl={sidebarAffiliateUrl}
           pricePerKg={sidebarPricePerKg}
           isVisible={stickyBarVisible}
-          hasActualRegionalPrice={hasActualRegionalPrice || !!sidebarBest}
+          isConverted={unifiedPricing.isConverted || !hasActualRegionalPrice}
         />
       )}
 

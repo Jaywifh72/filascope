@@ -24,8 +24,8 @@ import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
 import { useRegion } from "@/contexts/RegionContext";
+import { useResolvedPrice } from "@/hooks/useResolvedPrice";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
-import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor, SCORE_EXPLANATION } from "@/lib/unifiedFilamentScore";
@@ -183,40 +183,17 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     variantCount: fetchedVariants.count,
   };
   
-  // Use regional price for proper currency handling
+  // Use regional price hook only for URL resolution (not price)
   const { 
-    regionalPrice, 
-    isActualRegionalPrice, 
-    currency: priceCurrency,
     regionalUrl,
-    fallbackUrl,
     isLocalStore,
-    isUsingFallbackRegion,
-    priceSource,
     isRatesLoading,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
-  // Determine if the price is converted (needs tilde prefix)
-  // Show tilde when: using fallback region, or price currency differs from user's currency, or price source is 'converted'
-  const isConvertedPrice = isUsingFallbackRegion || 
-                           priceSource === 'converted' || 
-                           (priceCurrency && priceCurrency !== userCurrency);
-  
-  // Only fetch live price if we DON'T have an actual regional price
-  // This prevents the card from showing converted USD when we have accurate EUR/GBP/etc prices
-  const shouldFetchLivePrice = !isActualRegionalPrice;
-  
-  // Fetch live price only for products without actual regional pricing
-  const {
-    currentPrice: livePrice,
-    isLoading: isLivePriceLoading,
-    isLivePrice: hasLivePriceData,
-    weightGrams: liveWeightGrams,
-  } = useCurrentPrice(
-    shouldFetchLivePrice ? (regionalUrl || filament.product_url) : null,
-    shouldFetchLivePrice ? regionalPrice : null,
-    shouldFetchLivePrice ? fallbackUrl : null
-  );
+  // === UNIFIED PRICE RESOLUTION ===
+  // Use the single source of truth for all price calculations
+  const resolved = useResolvedPrice(filament);
+  const isConvertedPrice = resolved.isConverted;
   
   const { 
     addItem, 
@@ -234,24 +211,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const isPendingSelection = isPending(filament.id);
   const isCompareDisabled = isFull && !isSelected;
 
-  // PRIORITY: Use actual regional price from database when available
-  // This ensures €22.99 (price_eur) is used instead of converted $18.99 -> ~€16.81
-  // Only fall back to live price fetching when we don't have actual regional data
-  const isLivePrice = shouldFetchLivePrice && hasLivePriceData;
-  const effectivePrice = isActualRegionalPrice 
-    ? regionalPrice  // Trust the database regional price
-    : (isLivePrice && livePrice ? livePrice : regionalPrice);
-  
-  const effectiveWeightKg = (isLivePrice && liveWeightGrams) 
-    ? liveWeightGrams / 1000 
-    : (filament.net_weight_g ? filament.net_weight_g / 1000 : null);
-
-  // Calculate price per kg using the best available price
-  const packQty = filament.pack_quantity || 1;
-  const pricePerKg = (effectivePrice && effectiveWeightKg)
-    ? effectivePrice / (effectiveWeightKg * packQty)
-    : null;
-  const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
+  // === PRICE VALUES FROM UNIFIED RESOLVER ===
+  const pricePerKg = resolved.pricePerKg;
+  // Scale the validity threshold for non-decimal currencies
+  const maxValid = userCurrency === 'JPY' || userCurrency === 'KRW' ? 100000 : 500;
+  const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < maxValid;
 
   // For grouped products, show price range if available
   const hasMultipleVariants = effectiveVariantIndicators.variantCount > 1;
@@ -262,7 +226,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
 
   // Price freshness - determine confidence level
   const { confidence: priceConfidence, timeAgo, isStale } = usePriceFreshness(
-    isLivePrice ? new Date().toISOString() : filament.last_scraped_at
+    filament.last_scraped_at
   );
   
   // Determine if we should show the actual price or "Check price"
@@ -620,11 +584,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ELEMENT 3: Price
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3" data-card-element="3">
-        {(isLivePriceLoading || isRatesLoading) ? (
+        {(resolved.isLoading || isRatesLoading) ? (
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
             <span className="text-sm text-muted-foreground">
-              {isRatesLoading ? 'Loading rates...' : 'Checking price...'}
+              Loading rates...
             </span>
           </div>
         ) : shouldShowPrice ? (
@@ -647,7 +611,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             </div>
             
             {/* Price freshness indicator */}
-            {timeAgo && !isLivePrice && (
+            {timeAgo && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{timeAgo}</span>
@@ -660,7 +624,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               </div>
             )}
             {/* Show Local badge even without freshness indicator */}
-            {(!timeAgo || isLivePrice) && isLocalStore && (
+            {!timeAgo && isLocalStore && (
               <div className="flex items-center gap-1 text-xs">
                 <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded">
                   Local
