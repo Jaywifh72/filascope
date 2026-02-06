@@ -263,7 +263,8 @@ export default function BuildPlateList() {
                           id={plate.id}
                           name={plate.name}
                           brand={plate.brand || "Unknown"}
-                          price={plate.price}
+                          price={null}
+                          priceUsd={plate.price}
                           imageUrl={plate.image_url}
                           href={`/build-plates/${plate.id}`}
                           type="build_plate"

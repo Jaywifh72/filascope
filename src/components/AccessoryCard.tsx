@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { CircleDot, Square, Layers } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { cn } from "@/lib/utils";
+import { useRegion } from "@/contexts/RegionContext";
 
 interface AccessoryCardProps {
   id: string;
@@ -10,7 +11,9 @@ interface AccessoryCardProps {
   subtitle?: string;
   brand: string;
   price: number | null;
-  priceLabel?: string; // e.g., "$19.99" or "$19.99+"
+  priceUsd?: number | null; // Base price in USD for conversion
+  minPriceUsd?: number | null; // For price ranges
+  maxPriceUsd?: number | null; // For price ranges
   imageUrl: string | null;
   href: string;
   type: "hotend" | "build_plate" | "ams_mmu";
@@ -33,7 +36,9 @@ export default function AccessoryCard({
   subtitle,
   brand,
   price,
-  priceLabel,
+  priceUsd,
+  minPriceUsd,
+  maxPriceUsd,
   imageUrl,
   href,
   type,
@@ -45,8 +50,35 @@ export default function AccessoryCard({
 }: AccessoryCardProps) {
   const Icon = typeIcons[type];
   const brandLogo = getBrandLogo(brand);
+  const { formatPrice, convertPrice, currency } = useRegion();
   
-  const displayPrice = priceLabel || (price ? `$${price.toFixed(2)}` : null);
+  // Determine the display price
+  let displayPrice: string | null = null;
+  const isConverted = currency !== 'USD';
+  
+  if (discontinued) {
+    // Don't show price for discontinued items
+    displayPrice = null;
+  } else if (minPriceUsd !== null && minPriceUsd !== undefined) {
+    // Price range case
+    const convertedMin = convertPrice(minPriceUsd, 'USD');
+    const convertedMax = maxPriceUsd ? convertPrice(maxPriceUsd, 'USD') : null;
+    
+    if (convertedMax && convertedMax !== convertedMin) {
+      // Show range indicator
+      displayPrice = `${isConverted ? '~' : ''}${formatPrice(convertedMin)}+`;
+    } else {
+      displayPrice = `${isConverted ? '~' : ''}${formatPrice(convertedMin)}`;
+    }
+  } else if (priceUsd !== null && priceUsd !== undefined) {
+    // Single price case
+    const convertedPrice = convertPrice(priceUsd, 'USD');
+    displayPrice = `${isConverted ? '~' : ''}${formatPrice(convertedPrice)}`;
+  } else if (price !== null && price !== undefined) {
+    // Legacy: direct price prop (assumed USD)
+    const convertedPrice = convertPrice(price, 'USD');
+    displayPrice = `${isConverted ? '~' : ''}${formatPrice(convertedPrice)}`;
+  }
 
   return (
     <div className="relative h-full">

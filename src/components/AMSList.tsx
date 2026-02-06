@@ -269,7 +269,8 @@ export default function AMSList() {
                           name={ams.name}
                           subtitle={ams.specs?.max_spools ? `${ams.specs.max_spools} Spools` : undefined}
                           brand={ams.brand || "Unknown"}
-                          price={ams.price}
+                          price={null}
+                          priceUsd={ams.price}
                           imageUrl={ams.image_url}
                           href={`/ams/${ams.id}`}
                           type="ams_mmu"

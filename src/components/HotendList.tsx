@@ -555,7 +555,7 @@ export default function HotendList() {
                       const specs = nozzle.specs as Record<string, unknown> | null;
                       const isSelected = group.variants.some(v => selectedIds.has(v.id));
                       
-                      // Get price range
+                      // Get price range (prices are in USD)
                       const prices = group.variants.filter(v => v.price).map(v => v.price!);
                       const minPrice = prices.length > 0 ? Math.min(...prices) : null;
                       const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
@@ -572,10 +572,6 @@ export default function HotendList() {
                         badges.push({ label: "Hardened" });
                       }
                       
-                      const priceLabel = minPrice !== null 
-                        ? (minPrice === maxPrice ? `$${minPrice.toFixed(2)}` : `$${minPrice.toFixed(2)}+`)
-                        : null;
-                      
                       return (
                         <AccessoryCard
                           key={`${group.brand}::${group.baseName}`}
@@ -584,7 +580,8 @@ export default function HotendList() {
                           subtitle={nozzle.model || undefined}
                           brand={group.brand}
                           price={null}
-                          priceLabel={priceLabel || undefined}
+                          minPriceUsd={minPrice}
+                          maxPriceUsd={maxPrice}
                           imageUrl={nozzle.image_url}
                           href={`/hotends/${nozzle.id}`}
                           type="hotend"
