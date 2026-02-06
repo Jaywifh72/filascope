@@ -1523,12 +1523,18 @@ const Finder = () => {
       />
 
       {/* Welcome Banner for New Visitors */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
         <WelcomeBanner />
       </div>
 
-      {/* Visual Section Separator */}
+      {/* Visual Section Separator - tight spacing */}
       <SectionSeparator />
+
+      {/* Region Transition Indicator - fixed at top of viewport during region changes */}
+      <RegionTransitionIndicator 
+        isTransitioning={isRegionTransitioning || (isFetching && isPlaceholderData)}
+        newRegionName={regionConfig.name}
+      />
 
       {/* Results Header with Context */}
       <ResultsHeader
@@ -1862,12 +1868,6 @@ const Finder = () => {
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           <section className="w-full" role="region" aria-label="Filament product listings">
-
-        {/* Region Transition Indicator - shows when prices are updating */}
-        <RegionTransitionIndicator 
-          isTransitioning={isRegionTransitioning || (isFetching && isPlaceholderData)}
-          newRegionName={regionConfig.name}
-        />
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
