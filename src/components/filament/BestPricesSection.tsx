@@ -12,9 +12,11 @@ import { cn } from '@/lib/utils';
 interface BestPricesSectionProps {
   filamentId: string;
   onViewAllPrices?: () => void;
+  /** Override the retailer count to keep it consistent with the sidebar */
+  totalRetailerCount?: number;
 }
 
-export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSectionProps) {
+export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCount }: BestPricesSectionProps) {
   const { region, currency, formatPrice, convertPrice, hasRates } = useRegion();
   
   // Determine the user's region currency for listing queries
@@ -77,7 +79,7 @@ export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSec
 
   // Get top 3 retailers
   const topRetailers = mergedListings.slice(0, 3);
-  const totalCount = mergedListings.length;
+  const totalCount = totalRetailerCount ?? mergedListings.length;
 
   if (isLoading) {
     return (
