@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { isUuid, generateFilamentSlug, parseFilamentSlug } from '@/lib/seoSlugUtils';
+import { 
+  isUuid, 
+  generateFilamentSlug, 
+  parseFilamentSlug,
+  calculateSlugSimilarity,
+  extractPrimaryColor
+} from '@/lib/seoSlugUtils';
 import type { Database } from '@/integrations/supabase/types';
 
 type Filament = Database['public']['Tables']['filaments']['Row'];
@@ -11,6 +17,50 @@ interface UseFilamentBySlugResult {
   error: string | null;
   isRedirecting: boolean;
   refetch: () => Promise<void>;
+}
+
+/**
+ * Find the best matching filament from candidates based on slug similarity
+ */
+function findBestMatch(candidates: Filament[], targetSlug: string): Filament | null {
+  if (!candidates.length) return null;
+  if (candidates.length === 1) return candidates[0];
+  
+  let bestMatch: Filament | null = null;
+  let bestScore = -1;
+  
+  for (const filament of candidates) {
+    const generatedSlug = generateFilamentSlug(
+      filament.vendor,
+      filament.material,
+      filament.product_title,
+      filament.color_family
+    );
+    
+    const score = calculateSlugSimilarity(generatedSlug, targetSlug);
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = filament;
+    }
+  }
+  
+  return bestMatch;
+}
+
+/**
+ * Update product_handle in background for future lookups
+ */
+async function updateProductHandle(filamentId: string, slug: string): Promise<void> {
+  try {
+    await supabase
+      .from('filaments')
+      .update({ product_handle: slug })
+      .eq('id', filamentId);
+    console.log('[useFilamentBySlug] Updated product_handle for', filamentId);
+  } catch (err) {
+    console.warn('[useFilamentBySlug] Failed to update product_handle:', err);
+  }
 }
 
 /**
@@ -69,95 +119,15 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
             // Update URL for SEO without triggering navigation
             window.history.replaceState(null, '', `/filament/${slug}`);
             
-            // Optionally update product_handle in background for future lookups
+            // Update product_handle in background for future lookups
             if (!data.product_handle && slug) {
-              (async () => {
-                try {
-                  await supabase
-                    .from('filaments')
-                    .update({ product_handle: slug })
-                    .eq('id', data!.id);
-                  console.log('[useFilamentBySlug] Updated product_handle for', data!.id);
-                } catch (err) {
-                  console.warn('[useFilamentBySlug] Failed to update product_handle:', err);
-                }
-              })();
+              updateProductHandle(data.id, slug);
             }
           }
         }
       } else {
-        // Fetch by product_handle (slug)
-        const { data: slugData, error: slugError } = await supabase
-          .from('filaments')
-          .select('*')
-          .eq('product_handle', idOrSlug)
-          .limit(1);
-
-        if (slugError) throw slugError;
-        data = slugData?.[0] ?? null;
-
-        // If not found by product_handle, try fuzzy matching
-        if (!data) {
-          const { data: fuzzyData, error: fuzzyError } = await supabase
-            .from('filaments')
-            .select('*')
-            .ilike('product_handle', `%${idOrSlug}%`)
-            .limit(1);
-
-          if (!fuzzyError && fuzzyData?.[0]) {
-            data = fuzzyData[0];
-          }
-        }
-
-        // If still not found, try to parse the slug and search by components
-        if (!data) {
-          const parsed = parseFilamentSlug(idOrSlug);
-          
-          if (parsed.brand || parsed.material || parsed.color) {
-            let query = supabase.from('filaments').select('*');
-            
-            if (parsed.brand) {
-              const brandNormalized = parsed.brand.replace(/-/g, ' ');
-              query = query.ilike('vendor', `%${brandNormalized}%`);
-            }
-            
-            if (parsed.material) {
-              query = query.ilike('material', `%${parsed.material}%`);
-            }
-            
-            if (parsed.color) {
-              const colorNormalized = parsed.color.replace(/-/g, ' ');
-              query = query.or(`color_family.ilike.%${colorNormalized}%,product_title.ilike.%${colorNormalized}%`);
-            }
-            
-            const { data: componentData, error: componentError } = await query.limit(5);
-            
-            if (!componentError && componentData?.length) {
-              const bestMatch = componentData.find(f => {
-                const generatedSlug = generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
-                return generatedSlug === idOrSlug;
-              });
-              
-              if (bestMatch) {
-                data = bestMatch;
-                // Update product_handle for future lookups
-                (async () => {
-                  try {
-                    await supabase
-                      .from('filaments')
-                      .update({ product_handle: idOrSlug })
-                      .eq('id', bestMatch.id);
-                    console.log('[useFilamentBySlug] Updated product_handle for matched filament');
-                  } catch {
-                    // Silently ignore - this is a background optimization
-                  }
-                })();
-              } else if (componentData.length === 1) {
-                data = componentData[0];
-              }
-            }
-          }
-        }
+        // Multi-stage fallback search for slug-based lookups
+        data = await searchBySlug(idOrSlug);
       }
 
       if (!data) {
@@ -182,6 +152,120 @@ export function useFilamentBySlug(idOrSlug: string | undefined): UseFilamentBySl
   }, [fetchFilament]);
 
   return { filament, loading, error, isRedirecting, refetch };
+}
+
+/**
+ * Multi-stage fallback search for slug-based lookups
+ */
+async function searchBySlug(slug: string): Promise<Filament | null> {
+  // Stage 1: Exact product_handle match
+  const { data: exactMatch, error: exactError } = await supabase
+    .from('filaments')
+    .select('*')
+    .eq('product_handle', slug)
+    .limit(1);
+
+  if (!exactError && exactMatch?.[0]) {
+    console.log('[useFilamentBySlug] Found by exact product_handle');
+    return exactMatch[0];
+  }
+
+  // Stage 2: Fuzzy product_handle match
+  const { data: fuzzyMatch, error: fuzzyError } = await supabase
+    .from('filaments')
+    .select('*')
+    .ilike('product_handle', `%${slug}%`)
+    .limit(5);
+
+  if (!fuzzyError && fuzzyMatch?.length) {
+    const best = findBestMatch(fuzzyMatch, slug);
+    if (best) {
+      console.log('[useFilamentBySlug] Found by fuzzy product_handle');
+      return best;
+    }
+  }
+
+  // Stage 3+: Component-based search
+  const parsed = parseFilamentSlug(slug);
+  
+  if (!parsed.brand && !parsed.material) {
+    // Can't do component search without at least brand or material
+    return null;
+  }
+
+  // Stage 3: Brand + Material + Full Color
+  if (parsed.color) {
+    const colorNormalized = parsed.color.replace(/-/g, ' ');
+    const result = await searchByComponents(parsed.brand, parsed.material, colorNormalized, slug);
+    if (result) {
+      console.log('[useFilamentBySlug] Found by brand+material+color');
+      return result;
+    }
+  }
+
+  // Stage 4: Brand + Material + Primary Color Word
+  if (parsed.color) {
+    const primaryColor = extractPrimaryColor(parsed.color);
+    if (primaryColor && primaryColor !== parsed.color.replace(/-/g, ' ')) {
+      const result = await searchByComponents(parsed.brand, parsed.material, primaryColor, slug);
+      if (result) {
+        console.log('[useFilamentBySlug] Found by brand+material+primaryColor');
+        return result;
+      }
+    }
+  }
+
+  // Stage 5: Brand + Material only (best-effort)
+  const result = await searchByComponents(parsed.brand, parsed.material, undefined, slug);
+  if (result) {
+    console.log('[useFilamentBySlug] Found by brand+material only (best-effort)');
+    return result;
+  }
+
+  return null;
+}
+
+/**
+ * Search by component fields with similarity scoring
+ */
+async function searchByComponents(
+  brand: string | undefined,
+  material: string | undefined,
+  color: string | undefined,
+  targetSlug: string
+): Promise<Filament | null> {
+  let query = supabase.from('filaments').select('*');
+  
+  if (brand) {
+    const brandNormalized = brand.replace(/-/g, ' ');
+    query = query.ilike('vendor', `%${brandNormalized}%`);
+  }
+  
+  if (material) {
+    query = query.ilike('material', `%${material}%`);
+  }
+  
+  if (color) {
+    query = query.or(`color_family.ilike.%${color}%,product_title.ilike.%${color}%`);
+  }
+  
+  const { data, error } = await query.limit(20);
+  
+  if (error || !data?.length) {
+    return null;
+  }
+
+  // Find best match using similarity scoring
+  const bestMatch = findBestMatch(data, targetSlug);
+  
+  if (bestMatch) {
+    // Auto-heal: update product_handle for future lookups
+    if (!bestMatch.product_handle) {
+      updateProductHandle(bestMatch.id, targetSlug);
+    }
+  }
+  
+  return bestMatch;
 }
 
 /**
