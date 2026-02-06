@@ -352,7 +352,7 @@ const PrinterCompare = () => {
 
                     {/* Action buttons */}
                     <div className="flex gap-2">
-                      <Link to={`/printers/${printer.id}`} className="flex-1">
+                      <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex-1">
                         <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs">
                           <Eye className="h-3.5 w-3.5" />
                           View Details

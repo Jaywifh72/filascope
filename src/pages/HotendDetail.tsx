@@ -627,10 +627,10 @@ export default function NozzleDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {compatiblePrinters.map((printer: { id: string; model_name: string; brand: { brand: string } | null }) => (
+                    {compatiblePrinters.map((printer: { id: string; model_name: string; brand: { brand: string } | null; printer_id?: string | null }) => (
                       <Link
                         key={printer.id}
-                        to={`/printers/${printer.id}`}
+                        to={`/printers/${printer.printer_id || printer.id}`}
                         className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                       >
                         <Printer className="h-4 w-4 text-muted-foreground" />

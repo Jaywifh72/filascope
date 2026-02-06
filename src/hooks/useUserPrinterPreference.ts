@@ -13,6 +13,7 @@ interface PrinterPreference {
   has_enclosure: boolean;
   printer?: {
     id: string;
+    printer_id: string | null;
     model_name: string;
     max_nozzle_temp_c: number | null;
     bed_max_temp_c: number | null;
@@ -39,6 +40,7 @@ export function useUserPrinterPreference() {
           *,
           printer:printers(
             id,
+            printer_id,
             model_name,
             max_nozzle_temp_c,
             bed_max_temp_c,
@@ -146,10 +148,13 @@ export function useUserPrinterPreference() {
     ? `${prefQuery.data.printer.printer_brands?.brand || ''} ${prefQuery.data.printer.model_name}`.trim()
     : prefQuery.data?.printer_name || null;
 
+  // Get the SEO-friendly slug for linking (use printer_id slug if available, fallback to UUID)
+  const printerSlug = prefQuery.data?.printer?.printer_id || prefQuery.data?.printer_id;
+
   return {
     preference: prefQuery.data,
     printerName,
-    printerId: prefQuery.data?.printer_id,
+    printerId: printerSlug, // Now returns the slug for use in URLs
     autoFilter: prefQuery.data?.auto_filter ?? false,
     nozzleTempMax: prefQuery.data?.nozzle_temp_max ?? prefQuery.data?.printer?.max_nozzle_temp_c,
     bedTempMax: prefQuery.data?.bed_temp_max ?? prefQuery.data?.printer?.bed_max_temp_c,

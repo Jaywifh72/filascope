@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface SimilarPrinter {
   id: string;
+  printerId: string | null; // SEO-friendly slug (printer_id column)
   brand: string;
   model: string;
   price: number | null;
@@ -183,6 +184,7 @@ export function useSimilarPrinters(
           .from("printers")
           .select(`
             id,
+            printer_id,
             model_name,
             current_price_usd_store,
             rating_community_overall,
@@ -333,6 +335,7 @@ export function useSimilarPrinters(
           return {
             printer: {
               id: printer.id,
+              printerId: printer.printer_id,
               brand: printerBrand,
               model: printer.model_name,
               price: printer.current_price_usd_store,

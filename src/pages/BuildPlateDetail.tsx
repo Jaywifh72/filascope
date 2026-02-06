@@ -413,7 +413,7 @@ export default function BuildPlateDetail() {
             <h2 className="text-xl font-semibold mb-4">Compatible Printers</h2>
             <div className="flex flex-wrap gap-2">
               {compatiblePrinters.map((printer: any) => (
-                <Link key={printer.id} to={`/printers/${printer.id}`}>
+                <Link key={printer.id} to={`/printers/${printer.printer_id || printer.id}`}>
                   <Badge 
                     variant="outline" 
                     className="cursor-pointer hover:bg-muted transition-colors"

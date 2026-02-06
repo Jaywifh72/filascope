@@ -21,7 +21,7 @@ const PrinterQuizResults = ({ results, onClose, onRetake, onAddToCompare }: Prin
   const handleViewDetails = (printer: ScoredPrinter, rank: number) => {
     analytics.trackRecommendationClicked(printer.printer.id, printer.printer.model_name || '', rank, 'view_details');
     onClose();
-    navigate(`/printers/${printer.printer.id}`);
+    navigate(`/printers/${printer.printer.printer_id || printer.printer.id}`);
   };
 
   const handleAddToCompare = (printer: ScoredPrinter, rank: number) => {
