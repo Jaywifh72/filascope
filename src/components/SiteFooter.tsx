@@ -97,10 +97,10 @@ export function SiteFooter() {
   ];
 
   const resourceLinks = [
-    { name: "Material Encyclopedia", href: "/material-encyclopedia", comingSoon: true },
-    { name: "Compatibility Matrix", href: "/compatibility-matrix", comingSoon: true },
-    { name: "Slicer Directory", href: "/slicer-directory", comingSoon: true },
-    { name: "Model Repositories", href: "/model-repositories", comingSoon: true },
+    { name: "Material Encyclopedia", href: "/compare" },
+    { name: "Compatibility Matrix", href: "/matrix" },
+    { name: "Slicer Directory", href: "/reference/slicers" },
+    { name: "Model Repositories", href: "/reference/repos" },
     { name: "Quick Match", href: "/wizard" },
   ];
 
