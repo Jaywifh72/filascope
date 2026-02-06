@@ -30,7 +30,7 @@ export const FEATURE_HELP_DEFINITIONS: Record<string, FeatureHelpDefinition> = {
   nozzle_material: {
     title: "Nozzle Material",
     description: "Brass is standard but wears with abrasive filaments. Hardened steel or tungsten carbide handles carbon fiber, glass-filled, and glow-in-the-dark materials.",
-    learnMoreUrl: "/knowledge-base",
+    learnMoreUrl: "/compare",
     learnMoreLabel: "Material reference",
   },
   
