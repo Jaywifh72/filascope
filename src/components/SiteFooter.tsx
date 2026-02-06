@@ -139,7 +139,7 @@ export function SiteFooter() {
               The definitive 3D printing material database
             </p>
             <p className="text-xs text-muted-foreground">
-              © 2026 FilaScope. All rights reserved.
+              © {new Date().getFullYear()} FilaScope. All rights reserved.
             </p>
           </div>
 
