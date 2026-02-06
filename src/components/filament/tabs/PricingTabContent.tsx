@@ -262,7 +262,7 @@ export function PricingTabContent({
     ? (CURRENCY_SYMBOLS[livePriceCurrency] || '$')
     : '$';
 
-  // Combine official stores and retailers into unified list
+  // Combine official stores and retailers into unified list with deduplication
   const unifiedStoreList = useMemo((): UnifiedStoreItem[] => {
     const items: UnifiedStoreItem[] = [];
     
@@ -341,8 +341,80 @@ export function PricingTabContent({
       });
     });
     
+    // Deduplicate stores: group by normalized domain + region
+    const deduplicatedItems: UnifiedStoreItem[] = [];
+    const seenGroups = new Map<string, UnifiedStoreItem[]>();
+    
+    items.forEach((item) => {
+      // Extract base domain/brand name for grouping
+      // Normalize name by removing region suffixes like "(US)", "(EU)", etc.
+      const baseName = item.name
+        .replace(/\s*\((US|EU|UK|CA|AU|JP|CN|DE|FR|IT|ES)\)\s*/gi, '')
+        .replace(/\s*(US|EU|UK|CA|AU|JP|CN)\s*$/gi, '')
+        .trim()
+        .toLowerCase();
+      
+      // Create a group key: baseName + region
+      const groupKey = `${baseName}::${item.regionCode}`;
+      
+      if (!seenGroups.has(groupKey)) {
+        seenGroups.set(groupKey, []);
+      }
+      seenGroups.get(groupKey)!.push(item);
+    });
+    
+    // Process each group
+    seenGroups.forEach((groupItems) => {
+      if (groupItems.length === 1) {
+        // Only one item, no deduplication needed
+        deduplicatedItems.push(groupItems[0]);
+      } else {
+        // Multiple items in same store+region group
+        // Check if all have the same price
+        const prices = groupItems.map(i => i.nativePrice).filter(p => p !== null);
+        const uniquePrices = [...new Set(prices)];
+        
+        if (uniquePrices.length <= 1) {
+          // Same price (or no prices) - keep the one with the more specific name
+          // Prefer names with region indicators like "(US)" over plain names
+          const sorted = [...groupItems].sort((a, b) => {
+            const aHasRegion = /\((US|EU|UK|CA|AU|JP|CN|DE|FR|IT|ES)\)/i.test(a.name);
+            const bHasRegion = /\((US|EU|UK|CA|AU|JP|CN|DE|FR|IT|ES)\)/i.test(b.name);
+            if (aHasRegion && !bHasRegion) return -1;
+            if (!aHasRegion && bHasRegion) return 1;
+            // If both have or don't have region, prefer longer name (more specific)
+            return b.name.length - a.name.length;
+          });
+          deduplicatedItems.push(sorted[0]);
+        } else {
+          // Different prices - keep the one with best (lowest) price
+          // and add price alternatives info
+          const sorted = [...groupItems].sort((a, b) => {
+            const priceA = a.nativePrice ?? Infinity;
+            const priceB = b.nativePrice ?? Infinity;
+            return priceA - priceB;
+          });
+          
+          // Use the best-priced item as the representative
+          const bestItem = sorted[0];
+          
+          // Collect all unique prices for display
+          const allPrices = sorted
+            .map(i => i.nativePrice)
+            .filter((p): p is number => p !== null);
+          
+          if (allPrices.length > 1) {
+            // Multiple prices - we could enhance the name, but for now just keep the best
+            // The UI already shows the price, so users will see the best option
+          }
+          
+          deduplicatedItems.push(bestItem);
+        }
+      }
+    });
+    
     // Sort: local stores first, then by converted price (lowest first)
-    return items.sort((a, b) => {
+    return deduplicatedItems.sort((a, b) => {
       // Local stores first
       if (a.isLocal && !b.isLocal) return -1;
       if (!a.isLocal && b.isLocal) return 1;
