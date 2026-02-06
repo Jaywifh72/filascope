@@ -1,6 +1,12 @@
 import { useState, useRef, useCallback } from "react";
 import { Thermometer, Circle, Zap, Wind, Gauge, Printer } from "lucide-react";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PrinterSpecs {
   nozzleTemp: number | null;
@@ -149,18 +155,27 @@ const SpecCard = ({ spec, specs, delay, isLoading, hasSelectedPrinter }: SpecCar
         </div>
 
         {/* Main value - monospace font */}
-        <div className="flex items-baseline gap-1 mb-1">
+        <div className="flex items-baseline gap-1 mb-1 min-w-0">
           {isLoading ? (
             <div className="h-8 w-20 bg-muted/50 rounded animate-pulse" />
           ) : (
-            <>
-              <span className="font-mono text-2xl font-bold text-foreground tracking-tight">
-                {value}
-              </span>
-              <span className="font-mono text-sm text-muted-foreground">
-                {spec.unit}
-              </span>
-            </>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-baseline gap-1 min-w-0 truncate">
+                    <span className="font-mono text-2xl font-bold text-foreground tracking-tight truncate">
+                      {value}
+                    </span>
+                    <span className="font-mono text-sm text-muted-foreground shrink-0">
+                      {spec.unit}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>{spec.label}: {value} {spec.unit}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 
