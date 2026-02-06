@@ -38,6 +38,7 @@ import { useUnifiedRegionalPricing, type UnifiedRegionalPricingResult } from "@/
 import { extractProductSlug } from "@/hooks/useRegionalPricing";
 import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 import { useRegion } from "@/contexts/RegionContext";
+import type { RegionCode, CurrencyCode } from "@/types/regional";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
@@ -45,6 +46,7 @@ import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameU
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
+import { useFilamentListings } from "@/hooks/useFilamentListings";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -130,6 +132,11 @@ const FilamentDetail = () => {
     hasPriceData: hasStorePriceData,
     isLoading: storePriceLoading 
   } = useFilamentStorePricing(pricingFilament?.id);
+
+  // Fetch all retailer listings to find the true best price across ALL sources
+  const { data: allRetailerListings } = useFilamentListings(pricingFilament?.id, {
+    includeUnavailable: false,
+  });
   
   // Extract values for backward compatibility with existing code
   // PRIORITY: 1. Store pricing (filament_prices), 2. Unified pricing (brand_regional_stores), 3. variant_price fallback
@@ -225,6 +232,114 @@ const FilamentDetail = () => {
     
     return result;
   }, [pricingFilament, getAffiliateUrl, getAmazonUrl, getRegionalUrl, regionShortName, regionalPriceResult]);
+
+  // ─── Best Price Selection: find the cheapest retailer across ALL sources ───
+  const sidebarBest = useMemo(() => {
+    if (!pricingFilament) return null;
+
+    const packQty = (pricingFilament as any).pack_quantity || 1;
+    const wKg = pricingFilament.net_weight_g
+      ? (pricingFilament.net_weight_g / 1000) * packQty
+      : packQty;
+    if (wKg <= 0) return null;
+
+    const candidates: Array<{
+      name: string;
+      pricePerKg: number;
+      spoolPrice: number;
+      productUrl: string;
+      storeRegion: string | null;
+      isBrandDirect: boolean;
+    }> = [];
+
+    // Source 1: filament_listings (per-retailer prices, already sorted cheapest first)
+    if (allRetailerListings) {
+      for (const listing of allRetailerListings) {
+        if (listing.current_price != null && listing.current_price > 0 && listing.available) {
+          candidates.push({
+            name: listing.retailer_name,
+            pricePerKg: listing.current_price / wKg,
+            spoolPrice: listing.current_price,
+            productUrl: listing.affiliate_url || listing.product_url,
+            storeRegion: listing.region,
+            isBrandDirect: listing.retailer_name.toLowerCase() === (pricingFilament.vendor || '').toLowerCase(),
+          });
+        }
+      }
+    }
+
+    // Source 2: Regional pricing (brand store from useUnifiedRegionalPricing)
+    if (regionalPriceResult?.displayPrice != null && regionalPriceResult.displayPrice > 0 && regionalPriceResult.store?.url) {
+      const name = regionalPriceResult.store.name || pricingFilament.vendor || 'Store';
+      const exists = candidates.some(c => c.name.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, ''));
+      if (!exists) {
+        candidates.push({
+          name,
+          pricePerKg: regionalPriceResult.displayPrice / wKg,
+          spoolPrice: regionalPriceResult.displayPrice,
+          productUrl: regionalPriceResult.store.url,
+          storeRegion: regionalPriceResult.store.regionCode || null,
+          isBrandDirect: true,
+        });
+      }
+    }
+
+    // Source 3: Amazon price from filament record
+    if (pricingFilament.amazon_price_usd && pricingFilament.amazon_link_us) {
+      const aUrl = getAmazonUrl(pricingFilament.amazon_link_us);
+      if (aUrl && !candidates.some(c => c.name.toLowerCase().includes('amazon'))) {
+        candidates.push({
+          name: 'Amazon US',
+          pricePerKg: pricingFilament.amazon_price_usd / wKg,
+          spoolPrice: pricingFilament.amazon_price_usd,
+          productUrl: aUrl,
+          storeRegion: 'US',
+          isBrandDirect: false,
+        });
+      }
+    }
+
+    if (candidates.length === 0) return null;
+
+    // Sort: cheapest per kg first; ties go to brand-direct store
+    candidates.sort((a, b) => {
+      const diff = a.pricePerKg - b.pricePerKg;
+      if (Math.abs(diff) < 0.01) {
+        if (a.isBrandDirect !== b.isBrandDirect) return a.isBrandDirect ? -1 : 1;
+        return 0;
+      }
+      return diff;
+    });
+
+    return candidates[0];
+  }, [allRetailerListings, regionalPriceResult, pricingFilament, getAmazonUrl]);
+
+  // Build regional price result overridden by sidebarBest for the sidebar
+  const sidebarRegionalPrice = useMemo(() => {
+    if (!sidebarBest) return regionalPriceResult;
+
+    const baseStore = regionalPriceResult?.store || {
+      id: '', url: sidebarBest.productUrl,
+      regionCode: (sidebarBest.storeRegion || 'US') as RegionCode,
+      shipsFrom: null as string | null, freeShippingThreshold: null as number | null,
+    };
+
+    return {
+      displayPrice: sidebarBest.spoolPrice,
+      displayCurrency: (regionalPriceResult?.displayCurrency || 'USD') as CurrencyCode,
+      formattedPrice: `$${sidebarBest.spoolPrice.toFixed(2)}`,
+      originalPrice: sidebarBest.spoolPrice,
+      originalCurrency: (regionalPriceResult?.originalCurrency || 'USD') as CurrencyCode,
+      isConverted: regionalPriceResult?.isConverted || false,
+      conversionRate: regionalPriceResult?.conversionRate || null,
+      store: {
+        ...baseStore,
+        name: sidebarBest.name,
+        url: sidebarBest.productUrl,
+        regionCode: (sidebarBest.storeRegion || baseStore.regionCode || 'US') as RegionCode,
+      },
+    };
+  }, [sidebarBest, regionalPriceResult]);
 
   const handleViewRetailers = () => {
     if (filament) {
@@ -618,6 +733,23 @@ const FilamentDetail = () => {
         : null
     : null;
 
+  // ─── Sidebar-specific best-price prop overrides ───
+  const sidebarAffiliateUrl = sidebarBest
+    ? (getAffiliateUrl(sidebarBest.productUrl, pricingFilament?.vendor) || sidebarBest.productUrl)
+    : getAffiliateUrl(
+        storeBestPrice?.productUrl || selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament?.product_url || '',
+        pricingFilament?.vendor
+      );
+  const sidebarRetailerName = sidebarBest?.name
+    || storeBestPrice?.storeName || unifiedPricing.storeName || pricingFilament?.vendor || undefined;
+  const sidebarPricePerKg = sidebarBest?.pricePerKg ?? rawPricePerKg;
+  const sidebarPricePerSpool = sidebarBest
+    ? sidebarBest.spoolPrice / packQuantity
+    : rawPricePerSpool;
+  const sidebarProductUrl = sidebarBest?.productUrl
+    || storeBestPrice?.productUrl || selectedVariant?.product_url
+    || unifiedPricing.storeUrl || pricingFilament?.product_url || '';
+
   const baseProductName = getBaseName(filament.product_title);
   
   // Get the best product line name for SEO and display
@@ -819,25 +951,22 @@ const FilamentDetail = () => {
             vendor={pricingFilament.vendor}
             material={pricingFilament.material}
             productTitle={displayFilament.product_title}
-            pricePerKg={rawPricePerKg}
-            pricePerSpool={rawPricePerSpool}
+            pricePerKg={sidebarPricePerKg}
+            pricePerSpool={sidebarPricePerSpool}
             weightGrams={pricingFilament.net_weight_g}
-            affiliateUrl={getAffiliateUrl(
-              storeBestPrice?.productUrl || selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
-              pricingFilament.vendor
-            )}
-            productUrl={storeBestPrice?.productUrl || selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || ''}
+            affiliateUrl={sidebarAffiliateUrl}
+            productUrl={sidebarProductUrl}
             originalUsUrl={pricingFilament.product_url || undefined}
-            retailerName={storeBestPrice?.storeName || unifiedPricing.storeName || pricingFilament.vendor || undefined}
+            retailerName={sidebarRetailerName}
             retailerCount={retailers.length}
             onViewRetailers={handleViewRetailers}
-            hasActualRegionalPrice={hasActualRegionalPrice || hasStorePriceData}
+            hasActualRegionalPrice={hasActualRegionalPrice || hasStorePriceData || !!sidebarBest}
             isUsingFallbackRegion={!hasLocalStore}
             actualUrlCurrency={unifiedPricing.originalCurrency || null}
             isAvailableInUserRegion={hasLocalStore}
             isRegionalBrand={unifiedPricing.allStores.length > 0 || hasStorePriceData}
             onOpenCalculator={() => setIsCalculatorOpen(true)}
-            regionalPriceResult={regionalPriceResult}
+            regionalPriceResult={sidebarRegionalPrice}
             lastScrapedAt={storeBestPrice?.lastVerifiedAt ?? unifiedPricing.lastVerifiedAt?.toISOString() ?? pricingFilament.last_scraped_at}
             priceSource={unifiedPricing.priceSource}
             priceConfidence={unifiedPricing.priceConfidence}
@@ -851,13 +980,10 @@ const FilamentDetail = () => {
       {/* Mobile Bottom Bar */}
       <FilamentMobileBottomBar
         filamentId={displayFilament.id}
-        pricePerKg={rawPricePerKg}
-        affiliateUrl={getAffiliateUrl(
-          selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
-          pricingFilament.vendor
-        )}
-        storeName={storeBestPrice?.storeName || unifiedPricing.storeName || pricingFilament.vendor || 'Store'}
-        storeRegion={unifiedPricing.storeRegion}
+        pricePerKg={sidebarPricePerKg}
+        affiliateUrl={sidebarAffiliateUrl}
+        storeName={sidebarRetailerName || 'Store'}
+        storeRegion={sidebarBest?.storeRegion || unifiedPricing.storeRegion}
         isConverted={unifiedPricing.isConverted}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
@@ -972,10 +1098,10 @@ const FilamentDetail = () => {
       {pricingFilament && (
         <StickyBuyBar
           filament={pricingFilament}
-          affiliateUrl={getAffiliateUrl(unifiedPricing.storeUrl || pricingFilament.product_url || '', pricingFilament.vendor)}
-          pricePerKg={rawPricePerKg}
+          affiliateUrl={sidebarAffiliateUrl}
+          pricePerKg={sidebarPricePerKg}
           isVisible={stickyBarVisible}
-          hasActualRegionalPrice={hasActualRegionalPrice}
+          hasActualRegionalPrice={hasActualRegionalPrice || !!sidebarBest}
         />
       )}
 
