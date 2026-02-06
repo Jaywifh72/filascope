@@ -178,6 +178,28 @@ const Brands = () => {
     },
   });
 
+  // Get unique product count to match homepage display (bypasses 1000 row limit)
+  const { data: uniqueProductCount } = useQuery({
+    queryKey: ["unique-product-count"],
+    queryFn: async () => {
+      // Count unique products by grouping on product_title + vendor
+      const { data, error } = await supabase
+        .from("filaments")
+        .select("product_title, vendor")
+        .not("vendor", "is", null)
+        .or("net_weight_g.is.null,net_weight_g.gte.300")
+        .limit(10000);
+      
+      if (error) throw error;
+      
+      // Count unique product_title + vendor combinations
+      const uniqueProducts = new Set(
+        data.map(f => `${f.vendor}::${f.product_title}`)
+      );
+      return uniqueProducts.size;
+    },
+  });
+
   // Helper to calculate price indicator based on count (placeholder - would use actual price data)
   const getPriceIndicator = (count: number): "$" | "$$" | "$$$" | null => {
     // Larger brands tend to have more variety including budget options
@@ -318,8 +340,8 @@ const Brands = () => {
                           filters.hasLivePricing || 
                           filters.filamentCountRange !== null;
 
-  // Stats - use mergedBrands which is the canonical data source
-  const totalProducts = mergedBrands.reduce((sum, b) => sum + b.count, 0);
+  // Stats - use mergedBrands for brand count, uniqueProductCount for product total (matches homepage)
+  const totalProducts = uniqueProductCount || mergedBrands.reduce((sum, b) => sum + b.count, 0);
   const brandCount = mergedBrands.length;
 
   const handleOpenQuiz = () => {
