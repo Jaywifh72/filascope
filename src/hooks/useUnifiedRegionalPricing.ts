@@ -434,7 +434,7 @@ function getActualRegionalPrice(
 }
 
 export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedRegionalPricingResult {
-  const { region, currency, convertPrice, getConversionRate } = useRegion();
+  const { region, currency, convertPrice, getConversionRate, hasRates } = useRegion();
   
   const {
     brandName,
@@ -497,7 +497,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     staleTime: 60 * 60 * 1000, // 1 hour - matches URL validation TTL
   });
   
-  const isLoading = brandLoading || storesLoading || (!!filamentId && slugLoading);
+  const isLoading = brandLoading || storesLoading || (!!filamentId && slugLoading) || (!hasRates && currency !== 'USD');
   
   // Compute the unified result
   const result = useMemo((): UnifiedRegionalPricingResult => {
@@ -556,7 +556,8 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
       } else if (basePrice != null) {
         // Fall back to USD conversion
         needsConversion = baseCurrency !== currency;
-        displayPrice = needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice;
+        const converted = needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice;
+        displayPrice = converted; // null if rates not loaded yet
       }
       
       const rate = needsConversion ? getConversionRate(baseCurrency, currency) : null;
@@ -632,7 +633,8 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     } else if (basePrice != null) {
       // Fall back to USD conversion (with ~ prefix to indicate approximation)
       needsConversion = baseCurrency !== currency;
-      displayPrice = needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice;
+      const converted = needsConversion ? convertPrice(basePrice, baseCurrency) : basePrice;
+      displayPrice = converted; // null if rates not loaded yet
     }
     
     const rate = needsConversion ? getConversionRate(baseCurrency, currency) : null;
@@ -692,6 +694,7 @@ export function useUnifiedRegionalPricing(product: UnifiedProductData): UnifiedR
     priceSource,
     preCalculatedConfidence,
     regionalPrices,
+    hasRates,
   ]);
   
   return result;

@@ -193,6 +193,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
     isLocalStore,
     isUsingFallbackRegion,
     priceSource,
+    isRatesLoading,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
   // Determine if the price is converted (needs tilde prefix)
@@ -619,10 +620,12 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ELEMENT 3: Price
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3" data-card-element="3">
-        {isLivePriceLoading ? (
+        {(isLivePriceLoading || isRatesLoading) ? (
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">Checking price...</span>
+            <span className="text-sm text-muted-foreground">
+              {isRatesLoading ? 'Loading rates...' : 'Checking price...'}
+            </span>
           </div>
         ) : shouldShowPrice ? (
           <div className="flex flex-col gap-1">

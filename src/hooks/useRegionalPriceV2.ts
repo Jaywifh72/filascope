@@ -30,7 +30,7 @@ export function useRegionalPriceV2({
   basePrice,
   baseCurrency = 'USD',
 }: UseRegionalPriceV2Options) {
-  const { region, currency, getFallbackRegions, convertPrice, getConversionRate } = useRegion();
+  const { region, currency, getFallbackRegions, convertPrice, getConversionRate, hasRates } = useRegion();
   const [priceResult, setPriceResult] = useState<RegionalPriceResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allStores, setAllStores] = useState<BrandRegionalStoreRow[]>([]);
@@ -62,6 +62,11 @@ export function useRegionalPriceV2({
             const converted = convertPrice(basePrice, baseCurrency);
             const rate = getConversionRate(baseCurrency, currency);
             
+            if (!hasRates && baseCurrency !== currency) {
+              // Rates not loaded yet - keep loading state
+              setIsLoading(true);
+              return;
+            }
             setPriceResult({
               displayPrice: converted,
               displayCurrency: currency,
@@ -115,6 +120,11 @@ export function useRegionalPriceV2({
         
         if (storeCurrency !== currency) {
           conversionRate = getConversionRate(storeCurrency, currency);
+          if (!hasRates) {
+            // Rates not loaded yet
+            setIsLoading(true);
+            return;
+          }
           displayPrice = Math.round(storePrice * conversionRate * 100) / 100;
           isConverted = true;
         }
@@ -165,7 +175,7 @@ export function useRegionalPriceV2({
     };
     
     fetchRegionalPrice();
-  }, [brandId, basePrice, baseCurrency, region, currency, getFallbackRegions, convertPrice, getConversionRate]);
+  }, [brandId, basePrice, baseCurrency, region, currency, getFallbackRegions, convertPrice, getConversionRate, hasRates]);
 
   return {
     priceResult,

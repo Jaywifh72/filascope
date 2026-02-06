@@ -258,12 +258,14 @@ export interface RegionalPriceResult {
  * Prioritizes actual regional prices from database over converted USD prices
  * Also detects vendor native currency to avoid incorrect conversions
  */
-export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): RegionalPriceResult {
+export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): RegionalPriceResult & { isRatesLoading: boolean } {
   // Use RegionContext for proper currency sync with ?region= URL param
-  const { currency, convertPrice } = useRegion();
+  const { currency, convertPrice, hasRates } = useRegion();
   const { getRegionalUrl, currentRegion } = useRegionalStore();
 
-  return useMemo(() => {
+  const isRatesLoading = !hasRates && currency !== 'USD';
+
+  const result = useMemo((): RegionalPriceResult => {
     if (!filament) {
       return {
         regionalPrice: null,
@@ -428,18 +430,14 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     
     // Priority 3: Convert from vendor currency or USD
     if (filament.variant_price && filament.variant_price > 0) {
-      // If vendor prices in a non-USD currency and user wants a different currency,
-      // we can't accurately convert (we don't have cross-currency rates)
-      // In this case, we still convert from variant_price as if it were USD
-      // This may not be accurate, but it's the best we can do without more data
       const convertedPrice = convertPrice(filament.variant_price, 'USD');
       const { storeRegion, isLocalStore } = computeStoreInfo(false, brandHasRegionalStore, fallbackUrlCurrency, !isRegionalBrand);
       return {
-        regionalPrice: convertedPrice,
+        regionalPrice: hasRates ? convertedPrice : null, // null if rates not loaded yet
         isActualRegionalPrice: false,
         regionalUrl: regionalUrl || '',
         fallbackUrl: originalUsUrl,
-        priceSource: 'converted' as const,
+        priceSource: hasRates ? 'converted' as const : 'unavailable' as const,
         currency,
         vendorCurrency,
         isUsingFallbackRegion,
@@ -546,7 +544,9 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       storeRegion,
       isLocalStore,
     };
-  }, [filament, currency, convertPrice, getRegionalUrl, currentRegion]);
+  }, [filament, currency, convertPrice, getRegionalUrl, currentRegion, hasRates]);
+
+  return { ...result, isRatesLoading };
 }
 
 /**
