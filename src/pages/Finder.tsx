@@ -296,6 +296,26 @@ const Finder = () => {
     localStorage.setItem("finderViewMode", viewMode);
   }, [viewMode]);
   
+  // Clear search term when navigating away from the Finder page
+  useEffect(() => {
+    return () => {
+      // On unmount, clear the search term from session storage
+      // so returning to the homepage shows full results
+      try {
+        const stored = sessionStorage.getItem("finderFilters");
+        if (stored) {
+          const filters = JSON.parse(stored);
+          if (filters.searchTerm) {
+            filters.searchTerm = "";
+            sessionStorage.setItem("finderFilters", JSON.stringify(filters));
+          }
+        }
+      } catch (e) {
+        // Silently fail
+      }
+    };
+  }, []);
+  
   // Reset display count when filters change
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
