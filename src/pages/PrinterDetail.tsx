@@ -1023,16 +1023,23 @@ const PrinterDetail = () => {
           // Use regional store URL if available
           const regionalStoreUrl = unifiedPricing.storeUrl || printer.official_store_url;
           
+          // Use regional price from unified pricing (same data as Pricing tab)
+          const regionalPrice = unifiedPricing.displayPrice ?? displayPrice;
+          const regionalMsrp = unifiedPricing.isConverted && displayMsrp 
+            ? displayMsrp * (unifiedPricing.conversionRate || 1)
+            : displayMsrp;
+          
           return (
             <MobileBottomBar
-              price={displayPrice}
-              msrp={displayMsrp}
+              price={regionalPrice}
+              msrp={regionalMsrp}
               officialStoreUrl={regionalStoreUrl}
               getAffiliateUrl={getAffiliateUrl}
               brand={brand}
               isDiscontinued={printer.discontinued}
-              priceCurrency={livePriceCurrency}
-              isLivePrice={isLivePrice}
+              isConverted={unifiedPricing.isConverted}
+              originalPrice={unifiedPricing.originalPrice}
+              originalCurrency={unifiedPricing.originalCurrency}
               isLocalStore={unifiedPricing.isLocalStore}
               storeRegion={unifiedPricing.storeRegion}
               shipsFromCountry={unifiedPricing.shipsFromCountry}

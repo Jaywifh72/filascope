@@ -2,16 +2,23 @@ import { ShoppingCart, ExternalLink, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
+import { useRegion } from "@/contexts/RegionContext";
+import type { CurrencyCode } from "@/types/regional";
 
 interface MobileBottomBarProps {
+  /** Regional display price (already converted if needed) */
   price: number | null | undefined;
   msrp?: number | null;
   officialStoreUrl?: string | null;
   getAffiliateUrl: (url: string | null | undefined, vendor?: string | null) => string | null;
   brand: string | null;
   isDiscontinued?: boolean;
-  priceCurrency?: string;
-  isLivePrice?: boolean;
+  /** Whether the displayed price is a conversion estimate */
+  isConverted?: boolean;
+  /** Original price before conversion (shown in parentheses) */
+  originalPrice?: number | null;
+  /** Original currency code before conversion */
+  originalCurrency?: CurrencyCode | null;
   isLocalStore?: boolean;
   storeRegion?: string | null;
   shipsFromCountry?: string | null;
@@ -24,32 +31,32 @@ export function MobileBottomBar({
   getAffiliateUrl,
   brand,
   isDiscontinued,
-  priceCurrency,
-  isLivePrice,
+  isConverted = false,
+  originalPrice,
+  originalCurrency,
   isLocalStore,
+  storeRegion,
   shipsFromCountry,
 }: MobileBottomBarProps) {
-  const { formatPrice, formatRegionalPrice, currency } = useCurrency();
+  const { formatPrice } = useCurrency();
+  const { formatPrice: formatRegional, currency } = useRegion();
   const { count: compareCount } = usePrinterCompare();
 
   // Don't show if discontinued or if compare bar is active
   if (isDiscontinued || compareCount > 0) return null;
 
-  // Format price
-  const formatDisplayPrice = (p: number | null | undefined) => {
-    if (p === null || p === undefined) return null;
-    if (isLivePrice && priceCurrency && priceCurrency === currency) {
-      return formatRegionalPrice(p);
-    }
-    return formatPrice(p);
-  };
-
-  const formattedPrice = formatDisplayPrice(price);
-  const formattedMsrp = msrp && msrp > (price || 0) ? formatDisplayPrice(msrp) : null;
+  // Format price using regional formatter
+  const formattedPrice = price != null ? formatRegional(price) : null;
+  const formattedMsrp = msrp && msrp > (price || 0) ? formatRegional(msrp) : null;
   
   // Calculate discount percentage
   const discountPercent = msrp && price && msrp > price 
     ? Math.round((1 - price / msrp) * 100) 
+    : null;
+
+  // Format original price for conversion note
+  const originalPriceText = isConverted && originalPrice && originalCurrency
+    ? `(${formatPrice(originalPrice)} ${originalCurrency})`
     : null;
 
   const affiliateUrl = getAffiliateUrl(officialStoreUrl, brand);
@@ -67,20 +74,30 @@ export function MobileBottomBar({
         {/* Price section */}
         <div className="flex-1 min-w-0">
           {formattedPrice ? (
-            <div className="flex items-baseline gap-2 flex-wrap">
-              {/* Price - WHITE for consistency */}
-              <span className="text-xl font-bold text-white">{formattedPrice}</span>
-              {formattedMsrp && (
-                <>
-                  {/* Original Price - gray strikethrough */}
-                  <span className="text-sm text-gray-500 line-through">{formattedMsrp}</span>
-                  {/* Discount Badge - GREEN filled */}
-                  {discountPercent && (
-                    <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
-                      -{discountPercent}%
-                    </span>
-                  )}
-                </>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                {/* Price with ~ prefix for converted prices */}
+                <span className="text-xl font-bold text-foreground">
+                  {isConverted ? '~' : ''}{formattedPrice}
+                </span>
+                {formattedMsrp && (
+                  <>
+                    {/* Original Price - strikethrough */}
+                    <span className="text-sm text-muted-foreground line-through">{isConverted ? '~' : ''}{formattedMsrp}</span>
+                    {/* Discount Badge */}
+                    {discountPercent && (
+                      <span className="text-xs font-semibold bg-emerald-500 text-emerald-50 px-2 py-0.5 rounded-full">
+                        -{discountPercent}%
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              {/* Conversion source note */}
+              {originalPriceText && (
+                <span className="text-xs text-muted-foreground">
+                  {originalPriceText}
+                </span>
               )}
               {/* Fallback region indicator */}
               {!isLocalStore && shipsFromCountry && (
@@ -91,7 +108,7 @@ export function MobileBottomBar({
               )}
             </div>
           ) : (
-            <span className="text-sm text-gray-400">Price not available</span>
+            <span className="text-sm text-muted-foreground">Price not available</span>
           )}
         </div>
 
