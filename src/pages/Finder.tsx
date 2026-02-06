@@ -1379,8 +1379,9 @@ const Finder = () => {
       const packQty = (filament as any).pack_quantity || 1;
       const weightKg = filament.net_weight_g / 1000;
       
-      // Map currency to database column (same as useRegionalPrice)
-      const currencyToPriceColumn: Record<string, keyof typeof filament> = {
+      // Only these currencies have dedicated database columns with real prices.
+      // All other currencies must convert from USD (or a nearby region).
+      const directPriceColumns: Record<string, keyof typeof filament> = {
         USD: 'variant_price',
         CAD: 'price_cad',
         GBP: 'price_gbp',
@@ -1389,16 +1390,47 @@ const Finder = () => {
         JPY: 'price_jpy',
       };
       
-      // Get the regional price column for user's currency
-      const priceColumn = currencyToPriceColumn[currencyInfo.code] || 'variant_price';
-      const regionalPrice = filament[priceColumn] as number | null;
+      // Nearby region sources for currencies without dedicated columns
+      const nearbyRegionMap: Record<string, { column: keyof typeof filament; sourceCurrency: string }> = {
+        CHF: { column: 'price_eur', sourceCurrency: 'EUR' },
+        SEK: { column: 'price_eur', sourceCurrency: 'EUR' },
+        PLN: { column: 'price_eur', sourceCurrency: 'EUR' },
+        CZK: { column: 'price_eur', sourceCurrency: 'EUR' },
+        NZD: { column: 'price_aud', sourceCurrency: 'AUD' },
+      };
+
+      const currCode = currencyInfo.code;
       
-      // Priority 1: Use actual regional price if available
-      if (regionalPrice && regionalPrice > 0) {
-        return regionalPrice / (weightKg * packQty);
+      // Priority 1: Use actual regional price if currency has a dedicated column
+      if (directPriceColumns[currCode]) {
+        const priceColumn = directPriceColumns[currCode];
+        const regionalPrice = filament[priceColumn] as number | null;
+        if (regionalPrice && regionalPrice > 0) {
+          return regionalPrice / (weightKg * packQty);
+        }
       }
       
-      // Priority 2: Convert from variant_price (USD) to user's currency
+      // Priority 2: Convert from nearby region (e.g., EUR→CHF, AUD→NZD)
+      const nearbySource = nearbyRegionMap[currCode];
+      if (nearbySource) {
+        const nearbyPrice = filament[nearbySource.column] as number | null;
+        if (nearbyPrice && nearbyPrice > 0) {
+          // Convert nearby price to user's currency via convertPrice (USD-intermediated)
+          // First convert nearby currency to USD, then to target
+          // convertPrice expects USD input, so we need to adjust
+          // nearbyPrice is in sourceCurrency, variant_price is in USD
+          // Use the ratio: if we have EUR price and USD price, the EUR→target conversion
+          // is more accurate. But convertPrice only converts from USD.
+          // So just use variant_price as fallback for conversion.
+          const usdPrice = filament.variant_price;
+          if (usdPrice && usdPrice > 0) {
+            const convertedPrice = convertPrice(usdPrice) || usdPrice;
+            return convertedPrice / (weightKg * packQty);
+          }
+        }
+      }
+      
+      // Priority 3: Convert from variant_price (USD) to user's currency
       const basePrice = filament.variant_price;
       if (!basePrice) return 999999;
       

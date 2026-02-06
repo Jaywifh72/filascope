@@ -99,6 +99,20 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
     decimalPlaces: 2,
     symbolPosition: 'after',
   },
+  BRL: {
+    code: 'BRL',
+    symbol: 'R$',
+    name: 'Brazilian Real',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+  },
+  NZD: {
+    code: 'NZD',
+    symbol: 'NZ$',
+    name: 'New Zealand Dollar',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+  },
 };
 
 export const CURRENCY_LIST = Object.values(CURRENCIES);

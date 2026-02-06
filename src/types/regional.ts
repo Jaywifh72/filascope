@@ -13,7 +13,8 @@ export type RegionCode = 'US' | 'CA' | 'UK' | 'EU' | 'AU' | 'JP' | 'CN';
 
 export type CurrencyCode = 
   | 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'JPY' | 'CNY' 
-  | 'CHF' | 'SEK' | 'KRW' | 'INR' | 'PLN' | 'MXN' | 'CZK';
+  | 'CHF' | 'SEK' | 'KRW' | 'INR' | 'PLN' | 'MXN' | 'CZK'
+  | 'BRL' | 'NZD';
 
 export type DetectionMethod = 'geolocation' | 'ip' | 'browser_locale' | 'manual';
 
@@ -450,6 +451,20 @@ export const CURRENCY_CONFIGS: Record<CurrencyCode, CurrencyConfig> = {
     decimalPlaces: 2,
     symbolPosition: 'after',
   },
+  BRL: {
+    code: 'BRL',
+    symbol: 'R$',
+    name: 'Brazilian Real',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+  },
+  NZD: {
+    code: 'NZD',
+    symbol: 'NZ$',
+    name: 'New Zealand Dollar',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+  },
 };
 
 // =============================================
@@ -467,7 +482,7 @@ export function isValidRegionCode(code: string): code is RegionCode {
  * Check if a string is a valid CurrencyCode
  */
 export function isValidCurrencyCode(code: string): code is CurrencyCode {
-  return ['USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'CHF', 'SEK', 'KRW', 'INR', 'PLN', 'MXN', 'CZK'].includes(code);
+  return ['USD', 'CAD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY', 'CHF', 'SEK', 'KRW', 'INR', 'PLN', 'MXN', 'CZK', 'BRL', 'NZD'].includes(code);
 }
 
 /**
@@ -512,4 +527,6 @@ export const CURRENCY_TO_PRIMARY_REGION: Record<CurrencyCode, RegionCode> = {
   PLN: 'EU', // Poland uses EU stores
   MXN: 'US', // Mexico often falls back to US stores
   CZK: 'EU', // Czech Republic uses EU stores
+  BRL: 'US', // Brazil often falls back to US stores
+  NZD: 'AU', // New Zealand often falls back to AU stores
 };
