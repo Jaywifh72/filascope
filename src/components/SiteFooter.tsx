@@ -97,10 +97,10 @@ export function SiteFooter() {
   ];
 
   const resourceLinks = [
-    { name: "Material Encyclopedia", href: "/compare" },
-    { name: "Compatibility Matrix", href: "/matrix" },
-    { name: "Slicer Directory", href: "/reference/slicers" },
-    { name: "Model Repositories", href: "/reference/repos" },
+    { name: "Material Encyclopedia", href: "/material-encyclopedia", comingSoon: true },
+    { name: "Compatibility Matrix", href: "/compatibility-matrix", comingSoon: true },
+    { name: "Slicer Directory", href: "/slicer-directory", comingSoon: true },
+    { name: "Model Repositories", href: "/model-repositories", comingSoon: true },
     { name: "Quick Match", href: "/wizard" },
   ];
 
@@ -172,9 +172,14 @@ export function SiteFooter() {
                 <li key={link.name}>
                   <Link 
                     to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5"
                   >
                     {link.name}
+                    {'comingSoon' in link && link.comingSoon && (
+                      <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary leading-none">
+                        Soon
+                      </span>
+                    )}
                   </Link>
                 </li>
               ))}

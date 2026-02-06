@@ -111,6 +111,10 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Methodology = lazy(() => import("./pages/Methodology"));
+const MaterialEncyclopedia = lazy(() => import("./pages/MaterialEncyclopedia"));
+const CompatibilityMatrix = lazy(() => import("./pages/CompatibilityMatrix"));
+const SlicerDirectory = lazy(() => import("./pages/SlicerDirectory"));
+const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 
@@ -235,6 +239,10 @@ const App = () => (
                   <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/methodology" element={<Methodology />} />
+                  <Route path="/material-encyclopedia" element={<MaterialEncyclopedia />} />
+                  <Route path="/compatibility-matrix" element={<CompatibilityMatrix />} />
+                  <Route path="/slicer-directory" element={<SlicerDirectory />} />
+                  <Route path="/model-repositories" element={<ModelRepositories />} />
                   {/* Redirects for legacy/broken links */}
                   <Route path="/knowledge-base" element={<Navigate to="/compare" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
