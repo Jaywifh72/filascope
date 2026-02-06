@@ -296,25 +296,16 @@ const Finder = () => {
     localStorage.setItem("finderViewMode", viewMode);
   }, [viewMode]);
   
-  // Clear search term when navigating away from the Finder page
+  // Clear search term on fresh homepage visit (mount with no search params)
+  // This ensures returning visitors see the full catalog, not filtered results
   useEffect(() => {
-    return () => {
-      // On unmount, clear the search term from session storage
-      // so returning to the homepage shows full results
-      try {
-        const stored = sessionStorage.getItem("finderFilters");
-        if (stored) {
-          const filters = JSON.parse(stored);
-          if (filters.searchTerm) {
-            filters.searchTerm = "";
-            sessionStorage.setItem("finderFilters", JSON.stringify(filters));
-          }
-        }
-      } catch (e) {
-        // Silently fail
-      }
-    };
-  }, []);
+    const urlSearchQuery = searchParams.get("q") || searchParams.get("search");
+    // Only clear if there's no URL search param driving the search
+    if (!urlSearchQuery && searchTerm) {
+      setSearchTerm("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
   
   // Reset display count when filters change
   useEffect(() => {
