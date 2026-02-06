@@ -1,7 +1,17 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { SlidersHorizontal, Clock, ArrowLeft } from "lucide-react";
+import { SlidersHorizontal, Clock, ArrowLeft, BookOpen } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+const QUICK_REFERENCE_DATA = [
+  { material: "PLA", nozzleTemp: "190-220°C", bedTemp: "50-60°C", speed: "40-60 mm/s" },
+  { material: "PETG", nozzleTemp: "230-250°C", bedTemp: "70-85°C", speed: "30-50 mm/s" },
+  { material: "ABS", nozzleTemp: "230-260°C", bedTemp: "95-110°C", speed: "40-60 mm/s" },
+  { material: "ASA", nozzleTemp: "240-260°C", bedTemp: "90-110°C", speed: "40-50 mm/s" },
+  { material: "TPU", nozzleTemp: "220-250°C", bedTemp: "40-60°C", speed: "15-30 mm/s" },
+  { material: "Nylon", nozzleTemp: "240-270°C", bedTemp: "70-90°C", speed: "30-50 mm/s" },
+];
 
 const GuidePrintSettings = () => {
   return (
@@ -53,7 +63,7 @@ const GuidePrintSettings = () => {
                 <Clock className="w-8 h-8 text-primary" />
               </div>
               
-              <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
+              <h2 className="text-2xl font-bold mb-4">Full Guide Coming Soon</h2>
               
               <p className="text-muted-foreground mb-6">
                 We're working on a comprehensive guide covering everything you need to know about print settings:
@@ -83,13 +93,63 @@ const GuidePrintSettings = () => {
               </ul>
 
               <SubscribeForUpdates topic="the print settings guide" className="mb-8 text-left" />
-              
-              <Link 
-                to="/learn"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-lg text-primary font-medium transition-colors"
-              >
-                Explore Other Guides
-              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Quick Reference Section */}
+        <section className="container mx-auto px-4 py-12">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                <SlidersHorizontal className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold">Quick Reference</h2>
+            </div>
+            
+            <p className="text-muted-foreground mb-6">
+              While we work on the full guide, here are recommended starting settings for the most common materials:
+            </p>
+
+            <div className="bg-gray-900/50 border border-border/50 rounded-xl overflow-hidden mb-8">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border/50 hover:bg-transparent">
+                    <TableHead className="text-foreground font-semibold">Material</TableHead>
+                    <TableHead className="text-foreground font-semibold">Nozzle Temp</TableHead>
+                    <TableHead className="text-foreground font-semibold">Bed Temp</TableHead>
+                    <TableHead className="text-foreground font-semibold">Print Speed</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {QUICK_REFERENCE_DATA.map((row) => (
+                    <TableRow key={row.material} className="border-border/50">
+                      <TableCell className="font-medium text-primary">{row.material}</TableCell>
+                      <TableCell className="text-muted-foreground">{row.nozzleTemp}</TableCell>
+                      <TableCell className="text-muted-foreground">{row.bedTemp}</TableCell>
+                      <TableCell className="text-muted-foreground">{row.speed}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+              <div className="flex items-start gap-3">
+                <BookOpen className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Full guide with per-filament profiles coming soon. In the meantime, check our Material Encyclopedia for detailed specs on hundreds of filaments.
+                  </p>
+                  <Link 
+                    to="/compare"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                  >
+                    Browse Material Encyclopedia
+                    <ArrowLeft className="w-4 h-4 rotate-180" />
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>

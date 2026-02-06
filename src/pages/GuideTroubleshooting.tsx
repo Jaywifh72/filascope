@@ -2,6 +2,46 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { AlertCircle, Clock, ArrowLeft, Wrench } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+const COMMON_ISSUES = [
+  {
+    id: "stringing",
+    title: "Stringing / Oozing",
+    icon: "🕸️",
+    quickFix: "Increase retraction distance (start with 5-6mm for Bowden, 1-2mm for direct drive) and retraction speed (40-60 mm/s). Lower your nozzle temperature by 5-10°C. Enable 'Wipe' or 'Coasting' in your slicer."
+  },
+  {
+    id: "bed-adhesion",
+    title: "Poor Bed Adhesion",
+    icon: "📐",
+    quickFix: "Level your bed and ensure proper Z-offset (paper should have slight resistance). Clean your bed with IPA. Increase bed temperature by 5-10°C. Use a brim or raft. For stubborn materials, try glue stick or hairspray."
+  },
+  {
+    id: "warping",
+    title: "Warping / Lifting Corners",
+    icon: "🌊",
+    quickFix: "Use an enclosure for ABS/ASA/Nylon. Increase bed temperature. Add a brim (8-10mm). Reduce cooling fan speed for first 5-10 layers. Ensure no drafts near your printer."
+  },
+  {
+    id: "layer-shifting",
+    title: "Layer Shifting",
+    icon: "📊",
+    quickFix: "Check belt tension—belts should twang like a guitar string. Reduce print speed and acceleration. Ensure stepper motors aren't overheating. Check for loose set screws on pulleys and couplers."
+  },
+  {
+    id: "under-extrusion",
+    title: "Under-Extrusion",
+    icon: "🔻",
+    quickFix: "Calibrate your extruder e-steps. Check for partial clogs (do a cold pull). Increase nozzle temperature by 5-10°C. Ensure filament diameter is correct in slicer. Check for worn or damaged PTFE tube."
+  },
+  {
+    id: "clogged-nozzle",
+    title: "Clogged Nozzle",
+    icon: "🚫",
+    quickFix: "Perform a cold pull with nylon or cleaning filament. Heat nozzle to max temp and push filament through manually. Use an acupuncture needle to clear debris. For stubborn clogs, soak nozzle in acetone (brass only) or replace it."
+  },
+];
 
 const GuideTroubleshooting = () => {
   return (
@@ -53,34 +93,11 @@ const GuideTroubleshooting = () => {
                 <Clock className="w-8 h-8 text-orange-500" />
               </div>
               
-              <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
+              <h2 className="text-2xl font-bold mb-4">Full Database Coming Soon</h2>
               
               <p className="text-muted-foreground mb-6">
-                We're building a comprehensive troubleshooting resource covering:
+                We're building a comprehensive troubleshooting resource with visual diagnosis tools and step-by-step solutions.
               </p>
-              
-              <ul className="text-left text-sm text-muted-foreground space-y-2 mb-8 max-w-sm mx-auto">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Stringing and oozing fixes
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Warping prevention strategies
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Layer adhesion problems
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Under/over extrusion diagnosis
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Print quality optimization
-                </li>
-              </ul>
 
               <SubscribeForUpdates topic="the troubleshooting guide" className="mb-8 text-left" />
               
@@ -100,6 +117,46 @@ const GuideTroubleshooting = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Common Issues Section */}
+        <section className="container mx-auto px-4 py-12">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                <AlertCircle className="w-5 h-5 text-orange-500" />
+              </div>
+              <h2 className="text-2xl font-bold">Common Issues & Quick Fixes</h2>
+            </div>
+            
+            <p className="text-muted-foreground mb-6">
+              While we work on the full database, here are quick fixes for the most common 3D printing problems:
+            </p>
+
+            <div className="bg-gray-900/50 border border-border/50 rounded-xl overflow-hidden">
+              <Accordion type="single" collapsible className="w-full">
+                {COMMON_ISSUES.map((issue) => (
+                  <AccordionItem key={issue.id} value={issue.id} className="border-border/50">
+                    <AccordionTrigger className="px-6 py-4 hover:bg-gray-800/50 hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <span className="text-2xl">{issue.icon}</span>
+                        <span className="font-medium">{issue.title}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-4">
+                      <div className="pl-11 text-muted-foreground">
+                        {issue.quickFix}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+
+            <p className="text-sm text-muted-foreground mt-6 text-center italic">
+              Comprehensive troubleshooting database with visual examples coming soon.
+            </p>
           </div>
         </section>
       </div>
