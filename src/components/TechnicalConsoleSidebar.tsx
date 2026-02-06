@@ -398,39 +398,47 @@ export function TechnicalConsoleSidebar({
                 )}
               </div>
 
-              {/* 2x3 Live Specs Grid */}
-              <div className="grid grid-cols-3 gap-1.5">
-                <LiveSpecCell 
-                  label="Nozzle" 
-                  value={`${specs.nozzleDia}mm`}
-                  isLoading={printerLoading}
-                />
-                <LiveSpecCell 
-                  label="Nozzle Temp" 
-                  value={specs.nozzleTemp !== null ? `${specs.nozzleTemp}°C` : "--"}
-                  isLoading={printerLoading}
-                />
-                <LiveSpecCell 
-                  label="Bed Temp" 
-                  value={specs.bedTemp !== null ? `${specs.bedTemp}°C` : "--"}
-                  isLoading={printerLoading}
-                />
-                <LiveSpecCell 
-                  label="Max Speed" 
-                  value={specs.printSpeed !== null ? `${specs.printSpeed}mm/s` : "--"}
-                  isLoading={printerLoading}
-                />
-                <LiveSpecCell 
-                  label="Accel" 
-                  value={formatAcceleration(specs.acceleration) + (specs.acceleration !== null ? "mm/s²" : "")}
-                  isLoading={printerLoading}
-                />
-                <LiveSpecCell 
-                  label="Flow Rate" 
-                  value={specs.flowRate !== null ? `${specs.flowRate}mm³/s` : "--"}
-                  isLoading={printerLoading}
-                />
-              </div>
+              {/* 2x3 Live Specs Grid - Only show when printer is selected */}
+              {selectedPrinter ? (
+                <div className="grid grid-cols-3 gap-1.5">
+                  <LiveSpecCell 
+                    label="Nozzle" 
+                    value={`${specs.nozzleDia}mm`}
+                    isLoading={printerLoading}
+                  />
+                  <LiveSpecCell 
+                    label="Nozzle Temp" 
+                    value={specs.nozzleTemp !== null ? `${specs.nozzleTemp}°C` : "--"}
+                    isLoading={printerLoading}
+                  />
+                  <LiveSpecCell 
+                    label="Bed Temp" 
+                    value={specs.bedTemp !== null ? `${specs.bedTemp}°C` : "--"}
+                    isLoading={printerLoading}
+                  />
+                  <LiveSpecCell 
+                    label="Max Speed" 
+                    value={specs.printSpeed !== null ? `${specs.printSpeed}mm/s` : "--"}
+                    isLoading={printerLoading}
+                  />
+                  <LiveSpecCell 
+                    label="Accel" 
+                    value={formatAcceleration(specs.acceleration) + (specs.acceleration !== null ? "mm/s²" : "")}
+                    isLoading={printerLoading}
+                  />
+                  <LiveSpecCell 
+                    label="Flow Rate" 
+                    value={specs.flowRate !== null ? `${specs.flowRate}mm³/s` : "--"}
+                    isLoading={printerLoading}
+                  />
+                </div>
+              ) : (
+                <div className="py-3 px-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+                  <p className="text-xs text-gray-400 text-center">
+                    Select your printer above to see recommended settings
+                  </p>
+                </div>
+              )}
             </div>
           </CollapsibleContent>
         </div>
