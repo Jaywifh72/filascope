@@ -172,7 +172,7 @@ const ReferenceInfluencers = () => {
               Back to Finder
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold mb-2">YouTube Influencers</h1>
+          <h1 className="text-3xl font-bold mb-2">Creator Spotlights</h1>
           <p className="text-muted-foreground">
             Comprehensive guide to 3D printing content creators, their influence, and specializations.
           </p>
