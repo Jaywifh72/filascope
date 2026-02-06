@@ -304,90 +304,58 @@ export function PricingTabContent({
       <section className="section-card">
         <SectionHeader icon={Globe} title="Price by Region (MSRP)" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-          <div className={cn(
-            "p-3 sm:p-6 rounded-xl border",
-            region === 'US' 
-              ? "bg-primary/10 border-primary/30" 
-              : "bg-muted/30 border-border/40"
-          )}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs sm:text-sm text-gray-400">🇺🇸 USD</span>
-              {region === 'US' && (
-                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
-                  Selected
-                </Badge>
-              )}
-            </div>
-            <div className={cn(
-              "text-sm sm:text-lg font-bold",
-              !printer.msrp_usd ? "text-gray-500 italic font-normal" : "text-foreground"
-            )}>
-              {printer.msrp_usd ? `$${printer.msrp_usd}` : 'Not set'}
-            </div>
-          </div>
-          <div className={cn(
-            "p-3 sm:p-6 rounded-xl border",
-            region === 'CA' 
-              ? "bg-primary/10 border-primary/30" 
-              : "bg-muted/30 border-border/40"
-          )}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs sm:text-sm text-gray-400">🇨🇦 CAD</span>
-              {region === 'CA' && (
-                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
-                  Selected
-                </Badge>
-              )}
-            </div>
-            <div className={cn(
-              "text-sm sm:text-lg font-bold",
-              !printer.msrp_cad ? "text-gray-500 italic font-normal" : "text-foreground"
-            )}>
-              {printer.msrp_cad ? `C$${printer.msrp_cad}` : 'Not set'}
-            </div>
-          </div>
-          <div className={cn(
-            "p-3 sm:p-6 rounded-xl border",
-            region === 'EU' 
-              ? "bg-primary/10 border-primary/30" 
-              : "bg-muted/30 border-border/40"
-          )}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs sm:text-sm text-gray-400">🇪🇺 EUR</span>
-              {region === 'EU' && (
-                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
-                  Selected
-                </Badge>
-              )}
-            </div>
-            <div className={cn(
-              "text-sm sm:text-lg font-bold",
-              !printer.msrp_eur ? "text-gray-500 italic font-normal" : "text-foreground"
-            )}>
-              {printer.msrp_eur ? `€${printer.msrp_eur}` : 'Not set'}
-            </div>
-          </div>
-          <div className={cn(
-            "p-3 sm:p-6 rounded-xl border",
-            region === 'UK' 
-              ? "bg-primary/10 border-primary/30" 
-              : "bg-muted/30 border-border/40"
-          )}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs sm:text-sm text-gray-400">🇬🇧 GBP</span>
-              {region === 'UK' && (
-                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
-                  Selected
-                </Badge>
-              )}
-            </div>
-            <div className={cn(
-              "text-sm sm:text-lg font-bold",
-              !printer.msrp_gbp ? "text-gray-500 italic font-normal" : "text-foreground"
-            )}>
-              {printer.msrp_gbp ? `£${printer.msrp_gbp}` : 'Not set'}
-            </div>
-          </div>
+          {([
+            { regionCode: 'US', label: '🇺🇸 USD', msrp: printer.msrp_usd, symbol: '$', currency: 'USD' as const },
+            { regionCode: 'CA', label: '🇨🇦 CAD', msrp: printer.msrp_cad, symbol: 'C$', currency: 'CAD' as const },
+            { regionCode: 'EU', label: '🇪🇺 EUR', msrp: printer.msrp_eur, symbol: '€', currency: 'EUR' as const },
+            { regionCode: 'UK', label: '🇬🇧 GBP', msrp: printer.msrp_gbp, symbol: '£', currency: 'GBP' as const },
+          ] as const).map(({ regionCode, label, msrp, symbol, currency: regionCurrency }) => {
+            // Fallback: find a store price for this region when MSRP is not set
+            const storeFallback = !msrp && displayPrice
+              ? (() => {
+                  const store = allStores.find(s => s.region_code === regionCode);
+                  if (store) {
+                    const rate = regionCurrency === 'USD' ? 1 : getConversionRate('USD', regionCurrency);
+                    return (displayPrice || 0) * rate;
+                  }
+                  return null;
+                })()
+              : null;
+            
+            const displayValue = msrp 
+              ? `${symbol}${msrp}` 
+              : storeFallback 
+                ? `~${symbol}${storeFallback.toFixed(2)}`
+                : null;
+
+            return (
+              <div key={regionCode} className={cn(
+                "p-3 sm:p-6 rounded-xl border",
+                region === regionCode 
+                  ? "bg-primary/10 border-primary/30" 
+                  : "bg-muted/30 border-border/40"
+              )}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs sm:text-sm text-gray-400">{label}</span>
+                  {region === regionCode && (
+                    <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
+                      Selected
+                    </Badge>
+                  )}
+                </div>
+                <div className={cn(
+                  "text-sm sm:text-lg font-bold",
+                  !displayValue ? "text-gray-500/50 italic font-normal" : "",
+                  storeFallback && !msrp ? "text-muted-foreground" : "text-foreground"
+                )}>
+                  {displayValue || 'Not set'}
+                </div>
+                {storeFallback && !msrp && (
+                  <span className="text-[10px] text-muted-foreground/70">Store price</span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
