@@ -1,4 +1,10 @@
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PrinterSpecGridProps {
   buildVolume?: {
@@ -76,26 +82,32 @@ export default function PrinterSpecGrid({
 
   if (variant === "compact") {
     return (
-      <div className={cn("grid grid-cols-2 gap-2", className)}>
-        {specs.map((spec) => (
-          <div
-            key={spec.label}
-            className="bg-white/[0.03] border border-white/5 rounded-md px-2 py-1.5"
-          >
-            <div className="font-mono text-[8px] uppercase tracking-[0.1em] text-muted-foreground mb-0.5">
-              {spec.label}
-            </div>
-            <div className="font-mono text-[11px] font-bold text-foreground">
-              {spec.value}
-              {spec.unit && (
-                <span className="text-[9px] text-muted-foreground ml-0.5">
-                  {spec.unit}
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+      <TooltipProvider delayDuration={300}>
+        <div className={cn("grid grid-cols-2 gap-2", className)}>
+          {specs.map((spec) => (
+            <Tooltip key={spec.label}>
+              <TooltipTrigger asChild>
+                <div className="bg-white/[0.03] border border-white/5 rounded-md px-2 py-1.5 min-w-0 overflow-hidden">
+                  <div className="font-mono text-[8px] uppercase tracking-[0.1em] text-muted-foreground mb-0.5">
+                    {spec.label}
+                  </div>
+                  <div className="font-mono text-[11px] font-bold text-foreground truncate">
+                    {spec.value}
+                    {spec.unit && (
+                      <span className="text-[9px] text-muted-foreground ml-0.5">
+                        {spec.unit}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>{spec.label}: {spec.value}{spec.unit ? ` ${spec.unit}` : ''}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </TooltipProvider>
     );
   }
 

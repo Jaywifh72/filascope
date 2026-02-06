@@ -1,5 +1,11 @@
 import { Thermometer, Circle, Weight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface FilamentQuickSpecsGridProps {
   nozzleTempMin?: number | null;
@@ -19,15 +25,24 @@ interface SpecCardProps {
 
 function SpecCard({ icon, label, value }: SpecCardProps) {
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3">
-      <div className="text-primary flex-shrink-0 mt-0.5">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-gray-400 mb-1">{label}</p>
-        <p className="text-lg font-semibold text-white leading-tight">{value}</p>
-      </div>
-    </div>
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0">
+            <div className="text-primary flex-shrink-0 mt-0.5">
+              {icon}
+            </div>
+            <div className="min-w-0 overflow-hidden">
+              <p className="text-xs text-gray-400 mb-1">{label}</p>
+              <p className="text-lg font-semibold text-white leading-tight truncate">{value}</p>
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p>{label}: {value}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -75,7 +90,11 @@ export function FilamentQuickSpecsGrid({
   const nozzleTemp = formatTempRange(nozzleTempMin, nozzleTempMax);
   const bedTemp = formatTempRange(bedTempMin, bedTempMax);
   const diameterValue = diameter ? `${diameter}mm` : '—';
-  const weightValue = netWeight ? `${netWeight}g` : '—';
+  const weightValue = netWeight
+    ? netWeight >= 1000
+      ? `${(netWeight / 1000).toFixed(netWeight % 1000 === 0 ? 0 : netWeight % 100 === 0 ? 1 : 2)}kg`
+      : `${netWeight}g`
+    : '—';
 
   // Only render if we have at least one value
   const hasAnyData = nozzleTempMin || nozzleTempMax || bedTempMin || bedTempMax || diameter || netWeight;

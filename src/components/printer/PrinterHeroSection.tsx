@@ -5,6 +5,12 @@ import { DataQualityIndicator } from "./DataQualityIndicator";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
 import { ProductGallery } from "@/components/ui/product-gallery";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PrinterHeroSectionProps {
   printer: any;
@@ -22,17 +28,24 @@ interface QuickSpecCardProps {
 
 function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
   return (
-    <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-        <Icon className="h-5 w-5 text-primary" />
-      </div>
-      <div className="flex flex-col gap-1">
-        {/* Labels: text-xs text-gray-400 */}
-        <span className="text-xs text-gray-400">{label}</span>
-        {/* Values: text-base font-semibold text-white */}
-        <span className="text-base font-semibold text-white break-words">{value}</span>
-      </div>
-    </div>
+    <TooltipProvider delayDuration={300}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3 min-w-0">
+            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+              <Icon className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex flex-col gap-1 min-w-0">
+              <span className="text-xs text-gray-400">{label}</span>
+              <span className="text-base font-semibold text-white break-words leading-snug">{value}</span>
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p>{label}: {value}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
