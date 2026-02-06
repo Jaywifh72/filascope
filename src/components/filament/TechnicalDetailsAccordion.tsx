@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   ThermometerSun, 
   Droplets, 
@@ -17,9 +18,11 @@ import {
   Gauge,
   Shield,
   ChevronDown,
+  AlertTriangle,
 } from 'lucide-react';
 import { Database as SupabaseDB } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
+import { validateSpec, validateDiameter } from '@/lib/specValidation';
 
 type Filament = SupabaseDB["public"]["Tables"]["filaments"]["Row"];
 
@@ -105,14 +108,25 @@ interface SpecCardProps {
   value: React.ReactNode;
   icon?: React.ReactNode;
   colorClass?: string;
+  warningMessage?: string | null;
 }
 
-function SpecCard({ label, value, icon, colorClass = "text-foreground" }: SpecCardProps) {
+function SpecCard({ label, value, icon, colorClass = "text-foreground", warningMessage }: SpecCardProps) {
   return (
     <div className="p-3 bg-gray-800/40 rounded-lg border border-gray-700/50">
       <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1.5">
         {icon}
         {label}
+        {warningMessage && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertTriangle className="w-3 h-3 text-amber-400 flex-shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p className="text-xs">⚠ {warningMessage}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
       <div className={cn("font-bold", colorClass)}>{value}</div>
     </div>
@@ -386,24 +400,28 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
                 <SpecCard
                   label="Net Weight"
                   value={`${filament.net_weight_g}g`}
+                  warningMessage={validateSpec('net_weight', filament.net_weight_g).warningMessage}
                 />
               )}
               {filament.diameter_nominal_mm && (
                 <SpecCard
                   label="Diameter"
                   value={`${filament.diameter_nominal_mm}mm`}
+                  warningMessage={validateDiameter(filament.diameter_nominal_mm).warningMessage}
                 />
               )}
               {filament.spool_outer_d_mm && (
                 <SpecCard
                   label="Spool Diameter"
                   value={`${filament.spool_outer_d_mm}mm`}
+                  warningMessage={validateSpec('spool_outer_diameter', filament.spool_outer_d_mm).warningMessage}
                 />
               )}
               {filament.spool_width_mm && (
                 <SpecCard
                   label="Spool Width"
                   value={`${filament.spool_width_mm}mm`}
+                  warningMessage={validateSpec('spool_width', filament.spool_width_mm).warningMessage}
                 />
               )}
               {filament.density_g_cm3 && (
