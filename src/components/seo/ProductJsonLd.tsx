@@ -27,6 +27,11 @@ interface ProductJsonLdProps {
   availability?: boolean;
   // Regional pricing support
   regionalOffers?: RegionalOffer[];
+  // Aggregate rating support (FilaScope scores)
+  ratingValue?: number | null;
+  ratingCount?: number | null;
+  bestRating?: number;
+  worstRating?: number;
   // Technical specs for additionalProperty
   transmissionDistance?: number | null;
   nozzleTempMin?: number | null;
@@ -68,6 +73,10 @@ export function ProductJsonLd({
   currency,
   availability = true,
   regionalOffers,
+  ratingValue,
+  ratingCount,
+  bestRating = 10,
+  worstRating = 0,
   transmissionDistance,
   nozzleTempMin,
   nozzleTempMax,
@@ -273,6 +282,16 @@ export function ProductJsonLd({
     url,
     ...(additionalProperties.length > 0 && { additionalProperty: additionalProperties }),
     ...(offers && { offers }),
+    // Aggregate rating from FilaScope scores
+    ...(ratingValue != null && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: ratingValue.toFixed(1),
+        bestRating: bestRating.toString(),
+        worstRating: worstRating.toString(),
+        ...(ratingCount != null && { ratingCount: ratingCount.toString() }),
+      },
+    }),
   };
 
   return (

@@ -4,3 +4,7 @@ export { FAQSchema } from './FAQSchema';
 export { DatasetSchema } from './DatasetSchema';
 export { HowToSchema } from './HowToSchema';
 export { ItemListSchema } from './ItemListSchema';
+export { WebSiteSchema } from './WebSiteSchema';
+export { BreadcrumbSchema } from './BreadcrumbSchema';
+export { OrganizationSchema } from './OrganizationSchema';
+export { CanonicalLink } from './CanonicalLink';

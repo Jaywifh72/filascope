@@ -19,6 +19,7 @@ import { BrandOverviewTab } from "@/components/brands/tabs/BrandOverviewTab";
 import { BrandAboutTab } from "@/components/brands/tabs/BrandAboutTab";
 import { BrandProductsTab } from "@/components/brands/tabs/BrandProductsTab";
 import { BrandSEO } from "@/components/seo/BrandSEO";
+import { BreadcrumbSchema } from "@/components/seo";
 import { BrandBadgesDisplay, getBrandBadges } from "@/components/brands/BrandBadges";
 import { BrandFAQSection } from "@/components/brands/BrandFAQSection";
 
@@ -540,6 +541,15 @@ const BrandDetail = () => {
 
   return (
     <div className="min-h-screen p-8">
+      {/* Breadcrumb Schema */}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://filascope.com/' },
+          { name: 'Brands', url: 'https://filascope.com/brands' },
+          { name: decodedBrand, url: `https://filascope.com/brands/${encodeURIComponent(decodedBrand)}` },
+        ]}
+      />
+
       {/* Brand SEO */}
       <BrandSEO
         brandName={decodedBrand}
