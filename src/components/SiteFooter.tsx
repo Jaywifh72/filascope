@@ -97,7 +97,8 @@ export function SiteFooter() {
   ];
 
   const resourceLinks = [
-    { name: "Material Encyclopedia", href: "/matrix" },
+    { name: "Material Encyclopedia", href: "/compare" },
+    { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Slicer Directory", href: "/reference/slicers" },
     { name: "Model Repositories", href: "/reference/repos" },
     { name: "Print Calculator", href: "/wizard" },
