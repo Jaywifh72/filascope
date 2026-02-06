@@ -4,8 +4,8 @@ import { useLocation } from 'react-router-dom';
 const BASE_URL = 'https://filascope.com';
 
 /**
- * Adds a canonical link tag to every page.
- * The canonical URL is the current pathname without query parameters or trailing slashes.
+ * Adds canonical link and og:url meta tags to every page.
+ * Uses the current pathname without query parameters or trailing slashes.
  * This prevents duplicate content issues from region/currency URL variations.
  */
 export function CanonicalLink() {
@@ -21,6 +21,7 @@ export function CanonicalLink() {
   return (
     <Helmet>
       <link rel="canonical" href={canonicalUrl} />
+      <meta property="og:url" content={canonicalUrl} />
     </Helmet>
   );
 }
