@@ -175,6 +175,59 @@ export function parseFilamentSlug(slug: string): {
 }
 
 /**
+ * Calculate slug similarity score using token overlap
+ * Returns a score between 0 and 1 (1 = perfect match)
+ */
+export function calculateSlugSimilarity(slug1: string, slug2: string): number {
+  if (!slug1 || !slug2) return 0;
+  if (slug1 === slug2) return 1;
+  
+  const tokens1 = new Set(slug1.toLowerCase().split('-').filter(t => t.length > 0));
+  const tokens2 = new Set(slug2.toLowerCase().split('-').filter(t => t.length > 0));
+  
+  if (tokens1.size === 0 || tokens2.size === 0) return 0;
+  
+  // Count matching tokens
+  let matches = 0;
+  for (const token of tokens1) {
+    if (tokens2.has(token)) {
+      matches++;
+    }
+  }
+  
+  // Jaccard similarity: intersection / union
+  const union = new Set([...tokens1, ...tokens2]);
+  return matches / union.size;
+}
+
+/**
+ * Extract primary color word from a compound color phrase
+ * e.g., "basic-black" -> "black", "matte-white" -> "white"
+ */
+export function extractPrimaryColor(colorPhrase: string | undefined): string | undefined {
+  if (!colorPhrase) return undefined;
+  
+  // Common color modifiers to strip
+  const modifiers = new Set([
+    'basic', 'matte', 'gloss', 'glossy', 'silk', 'silky', 'metallic',
+    'sparkle', 'sparkly', 'pearl', 'pearlescent', 'translucent', 'transparent',
+    'opaque', 'bright', 'dark', 'light', 'deep', 'pale', 'vivid', 'neon',
+    'pastel', 'satin', 'marble', 'galaxy', 'rainbow', 'gradient'
+  ]);
+  
+  const parts = colorPhrase.toLowerCase().split('-').filter(p => p.length > 0);
+  
+  // Return the last non-modifier word, or the last word if all are modifiers
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (!modifiers.has(parts[i])) {
+      return parts[i];
+    }
+  }
+  
+  return parts[parts.length - 1];
+}
+
+/**
  * Generate canonical URL for a filament
  */
 export function getCanonicalFilamentUrl(slug: string): string {
