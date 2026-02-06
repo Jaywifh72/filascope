@@ -32,9 +32,9 @@ function SpecCard({ icon, label, value }: SpecCardProps) {
             <div className="text-primary flex-shrink-0 mt-0.5">
               {icon}
             </div>
-            <div className="min-w-0 overflow-hidden">
-              <p className="text-xs text-gray-400 mb-1">{label}</p>
-              <p className="text-lg font-semibold text-white leading-tight truncate">{value}</p>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-400 mb-1 whitespace-nowrap">{label}</p>
+              <p className="text-lg font-semibold text-white leading-tight whitespace-nowrap">{value}</p>
             </div>
           </div>
         </TooltipTrigger>

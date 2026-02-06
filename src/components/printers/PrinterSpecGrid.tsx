@@ -87,16 +87,14 @@ export default function PrinterSpecGrid({
           {specs.map((spec) => (
             <Tooltip key={spec.label}>
               <TooltipTrigger asChild>
-                <div className="bg-white/[0.03] border border-white/5 rounded-md px-2 py-1.5 min-w-0 overflow-hidden">
-                  <div className="font-mono text-[8px] uppercase tracking-[0.1em] text-muted-foreground mb-0.5">
+                 <div className="bg-white/[0.03] border border-white/5 rounded-md px-2 py-1.5 min-w-0">
+                  <div className="font-mono text-[8px] uppercase tracking-[0.1em] text-muted-foreground mb-0.5 whitespace-nowrap">
                     {spec.label}
                   </div>
-                  <div className="font-mono text-[11px] font-bold text-foreground truncate">
-                    {spec.value}
+                  <div className="font-mono text-[11px] font-bold text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span>{spec.value}</span>
                     {spec.unit && (
-                      <span className="text-[9px] text-muted-foreground ml-0.5">
-                        {spec.unit}
-                      </span>
+                      <span className="text-[9px] text-muted-foreground ml-0.5">{spec.unit}</span>
                     )}
                   </div>
                 </div>
@@ -132,14 +130,12 @@ export default function PrinterSpecGrid({
           <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground mb-1">
             {spec.label}
           </div>
-          <div className="font-mono text-sm font-bold text-foreground flex items-baseline gap-0.5">
+          <div className="font-mono text-sm font-bold text-foreground flex items-baseline gap-0.5 whitespace-nowrap">
             <span className={spec.value === "—" ? "text-muted-foreground" : ""}>
               {spec.value}
             </span>
             {spec.unit && spec.value !== "—" && (
-              <span className="text-[10px] text-muted-foreground font-normal">
-                {spec.unit}
-              </span>
+              <span className="text-[10px] text-muted-foreground font-normal">{spec.unit}</span>
             )}
           </div>
         </div>
