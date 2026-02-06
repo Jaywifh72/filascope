@@ -26,6 +26,7 @@ interface RegionContextType {
   
   // State
   isLoading: boolean;
+  hasRates: boolean;
   exchangeRates: Map<string, number>;
 }
 
@@ -155,6 +156,9 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     savePreferences(region, newCurrency);
   }, [region, savePreferences]);
 
+  // Whether exchange rates have been loaded (prevents 1:1 fallback bug)
+  const hasRates = exchangeRates.size > 1; // At least USD_USD + one real rate
+
   const getConversionRate = useCallback((
     fromCurrency: CurrencyCode,
     toCurrency: CurrencyCode
@@ -171,8 +175,14 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     const toUsdKey = `${fromCurrency}_USD`;
     const fromUsdKey = `USD_${toCurrency}`;
     
-    const toUsd = exchangeRates.get(toUsdKey) || 1;
-    const fromUsd = exchangeRates.get(fromUsdKey) || 1;
+    const toUsd = exchangeRates.get(toUsdKey);
+    const fromUsd = exchangeRates.get(fromUsdKey);
+    
+    // If we can't find either leg, return 1 as fallback
+    // Components should check `hasRates` before trusting conversion results
+    if (toUsd === undefined || fromUsd === undefined) {
+      return 1;
+    }
     
     return toUsd * fromUsd;
   }, [exchangeRates]);
@@ -181,6 +191,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     amount: number,
     fromCurrency: CurrencyCode
   ): number => {
+    if (fromCurrency === currency) return amount;
     const rate = getConversionRate(fromCurrency, currency);
     return Math.round(amount * rate * 100) / 100;
   }, [currency, getConversionRate]);
@@ -208,6 +219,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     getConversionRate,
     getFallbackRegions,
     isLoading,
+    hasRates,
     exchangeRates,
   }), [
     region,
@@ -219,6 +231,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
     getConversionRate,
     getFallbackRegions,
     isLoading,
+    hasRates,
     exchangeRates,
   ]);
 
