@@ -9,6 +9,7 @@ interface ResultsHeaderProps {
   onClearFilters: () => void;
   onExportCSV?: () => void;
   isExporting?: boolean;
+  isUpdating?: boolean; // True during region transitions when we're showing stale count
 }
 
 const ResultsHeader = ({ 
@@ -17,10 +18,15 @@ const ResultsHeader = ({
   hasActiveFilters, 
   onClearFilters,
   onExportCSV,
-  isExporting = false
+  isExporting = false,
+  isUpdating = false
 }: ResultsHeaderProps) => {
   const printerBrand = selectedPrinter?.printer_brands?.brand || "";
   const printerName = selectedPrinter?.model_name || "";
+
+  // Only show loading skeleton on initial load (count is 0 and no filters)
+  // Keep the count visible during region transitions
+  const showLoadingSkeleton = count === 0 && !hasActiveFilters && !isUpdating;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 animate-fade-in">
@@ -32,10 +38,15 @@ const ResultsHeader = ({
             <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.06em] sm:tracking-[0.08em] text-foreground">
               <span className="hidden sm:inline text-muted-foreground">Material Registry </span>
               <span className="text-muted-foreground sm:hidden">// </span>
-              {count === 0 && !hasActiveFilters ? (
+              {showLoadingSkeleton ? (
                 <span className="inline-block w-12 h-4 bg-primary/20 rounded animate-pulse align-middle" />
               ) : (
-                <span className="text-primary font-bold">{count.toLocaleString()}</span>
+                <>
+                  <span className="text-primary font-bold">{count.toLocaleString()}</span>
+                  {isUpdating && (
+                    <Loader2 className="inline-block w-3 h-3 ml-1.5 text-primary animate-spin align-middle" />
+                  )}
+                </>
               )}
               <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
                 {hasActiveFilters ? "Matching" : "Products"}
