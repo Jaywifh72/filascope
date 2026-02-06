@@ -3,8 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import type { SimilarFilamentData, SimilarityReason } from "@/components/filament/similar/SimilarFilamentCard";
 import { MATERIAL_PRICE_TIERS } from "@/lib/materialPriceTiers";
 
+export type SimilarityGroup = "other_brands_same_material" | "same_brand_other_material";
+
+export interface GroupedSimilarFilament extends SimilarFilamentData {
+  group: SimilarityGroup;
+  score: number;
+}
+
 interface UseSimilarFilamentsEnhancedResult {
   similarFilaments: SimilarFilamentData[];
+  groupedFilaments: {
+    otherBrandsSameMaterial: GroupedSimilarFilament[];
+    sameBrandOtherMaterial: GroupedSimilarFilament[];
+  };
   isLoading: boolean;
 }
 
@@ -18,17 +29,48 @@ interface CurrentFilament {
   color_family: string | null;
 }
 
+/**
+ * Extract a normalized "product line" key from a product title + vendor.
+ * This groups color variants of the same product together.
+ * e.g., "Bambu Lab PLA Basic Red" and "Bambu Lab PLA Basic Blue" → same key
+ */
+function getProductLineKey(title: string, vendor: string | null): string {
+  const normalized = title.toLowerCase().trim();
+  const v = (vendor || "").toLowerCase().trim();
+
+  // Remove common color suffixes and variant descriptors
+  const cleaned = normalized
+    // Remove hex color codes
+    .replace(/#[0-9a-f]{3,8}/gi, "")
+    // Remove common color names at the end
+    .replace(
+      /\s+(red|blue|green|black|white|yellow|orange|purple|pink|grey|gray|silver|gold|brown|beige|teal|cyan|magenta|olive|navy|cream|ivory|coral|salmon|lime|aqua|maroon|tan|champagne|charcoal|midnight|forest|sky|cobalt|emerald|ruby|jade|pearl|matte|glossy|translucent|transparent|clear|natural|rainbow|multicolor|gradient|marble|wood|silk|galaxy|glow|neon|pastel|metallic|sparkle|satin|platinum|bronze|copper)\b/gi,
+      ""
+    )
+    // Remove trailing weight/size descriptors that don't define the product line
+    .replace(/\s*\d+\s*g\s*$/i, "")
+    .replace(/\s*[\-–]\s*$/, "")
+    .trim();
+
+  return `${v}::${cleaned}`;
+}
+
 export function useSimilarFilamentsEnhanced(
   currentFilament: CurrentFilament | null
 ): UseSimilarFilamentsEnhancedResult {
-  const [candidates, setCandidates] = useState<SimilarFilamentData[]>([]);
+  const [sameMaterialCandidates, setSameMaterialCandidates] = useState<any[]>([]);
+  const [sameBrandCandidates, setSameBrandCandidates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Calculate current price per kg
   const currentPricePerKg = useMemo(() => {
     if (!currentFilament?.variant_price || !currentFilament?.net_weight_g) return null;
     return currentFilament.variant_price / (currentFilament.net_weight_g / 1000);
   }, [currentFilament?.variant_price, currentFilament?.net_weight_g]);
+
+  const currentProductLineKey = useMemo(() => {
+    if (!currentFilament) return "";
+    return getProductLineKey(currentFilament.product_title, currentFilament.vendor);
+  }, [currentFilament?.product_title, currentFilament?.vendor]);
 
   useEffect(() => {
     if (!currentFilament?.id || !currentFilament?.material) {
@@ -36,138 +78,247 @@ export function useSimilarFilamentsEnhanced(
       return;
     }
 
-    const fetchSimilar = async () => {
+    const fetchAll = async () => {
       setIsLoading(true);
       try {
-        // Fetch filaments with same material, different from current
-        const { data, error } = await supabase
+        // Query 1: Same material, different brands
+        const sameMaterialPromise = supabase
           .from("filaments")
           .select(`
-            id, 
-            product_title, 
-            vendor, 
-            material, 
-            variant_price, 
-            net_weight_g, 
-            color_hex, 
-            color_family, 
-            featured_image,
-            nozzle_temp_min_c,
-            nozzle_temp_max_c,
-            ease_of_printing_score
+            id, product_title, vendor, material, variant_price, 
+            net_weight_g, color_hex, color_family, featured_image,
+            nozzle_temp_min_c, nozzle_temp_max_c, ease_of_printing_score
           `)
           .eq("material", currentFilament.material)
-          .neq("id", currentFilament.id)
-          .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude samples
+          .neq("vendor", currentFilament.vendor || "")
+          .or("net_weight_g.is.null,net_weight_g.gte.300")
           .not("variant_price", "is", null)
-          .limit(50);
+          .limit(80);
 
-        if (error) {
-          console.error("Error fetching similar filaments:", error);
-          setCandidates([]);
-          return;
+        // Query 2: Same brand, different material
+        const sameBrandPromise = currentFilament.vendor
+          ? supabase
+              .from("filaments")
+              .select(`
+                id, product_title, vendor, material, variant_price, 
+                net_weight_g, color_hex, color_family, featured_image,
+                nozzle_temp_min_c, nozzle_temp_max_c, ease_of_printing_score
+              `)
+              .eq("vendor", currentFilament.vendor)
+              .neq("material", currentFilament.material || "")
+              .or("net_weight_g.is.null,net_weight_g.gte.300")
+              .not("variant_price", "is", null)
+              .limit(40)
+          : Promise.resolve({ data: [], error: null });
+
+        const [sameMaterialResult, sameBrandResult] = await Promise.all([
+          sameMaterialPromise,
+          sameBrandPromise,
+        ]);
+
+        if (sameMaterialResult.error) {
+          console.error("Error fetching same-material filaments:", sameMaterialResult.error);
+        }
+        if (sameBrandResult.error) {
+          console.error("Error fetching same-brand filaments:", sameBrandResult.error);
         }
 
-        setCandidates(data || []);
+        setSameMaterialCandidates(sameMaterialResult.data || []);
+        setSameBrandCandidates(sameBrandResult.data || []);
       } catch (err) {
         console.error("Error in useSimilarFilamentsEnhanced:", err);
-        setCandidates([]);
+        setSameMaterialCandidates([]);
+        setSameBrandCandidates([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSimilar();
-  }, [currentFilament?.id, currentFilament?.material]);
+    fetchAll();
+  }, [currentFilament?.id, currentFilament?.material, currentFilament?.vendor]);
 
-  // Process and rank candidates
-  const similarFilaments = useMemo(() => {
-    if (!currentFilament || candidates.length === 0) return [];
+  const { groupedFilaments, similarFilaments } = useMemo(() => {
+    if (!currentFilament) {
+      return {
+        groupedFilaments: { otherBrandsSameMaterial: [], sameBrandOtherMaterial: [] },
+        similarFilaments: [],
+      };
+    }
 
     const baseMaterial = currentFilament.material?.split(/[\s\-+]/)[0] || "";
-    const priceTier = MATERIAL_PRICE_TIERS[baseMaterial] || MATERIAL_PRICE_TIERS[currentFilament.material || ""] || { budget: 25, premium: 45 };
+    const priceTier =
+      MATERIAL_PRICE_TIERS[baseMaterial] ||
+      MATERIAL_PRICE_TIERS[currentFilament.material || ""] ||
+      { budget: 25, premium: 45 };
 
-    const scored = candidates.map((filament) => {
-      const pricePerKg = filament.variant_price && filament.net_weight_g
-        ? filament.variant_price / (filament.net_weight_g / 1000)
-        : null;
+    // --- Deduplicate: keep one per product line ---
+    function deduplicateByProductLine(items: any[]): any[] {
+      const seen = new Map<string, any>();
+      for (const item of items) {
+        const key = getProductLineKey(item.product_title, item.vendor);
+        // Skip if it's the same product line as the current filament
+        if (key === currentProductLineKey) continue;
+
+        if (!seen.has(key)) {
+          seen.set(key, item);
+        } else {
+          // Prefer the one with a featured image
+          const existing = seen.get(key);
+          if (!existing.featured_image && item.featured_image) {
+            seen.set(key, item);
+          }
+        }
+      }
+      return Array.from(seen.values());
+    }
+
+    // --- Score other-brand same-material candidates ---
+    const dedupedSameMaterial = deduplicateByProductLine(sameMaterialCandidates);
+    const scoredSameMaterial: GroupedSimilarFilament[] = dedupedSameMaterial.map((filament) => {
+      const pricePerKg =
+        filament.variant_price && filament.net_weight_g
+          ? filament.variant_price / (filament.net_weight_g / 1000)
+          : null;
 
       let score = 0;
       let reason: SimilarityReason = "same_material";
 
-      // Same brand bonus (high priority to show alternatives)
-      const isSameBrand = filament.vendor?.toLowerCase() === currentFilament.vendor?.toLowerCase();
-      if (isSameBrand) {
-        score += 10;
-        reason = "same_brand";
-      }
-
-      // Same color family
-      const isSameColor = filament.color_family && filament.color_family === currentFilament.color_family;
-      if (isSameColor) {
-        score += 8;
-        if (!isSameBrand) reason = "same_color";
-      }
-
-      // Price similarity (within 20%)
+      // Price similarity (within 30%) — highest priority
       if (pricePerKg && currentPricePerKg) {
         const priceDiff = Math.abs(pricePerKg - currentPricePerKg) / currentPricePerKg;
-        if (priceDiff <= 0.2) {
-          score += 15;
-          if (!isSameBrand && !isSameColor) reason = "similar_price";
-        } else if (priceDiff <= 0.35) {
-          score += 8;
+        if (priceDiff <= 0.15) {
+          score += 20;
+          reason = "similar_price";
+        } else if (priceDiff <= 0.30) {
+          score += 12;
+          reason = "similar_price";
+        } else if (priceDiff <= 0.50) {
+          score += 5;
         }
       }
 
-      // Budget pick (great value)
-      if (pricePerKg && pricePerKg <= priceTier.budget) {
-        score += 5;
-        if (!isSameBrand && !isSameColor && currentPricePerKg && pricePerKg < currentPricePerKg * 0.8) {
-          reason = "budget_pick";
-        }
+      // Similar spool size
+      if (
+        filament.net_weight_g &&
+        currentFilament.net_weight_g &&
+        Math.abs(filament.net_weight_g - currentFilament.net_weight_g) <= 100
+      ) {
+        score += 6;
+      }
+
+      // Budget pick
+      if (
+        pricePerKg &&
+        pricePerKg <= priceTier.budget &&
+        currentPricePerKg &&
+        pricePerKg < currentPricePerKg * 0.7
+      ) {
+        reason = "budget_pick";
+        score += 4;
       }
 
       // Premium pick
-      if (pricePerKg && pricePerKg >= priceTier.premium) {
-        if (!isSameBrand && currentPricePerKg && pricePerKg > currentPricePerKg * 1.3) {
-          reason = "premium_pick";
-        }
+      if (
+        pricePerKg &&
+        pricePerKg >= priceTier.premium &&
+        currentPricePerKg &&
+        pricePerKg > currentPricePerKg * 1.3
+      ) {
+        reason = "premium_pick";
       }
 
-      // Prefer different vendors for variety
-      if (!isSameBrand) {
+      // Same color family bonus
+      if (filament.color_family && filament.color_family === currentFilament.color_family) {
+        score += 3;
+      }
+
+      // Prefer items with images
+      if (filament.featured_image) score += 2;
+
+      return {
+        ...filament,
+        similarityReason: reason,
+        group: "other_brands_same_material" as SimilarityGroup,
+        score,
+      };
+    });
+
+    // --- Score same-brand other-material candidates ---
+    const dedupedSameBrand = deduplicateByProductLine(sameBrandCandidates);
+    const scoredSameBrand: GroupedSimilarFilament[] = dedupedSameBrand.map((filament) => {
+      let score = 0;
+
+      // Prefer items with images
+      if (filament.featured_image) score += 5;
+
+      // Price similarity
+      const pricePerKg =
+        filament.variant_price && filament.net_weight_g
+          ? filament.variant_price / (filament.net_weight_g / 1000)
+          : null;
+      if (pricePerKg && currentPricePerKg) {
+        const priceDiff = Math.abs(pricePerKg - currentPricePerKg) / currentPricePerKg;
+        if (priceDiff <= 0.30) score += 8;
+        else if (priceDiff <= 0.50) score += 4;
+      }
+
+      // Similar spool size
+      if (
+        filament.net_weight_g &&
+        currentFilament.net_weight_g &&
+        Math.abs(filament.net_weight_g - currentFilament.net_weight_g) <= 100
+      ) {
         score += 3;
       }
 
       return {
         ...filament,
-        similarityReason: reason,
+        similarityReason: "same_brand" as SimilarityReason,
+        group: "same_brand_other_material" as SimilarityGroup,
         score,
       };
     });
 
-    // Sort by score descending
-    scored.sort((a, b) => b.score - a.score);
+    // Sort both groups
+    scoredSameMaterial.sort((a, b) => b.score - a.score);
+    scoredSameBrand.sort((a, b) => b.score - a.score);
 
-    // Ensure diversity: max 2 from same brand
-    const result: (SimilarFilamentData & { score: number })[] = [];
+    // Ensure brand diversity in same-material group: max 2 per brand
+    const diverseSameMaterial: GroupedSimilarFilament[] = [];
     const brandCounts: Record<string, number> = {};
-
-    for (const item of scored) {
+    for (const item of scoredSameMaterial) {
       const vendor = item.vendor?.toLowerCase() || "unknown";
-      const currentCount = brandCounts[vendor] || 0;
-      
-      if (currentCount < 2) {
-        result.push(item);
-        brandCounts[vendor] = currentCount + 1;
+      const count = brandCounts[vendor] || 0;
+      if (count < 2) {
+        diverseSameMaterial.push(item);
+        brandCounts[vendor] = count + 1;
       }
-
-      if (result.length >= 6) break;
+      if (diverseSameMaterial.length >= 4) break;
     }
 
-    return result;
-  }, [candidates, currentFilament, currentPricePerKg]);
+    // Take top 2 same-brand other-material
+    const topSameBrand = scoredSameBrand.slice(0, 2);
 
-  return { similarFilaments, isLoading };
+    // Combined flat list for backward compatibility
+    const combined: SimilarFilamentData[] = [
+      ...diverseSameMaterial,
+      ...topSameBrand,
+    ];
+
+    return {
+      groupedFilaments: {
+        otherBrandsSameMaterial: diverseSameMaterial,
+        sameBrandOtherMaterial: topSameBrand,
+      },
+      similarFilaments: combined,
+    };
+  }, [
+    sameMaterialCandidates,
+    sameBrandCandidates,
+    currentFilament,
+    currentPricePerKg,
+    currentProductLineKey,
+  ]);
+
+  return { similarFilaments, groupedFilaments, isLoading };
 }
