@@ -104,11 +104,10 @@ const PrintersHeroSection = ({
             >
               {/* Vertical Cyan Laser Scan */}
               <div 
-                className="absolute top-0 bottom-0 w-[2px] z-30 pointer-events-none"
+                className="absolute top-0 bottom-0 w-[2px] z-30 pointer-events-none animate-printers-laser-scan"
                 style={{
                   background: "linear-gradient(180deg, transparent, #00CFE8, transparent)",
                   boxShadow: "0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)",
-                  animation: "laserScan 4s ease-in-out infinite",
                 }}
               />
               
@@ -190,30 +189,6 @@ const PrintersHeroSection = ({
           </div>
         </div>
       </div>
-      
-      {/* Keyframes */}
-      <style>{`
-        @keyframes laserScan {
-          0% {
-            left: 0%;
-            opacity: 0;
-          }
-          5% {
-            opacity: 1;
-          }
-          45% {
-            opacity: 1;
-          }
-          50% {
-            left: 100%;
-            opacity: 0;
-          }
-          100% {
-            left: 100%;
-            opacity: 0;
-          }
-        }
-      `}</style>
     </section>
   );
 };

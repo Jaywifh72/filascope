@@ -251,11 +251,10 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
             >
               {/* Horizontal Cyan Scan Line */}
               <div 
-                className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none"
+                className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none animate-hero-scan-line"
                 style={{
                   background: "linear-gradient(90deg, transparent, #00CFE8, transparent)",
                   boxShadow: "0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)",
-                  animation: "heroScanLine 4s ease-in-out infinite",
                 }}
               />
               
@@ -334,30 +333,6 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
           </div>
         </div>
       </div>
-      
-      {/* Hero scan line keyframes */}
-      <style>{`
-        @keyframes heroScanLine {
-          0% {
-            top: 0%;
-            opacity: 0;
-          }
-          5% {
-            opacity: 1;
-          }
-          45% {
-            opacity: 1;
-          }
-          50% {
-            top: 100%;
-            opacity: 0;
-          }
-          100% {
-            top: 100%;
-            opacity: 0;
-          }
-        }
-      `}</style>
     </section>
   );
 };

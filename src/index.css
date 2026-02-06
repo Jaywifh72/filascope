@@ -385,6 +385,58 @@ All colors MUST be HSL.
   }
 }
 
+/* Hero scan line animation */
+@keyframes heroScanLine {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  50% {
+    top: 100%;
+    opacity: 0;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-hero-scan-line {
+  animation: heroScanLine 4s ease-in-out infinite;
+}
+
+/* Printers page laser scan animation */
+@keyframes printersLaserScan {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  50% {
+    left: 100%;
+    opacity: 0;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-printers-laser-scan {
+  animation: printersLaserScan 4s ease-in-out infinite;
+}
+
 /* Skeleton shimmer animation for better perceived performance */
 @keyframes shimmer {
   0% {
