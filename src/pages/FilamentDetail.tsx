@@ -78,13 +78,13 @@ const FilamentDetail = () => {
   const [activeTab, setActiveTab] = useState<FilamentTab>("overview");
   const heroSentinelRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
-  const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { formatPrice: legacyFormatPrice, formatRegionalPrice } = useCurrency();
   const { incrementStat } = useAchievements();
   const { trackStoreClick } = useConversionTracking();
   const { getRegionalUrl, regionShortName } = useRegionalStore();
   
   // Get region from the correct source (URL parameter-based)
-  const { region: currentRegionCode } = useRegion();
+  const { region: currentRegionCode, currency, formatPrice, convertPrice: regionConvertPrice, hasRates } = useRegion();
   
   // Use the extracted color variants hook with CORRECT region from RegionContext
   const {
@@ -263,58 +263,119 @@ const FilamentDetail = () => {
       : packQty;
     if (wKg <= 0) return null;
 
+    // All prices must be in user's currency for fair comparison
+    const userCurrencyCode = currency;
+
     const candidates: Array<{
       name: string;
-      pricePerKg: number;
-      spoolPrice: number;
+      pricePerKg: number;       // in user's currency
+      spoolPrice: number;       // in user's currency
       productUrl: string;
       storeRegion: string | null;
       isBrandDirect: boolean;
+      isConverted: boolean;     // whether the displayed price is a conversion
+      originalCurrency: string | null;
     }> = [];
 
-    // Source 1: filament_listings (per-retailer prices, already sorted cheapest first)
+    // Source 1: filament_listings (per-retailer prices)
+    // Listings from the user's region are already in local currency;
+    // US listings need conversion for a fair comparison.
     if (allRetailerListings) {
       for (const listing of allRetailerListings) {
         if (listing.current_price != null && listing.current_price > 0 && listing.available) {
+          let price = listing.current_price;
+          let converted = false;
+          let origCurrency: string | null = null;
+
+          // Convert to user's currency if the listing is in a different currency
+          if (listing.currency !== userCurrencyCode && hasRates) {
+            const c = regionConvertPrice(listing.current_price, listing.currency as CurrencyCode);
+            if (c != null) {
+              origCurrency = listing.currency;
+              price = c;
+              converted = true;
+            }
+          }
+
           candidates.push({
             name: listing.retailer_name,
-            pricePerKg: listing.current_price / wKg,
-            spoolPrice: listing.current_price,
+            pricePerKg: price / wKg,
+            spoolPrice: price,
             productUrl: listing.affiliate_url || listing.product_url,
             storeRegion: listing.region,
             isBrandDirect: listing.retailer_name.toLowerCase() === (pricingFilament.vendor || '').toLowerCase(),
+            isConverted: converted,
+            originalCurrency: origCurrency,
           });
         }
       }
     }
 
-    // Source 2: Regional pricing (brand store from useUnifiedRegionalPricing)
-    if (regionalPriceResult?.displayPrice != null && regionalPriceResult.displayPrice > 0 && regionalPriceResult.store?.url) {
-      const name = regionalPriceResult.store.name || pricingFilament.vendor || 'Store';
+    // Source 2: Store pricing result (filament_prices table via RPC)
+    // This is the storeBestPrice — often Amazon. Include but don't let it
+    // shadow brand-direct stores from unified pricing (Source 3).
+    if (storeBestPrice && storeBestPrice.priceDisplay > 0 && storeBestPrice.productUrl) {
+      const name = storeBestPrice.storeName;
       const exists = candidates.some(c => c.name.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, ''));
       if (!exists) {
         candidates.push({
           name,
-          pricePerKg: regionalPriceResult.displayPrice / wKg,
-          spoolPrice: regionalPriceResult.displayPrice,
-          productUrl: regionalPriceResult.store.url,
-          storeRegion: regionalPriceResult.store.regionCode || null,
-          isBrandDirect: true,
+          pricePerKg: storeBestPrice.priceDisplay / wKg,
+          spoolPrice: storeBestPrice.priceDisplay,
+          productUrl: storeBestPrice.productUrl,
+          storeRegion: storeBestPrice.storeRegion,
+          isBrandDirect: false,
+          isConverted: storeBestPrice.isConverted,
+          originalCurrency: storeBestPrice.originalCurrency || null,
         });
       }
     }
 
-    // Source 3: Amazon price from filament record
+    // Source 3: Brand regional store (useUnifiedRegionalPricing — finds stores
+    // from brand_regional_stores, e.g. Polymaker Canada for CA users)
+    // This is critical: storeBestPrice may only have Amazon US, but the brand
+    // may have a local storefront.
+    if (unifiedPricing.displayPrice != null && unifiedPricing.displayPrice > 0 && unifiedPricing.storeUrl) {
+      const name = unifiedPricing.storeName || pricingFilament.vendor || 'Store';
+      const exists = candidates.some(c => c.name.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, ''));
+      if (!exists) {
+        candidates.push({
+          name,
+          pricePerKg: unifiedPricing.displayPrice / wKg,
+          spoolPrice: unifiedPricing.displayPrice,
+          productUrl: unifiedPricing.storeUrl,
+          storeRegion: unifiedPricing.storeRegion,
+          isBrandDirect: true,
+          isConverted: unifiedPricing.isConverted,
+          originalCurrency: unifiedPricing.originalCurrency || null,
+        });
+      }
+    }
+
+    // Source 4: Amazon price from filament record (legacy fallback)
     if (pricingFilament.amazon_price_usd && pricingFilament.amazon_link_us) {
       const aUrl = getAmazonUrl(pricingFilament.amazon_link_us);
       if (aUrl && !candidates.some(c => c.name.toLowerCase().includes('amazon'))) {
+        let price = pricingFilament.amazon_price_usd;
+        let converted = false;
+        let origCurrency: string | null = null;
+        if (userCurrencyCode !== 'USD' && hasRates) {
+          const c = regionConvertPrice(price, 'USD');
+          if (c != null) {
+            origCurrency = 'USD';
+            price = c;
+            converted = true;
+          }
+        }
         candidates.push({
           name: 'Amazon US',
-          pricePerKg: pricingFilament.amazon_price_usd / wKg,
-          spoolPrice: pricingFilament.amazon_price_usd,
+          pricePerKg: price / wKg,
+          spoolPrice: price,
           productUrl: aUrl,
           storeRegion: 'US',
           isBrandDirect: false,
+          isConverted: converted,
+          originalCurrency: origCurrency,
         });
       }
     }
@@ -342,34 +403,48 @@ const FilamentDetail = () => {
       return localCandidates[0];
     }
     return internationalCandidates[0];
-  }, [allRetailerListings, regionalPriceResult, pricingFilament, getAmazonUrl, currentRegionCode]);
+  }, [allRetailerListings, storeBestPrice, unifiedPricing, pricingFilament, getAmazonUrl, currentRegionCode]);
 
   // Build regional price result overridden by sidebarBest for the sidebar
   const sidebarRegionalPrice = useMemo(() => {
     if (!sidebarBest) return regionalPriceResult;
 
-    const baseStore = regionalPriceResult?.store || {
-      id: '', url: sidebarBest.productUrl,
-      regionCode: (sidebarBest.storeRegion || 'US') as RegionCode,
-      shipsFrom: null as string | null, freeShippingThreshold: null as number | null,
-    };
+    const isLocal = sidebarBest.storeRegion === currentRegionCode;
+    const bestRegion = (sidebarBest.storeRegion || 'US') as RegionCode;
 
     return {
       displayPrice: sidebarBest.spoolPrice,
-      displayCurrency: (regionalPriceResult?.displayCurrency || 'USD') as CurrencyCode,
-      formattedPrice: `$${sidebarBest.spoolPrice.toFixed(2)}`,
+      displayCurrency: currency as CurrencyCode,
+      formattedPrice: formatPrice(sidebarBest.spoolPrice, { showApproximate: sidebarBest.isConverted }),
       originalPrice: sidebarBest.spoolPrice,
-      originalCurrency: (regionalPriceResult?.originalCurrency || 'USD') as CurrencyCode,
-      isConverted: regionalPriceResult?.isConverted || false,
-      conversionRate: regionalPriceResult?.conversionRate || null,
+      originalCurrency: (sidebarBest.originalCurrency || currency) as CurrencyCode,
+      isConverted: sidebarBest.isConverted,
+      conversionRate: null,
       store: {
-        ...baseStore,
+        id: '',
         name: sidebarBest.name,
         url: sidebarBest.productUrl,
-        regionCode: (sidebarBest.storeRegion || baseStore.regionCode || 'US') as RegionCode,
+        regionCode: bestRegion,
+        shipsFrom: isLocal ? null : (REGIONS[bestRegion]?.name || bestRegion),
+        freeShippingThreshold: null,
       },
     };
-  }, [sidebarBest, regionalPriceResult]);
+  }, [sidebarBest, currentRegionCode, currency, formatPrice]);
+
+  // Unified retailer count: actual listings + brand store (if not already in listings)
+  const unifiedRetailerCount = useMemo(() => {
+    const listingNames = new Set(
+      (allRetailerListings || [])
+        .filter(l => l.current_price != null && l.current_price > 0 && l.available)
+        .map(l => l.retailer_name.toLowerCase().replace(/\s+/g, ''))
+    );
+    let count = listingNames.size;
+    if (unifiedPricing.storeUrl && unifiedPricing.storeName) {
+      const key = unifiedPricing.storeName.toLowerCase().replace(/\s+/g, '');
+      if (!listingNames.has(key)) count++;
+    }
+    return count;
+  }, [allRetailerListings, unifiedPricing.storeUrl, unifiedPricing.storeName]);
 
   const handleViewRetailers = () => {
     if (filament) {
@@ -780,6 +855,8 @@ const FilamentDetail = () => {
     || storeBestPrice?.productUrl || selectedVariant?.product_url
     || unifiedPricing.storeUrl || pricingFilament?.product_url || '';
 
+  // (unifiedRetailerCount computed above, before early returns)
+
   const baseProductName = getBaseName(filament.product_title);
   
   // Get the best product line name for SEO and display
@@ -988,7 +1065,7 @@ const FilamentDetail = () => {
             productUrl={sidebarProductUrl}
             originalUsUrl={pricingFilament.product_url || undefined}
             retailerName={sidebarRetailerName}
-            retailerCount={retailers.length}
+            retailerCount={unifiedRetailerCount}
             onViewRetailers={handleViewRetailers}
             hasActualRegionalPrice={hasActualRegionalPrice || hasStorePriceData || !!sidebarBest}
             isUsingFallbackRegion={!hasLocalStore}
