@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PriceFreshnessCell } from "@/components/price/PriceFreshnessDot";
 
 interface Filament {
   id: string;
@@ -45,6 +46,7 @@ interface Filament {
   product_url_eu?: string | null;
   high_speed_capable?: boolean | null;
   finish_type?: string | null;
+  last_scraped_at?: string | null;
 }
 
 interface FilamentTableViewProps {
@@ -96,6 +98,7 @@ export function FilamentTableView({
             <th className="py-3 px-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-right">True Cost</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Price</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Stock</th>
+            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Updated</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Rating</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Actions</th>
           </tr>
@@ -235,6 +238,9 @@ export function FilamentTableView({
                   ) : (
                     <XCircle className="w-4 h-4 text-red-400 mx-auto" />
                   )}
+                </td>
+                <td className="py-3 px-3 text-center">
+                  <PriceFreshnessCell lastScrapedAt={filament.last_scraped_at} />
                 </td>
                 <td className="py-3 px-3 text-right">
                   {overallScore !== null ? (
