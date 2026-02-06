@@ -1364,10 +1364,31 @@ const Finder = () => {
       return breakdown.score ?? 5;
     };
 
+    // Check if product is in stock - consider it in stock if variant_available is true
+    // or if it has a price (meaning it's available somewhere)
+    const isInStock = (filament: typeof a): boolean => {
+      // Explicit variant_available flag
+      if (filament.variant_available === true) return true;
+      if (filament.variant_available === false) return false;
+      // Fallback: if no explicit flag, assume in stock if there's a price
+      return (filament.variant_price ?? 0) > 0;
+    };
+
+    // Primary sort: in-stock items first (for score-based sorting)
+    const stockCompare = (stockA: boolean, stockB: boolean): number => {
+      if (stockA === stockB) return 0;
+      return stockB ? 1 : -1; // in-stock (true) comes first
+    };
+
     switch (sortBy) {
-      case "scoring-asc":
+      case "scoring-asc": {
+        const stockDiff = stockCompare(isInStock(a), isInStock(b));
+        if (stockDiff !== 0) return -stockDiff; // Reverse for ascending
         return getScore(a) - getScore(b);
+      }
       case "scoring-desc": {
+        const stockDiff = stockCompare(isInStock(a), isInStock(b));
+        if (stockDiff !== 0) return stockDiff;
         const scoreA = getScore(a);
         const scoreB = getScore(b);
         if (scoreB !== scoreA) return scoreB - scoreA;
@@ -1388,8 +1409,11 @@ const Finder = () => {
         return (b.tg_c || b.nozzle_temp_max_c || 0) - (a.tg_c || a.nozzle_temp_max_c || 0);
       case "print-desc":
         return (b.printability_index || 0) - (a.printability_index || 0);
-      default:
+      default: {
+        const stockDiff = stockCompare(isInStock(a), isInStock(b));
+        if (stockDiff !== 0) return stockDiff;
         return getScore(b) - getScore(a);
+      }
     }
   }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
