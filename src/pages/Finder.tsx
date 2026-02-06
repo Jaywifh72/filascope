@@ -57,6 +57,8 @@ import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilter
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { LoadingProgress } from "@/components/LoadingProgress";
+import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
+import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -1201,6 +1203,12 @@ const Finder = () => {
     }, 0);
   };
 
+  // Create scoring context from the full dataset for relative scoring
+  const scoringContext = useMemo(() => {
+    if (!regionalFilaments || regionalFilaments.length === 0) return null;
+    return createScoringContext(regionalFilaments as FilamentForScoring[]);
+  }, [regionalFilaments]);
+
   const filteredAndSortedFilaments = useMemo(() => regionalFilaments?.filter(f => {
     // Apply price range filter
     if (f.variant_price) {
@@ -1228,45 +1236,66 @@ const Finder = () => {
     // Apply glow filter
     if (glow && !f.material?.toLowerCase().includes('glow') && !f.product_title?.toLowerCase().includes('glow')) return false;
     
-    // Apply new surface finish filters
-    const finishType = f.finish_type?.toLowerCase() || '';
-    const titleLower = f.product_title?.toLowerCase() || '';
+    // Apply silk filter
+    if (silk && !isSilkFilament(f)) return false;
     
-    // Apply silk filter (silk, shimmer)
-    if (silk && !finishType.includes('silk') && !finishType.includes('shimmer') && !titleLower.includes('silk') && !titleLower.includes('shimmer')) return false;
+    // Apply metallic filter  
+    if (metallic && !isMetallicFilament(f)) return false;
     
-    // Apply metallic filter
-    if (metallic && !finishType.includes('metallic') && !finishType.includes('metal') && !titleLower.includes('metallic')) return false;
+    // Apply sparkle filter
+    if (sparkle && !isSparkleFilament(f)) return false;
     
-    // Apply sparkle filter (sparkle, glitter, galaxy)
-    if (sparkle && !finishType.includes('sparkle') && !finishType.includes('glitter') && !finishType.includes('galaxy') && !titleLower.includes('sparkle') && !titleLower.includes('glitter') && !titleLower.includes('galaxy')) return false;
+    // Apply translucent filter
+    if (translucent && !isTranslucentFilament(f)) return false;
     
-    // Apply translucent filter (translucent, transparent, clear)
-    if (translucent && !finishType.includes('translucent') && !finishType.includes('transparent') && !finishType.includes('clear') && !titleLower.includes('translucent') && !titleLower.includes('transparent')) return false;
+    // Apply large spools filter (1kg+)
+    if (largeSpools && (!f.net_weight_g || f.net_weight_g < 1000)) return false;
     
-    // Apply spool weight filter (default: hide very large spools > 2kg unless largeSpools is enabled)
-    // Standard spools are 0.5kg-1.5kg, large multi-packs are 2kg+
-    const weightG = f.net_weight_g || 1000; // Default to 1kg if unknown
-    if (!largeSpools && weightG > 2000) return false;
-    
-    // Apply color family filter
+    // Apply color family filter (OR logic - match any selected family)
     if (selectedColorFamilies.length > 0) {
-      const filamentColorFamily = f.color_family?.toLowerCase() || '';
-      const matchesFamily = selectedColorFamilies.some(family => {
-        const colorDef = COLOR_FAMILIES.find(c => c.name === family);
-        if (!colorDef) return false;
-        return colorDef.families.some(fam => filamentColorFamily.includes(fam.toLowerCase()));
+      // Find which color families this filament's color_hex matches
+      if (!f.color_hex) return false;
+      
+      const matchesAnyFamily = selectedColorFamilies.some(familyName => {
+        const familyDef = COLOR_FAMILIES.find(cf => cf.name === familyName);
+        if (!familyDef || familyDef.name === 'Multi' || familyDef.name === 'Glow') {
+          // For Multi/Glow, check product_title or material for keywords
+          if (familyDef?.name === 'Multi') {
+            const title = f.product_title?.toLowerCase() || '';
+            const mat = f.material?.toLowerCase() || '';
+            return familyDef.families.some(kw => title.includes(kw.toLowerCase()) || mat.includes(kw.toLowerCase()));
+          }
+          if (familyDef?.name === 'Glow') {
+            const title = f.product_title?.toLowerCase() || '';
+            const mat = f.material?.toLowerCase() || '';
+            return familyDef.families.some(kw => title.includes(kw.toLowerCase()) || mat.includes(kw.toLowerCase()));
+          }
+          return false;
+        }
+        // Calculate color distance to the family's representative hex
+        const distance = colorDistance(familyDef.hex, f.color_hex!);
+        return distance <= 45; // More generous tolerance for family matching
       });
-      if (!matchesFamily) return false;
+      
+      if (!matchesAnyFamily) return false;
     }
     
-    // Apply HEX color search filter (from explicit hex input)
-    if (hexSearch && hexSearch.match(/^#?[0-9A-Fa-f]{6}$/)) {
-      const searchHex = hexSearch.startsWith('#') ? hexSearch : `#${hexSearch}`;
-      const filamentHex = f.color_hex;
-      if (!filamentHex) return false;
-      const distance = colorDistance(searchHex, filamentHex);
+    // Apply hex-based color search (precise matching)
+    if (hexSearch) {
+      if (!f.color_hex) return false;
+      const distance = colorDistance(hexSearch, f.color_hex);
       if (distance > colorTolerance) return false;
+    }
+    
+    // Apply search term filter client-side for immediate feedback
+    if (searchTerm && searchTerm.trim().length > 0) {
+      const term = searchTerm.toLowerCase().trim();
+      const titleMatch = f.product_title?.toLowerCase().includes(term);
+      const vendorMatch = f.vendor?.toLowerCase().includes(term);
+      const materialMatch = f.material?.toLowerCase().includes(term);
+      const descMatch = f.product_description?.toLowerCase().includes(term);
+      
+      if (!titleMatch && !vendorMatch && !materialMatch && !descMatch) return false;
     }
     
     // Apply intelligent color name search (e.g., "orange" finds filaments with orange-like hex colors)
@@ -1316,49 +1345,17 @@ const Finder = () => {
       return convertedPrice / (weightKg * packQty);
     };
 
-    // Calculate a composite score for sorting when value_score is not available
-    // Uses printability_index, or computes from available data
-    const getCompositeScore = (filament: typeof a) => {
-      // Priority 1: Use stored value_score if available
-      if (filament.value_score && filament.value_score > 0) {
-        return filament.value_score;
-      }
-      
-      // Priority 2: Use printability_index (composite of ease + strength)
-      if (filament.printability_index && filament.printability_index > 0) {
-        return filament.printability_index;
-      }
-      
-      // Priority 3: Compute a basic score from available data
-      let score = 5; // Base score
-      
-      // Boost for high-speed capability
-      if (filament.high_speed_capable) score += 1;
-      
-      // Boost for having complete temperature data
-      if (filament.nozzle_temp_min_c && filament.nozzle_temp_max_c) score += 0.5;
-      if (filament.bed_temp_min_c && filament.bed_temp_max_c) score += 0.5;
-      
-      // Boost for having price data (indicates availability)
-      if (filament.variant_price && filament.variant_price > 0) score += 0.5;
-      
-      // Boost for having TDS data
-      if (filament.tds_url) score += 0.5;
-      
-      // Boost for popular/easy materials
-      const material = filament.material?.toUpperCase() || '';
-      if (material.includes('PLA')) score += 1;
-      else if (material.includes('PETG')) score += 0.8;
-      else if (material.includes('ABS')) score += 0.5;
-      
-      return Math.min(10, score);
+    // Use the new relative scoring algorithm for meaningful differentiation
+    const getScore = (filament: typeof a) => {
+      if (!scoringContext) return 5; // Neutral score if no context
+      return scoringContext.getScore(filament as FilamentForScoring);
     };
 
     switch (sortBy) {
       case "scoring-asc":
-        return getCompositeScore(a) - getCompositeScore(b);
+        return getScore(a) - getScore(b);
       case "scoring-desc":
-        return getCompositeScore(b) - getCompositeScore(a);
+        return getScore(b) - getScore(a);
       case "alpha-asc":
         return (a.product_title || '').localeCompare(b.product_title || '');
       case "alpha-desc":
@@ -1374,9 +1371,9 @@ const Finder = () => {
       case "print-desc":
         return (b.printability_index || 0) - (a.printability_index || 0);
       default:
-        return getCompositeScore(b) - getCompositeScore(a);
+        return getScore(b) - getScore(a);
     }
-  }), [regionalFilaments, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
+  }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
   // Group filaments by product before pagination
   const groupedFilaments = useMemo(() => {
