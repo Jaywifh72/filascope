@@ -80,6 +80,8 @@ export const LikeButton = ({ filamentId, size = "default" }: LikeButtonProps) =>
       onClick={handleToggleLike}
       disabled={isLoading}
       className={`transition-colors ${isLiked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-foreground"}`}
+      aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={isLiked}
     >
       <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
     </Button>

@@ -133,7 +133,7 @@ export function MultiPrinterManager({
         {/* Manage Printers Dialog */}
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex-shrink-0">
+            <Button variant="ghost" size="icon" className="flex-shrink-0" aria-label="Manage printers">
               <Edit3 className="h-4 w-4" />
             </Button>
           </DialogTrigger>
@@ -281,7 +281,7 @@ export function MultiPrinterManager({
           </p>
         </div>
       </div>
-      <Button variant="outline" size="icon" onClick={onAddPrinter}>
+      <Button variant="outline" size="icon" onClick={onAddPrinter} aria-label="Add printer">
         <Plus className="h-4 w-4" />
       </Button>
     </div>
