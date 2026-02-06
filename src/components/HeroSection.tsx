@@ -4,6 +4,45 @@ import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw } from "l
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 
+// Static fallback values shown while real data loads or if query fails
+const FALLBACK_FILAMENT_COUNT = 8000;
+const FALLBACK_BRAND_COUNT = 42;
+const CACHE_KEY = "hero_stats_cache";
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+interface CachedStats {
+  filamentCount: number;
+  brandCount: number;
+  timestamp: number;
+}
+
+function getCachedStats(): CachedStats | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed: CachedStats = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp > CACHE_TTL_MS) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedStats(filamentCount: number, brandCount: number) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      filamentCount,
+      brandCount,
+      timestamp: Date.now(),
+    }));
+  } catch {
+    // localStorage unavailable, silently ignore
+  }
+}
+
 interface HeroSectionProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -28,8 +67,22 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const { data: dealsData, isLoading: isDealsLoading } = useDealsCount();
   const dealsCount = dealsData?.uniqueProducts || 0;
 
-  // Format count for display - show rounded marketing number "960+" when loaded
-  const displayCount = isLoading ? null : filamentCount;
+  // Resolve display counts with fallback chain: live data → localStorage cache → static fallback
+  const cached = useMemo(() => getCachedStats(), []);
+
+  const resolvedFilamentCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? FALLBACK_FILAMENT_COUNT);
+  const resolvedBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? FALLBACK_BRAND_COUNT);
+
+  // Cache successful live values
+  useEffect(() => {
+    if (filamentCount > 0 && brandCount > 0) {
+      setCachedStats(filamentCount, brandCount);
+    }
+  }, [filamentCount, brandCount]);
+
+  // Always show a number — use fallbacks so the hero never renders blank
+  const displayCount = resolvedFilamentCount;
+  const displayBrandCount = resolvedBrandCount;
 
   // Dynamic quick start paths
   const quickStartPaths = useMemo(() => [
@@ -42,7 +95,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
     },
     {
       title: "Browse Filaments",
-      description: displayCount !== null ? `Explore ${displayCount.toLocaleString()}+ materials` : "Explore all materials",
+      description: `Explore ${displayCount.toLocaleString()}+ materials`,
       icon: Search,
       href: "#system-config",
       color: "primary",
@@ -129,17 +182,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
-              {displayCount !== null ? (
-                <>
-                  <span className="text-primary">{displayCount.toLocaleString()}+</span> materials indexed from{" "}
-                  <span className="text-primary">{brandCount}+</span> manufacturers. 
-                </>
-              ) : (
-                <>
-                  <span className="inline-block w-10 h-4 bg-primary/20 rounded animate-pulse align-middle" /> materials indexed from{" "}
-                  <span className="inline-block w-6 h-4 bg-primary/20 rounded animate-pulse align-middle" /> manufacturers. 
-                </>
-              )}
+              <span className="text-primary">{displayCount.toLocaleString()}+</span> materials indexed from{" "}
+              <span className="text-primary">{displayBrandCount}+</span> manufacturers.{" "}
               Compare properties, specs, and pricing in one unified data hub.
             </p>
 
