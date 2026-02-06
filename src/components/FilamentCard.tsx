@@ -28,8 +28,8 @@ import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRe
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
-import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
-import { ScoreCalculationTooltip } from "@/components/filament/education/ScoreCalculationTooltip";
+import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor } from "@/lib/unifiedFilamentScore";
+import { Tooltip as ScoreTooltip, TooltipContent as ScoreTooltipContent, TooltipTrigger as ScoreTooltipTrigger } from "@/components/ui/tooltip";
 import { REGIONS } from "@/config/regions";
 import { usePriceFreshness } from "@/hooks/usePriceFreshness";
 
@@ -268,14 +268,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   const shouldShowPrice = !isStale && isValidPrice && pricePerKg;
   const isHighConfidence = priceConfidence === 'high' || priceConfidence === 'medium';
 
-  // Dynamically calculate score based on filament data
-  const dynamicScore = useMemo(() => {
-    const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
-    return breakdown.score;
-  }, [filament]);
-  
-  // Use stored score if available, otherwise use dynamically calculated score
-  const overallScore = filament.ease_of_printing_score ?? dynamicScore ?? null;
+  // Calculate unified score with factors breakdown
+  const { score: overallScore, factors: scoreFactors, confidence: scoreConfidence, dataPointCount, label: scoreLabel } = useMemo(() => 
+    calculateUnifiedScore(filament as FilamentForScoring),
+    [filament]
+  );
   
   // Check for limited data - count available data points
   // Requires at least: price + (one score OR two TDS specs)
@@ -559,23 +556,46 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <HoverCardTrigger asChild>
               <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5 cursor-help">
                 <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
-                <span className="text-lg font-bold text-foreground">{overallScore.toFixed(1)}</span>
+                <span className={cn("text-lg font-bold", getScoreNumberColor(overallScore))}>{overallScore.toFixed(1)}</span>
                 <span className="text-sm font-medium text-muted-foreground">/10</span>
               </div>
             </HoverCardTrigger>
-            <HoverCardContent side="top" className="w-72 p-3 bg-popover border-border">
-              <ScoreCalculationTooltip 
-                scoreType="ease_of_printing"
-                filament={filament as FilamentDataForScoring}
-                showBreakdown={true}
-                inline
-              />
+            <HoverCardContent side="top" className="w-80 p-4 bg-popover border-border">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">Score Breakdown</span>
+                  <span className={cn("text-xs px-2 py-0.5 rounded-full", 
+                    scoreConfidence === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
+                    scoreConfidence === 'medium' ? 'bg-cyan-500/20 text-cyan-400' :
+                    'bg-orange-500/20 text-orange-400'
+                  )}>
+                    {scoreConfidence === 'high' ? 'High' : scoreConfidence === 'medium' ? 'Good' : 'Limited'} confidence
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {scoreFactors.slice(0, 6).map((factor, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{factor.label}</span>
+                      <span className="font-mono text-emerald-400">+{factor.points.toFixed(1)}</span>
+                    </div>
+                  ))}
+                  {scoreFactors.length > 6 && (
+                    <div className="text-xs text-muted-foreground text-center pt-1">
+                      +{scoreFactors.length - 6} more factors
+                    </div>
+                  )}
+                </div>
+                <div className="pt-2 border-t border-border/50 flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">{dataPointCount} data points</span>
+                  <span className={cn("font-bold", getScoreNumberColor(overallScore))}>{overallScore.toFixed(1)} / 10</span>
+                </div>
+              </div>
             </HoverCardContent>
           </HoverCard>
         ) : (
           <div className="inline-flex items-center gap-1.5 bg-gray-500/15 border border-gray-500/30 rounded-lg px-3 py-1.5">
             <Star className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-muted-foreground">No score</span>
+            <span className="text-sm font-medium text-muted-foreground">Unrated</span>
           </div>
         )}
         

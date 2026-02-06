@@ -16,7 +16,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
-import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
+import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor } from "@/lib/unifiedFilamentScore";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -141,13 +141,11 @@ export function LabReadoutCard({
     ? Math.round(((originalPricePerKg - pricePerKg) / originalPricePerKg) * 100)
     : 0;
 
-  // Dynamic score calculation
-  const dynamicScore = useMemo(() => {
-    const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
-    return breakdown.score;
-  }, [filament]);
-  
-  const overallScore = filament.ease_of_printing_score ?? dynamicScore ?? null;
+  // Calculate unified score
+  const { score: overallScore, factors: scoreFactors, confidence: scoreConfidence } = useMemo(() => 
+    calculateUnifiedScore(filament as FilamentForScoring),
+    [filament]
+  );
 
   const getDisplayTitle = () => {
     if (displayTitle) return cleanFilamentDisplayName(displayTitle);

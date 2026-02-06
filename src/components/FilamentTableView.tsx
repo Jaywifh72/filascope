@@ -1,11 +1,14 @@
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
-import { CheckCircle, XCircle, TreeDeciduous, Layers } from "lucide-react";
+import { CheckCircle, XCircle, TreeDeciduous, Layers, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
+import { calculateUnifiedScore, getScoreNumberColor, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Filament {
   id: string;
@@ -25,6 +28,23 @@ interface Filament {
   wood_powder_percentage?: number | null;
   glass_fiber_percentage?: number | null;
   carbon_fiber_percentage?: number | null;
+  // Additional fields for unified scoring
+  tds_url?: string | null;
+  nozzle_temp_min_c?: number | null;
+  nozzle_temp_max_c?: number | null;
+  bed_temp_min_c?: number | null;
+  bed_temp_max_c?: number | null;
+  tensile_strength_xy_mpa?: number | null;
+  flexural_strength_mpa?: number | null;
+  price_cad?: number | null;
+  price_eur?: number | null;
+  price_gbp?: number | null;
+  price_aud?: number | null;
+  product_url_ca?: string | null;
+  product_url_uk?: string | null;
+  product_url_eu?: string | null;
+  high_speed_capable?: boolean | null;
+  finish_type?: string | null;
 }
 
 interface FilamentTableViewProps {
@@ -91,7 +111,9 @@ export function FilamentTableView({
             const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
             const displayPricePerKg = isValidPrice ? pricePerKg : null;
             const pricePerSpool = filament.variant_price ? filament.variant_price / packQty : null;
-            const overallScore = filament.value_score || 7.0;
+            
+            // Calculate unified score
+            const { score: overallScore, factors: scoreFactors, confidence: scoreConfidence, dataPointCount } = calculateUnifiedScore(filament as FilamentForScoring);
             
             // Color match calculation
             const normalizedHex = filament.color_hex 
@@ -215,13 +237,42 @@ export function FilamentTableView({
                   )}
                 </td>
                 <td className="py-3 px-3 text-right">
-                  <span className={cn(
-                    "font-mono text-sm font-semibold",
-                    overallScore >= 8 ? "text-emerald-400" : 
-                    overallScore >= 6 ? "text-primary" : "text-orange-400"
-                  )}>
-                    {overallScore.toFixed(1)}
-                  </span>
+                  {overallScore !== null ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={cn(
+                          "font-mono text-sm font-semibold cursor-help",
+                          getScoreNumberColor(overallScore)
+                        )}>
+                          {overallScore.toFixed(1)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs p-3">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-medium">Score Breakdown</span>
+                            <span className={cn("px-1.5 py-0.5 rounded text-[10px]", 
+                              scoreConfidence === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
+                              scoreConfidence === 'medium' ? 'bg-cyan-500/20 text-cyan-400' :
+                              'bg-orange-500/20 text-orange-400'
+                            )}>
+                              {dataPointCount} data points
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            {scoreFactors.slice(0, 5).map((factor, idx) => (
+                              <div key={idx} className="flex justify-between text-xs">
+                                <span className="text-muted-foreground truncate pr-2">{factor.label}</span>
+                                <span className="text-emerald-400 font-mono">+{factor.points.toFixed(1)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
                 </td>
                 <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
