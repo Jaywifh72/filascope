@@ -2,6 +2,7 @@ import React from 'react';
 import { Wrench, Plus, Star, Info, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccessoryProduct } from './types';
+import { useRegion } from '@/contexts/RegionContext';
 
 interface AccessoriesCrossSellProps {
   accessories: AccessoryProduct[];
@@ -21,6 +22,8 @@ export const AccessoriesCrossSell: React.FC<AccessoriesCrossSellProps> = ({
   onAddAccessory,
   addedAccessoryIds = new Set()
 }) => {
+  const { formatPrice, convertPrice, currency } = useRegion();
+  
   if (accessories.length === 0) return null;
 
   // Group by category
@@ -59,6 +62,11 @@ export const AccessoriesCrossSell: React.FC<AccessoriesCrossSellProps> = ({
               const discountPercent = hasDiscount 
                 ? Math.round((1 - accessory.price / accessory.originalPrice!) * 100)
                 : 0;
+              
+              // Convert prices from USD
+              const isConverted = currency !== 'USD';
+              const convertedPrice = convertPrice(accessory.price, 'USD');
+              const convertedOriginalPrice = accessory.originalPrice ? convertPrice(accessory.originalPrice, 'USD') : null;
               
               return (
                 <div
@@ -109,13 +117,13 @@ export const AccessoriesCrossSell: React.FC<AccessoriesCrossSellProps> = ({
                     
                     {/* Pricing */}
                     <div className="flex items-center gap-1.5 mt-1">
-                      {hasDiscount && (
+                      {hasDiscount && convertedOriginalPrice && (
                         <span className="text-[11px] font-medium text-muted-foreground line-through">
-                          ${accessory.originalPrice!.toFixed(2)}
+                          {isConverted ? '~' : ''}{formatPrice(convertedOriginalPrice)}
                         </span>
                       )}
                       <span className="text-[15px] font-extrabold text-foreground">
-                        ${accessory.price.toFixed(2)}
+                        {isConverted ? '~' : ''}{formatPrice(convertedPrice)}
                       </span>
                     </div>
                   </div>
@@ -133,7 +141,7 @@ export const AccessoriesCrossSell: React.FC<AccessoriesCrossSellProps> = ({
                     )}
                     aria-label={isAdded 
                       ? `${accessory.name} added to cart` 
-                      : `Add ${accessory.name} to cart for $${accessory.price.toFixed(2)}`
+                      : `Add ${accessory.name} to cart for ${formatPrice(convertedPrice)}`
                     }
                   >
                     {isAdded ? (
