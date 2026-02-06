@@ -32,9 +32,13 @@ const ResultsHeader = ({
             <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.06em] sm:tracking-[0.08em] text-foreground">
               <span className="hidden sm:inline text-muted-foreground">Material Registry </span>
               <span className="text-muted-foreground sm:hidden">// </span>
-              <span className="text-primary font-bold">{count.toLocaleString()}</span>
+              {count === 0 && !hasActiveFilters ? (
+                <span className="inline-block w-12 h-4 bg-primary/20 rounded animate-pulse align-middle" />
+              ) : (
+                <span className="text-primary font-bold">{count.toLocaleString()}</span>
+              )}
               <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
-                {hasActiveFilters ? "Matching" : "Materials"}
+                {hasActiveFilters ? "Matching" : "Products"}
               </span>
             </h2>
           </div>
