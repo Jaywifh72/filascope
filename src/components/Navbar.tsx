@@ -357,7 +357,7 @@ const Navbar = () => {
             {/* Compare Button - Ghost with teal border */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <button onClick={() => navigate('/compare')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                <button onClick={() => navigate('/compare?tab=comparison')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
                   <GitCompareArrows className="w-3.5 h-3.5" />
                   Compare
                   {compareCount > 0 && (
@@ -438,7 +438,7 @@ const Navbar = () => {
             {/* Compare Button - Tablet */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <button onClick={() => navigate('/compare')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                <button onClick={() => navigate('/compare?tab=comparison')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
                   <GitCompareArrows className="w-3.5 h-3.5" />
                   Compare
                   {compareCount > 0 && (
@@ -555,7 +555,7 @@ const Navbar = () => {
             {/* Compare Button - Prominent at top */}
             <div className="px-4 pb-4">
               <button onClick={() => {
-              navigate('/compare');
+              navigate('/compare?tab=comparison');
               setMobileMenuOpen(false);
             }} className={cn("relative w-full border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-3", "text-sm font-bold uppercase tracking-widest", "flex items-center justify-center gap-2", "transition-all duration-200", "text-teal-400")}>
                 <GitCompareArrows className="w-4 h-4" />
