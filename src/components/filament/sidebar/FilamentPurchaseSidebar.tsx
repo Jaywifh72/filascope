@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { MaterialBadge } from '@/components/MaterialBadge';
 import { useConversionTracking } from '@/hooks/useConversionTracking';
-import { useCurrentPrice, invalidatePriceCache } from '@/hooks/useCurrentPrice';
+import { invalidatePriceCache } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
 import { useCompare } from '@/hooks/useCompare';
@@ -90,20 +90,6 @@ export function FilamentPurchaseSidebar({
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
   const { addItem, removeItem, isInCompare } = useCompare();
-  
-  // Fetch live price from the store - now automatically converted to user's currency
-  const { 
-    currentPrice: livePrice, 
-    compareAtPrice,
-    weightGrams: liveWeightGrams,
-    isLoading: priceLoading, 
-    isLivePrice,
-    currency: livePriceCurrency,
-    isConverted: isLivePriceConverted,
-    originalCurrency: liveOriginalCurrency,
-    conversionRate: liveConversionRate,
-    isSuspicious: isLivePriceSuspicious,
-  } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
 
   // Determine the primary retailer name
   const displayRetailer = retailerName || vendor || 'Store';
@@ -164,41 +150,29 @@ export function FilamentPurchaseSidebar({
     }
   };
 
-  // PRIORITY 1: Use regional pricing from parent (already converted to user's currency)
-  // PRIORITY 2: Use live price (now automatically converted to user's currency by useCurrentPrice)
-  // PRIORITY 3: Fall back to passed-in pricePerSpool
+  // === SIMPLIFIED PRICING: Use parent-provided prices directly ===
+  // The sidebar no longer does its own live price fetch. The parent (FilamentDetail)
+  // resolves the best price and passes it as pricePerSpool / pricePerKg.
   const hasValidRegionalPrice = regionalPriceResult && regionalPriceResult.displayPrice !== null && regionalPriceResult.displayPrice > 0;
-  const hasValidLivePrice = isLivePrice && livePrice !== null;
   
   const displayPrice = hasValidRegionalPrice 
     ? regionalPriceResult.displayPrice 
-    : hasValidLivePrice 
-      ? livePrice 
-      : pricePerSpool;
+    : pricePerSpool;
   
-  // Track if we're using a converted price (from either regional or live pricing)
+  // Track if we're using a converted price (from regional pricing)
   const isConvertedPrice = hasValidRegionalPrice 
     ? regionalPriceResult.isConverted 
-    : hasValidLivePrice 
-      ? isLivePriceConverted 
-      : false;
+    : false;
   
-  // Check for price discrepancy (live price differs from estimated by >50%)
-  const priceDiscrepancy = hasValidLivePrice && pricePerSpool && pricePerSpool > 0 && livePrice
-    ? Math.abs((livePrice - pricePerSpool) / pricePerSpool)
-    : 0;
-  const isPriceSuspicious = isLivePriceSuspicious || (hasValidLivePrice && priceDiscrepancy > 0.5);
+  // Use the parent-provided pricePerKg directly — no re-calculation
+  let displayPricePerKg: number | null = pricePerKg;
   
-  // Calculate price per kg using proper weight
-  const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
-  const fallbackWeightKg = weightGrams ? weightGrams / 1000 : null;
-  const effectiveWeightKg = liveWeightKg || fallbackWeightKg;
-  
-  let displayPricePerKg: number | null = null;
-  if (displayPrice && effectiveWeightKg) {
-    displayPricePerKg = displayPrice / effectiveWeightKg;
-  } else {
-    displayPricePerKg = pricePerKg;
+  // Only recalculate if we have a regional display price that differs from the prop
+  if (hasValidRegionalPrice && displayPrice && weightGrams) {
+    const effectiveWeightKg = weightGrams / 1000;
+    if (effectiveWeightKg > 0) {
+      displayPricePerKg = displayPrice / effectiveWeightKg;
+    }
   }
 
   // Format price with approximate indicator for converted prices
@@ -236,88 +210,58 @@ export function FilamentPurchaseSidebar({
           )}
 
           {/* Price Section - Honest Display */}
-          {priceLoading ? (
-            <div className="flex items-center gap-2 py-4">
-              <RefreshCw className="w-4 h-4 text-primary animate-spin" />
-              <span className="text-sm text-muted-foreground">Checking price...</span>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Honest Price Display with confidence-aware messaging */}
-              <HonestPriceDisplay
-                price={displayPricePerKg}
-                confidence={priceConfidence}
-                lastVerifiedAt={lastScrapedAt}
-                storeName={regionalPriceResult?.store?.name || finalRetailerName}
-                storeUrl={affiliateUrl}
-                isConverted={isConvertedPrice}
-                conversionTooltip={
-                  isConvertedPrice && hasValidRegionalPrice && regionalPriceResult
-                    ? `Converted from ${regionalPriceResult.originalCurrency}${regionalPriceResult.conversionRate ? ` (Rate: 1 ${regionalPriceResult.originalCurrency} = ${regionalPriceResult.conversionRate.toFixed(4)} ${currency})` : ''}`
-                    : isConvertedPrice && hasValidLivePrice && isLivePriceConverted
-                      ? `Converted from ${liveOriginalCurrency}${liveConversionRate ? ` (Rate: 1 ${liveOriginalCurrency} = ${liveConversionRate.toFixed(4)} ${currency})` : ''}`
-                      : null
-                }
-                size="lg"
-                showCTA={false}
-                showPerKg={true}
+          <div className="space-y-3">
+            {/* Honest Price Display with confidence-aware messaging */}
+            <HonestPriceDisplay
+              price={displayPricePerKg}
+              confidence={priceConfidence}
+              lastVerifiedAt={lastScrapedAt}
+              storeName={regionalPriceResult?.store?.name || finalRetailerName}
+              storeUrl={affiliateUrl}
+              isConverted={isConvertedPrice}
+              conversionTooltip={
+                isConvertedPrice && hasValidRegionalPrice && regionalPriceResult
+                  ? `Converted from ${regionalPriceResult.originalCurrency}${regionalPriceResult.conversionRate ? ` (Rate: 1 ${regionalPriceResult.originalCurrency} = ${regionalPriceResult.conversionRate.toFixed(4)} ${currency})` : ''}`
+                  : null
+              }
+              size="lg"
+              showCTA={false}
+              showPerKg={true}
+              filamentId={filamentId}
+              productUrl={affiliateUrl || productUrl || undefined}
+              onAdminRefresh={handleAdminRefresh}
+              netWeightGrams={weightGrams}
+            />
+
+            {/* Fallback region warning - show when price is from a different region */}
+            {!isLocalStore && storeRegionCode && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1.5 rounded-md">
+                <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-medium">
+                    {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
+                  </span>
+                  {regionalPriceResult?.store?.shipsFrom && (
+                    <span className="text-amber-400/80">
+                      Ships from {regionalPriceResult.store.shipsFrom}
+                    </span>
+                  )}
+                  <span className="text-amber-400/60 text-[10px]">
+                    International shipping • Duties may apply
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Price Urgency Badge */}
+            {(displayPricePerKg || displayPrice) && priceConfidence !== 'stale' && priceConfidence !== 'unknown' && (
+              <PriceUrgencyBadge
                 filamentId={filamentId}
-                productUrl={affiliateUrl || productUrl || undefined}
-                onAdminRefresh={handleAdminRefresh}
-                netWeightGrams={weightGrams}
+                currentPrice={displayPricePerKg || displayPrice}
+                size="small"
               />
-              
-              {/* Compare at price (sale indicator) */}
-              {isLivePrice && compareAtPrice && livePrice && compareAtPrice > livePrice && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground line-through">
-                    {formatPrice(compareAtPrice)}
-                  </span>
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    {Math.round((1 - livePrice / compareAtPrice) * 100)}% OFF
-                  </span>
-                </div>
-              )}
-              
-              {/* Price discrepancy warning */}
-              {isPriceSuspicious && isLivePrice && (
-                <div className="flex items-center gap-1.5 text-xs text-amber-500 bg-amber-500/10 px-2 py-1.5 rounded-md">
-                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Price may be inaccurate — verify at store</span>
-                </div>
-              )}
-
-              {/* Fallback region warning - show when price is from a different region */}
-              {!isLocalStore && storeRegionCode && (
-                <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2 py-1.5 rounded-md">
-                  <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">
-                      {storeRegionFlag} {REGIONS[storeRegionCode]?.name || storeRegionCode} store
-                    </span>
-                    {regionalPriceResult?.store?.shipsFrom && (
-                      <span className="text-amber-400/80">
-                        Ships from {regionalPriceResult.store.shipsFrom}
-                      </span>
-                    )}
-                    {/* International shipping notice */}
-                    <span className="text-amber-400/60 text-[10px]">
-                      International shipping • Duties may apply
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Price Urgency Badge */}
-              {(displayPricePerKg || displayPrice) && priceConfidence !== 'stale' && priceConfidence !== 'unknown' && (
-                <PriceUrgencyBadge
-                  filamentId={filamentId}
-                  currentPrice={displayPricePerKg || displayPrice}
-                  size="small"
-                />
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
 
           {/* Primary CTA - Always "Buy at [Store]" */}

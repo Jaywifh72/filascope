@@ -1,11 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ExternalLink, ChevronRight, Store, CheckCircle2 } from 'lucide-react';
 import { useFilamentListings } from '@/hooks/useFilamentListings';
-import { useCurrency } from '@/hooks/useCurrency';
+import { useRegion } from '@/contexts/RegionContext';
+import { REGIONS } from '@/config/regions';
+import type { RegionCode } from '@/types/regional';
 import { cn } from '@/lib/utils';
 
 interface BestPricesSectionProps {
@@ -14,15 +15,69 @@ interface BestPricesSectionProps {
 }
 
 export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSectionProps) {
-  const { formatRegionalPrice, currency } = useCurrency();
-  const { data: listings, isLoading } = useFilamentListings(filamentId, {
-    region: 'US',
-    currency: 'USD',
+  const { region, currency, formatPrice, convertPrice, hasRates } = useRegion();
+  
+  // Determine the user's region currency for listing queries
+  const userCurrency = REGIONS[region as RegionCode]?.defaultCurrency || 'USD';
+  
+  // Fetch listings for the USER'S region first
+  const { data: localListings, isLoading: localLoading } = useFilamentListings(filamentId, {
+    region: region,
+    currency: userCurrency,
     includeUnavailable: false,
   });
+  
+  // Also fetch US listings as fallback (if user is not in US)
+  const isUserUS = region === 'US';
+  const { data: usListings, isLoading: usLoading } = useFilamentListings(
+    !isUserUS ? filamentId : undefined,
+    {
+      region: 'US',
+      currency: 'USD',
+      includeUnavailable: false,
+    }
+  );
+
+  const isLoading = localLoading || usLoading;
+
+  // Merge listings: local first, then US (de-duplicated), with price conversion
+  const mergedListings = React.useMemo(() => {
+    const local = localListings || [];
+    const us = usListings || [];
+    const seen = new Set(local.map(l => l.listing_id));
+    
+    // Local listings are already in user's currency — use directly
+    const result = local.map(l => ({
+      ...l,
+      displayPrice: l.current_price,
+      isConverted: false,
+    }));
+    
+    // US listings need conversion if user isn't in US
+    for (const listing of us) {
+      if (seen.has(listing.listing_id)) continue;
+      if (!listing.current_price) continue;
+      
+      const converted = hasRates 
+        ? convertPrice(listing.current_price, 'USD')
+        : listing.current_price;
+      
+      result.push({
+        ...listing,
+        displayPrice: converted,
+        isConverted: !isUserUS && hasRates,
+      });
+    }
+    
+    // Sort by converted price ascending
+    result.sort((a, b) => (a.displayPrice ?? Infinity) - (b.displayPrice ?? Infinity));
+    
+    return result;
+  }, [localListings, usListings, hasRates, convertPrice, isUserUS]);
 
   // Get top 3 retailers
-  const topRetailers = listings?.slice(0, 3) || [];
+  const topRetailers = mergedListings.slice(0, 3);
+  const totalCount = mergedListings.length;
 
   if (isLoading) {
     return (
@@ -44,8 +99,6 @@ export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSec
     return null;
   }
 
-  const bestPrice = topRetailers[0];
-
   return (
     <Card className="bg-gradient-to-br from-emerald-500/5 to-emerald-500/[0.02] border-emerald-500/20">
       <CardContent className="p-6">
@@ -56,10 +109,10 @@ export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSec
             </div>
             <div>
               <h3 className="text-lg font-semibold">Best Prices</h3>
-              <p className="text-xs text-muted-foreground">Compare {listings?.length || 0} retailers</p>
+              <p className="text-xs text-muted-foreground">Compare {totalCount} retailers</p>
             </div>
           </div>
-          {listings && listings.length > 3 && (
+          {totalCount > 3 && (
             <Button variant="ghost" size="sm" onClick={onViewAllPrices} className="gap-1">
               View All
               <ChevronRight className="w-4 h-4" />
@@ -101,6 +154,9 @@ export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSec
                       Best Price
                     </Badge>
                   )}
+                  {retailer.isConverted && (
+                    <span className="ml-1 text-[10px] text-muted-foreground">(converted)</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -108,7 +164,9 @@ export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSec
                   "font-bold",
                   idx === 0 ? "text-emerald-400 text-lg" : "text-foreground"
                 )}>
-                  {retailer.current_price ? formatRegionalPrice(retailer.current_price) : 'N/A'}
+                  {retailer.displayPrice != null 
+                    ? formatPrice(retailer.displayPrice, { showApproximate: retailer.isConverted })
+                    : 'N/A'}
                 </span>
                 <ExternalLink className="w-4 h-4 text-muted-foreground" />
               </div>
@@ -123,7 +181,7 @@ export function BestPricesSection({ filamentId, onViewAllPrices }: BestPricesSec
             onClick={onViewAllPrices}
           >
             <CheckCircle2 className="w-4 h-4" />
-            See All {listings?.length || 0} Retailers
+            See All {totalCount} Retailers
           </Button>
         )}
       </CardContent>

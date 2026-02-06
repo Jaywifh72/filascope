@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { ShoppingCart, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { cn } from "@/lib/utils";
 import { PriceUrgencyBadge } from "./urgency/PriceUrgencyBadge";
 import { StockUrgencyIndicator } from "./urgency/StockUrgencyIndicator";
@@ -22,7 +22,8 @@ interface StickyBuyBarProps {
   isVisible: boolean;
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
   stockQuantity?: number | null;
-  hasActualRegionalPrice?: boolean;
+  /** Whether the displayed price was converted from another currency */
+  isConverted?: boolean;
 }
 
 export function StickyBuyBar({ 
@@ -32,15 +33,15 @@ export function StickyBuyBar({
   isVisible,
   stockStatus = 'in_stock',
   stockQuantity,
-  hasActualRegionalPrice = false
+  isConverted = false,
 }: StickyBuyBarProps) {
   const { trackStoreClick } = useConversionTracking();
-  const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { formatPrice } = useRegion();
   const hasTrackedImpression = useRef(false);
   
-  // Use the appropriate formatter based on whether we have an actual regional price
+  // Format using useRegion's formatPrice with approximate indicator for converted prices
   const formattedPrice = pricePerKg 
-    ? (hasActualRegionalPrice ? formatRegionalPrice(pricePerKg, false) : formatPrice(pricePerKg, false))
+    ? formatPrice(pricePerKg, { showApproximate: isConverted })
     : null;
 
   // Track impression when bar becomes visible
