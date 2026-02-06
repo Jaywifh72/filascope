@@ -3,16 +3,63 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Radix ScrollArea injects a <style> tag via dangerouslySetInnerHTML inside the Viewport.
+ * In some rendering scenarios this <style> tag can leak as visible text content.
+ * We clean up any stray text nodes containing the CSS string on mount.
+ * The actual CSS is applied globally via index.css as a reliable fallback.
+ */
+function useCleanRadixStyleLeak(rootRef: React.RefObject<HTMLElement | null>) {
+  React.useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    // Walk immediate children and remove text nodes that contain the Radix CSS string
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const toRemove: Node[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      if (
+        node.textContent &&
+        node.textContent.includes("data-radix-scroll-area-viewport")
+      ) {
+        toRemove.push(node);
+      }
+    }
+    toRemove.forEach((n) => n.parentNode?.removeChild(n));
+  }, [rootRef]);
+}
+
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, ...props }, ref) => (
-  <ScrollAreaPrimitive.Root ref={ref} className={cn("relative overflow-hidden", className)} {...props}>
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">{children}</ScrollAreaPrimitive.Viewport>
-    <ScrollBar />
-    <ScrollAreaPrimitive.Corner />
-  </ScrollAreaPrimitive.Root>
-));
+>(({ className, children, ...props }, ref) => {
+  const internalRef = React.useRef<HTMLDivElement>(null);
+  const composedRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      (internalRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    },
+    [ref],
+  );
+
+  useCleanRadixStyleLeak(internalRef);
+
+  return (
+    <ScrollAreaPrimitive.Root
+      ref={composedRef}
+      className={cn("relative overflow-hidden", className)}
+      {...props}
+    >
+      <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+        {children}
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar />
+      <ScrollAreaPrimitive.Corner />
+    </ScrollAreaPrimitive.Root>
+  );
+});
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
 
 const ScrollBar = React.forwardRef<
