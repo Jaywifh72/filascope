@@ -72,6 +72,9 @@ export function RetailerCard({
                 src={retailer.logo_url} 
                 alt={retailer.name}
                 className="h-8 w-8 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             ) : (
               <ShoppingCart className="h-5 w-5 text-muted-foreground" />

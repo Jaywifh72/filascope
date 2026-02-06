@@ -143,6 +143,11 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
                     src={retailer.retailer_logo} 
                     alt={retailer.retailer_name}
                     className="w-8 h-8 object-contain rounded"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = `<div class="w-8 h-8 rounded bg-muted flex items-center justify-center text-xs font-bold">${retailer.retailer_name.charAt(0)}</div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-xs font-bold">

@@ -159,6 +159,9 @@ export function RetailerCompareGrid({ retailers, className }: RetailerCompareGri
                             src={retailer.logo_url} 
                             alt={retailer.name}
                             className="h-6 w-6 object-contain rounded"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
                         )}
                         <div>

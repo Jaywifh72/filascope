@@ -186,6 +186,9 @@ export function ShippingCalculator({
                           src={est.retailer.logo_url} 
                           alt={est.retailer.name}
                           className="h-6 w-6 object-contain rounded"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       )}
                       <div>
