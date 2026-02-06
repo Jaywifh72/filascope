@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { DealShareModal } from "./DealShareModal";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
@@ -13,6 +12,78 @@ import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 interface GroupedDealCardProps {
   group: GroupedDeal;
+}
+
+/**
+ * Deal card image with eager loading and rich fallback
+ */
+function DealCardImage({ 
+  src, 
+  alt, 
+  colorHex, 
+  vendor 
+}: { 
+  src: string | null | undefined; 
+  alt: string; 
+  colorHex?: string | null; 
+  vendor?: string | null;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+
+  const showFallback = !src || errored;
+
+  return (
+    <div 
+      className="relative h-40 bg-muted/30 flex items-center justify-center overflow-hidden"
+      style={colorHex && showFallback ? { backgroundColor: `${colorHex}15` } : undefined}
+    >
+      {/* Color accent bar at top */}
+      {colorHex && (
+        <div 
+          className="absolute top-0 left-0 right-0 h-1 opacity-60" 
+          style={{ backgroundColor: colorHex }} 
+        />
+      )}
+
+      {showFallback ? (
+        <div className="flex flex-col items-center gap-2 text-muted-foreground p-4">
+          {colorHex ? (
+            <div 
+              className="w-16 h-16 rounded-full border-2 border-border/30 shadow-sm"
+              style={{ backgroundColor: colorHex }}
+            />
+          ) : (
+            <Package className="w-10 h-10 opacity-40" />
+          )}
+          {vendor && (
+            <span className="text-[10px] font-medium opacity-50 text-center truncate max-w-[80%]">
+              {vendor}
+            </span>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Loading skeleton */}
+          {!loaded && (
+            <div className="absolute inset-0 bg-muted/30 animate-pulse" />
+          )}
+          <img
+            src={src}
+            alt={alt}
+            loading="eager"
+            decoding="async"
+            onLoad={() => setLoaded(true)}
+            onError={() => setErrored(true)}
+            className={cn(
+              "h-full w-full p-4 object-contain transition-opacity duration-300",
+              loaded ? "opacity-100" : "opacity-0"
+            )}
+          />
+        </>
+      )}
+    </div>
+  );
 }
 
 export function GroupedDealCard({ group }: GroupedDealCardProps) {
@@ -53,6 +124,9 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     return group.variants.find(v => (v as any).color_hex === hex);
   };
 
+  // Get representative color hex for fallback
+  const representativeColorHex = (group.representativeDeal as any).color_hex as string | null;
+
   return (
     <>
       <Card
@@ -78,19 +152,14 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           <Share2 className="h-4 w-4" aria-hidden="true" />
         </Button>
 
-        {/* Image from representative deal */}
+        {/* Image with eager loading and rich fallback */}
         <Link to={`/filament/${group.representativeDeal.id}`} className="block">
-          <div className="relative h-40 bg-muted/30 flex items-center justify-center overflow-hidden">
-            <OptimizedImage
-              src={group.representativeDeal.featured_image}
-              alt={group.baseName}
-              className="h-full w-full p-4 group-hover:scale-105 transition-transform duration-300"
-              aspectRatio="auto"
-              objectFit="contain"
-              width={320}
-              fallback={<span className="text-4xl text-muted-foreground">📦</span>}
-            />
-          </div>
+          <DealCardImage
+            src={group.representativeDeal.featured_image}
+            alt={group.baseName}
+            colorHex={representativeColorHex}
+            vendor={group.representativeDeal.vendor}
+          />
         </Link>
 
         <CardContent className="p-4">
