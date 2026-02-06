@@ -819,14 +819,21 @@ const MaterialReference = () => {
     });
   };
 
-  // Normalize material name to Title Case (e.g., "PLA-MARBLE" -> "PLA-Marble")
+  // Normalize material name to Title Case (e.g., "PLA-MARBLE" -> "PLA-Marble", "Pla silk" -> "PLA-Silk")
   const normalizeMaterialName = (name: string): string => {
-    return name
+    // First, normalize spaces and hyphens - replace spaces with hyphens for consistent formatting
+    const normalized = name.replace(/\s+/g, '-');
+    
+    return normalized
       .split('-')
       .map((part, index) => {
         // Keep uppercase for acronyms at the start (PLA, PETG, ABS, etc.)
-        if (index === 0 && part === part.toUpperCase() && part.length <= 5) {
-          return part;
+        if (index === 0 && part.toUpperCase() === part.toUpperCase() && part.length <= 5) {
+          // Check if it looks like an acronym (all caps or known material base)
+          const knownBases = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'TPE', 'PA', 'PC', 'PEEK', 'PEI', 'PP', 'PET', 'HIPS', 'PVA', 'HTPLA', 'PEBA', 'PCTG', 'PAHT', 'PPA', 'PEKK', 'PES', 'PSU', 'PPS', 'PPSU', 'CPE', 'POM', 'BIO', 'PHA', 'PCL', 'PVC', 'PMMA', 'HDPE', 'LW', 'ESD', 'FR', 'HT', 'HS', 'HP', 'CF', 'GF', 'AF'];
+          if (knownBases.includes(part.toUpperCase())) {
+            return part.toUpperCase();
+          }
         }
         // Title case for other parts
         return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
@@ -834,27 +841,35 @@ const MaterialReference = () => {
       .join('-');
   };
 
+  // Generate a deduplication key that treats spaces and hyphens as equivalent
+  const getDedupeKey = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[\s-]+/g, '-') // Normalize all separators to hyphens
+      .replace(/[^a-z0-9-]/g, '') // Remove special chars except hyphens
+      .replace(/-+/g, '-'); // Collapse multiple hyphens
+  };
+
   // Get all materials organized by category with case-insensitive deduplication
   const allMaterials = useMemo(() => {
-    const materials: { name: string; normalizedName: string; category: string; hasReference: boolean; originalNames: string[] }[] = [];
-    const seenNormalized = new Map<string, number>(); // normalizedName -> index in materials array
+    const seenNormalized = new Map<string, { name: string; normalizedName: string; category: string; hasReference: boolean; originalNames: string[] }>();
     
     MATERIAL_CATEGORIES.forEach(category => {
       category.materials.forEach(materialName => {
         const normalizedName = normalizeMaterialName(materialName);
-        const existingIndex = seenNormalized.get(normalizedName.toLowerCase());
+        const key = getDedupeKey(materialName);
+        const existing = seenNormalized.get(key);
         
-        if (existingIndex !== undefined) {
+        if (existing) {
           // Merge with existing entry - add to originalNames for database matching
-          materials[existingIndex].originalNames.push(materialName);
+          existing.originalNames.push(materialName);
           // Update hasReference if this variant has reference data
           if (MATERIAL_REFERENCE_DATA[materialName]) {
-            materials[existingIndex].hasReference = true;
+            existing.hasReference = true;
           }
         } else {
           // New unique material
-          seenNormalized.set(normalizedName.toLowerCase(), materials.length);
-          materials.push({
+          seenNormalized.set(key, {
             name: normalizedName,
             normalizedName,
             category: category.name,
@@ -863,19 +878,18 @@ const MaterialReference = () => {
           });
         }
       });
-      
-      // Sort materials within each category alphabetically
-      const categoryStart = materials.findIndex(m => m.category === category.name);
-      if (categoryStart !== -1) {
-        const categoryMaterials = materials.filter(m => m.category === category.name);
-        categoryMaterials.sort((a, b) => a.name.localeCompare(b.name));
-        // Replace in-place
-        let idx = categoryStart;
-        categoryMaterials.forEach(m => {
-          materials[idx] = m;
-          idx++;
-        });
-      }
+    });
+    
+    // Convert map to array and sort by category, then alphabetically within category
+    const materials = Array.from(seenNormalized.values());
+    materials.sort((a, b) => {
+      // First sort by category order (based on MATERIAL_CATEGORIES order)
+      const categoryOrder = MATERIAL_CATEGORIES.map(c => c.name);
+      const aCatIndex = categoryOrder.indexOf(a.category);
+      const bCatIndex = categoryOrder.indexOf(b.category);
+      if (aCatIndex !== bCatIndex) return aCatIndex - bCatIndex;
+      // Then sort alphabetically within category
+      return a.name.localeCompare(b.name);
     });
     
     return materials;
