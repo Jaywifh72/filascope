@@ -8,8 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
-import { useMemo, useRef, useState } from "react";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useMemo, useRef, useState, useCallback } from "react";
+import { useRegion } from "@/contexts/RegionContext";
 
 type Filament = Tables<"filaments">;
 
@@ -52,8 +52,17 @@ export function BrandOverviewTab({
   onFilterByMaterial,
 }: BrandOverviewTabProps) {
   const navigate = useNavigate();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, convertPrice, currency, hasRates } = useRegion();
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Convert USD price range to regional currency
+  const convertUsdPrice = useCallback((usdPrice: number): number => {
+    if (currency === 'USD' || !hasRates) return usdPrice;
+    return convertPrice(usdPrice, 'USD');
+  }, [currency, hasRates, convertPrice]);
+
+  const isConverted = currency !== 'USD';
+  const pricePrefix = isConverted ? '~' : '';
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
@@ -217,7 +226,7 @@ export function BrandOverviewTab({
             <div
               ref={carouselRef}
               onScroll={updateScrollButtons}
-              className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+              className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 -mx-1 px-1"
             >
               {popularProducts.map((product) => (
                 <Card
@@ -227,14 +236,33 @@ export function BrandOverviewTab({
                 >
                   <CardContent className="p-4">
                     {/* Product Image */}
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-900/50 flex items-center justify-center mb-3">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center mb-3">
                       {product.representativeImage ? (
-                        <img
-                          src={product.representativeImage}
-                          alt={product.baseName}
-                          className="w-full h-full object-cover group-hover/card:scale-105 transition-transform"
-                          loading="lazy"
-                        />
+                        <>
+                          <img
+                            src={product.representativeImage}
+                            alt={product.baseName}
+                            className="w-full h-full object-cover group-hover/card:scale-105 transition-transform"
+                            loading="lazy"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div className="hidden w-full h-full items-center justify-center">
+                            {brandLogo ? (
+                              <img
+                                src={brandLogo}
+                                alt={brandName}
+                                className="max-w-[50%] max-h-[50%] object-contain opacity-30"
+                              />
+                            ) : (
+                              <Package className="w-10 h-10 text-muted-foreground/40" />
+                            )}
+                          </div>
+                        </>
                       ) : brandLogo ? (
                         <img
                           src={brandLogo}
@@ -242,7 +270,7 @@ export function BrandOverviewTab({
                           className="max-w-[50%] max-h-[50%] object-contain opacity-30"
                         />
                       ) : (
-                        <Package className="w-10 h-10 text-gray-600" />
+                        <Package className="w-10 h-10 text-muted-foreground/40" />
                       )}
                     </div>
                     
@@ -261,14 +289,14 @@ export function BrandOverviewTab({
                       </Badge>
                     )}
                     
-                    {/* Price */}
+                    {/* Price - converted to user's regional currency */}
                     {product.priceRange && product.priceRange.min !== null && (
-                      <div className="text-sm text-white font-semibold mb-3">
+                      <div className="text-sm text-foreground font-semibold mb-3">
                         {product.priceRange.min === product.priceRange.max ? (
-                          formatPrice(product.priceRange.min)
+                          <span>{pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.min))}/kg</span>
                         ) : (
-                          <span className="text-gray-400">
-                            {formatPrice(product.priceRange.min)} - {formatPrice(product.priceRange.max)}
+                          <span className="text-muted-foreground">
+                            {pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.min))} - {pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.max))}/kg
                           </span>
                         )}
                       </div>
