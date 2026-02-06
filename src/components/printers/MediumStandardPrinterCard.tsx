@@ -133,7 +133,7 @@ export default function MediumStandardPrinterCard({
         />
       </div>
 
-      <Link to={`/printers/${printer.id}`}>
+      <Link to={`/printers/${printer.printer_id || printer.id}`}>
         <div 
           className={`
             relative

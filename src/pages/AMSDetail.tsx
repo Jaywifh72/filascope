@@ -514,7 +514,7 @@ export default function AMSDetail() {
                 {compatiblePrinters.map((printer: any) => (
                   <Link
                     key={printer.id}
-                    to={`/printers/${printer.id}`}
+                    to={`/printers/${printer.printer_id || printer.id}`}
                     className="p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                   >
                     <p className="font-medium text-sm">{printer.model_name}</p>

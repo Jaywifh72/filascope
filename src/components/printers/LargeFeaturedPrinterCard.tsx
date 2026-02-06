@@ -52,7 +52,7 @@ export default function LargeFeaturedPrinterCard({
       role="article"
       aria-label={`Featured: ${printer.brand?.brand} ${printer.model_name}`}
     >
-      <Link to={`/printers/${printer.id}`}>
+      <Link to={`/printers/${printer.printer_id || printer.id}`}>
         <div className="
           relative
           bg-[hsl(220_15%_6%)]

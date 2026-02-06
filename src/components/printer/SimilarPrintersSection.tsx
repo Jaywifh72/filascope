@@ -68,6 +68,7 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
   // Create current printer card data
   const currentPrinterCard: SimilarPrinter = {
     id: currentPrinter.id,
+    printerId: null, // Current printer already on this page, no need for slug
     brand: currentPrinter.brand,
     model: currentPrinter.model,
     price: currentPrinter.price,

@@ -12,6 +12,7 @@ import { RegionalPrice } from "@/components/price/RegionalPrice";
 interface SimilarPrinterCardProps {
   printer: {
     id: string;
+    printerId?: string | null; // SEO-friendly slug
     brand: string;
     model: string;
     price: number | null;
@@ -324,7 +325,7 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
   }
 
   return (
-    <Link to={`/printers/${printer.id}`} className="block">
+    <Link to={`/printers/${printer.printerId || printer.id}`} className="block">
       {cardContent}
     </Link>
   );

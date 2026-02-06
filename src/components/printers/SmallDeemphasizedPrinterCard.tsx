@@ -39,7 +39,7 @@ export default function SmallDeemphasizedPrinterCard({
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name} - ${cardInfo.badge?.label || 'Discontinued'}`}
     >
-      <Link to={`/printers/${printer.id}`}>
+      <Link to={`/printers/${printer.printer_id || printer.id}`}>
         <div 
           className="
             relative
