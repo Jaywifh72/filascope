@@ -231,6 +231,8 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                  {/* Redirects for legacy/broken links */}
+                  <Route path="/knowledge-base" element={<Navigate to="/compare" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
