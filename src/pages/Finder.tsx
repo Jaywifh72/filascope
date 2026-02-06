@@ -59,6 +59,7 @@ import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuic
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { LoadingProgress } from "@/components/LoadingProgress";
 import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
+import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
 import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
 
 // Color family definitions with representative HEX colors
@@ -1357,17 +1358,22 @@ const Finder = () => {
       return convertedPrice / (weightKg * packQty);
     };
 
-    // Use the new relative scoring algorithm for meaningful differentiation
+    // Use the same ease-of-printing score that's displayed on cards for consistent sorting
     const getScore = (filament: typeof a) => {
-      if (!scoringContext) return 5; // Neutral score if no context
-      return scoringContext.getScore(filament as FilamentForScoring);
+      const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
+      return breakdown.score ?? 5;
     };
 
     switch (sortBy) {
       case "scoring-asc":
         return getScore(a) - getScore(b);
-      case "scoring-desc":
-        return getScore(b) - getScore(a);
+      case "scoring-desc": {
+        const scoreA = getScore(a);
+        const scoreB = getScore(b);
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        // Secondary sort by price (lower first) for products with same score
+        return getPricePerKg(a) - getPricePerKg(b);
+      }
       case "alpha-asc":
         return (a.product_title || '').localeCompare(b.product_title || '');
       case "alpha-desc":
