@@ -10,6 +10,7 @@ interface HeroSectionProps {
   filamentCount: number;
   brandCount: number;
   compatibleCount: number;
+  isLoading?: boolean;
 }
 
 const searchSuggestions = [
@@ -20,12 +21,15 @@ const searchSuggestions = [
   "Try 'flexible TPU'",
 ];
 
-const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount }: HeroSectionProps) => {
+const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, compatibleCount, isLoading = false }: HeroSectionProps) => {
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Use shared deals count hook for consistency with Deals page
   const { data: dealsData } = useDealsCount();
   const dealsCount = dealsData?.uniqueProducts || 0;
+
+  // Format count for display - show rounded marketing number "960+" when loaded
+  const displayCount = isLoading ? null : filamentCount;
 
   // Dynamic quick start paths
   const quickStartPaths = useMemo(() => [
@@ -38,7 +42,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
     },
     {
       title: "Browse Filaments",
-      description: `Explore ${filamentCount.toLocaleString()}+ materials`,
+      description: displayCount !== null ? `Explore ${displayCount.toLocaleString()}+ materials` : "Explore all materials",
       icon: Search,
       href: "#system-config",
       color: "primary",
@@ -59,7 +63,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
       color: "green",
       hasLiveBadge: true,
     },
-  ], [filamentCount, dealsCount]);
+  ], [displayCount, dealsCount]);
 
   // Cycle through search suggestions - respects reduced motion preference
   useEffect(() => {
@@ -125,8 +129,17 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
               className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
-              <span className="text-primary">{filamentCount.toLocaleString()}</span> materials indexed from{" "}
-              <span className="text-primary">{brandCount}+</span> manufacturers. 
+              {displayCount !== null ? (
+                <>
+                  <span className="text-primary">{displayCount.toLocaleString()}+</span> materials indexed from{" "}
+                  <span className="text-primary">{brandCount}+</span> manufacturers. 
+                </>
+              ) : (
+                <>
+                  <span className="inline-block w-10 h-4 bg-primary/20 rounded animate-pulse align-middle" /> materials indexed from{" "}
+                  <span className="inline-block w-6 h-4 bg-primary/20 rounded animate-pulse align-middle" /> manufacturers. 
+                </>
+              )}
               Compare properties, specs, and pricing in one unified data hub.
             </p>
 

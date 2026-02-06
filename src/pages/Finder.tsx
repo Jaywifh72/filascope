@@ -1495,9 +1495,10 @@ const Finder = () => {
       <HeroSection 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        filamentCount={totalCount || 976}
+        filamentCount={filamentCount || 0}
         brandCount={brands?.length || 23}
         compatibleCount={totalCount}
+        isLoading={isLoading || filamentCount === undefined}
       />
 
       {/* Welcome Banner for New Visitors */}
@@ -1843,9 +1844,15 @@ const Finder = () => {
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm text-muted-foreground">
-            {totalCount} products{filteredAndSortedFilaments && filteredAndSortedFilaments.length !== totalCount 
-              ? ` (${filteredAndSortedFilaments.length} variants)` 
-              : ''}
+            {isLoading ? (
+              <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
+            ) : (
+              <>
+                {totalCount} products{filteredAndSortedFilaments && filteredAndSortedFilaments.length !== totalCount 
+                  ? ` (${filteredAndSortedFilaments.length} variants)` 
+                  : ''}
+              </>
+            )}
           </p>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground hidden sm:inline">{regionConfig.flag} {regionConfig.name}</span>

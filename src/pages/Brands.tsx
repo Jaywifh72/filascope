@@ -178,25 +178,16 @@ const Brands = () => {
     },
   });
 
-  // Get unique product count to match homepage display (bypasses 1000 row limit)
-  const { data: uniqueProductCount } = useQuery({
-    queryKey: ["unique-product-count"],
+  // Get total product count (matching homepage methodology - exact count from DB)
+  const { data: totalProductCount, isLoading: isCountLoading } = useQuery({
+    queryKey: ["total-product-count"],
     queryFn: async () => {
-      // Count unique products by grouping on product_title + vendor
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from("filaments")
-        .select("product_title, vendor")
-        .not("vendor", "is", null)
-        .or("net_weight_g.is.null,net_weight_g.gte.300")
-        .limit(10000);
+        .select("*", { count: "exact", head: true });
       
       if (error) throw error;
-      
-      // Count unique product_title + vendor combinations
-      const uniqueProducts = new Set(
-        data.map(f => `${f.vendor}::${f.product_title}`)
-      );
-      return uniqueProducts.size;
+      return count || 0;
     },
   });
 
@@ -340,9 +331,10 @@ const Brands = () => {
                           filters.hasLivePricing || 
                           filters.filamentCountRange !== null;
 
-  // Stats - use mergedBrands for brand count, uniqueProductCount for product total (matches homepage)
-  const totalProducts = uniqueProductCount || mergedBrands.reduce((sum, b) => sum + b.count, 0);
+  // Stats - use totalProductCount for product total (matches homepage exact count methodology)
+  const totalProducts = totalProductCount || 0;
   const brandCount = mergedBrands.length;
+  const isStatsLoading = isLoading || isCountLoading || !automatedBrands;
 
   const handleOpenQuiz = () => {
     toast.info("Brand Quiz coming soon!", {
@@ -387,7 +379,7 @@ const Brands = () => {
         onSearchChange={setSearchQuery}
         brandCount={brandCount}
         productCount={totalProducts}
-        isLoading={isLoading || !automatedBrands}
+        isLoading={isStatsLoading}
         onOpenQuiz={handleOpenQuiz}
         brandSuggestions={brandSuggestions}
       />
