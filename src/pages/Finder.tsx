@@ -61,6 +61,13 @@ import { LoadingProgress } from "@/components/LoadingProgress";
 import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
 import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
 import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
+import { 
+  tokenizeSearchQuery, 
+  matchesAllTerms, 
+  analyzeSearchQuery, 
+  getPreFilterTerm,
+  type FilamentSearchable 
+} from "@/lib/multiTermSearch";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -758,8 +765,21 @@ const Finder = () => {
         // Check if search term is a color name - if so, skip text search (will filter by color later)
         const isColorSearch = searchTerm ? extractColorFromText(searchTerm) : null;
         
+        // Multi-term search: Use the most specific (longest) term for database pre-filtering
+        // Client-side filtering will handle matching ALL terms across fields
         if (searchTerm && !isColorSearch) {
-          query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
+          const terms = tokenizeSearchQuery(searchTerm);
+          const preFilterTerm = getPreFilterTerm(terms);
+          
+          if (preFilterTerm) {
+            // Pre-filter in database with the most specific term across all searchable fields
+            query = query.or(
+              `product_title.ilike.%${preFilterTerm}%,` +
+              `vendor.ilike.%${preFilterTerm}%,` +
+              `material.ilike.%${preFilterTerm}%,` +
+              `finish_type.ilike.%${preFilterTerm}%`
+            );
+          }
         }
 
         if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
@@ -1300,15 +1320,22 @@ const Finder = () => {
       if (distance > colorTolerance) return false;
     }
     
-    // Apply search term filter client-side for immediate feedback
+    // Apply multi-term search filter client-side
+    // This ensures ALL search terms match across ANY combination of fields
     if (searchTerm && searchTerm.trim().length > 0) {
-      const term = searchTerm.toLowerCase().trim();
-      const titleMatch = f.product_title?.toLowerCase().includes(term);
-      const vendorMatch = f.vendor?.toLowerCase().includes(term);
-      const materialMatch = f.material?.toLowerCase().includes(term);
-      const descMatch = f.product_description?.toLowerCase().includes(term);
+      const colorFromSearchCheck = extractColorFromText(searchTerm);
       
-      if (!titleMatch && !vendorMatch && !materialMatch && !descMatch) return false;
+      // Skip text matching if this is a pure color search
+      if (!colorFromSearchCheck) {
+        const terms = tokenizeSearchQuery(searchTerm);
+        
+        if (terms.length > 0) {
+          // Use multi-term matching: ALL terms must match across ANY fields
+          if (!matchesAllTerms(f as FilamentSearchable, terms)) {
+            return false;
+          }
+        }
+      }
     }
     
     // Apply intelligent color name search (e.g., "orange" finds filaments with orange-like hex colors)
@@ -1909,11 +1936,28 @@ const Finder = () => {
           )}
           </>
         ) : (
-          <FilamentsEmptyState
-            searchTerm={searchTerm}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={handleClearAllFilters}
-          />
+          (() => {
+            // Analyze search query for smart suggestions
+            const searchAnalysis = searchTerm ? analyzeSearchQuery(searchTerm) : null;
+            return (
+              <FilamentsEmptyState
+                searchTerm={searchTerm}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={handleClearAllFilters}
+                onSearchChange={setSearchTerm}
+                detectedBrands={searchAnalysis?.detectedBrands}
+                detectedMaterials={searchAnalysis?.detectedMaterials}
+                onBrandFilter={(brand) => {
+                  setSearchTerm("");
+                  setSelectedBrands([brand]);
+                }}
+                onMaterialFilter={(material) => {
+                  setSearchTerm("");
+                  setSelectedMaterials([material]);
+                }}
+              />
+            );
+          })()
         )}
           </section>
         </div>

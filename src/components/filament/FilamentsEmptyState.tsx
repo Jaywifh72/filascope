@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Beaker, Search, Sparkles, ArrowRight, X, Target, Lightbulb } from "lucide-react";
+import { Beaker, Search, Sparkles, ArrowRight, X, Target, Lightbulb, Filter, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
@@ -11,6 +11,11 @@ interface FilamentsEmptyStateProps {
   onClearFilters: () => void;
   onSearchChange?: (value: string) => void;
   className?: string;
+  // Smart suggestion props
+  detectedBrands?: string[];
+  detectedMaterials?: string[];
+  onBrandFilter?: (brand: string) => void;
+  onMaterialFilter?: (material: string) => void;
 }
 
 const popularSearches = [
@@ -33,6 +38,10 @@ export function FilamentsEmptyState({
   onClearFilters,
   onSearchChange,
   className,
+  detectedBrands = [],
+  detectedMaterials = [],
+  onBrandFilter,
+  onMaterialFilter,
 }: FilamentsEmptyStateProps) {
   const isSearchEmpty = searchTerm && searchTerm.trim().length > 0;
 
@@ -47,6 +56,9 @@ export function FilamentsEmptyState({
     if (!searchTerm || searchTerm.length < 3 || typoSuggestion) return [];
     return getSimilarSuggestions(searchTerm, 3);
   }, [searchTerm, typoSuggestion]);
+
+  // Check if we have detected brands or materials for smart suggestions
+  const hasSmartSuggestions = detectedBrands.length > 0 || detectedMaterials.length > 0;
 
   const handleSuggestionClick = (suggestion: string) => {
     onSearchChange?.(suggestion);
@@ -133,6 +145,45 @@ export function FilamentsEmptyState({
               >
                 {suggestion}
               </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Smart Suggestions - Based on detected brands/materials in search query */}
+      {hasSmartSuggestions && !typoSuggestion && (
+        <div className="mb-6 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 max-w-md w-full">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="w-4 h-4 text-cyan-500" />
+            <span className="text-sm font-medium text-cyan-500">Try filtering instead</span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            We found related terms in your search. Try using filters:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {detectedMaterials.map((material) => (
+              <Button
+                key={material}
+                variant="outline"
+                size="sm"
+                onClick={() => onMaterialFilter?.(material)}
+                className="gap-1.5 border-cyan-500/30 hover:border-cyan-500/50 hover:bg-cyan-500/10"
+              >
+                <Tag className="w-3 h-3" />
+                Browse all {material}
+              </Button>
+            ))}
+            {detectedBrands.map((brand) => (
+              <Button
+                key={brand}
+                variant="outline"
+                size="sm"
+                onClick={() => onBrandFilter?.(brand)}
+                className="gap-1.5 border-cyan-500/30 hover:border-cyan-500/50 hover:bg-cyan-500/10"
+              >
+                <Tag className="w-3 h-3" />
+                View {brand} filaments
+              </Button>
             ))}
           </div>
         </div>
