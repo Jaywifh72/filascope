@@ -60,10 +60,8 @@ export function ProductSEO({
     // Printer with region
     seoTitle = `Buy ${title} in ${regionName} | FilaScope`;
   } else {
-    // Filament with region
-    seoTitle = brand 
-      ? `Buy ${brand} ${material || ''} in ${regionName} | FilaScope`
-      : `${title} | FilaScope`;
+    // Filament with region — use the full title which includes brand + product line name
+    seoTitle = `Buy ${title.trim()} in ${regionName} | FilaScope`;
   }
 
   // Build meta description with key specs, price, and region
