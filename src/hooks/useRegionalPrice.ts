@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useRegion } from '@/contexts/RegionContext';
-import { CurrencyCode, CURRENCIES } from '@/hooks/useCurrency';
+import { CurrencyCode } from '@/hooks/useCurrency';
 import { useRegionalStore } from '@/hooks/useRegionalStore';
 import { isRegionalBrand as checkIsRegionalBrand } from '@/hooks/useRegionalFiltering';
 import { getBrandConfig } from '@/lib/brandRegionalStores';
@@ -28,25 +28,41 @@ const CURRENCY_TO_REGION_CODE: Record<CurrencyCode, string> = {
 };
 
 /**
- * Maps currency codes to regional price columns
+ * Maps currency codes to regional price columns.
+ * ONLY maps currencies that have a dedicated database column with prices in that currency.
+ * Currencies without a column map to null — these will be converted via exchange rates.
  */
-const CURRENCY_TO_PRICE_COLUMN: Record<CurrencyCode, string> = {
+const CURRENCY_TO_PRICE_COLUMN: Record<CurrencyCode, string | null> = {
   USD: 'variant_price',
   CAD: 'price_cad',
   GBP: 'price_gbp',
   EUR: 'price_eur',
   AUD: 'price_aud',
   JPY: 'price_jpy',
-  CHF: 'price_eur', // Switzerland falls back to EUR
-  SEK: 'price_eur', // Sweden falls back to EUR
-  CNY: 'variant_price', // Fallback to USD
-  KRW: 'variant_price', // Fallback to USD
-  INR: 'variant_price', // Fallback to USD
-  MXN: 'variant_price', // Fallback to USD
-  BRL: 'variant_price', // Fallback to USD
-  NZD: 'price_aud', // NZ falls back to AUD
-  PLN: 'price_eur', // Poland falls back to EUR
-  CZK: 'price_eur', // Czech Republic falls back to EUR
+  CHF: null, // No dedicated column — convert from EUR or USD
+  SEK: null, // No dedicated column — convert from EUR or USD
+  CNY: null, // No dedicated column — convert from USD
+  KRW: null, // No dedicated column — convert from USD
+  INR: null, // No dedicated column — convert from USD
+  MXN: null, // No dedicated column — convert from USD
+  BRL: null, // No dedicated column — convert from USD
+  NZD: null, // No dedicated column — convert from AUD or USD
+  PLN: null, // No dedicated column — convert from EUR or USD
+  CZK: null, // No dedicated column — convert from EUR or USD
+};
+
+/**
+ * "Nearby region" mapping for currencies without a dedicated DB column.
+ * These currencies can get better accuracy by converting from a geographically
+ * close region's price rather than always falling back to USD.
+ * Maps to: { column: DB column name, sourceCurrency: currency of that column }
+ */
+const NEARBY_REGION_SOURCE: Partial<Record<CurrencyCode, { column: string; sourceCurrency: CurrencyCode }>> = {
+  CHF: { column: 'price_eur', sourceCurrency: 'EUR' },
+  SEK: { column: 'price_eur', sourceCurrency: 'EUR' },
+  PLN: { column: 'price_eur', sourceCurrency: 'EUR' },
+  CZK: { column: 'price_eur', sourceCurrency: 'EUR' },
+  NZD: { column: 'price_aud', sourceCurrency: 'AUD' },
 };
 
 /**
@@ -297,8 +313,8 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
     const priceColumn = CURRENCY_TO_PRICE_COLUMN[currency];
     const urlColumn = CURRENCY_TO_URL_COLUMN[currency];
 
-    // Try to get actual regional price from database
-    const actualRegionalPrice = filament[priceColumn] as number | null | undefined;
+    // Try to get actual regional price from database (only if there's a dedicated column)
+    const actualRegionalPrice = priceColumn ? (filament[priceColumn] as number | null | undefined) : null;
     
     // Try to get regional URL from database
     let regionalUrl = filament[urlColumn] as string | null | undefined;
@@ -428,6 +444,33 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
       };
     }
     
+    // Priority 2.5: "Nearby region" conversion — for currencies without a dedicated column,
+    // try to convert from a geographically close region's actual price (e.g., EUR→CHF, AUD→NZD)
+    // This is more accurate than converting from USD for nearby currencies.
+    const nearbySource = NEARBY_REGION_SOURCE[currency];
+    if (nearbySource) {
+      const nearbyPrice = filament[nearbySource.column] as number | null | undefined;
+      if (nearbyPrice && nearbyPrice > 0 && hasRates) {
+        const convertedFromNearby = convertPrice(nearbyPrice, nearbySource.sourceCurrency);
+        const { storeRegion, isLocalStore } = computeStoreInfo(false, brandHasRegionalStore, fallbackUrlCurrency, !isRegionalBrand);
+        return {
+          regionalPrice: convertedFromNearby,
+          isActualRegionalPrice: false,
+          regionalUrl: regionalUrl || '',
+          fallbackUrl: originalUsUrl,
+          priceSource: 'converted' as const,
+          currency,
+          vendorCurrency,
+          isUsingFallbackRegion,
+          actualUrlCurrency: nearbySource.sourceCurrency,
+          isAvailableInUserRegion,
+          isRegionalBrand,
+          storeRegion,
+          isLocalStore,
+        };
+      }
+    }
+
     // Priority 3: Convert from vendor currency or USD
     if (filament.variant_price && filament.variant_price > 0) {
       const convertedPrice = convertPrice(filament.variant_price, 'USD');
@@ -483,15 +526,13 @@ export function useRegionalPrice(filament: FilamentWithRegionalPrices | null): R
           };
         }
         
-        // Convert to user's currency: source -> USD -> target
-        const sourceRate = CURRENCIES[fallback.cur]?.rate || 1;
-        const targetRate = CURRENCIES[currency]?.rate || 1;
-        const convertedPrice = (fallback.price / sourceRate) * targetRate;
+        // Convert to user's currency using live database exchange rates (via RegionContext)
+        const convertedPrice = convertPrice(fallback.price, fallback.cur);
         
         const storeInfo = computeStoreInfo(false, brandHasRegionalStore, fallback.cur, !isRegionalBrand);
         return {
-          regionalPrice: convertedPrice,
-          isActualRegionalPrice: true, // Mark as true so FilamentCard uses formatRegionalPrice (no double conversion)
+          regionalPrice: hasRates ? convertedPrice : null, // null if rates not loaded yet
+          isActualRegionalPrice: false, // This IS a converted price, not a native regional price
           regionalUrl: bestUrl,
           fallbackUrl: originalUsUrl,
           priceSource: 'converted' as const,
@@ -558,10 +599,13 @@ export function getRegionalPrice(
   currency: CurrencyCode
 ): { price: number | null; isRegional: boolean } {
   const priceColumn = CURRENCY_TO_PRICE_COLUMN[currency];
-  const actualRegionalPrice = filament[priceColumn] as number | null | undefined;
-
-  if (actualRegionalPrice && actualRegionalPrice > 0) {
-    return { price: actualRegionalPrice, isRegional: true };
+  
+  // Only use the column if it's a dedicated column for this currency
+  if (priceColumn) {
+    const actualRegionalPrice = filament[priceColumn] as number | null | undefined;
+    if (actualRegionalPrice && actualRegionalPrice > 0) {
+      return { price: actualRegionalPrice, isRegional: true };
+    }
   }
 
   // Check if vendor's native currency matches

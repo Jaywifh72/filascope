@@ -97,10 +97,12 @@ export function LabReadoutCard({
     isUsingFallbackRegion,
     currency: priceCurrency,
     isLocalStore,
+    priceSource,
+    isRatesLoading,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
-  // Use isLocalStore from the hook instead of computing locally
-  const isConverted = isUsingFallbackRegion || (priceCurrency && priceCurrency !== userCurrency);
+  // Use priceSource for accurate conversion detection (matches FilamentCard behavior)
+  const isConverted = priceSource === 'converted';
   
   const {
     currentPrice: livePrice,
