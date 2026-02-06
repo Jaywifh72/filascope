@@ -1,97 +1,85 @@
 
+# Plan: Fix Scoring Sort Order Mismatch
 
-# Plan: Fix Search Autocomplete Navigation for Keyboard Selection
+## Problem Analysis
 
-## Problem Summary
-When a user clicks on a **PRODUCT-type** suggestion in the search dropdown, the navigation works correctly (navigates to `/filament/{slug}`). However, when using **keyboard navigation** (ArrowDown/ArrowUp + Enter), the product name is incorrectly filled into the search input instead of navigating to the detail page.
+The "Scoring: High to Low" sort displays products in unexpected order because:
+
+1. **Sorting uses one score algorithm** (`filamentScoring.ts` - value/brand score)
+2. **Cards display a different score algorithm** (`scoreCalculation.ts` - ease of printing score)
+
+This means a product sorted high (8.0 value score) might display a lower ease-of-printing score (e.g., 6.5), making the sort order appear wrong to users.
 
 ## Root Cause
-The `handleKeyDown` function is wrapped in `useCallback` with incomplete dependencies, causing stale closures:
+
+| Location | Algorithm | Measures |
+|----------|-----------|----------|
+| `Finder.tsx` sorting | `scoringContext.getScore()` | Price competitiveness, brand reputation, data quality, features |
+| `LabReadoutCard.tsx` display | `calculateEaseBreakdown()` | Material difficulty, temperature range, drying requirements |
+
+Users see the ease-of-printing score on cards but products are sorted by value score - these are fundamentally different metrics.
+
+## Solution
+
+Change the sorting algorithm to use the **same score that's displayed on cards** (ease-of-printing), so what users see matches the sort order.
+
+### Implementation
+
+**File: `src/pages/Finder.tsx`**
+
+1. Import `calculateEaseBreakdown` from `scoreCalculation.ts`
+2. Replace the `getScore` function in the sort comparator to use `calculateEaseBreakdown` instead of `scoringContext.getScore()`
+3. Remove the unused `scoringContext` creation since it won't be needed for sorting
+
+### Code Changes
 
 ```typescript
-// Current (buggy)
-const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-  // ...
-  handleSelect(allItems[selectedIndex], selectedSuggestion);
-  // ...
-}, [showDropdown, selectedIndex, allItems, value, trackSearch]); // ❌ Missing: handleSelect, suggestions, navigate, onChange
-```
+// Before (lines 1360-1364)
+const getScore = (filament: typeof a) => {
+  if (!scoringContext) return 5;
+  return scoringContext.getScore(filament as FilamentForScoring);
+};
 
-1. `handleSelect` is a regular function that captures `navigate`, `onChange`, `trackSearch`, and `onSelect` - it's redefined on every render but the memoized `handleKeyDown` holds a stale reference
-2. `suggestions` is accessed inside `handleKeyDown` but not in the dependency array
-
-## Solution Overview
-1. Wrap `handleSelect` in `useCallback` with proper dependencies
-2. Add `handleSelect` and `suggestions` to the `handleKeyDown` dependency array
-
-## Implementation Details
-
-### File: `src/components/search/SearchInputWithHistory.tsx`
-
-#### Change 1: Wrap `handleSelect` in `useCallback`
-
-**Before (lines 96-115):**
-```typescript
-const handleSelect = (selectedValue: string, suggestion?: SearchSuggestion) => {
-  if (suggestion?.type === "product" && suggestion.id) {
-    trackSearch(selectedValue);
-    setShowDropdown(false);
-    onChange("");
-    const slug = suggestion.productHandle || suggestion.id;
-    navigate(`/filament/${slug}`);
-    return;
-  }
-  onChange(selectedValue);
-  trackSearch(selectedValue);
-  setShowDropdown(false);
-  onSelect?.(selectedValue);
-  inputRef.current?.blur();
+// After
+const getScore = (filament: typeof a) => {
+  // Use the same score calculation as displayed on cards
+  const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
+  return breakdown.score ?? 5;
 };
 ```
 
-**After:**
+### Why This Works
+
+- **Consistency**: Users see 8.0 on a card → that product sorts as 8.0
+- **Predictability**: Products visually appear in the order users expect
+- **No UI changes needed**: The cards already display the correct score
+
+### Optional Enhancement: Secondary Sort
+
+When products have the same score, add a secondary sort by:
+1. Price per kg (lower is better)
+2. Brand name (alphabetical)
+
 ```typescript
-const handleSelect = useCallback((selectedValue: string, suggestion?: SearchSuggestion) => {
-  if (suggestion?.type === "product" && suggestion.id) {
-    trackSearch(selectedValue);
-    setShowDropdown(false);
-    onChange("");
-    const slug = suggestion.productHandle || suggestion.id;
-    navigate(`/filament/${slug}`);
-    return;
-  }
-  onChange(selectedValue);
-  trackSearch(selectedValue);
-  setShowDropdown(false);
-  onSelect?.(selectedValue);
-  inputRef.current?.blur();
-}, [navigate, onChange, trackSearch, onSelect]);
+case "scoring-desc": {
+  const scoreA = getScore(a);
+  const scoreB = getScore(b);
+  if (scoreB !== scoreA) return scoreB - scoreA;
+  // Secondary sort by price (lower first)
+  return getPricePerKg(a) - getPricePerKg(b);
+}
 ```
 
-#### Change 2: Update `handleKeyDown` dependencies
+## Files to Modify
 
-**Before (line 94):**
-```typescript
-}, [showDropdown, selectedIndex, allItems, value, trackSearch]);
-```
+| File | Changes |
+|------|---------|
+| `src/pages/Finder.tsx` | Update `getScore` function in sort comparator to use `calculateEaseBreakdown`; optionally remove unused `scoringContext` memoization |
 
-**After:**
-```typescript
-}, [showDropdown, selectedIndex, allItems, value, trackSearch, handleSelect, suggestions]);
-```
+## Testing
 
-## Summary of Changes
-
-| File | Change Description |
-|------|-------------------|
-| `src/components/search/SearchInputWithHistory.tsx` | Wrap `handleSelect` in `useCallback` and fix dependency arrays |
-
-## Testing Scenarios
-
-After implementation, verify both interaction methods work:
-
-1. **Click navigation**: Type "carbon fiber" → Click a PRODUCT suggestion → Should navigate to `/filament/{slug}`
-2. **Keyboard navigation**: Type "carbon fiber" → Press ArrowDown 3x → Press Enter on a PRODUCT → Should navigate to `/filament/{slug}`
-3. **Brand/Material selection**: Click or select a BRAND/MATERIAL → Should update search input (not navigate)
-4. **Typo correction**: Click or select a TYPO correction → Should update search input
-
+After implementation, verify:
+- First products shown have scores of ~9.0+ (PLA materials)
+- Products are ordered 10.0 → 9.x → 8.x → 7.x etc.
+- The score displayed on each card matches its position in the sorted list
+- PETG/ABS materials (harder to print) appear lower in the list when sorted by score
