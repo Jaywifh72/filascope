@@ -105,7 +105,8 @@ export function SiteFooter() {
   ];
 
   const companyLinks = [
-    { name: "Our Methodology", href: "/reference/methodology" },
+    { name: "About FilaScope", href: "/about" },
+    { name: "Our Methodology", href: "/methodology" },
     { name: "Contact", href: "mailto:hello@filascope.com", external: true },
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Terms of Service", href: "/terms" },

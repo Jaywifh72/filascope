@@ -109,6 +109,8 @@ const Install = lazy(() => import("./pages/Install"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
+const About = lazy(() => import("./pages/About"));
+const Methodology = lazy(() => import("./pages/Methodology"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 
@@ -231,6 +233,8 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/methodology" element={<Methodology />} />
                   {/* Redirects for legacy/broken links */}
                   <Route path="/knowledge-base" element={<Navigate to="/compare" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
