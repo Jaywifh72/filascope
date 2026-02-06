@@ -24,7 +24,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Use shared deals count hook for consistency with Deals page
-  const { data: dealsCount = 0 } = useDealsCount();
+  const { data: dealsData } = useDealsCount();
+  const dealsCount = dealsData?.uniqueProducts || 0;
 
   // Dynamic quick start paths
   const quickStartPaths = useMemo(() => [

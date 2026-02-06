@@ -1,17 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface DealsCountResult {
+  totalVariants: number;
+  uniqueProducts: number;
+}
+
 /**
  * Shared hook to get the accurate count of active deals.
- * Uses pagination to count ALL deals, not just a limited subset.
+ * Returns both total variants and unique product count (grouped by vendor + base product name).
  * 
  * A deal is defined as: variant_compare_at_price > variant_price, net_weight >= 300g
  */
 export function useDealsCount() {
   return useQuery({
     queryKey: ["active-deals-count"],
-    queryFn: async () => {
-      let allDeals: { variant_price: number | null; variant_compare_at_price: number | null }[] = [];
+    queryFn: async (): Promise<DealsCountResult> => {
+      let allDeals: { 
+        variant_price: number | null; 
+        variant_compare_at_price: number | null;
+        vendor: string | null;
+        product_title: string | null;
+      }[] = [];
       let offset = 0;
       const batchSize = 1000;
       let hasMore = true;
@@ -20,7 +30,7 @@ export function useDealsCount() {
       while (hasMore) {
         const { data, error } = await supabase
           .from("filaments")
-          .select("variant_price, variant_compare_at_price")
+          .select("variant_price, variant_compare_at_price, vendor, product_title")
           .not("variant_compare_at_price", "is", null)
           .not("variant_price", "is", null)
           .gt("variant_compare_at_price", 0)
@@ -49,7 +59,22 @@ export function useDealsCount() {
           item.variant_compare_at_price > item.variant_price
       );
 
-      return actualDeals.length;
+      // Group by vendor + base product name to get unique product count
+      const productGroups = new Set<string>();
+      for (const deal of actualDeals) {
+        // Extract base product name (remove color variants)
+        const baseTitle = deal.product_title
+          ?.replace(/\s*-\s*[^-]+$/, '') // Remove " - Color" suffix
+          ?.replace(/\s*\([^)]+\)\s*$/, '') // Remove "(Color)" suffix
+          ?.trim() || 'Unknown';
+        const groupKey = `${deal.vendor || 'Unknown'}::${baseTitle}`;
+        productGroups.add(groupKey);
+      }
+
+      return {
+        totalVariants: actualDeals.length,
+        uniqueProducts: productGroups.size,
+      };
     },
     staleTime: 1000 * 60 * 5, // 5 min cache
   });
