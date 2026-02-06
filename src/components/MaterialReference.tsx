@@ -819,18 +819,63 @@ const MaterialReference = () => {
     });
   };
 
-  // Get all materials organized by category
+  // Normalize material name to Title Case (e.g., "PLA-MARBLE" -> "PLA-Marble")
+  const normalizeMaterialName = (name: string): string => {
+    return name
+      .split('-')
+      .map((part, index) => {
+        // Keep uppercase for acronyms at the start (PLA, PETG, ABS, etc.)
+        if (index === 0 && part === part.toUpperCase() && part.length <= 5) {
+          return part;
+        }
+        // Title case for other parts
+        return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+      })
+      .join('-');
+  };
+
+  // Get all materials organized by category with case-insensitive deduplication
   const allMaterials = useMemo(() => {
-    const materials: { name: string; category: string; hasReference: boolean }[] = [];
+    const materials: { name: string; normalizedName: string; category: string; hasReference: boolean; originalNames: string[] }[] = [];
+    const seenNormalized = new Map<string, number>(); // normalizedName -> index in materials array
     
     MATERIAL_CATEGORIES.forEach(category => {
       category.materials.forEach(materialName => {
-        materials.push({
-          name: materialName,
-          category: category.name,
-          hasReference: !!MATERIAL_REFERENCE_DATA[materialName],
-        });
+        const normalizedName = normalizeMaterialName(materialName);
+        const existingIndex = seenNormalized.get(normalizedName.toLowerCase());
+        
+        if (existingIndex !== undefined) {
+          // Merge with existing entry - add to originalNames for database matching
+          materials[existingIndex].originalNames.push(materialName);
+          // Update hasReference if this variant has reference data
+          if (MATERIAL_REFERENCE_DATA[materialName]) {
+            materials[existingIndex].hasReference = true;
+          }
+        } else {
+          // New unique material
+          seenNormalized.set(normalizedName.toLowerCase(), materials.length);
+          materials.push({
+            name: normalizedName,
+            normalizedName,
+            category: category.name,
+            hasReference: !!MATERIAL_REFERENCE_DATA[materialName] || !!MATERIAL_REFERENCE_DATA[normalizedName],
+            originalNames: [materialName],
+          });
+        }
       });
+      
+      // Sort materials within each category alphabetically
+      const categoryStart = materials.findIndex(m => m.category === category.name);
+      if (categoryStart !== -1) {
+        const categoryMaterials = materials.filter(m => m.category === category.name);
+        categoryMaterials.sort((a, b) => a.name.localeCompare(b.name));
+        // Replace in-place
+        let idx = categoryStart;
+        categoryMaterials.forEach(m => {
+          materials[idx] = m;
+          idx++;
+        });
+      }
     });
     
     return materials;
@@ -856,8 +901,33 @@ const MaterialReference = () => {
     return grouped;
   }, [filteredMaterials]);
 
-  const selectedReference = selectedMaterial ? getMaterialReference(selectedMaterial) : null;
-  const selectedBasicInfo = selectedMaterial ? getMaterialInfo(selectedMaterial) : null;
+  // Look up material reference - try the selected name first, then try original variant names
+  const selectedMaterialData = useMemo(() => {
+    if (!selectedMaterial) return { reference: null, basicInfo: null };
+    
+    // Find the material entry to get original names
+    const materialEntry = allMaterials.find(m => m.name === selectedMaterial);
+    const namesToTry = materialEntry ? [selectedMaterial, ...materialEntry.originalNames] : [selectedMaterial];
+    
+    // Try each name until we find reference data
+    let reference = null;
+    let basicInfo = null;
+    
+    for (const name of namesToTry) {
+      if (!reference) {
+        reference = getMaterialReference(name);
+      }
+      if (!basicInfo) {
+        basicInfo = getMaterialInfo(name);
+      }
+      if (reference && basicInfo) break;
+    }
+    
+    return { reference, basicInfo };
+  }, [selectedMaterial, allMaterials]);
+
+  const selectedReference = selectedMaterialData.reference;
+  const selectedBasicInfo = selectedMaterialData.basicInfo;
 
   const totalMaterials = allMaterials.length;
   const categoriesWithData = Object.keys(groupedMaterials).length;
