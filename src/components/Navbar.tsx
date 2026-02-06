@@ -449,7 +449,7 @@ const Navbar = () => {
             {/* User Avatar / Login */}
             {user ? <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
+                  <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label="Open account menu">
                     <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
                       <AvatarFallback className="text-sm font-medium bg-gray-800 text-white">
@@ -507,7 +507,7 @@ const Navbar = () => {
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu> : <button onClick={() => navigate('/auth')} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full">
+              </DropdownMenu> : <button onClick={() => navigate('/auth')} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label="Sign in">
                 <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
                   <AvatarFallback className="bg-gray-800">
                     <User className="w-4 h-4 text-gray-400" />

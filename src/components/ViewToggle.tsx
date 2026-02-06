@@ -38,6 +38,7 @@ export function ViewToggle({ viewMode, onViewModeChange, className }: ViewToggle
         role="tab"
         aria-selected={viewMode === "grid"}
         aria-controls="filament-grid"
+        aria-label="Card view"
       >
         <LayoutGrid className="w-4 h-4" />
         <span className="hidden sm:inline">Cards</span>
@@ -55,6 +56,7 @@ export function ViewToggle({ viewMode, onViewModeChange, className }: ViewToggle
         role="tab"
         aria-selected={viewMode === "list"}
         aria-controls="filament-table"
+        aria-label="Table view"
       >
         <List className="w-4 h-4" />
         <span className="hidden sm:inline">Table</span>

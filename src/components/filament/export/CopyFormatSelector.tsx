@@ -67,7 +67,7 @@ export function CopyFormatSelector({ settings, variant = 'outline', size = 'sm' 
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant={variant} size="icon" className="h-8 w-6 px-0">
+          <Button variant={variant} size="icon" className="h-8 w-6 px-0" aria-label="Select copy format">
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>

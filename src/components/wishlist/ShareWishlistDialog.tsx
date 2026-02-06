@@ -124,7 +124,7 @@ export function ShareWishlistDialog({
               <Label>Share Link</Label>
               <div className="flex gap-2">
                 <Input value={generatedUrl} readOnly className="font-mono text-xs" />
-                <Button variant="outline" size="icon" onClick={handleCopy}>
+                <Button variant="outline" size="icon" onClick={handleCopy} aria-label={copied ? "Copied" : "Copy link"}>
                   {copied ? (
                     <Check className="h-4 w-4 text-green-500" />
                   ) : (
