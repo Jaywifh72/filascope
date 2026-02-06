@@ -31,7 +31,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const quickStartPaths = useMemo(() => [
     {
       title: "Quick Match",
-      description: "Answer 3 questions, get your perfect filament",
+      description: "Answer 5 questions, get your perfect filament",
       icon: Target,
       href: "/wizard",
       color: "purple",
