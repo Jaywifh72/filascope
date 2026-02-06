@@ -8743,6 +8743,24 @@ export type Database = {
         }
         Relationships: []
       }
+      v_missing_temp_data: {
+        Row: {
+          all_missing_bed_max: boolean | null
+          all_missing_bed_min: boolean | null
+          all_missing_nozzle_max: boolean | null
+          all_missing_nozzle_min: boolean | null
+          material: string | null
+          null_bed_min_count: number | null
+          null_nozzle_min_count: number | null
+          product_line_id: string | null
+          sample_handle: string | null
+          sample_title: string | null
+          sample_url: string | null
+          variant_count: number | null
+          vendor: string | null
+        }
+        Relationships: []
+      }
       v_pending_discoveries: {
         Row: {
           attempts: number | null
