@@ -97,7 +97,9 @@ const NotFound = () => {
           Page Not Found
         </h2>
         <p className="text-lg text-muted-foreground mb-2 max-w-md mx-auto">
-          The filament you're looking for might have been discontinued, or the page has moved.
+          {location.pathname.startsWith('/filament/') 
+            ? "The filament you're looking for might have been discontinued, or the page has moved."
+            : "The page you're looking for doesn't exist or has been moved."}
         </p>
         <p className="text-sm text-muted-foreground/70 mb-8">
           Requested: <code className="text-xs bg-muted px-2 py-1 rounded">{location.pathname}</code>
