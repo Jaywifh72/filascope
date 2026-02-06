@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
 import { CheckCircle, XCircle, TreeDeciduous, Layers, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCurrency } from "@/hooks/useCurrency";
+import { useRegion } from "@/contexts/RegionContext";
 import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PriceFreshnessCell } from "@/components/price/PriceFreshnessDot";
@@ -83,7 +83,39 @@ export function FilamentTableView({
   getColorMatchPercent,
 }: FilamentTableViewProps) {
   const navigate = useNavigate();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, convertPrice, currency, hasRates } = useRegion();
+
+  // Map currency to the direct DB column for that currency
+  const CURRENCY_COLUMN_MAP: Record<string, keyof Filament | null> = {
+    USD: 'variant_price',
+    CAD: 'price_cad',
+    EUR: 'price_eur',
+    GBP: 'price_gbp',
+    AUD: 'price_aud',
+  };
+
+  const getRegionalPrice = useCallback((filament: Filament): { price: number | null; isConverted: boolean } => {
+    // If USD, use variant_price directly
+    if (currency === 'USD') {
+      return { price: filament.variant_price, isConverted: false };
+    }
+
+    // Check for a direct regional price column
+    const column = CURRENCY_COLUMN_MAP[currency];
+    if (column) {
+      const directPrice = filament[column] as number | null;
+      if (directPrice && directPrice > 0) {
+        return { price: directPrice, isConverted: false };
+      }
+    }
+
+    // Fallback: convert from USD
+    if (filament.variant_price && hasRates) {
+      return { price: convertPrice(filament.variant_price, 'USD'), isConverted: true };
+    }
+
+    return { price: filament.variant_price, isConverted: false };
+  }, [currency, hasRates, convertPrice]);
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border/50" role="region" aria-label="Filament comparison table">
@@ -105,15 +137,19 @@ export function FilamentTableView({
         </thead>
         <tbody>
           {filaments.map((filament) => {
-            // Calculate true per-kg price accounting for pack quantity
+            // Calculate true per-kg price accounting for pack quantity with regional pricing
             const packQty = filament.pack_quantity || 1;
             const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
-            const pricePerKg = (filament.variant_price && weightKg) 
-              ? filament.variant_price / (weightKg * packQty) 
+            const { price: regionalPrice, isConverted } = getRegionalPrice(filament);
+            const pricePerKg = (regionalPrice && weightKg) 
+              ? regionalPrice / (weightKg * packQty) 
               : null;
-            const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < 500;
+            // Scale the validity threshold for non-decimal currencies
+            const maxValid = currency === 'JPY' || currency === 'KRW' ? 100000 : 500;
+            const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < maxValid;
             const displayPricePerKg = isValidPrice ? pricePerKg : null;
-            const pricePerSpool = filament.variant_price ? filament.variant_price / packQty : null;
+            const pricePerSpool = regionalPrice ? regionalPrice / packQty : null;
+            const prefix = isConverted ? '~' : '';
             
             // Calculate unified score
             const { score: overallScore, factors: scoreFactors, confidence: scoreConfidence, dataPointCount } = calculateUnifiedScore(filament as FilamentForScoring);
@@ -224,12 +260,12 @@ export function FilamentTableView({
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span className="font-mono text-sm font-bold text-orange-400">
-                    {displayPricePerKg ? `${formatPrice(displayPricePerKg, false)}/kg` : "—"}
+                    {displayPricePerKg ? `${prefix}${formatPrice(displayPricePerKg)}/kg` : "—"}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span className="font-mono text-sm text-muted-foreground">
-                    {pricePerSpool ? formatPrice(pricePerSpool, false) : "—"}
+                    {pricePerSpool ? `${prefix}${formatPrice(pricePerSpool)}` : "—"}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-center">
