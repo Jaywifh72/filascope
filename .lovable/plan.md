@@ -1,196 +1,229 @@
 
-# Multi-Word Search Implementation Plan
+
+# Filament Scoring System Fix
 
 ## Problem Analysis
 
-The current search implementation in `Finder.tsx` (line 762) uses a single OR filter that requires the **entire search term** to match within a single field:
+### Root Cause 1: Inconsistent Score Sources
+The Card view and Table view use **different score sources**:
 
-```typescript
-query = query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`);
-```
+| View | Score Source | Result |
+|------|--------------|--------|
+| **FilamentCard.tsx** | `filament.ease_of_printing_score ?? calculateEaseBreakdown().score` | Dynamic (varies per product) |
+| **FilamentTableView.tsx** | `filament.value_score \|\| 7.0` | Hardcoded fallback of 7.0 |
+| **LabReadoutCard.tsx** | `filament.ease_of_printing_score ?? calculateEaseBreakdown().score` | Dynamic (varies per product) |
 
-When a user searches for "Bambu Lab PETG", this query looks for the exact string "Bambu Lab PETG" in either `product_title` OR `vendor`. Since no product title contains that exact phrase (Bambu Lab products have titles like "PETG HF" with vendor "Bambu Lab"), the search returns 0 results.
+The Table view defaults to `7.0` when `value_score` is null, which explains why all products show 7.0 in table view.
 
-**What should happen:** The search should tokenize "Bambu Lab PETG" into ["Bambu", "Lab", "PETG"] and find products where ALL tokens appear across ANY combination of searchable fields.
+### Root Cause 2: Most Products Show 10.0 in Cards
+The `calculateEaseBreakdown()` function in `scoreCalculation.ts` starts at 10 and only deducts for:
+- Material difficulty (e.g., PLA only deducts 0.45 points: 1.5 × 0.3)
+- Narrow temperature windows
+- High temps, drying requirements, abrasive nozzles
+
+For a typical PLA with minimal data, the score calculates as:
+- Start: 10.0
+- Material deduction (PLA = 1.5 difficulty): -0.45
+- **Final: ~9.55, rounded to 9.6**
+
+Since most products lack negative factors, they cluster at 9.5-10.0.
+
+### Root Cause 3: Different Scoring Philosophies
+- `calculateEaseBreakdown()` = "Ease of Printing" (penalty-based from 10)
+- `filamentScoring.ts` = "Overall Value" (additive from 0, considers price, brand, features)
+- `value_score` database column = Often null
 
 ---
 
-## Solution Architecture
+## Solution Design
 
-### 1. New Utility: Multi-Term Search Parser (`src/lib/multiTermSearch.ts`)
+### Strategy: Unified Scoring Function
+Create a single, comprehensive scoring function that:
+1. Is used by **both** Card and Table views
+2. Considers multiple data points for differentiation
+3. Shows "Unrated" when insufficient data exists
+4. Provides tooltip breakdown of score factors
 
-Create a utility that:
-- Tokenizes the query into individual terms (respecting quoted phrases)
-- Normalizes terms (lowercase, trim whitespace)
-- Handles special cases like hyphenated terms ("carbon-fiber" = "carbon fiber")
-- Provides scoring based on match quality
+### Scoring Formula (0-10 Scale)
 
 ```text
-Input: "Bambu Lab PETG"
-Output: ["bambu", "lab", "petg"]
-
-Input: '"carbon fiber" PETG'
-Output: ["carbon fiber", "petg"]
+┌─────────────────────────────────────────────────────────────────┐
+│                    UNIFIED FILAMENT SCORE                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  BASE SCORE (max 3.0)                                          │
+│  ├── Material ease baseline: 0-2.5 points                      │
+│  │   (PLA=2.5, PETG=2.0, ABS=1.5, PA/PC=1.0, PEEK=0.5)        │
+│  └── Has material defined: +0.5                                │
+│                                                                 │
+│  DATA COMPLETENESS (max 2.5)                                   │
+│  ├── TDS available: +0.5                                       │
+│  ├── Temperature specs (nozzle + bed): +0.5                    │
+│  ├── Mechanical data (tensile/flexural): +0.5                  │
+│  ├── Has product image: +0.5                                   │
+│  └── Has color hex defined: +0.5                               │
+│                                                                 │
+│  PRICE & AVAILABILITY (max 2.0)                                │
+│  ├── Has pricing data: +0.5                                    │
+│  ├── Regional pricing (CAD/EUR/GBP/AUD): +0.1 each (max 0.4)  │
+│  ├── Multiple purchase options (Amazon + store): +0.3         │
+│  └── Price competitiveness vs material avg: +0.3              │
+│                                                                 │
+│  BRAND & QUALITY (max 1.5)                                     │
+│  ├── Premium brand: +1.0                                       │
+│  ├── Mid-tier brand: +0.5                                      │
+│  └── Unknown brand: +0.0                                       │
+│                                                                 │
+│  FEATURES (max 1.0)                                            │
+│  ├── High-speed capable: +0.4                                  │
+│  ├── Specialty finish (silk/matte/sparkle): +0.3              │
+│  └── Reinforced (CF/GF): +0.3                                  │
+│                                                                 │
+│  TOTAL: 0-10 (capped)                                          │
+│  MINIMUM DATA: material OR (price + image) required            │
+│  Otherwise: "Unrated"                                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
-
-### 2. Two-Phase Search Strategy
-
-**Phase 1: Database-Level Pre-Filtering (Supabase Query)**
-
-Modify the Supabase query to use the FIRST term only for initial database filtering. This keeps the query performant and avoids full table scans:
-
-```
-WHERE product_title ILIKE '%bambu%' 
-   OR vendor ILIKE '%bambu%' 
-   OR material ILIKE '%bambu%'
-```
-
-**Phase 2: Client-Side Multi-Term Matching (Post-Fetch Filter)**
-
-After fetching results, apply a client-side filter that checks ALL terms match across ANY field combination:
-
-```text
-For each filament:
-  For each search term:
-    Check if term appears in: vendor, product_title, material, finish_type, or color_family
-  Product passes only if ALL terms are found
-```
-
-### 3. Relevance Scoring System
-
-Rank results by how many fields match and match quality:
-
-| Match Type | Score |
-|------------|-------|
-| Exact field match | +10 |
-| Vendor match | +5 |
-| Material match | +4 |
-| Product title match | +3 |
-| Finish type / color | +1 |
-
-Products with higher scores appear first (when sort is "scoring-desc").
-
-### 4. Enhanced Empty State with Smart Suggestions
-
-When no results are found for a multi-term query like "Bambu Lab PETG", the empty state will offer contextual suggestions:
-
-- **"Browse all PETG"** - Material filter applied
-- **"View Bambu Lab filaments"** - Brand filter applied
-- **"Try: PETG HF"** - Similar product names
 
 ---
 
-## Implementation Details
+## Implementation Plan
 
-### Files to Create
+### Step 1: Create Unified Score Utility
+**File: `src/lib/unifiedFilamentScore.ts`**
 
-**`src/lib/multiTermSearch.ts`**
-- `tokenizeSearchQuery(query: string): string[]` - Splits query into normalized tokens
-- `matchesAllTerms(filament, terms, fields): boolean` - Tests if all terms match
-- `calculateRelevanceScore(filament, terms): number` - Scores match quality
-- `getSuggestionsFromQuery(query: string): { brands: string[], materials: string[] }` - Extracts filter suggestions
+Create a new scoring module with:
+- `calculateUnifiedScore(filament): ScoreResult`
+- `ScoreResult` interface with: `score: number | null`, `factors: Factor[]`, `confidence: 'high' | 'medium' | 'low' | 'insufficient'`
+- Export `getScoreLabel(score)` for text labels ("Excellent", "Good", "Average", etc.)
+- Export `getScoreColor(score)` for consistent color coding
 
-### Files to Modify
+### Step 2: Update FilamentTableView
+**File: `src/components/FilamentTableView.tsx`**
 
-**`src/pages/Finder.tsx`**
-
-1. Import the new utility functions
-2. Modify `buildQuery()` (lines 749-831) to use first-term filtering for multi-word queries
-3. Add a new `useMemo` block after `regionalFilaments` that applies multi-term filtering client-side
-4. Pass new props to `FilamentsEmptyState` for smart suggestions
-
-**`src/components/filament/FilamentsEmptyState.tsx`**
-
-1. Add new props: `detectedBrands?: string[]`, `detectedMaterials?: string[]`
-2. Render contextual CTAs: "Browse all [material]" and "View [brand] filaments"
-3. Make these buttons functional (link to filtered views or trigger filter changes)
-
-**`src/hooks/useSearchSuggestions.ts`**
-
-1. Update product suggestions query to use multi-term matching for autocomplete dropdown
-2. Show "Bambu Lab PETG" as a valid suggestion that would return results
-
----
-
-## Technical Approach: Query Construction
-
-**Current Query (single term only):**
+Current (line 94):
 ```typescript
-query.or(`product_title.ilike.%${searchTerm}%,vendor.ilike.%${searchTerm}%`)
+const overallScore = filament.value_score || 7.0;
 ```
 
-**New Query (database pre-filter with first term):**
+Change to:
 ```typescript
-const terms = tokenizeSearchQuery(searchTerm);
-const firstTerm = terms[0];
+import { calculateUnifiedScore } from '@/lib/unifiedFilamentScore';
 
-if (firstTerm) {
-  query = query.or(
-    `product_title.ilike.%${firstTerm}%,` +
-    `vendor.ilike.%${firstTerm}%,` +
-    `material.ilike.%${firstTerm}%`
-  );
+// Inside component
+const { score: overallScore } = calculateUnifiedScore(filament);
+```
+
+Update the score display (lines 217-224) to:
+- Show "—" when score is null
+- Add tooltip on hover explaining score breakdown
+- Use consistent color coding
+
+### Step 3: Update FilamentCard
+**File: `src/components/FilamentCard.tsx`**
+
+Current (lines 272-278):
+```typescript
+const dynamicScore = useMemo(() => {
+  const breakdown = calculateEaseBreakdown(filament);
+  return breakdown.score;
+}, [filament]);
+
+const overallScore = filament.ease_of_printing_score ?? dynamicScore ?? null;
+```
+
+Change to:
+```typescript
+import { calculateUnifiedScore } from '@/lib/unifiedFilamentScore';
+
+const { score: overallScore, factors, confidence } = useMemo(() => 
+  calculateUnifiedScore(filament),
+  [filament]
+);
+```
+
+Update the score tooltip (HoverCardContent) to show the unified breakdown factors.
+
+### Step 4: Update LabReadoutCard
+**File: `src/components/LabReadoutCard.tsx`**
+
+Apply same changes as FilamentCard for consistency.
+
+### Step 5: Extend Filament Interface for Table
+**File: `src/components/FilamentTableView.tsx`**
+
+Add missing fields to the `Filament` interface that are needed for scoring:
+```typescript
+interface Filament {
+  // existing fields...
+  high_speed_capable?: boolean | null;
+  nozzle_temp_min_c?: number | null;
+  nozzle_temp_max_c?: number | null;
+  bed_temp_min_c?: number | null;
+  tds_url?: string | null;
+  price_cad?: number | null;
+  price_eur?: number | null;
+  price_gbp?: number | null;
+  price_aud?: number | null;
+  // etc.
 }
 ```
 
-**Client-Side Multi-Term Filter (after fetch):**
-```typescript
-const multiTermFiltered = useMemo(() => {
-  if (!regionalFilaments || !searchTerm) return regionalFilaments;
-  
-  const terms = tokenizeSearchQuery(searchTerm);
-  if (terms.length <= 1) return regionalFilaments; // Single term handled by DB
-  
-  return regionalFilaments.filter(f => matchesAllTerms(f, terms));
-}, [regionalFilaments, searchTerm]);
+---
+
+## Score Interpretation
+
+| Score Range | Label | Color | Meaning |
+|-------------|-------|-------|---------|
+| 8.5-10.0 | Excellent | Green (#22c55e) | Top-tier, complete data, great value |
+| 7.0-8.4 | Great | Cyan (#06b6d4) | Well-documented, good brand/price |
+| 5.5-6.9 | Good | Primary | Solid option, some data gaps |
+| 4.0-5.4 | Average | Orange (#f59e0b) | Limited info or pricey |
+| 1.0-3.9 | Limited | Red (#ef4444) | Missing key data |
+| null | Unrated | Gray | Insufficient data to score |
+
+---
+
+## Tooltip/Hover Content
+
+When hovering over the score, show a breakdown:
+```text
+┌────────────────────────────────────┐
+│  Score Breakdown                   │
+├────────────────────────────────────┤
+│  ✓ Material (PLA)         +2.5    │
+│  ✓ Complete specs         +1.5    │
+│  ✓ Polymaker brand        +1.0    │
+│  ✓ Has regional pricing   +0.8    │
+│  ✓ High-speed capable     +0.4    │
+│  ────────────────────────────     │
+│  Total: 6.2 / 10                  │
+│                                    │
+│  Confidence: High                  │
+│  (Based on 8 data points)          │
+└────────────────────────────────────┘
 ```
 
 ---
 
-## Search Fields Priority
+## Files to Create/Modify
 
-The following fields will be searched (in priority order for scoring):
-
-1. **vendor** - Brand name (e.g., "Bambu Lab", "Polymaker")
-2. **material** - Material type (e.g., "PETG", "PLA Carbon Fiber")
-3. **product_title** - Product name (e.g., "PETG HF", "PolyLite PLA")
-4. **finish_type** - Surface finish (e.g., "Carbon", "Silk", "Matte")
-5. **color_family** - Color category (e.g., "Red", "Black")
-
----
-
-## Performance Considerations
-
-1. **Debouncing**: Already implemented at 300ms in `useSearchSuggestions`
-2. **Query Cache**: React Query caches results by search term - multi-term searches get their own cache entry
-3. **No Full Table Scans**: Database query still uses ILIKE with first term, limiting initial result set
-4. **Client-Side Filtering**: Only runs on already-fetched regional results (typically under 1000 items)
-5. **Memoization**: All filtering uses `useMemo` to prevent recalculation on unrelated re-renders
+| File | Action | Description |
+|------|--------|-------------|
+| `src/lib/unifiedFilamentScore.ts` | **Create** | New unified scoring function |
+| `src/components/FilamentTableView.tsx` | Modify | Use unified score, add tooltip |
+| `src/components/FilamentCard.tsx` | Modify | Use unified score |
+| `src/components/LabReadoutCard.tsx` | Modify | Use unified score |
 
 ---
 
-## Test Cases
+## Validation Checklist
 
-After implementation, these searches should return expected results:
+After implementation, verify:
+- [ ] Scores vary meaningfully (not all 10.0 or 7.0)
+- [ ] Same product shows same score in Card vs Table view
+- [ ] Scores use 0-10 scale with clear meaning
+- [ ] Hover tooltip explains score breakdown
+- [ ] Products with minimal data show "Unrated" instead of default number
+- [ ] Existing sort functionality still works with new scores
 
-| Query | Expected Result |
-|-------|-----------------|
-| "Bambu Lab PETG" | All Bambu Lab filaments with PETG material (~30 items) |
-| "Polymaker PLA" | All Polymaker PLA products (~430 items) |
-| "carbon fiber PETG" | PETG filaments with carbon fiber finish |
-| "high speed PLA" | PLA filaments with high-speed designation |
-| "silk red" | Red-colored silk finish filaments |
-| "Prusament ASA" | Prusament brand ASA material products |
-
----
-
-## Summary
-
-This approach:
-- Tokenizes multi-word queries into individual terms
-- Matches ALL terms across ANY field combination
-- Maintains database query performance (single-term pre-filter)
-- Adds relevance scoring for result ranking
-- Enhances empty state with contextual filter suggestions
-- Works alongside existing sidebar filters (search narrows, filters narrow further)
-- Preserves existing autocomplete functionality
