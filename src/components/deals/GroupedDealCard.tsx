@@ -21,43 +21,58 @@ function DealCardImage({
   src, 
   alt, 
   colorHex, 
-  vendor 
+  vendor,
+  material,
 }: { 
   src: string | null | undefined; 
   alt: string; 
   colorHex?: string | null; 
   vendor?: string | null;
+  material?: string | null;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
 
   const showFallback = !src || errored;
 
+  // Generate a deterministic accent color from vendor name when no color_hex
+  const accentHue = vendor
+    ? vendor.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0) % 360
+    : 200;
+  const accentColor = colorHex || `hsl(${accentHue}, 40%, 50%)`;
+
   return (
     <div 
       className="relative h-40 bg-muted/30 flex items-center justify-center overflow-hidden"
-      style={colorHex && showFallback ? { backgroundColor: `${colorHex}15` } : undefined}
+      style={showFallback ? { 
+        background: `linear-gradient(135deg, hsl(${accentHue}, 20%, 12%) 0%, hsl(${accentHue}, 15%, 8%) 100%)`
+      } : undefined}
     >
       {/* Color accent bar at top */}
-      {colorHex && (
-        <div 
-          className="absolute top-0 left-0 right-0 h-1 opacity-60" 
-          style={{ backgroundColor: colorHex }} 
-        />
-      )}
+      <div 
+        className="absolute top-0 left-0 right-0 h-1 opacity-70" 
+        style={{ backgroundColor: accentColor }} 
+      />
 
       {showFallback ? (
-        <div className="flex flex-col items-center gap-2 text-muted-foreground p-4">
+        <div className="flex flex-col items-center gap-2 text-center p-4">
           {colorHex ? (
             <div 
-              className="w-16 h-16 rounded-full border-2 border-border/30 shadow-sm"
+              className="w-14 h-14 rounded-full border-2 border-white/10 shadow-lg"
               style={{ backgroundColor: colorHex }}
             />
           ) : (
-            <Package className="w-10 h-10 opacity-40" />
+            <div className="w-14 h-14 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+              <Package className="w-7 h-7 text-muted-foreground/60" />
+            </div>
+          )}
+          {material && (
+            <span className="text-xs font-bold tracking-wider text-muted-foreground/80 uppercase">
+              {material}
+            </span>
           )}
           {vendor && (
-            <span className="text-[10px] font-medium opacity-50 text-center truncate max-w-[80%]">
+            <span className="text-[10px] font-medium text-muted-foreground/50 truncate max-w-[80%]">
               {vendor}
             </span>
           )}
@@ -85,7 +100,6 @@ function DealCardImage({
     </div>
   );
 }
-
 export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -159,6 +173,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             alt={group.baseName}
             colorHex={representativeColorHex}
             vendor={group.representativeDeal.vendor}
+            material={group.representativeDeal.material}
           />
         </Link>
 
