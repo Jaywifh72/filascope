@@ -195,7 +195,7 @@ const Navbar = () => {
       icon: Wrench,
       items: [
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
-        { to: '/reference/cad', label: '3D Modeling Software', icon: Box },
+        { to: '/reference/cad', label: '3D Modeling Software', icon: Box, comingSoon: true },
         { to: '/resources/profiles', label: 'Print Profiles', icon: FileText, comingSoon: true },
       ]
     },
@@ -204,8 +204,8 @@ const Navbar = () => {
       icon: Globe,
       items: [
         { to: '/reference/repos', label: 'Model Repositories', icon: FolderGit2 },
-        { to: '/reference/influencers', label: 'Creator Spotlights', icon: Youtube },
-        { to: '/accessories', label: 'Accessories & Upgrades', icon: Puzzle },
+        { to: '/reference/influencers', label: 'Creator Spotlights', icon: Youtube, comingSoon: true },
+        { to: '/accessories', label: 'Accessories & Upgrades', icon: Puzzle, comingSoon: true },
       ]
     }
   ];
@@ -316,22 +316,30 @@ const Navbar = () => {
                     
                     {/* Section Items */}
                     {section.items.map(item => (
-                      <DropdownMenuItem 
-                        key={item.to} 
-                        asChild 
-                        className="rounded-lg"
-                        onClick={() => setLearnDropdownOpen(false)}
-                      >
-                        <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                          <item.icon className="w-4 h-4 text-muted-foreground" />
+                      item.comingSoon ? (
+                        <div 
+                          key={item.to}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground/50 cursor-not-allowed rounded-lg"
+                        >
+                          <item.icon className="w-4 h-4 text-muted-foreground/40" />
                           {item.label}
-                          {item.comingSoon && (
-                            <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
-                              Soon
-                            </span>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
+                          <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
+                            Soon
+                          </span>
+                        </div>
+                      ) : (
+                        <DropdownMenuItem 
+                          key={item.to} 
+                          asChild 
+                          className="rounded-lg"
+                          onClick={() => setLearnDropdownOpen(false)}
+                        >
+                          <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                            <item.icon className="w-4 h-4 text-muted-foreground" />
+                            {item.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      )
                     ))}
                     
                     {/* Divider between sections */}
@@ -403,12 +411,27 @@ const Navbar = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
-                {learnItemsFlat.map(item => <DropdownMenuItem key={item.to} asChild className="rounded-lg">
-                    <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                      <item.icon className="w-4 h-4 text-muted-foreground" />
+                {learnItemsFlat.map(item => 
+                  item.comingSoon ? (
+                    <div 
+                      key={item.to}
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground/50 cursor-not-allowed rounded-lg"
+                    >
+                      <item.icon className="w-4 h-4 text-muted-foreground/40" />
                       {item.label}
-                    </Link>
-                  </DropdownMenuItem>)}
+                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
+                        Soon
+                      </span>
+                    </div>
+                  ) : (
+                    <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+                      <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                        <item.icon className="w-4 h-4 text-muted-foreground" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  )
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -573,9 +596,22 @@ const Navbar = () => {
                   </span>
                 </div>
                 {section.items.map(item => (
-                  <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
-                    {item.label}
-                  </MobileNavLink>
+                  item.comingSoon ? (
+                    <div 
+                      key={item.to}
+                      className="flex items-center px-4 py-3 text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
+                    >
+                      {item.icon && <item.icon className="w-4 h-4 mr-3 text-muted-foreground/40" />}
+                      {item.label}
+                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
+                        Soon
+                      </span>
+                    </div>
+                  ) : (
+                    <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
+                      {item.label}
+                    </MobileNavLink>
+                  )
                 ))}
                 {sectionIndex < learnMenuSections.length - 1 && (
                   <div className="border-t border-border/30 my-2" />
