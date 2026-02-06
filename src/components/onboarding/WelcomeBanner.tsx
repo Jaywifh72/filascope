@@ -56,9 +56,9 @@ export function WelcomeBanner() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="w-4 h-4 text-primary sm:hidden" />
-              <h3 className="text-sm font-semibold text-foreground">
+              <h2 className="text-sm font-semibold text-foreground">
                 New to 3D printing materials?
-              </h3>
+              </h2>
             </div>
             <p className="text-sm text-muted-foreground">
               Not sure which filament to choose? Our Quick Match wizard finds your perfect material in under 60 seconds.
