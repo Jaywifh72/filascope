@@ -47,7 +47,7 @@ export function TechFooter() {
           </span>
           <div className="h-3 w-px bg-border" />
           <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            © 2025
+            © {new Date().getFullYear()}
           </span>
         </div>
       </div>
