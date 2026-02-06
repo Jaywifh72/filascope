@@ -491,6 +491,19 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
   // - Atomic: "atomic-filament__material" (2 parts) - extract material as display name
   const parts = productLineId.split('__');
   
+  // POLYMAKER: Use cleaned product_title directly - it's authoritative
+  // product_title examples: "Polymaker™ PC-PBT", "PolyLite™ ABS - Black", "PolySonic™ PLA Pro - Red"
+  if (parts[0] === 'polymaker' && fallbackTitle) {
+    const cleaned = fallbackTitle
+      .replace(/^Polymaker™?\s*/gi, '')          // Strip brand prefix (with or without ™)
+      .replace(/\s+-\s+[^-]+$/, '')              // Remove trailing color suffix (" - Black") — requires spaces around dash
+      .replace(/\s+Filament\s*$/i, '')
+      .replace(/\s*,?\s*\d+\.?\d*\s*mm\b/gi, '')
+      .replace(/\s*,?\s*\d+\.?\d*\s*kg\b/gi, '')
+      .trim();
+    return cleaned || fallbackTitle;
+  }
+  
   // FORMFUTURA: Use cleaned product_title directly (removes color suffix)
   // The product_title is authoritative, e.g., "High Gloss PLA ColorMorph - Lava" → "High Gloss PLA ColorMorph"
   if (parts[0] === 'formfutura' && fallbackTitle) {
@@ -711,12 +724,45 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
     let materialSlug = parts[1] || '';
     let material = '';
     
+    // Detect duplicate: when line slug equals material slug (e.g., "pc-pbt" + "pc-pbt")
+    // In this case, just format the material and skip the line name
+    const lineSlugRaw = parts.slice(2).join('__');
+    if (lineSlugRaw === materialSlug) {
+      // Material and line are identical — format material only
+      const compositeSuffixes = ['-cf', '-gf', '-fr'];
+      const hasCompositeSuffix = compositeSuffixes.some(s => materialSlug.toLowerCase().endsWith(s));
+      
+      if (hasCompositeSuffix) {
+        return materialSlug.toUpperCase();
+      }
+      // Check if the entire slug is a known compound material (keep hyphen)
+      const COMPOUND_MATERIALS = ['pc-pbt', 'pc-abs', 'pa-cf', 'pa-gf', 'pet-cf', 'pa6-cf', 'pa6-gf', 'pa12-cf'];
+      if (COMPOUND_MATERIALS.includes(materialSlug.toLowerCase())) {
+        return materialSlug.toUpperCase();
+      }
+      // Otherwise split hyphen and format
+      return materialSlug
+        .split('-')
+        .map(word => {
+          const upper = word.toUpperCase();
+          if (['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PC', 'PA', 'PAHT', 'PBT', 'PPS', 'PPA', 'PEI', 'POM', 'HIPS', 'PVA', 'PCTG', 'PVDF', 'FR', 'HF', 'HS', 'CF', 'GF'].includes(upper)) {
+            return upper;
+          }
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(' ');
+    }
+    
     // Check if material slug contains composite suffixes (CF, GF)
     const compositeSuffixes = ['-cf', '-gf'];
     const hasCompositeSuffix = compositeSuffixes.some(s => materialSlug.toLowerCase().endsWith(s));
     
-    if (hasCompositeSuffix) {
-      // Keep composite suffix with hyphen: "petg-cf" → "PETG-CF"
+    // Check if the entire slug is a known compound material (keep hyphen: "pc-pbt" → "PC-PBT")
+    const COMPOUND_MATERIALS = ['pc-pbt', 'pc-abs', 'pa-cf', 'pa-gf', 'pet-cf', 'pa6-cf', 'pa6-gf', 'pa12-cf'];
+    const isCompoundMaterial = COMPOUND_MATERIALS.includes(materialSlug.toLowerCase());
+    
+    if (hasCompositeSuffix || isCompoundMaterial) {
+      // Keep as hyphenated uppercase: "petg-cf" → "PETG-CF", "pc-pbt" → "PC-PBT"
       material = materialSlug.toUpperCase();
     } else if (materialSlug.includes('-')) {
       // Convert hyphen to space for display: "pla-metal" → "PLA Metal", "rapid-petg" → "Rapid PETG"
@@ -725,7 +771,7 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
         .map((word, idx) => {
           const upper = word.toUpperCase();
           // Keep material abbreviations uppercase (PLA, PETG, ABS, etc.)
-          if (['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PC', 'PA', 'PAHT'].includes(upper)) {
+          if (['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PC', 'PA', 'PAHT', 'PBT', 'PPS', 'PPA', 'PEI', 'POM', 'HIPS', 'PVA', 'PCTG', 'PVDF', 'FR', 'HF', 'HS', 'CF', 'GF'].includes(upper)) {
             return upper;
           }
           // Title case for other words
@@ -743,6 +789,14 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
       .replace(/\b\w/g, c => c.toUpperCase())
       // Fix capitalization for abbreviations like "HS" (Matte Hs → Matte HS)
       .replace(/\bHs\b/g, 'HS')
+      .replace(/\bAbs\b/g, 'ABS')
+      .replace(/\bPla\b/g, 'PLA')
+      .replace(/\bPetg\b/g, 'PETG')
+      .replace(/\bAsa\b/g, 'ASA')
+      .replace(/\bTpu\b/g, 'TPU')
+      .replace(/\bPbt\b/g, 'PBT')
+      .replace(/\bCf\b/g, 'CF')
+      .replace(/\bGf\b/g, 'GF')
       .trim();
     
     // Remove category suffixes ONLY when they're redundant (already present in the material slug)
