@@ -186,8 +186,8 @@ const Navbar = () => {
       icon: BookOpen,
       items: [
         { to: '/compare', label: 'Material Encyclopedia', icon: BookOpen },
-        { to: '/guides/print-settings', label: 'Print Settings Guide', icon: SlidersHorizontal },
-        { to: '/guides/troubleshooting', label: 'Troubleshooting', icon: AlertCircle },
+        { to: '/guides/print-settings', label: 'Print Settings Guide', icon: SlidersHorizontal, comingSoon: true },
+        { to: '/guides/troubleshooting', label: 'Troubleshooting', icon: AlertCircle, comingSoon: true },
       ]
     },
     {
@@ -196,7 +196,7 @@ const Navbar = () => {
       items: [
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
         { to: '/reference/cad', label: '3D Modeling Software', icon: Box },
-        { to: '/resources/profiles', label: 'Print Profiles', icon: FileText },
+        { to: '/resources/profiles', label: 'Print Profiles', icon: FileText, comingSoon: true },
       ]
     },
     {
@@ -325,6 +325,11 @@ const Navbar = () => {
                         <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
                           <item.icon className="w-4 h-4 text-muted-foreground" />
                           {item.label}
+                          {item.comingSoon && (
+                            <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
+                              Soon
+                            </span>
+                          )}
                         </Link>
                       </DropdownMenuItem>
                     ))}
