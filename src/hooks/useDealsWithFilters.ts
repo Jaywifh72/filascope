@@ -59,7 +59,8 @@ export function useDealsWithFilters() {
   const [showLocalOnly, setShowLocalOnly] = useState(false);
   
   // Use shared deals count for accurate total (not limited by query limit)
-  const { data: totalDealsCount = 0 } = useDealsCount();
+  const { data: dealsCountData } = useDealsCount();
+  const totalDealsCount = dealsCountData?.totalVariants || 0;
   const { data: rawDeals = [], isLoading } = useQuery({
     queryKey: ["deals-page-enhanced"],
     queryFn: async () => {
