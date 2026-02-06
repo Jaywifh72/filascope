@@ -39,6 +39,7 @@ import { extractProductSlug } from "@/hooks/useRegionalPricing";
 import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 import { useRegion } from "@/contexts/RegionContext";
 import type { RegionCode, CurrencyCode } from "@/types/regional";
+import { REGIONS } from "@/config/regions";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
@@ -133,10 +134,29 @@ const FilamentDetail = () => {
     isLoading: storePriceLoading 
   } = useFilamentStorePricing(pricingFilament?.id);
 
-  // Fetch all retailer listings to find the true best price across ALL sources
-  const { data: allRetailerListings } = useFilamentListings(pricingFilament?.id, {
+  // Fetch retailer listings for US (baseline) and user's region
+  const userCurrency = REGIONS[currentRegionCode as RegionCode]?.defaultCurrency || 'USD';
+  const { data: usRetailerListings } = useFilamentListings(pricingFilament?.id, {
+    region: 'US',
+    currency: 'USD',
     includeUnavailable: false,
   });
+  const isUserRegionUS = currentRegionCode === 'US';
+  const { data: localRetailerListings } = useFilamentListings(
+    !isUserRegionUS ? pricingFilament?.id : undefined, 
+    {
+      region: currentRegionCode,
+      currency: userCurrency,
+      includeUnavailable: false,
+    }
+  );
+  // Merge: local listings + US listings (de-duped)
+  const allRetailerListings = useMemo(() => {
+    const local = localRetailerListings || [];
+    const us = usRetailerListings || [];
+    const seen = new Set(local.map(l => l.listing_id));
+    return [...local, ...us.filter(l => !seen.has(l.listing_id))];
+  }, [localRetailerListings, usRetailerListings]);
   
   // Extract values for backward compatibility with existing code
   // PRIORITY: 1. Store pricing (filament_prices), 2. Unified pricing (brand_regional_stores), 3. variant_price fallback
@@ -301,18 +321,28 @@ const FilamentDetail = () => {
 
     if (candidates.length === 0) return null;
 
-    // Sort: cheapest per kg first; ties go to brand-direct store
-    candidates.sort((a, b) => {
+    // Separate local (matching user region) vs international candidates
+    const localCandidates = candidates.filter(c => c.storeRegion === currentRegionCode);
+    const internationalCandidates = candidates.filter(c => c.storeRegion !== currentRegionCode);
+
+    // Sort each group: cheapest per kg first; ties go to brand-direct store
+    const sortByPrice = (a: typeof candidates[0], b: typeof candidates[0]) => {
       const diff = a.pricePerKg - b.pricePerKg;
       if (Math.abs(diff) < 0.01) {
         if (a.isBrandDirect !== b.isBrandDirect) return a.isBrandDirect ? -1 : 1;
         return 0;
       }
       return diff;
-    });
+    };
+    localCandidates.sort(sortByPrice);
+    internationalCandidates.sort(sortByPrice);
 
-    return candidates[0];
-  }, [allRetailerListings, regionalPriceResult, pricingFilament, getAmazonUrl]);
+    // Prefer local stores if any exist; only fall back to international if none
+    if (localCandidates.length > 0) {
+      return localCandidates[0];
+    }
+    return internationalCandidates[0];
+  }, [allRetailerListings, regionalPriceResult, pricingFilament, getAmazonUrl, currentRegionCode]);
 
   // Build regional price result overridden by sidebarBest for the sidebar
   const sidebarRegionalPrice = useMemo(() => {
