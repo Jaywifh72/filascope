@@ -1549,6 +1549,7 @@ const Finder = () => {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         filamentCount={filamentCount || 0}
+        productCount={totalCount}
         brandCount={brands?.length || 23}
         compatibleCount={totalCount}
         isLoading={isLoading || filamentCount === undefined}
