@@ -1,229 +1,211 @@
 
+# Plan: Convert Printer URLs from UUID to SEO-Friendly Slugs
 
-# Filament Scoring System Fix
+## Overview
+Convert printer detail page URLs from UUID format (`/printers/f9bc2b59-33e8-4fce-84f2-979e010f5d69`) to SEO-friendly slug format (`/printers/bambu-lab-a1`) to match the filament pages pattern.
 
-## Problem Analysis
+## Current State Analysis
 
-### Root Cause 1: Inconsistent Score Sources
-The Card view and Table view use **different score sources**:
+### What Already Exists
+- **`printer_id` column**: The `printers` table already has a `printer_id` text column containing slug-like values
+- **Dual lookup support**: `PrinterDetail.tsx` already supports looking up by both UUID and `printer_id`
+- **Inconsistent formatting**: Current `printer_id` values use a mix of underscores (`bambu_lab_a1`) and hyphens (`creality-ender-3-v3`)
 
-| View | Score Source | Result |
-|------|--------------|--------|
-| **FilamentCard.tsx** | `filament.ease_of_printing_score ?? calculateEaseBreakdown().score` | Dynamic (varies per product) |
-| **FilamentTableView.tsx** | `filament.value_score \|\| 7.0` | Hardcoded fallback of 7.0 |
-| **LabReadoutCard.tsx** | `filament.ease_of_printing_score ?? calculateEaseBreakdown().score` | Dynamic (varies per product) |
-
-The Table view defaults to `7.0` when `value_score` is null, which explains why all products show 7.0 in table view.
-
-### Root Cause 2: Most Products Show 10.0 in Cards
-The `calculateEaseBreakdown()` function in `scoreCalculation.ts` starts at 10 and only deducts for:
-- Material difficulty (e.g., PLA only deducts 0.45 points: 1.5 × 0.3)
-- Narrow temperature windows
-- High temps, drying requirements, abrasive nozzles
-
-For a typical PLA with minimal data, the score calculates as:
-- Start: 10.0
-- Material deduction (PLA = 1.5 difficulty): -0.45
-- **Final: ~9.55, rounded to 9.6**
-
-Since most products lack negative factors, they cluster at 9.5-10.0.
-
-### Root Cause 3: Different Scoring Philosophies
-- `calculateEaseBreakdown()` = "Ease of Printing" (penalty-based from 10)
-- `filamentScoring.ts` = "Overall Value" (additive from 0, considers price, brand, features)
-- `value_score` database column = Often null
-
----
-
-## Solution Design
-
-### Strategy: Unified Scoring Function
-Create a single, comprehensive scoring function that:
-1. Is used by **both** Card and Table views
-2. Considers multiple data points for differentiation
-3. Shows "Unrated" when insufficient data exists
-4. Provides tooltip breakdown of score factors
-
-### Scoring Formula (0-10 Scale)
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    UNIFIED FILAMENT SCORE                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  BASE SCORE (max 3.0)                                          │
-│  ├── Material ease baseline: 0-2.5 points                      │
-│  │   (PLA=2.5, PETG=2.0, ABS=1.5, PA/PC=1.0, PEEK=0.5)        │
-│  └── Has material defined: +0.5                                │
-│                                                                 │
-│  DATA COMPLETENESS (max 2.5)                                   │
-│  ├── TDS available: +0.5                                       │
-│  ├── Temperature specs (nozzle + bed): +0.5                    │
-│  ├── Mechanical data (tensile/flexural): +0.5                  │
-│  ├── Has product image: +0.5                                   │
-│  └── Has color hex defined: +0.5                               │
-│                                                                 │
-│  PRICE & AVAILABILITY (max 2.0)                                │
-│  ├── Has pricing data: +0.5                                    │
-│  ├── Regional pricing (CAD/EUR/GBP/AUD): +0.1 each (max 0.4)  │
-│  ├── Multiple purchase options (Amazon + store): +0.3         │
-│  └── Price competitiveness vs material avg: +0.3              │
-│                                                                 │
-│  BRAND & QUALITY (max 1.5)                                     │
-│  ├── Premium brand: +1.0                                       │
-│  ├── Mid-tier brand: +0.5                                      │
-│  └── Unknown brand: +0.0                                       │
-│                                                                 │
-│  FEATURES (max 1.0)                                            │
-│  ├── High-speed capable: +0.4                                  │
-│  ├── Specialty finish (silk/matte/sparkle): +0.3              │
-│  └── Reinforced (CF/GF): +0.3                                  │
-│                                                                 │
-│  TOTAL: 0-10 (capped)                                          │
-│  MINIMUM DATA: material OR (price + image) required            │
-│  Otherwise: "Unrated"                                           │
-└─────────────────────────────────────────────────────────────────┘
-```
+### What's Missing
+- All listing links still use UUID (`printer.id`) instead of slug
+- No automatic URL rewriting from UUID to slug like filaments have
+- No slug generation utilities for printers
+- Slugs aren't SEO-optimized (should be `brand-model` format with hyphens)
 
 ---
 
 ## Implementation Plan
 
-### Step 1: Create Unified Score Utility
-**File: `src/lib/unifiedFilamentScore.ts`**
+### Phase 1: Database Migration
 
-Create a new scoring module with:
-- `calculateUnifiedScore(filament): ScoreResult`
-- `ScoreResult` interface with: `score: number | null`, `factors: Factor[]`, `confidence: 'high' | 'medium' | 'low' | 'insufficient'`
-- Export `getScoreLabel(score)` for text labels ("Excellent", "Good", "Average", etc.)
-- Export `getScoreColor(score)` for consistent color coding
+#### 1.1 Add Unique Constraint and Normalize Slugs
+Create a migration to:
+- Normalize all existing `printer_id` values to use hyphens instead of underscores
+- Add a unique constraint on `printer_id` to prevent duplicates
+- Create a function to generate standardized slugs
 
-### Step 2: Update FilamentTableView
-**File: `src/components/FilamentTableView.tsx`**
+```sql
+-- Normalize existing printer_id values (underscores → hyphens)
+UPDATE printers 
+SET printer_id = REPLACE(printer_id, '_', '-')
+WHERE printer_id LIKE '%_%';
 
-Current (line 94):
-```typescript
-const overallScore = filament.value_score || 7.0;
+-- Add unique constraint
+ALTER TABLE printers 
+ADD CONSTRAINT printers_printer_id_unique UNIQUE (printer_id);
 ```
 
-Change to:
-```typescript
-import { calculateUnifiedScore } from '@/lib/unifiedFilamentScore';
+#### 1.2 Create Slug Generation Function
+Create a database function to generate SEO slugs from brand + model:
 
-// Inside component
-const { score: overallScore } = calculateUnifiedScore(filament);
+```sql
+CREATE OR REPLACE FUNCTION generate_printer_slug(
+  p_brand_name TEXT,
+  p_model_name TEXT
+) RETURNS TEXT AS $$
+BEGIN
+  RETURN LOWER(
+    REGEXP_REPLACE(
+      REGEXP_REPLACE(
+        COALESCE(p_brand_name, '') || '-' || COALESCE(p_model_name, ''),
+        '[^a-zA-Z0-9]+', '-', 'g'
+      ),
+      '^-|-$', '', 'g'
+    )
+  );
+END;
+$$ LANGUAGE plpgsql;
 ```
 
-Update the score display (lines 217-224) to:
-- Show "—" when score is null
-- Add tooltip on hover explaining score breakdown
-- Use consistent color coding
+#### 1.3 One-Time Data Migration
+Regenerate all slugs with consistent format:
 
-### Step 3: Update FilamentCard
-**File: `src/components/FilamentCard.tsx`**
+```sql
+UPDATE printers p
+SET printer_id = generate_printer_slug(
+  (SELECT brand FROM printer_brands WHERE id = p.brand_id),
+  p.model_name
+)
+WHERE printer_id IS NOT NULL;
 
-Current (lines 272-278):
-```typescript
-const dynamicScore = useMemo(() => {
-  const breakdown = calculateEaseBreakdown(filament);
-  return breakdown.score;
-}, [filament]);
-
-const overallScore = filament.ease_of_printing_score ?? dynamicScore ?? null;
-```
-
-Change to:
-```typescript
-import { calculateUnifiedScore } from '@/lib/unifiedFilamentScore';
-
-const { score: overallScore, factors, confidence } = useMemo(() => 
-  calculateUnifiedScore(filament),
-  [filament]
-);
-```
-
-Update the score tooltip (HoverCardContent) to show the unified breakdown factors.
-
-### Step 4: Update LabReadoutCard
-**File: `src/components/LabReadoutCard.tsx`**
-
-Apply same changes as FilamentCard for consistency.
-
-### Step 5: Extend Filament Interface for Table
-**File: `src/components/FilamentTableView.tsx`**
-
-Add missing fields to the `Filament` interface that are needed for scoring:
-```typescript
-interface Filament {
-  // existing fields...
-  high_speed_capable?: boolean | null;
-  nozzle_temp_min_c?: number | null;
-  nozzle_temp_max_c?: number | null;
-  bed_temp_min_c?: number | null;
-  tds_url?: string | null;
-  price_cad?: number | null;
-  price_eur?: number | null;
-  price_gbp?: number | null;
-  price_aud?: number | null;
-  // etc.
-}
+-- Handle duplicates by appending variant name or numeric suffix
+-- (Custom migration script needed for edge cases)
 ```
 
 ---
 
-## Score Interpretation
+### Phase 2: Frontend - Utility Functions
 
-| Score Range | Label | Color | Meaning |
-|-------------|-------|-------|---------|
-| 8.5-10.0 | Excellent | Green (#22c55e) | Top-tier, complete data, great value |
-| 7.0-8.4 | Great | Cyan (#06b6d4) | Well-documented, good brand/price |
-| 5.5-6.9 | Good | Primary | Solid option, some data gaps |
-| 4.0-5.4 | Average | Orange (#f59e0b) | Limited info or pricey |
-| 1.0-3.9 | Limited | Red (#ef4444) | Missing key data |
-| null | Unrated | Gray | Insufficient data to score |
+#### 2.1 Create Printer Slug Utilities
+Create `src/lib/printerSlugUtils.ts`:
 
----
+```typescript
+// Generate SEO-friendly slug from brand + model
+export function generatePrinterSlug(
+  brand: string | null | undefined,
+  modelName: string | null | undefined
+): string;
 
-## Tooltip/Hover Content
+// Check if string is UUID
+export function isUuid(str: string): boolean;
 
-When hovering over the score, show a breakdown:
-```text
-┌────────────────────────────────────┐
-│  Score Breakdown                   │
-├────────────────────────────────────┤
-│  ✓ Material (PLA)         +2.5    │
-│  ✓ Complete specs         +1.5    │
-│  ✓ Polymaker brand        +1.0    │
-│  ✓ Has regional pricing   +0.8    │
-│  ✓ High-speed capable     +0.4    │
-│  ────────────────────────────     │
-│  Total: 6.2 / 10                  │
-│                                    │
-│  Confidence: High                  │
-│  (Based on 8 data points)          │
-└────────────────────────────────────┘
+// Get SEO URL for a printer
+export function getPrinterSeoUrl(printer: { 
+  printer_id: string; 
+  id: string; 
+}): string;
 ```
 
----
-
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/lib/unifiedFilamentScore.ts` | **Create** | New unified scoring function |
-| `src/components/FilamentTableView.tsx` | Modify | Use unified score, add tooltip |
-| `src/components/FilamentCard.tsx` | Modify | Use unified score |
-| `src/components/LabReadoutCard.tsx` | Modify | Use unified score |
+#### 2.2 Create `usePrinterBySlug` Hook
+Create `src/hooks/usePrinterBySlug.ts` following the filament pattern:
+- Fetch by UUID or slug
+- Auto-rewrite URL from UUID to slug using `history.replaceState()`
+- Multi-stage fallback search if exact match fails
+- Auto-heal missing slugs by updating database
 
 ---
 
-## Validation Checklist
+### Phase 3: Frontend - Update Components
 
-After implementation, verify:
-- [ ] Scores vary meaningfully (not all 10.0 or 7.0)
-- [ ] Same product shows same score in Card vs Table view
-- [ ] Scores use 0-10 scale with clear meaning
-- [ ] Hover tooltip explains score breakdown
-- [ ] Products with minimal data show "Unrated" instead of default number
-- [ ] Existing sort functionality still works with new scores
+#### 3.1 Update Printer Detail Page
+Modify `src/pages/PrinterDetail.tsx`:
+- Use new `usePrinterBySlug` hook
+- Add URL rewriting from UUID to slug (like filaments)
+- Update SEO metadata to use canonical slug URL
 
+#### 3.2 Update All Printer Links (10+ files)
+Change all printer links from `printer.id` to `printer.printer_id`:
+
+| File | Current | New |
+|------|---------|-----|
+| `MediumStandardPrinterCard.tsx` | `printer.id` | `printer.printer_id` |
+| `LargeFeaturedPrinterCard.tsx` | `printer.id` | `printer.printer_id` |
+| `SmallDeemphasizedPrinterCard.tsx` | `printer.id` | `printer.printer_id` |
+| `SimilarPrinterCard.tsx` | `printer.id` | `printer.printer_id` |
+| `PrinterQuizResults.tsx` | `printer.id` | `printer.printer_id` |
+| `SavedPrinterCard.tsx` | `printerId` (UUID) | (needs lookup) |
+| `PrinterCompare.tsx` | `printer.id` | `printer.printer_id` |
+| `AMSDetail.tsx` | `printer.id` | `printer.printer_id` |
+| `HotendDetail.tsx` | `printer.id` | `printer.printer_id` |
+| `BuildPlateDetail.tsx` | `printer.id` | `printer.printer_id` |
+
+---
+
+### Phase 4: Backward Compatibility
+
+#### 4.1 UUID Redirect Logic
+The detail page will:
+1. Accept both UUID and slug in the URL
+2. If UUID is detected, fetch printer and silently rewrite URL to slug
+3. No HTTP redirect (uses `history.replaceState()`) to avoid redirect loops
+
+#### 4.2 Fallback Search
+If exact slug match fails:
+1. Try fuzzy match on `printer_id`
+2. Try brand + model component search
+3. Display "Not Found" with suggestions if no match
+
+---
+
+## File Changes Summary
+
+### New Files
+1. `src/lib/printerSlugUtils.ts` - Slug generation utilities
+2. `src/hooks/usePrinterBySlug.ts` - Hook for fetching by slug
+
+### Modified Files
+1. `src/pages/PrinterDetail.tsx` - Use new hook, add URL rewriting
+2. `src/components/printers/MediumStandardPrinterCard.tsx` - Use slug links
+3. `src/components/printers/LargeFeaturedPrinterCard.tsx` - Use slug links
+4. `src/components/printers/SmallDeemphasizedPrinterCard.tsx` - Use slug links
+5. `src/components/printer/SimilarPrinterCard.tsx` - Use slug links
+6. `src/components/printers/PrinterQuizResults.tsx` - Use slug links
+7. `src/components/account/SavedPrinterCard.tsx` - Use slug links
+8. `src/pages/PrinterCompare.tsx` - Use slug links
+9. `src/pages/AMSDetail.tsx` - Use slug links
+10. `src/pages/HotendDetail.tsx` - Use slug links
+11. `src/pages/BuildPlateDetail.tsx` - Use slug links
+
+### Database Migration
+1. Normalize `printer_id` values (underscores → hyphens)
+2. Add unique constraint on `printer_id`
+3. Create slug generation function
+
+---
+
+## Edge Cases & Considerations
+
+### Duplicate Slugs
+When brand + model creates duplicates:
+1. First: `bambu-lab-p1s`
+2. With variant: `bambu-lab-p1s-combo` (append variant name)
+3. Numeric fallback: `bambu-lab-p1s-2` (if still duplicate)
+
+### Special Characters
+Handle model names with special characters:
+- `MINI+` → `mini-plus`
+- `Ender-3 V2 Neo` → `ender-3-v2-neo`
+- Trademark symbols stripped
+
+### Migration Safety
+- Run slug normalization in a transaction
+- Validate no duplicates before committing
+- Log any conflicts for manual review
+
+---
+
+## Testing Checklist
+
+- [ ] Old UUID URLs redirect to new slug URLs
+- [ ] All listing pages link to slug URLs
+- [ ] Slug URLs load correctly
+- [ ] SEO canonical URLs use slugs
+- [ ] No duplicate slugs in database
+- [ ] Compare feature works with new URLs
+- [ ] Saved printers/wishlists work correctly
+- [ ] Search engines see consistent URLs
