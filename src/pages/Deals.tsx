@@ -45,7 +45,7 @@ const Deals = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1">
+      <section className="flex-1" role="region" aria-label="Deals listings">
         {/* Hero Section */}
         <section className="relative py-12 md:py-16 px-6 md:px-10">
           <div className="max-w-[1600px] mx-auto">
@@ -250,7 +250,7 @@ const Deals = () => {
             )}
           </div>
         </section>
-      </main>
+      </section>
     </div>
   );
 };

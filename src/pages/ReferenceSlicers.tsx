@@ -348,7 +348,7 @@ const ReferenceSlicers = () => {
           </aside>
 
           {/* Main Content */}
-          <main>
+          <section role="region" aria-label="Slicer software listings">
             {/* Mobile Filter Panel */}
             <MobileFilterPanel
               filters={filters}
@@ -756,7 +756,7 @@ const ReferenceSlicers = () => {
                 </Accordion>
               </section>
             )}
-          </main>
+          </section>
 
           {/* Right Sidebar: Comparison Builder (Desktop) */}
           <aside className="hidden lg:block">

@@ -1766,7 +1766,7 @@ const Finder = () => {
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          <main className="w-full">
+          <section className="w-full" role="region" aria-label="Filament product listings">
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
@@ -1870,7 +1870,7 @@ const Finder = () => {
             onClearFilters={handleClearAllFilters}
           />
         )}
-          </main>
+          </section>
         </div>
       </div>
 
