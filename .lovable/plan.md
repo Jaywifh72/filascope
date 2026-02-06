@@ -1,147 +1,163 @@
 
-# Fix: Regional Pricing Currency Mismatch Bug
 
-## Root Cause Analysis
+# Fix Pricing Inconsistency Across All Views
 
-After investigating the database schema, stored data, and frontend price resolution logic, I identified **three interconnected bugs** in `src/hooks/useRegionalPrice.ts`:
+## Problem Summary
 
-### Bug 1: Currency-to-Column Mapping Treats Foreign Currencies as USD/EUR
+The same product shows wildly different prices across card, table, detail sidebar, Best Prices section, and sticky bar views. The root cause is that **6 different price calculation paths** exist independently, each with their own data source, conversion logic, and formatting.
 
-The `CURRENCY_TO_PRICE_COLUMN` mapping (lines 33-50) maps currencies that lack dedicated database columns to **other currencies' columns**:
+## Root Causes Identified
 
-```text
-CNY  --> 'variant_price' (USD column!) --> shows $19.99 as ¥19.99 CNY
-KRW  --> 'variant_price' (USD column!) --> shows $19.99 as ₩19.99 KRW  
-INR  --> 'variant_price' (USD column!) --> shows $19.99 as ₹19.99 INR
-MXN  --> 'variant_price' (USD column!)
-BRL  --> 'variant_price' (USD column!)
-CHF  --> 'price_eur'     (EUR column!) --> shows €22.99 as Fr22.99 CHF
-SEK  --> 'price_eur'     (EUR column!) --> shows €22.99 as 22.99 kr SEK
-PLN  --> 'price_eur'     (EUR column!)
-CZK  --> 'price_eur'     (EUR column!)
-NZD  --> 'price_aud'     (AUD column!) --> shows A$34.99 as NZ$34.99
-```
+### 1. Six Independent Price Pipelines
+Each view computes prices differently:
 
-When the mapped column has data, Priority 1 (line 391) marks it as `isActualRegionalPrice: true` and returns the raw numeric value slapped with the wrong currency symbol. A $19.99 USD spool appears as ¥19.99 CNY (should be ~¥139 CNY).
+| View | Price Source | Conversion Method | Per-Kg Calculation |
+|------|------------|-------------------|-------------------|
+| Card | `useRegionalPrice` + `useCurrentPrice` (live) | `useRegion().convertPrice` | Inline: `price / (weightKg * packQty)` |
+| Table | Inline `getRegionalPrice()` function | `useRegion().convertPrice` | Inline: `price / (weightKg * packQty)` |
+| Detail Sidebar | `useUnifiedRegionalPricing` + `useFilamentStorePricing` + `useCurrentPrice` (live again!) | Mix of `useRegion` and manual conversion | Recalculates from `displayPrice / effectiveWeightKg` |
+| Best Prices | `useFilamentListings` hardcoded to US/USD | `useCurrency().formatRegionalPrice` (no actual conversion!) | Not computed (shows spool price only) |
+| Sticky Bar | Props from parent (sidebarPricePerKg) | `useCurrency().formatPrice` or `formatRegionalPrice` | Received as prop |
+| Mobile Bar | Props from parent (sidebarPricePerKg) | Passed through | Received as prop |
 
-### Bug 2: Priority 4 Fallback Uses Hardcoded Stale Exchange Rates
+### 2. Two Competing Currency Systems
+- **`useCurrency()`** (older): Uses hardcoded fallback rates, has `formatPrice` that converts from USD, and `formatRegionalPrice` that skips conversion entirely.
+- **`useRegion()`** (newer): Uses live exchange rates from the database, has `formatPrice` with `showApproximate` option and proper conversion.
 
-When Priority 4 (line 461-507) converts between regional prices, it uses:
-```
-const sourceRate = CURRENCIES[fallback.cur]?.rate || 1;
-const targetRate = CURRENCIES[currency]?.rate || 1;
-```
+Components mix these two systems, causing different numbers.
 
-These `CURRENCIES[].rate` values come from `useCurrency.tsx` — **hardcoded static rates** (e.g., JPY: 149.50) rather than the database-loaded exchange rates in `RegionContext` (actual: 155.35). It also incorrectly sets `isActualRegionalPrice: true` for converted prices, hiding the `~` prefix.
+### 3. BestPricesSection is Hardcoded to USD
+The `BestPricesSection` component always fetches listings with `region: 'US'` and `currency: 'USD'`, then formats with `useCurrency().formatRegionalPrice` which simply prepends the local currency symbol without converting the value. A Canadian user sees "$54.99" (USD) with no conversion.
 
-### Bug 3: LabReadoutCard Missing Safety Guards
-
-Unlike `FilamentCard`, the `LabReadoutCard` component:
-- Does not destructure or check `isRatesLoading` from `useRegionalPrice`
-- Does not guard `useCurrentPrice` calls with `shouldFetchLivePrice`
-- Uses a simplistic `isConverted` check that misses the `priceSource === 'converted'` case
-
-### Data Context
-
-From the database:
-- **7,336** filaments have `variant_price` (USD)
-- **0** have `price_jpy` populated
-- No `price_cny` column exists at all
-- `currency_exchange_rates` table has correct live rates (USD to JPY = 155.35, USD to CNY = 6.95)
-
----
+### 4. Sidebar Does Its Own Live Price Fetch
+The sidebar (`FilamentPurchaseSidebar`) receives a `pricePerKg` from the parent but then runs its own `useCurrentPrice` call (line 106), potentially getting a different price from the live scraper, then recalculates per-kg price using different weight data.
 
 ## Implementation Plan
 
-### Phase 1: Fix the Currency-to-Column Mapping
+### Phase 1: Create a Single Price Resolution Utility
 
-**File: `src/hooks/useRegionalPrice.ts`**
+Create a new shared utility `src/lib/resolveFilamentPrice.ts` that consolidates all price resolution logic into one deterministic function:
 
-Replace the `CURRENCY_TO_PRICE_COLUMN` mapping with a version that only maps currencies to columns that genuinely store prices in that currency. Currencies without dedicated columns will map to `null`.
-
-Supported direct mappings (these have real DB columns):
-- USD --> `variant_price`
-- CAD --> `price_cad`
-- GBP --> `price_gbp`
-- EUR --> `price_eur`
-- AUD --> `price_aud`
-- JPY --> `price_jpy`
-
-For all other currencies (CNY, KRW, INR, CHF, SEK, NZD, PLN, CZK, MXN, BRL): map to `null`.
-
-Update the Priority 1 logic so when `priceColumn` is `null`, it skips directly to the conversion path (Priority 3), which correctly uses database exchange rates.
-
-### Phase 2: Add "Nearby Region Conversion" Path
-
-For currencies that are geographically close to a supported region, add a new priority between Priority 1 and Priority 3:
-
-- CHF, SEK, PLN, CZK: check `price_eur` first, then convert EUR to target currency using `RegionContext.convertPrice`
-- NZD: check `price_aud` first, then convert AUD to NZD
-
-This gives better accuracy than converting from USD, since EUR-region prices are often more accurate for European users. These will be marked as `priceSource: 'converted'` and show the `~` prefix.
-
-### Phase 3: Fix Priority 4 Conversion
-
-Replace the hardcoded rate calculation:
-```
-// BEFORE (stale hardcoded rates)
-const sourceRate = CURRENCIES[fallback.cur]?.rate || 1;
-const targetRate = CURRENCIES[currency]?.rate || 1;
-const convertedPrice = (fallback.price / sourceRate) * targetRate;
+```text
+resolveFilamentPrice(filament, userCurrency, exchangeRates)
+  -> { spoolPrice, pricePerKg, currency, isConverted, source, storeName }
 ```
 
-With RegionContext's database-backed conversion:
+**Resolution priority:**
+1. Direct regional price column (e.g., `price_cad` for CAD users) -- native price, no conversion
+2. Nearby region conversion (e.g., `price_eur` converted to CHF)
+3. USD (`variant_price`) converted to user's currency
+4. null (no price available)
+
+**Per-kg calculation:**
+```text
+pricePerKg = spoolPrice / ((net_weight_g / 1000) * pack_quantity)
 ```
-// AFTER (live exchange rates)
-const convertedPrice = convertFromCurrency(fallback.price, fallback.cur);
+
+This function is pure (no hooks, no side effects) so it can be used in any context.
+
+### Phase 2: Create a Shared Hook Wrapper
+
+Create `src/hooks/useResolvedPrice.ts` -- a thin hook that calls the utility with data from `useRegion()`:
+
+```text
+useResolvedPrice(filament) -> {
+  spoolPrice, pricePerKg, formattedSpoolPrice, formattedPricePerKg,
+  isConverted, source, currency
+}
 ```
 
-Also fix the metadata:
-- Set `isActualRegionalPrice: false` (it IS converted)
-- Set `priceSource: 'converted'` (so UI shows `~` prefix)
+This replaces the inline price calculations in card, table, and detail views.
 
-### Phase 4: Fix LabReadoutCard Guards
+### Phase 3: Fix Each View to Use the Shared Source
 
-**File: `src/components/LabReadoutCard.tsx`**
+**3a. FilamentCard.tsx**
+- Replace the inline `effectivePrice` / `pricePerKg` calculation with `useResolvedPrice(filament)`
+- Remove the `useCurrentPrice` live-scraping call (this is what causes the sidebar to show different prices; live scraping is unreliable and adds latency)
+- Keep `useRegionalPrice` only for URL resolution (not price)
 
-- Destructure `isRatesLoading`, `priceSource`, and add `shouldFetchLivePrice` guard matching `FilamentCard`
-- Use `priceSource === 'converted'` for the `isConverted` flag instead of just currency comparison
-- Show loading skeleton when `isRatesLoading` is true (prevents flash of unconverted prices)
+**3b. FilamentTableView.tsx**
+- Replace the inline `getRegionalPrice` function with `useResolvedPrice` (called per-row via the shared utility, since the hook can't be called in a loop)
+- Instead, use the pure `resolveFilamentPrice()` utility directly inside the `.map()` loop with the region context values passed in
 
-### Phase 5: Fix Finder Page Sorting
+**3c. FilamentDetail.tsx (Sidebar Price)**
+- Replace the complex `sidebarBest` logic with the same `resolveFilamentPrice` for the base product price
+- If `useFilamentStorePricing` returns a better local store price, use that -- but convert it through the same utility for consistency
+- Pass the resolved price to `FilamentPurchaseSidebar` and mark it as final (no further recalculation)
 
-**File: `src/pages/Finder.tsx`**
+**3d. FilamentPurchaseSidebar.tsx**
+- Remove the independent `useCurrentPrice` call (line 106) -- the sidebar should display whatever the parent tells it, not re-fetch
+- Use the `pricePerKg` prop directly as the display value
+- Format using `useRegion().formatPrice` exclusively (not `useCurrency`)
 
-The `currencyToPriceColumn` mapping in the sort function (line 1383-1390) has the same problem -- it only lists USD, CAD, GBP, EUR, AUD, JPY. For other currencies it falls back to `variant_price` (USD). Fix this to apply exchange rate conversion for unsupported currency columns, matching the hook logic.
+**3e. BestPricesSection.tsx** (Critical fix)
+- Change from hardcoded `region: 'US', currency: 'USD'` to use the user's actual region and currency from `useRegion()`
+- Replace `useCurrency().formatRegionalPrice` with `useRegion().formatPrice`
+- If prices come back in a different currency than the user's, convert them using `useRegion().convertPrice`
 
-### Phase 6: Add Data Validation View
+**3f. StickyBuyBar.tsx**
+- Replace `useCurrency()` formatting with `useRegion().formatPrice`
+- Accept `isConverted` as a prop and pass `showApproximate: isConverted` to the formatter
 
-Create a database view `v_suspect_regional_prices` that flags products where:
-- All populated regional price columns have identical numeric values (copy-paste error)
-- Regional prices that are implausibly close to variant_price for high-rate currencies (e.g., JPY value < 100 when variant_price is ~20)
+### Phase 4: Deprecate useCurrency for Price Display
 
-This helps catch data quality issues going forward.
+- Add a deprecation comment to `useCurrency.tsx` stating all price formatting should use `useRegion().formatPrice`
+- The `useCurrency` hook has hardcoded fallback rates that diverge from the live DB rates in `RegionContext`, causing subtle differences
 
----
+### Phase 5: Document the Price/True Cost Distinction
+
+Add inline documentation clarifying:
+- **"Price"** column = spool price (what you pay for one spool), calculated as `resolvedPrice / pack_quantity`
+- **"True Cost"** column = per-kg normalized price, calculated as `resolvedPrice / ((net_weight_g / 1000) * pack_quantity)`
 
 ## Technical Details
 
-### Files Modified
-1. `src/hooks/useRegionalPrice.ts` -- Core fix for column mapping, conversion logic, and Priority 4
-2. `src/components/LabReadoutCard.tsx` -- Add rate-loading guards and fix conversion detection
-3. `src/pages/Finder.tsx` -- Fix sort-time price resolution for unsupported currencies
-4. New migration SQL -- Create `v_suspect_regional_prices` validation view
+### resolveFilamentPrice Utility Signature
 
-### Expected Behavior After Fix
+```text
+Input:
+  filament: { variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy,
+              net_weight_g, pack_quantity }
+  userCurrency: CurrencyCode
+  convertFromUSD: (amount: number) => number | null
+  hasRates: boolean
 
-| Currency | Before (broken) | After (fixed) |
-|----------|-----------------|---------------|
-| CNY | ¥19.99 | ~¥138.90 (converted from $19.99 USD) |
-| JPY | ~¥2,990 or ¥19.99 | ~¥3,105 (converted from $19.99 USD) |
-| CHF | Fr22.99 | ~Fr16.92 (converted from EUR22.99) |
-| SEK | 22.99 kr | ~169.87 kr (converted from EUR22.99) |
-| NZD | NZ$34.99 | ~NZ$37.79 (converted from A$34.99) |
-| EUR | EUR22.99 (unchanged) | EUR22.99 (actual regional price) |
-| GBP | GBP19.99 (unchanged) | GBP19.99 (actual regional price) |
+Output:
+  {
+    spoolPrice: number | null      -- total price for the package
+    pricePerSpool: number | null   -- price per individual spool (spoolPrice / packQty)
+    pricePerKg: number | null      -- normalized per-kg cost
+    currency: CurrencyCode
+    isConverted: boolean           -- true if price was converted (show ~ prefix)
+    source: 'regional' | 'converted' | 'unavailable'
+  }
+```
 
-All converted prices will display the `~` prefix and show properly converted amounts using live exchange rates from the database.
+### Column-to-Currency Mapping (reused from existing code)
+```text
+USD -> variant_price
+CAD -> price_cad
+EUR -> price_eur
+GBP -> price_gbp
+AUD -> price_aud
+JPY -> price_jpy
+```
+
+### Files to Create
+- `src/lib/resolveFilamentPrice.ts` -- pure utility function
+- `src/hooks/useResolvedPrice.ts` -- React hook wrapper
+
+### Files to Modify
+- `src/components/FilamentCard.tsx` -- use shared price, remove live fetch
+- `src/components/FilamentTableView.tsx` -- use shared utility
+- `src/pages/FilamentDetail.tsx` -- simplify sidebarBest, pass resolved price
+- `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` -- remove independent live fetch
+- `src/components/filament/BestPricesSection.tsx` -- use user's region, convert prices
+- `src/components/filament/StickyBuyBar.tsx` -- use `useRegion` formatting
+- `src/hooks/useCurrency.tsx` -- add deprecation notice
+
+### Risk Mitigation
+- The `useCurrentPrice` live-scraping hook will be removed from card and sidebar views. This means prices shown are from the database only. This is actually more reliable since live scraping often returns wrong prices due to geo-redirects (documented in the regional-scraper-constraints memory).
+- The `useFilamentStorePricing` hook (RPC-based) will remain as an additional price source on the detail page, but its output will be normalized through the same formatting pipeline.
+- Exchange rate loading guards (`hasRates`) will be preserved to prevent 1:1 conversion display.
+
