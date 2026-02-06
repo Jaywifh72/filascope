@@ -10,8 +10,9 @@ interface RegionTransitionIndicatorProps {
 
 /**
  * Shows a subtle indicator when prices are updating due to region change.
- * - Thin progress bar at top of content area
+ * - Thin progress bar fixed at top of grid area
  * - After 3 seconds, shows reassurance message
+ * Returns null when not transitioning to avoid layout impact.
  */
 export function RegionTransitionIndicator({ 
   isTransitioning, 
@@ -32,14 +33,15 @@ export function RegionTransitionIndicator({
     }
   }, [isTransitioning]);
 
+  // Return null when not transitioning - no DOM impact
   if (!isTransitioning) return null;
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Thin progress bar at top */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-muted overflow-hidden z-50">
+    <div className={cn("fixed top-0 left-0 right-0 z-[100] pointer-events-none", className)}>
+      {/* Thin progress bar at very top of viewport */}
+      <div className="h-0.5 bg-muted overflow-hidden">
         <div 
-          className="h-full bg-primary animate-pulse"
+          className="h-full bg-primary"
           style={{
             animation: 'region-loading 1.5s ease-in-out infinite',
             width: '100%',
@@ -47,9 +49,9 @@ export function RegionTransitionIndicator({
         />
       </div>
 
-      {/* Message after 3 seconds */}
+      {/* Message after 3 seconds - centered in viewport */}
       {showMessage && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 animate-fade-in pointer-events-auto">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/90 backdrop-blur-sm border border-border shadow-lg">
             <Loader2 className="w-4 h-4 text-primary animate-spin" />
             <span className="text-sm text-foreground">
