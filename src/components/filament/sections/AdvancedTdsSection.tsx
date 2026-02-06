@@ -1,10 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from '@/integrations/supabase/types';
-import { FileText, Thermometer, Ruler, Gauge, FlaskConical, Wrench, Droplets, ExternalLink, Info, Layers, Settings, Palette, Archive, Tag, Zap, Cpu, Eye, Activity, Hammer } from 'lucide-react';
+import { FileText, Thermometer, Ruler, Gauge, FlaskConical, Wrench, Droplets, ExternalLink, Info, Layers, Settings, Palette, Archive, Tag, Zap, Cpu, Eye, Activity, Hammer, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { validateSpec, validateDiameter, type SpecValidationResult } from '@/lib/specValidation';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -16,6 +18,7 @@ interface AdvancedTdsSectionProps {
 interface SpecItem {
   label: string;
   value: string | null;
+  validation?: SpecValidationResult;
 }
 
 interface SpecGroup {
@@ -43,12 +46,12 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
       title: 'Physical Dimensions',
       icon: <Ruler className="w-4 h-4" />,
       specs: [
-        { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : null },
-        { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null },
+        { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : null, validation: validateDiameter(filament.diameter_nominal_mm) },
+        { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null, validation: validateSpec('net_weight', filament.net_weight_g) },
         { label: 'Pack Quantity', value: filament.pack_quantity && filament.pack_quantity > 1 ? `${filament.pack_quantity} spools` : null },
         { label: 'Spool Material', value: filament.spool_material },
-        { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm ? `${filament.spool_outer_d_mm}mm` : null },
-        { label: 'Spool Width', value: filament.spool_width_mm ? `${filament.spool_width_mm}mm` : null },
+        { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm ? `${filament.spool_outer_d_mm}mm` : null, validation: validateSpec('spool_outer_diameter', filament.spool_outer_d_mm) },
+        { label: 'Spool Width', value: filament.spool_width_mm ? `${filament.spool_width_mm}mm` : null, validation: validateSpec('spool_width', filament.spool_width_mm) },
         { label: 'AMS Compatible', value: filament.spool_ams_fit !== null ? (filament.spool_ams_fit ? '✓ Yes' : '✗ No') : null },
       ],
     },
@@ -131,7 +134,19 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
                     className="flex justify-between items-start text-sm py-1 hover:bg-muted/30 px-1 rounded transition-colors"
                   >
                     <span className="text-muted-foreground">{spec.label}</span>
-                    <span className="font-medium text-foreground text-right">{spec.value}</span>
+                    <div className="flex items-center gap-1.5">
+                      {spec.validation?.isSuspect && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <p className="text-xs">⚠ {spec.validation.warningMessage}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      <span className="font-medium text-foreground text-right">{spec.value}</span>
+                    </div>
                   </div>
                 ))}
               </div>

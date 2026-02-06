@@ -3,6 +3,7 @@ import { Database } from '@/integrations/supabase/types';
 import { AdvancedTdsSection } from '../sections/AdvancedTdsSection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   ThermometerSun, 
   Package, 
@@ -13,9 +14,11 @@ import {
   Shield,
   Droplets,
   FileText,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { validateSpec, validateDiameter, type SpecValidationResult } from '@/lib/specValidation';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -28,6 +31,7 @@ interface SpecRow {
   value: string | number | null | undefined;
   unit?: string;
   comparison?: ComparisonContext | null;
+  validation?: SpecValidationResult;
 }
 
 interface ComparisonContext {
@@ -175,6 +179,16 @@ function SpecTable({
             >
               <span className="text-sm text-muted-foreground">{spec.label}</span>
               <div className="flex items-center gap-2">
+                {spec.validation?.isSuspect && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-xs">
+                      <p className="text-xs">⚠ {spec.validation.warningMessage}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 {spec.comparison && <ComparisonBadge comparison={spec.comparison} />}
                 <span className="text-sm font-medium">
                   {spec.value}{spec.unit ? ` ${spec.unit}` : ''}
@@ -243,16 +257,16 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
         icon={<Ruler className="w-5 h-5" />}
         materialContext={material}
         specs={[
-          { label: 'Diameter', value: filament.diameter_nominal_mm, unit: 'mm' },
-          { label: 'Net Weight', value: filament.net_weight_g, unit: 'g' },
+          { label: 'Diameter', value: filament.diameter_nominal_mm, unit: 'mm', validation: validateDiameter(filament.diameter_nominal_mm) },
+          { label: 'Net Weight', value: filament.net_weight_g, unit: 'g', validation: validateSpec('net_weight', filament.net_weight_g) },
           { 
             label: 'Density', 
             value: filament.density_g_cm3, 
             unit: 'g/cm³',
             comparison: getComparisonContext(material, 'density', filament.density_g_cm3)
           },
-          { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm, unit: 'mm' },
-          { label: 'Spool Width', value: filament.spool_width_mm, unit: 'mm' },
+          { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm, unit: 'mm', validation: validateSpec('spool_outer_diameter', filament.spool_outer_d_mm) },
+          { label: 'Spool Width', value: filament.spool_width_mm, unit: 'mm', validation: validateSpec('spool_width', filament.spool_width_mm) },
           { label: 'AMS Compatible', value: filament.spool_ams_fit !== null ? (filament.spool_ams_fit ? 'Yes' : 'No') : null },
           { label: 'Spool Material', value: filament.spool_material },
         ]}
