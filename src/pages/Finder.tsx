@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState, useRef, useCallback } from "react"; // v4
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +58,7 @@ import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilter
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { LoadingProgress } from "@/components/LoadingProgress";
+import { RegionTransitionIndicator, RegionLoadingSpinner } from "@/components/RegionTransitionIndicator";
 import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
 import { calculateUnifiedScore, type FilamentForScoring as UnifiedFilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
@@ -348,6 +349,10 @@ const Finder = () => {
   
   // Region hook for displaying current region
   const { regionConfig } = useRegion();
+  
+  // Track region transitions for smooth UI updates
+  const [previousRegion, setPreviousRegion] = useState<string | null>(null);
+  const [isRegionTransitioning, setIsRegionTransitioning] = useState(false);
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -748,9 +753,11 @@ const Finder = () => {
     enabled: Object.keys(brandNameMap).length > 0,
   });
 
-  const { data: filaments, isLoading } = useQuery({
+  const { data: filaments, isLoading, isFetching, isPlaceholderData } = useQuery({
     queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials, brandNameMap, carbonFiber, glassFiber, woodFilled],
     enabled: !!materials && !!brandsData, // Wait for materials and brands to load first
+    // Keep showing previous data while new region data loads - prevents "0 MATERIALS" flash
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       // Build the query function that will be called for each page
       const buildQuery = () => {
@@ -902,7 +909,21 @@ const Finder = () => {
     }
   }, [searchTerm, isLoading, regionalFilaments, selectedMaterials, selectedBrands, priceRange, trackSearch]);
 
-  // Get accurate total filament count (bypasses 1000 row limit)
+  // Track region changes for smooth transitions
+  useEffect(() => {
+    if (previousRegion !== null && previousRegion !== currentRegion) {
+      // Region changed - start transition
+      setIsRegionTransitioning(true);
+    }
+    setPreviousRegion(currentRegion);
+  }, [currentRegion, previousRegion]);
+  
+  // End transition when data finishes loading
+  useEffect(() => {
+    if (!isFetching && isRegionTransitioning) {
+      setIsRegionTransitioning(false);
+    }
+  }, [isFetching, isRegionTransitioning]);
   const { data: filamentCount } = useQuery({
     queryKey: ["filamentCount"],
     queryFn: async () => {
@@ -1515,6 +1536,7 @@ const Finder = () => {
         selectedPrinter={selectedPrinter}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearAllFilters}
+        isUpdating={isRegionTransitioning || (isFetching && isPlaceholderData)}
       />
 
       {/* Horizontal Filter Bar */}
@@ -1841,10 +1863,17 @@ const Finder = () => {
         <div className="flex-1 min-w-0">
           <section className="w-full" role="region" aria-label="Filament product listings">
 
+        {/* Region Transition Indicator - shows when prices are updating */}
+        <RegionTransitionIndicator 
+          isTransitioning={isRegionTransitioning || (isFetching && isPlaceholderData)}
+          newRegionName={regionConfig.name}
+        />
+
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm text-muted-foreground">
-            {isLoading ? (
+            {/* Only show skeleton on initial load, not during region transitions */}
+            {isLoading && !isPlaceholderData ? (
               <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
             ) : (
               <>
@@ -1855,7 +1884,10 @@ const Finder = () => {
             )}
           </p>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground hidden sm:inline">{regionConfig.flag} {regionConfig.name}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              {regionConfig.flag} {regionConfig.name}
+              <RegionLoadingSpinner isLoading={isRegionTransitioning || (isFetching && isPlaceholderData)} />
+            </span>
             {!isMobile && (
               <ViewToggle 
                 viewMode={viewMode} 
@@ -1865,8 +1897,8 @@ const Finder = () => {
           </div>
         </div>
 
-        {/* Data Inventory Control Bar - Desktop only */}
-        {!isLoading && displayedGroups.length > 0 && !isMobile && (
+        {/* Data Inventory Control Bar - Desktop only - show even during region transition if we have data */}
+        {(!isLoading || isPlaceholderData) && displayedGroups.length > 0 && !isMobile && (
           <DataInventoryControlBar
             sortBy={sortBy as SortOption}
             onSortChange={(val) => setSortBy(val)}
@@ -1874,8 +1906,8 @@ const Finder = () => {
           />
         )}
 
-        {/* Filaments Display */}
-        {isLoading ? (
+        {/* Filaments Display - only show skeleton on initial load, keep products visible during region transition */}
+        {isLoading && !isPlaceholderData ? (
           <div className="space-y-6">
             {/* Show skeleton grid immediately for visual feedback */}
             <FilamentCardSkeletonGrid count={8} />
