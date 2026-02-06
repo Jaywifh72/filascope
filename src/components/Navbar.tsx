@@ -213,7 +213,7 @@ const Navbar = () => {
   // Flattened items for tablet/mobile "More" dropdown
   const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
-      <nav className="sticky top-0 z-50 bg-gray-950 shadow-lg">
+      <nav className="sticky top-0 z-50 bg-gray-950 shadow-lg" aria-label="Main navigation">
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
@@ -241,7 +241,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Links (lg and up) */}
-          <nav className="hidden lg:flex items-center flex-1 justify-center gap-6">
+          <div role="navigation" aria-label="Desktop navigation" className="hidden lg:flex items-center flex-1 justify-center gap-6">
             <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
@@ -371,10 +371,10 @@ const Navbar = () => {
                 Compare materials side-by-side
               </TooltipContent>
             </Tooltip>
-          </nav>
+          </div>
 
           {/* Tablet Navigation (md to lg) */}
-          <nav className="hidden md:flex lg:hidden items-center flex-1 justify-center gap-4">
+          <div role="navigation" aria-label="Tablet navigation" className="hidden md:flex lg:hidden items-center flex-1 justify-center gap-4">
             <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
@@ -437,7 +437,7 @@ const Navbar = () => {
                 Compare materials side-by-side
               </TooltipContent>
             </Tooltip>
-          </nav>
+          </div>
 
           {/* Right-side utilities */}
           <div className="hidden md:block h-6 w-px bg-gray-700" />
@@ -520,6 +520,8 @@ const Navbar = () => {
         {/* Mobile Menu - Slide down animation */}
         <div 
           id="mobile-navigation"
+          role="navigation"
+          aria-label="Mobile navigation"
           className={cn("lg:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} 
           style={{
             background: 'hsla(220, 20%, 4%, 0.98)'
