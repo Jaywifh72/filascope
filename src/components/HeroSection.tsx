@@ -25,7 +25,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Use shared deals count hook for consistency with Deals page
-  const { data: dealsData } = useDealsCount();
+  const { data: dealsData, isLoading: isDealsLoading } = useDealsCount();
   const dealsCount = dealsData?.uniqueProducts || 0;
 
   // Format count for display - show rounded marketing number "960+" when loaded
@@ -57,13 +57,13 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, brandCount, co
     },
     {
       title: "Today's Deals",
-      description: dealsCount > 0 ? `${dealsCount} active deals` : "Best prices right now",
+      description: isDealsLoading ? "Loading deals..." : `${dealsCount} active deals`,
       icon: Tag,
       href: "/deals",
       color: "green",
-      hasLiveBadge: true,
+      hasLiveBadge: !isDealsLoading && dealsCount > 0,
     },
-  ], [displayCount, dealsCount]);
+  ], [displayCount, dealsCount, isDealsLoading]);
 
   // Cycle through search suggestions - respects reduced motion preference
   useEffect(() => {

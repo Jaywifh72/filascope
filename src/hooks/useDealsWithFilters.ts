@@ -60,7 +60,7 @@ export function useDealsWithFilters() {
   
   // Use shared deals count for accurate total (not limited by query limit)
   const { data: dealsCountData } = useDealsCount();
-  const totalDealsCount = dealsCountData?.totalVariants || 0;
+  const totalDealsCount = dealsCountData?.uniqueProducts || 0; // Use grouped product count for consistency
   const { data: rawDeals = [], isLoading } = useQuery({
     queryKey: ["deals-page-enhanced"],
     queryFn: async () => {
