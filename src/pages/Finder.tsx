@@ -59,7 +59,7 @@ import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuic
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { LoadingProgress } from "@/components/LoadingProgress";
 import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
-import { calculateEaseBreakdown, type FilamentDataForScoring } from "@/lib/scoreCalculation";
+import { calculateUnifiedScore, type FilamentForScoring as UnifiedFilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
 import { 
   tokenizeSearchQuery, 
@@ -1385,10 +1385,10 @@ const Finder = () => {
       return convertedPrice / (weightKg * packQty);
     };
 
-    // Use the same ease-of-printing score that's displayed on cards for consistent sorting
+    // Use the unified score for consistent sorting with card display
     const getScore = (filament: typeof a) => {
-      const breakdown = calculateEaseBreakdown(filament as FilamentDataForScoring);
-      return breakdown.score ?? 5;
+      const { score } = calculateUnifiedScore(filament as UnifiedFilamentForScoring);
+      return score ?? 0; // Treat null/unrated as 0 for sorting
     };
 
     // Check if product is in stock - consider it in stock if variant_available is true

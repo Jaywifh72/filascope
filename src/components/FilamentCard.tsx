@@ -28,7 +28,7 @@ import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRe
 import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { useFilamentVariantCounts } from "@/hooks/useFilamentVariantCounts";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
-import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor } from "@/lib/unifiedFilamentScore";
+import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor, SCORE_EXPLANATION } from "@/lib/unifiedFilamentScore";
 import { Tooltip as ScoreTooltip, TooltipContent as ScoreTooltipContent, TooltipTrigger as ScoreTooltipTrigger } from "@/components/ui/tooltip";
 import { REGIONS } from "@/config/regions";
 import { usePriceFreshness } from "@/hooks/usePriceFreshness";
@@ -558,6 +558,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                 <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
                 <span className={cn("text-lg font-bold", getScoreNumberColor(overallScore))}>{overallScore.toFixed(1)}</span>
                 <span className="text-sm font-medium text-muted-foreground">/10</span>
+                <Info className="w-3.5 h-3.5 text-muted-foreground/60 ml-0.5" />
               </div>
             </HoverCardTrigger>
             <HoverCardContent side="top" className="w-80 p-4 bg-popover border-border">
@@ -573,22 +574,20 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                   </span>
                 </div>
                 <div className="space-y-1.5">
-                  {scoreFactors.slice(0, 6).map((factor, idx) => (
+                  {scoreFactors.map((factor, idx) => (
                     <div key={idx} className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{factor.label}</span>
-                      <span className="font-mono text-emerald-400">+{factor.points.toFixed(1)}</span>
+                      <span className="font-mono text-emerald-400">+{factor.points.toFixed(2)}</span>
                     </div>
                   ))}
-                  {scoreFactors.length > 6 && (
-                    <div className="text-xs text-muted-foreground text-center pt-1">
-                      +{scoreFactors.length - 6} more factors
-                    </div>
-                  )}
                 </div>
                 <div className="pt-2 border-t border-border/50 flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">{dataPointCount} data points</span>
                   <span className={cn("font-bold", getScoreNumberColor(overallScore))}>{overallScore.toFixed(1)} / 10</span>
                 </div>
+                <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                  {SCORE_EXPLANATION}
+                </p>
               </div>
             </HoverCardContent>
           </HoverCard>

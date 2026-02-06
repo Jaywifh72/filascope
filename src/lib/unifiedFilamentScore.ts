@@ -1,46 +1,45 @@
 /**
- * Unified Filament Score Calculation
- * A comprehensive scoring function that considers multiple data points
+ * Unified Filament Score Calculation (FilaScore)
+ * A comprehensive scoring function using weighted components:
+ * - Data completeness (25%): % of key spec fields filled
+ * - Price availability (20%): regional vs converted pricing
+ * - Color variety (15%): number of color variants
+ * - TDS data (15%): technical data sheet availability
+ * - Brand verification (15%): verified/premium brand status
+ * - Regional coverage (10%): available in multiple regions
+ * 
  * Used consistently across all views (Card, Table, LabReadout)
  */
 
-// Premium brands (verified, well-documented, high quality)
-const PREMIUM_BRANDS = [
+// Premium/verified brands
+const VERIFIED_BRANDS = [
   'bambu lab', 'prusa', 'polymaker', 'atomic filament', 'protopasta', 
   'fillamentum', 'colorfabb', 'esun', 'overture', 'inland',
-  'prusament', 'filaform', 'ninjatek', 'matterhackers'
+  'prusament', 'filaform', 'ninjatek', 'matterhackers', 'hatchbox'
 ];
 
-// Mid-tier brands (known, decent documentation)
+// Mid-tier brands (known, partial verification)
 const MID_TIER_BRANDS = [
-  'hatchbox', 'sunlu', 'eryone', 'duramic', 'geeetech', 
+  'sunlu', 'eryone', 'duramic', 'geeetech', 
   'tecbears', 'amolen', 'iwecolor', 'jayo', 'elegoo',
   'creality', 'flashforge', 'anycubic', 'ziro'
 ];
 
-// Material ease scores (higher = easier to print)
-const MATERIAL_EASE: Record<string, number> = {
-  'PLA': 2.5,
-  'PLA+': 2.3,
-  'PETG': 2.0,
-  'TPU': 1.5,
-  'ABS': 1.5,
-  'ASA': 1.3,
-  'PA': 1.0,
-  'NYLON': 1.0,
-  'PC': 0.8,
-  'PP': 1.0,
-  'PVA': 1.5,
-  'HIPS': 1.8,
-  'PCTG': 2.0,
-  'PEEK': 0.5,
-  'PEI': 0.5,
-};
+// Weight constants (must sum to 10.0 for 0-10 scale)
+const WEIGHTS = {
+  DATA_COMPLETENESS: 2.5,  // 25%
+  PRICE_AVAILABILITY: 2.0, // 20%
+  COLOR_VARIETY: 1.5,      // 15%
+  TDS_DATA: 1.5,           // 15%
+  BRAND_VERIFICATION: 1.5, // 15%
+  REGIONAL_COVERAGE: 1.0,  // 10%
+} as const;
 
 export interface ScoreFactor {
   label: string;
   points: number;
-  category: 'base' | 'data' | 'price' | 'brand' | 'features';
+  maxPoints: number;
+  category: 'data' | 'price' | 'color' | 'tds' | 'brand' | 'regional';
 }
 
 export interface UnifiedScoreResult {
@@ -57,231 +56,249 @@ export interface FilamentForScoring {
   id?: string;
   material?: string | null;
   vendor?: string | null;
-  // Data completeness fields
-  tds_url?: string | null;
+  // Data completeness fields (6 key specs)
   nozzle_temp_min_c?: number | null;
   nozzle_temp_max_c?: number | null;
   bed_temp_min_c?: number | null;
   bed_temp_max_c?: number | null;
+  diameter_mm?: number | null;
+  net_weight_g?: number | null;
+  density_g_cm3?: number | null;
+  // TDS data
+  tds_url?: string | null;
   tensile_strength_xy_mpa?: number | null;
   flexural_strength_mpa?: number | null;
-  featured_image?: string | null;
-  color_hex?: string | null;
+  elongation_break_xy_percent?: number | null;
   // Price & availability fields
   variant_price?: number | null;
   price_cad?: number | null;
   price_eur?: number | null;
   price_gbp?: number | null;
   price_aud?: number | null;
+  price_jpy?: number | null;
   product_url?: string | null;
   amazon_link_us?: string | null;
   product_url_ca?: string | null;
   product_url_uk?: string | null;
   product_url_eu?: string | null;
-  // Features
+  product_url_au?: string | null;
+  product_url_jp?: string | null;
+  // Color/variety
+  color_hex?: string | null;
+  featured_image?: string | null;
+  // For grouped products - variant count
+  variant_count?: number | null;
+  // Additional fields
   high_speed_capable?: boolean | null;
   finish_type?: string | null;
   carbon_fiber_percentage?: number | null;
   glass_fiber_percentage?: number | null;
 }
 
-function getBaseMaterial(material: string | null | undefined): string {
-  if (!material) return '';
-  return material.toUpperCase().replace(/[\s\-+]+/g, '-').split('-')[0].trim();
-}
-
-function getBrandTier(vendor: string | null | undefined): 'premium' | 'mid' | 'unknown' {
+function getBrandVerificationStatus(vendor: string | null | undefined): 'verified' | 'partial' | 'unknown' {
   if (!vendor) return 'unknown';
   const normalized = vendor.toLowerCase().trim();
-  if (PREMIUM_BRANDS.some(b => normalized.includes(b) || b.includes(normalized))) {
-    return 'premium';
+  if (VERIFIED_BRANDS.some(b => normalized.includes(b) || b.includes(normalized))) {
+    return 'verified';
   }
   if (MID_TIER_BRANDS.some(b => normalized.includes(b) || b.includes(normalized))) {
-    return 'mid';
+    return 'partial';
   }
   return 'unknown';
 }
 
 /**
- * Calculate unified filament score
+ * Calculate unified filament score using weighted components
  * Returns null score if insufficient data to compute meaningful score
  */
-export function calculateUnifiedScore(filament: FilamentForScoring): UnifiedScoreResult {
+export function calculateUnifiedScore(
+  filament: FilamentForScoring,
+  colorVariantCount?: number // Optional: pass variant count for grouped products
+): UnifiedScoreResult {
   const factors: ScoreFactor[] = [];
   let totalPoints = 0;
   let dataPointCount = 0;
 
   // ═══════════════════════════════════════════════════════════════
-  // BASE SCORE (max 3.0)
+  // 1. DATA COMPLETENESS (25% = 2.5 points max)
+  // Key specs: nozzle temp, bed temp, diameter, weight, material type, density
   // ═══════════════════════════════════════════════════════════════
-  const baseMaterial = getBaseMaterial(filament.material);
+  const keySpecs = [
+    { name: 'Nozzle temp', filled: !!(filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) },
+    { name: 'Bed temp', filled: !!(filament.bed_temp_min_c || filament.bed_temp_max_c) },
+    { name: 'Diameter', filled: !!filament.diameter_mm },
+    { name: 'Weight', filled: !!filament.net_weight_g },
+    { name: 'Material', filled: !!filament.material },
+    { name: 'Density', filled: !!filament.density_g_cm3 },
+  ];
   
-  if (baseMaterial) {
-    const materialEase = MATERIAL_EASE[baseMaterial] ?? 1.5;
-    totalPoints += materialEase;
-    factors.push({
-      label: `${baseMaterial} material`,
-      points: materialEase,
-      category: 'base',
-    });
-    dataPointCount++;
-    
-    // Material defined bonus
-    totalPoints += 0.5;
-    factors.push({
-      label: 'Material specified',
-      points: 0.5,
-      category: 'base',
-    });
-  }
+  const filledSpecs = keySpecs.filter(s => s.filled).length;
+  const completenessRatio = filledSpecs / keySpecs.length;
+  const completenessPoints = completenessRatio * WEIGHTS.DATA_COMPLETENESS;
+  
+  totalPoints += completenessPoints;
+  dataPointCount += filledSpecs;
+  factors.push({
+    label: `${filledSpecs}/${keySpecs.length} specs filled`,
+    points: Math.round(completenessPoints * 100) / 100,
+    maxPoints: WEIGHTS.DATA_COMPLETENESS,
+    category: 'data',
+  });
 
   // ═══════════════════════════════════════════════════════════════
-  // DATA COMPLETENESS (max 2.5)
+  // 2. PRICE AVAILABILITY (20% = 2.0 points max)
+  // Full points for regional price, partial for converted, zero for none
   // ═══════════════════════════════════════════════════════════════
+  const hasRegionalPrice = !!(
+    filament.price_cad || filament.price_eur || 
+    filament.price_gbp || filament.price_aud || filament.price_jpy
+  );
+  const hasBasePrice = !!filament.variant_price;
   
-  // TDS available (+0.5)
-  if (filament.tds_url) {
-    totalPoints += 0.5;
-    factors.push({ label: 'TDS available', points: 0.5, category: 'data' });
-    dataPointCount++;
-  }
+  let pricePoints = 0;
+  let priceLabel = 'No pricing';
   
-  // Temperature specs (+0.5)
-  const hasNozzleTemp = filament.nozzle_temp_min_c || filament.nozzle_temp_max_c;
-  const hasBedTemp = filament.bed_temp_min_c || filament.bed_temp_max_c;
-  if (hasNozzleTemp && hasBedTemp) {
-    totalPoints += 0.5;
-    factors.push({ label: 'Temp specs complete', points: 0.5, category: 'data' });
+  if (hasRegionalPrice) {
+    pricePoints = WEIGHTS.PRICE_AVAILABILITY; // Full points
+    priceLabel = 'Regional pricing';
     dataPointCount += 2;
-  } else if (hasNozzleTemp || hasBedTemp) {
-    totalPoints += 0.25;
-    factors.push({ label: 'Partial temp specs', points: 0.25, category: 'data' });
-    dataPointCount++;
+  } else if (hasBasePrice) {
+    pricePoints = WEIGHTS.PRICE_AVAILABILITY * 0.6; // 60% for converted only
+    priceLabel = 'Base pricing (converted)';
+    dataPointCount += 1;
   }
   
-  // Mechanical data (+0.5)
+  totalPoints += pricePoints;
+  factors.push({
+    label: priceLabel,
+    points: Math.round(pricePoints * 100) / 100,
+    maxPoints: WEIGHTS.PRICE_AVAILABILITY,
+    category: 'price',
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // 3. COLOR VARIETY (15% = 1.5 points max)
+  // More color variants = higher score, capped at 10+ variants for full points
+  // ═══════════════════════════════════════════════════════════════
+  const variantCount = colorVariantCount ?? filament.variant_count ?? 1;
+  const hasColorInfo = !!filament.color_hex;
+  
+  // Scale: 1 variant = 0.15, 5 variants = 0.75, 10+ variants = 1.5
+  let colorPoints = 0;
+  if (hasColorInfo || variantCount > 0) {
+    const colorRatio = Math.min(variantCount / 10, 1); // Cap at 10 variants
+    colorPoints = colorRatio * WEIGHTS.COLOR_VARIETY;
+    dataPointCount += 1;
+  }
+  
+  totalPoints += colorPoints;
+  factors.push({
+    label: variantCount > 1 ? `${variantCount} color variants` : (hasColorInfo ? '1 color' : 'No color data'),
+    points: Math.round(colorPoints * 100) / 100,
+    maxPoints: WEIGHTS.COLOR_VARIETY,
+    category: 'color',
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // 4. TDS DATA (15% = 1.5 points max)
+  // Technical data sheet and mechanical properties
+  // ═══════════════════════════════════════════════════════════════
+  const hasTDS = !!filament.tds_url;
   const hasTensile = !!filament.tensile_strength_xy_mpa;
   const hasFlexural = !!filament.flexural_strength_mpa;
-  if (hasTensile || hasFlexural) {
-    const mechPoints = (hasTensile && hasFlexural) ? 0.5 : 0.3;
-    totalPoints += mechPoints;
-    factors.push({ label: 'Mechanical data', points: mechPoints, category: 'data' });
-    dataPointCount += (hasTensile ? 1 : 0) + (hasFlexural ? 1 : 0);
+  const hasElongation = !!filament.elongation_break_xy_percent;
+  
+  let tdsPoints = 0;
+  let tdsLabel = 'No TDS data';
+  
+  if (hasTDS) {
+    tdsPoints = WEIGHTS.TDS_DATA * 0.6; // TDS URL worth 60%
+    tdsLabel = 'TDS available';
+    dataPointCount += 1;
   }
   
-  // Has product image (+0.5)
-  if (filament.featured_image) {
-    totalPoints += 0.5;
-    factors.push({ label: 'Product image', points: 0.5, category: 'data' });
-    dataPointCount++;
+  // Mechanical properties add remaining 40%
+  const mechCount = [hasTensile, hasFlexural, hasElongation].filter(Boolean).length;
+  if (mechCount > 0) {
+    const mechRatio = mechCount / 3;
+    tdsPoints += mechRatio * (WEIGHTS.TDS_DATA * 0.4);
+    tdsLabel = hasTDS ? 'TDS + mechanical data' : `${mechCount} mechanical specs`;
+    dataPointCount += mechCount;
   }
   
-  // Has color hex defined (+0.5)
-  if (filament.color_hex) {
-    totalPoints += 0.5;
-    factors.push({ label: 'Color specified', points: 0.5, category: 'data' });
-    dataPointCount++;
-  }
+  totalPoints += tdsPoints;
+  factors.push({
+    label: tdsLabel,
+    points: Math.round(tdsPoints * 100) / 100,
+    maxPoints: WEIGHTS.TDS_DATA,
+    category: 'tds',
+  });
 
   // ═══════════════════════════════════════════════════════════════
-  // PRICE & AVAILABILITY (max 2.0)
+  // 5. BRAND VERIFICATION (15% = 1.5 points max)
+  // Verified brands get full points, partial verification = 50%
   // ═══════════════════════════════════════════════════════════════
+  const brandStatus = getBrandVerificationStatus(filament.vendor);
   
-  // Has pricing data (+0.5)
-  if (filament.variant_price) {
-    totalPoints += 0.5;
-    factors.push({ label: 'Pricing available', points: 0.5, category: 'price' });
-    dataPointCount++;
-  }
+  let brandPoints = 0;
+  let brandLabel = 'Unknown brand';
   
-  // Regional pricing (+0.1 each, max 0.4)
-  let regionalCount = 0;
-  if (filament.price_cad) regionalCount++;
-  if (filament.price_eur) regionalCount++;
-  if (filament.price_gbp) regionalCount++;
-  if (filament.price_aud) regionalCount++;
-  
-  if (regionalCount > 0) {
-    const regionalPoints = Math.min(regionalCount * 0.1, 0.4);
-    totalPoints += regionalPoints;
-    factors.push({ 
-      label: `${regionalCount} regional prices`, 
-      points: regionalPoints, 
-      category: 'price' 
-    });
-    dataPointCount += regionalCount;
-  }
-  
-  // Multiple purchase options (+0.3)
-  const hasStoreUrl = !!filament.product_url;
-  const hasAmazon = !!filament.amazon_link_us;
-  const hasRegionalUrls = !!(filament.product_url_ca || filament.product_url_uk || filament.product_url_eu);
-  
-  if ((hasStoreUrl && hasAmazon) || (hasStoreUrl && hasRegionalUrls)) {
-    totalPoints += 0.3;
-    factors.push({ label: 'Multiple retailers', points: 0.3, category: 'price' });
-    dataPointCount++;
-  } else if (hasStoreUrl || hasAmazon) {
-    totalPoints += 0.15;
-    factors.push({ label: 'Purchase link', points: 0.15, category: 'price' });
-    dataPointCount++;
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // BRAND & QUALITY (max 1.5)
-  // ═══════════════════════════════════════════════════════════════
-  const brandTier = getBrandTier(filament.vendor);
-  
-  if (brandTier === 'premium') {
-    totalPoints += 1.0;
-    factors.push({ label: `${filament.vendor} (Premium)`, points: 1.0, category: 'brand' });
-    dataPointCount++;
-  } else if (brandTier === 'mid') {
-    totalPoints += 0.5;
-    factors.push({ label: `${filament.vendor}`, points: 0.5, category: 'brand' });
-    dataPointCount++;
+  if (brandStatus === 'verified') {
+    brandPoints = WEIGHTS.BRAND_VERIFICATION;
+    brandLabel = `${filament.vendor} (Verified)`;
+    dataPointCount += 1;
+  } else if (brandStatus === 'partial') {
+    brandPoints = WEIGHTS.BRAND_VERIFICATION * 0.5;
+    brandLabel = `${filament.vendor}`;
+    dataPointCount += 1;
   } else if (filament.vendor) {
-    // Unknown brand still gets minimal points for having vendor info
-    totalPoints += 0.1;
-    factors.push({ label: `${filament.vendor}`, points: 0.1, category: 'brand' });
-    dataPointCount++;
+    brandPoints = WEIGHTS.BRAND_VERIFICATION * 0.1;
+    brandLabel = filament.vendor;
+    dataPointCount += 1;
   }
+  
+  totalPoints += brandPoints;
+  factors.push({
+    label: brandLabel,
+    points: Math.round(brandPoints * 100) / 100,
+    maxPoints: WEIGHTS.BRAND_VERIFICATION,
+    category: 'brand',
+  });
 
   // ═══════════════════════════════════════════════════════════════
-  // FEATURES (max 1.0)
+  // 6. REGIONAL COVERAGE (10% = 1.0 points max)
+  // Available in more regions = higher score
   // ═══════════════════════════════════════════════════════════════
+  const regionUrls = [
+    filament.product_url,
+    filament.product_url_ca,
+    filament.product_url_uk,
+    filament.product_url_eu,
+    filament.product_url_au,
+    filament.product_url_jp,
+    filament.amazon_link_us,
+  ];
   
-  // High-speed capable (+0.4)
-  if (filament.high_speed_capable) {
-    totalPoints += 0.4;
-    factors.push({ label: 'High-speed capable', points: 0.4, category: 'features' });
-    dataPointCount++;
-  }
+  const regionCount = regionUrls.filter(Boolean).length;
+  const regionalRatio = Math.min(regionCount / 5, 1); // Cap at 5 regions for full points
+  const regionalPoints = regionalRatio * WEIGHTS.REGIONAL_COVERAGE;
   
-  // Specialty finish (+0.3)
-  const finishType = filament.finish_type?.toLowerCase() || '';
-  if (finishType.includes('silk') || finishType.includes('matte') || 
-      finishType.includes('sparkle') || finishType.includes('galaxy')) {
-    totalPoints += 0.3;
-    factors.push({ label: 'Specialty finish', points: 0.3, category: 'features' });
-    dataPointCount++;
-  }
+  totalPoints += regionalPoints;
+  if (regionCount > 0) dataPointCount += 1;
   
-  // Reinforced (+0.3)
-  const hasCF = filament.carbon_fiber_percentage && filament.carbon_fiber_percentage > 0;
-  const hasGF = filament.glass_fiber_percentage && filament.glass_fiber_percentage > 0;
-  if (hasCF || hasGF) {
-    totalPoints += 0.3;
-    factors.push({ label: hasCF ? 'Carbon reinforced' : 'Glass reinforced', points: 0.3, category: 'features' });
-    dataPointCount++;
-  }
+  factors.push({
+    label: regionCount > 0 ? `${regionCount} region(s)` : 'No regional links',
+    points: Math.round(regionalPoints * 100) / 100,
+    maxPoints: WEIGHTS.REGIONAL_COVERAGE,
+    category: 'regional',
+  });
 
   // ═══════════════════════════════════════════════════════════════
   // DETERMINE RESULT
   // ═══════════════════════════════════════════════════════════════
   
-  // Minimum data requirement: must have material OR (price + image)
-  const hasMinimumData = !!baseMaterial || (filament.variant_price && filament.featured_image);
+  // Minimum data requirement: must have material OR price
+  const hasMinimumData = !!filament.material || !!filament.variant_price;
   
   if (!hasMinimumData || dataPointCount < 2) {
     return {
@@ -294,14 +311,14 @@ export function calculateUnifiedScore(filament: FilamentForScoring): UnifiedScor
     };
   }
   
-  // Cap score at 10
-  const finalScore = Math.min(10, Math.max(1, Math.round(totalPoints * 10) / 10));
+  // Round to one decimal place, clamp to 0-10
+  const finalScore = Math.min(10, Math.max(0, Math.round(totalPoints * 10) / 10));
   
   // Determine confidence based on data points
   let confidence: 'high' | 'medium' | 'low';
-  if (dataPointCount >= 10) {
+  if (dataPointCount >= 8) {
     confidence = 'high';
-  } else if (dataPointCount >= 5) {
+  } else if (dataPointCount >= 4) {
     confidence = 'medium';
   } else {
     confidence = 'low';
@@ -328,16 +345,16 @@ export function getScoreLabel(score: number | null): { label: string; colorClass
     return { label: 'Unrated', colorClass: 'text-muted-foreground' };
   }
   
-  if (score >= 8.5) {
+  if (score >= 8.0) {
     return { label: 'Excellent', colorClass: 'text-emerald-400' };
   }
-  if (score >= 7.0) {
+  if (score >= 6.5) {
     return { label: 'Great', colorClass: 'text-cyan-400' };
   }
-  if (score >= 5.5) {
+  if (score >= 5.0) {
     return { label: 'Good', colorClass: 'text-primary' };
   }
-  if (score >= 4.0) {
+  if (score >= 3.5) {
     return { label: 'Average', colorClass: 'text-orange-400' };
   }
   return { label: 'Limited', colorClass: 'text-red-400' };
@@ -352,3 +369,9 @@ export function getScoreNumberColor(score: number | null): string {
   if (score >= 6) return 'text-primary';
   return 'text-orange-400';
 }
+
+/**
+ * Score explanation text for tooltip
+ */
+export const SCORE_EXPLANATION = 
+  "FilaScore: Based on data completeness, pricing availability, color variety, TDS data, brand verification, and regional coverage.";

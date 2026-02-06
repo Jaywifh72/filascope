@@ -7,7 +7,7 @@ import { LikeButton } from "@/components/LikeButton";
 import { CheckCircle, XCircle, TreeDeciduous, Layers, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
-import { calculateUnifiedScore, getScoreNumberColor, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
+import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type FilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Filament {
@@ -240,12 +240,15 @@ export function FilamentTableView({
                   {overallScore !== null ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className={cn(
-                          "font-mono text-sm font-semibold cursor-help",
-                          getScoreNumberColor(overallScore)
-                        )}>
-                          {overallScore.toFixed(1)}
-                        </span>
+                        <div className="inline-flex items-center gap-1 cursor-help">
+                          <span className={cn(
+                            "font-mono text-sm font-semibold",
+                            getScoreNumberColor(overallScore)
+                          )}>
+                            {overallScore.toFixed(1)}
+                          </span>
+                          <Info className="w-3 h-3 text-muted-foreground/60" />
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs p-3">
                         <div className="space-y-2">
@@ -267,6 +270,9 @@ export function FilamentTableView({
                               </div>
                             ))}
                           </div>
+                          <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/50">
+                            {SCORE_EXPLANATION}
+                          </p>
                         </div>
                       </TooltipContent>
                     </Tooltip>
