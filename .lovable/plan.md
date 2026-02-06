@@ -1,182 +1,128 @@
 
-# Plan: Add JSON-LD Structured Data for Rich Search Results
+# Plan: Fix Filament Detail Page Slug Matching
 
-## Overview
-This plan adds comprehensive Schema.org JSON-LD structured data to improve search result appearance with rich snippets. The site already has some SEO components (`ProductJsonLd`, `FAQSchema`, `ItemListSchema`, `DatasetSchema`) but is missing key schemas for the homepage, brands listing, and breadcrumb navigation.
+## Problem Summary
+Filament detail pages show "Filament Not Found" for valid products when the URL slug doesn't exactly match the database's `product_handle` or the generated slug. This happens when:
+- A user types a URL manually (e.g., `/filament/bambu-lab-pla-basic-black`)
+- The slug includes product title components that aren't in `color_family`
+- The `product_handle` column is NULL for some products (~25% of catalog)
+
+## Current Behavior
+The page correctly shows a "Not Found" UI (not a redirect to "/"), but it fails to find valid products due to overly strict matching logic.
+
+## Solution Overview
+Improve the slug matching in `useFilamentBySlug.ts` to be more resilient by:
+1. Adding more fallback search strategies
+2. Improving color matching to handle partial matches
+3. Using best-effort matching when exact matches fail
 
 ---
 
 ## Implementation Steps
 
-### 1. Create WebSiteSchema Component for Homepage
-Create a new reusable component for WebSite schema with SearchAction.
+### 1. Enhance Color Matching Logic
+The current approach searches for the full parsed color (e.g., "basic black") but should try variations.
 
-**New file**: `src/components/seo/WebSiteSchema.tsx`
+**Edit**: `src/hooks/useFilamentBySlug.ts`
 
+- When color search fails, try searching with individual color words
+- Add fallback to search with just brand + material (ignoring color)
+- Score multiple results by similarity to the slug
+
+### 2. Add Partial Word Matching for Colors
+Extract significant color words from the slug and match them independently.
+
+**Changes**:
 ```typescript
-// Renders JSON-LD for WebSite schema with:
-// - name: "FilaScope"
-// - url: "https://filascope.com"
-// - description: site meta description
-// - potentialAction: SearchAction pointing to /?searchTerm={query}
+// Instead of just: color_family.ilike.%basic black%
+// Try: color_family.ilike.%black% OR product_title.ilike.%black%
+// Extract the last word of the color as the primary color term
 ```
 
-Key schema structure:
-- `@type: "WebSite"`
-- `potentialAction` with `SearchAction` type
-- `query-input: "required name=search_term_string"`
-- Target URL: `https://filascope.com/?searchTerm={search_term_string}`
+### 3. Add Brand+Material Only Fallback
+If color-based search returns no results, try finding products with just brand + material, then use the first result.
 
-### 2. Create BreadcrumbSchema Component
-Create a reusable component for BreadcrumbList schema.
-
-**New file**: `src/components/seo/BreadcrumbSchema.tsx`
-
+**Changes**:
 ```typescript
-interface BreadcrumbItem {
-  name: string;
-  url: string;
-}
-
-interface BreadcrumbSchemaProps {
-  items: BreadcrumbItem[];
-}
+// If componentData is empty after color search:
+// 1. Remove color filter
+// 2. Search by brand + material only
+// 3. Return first result as best-effort match
 ```
 
-Key schema structure:
-- `@type: "BreadcrumbList"`
-- `itemListElement` array with `ListItem` objects
-- Each item has `position`, `name`, and `item` (URL)
+### 4. Improve Slug Similarity Scoring
+When multiple products match, score them by how closely their generated slug matches the requested URL.
 
-### 3. Create OrganizationSchema Component (Optional Enhancement)
-Add Organization schema to homepage for brand recognition.
-
-**New file**: `src/components/seo/OrganizationSchema.tsx`
-
+**Changes**:
 ```typescript
-// Renders JSON-LD for Organization schema with:
-// - name: "FilaScope"
-// - url: "https://filascope.com"
-// - logo: "https://filascope.com/og-image.png"
-// - sameAs: social media links (if any)
+// Use Levenshtein distance or token overlap to find best match
+// Even if exact slug doesn't match, pick the closest one
 ```
 
-### 4. Add WebSite Schema to Homepage (Finder.tsx)
-Import and render the WebSiteSchema component on the homepage.
-
-**Edit file**: `src/pages/Finder.tsx`
-
-- Import `WebSiteSchema` and `OrganizationSchema` from `@/components/seo`
-- Add near the top of the JSX return (before the hero section)
-- Include site description and search target URL
-
-### 5. Add ItemListSchema to Brands Page
-The Brands page already has `ItemListSchema` available but needs to use it.
-
-**Edit file**: `src/pages/Brands.tsx`
-
-- Import `ItemListSchema` from `@/components/seo`
-- Map filtered brands to the required format with name, url, image, description
-- Render the schema with:
-  - `name: "3D Printer Filament Brands"`
-  - `description: "Directory of 3D printing filament manufacturers..."`
-  - `items`: array of brand objects
-
-### 6. Enhance ProductJsonLd with AggregateRating
-The existing `ProductJsonLd` component needs to support `aggregateRating` for FilaScope scores.
-
-**Edit file**: `src/components/seo/ProductJsonLd.tsx`
-
-Add new optional props:
-- `ratingValue?: number` - the FilaScope score (0-10)
-- `ratingCount?: number` - number of ratings/reviews
-- `bestRating?: number` - defaults to 10
-- `worstRating?: number` - defaults to 0
-
-Add to JSON-LD output:
-```json
-{
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": 8.5,
-    "bestRating": 10,
-    "worstRating": 0,
-    "ratingCount": 42
-  }
-}
-```
-
-### 7. Add BreadcrumbSchema to Detail Pages
-Add breadcrumb schema to pages with "Back" navigation.
-
-**Edit files**:
-- `src/pages/FilamentDetail.tsx`: Home > Materials > [Brand] > [Product]
-- `src/pages/PrinterDetail.tsx`: Home > Printers > [Manufacturer] > [Model]
-- `src/pages/BrandDetail.tsx`: Home > Brands > [Brand Name]
-
-Example for FilamentDetail:
-```typescript
-<BreadcrumbSchema items={[
-  { name: 'Home', url: 'https://filascope.com/' },
-  { name: 'Materials', url: 'https://filascope.com/' },
-  { name: filament.vendor || 'Brand', url: `https://filascope.com/brand/${brandSlug}` },
-  { name: displayName, url: `https://filascope.com/filament/${filament.id}` },
-]} />
-```
-
-### 8. Update SEO Index Exports
-Add new components to the central exports file.
-
-**Edit file**: `src/components/seo/index.ts`
-
-```typescript
-export { WebSiteSchema } from './WebSiteSchema';
-export { BreadcrumbSchema } from './BreadcrumbSchema';
-export { OrganizationSchema } from './OrganizationSchema';
-```
-
----
-
-## Files to Create
-| File | Purpose |
-|------|---------|
-| `src/components/seo/WebSiteSchema.tsx` | Homepage WebSite schema with SearchAction |
-| `src/components/seo/BreadcrumbSchema.tsx` | Reusable breadcrumb navigation schema |
-| `src/components/seo/OrganizationSchema.tsx` | Organization identity schema |
-
-## Files to Edit
-| File | Changes |
-|------|---------|
-| `src/components/seo/index.ts` | Export new schema components |
-| `src/components/seo/ProductJsonLd.tsx` | Add aggregateRating support |
-| `src/pages/Finder.tsx` | Add WebSiteSchema and OrganizationSchema |
-| `src/pages/Brands.tsx` | Add ItemListSchema with brand data |
-| `src/pages/FilamentDetail.tsx` | Add BreadcrumbSchema |
-| `src/pages/PrinterDetail.tsx` | Add BreadcrumbSchema |
-| `src/pages/BrandDetail.tsx` | Add BreadcrumbSchema |
+### 5. Log and Auto-Heal Missing Handles
+Continue the existing behavior of updating `product_handle` when a match is found, but also log cases where fuzzy matching was needed for debugging.
 
 ---
 
 ## Technical Details
 
-### Schema.org Vocabulary Used
-- **WebSite**: Site identity with search capability
-- **SearchAction**: Enables sitelinks search box in Google
-- **Organization**: Business identity
-- **BreadcrumbList**: Navigation hierarchy
-- **Product** (existing): Enhanced with AggregateRating
-- **ItemList** (existing): Brand directory listing
+### File to Edit
+`src/hooks/useFilamentBySlug.ts`
 
-### Validation
-All schemas follow Google's Rich Results Test format requirements:
-- Proper `@context: "https://schema.org"` declarations
-- Required fields populated (name, url, etc.)
-- Absolute URLs used throughout
-- Proper nesting of related types
+### Key Logic Changes
 
-### Search Action URL Pattern
-The homepage uses `searchTerm` as the query parameter:
+1. **Split color search**: 
+   - First try full color phrase
+   - Then try last word only (primary color)
+   - Then try brand+material without color
+
+2. **Best-effort matching**:
+   - When no exact slug match found, use token-based similarity
+   - Count how many words from the slug appear in the generated slug
+   - Pick the result with highest overlap
+
+3. **Fallback chain**:
 ```
-https://filascope.com/?searchTerm={search_term_string}
+product_handle exact match
+  ↓ (not found)
+fuzzy product_handle match
+  ↓ (not found)  
+component search (brand + material + full color)
+  ↓ (not found)
+component search (brand + material + primary color word)
+  ↓ (not found)
+component search (brand + material only)
+  ↓ (still not found)
+Show "Not Found" page
 ```
-This matches the existing filter state in Finder.tsx.
+
+### Example Fix for "bambu-lab-pla-basic-black"
+
+**Before** (fails):
+- Parses to `{brand: 'bambu-lab', material: 'pla', color: 'basic-black'}`
+- Searches `color_family ILIKE '%basic black%'` → 0 results
+- Shows "Not Found"
+
+**After** (succeeds):
+- Parses to `{brand: 'bambu-lab', material: 'pla', color: 'basic-black'}`
+- Searches `color_family ILIKE '%basic black%'` → 0 results
+- Fallback: Extract primary color word "black"
+- Searches `color_family ILIKE '%black%'` → Multiple results
+- Scores by similarity: "bambu-lab-pla-black" has highest overlap with "bambu-lab-pla-basic-black"
+- Returns best match
+
+---
+
+## Files Changed
+| File | Changes |
+|------|---------|
+| `src/hooks/useFilamentBySlug.ts` | Add multi-stage fallback search, improve color parsing, add similarity scoring |
+| `src/lib/seoSlugUtils.ts` | Add helper function for slug similarity scoring |
+
+## Testing Scenarios
+After implementation, verify these URLs resolve correctly:
+- `/filament/formfutura-pla-maize-yellow` ✓ (already works)
+- `/filament/bambu-lab-pla-basic-black` → Should find PLA Basic Black
+- `/filament/bambu-lab-abs` → Should find first Bambu Lab ABS product
+- `/filament/nonexistent-brand-xyz` → Should show "Not Found"
+
