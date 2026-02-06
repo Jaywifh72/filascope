@@ -306,10 +306,6 @@ const BrandDetail = () => {
   const { isAdmin } = useAuth();
   const { formatPrice } = useRegion();
 
-  const brandInfo = getBrandInfo(decodedBrand);
-  const brandLogo = getBrandLogo(decodedBrand);
-
-
   // Fetch public brand data (safe for all users)
   const { data: automatedBrand } = useQuery({
     queryKey: ["public-brand", decodedBrand],
@@ -325,6 +321,11 @@ const BrandDetail = () => {
     },
     enabled: !!decodedBrand,
   });
+
+  // Derive proper display name and logo from DB data, falling back to slug/static map
+  const displayName = automatedBrand?.display_name || automatedBrand?.brand_name || decodedBrand.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const brandInfo = getBrandInfo(displayName);
+  const brandLogo = automatedBrand?.logo_url || getBrandLogo(displayName) || getBrandLogo(decodedBrand);
 
   // Admin-only query for scraping status and sensitive data
   const { data: adminBrandData } = useQuery({
@@ -535,7 +536,7 @@ const BrandDetail = () => {
   };
 
   const hasHighSpeedProducts = filaments?.some(f => f.high_speed_capable) ?? false;
-  const brandBadges = getBrandBadges(decodedBrand, hasHighSpeedProducts);
+  const brandBadges = getBrandBadges(displayName, hasHighSpeedProducts);
   const isPremium = brandBadges.includes('premium');
   const isBudgetFriendly = brandBadges.includes('budget-friendly');
 
@@ -546,13 +547,13 @@ const BrandDetail = () => {
         items={[
           { name: 'Home', url: 'https://filascope.com/' },
           { name: 'Brands', url: 'https://filascope.com/brands' },
-          { name: decodedBrand, url: `https://filascope.com/brands/${encodeURIComponent(decodedBrand)}` },
+          { name: displayName, url: `https://filascope.com/brands/${encodeURIComponent(decodedBrand)}` },
         ]}
       />
 
       {/* Brand SEO */}
       <BrandSEO
-        brandName={decodedBrand}
+        brandName={displayName}
         description={brandInfo?.summary?.slice(0, 160)}
         canonicalUrl={`/brands/${encodeURIComponent(decodedBrand)}`}
         image={brandLogo}
@@ -568,7 +569,7 @@ const BrandDetail = () => {
 
         {/* Brand Hero Section */}
         <BrandHeroSection
-          brandName={decodedBrand}
+          brandName={displayName}
           brandLogo={brandLogo}
           isVerified={automatedBrand?.is_visible ?? false}
           location={brandInfo?.location}
@@ -593,7 +594,7 @@ const BrandDetail = () => {
         {brandBadges.length > 0 && (
           <div className="mb-6">
             <BrandBadgesDisplay 
-              brandName={decodedBrand} 
+              brandName={displayName} 
               hasHighSpeedProducts={hasHighSpeedProducts}
               size="md"
             />
@@ -614,7 +615,7 @@ const BrandDetail = () => {
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <BrandOverviewTab
-              brandName={decodedBrand}
+              brandName={displayName}
               brandLogo={brandLogo}
               groupedProducts={groupedProducts}
               availableMaterials={availableMaterials}
@@ -632,7 +633,7 @@ const BrandDetail = () => {
           {/* Products Tab */}
           {activeTab === "products" && (
             <BrandProductsTab
-              brandName={decodedBrand}
+              brandName={displayName}
               brandLogo={brandLogo}
               groupedProducts={groupedProducts}
               filaments={filaments || []}
@@ -645,14 +646,14 @@ const BrandDetail = () => {
           {activeTab === "about" && (
             <>
             <BrandAboutTab
-              brandName={decodedBrand}
+              brandName={displayName}
               brandInfo={brandInfo}
               productCount={groupedProducts.length}
               materialsCount={availableMaterials.length}
             />
             {/* FAQ Section for SEO */}
             <BrandFAQSection
-              brandName={decodedBrand}
+              brandName={displayName}
               productCount={filaments?.length ?? 0}
               materials={availableMaterials}
               isVerified={automatedBrand?.is_visible ?? false}
