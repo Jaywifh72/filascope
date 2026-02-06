@@ -21,6 +21,7 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { generateFilamentSlug } from "@/lib/seoSlugUtils";
+import { PriceFreshnessDot } from "@/components/price/PriceFreshnessDot";
 
 interface Filament {
   id: string;
@@ -49,6 +50,7 @@ interface Filament {
   product_url_eu?: string | null;
   product_url_au?: string | null;
   product_url_jp?: string | null;
+  last_scraped_at?: string | null;
   price_cad?: number | null;
   price_gbp?: number | null;
   price_eur?: number | null;
@@ -471,6 +473,8 @@ export function LabReadoutCard({
                     Compare →
                   </span>
                 </div>
+                {/* Price freshness indicator */}
+                <PriceFreshnessDot lastScrapedAt={filament.last_scraped_at} />
               </div>
             ) : (
               <span className="text-sm text-muted-foreground">
