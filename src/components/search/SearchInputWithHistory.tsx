@@ -59,6 +59,27 @@ export function SearchInputWithHistory({
     ? suggestions.map((s) => s.value)
     : filteredRecentSearches;
 
+  const handleSelect = useCallback((selectedValue: string, suggestion?: SearchSuggestion) => {
+    // If this is a product suggestion with an ID, navigate to detail page
+    if (suggestion?.type === "product" && suggestion.id) {
+      trackSearch(selectedValue);
+      setShowDropdown(false);
+      onChange(""); // Clear input after navigation
+      
+      // Navigate using product_handle or ID
+      const slug = suggestion.productHandle || suggestion.id;
+      navigate(`/filament/${slug}`);
+      return;
+    }
+    
+    // For brands, materials, typos, and recent searches - update search input
+    onChange(selectedValue);
+    trackSearch(selectedValue);
+    setShowDropdown(false);
+    onSelect?.(selectedValue);
+    inputRef.current?.blur();
+  }, [navigate, onChange, trackSearch, onSelect]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!showDropdown) return;
 
@@ -91,28 +112,7 @@ export function SearchInputWithHistory({
         inputRef.current?.blur();
         break;
     }
-  }, [showDropdown, selectedIndex, allItems, value, trackSearch]);
-
-  const handleSelect = (selectedValue: string, suggestion?: SearchSuggestion) => {
-    // If this is a product suggestion with an ID, navigate to detail page
-    if (suggestion?.type === "product" && suggestion.id) {
-      trackSearch(selectedValue);
-      setShowDropdown(false);
-      onChange(""); // Clear input after navigation
-      
-      // Navigate using product_handle or ID
-      const slug = suggestion.productHandle || suggestion.id;
-      navigate(`/filament/${slug}`);
-      return;
-    }
-    
-    // For brands, materials, typos, and recent searches - update search input
-    onChange(selectedValue);
-    trackSearch(selectedValue);
-    setShowDropdown(false);
-    onSelect?.(selectedValue);
-    inputRef.current?.blur();
-  };
+  }, [showDropdown, selectedIndex, allItems, value, trackSearch, handleSelect, suggestions]);
 
   const handleClearRecent = (e: React.MouseEvent) => {
     e.stopPropagation();
