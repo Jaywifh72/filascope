@@ -40,7 +40,7 @@ import { isFilamentAvailableInRegion, isRegionalBrand, type FilamentWithRegion }
 import { useRegion } from "@/contexts/RegionContext";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
-import { ProductSEO, ProductJsonLd } from "@/components/seo";
+import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
@@ -631,8 +631,21 @@ const FilamentDetail = () => {
       : ''
   }${rawPricePerKg ? `From $${rawPricePerKg.toFixed(2)}/kg. ` : ''}Compare specs & prices at FilaScope.`;
 
+  // Build brand slug for breadcrumb link
+  const brandSlug = displayFilament.vendor ? encodeURIComponent(displayFilament.vendor) : '';
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      {/* Breadcrumb Schema */}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://filascope.com/' },
+          { name: 'Materials', url: 'https://filascope.com/' },
+          ...(displayFilament.vendor ? [{ name: displayFilament.vendor, url: `https://filascope.com/brands/${brandSlug}` }] : []),
+          { name: cleanFilamentDisplayName(baseProductName), url: `https://filascope.com/filament/${displayFilament.id}` },
+        ]}
+      />
+
       {/* SEO Meta Tags */}
       <ProductSEO
         title={`${displayFilament.vendor || ''} ${cleanFilamentDisplayName(baseProductName)}`}

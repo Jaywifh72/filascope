@@ -36,6 +36,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
 import HeroSection from "@/components/HeroSection";
+import { WebSiteSchema, OrganizationSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
@@ -1416,6 +1417,9 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
+      {/* JSON-LD Structured Data for Homepage */}
+      <WebSiteSchema />
+      <OrganizationSchema />
       {/* Onboarding Tour */}
       <OnboardingTour />
       

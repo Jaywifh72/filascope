@@ -93,7 +93,7 @@ import {
   Upload,
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
-import { ProductSEO, ProductJsonLd } from "@/components/seo";
+import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
 
 const PrinterDetail = () => {
   const { id } = useParams();
@@ -600,6 +600,16 @@ const PrinterDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20 lg:pb-0">
+      {/* Breadcrumb Schema */}
+      <BreadcrumbSchema
+        items={[
+          { name: 'Home', url: 'https://filascope.com/' },
+          { name: 'Printers', url: 'https://filascope.com/printers' },
+          ...(printerBrand ? [{ name: printerBrand, url: `https://filascope.com/printers?brand=${encodeURIComponent(printerBrand)}` }] : []),
+          { name: printerModel, url: `https://filascope.com/printer/${printer.printer_id || printer.id}` },
+        ]}
+      />
+
       {/* SEO Meta Tags */}
       <ProductSEO
         title={printerName}

@@ -8,6 +8,7 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ItemListSchema } from "@/components/seo";
 import {
   Select,
   SelectContent,
@@ -337,8 +338,27 @@ const Brands = () => {
     }));
   }, [filteredBrands, searchQuery]);
 
+  // Build ItemList schema data for SEO
+  const brandListItems = useMemo(() => {
+    return filteredBrands.map((brand, index) => ({
+      name: brand.name,
+      url: `https://filascope.com/brands/${encodeURIComponent(brand.name)}`,
+      image: brand.automated?.logo_url || undefined,
+      description: brand.automated?.description || `${brand.name} - ${brand.count} filaments available`,
+      position: index + 1,
+    }));
+  }, [filteredBrands]);
+
   return (
     <div className="min-h-screen">
+      {/* JSON-LD Structured Data */}
+      <ItemListSchema
+        name="3D Printer Filament Brands"
+        description="Directory of 3D printing filament manufacturers. Compare brands by material variety, features, and product availability."
+        items={brandListItems}
+        itemListOrder="Descending"
+      />
+
       {/* Hero Section */}
       <BrandsHeroSection
         searchTerm={searchQuery}
