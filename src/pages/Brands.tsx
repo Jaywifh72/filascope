@@ -217,7 +217,8 @@ const Brands = () => {
              b.name.toLowerCase() === ab.display_name.toLowerCase()
       );
       const spoolMaterial = filamentStats?.spoolMaterial || null;
-      const variantCount = filamentStats?.count || ab.product_count || 0;
+      // Prefer pre-computed DB counts (accurate) over client-side counts (may be truncated by query limits)
+      const variantCount = ab.product_count || filamentStats?.count || 0;
       const productLineCount = ab.product_line_count || variantCount;
       return {
         name: ab.display_name,
