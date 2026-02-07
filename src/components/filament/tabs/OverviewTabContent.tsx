@@ -4,6 +4,7 @@ import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BestPricesSection } from '../BestPricesSection';
+import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
 import { 
   Zap, 
   Package, 
@@ -23,6 +24,12 @@ type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 interface OverviewTabContentProps {
   filament: Filament;
   onNavigateToPricing?: () => void;
+  /** Pre-computed price candidates from the unified pricing hook */
+  priceCandidates?: PriceCandidate[];
+  /** Whether the pricing data is still loading */
+  priceCandidatesLoading?: boolean;
+  /** Total retailer count from unified hook */
+  totalRetailerCount?: number;
 }
 
 // Helper function to get ease label
@@ -145,7 +152,7 @@ function inferNotRecommendedWarnings(filament: Filament): Array<{ label: string;
   return warnings;
 }
 
-export function OverviewTabContent({ filament, onNavigateToPricing }: OverviewTabContentProps) {
+export function OverviewTabContent({ filament, onNavigateToPricing, priceCandidates, priceCandidatesLoading, totalRetailerCount }: OverviewTabContentProps) {
   // Build key features list
   const features: Array<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = [];
 
@@ -193,6 +200,9 @@ export function OverviewTabContent({ filament, onNavigateToPricing }: OverviewTa
       <BestPricesSection 
         filamentId={filament.id} 
         onViewAllPrices={onNavigateToPricing}
+        candidates={priceCandidates}
+        candidatesLoading={priceCandidatesLoading}
+        totalRetailerCount={totalRetailerCount}
       />
 
       {/* Product Summary */}

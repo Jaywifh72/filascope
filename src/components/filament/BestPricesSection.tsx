@@ -8,62 +8,61 @@ import { useRegion } from '@/contexts/RegionContext';
 import { REGIONS } from '@/config/regions';
 import type { RegionCode } from '@/types/regional';
 import { cn } from '@/lib/utils';
+import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
 
 interface BestPricesSectionProps {
   filamentId: string;
   onViewAllPrices?: () => void;
   /** Override the retailer count to keep it consistent with the sidebar */
   totalRetailerCount?: number;
+  /** Pre-computed candidates from the unified pricing hook (preferred) */
+  candidates?: PriceCandidate[];
+  /** Whether the unified pricing data is still loading */
+  candidatesLoading?: boolean;
 }
 
-export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCount }: BestPricesSectionProps) {
+export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCount, candidates, candidatesLoading }: BestPricesSectionProps) {
   const { region, currency, formatPrice, convertPrice, hasRates } = useRegion();
   
-  // Determine the user's region currency for listing queries
+  // ── If candidates are provided from parent, use them directly ──
+  // This ensures the BestPricesSection shows the exact same data as the sidebar.
+  const useFallbackFetch = candidates === undefined;
+  
+  // Determine the user's region currency for listing queries (only used in fallback mode)
   const userCurrency = REGIONS[region as RegionCode]?.defaultCurrency || 'USD';
   
-  // Fetch listings for the USER'S region first
-  const { data: localListings, isLoading: localLoading } = useFilamentListings(filamentId, {
-    region: region,
-    currency: userCurrency,
-    includeUnavailable: false,
-  });
-  
-  // Also fetch US listings as fallback (if user is not in US)
+  // Fallback: Fetch listings independently (only when candidates NOT provided)
+  const { data: localListings, isLoading: localLoading } = useFilamentListings(
+    useFallbackFetch ? filamentId : undefined,
+    { region: region, currency: userCurrency, includeUnavailable: false }
+  );
   const isUserUS = region === 'US';
   const { data: usListings, isLoading: usLoading } = useFilamentListings(
-    !isUserUS ? filamentId : undefined,
-    {
-      region: 'US',
-      currency: 'USD',
-      includeUnavailable: false,
-    }
+    useFallbackFetch && !isUserUS ? filamentId : undefined,
+    { region: 'US', currency: 'USD', includeUnavailable: false }
   );
 
-  const isLoading = localLoading || usLoading;
+  const isLoading = useFallbackFetch ? (localLoading || usLoading) : (candidatesLoading ?? false);
 
-  // Merge listings: local first, then US (de-duplicated), with price conversion
-  const mergedListings = React.useMemo(() => {
+  // Merge fallback listings (only used when no candidates prop)
+  const fallbackListings = React.useMemo(() => {
+    if (!useFallbackFetch) return [];
     const local = localListings || [];
     const us = usListings || [];
     const seen = new Set(local.map(l => l.listing_id));
     
-    // Local listings are already in user's currency — use directly
     const result = local.map(l => ({
       ...l,
       displayPrice: l.current_price,
       isConverted: false,
     }));
     
-    // US listings need conversion if user isn't in US
     for (const listing of us) {
       if (seen.has(listing.listing_id)) continue;
       if (!listing.current_price) continue;
-      
       const converted = hasRates 
         ? convertPrice(listing.current_price, 'USD')
         : listing.current_price;
-      
       result.push({
         ...listing,
         displayPrice: converted,
@@ -71,15 +70,33 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
       });
     }
     
-    // Sort by converted price ascending
     result.sort((a, b) => (a.displayPrice ?? Infinity) - (b.displayPrice ?? Infinity));
-    
     return result;
-  }, [localListings, usListings, hasRates, convertPrice, isUserUS]);
+  }, [useFallbackFetch, localListings, usListings, hasRates, convertPrice, isUserUS]);
 
-  // Get top 3 retailers
-  const topRetailers = mergedListings.slice(0, 3);
-  const totalCount = totalRetailerCount ?? mergedListings.length;
+  // Build the display list from either candidates (preferred) or fallback
+  const topRetailers = React.useMemo(() => {
+    if (candidates) {
+      return candidates.slice(0, 3).map((c, idx) => ({
+        key: `${c.name}-${idx}`,
+        name: c.name,
+        url: c.affiliateUrl || c.productUrl,
+        displayPrice: c.spoolPrice,
+        isConverted: c.isConverted,
+        logo: c.retailerLogo || null,
+      }));
+    }
+    return fallbackListings.slice(0, 3).map(r => ({
+      key: r.listing_id,
+      name: r.retailer_name,
+      url: r.affiliate_url || r.product_url,
+      displayPrice: r.displayPrice,
+      isConverted: r.isConverted,
+      logo: r.retailer_logo || null,
+    }));
+  }, [candidates, fallbackListings]);
+
+  const totalCount = totalRetailerCount ?? (candidates ? candidates.length : fallbackListings.length);
 
   if (isLoading) {
     return (
@@ -125,8 +142,8 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
         <div className="space-y-2">
           {topRetailers.map((retailer, idx) => (
             <a
-              key={retailer.listing_id}
-              href={retailer.affiliate_url || retailer.product_url}
+              key={retailer.key}
+              href={retailer.url}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
@@ -138,24 +155,24 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
               )}
             >
               <div className="flex items-center gap-3">
-                {retailer.retailer_logo ? (
+                {retailer.logo ? (
                   <img 
-                    src={retailer.retailer_logo} 
-                    alt={retailer.retailer_name}
+                    src={retailer.logo} 
+                    alt={retailer.name}
                     className="w-8 h-8 object-contain rounded"
                     onError={(e) => {
                       const target = e.currentTarget;
                       target.style.display = 'none';
-                      target.parentElement!.innerHTML = `<div class="w-8 h-8 rounded bg-muted flex items-center justify-center text-xs font-bold">${retailer.retailer_name.charAt(0)}</div>`;
+                      target.parentElement!.innerHTML = `<div class="w-8 h-8 rounded bg-muted flex items-center justify-center text-xs font-bold">${retailer.name.charAt(0)}</div>`;
                     }}
                   />
                 ) : (
                   <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-xs font-bold">
-                    {retailer.retailer_name.charAt(0)}
+                    {retailer.name.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <span className="font-medium text-sm">{retailer.retailer_name}</span>
+                  <span className="font-medium text-sm">{retailer.name}</span>
                   {idx === 0 && (
                     <Badge className="ml-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
                       Best Price
