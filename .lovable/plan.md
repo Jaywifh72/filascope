@@ -1,81 +1,101 @@
 
-# Add HueForge TD Visibility Across Product Views
+# Add Price History Sparkline to Product Detail Sidebar
 
 ## Overview
-Surface the `transmission_distance` (TD) value -- FilaScope's key HueForge differentiator -- across card views, table views, detail pages, and add sort/filter capabilities. Currently only 3 products have TD data, but the infrastructure should be ready as coverage grows.
+Add a compact, interactive price history sparkline to the filament detail sidebar that provides visual proof of price trends. Clicking it scrolls to (or opens) the full price history chart already in the Pricing tab. For products with insufficient data, show a "Price tracking started [date]" message instead.
 
-## Database Status
-- Column: `transmission_distance` (numeric, nullable) on `filaments` table
-- Current coverage: 3 products (all Polymaker, TD = 2.0)
-- No database changes needed -- the column already exists
+## Data Reality Check
+- **669** filaments have price history records (out of ~7,500 total)
+- **659** of those have only **1 data point** (not enough for a sparkline)
+- **10** filaments have 2+ points; **7** have 3+ points
+- The sparkline will show for a small subset now, but the infrastructure scales as weekly scraping continues
 
-## Changes
+This means the "insufficient data" fallback state will be the **most commonly seen** state initially, making it critical to design well.
 
-### 1. FilamentCard -- TD Badge (Card View)
-**File:** `src/components/FilamentCard.tsx`
+## Implementation Approach
 
-- Add `transmission_distance` to the `Filament` interface (line ~53)
-- In **Element 4** (the material + standout feature badges section, around line 660), add a gold/amber "TD X.X" badge when `transmission_distance` is present and non-null
-- Badge styling: `bg-amber-500/15 border-amber-500/30 text-amber-400` with a `Lightbulb` icon (consistent with existing HueForge styling in `CompareActionRow.tsx`)
-- This badge appears alongside the material badge and standout feature, making it a third potential badge
-- Products without TD data show nothing (silent absence)
+### 1. New Component: `SidebarPriceHistory`
+**File:** `src/components/filament/sidebar/SidebarPriceHistory.tsx` (new)
 
-### 2. FilamentTableView -- TD Column (Table View)
-**File:** `src/components/FilamentTableView.tsx`
+A self-contained component that wraps the existing `usePriceHistory` hook and renders one of three states:
 
-- Add `transmission_distance` to the local `Filament` interface
-- Add a "TD" column header after the "Type" column, styled in amber (`text-amber-400`) to signal its premium nature
-- In each row, display `X.X` in mono font with amber coloring when available, or an em-dash when absent
-- Keep the column compact (no tooltip needed in table -- users can click through for details)
+**State A -- Sparkline (3+ data points):**
+- Reuses the existing `PriceSparkline` SVG component (zero additional bundle cost -- pure SVG, no Recharts)
+- Height: 40px (matching existing sparkline sizing), full sidebar width
+- Shows min/max point markers (green dot for low, red for high)
+- Below the sparkline: a single-line summary like "Low: $18.50 | Avg: $21.30 | High: $24.00" in small text
+- The entire sparkline area is clickable -- clicking scrolls to the Pricing tab and opens the full `PriceHistoryChart`
+- Subtle hover effect with "View full history" tooltip
 
-### 3. SpecificationsContent -- TD in Quick Specs (Detail Page)
-**File:** `src/components/filament/sections/SpecificationsContent.tsx`
+**State B -- Early tracking (1-2 data points):**
+- Small text: "Price tracking started [formatted date]" with a clock icon
+- No chart rendered, keeping the sidebar clean
+- Clickable to scroll to the Pricing tab
 
-- Add a "Transmission Distance (TD)" row to the specifications array, positioned near the top (after Material Type)
-- Format as `X.X mm` with a HueForge-ready indicator when TD >= 2.0
-- This supplements the existing TD display in the advanced Specifications tab (`SpecificationsTabContent.tsx` under "Appearance & HueForge")
+**State C -- No data at all:**
+- Renders nothing (silent absence, consistent with project convention for missing premium data like TD badges)
 
-### 4. Sort Option -- Sort by TD Value
-**File:** `src/components/DataInventoryControlBar.tsx`
+### 2. Integrate into `FilamentPurchaseSidebar`
+**File:** `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`
 
-- Add `"td-desc"` to the `SortOption` type union
-- Add a new sort option: `{ value: "td-desc", label: "HueForge TD" }` to the `SORT_OPTIONS` array
+- Import and place `SidebarPriceHistory` between the `PriceUrgencyBadge` block (line ~263) and the primary CTA button (line ~268)
+- Pass `filamentId`, `currentPrice` (using `displayPricePerKg`), and a callback for scrolling to the pricing tab
+- The component uses the user's regional currency via the existing `useRegion` context (already available in the sidebar)
 
-**File:** `src/pages/Finder.tsx`
+### 3. Add Scroll-to-Pricing-Tab Callback
+**File:** `src/pages/FilamentDetail.tsx`
 
-- Add a `case "td-desc"` in the sort switch statement (~line 1463) that sorts by `transmission_distance` descending, with nulls pushed to the bottom
-- This lets HueForge users quickly find filaments with known TD values
+- Add a `handleScrollToPricing` callback that:
+  1. Sets the active tab to "pricing" (the tab containing `PriceHistoryChart`)
+  2. Scrolls the pricing section into view using `scrollIntoView({ behavior: 'smooth' })`
+- Pass this callback down through `FilamentPurchaseSidebar` as a new `onViewPriceHistory` prop
 
-### 5. Filter -- "Has TD Data" Toggle
-**File:** `src/hooks/useSessionFilters.ts`
+### 4. Currency Integration
+- The sparkline component uses `useRegion().formatPrice` for the min/avg/high summary line -- same pattern as the rest of the sidebar
+- The `usePriceHistory` hook returns raw numeric values; formatting happens at the display layer
+- The `currencySymbol` prop on `PriceHistoryChart` (full chart) already receives the user's currency symbol from `PricingTabContent`
 
-- Add `hasTdData: boolean` to `FilamentFiltersState` (default: `false`)
-- Add it to the `hasActiveFilters` check
+## Component Structure
 
-**File:** `src/components/filters/MoreFiltersModal.tsx`
-
-- Add a "Has HueForge TD" checkbox under a new "HueForge" section (or under "Performance & Compatibility")
-- Uses the amber Lightbulb icon for the section header
-
-**File:** `src/pages/Finder.tsx`
-
-- Wire up the new `hasTdData` filter state
-- In the client-side filtering logic, when `hasTdData` is true, exclude filaments where `transmission_distance` is null
-- Add an active filter tag for "HueForge TD" when the filter is on
-
-## Visual Design
-
-The TD badge on cards will look like:
 ```text
-+-------------------------------+
-| [Layers] PLA   [Lightbulb] TD 2.0 |
-+-------------------------------+
+FilamentPurchaseSidebar
+  +-- Material Badge
+  +-- HonestPriceDisplay (price)
+  +-- PriceUrgencyBadge ("Lowest in 6mo")
+  +-- SidebarPriceHistory  <-- NEW
+  |     State A: PriceSparkline + min/avg/high stats
+  |     State B: "Price tracking started Jan 18" 
+  |     State C: (renders nothing)
+  +-- Buy Button (CTA)
+  +-- Compare Button
+  ...
 ```
 
-Amber/gold coloring throughout signals this as premium data -- consistent with the existing `TDValueBadge` component in the compare view.
+## Technical Details
 
-## Technical Notes
-- The Finder page already fetches `select("*")`, so `transmission_distance` is available without query changes
-- The existing `TDValueBadge` component in `CompareActionRow.tsx` can be reused or its styling pattern followed for consistency
-- Only ~0.04% of products currently have TD data, so the badge will be rare and distinctive -- exactly the "premium differentiator" positioning intended
-- No new dependencies required
+**No new dependencies** -- reuses:
+- `PriceSparkline` (existing pure SVG component)
+- `usePriceHistory` (existing hook, fetches from `price_history` table)
+- `useRegion` (existing context for currency formatting)
+
+**Props for `SidebarPriceHistory`:**
+- `filamentId: string`
+- `currentPrice: number | null` -- the resolved regional price per kg
+- `onViewFullHistory?: () => void` -- callback to scroll/switch to pricing tab
+
+**Performance:**
+- The `usePriceHistory` hook is already called by `PriceUrgencyBadge` in the sidebar with the same `filamentId`. Both will share the same Supabase query result via React's render cycle (same effect dependencies). No duplicate network requests.
+- The `PriceSparkline` is pure SVG with `useMemo` -- renders in microseconds.
+
+**Responsive behavior:**
+- Desktop (lg+): Sparkline appears in the 300px sticky sidebar
+- Mobile: Not shown in the mobile bottom bar (too compact). Users can still access the full chart via the Pricing tab. The mobile bar remains focused on price + buy CTA.
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `src/components/filament/sidebar/SidebarPriceHistory.tsx` | New component |
+| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Add SidebarPriceHistory below urgency badge |
+| `src/components/filament/sidebar/index.ts` | Export new component (if needed) |
+| `src/pages/FilamentDetail.tsx` | Add `onViewPriceHistory` callback, pass to sidebar |
