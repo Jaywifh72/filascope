@@ -1,163 +1,81 @@
 
+# Add HueForge TD Visibility Across Product Views
 
-# Fix Pricing Inconsistency Across All Views
+## Overview
+Surface the `transmission_distance` (TD) value -- FilaScope's key HueForge differentiator -- across card views, table views, detail pages, and add sort/filter capabilities. Currently only 3 products have TD data, but the infrastructure should be ready as coverage grows.
 
-## Problem Summary
+## Database Status
+- Column: `transmission_distance` (numeric, nullable) on `filaments` table
+- Current coverage: 3 products (all Polymaker, TD = 2.0)
+- No database changes needed -- the column already exists
 
-The same product shows wildly different prices across card, table, detail sidebar, Best Prices section, and sticky bar views. The root cause is that **6 different price calculation paths** exist independently, each with their own data source, conversion logic, and formatting.
+## Changes
 
-## Root Causes Identified
+### 1. FilamentCard -- TD Badge (Card View)
+**File:** `src/components/FilamentCard.tsx`
 
-### 1. Six Independent Price Pipelines
-Each view computes prices differently:
+- Add `transmission_distance` to the `Filament` interface (line ~53)
+- In **Element 4** (the material + standout feature badges section, around line 660), add a gold/amber "TD X.X" badge when `transmission_distance` is present and non-null
+- Badge styling: `bg-amber-500/15 border-amber-500/30 text-amber-400` with a `Lightbulb` icon (consistent with existing HueForge styling in `CompareActionRow.tsx`)
+- This badge appears alongside the material badge and standout feature, making it a third potential badge
+- Products without TD data show nothing (silent absence)
 
-| View | Price Source | Conversion Method | Per-Kg Calculation |
-|------|------------|-------------------|-------------------|
-| Card | `useRegionalPrice` + `useCurrentPrice` (live) | `useRegion().convertPrice` | Inline: `price / (weightKg * packQty)` |
-| Table | Inline `getRegionalPrice()` function | `useRegion().convertPrice` | Inline: `price / (weightKg * packQty)` |
-| Detail Sidebar | `useUnifiedRegionalPricing` + `useFilamentStorePricing` + `useCurrentPrice` (live again!) | Mix of `useRegion` and manual conversion | Recalculates from `displayPrice / effectiveWeightKg` |
-| Best Prices | `useFilamentListings` hardcoded to US/USD | `useCurrency().formatRegionalPrice` (no actual conversion!) | Not computed (shows spool price only) |
-| Sticky Bar | Props from parent (sidebarPricePerKg) | `useCurrency().formatPrice` or `formatRegionalPrice` | Received as prop |
-| Mobile Bar | Props from parent (sidebarPricePerKg) | Passed through | Received as prop |
+### 2. FilamentTableView -- TD Column (Table View)
+**File:** `src/components/FilamentTableView.tsx`
 
-### 2. Two Competing Currency Systems
-- **`useCurrency()`** (older): Uses hardcoded fallback rates, has `formatPrice` that converts from USD, and `formatRegionalPrice` that skips conversion entirely.
-- **`useRegion()`** (newer): Uses live exchange rates from the database, has `formatPrice` with `showApproximate` option and proper conversion.
+- Add `transmission_distance` to the local `Filament` interface
+- Add a "TD" column header after the "Type" column, styled in amber (`text-amber-400`) to signal its premium nature
+- In each row, display `X.X` in mono font with amber coloring when available, or an em-dash when absent
+- Keep the column compact (no tooltip needed in table -- users can click through for details)
 
-Components mix these two systems, causing different numbers.
+### 3. SpecificationsContent -- TD in Quick Specs (Detail Page)
+**File:** `src/components/filament/sections/SpecificationsContent.tsx`
 
-### 3. BestPricesSection is Hardcoded to USD
-The `BestPricesSection` component always fetches listings with `region: 'US'` and `currency: 'USD'`, then formats with `useCurrency().formatRegionalPrice` which simply prepends the local currency symbol without converting the value. A Canadian user sees "$54.99" (USD) with no conversion.
+- Add a "Transmission Distance (TD)" row to the specifications array, positioned near the top (after Material Type)
+- Format as `X.X mm` with a HueForge-ready indicator when TD >= 2.0
+- This supplements the existing TD display in the advanced Specifications tab (`SpecificationsTabContent.tsx` under "Appearance & HueForge")
 
-### 4. Sidebar Does Its Own Live Price Fetch
-The sidebar (`FilamentPurchaseSidebar`) receives a `pricePerKg` from the parent but then runs its own `useCurrentPrice` call (line 106), potentially getting a different price from the live scraper, then recalculates per-kg price using different weight data.
+### 4. Sort Option -- Sort by TD Value
+**File:** `src/components/DataInventoryControlBar.tsx`
 
-## Implementation Plan
+- Add `"td-desc"` to the `SortOption` type union
+- Add a new sort option: `{ value: "td-desc", label: "HueForge TD" }` to the `SORT_OPTIONS` array
 
-### Phase 1: Create a Single Price Resolution Utility
+**File:** `src/pages/Finder.tsx`
 
-Create a new shared utility `src/lib/resolveFilamentPrice.ts` that consolidates all price resolution logic into one deterministic function:
+- Add a `case "td-desc"` in the sort switch statement (~line 1463) that sorts by `transmission_distance` descending, with nulls pushed to the bottom
+- This lets HueForge users quickly find filaments with known TD values
 
+### 5. Filter -- "Has TD Data" Toggle
+**File:** `src/hooks/useSessionFilters.ts`
+
+- Add `hasTdData: boolean` to `FilamentFiltersState` (default: `false`)
+- Add it to the `hasActiveFilters` check
+
+**File:** `src/components/filters/MoreFiltersModal.tsx`
+
+- Add a "Has HueForge TD" checkbox under a new "HueForge" section (or under "Performance & Compatibility")
+- Uses the amber Lightbulb icon for the section header
+
+**File:** `src/pages/Finder.tsx`
+
+- Wire up the new `hasTdData` filter state
+- In the client-side filtering logic, when `hasTdData` is true, exclude filaments where `transmission_distance` is null
+- Add an active filter tag for "HueForge TD" when the filter is on
+
+## Visual Design
+
+The TD badge on cards will look like:
 ```text
-resolveFilamentPrice(filament, userCurrency, exchangeRates)
-  -> { spoolPrice, pricePerKg, currency, isConverted, source, storeName }
++-------------------------------+
+| [Layers] PLA   [Lightbulb] TD 2.0 |
++-------------------------------+
 ```
 
-**Resolution priority:**
-1. Direct regional price column (e.g., `price_cad` for CAD users) -- native price, no conversion
-2. Nearby region conversion (e.g., `price_eur` converted to CHF)
-3. USD (`variant_price`) converted to user's currency
-4. null (no price available)
+Amber/gold coloring throughout signals this as premium data -- consistent with the existing `TDValueBadge` component in the compare view.
 
-**Per-kg calculation:**
-```text
-pricePerKg = spoolPrice / ((net_weight_g / 1000) * pack_quantity)
-```
-
-This function is pure (no hooks, no side effects) so it can be used in any context.
-
-### Phase 2: Create a Shared Hook Wrapper
-
-Create `src/hooks/useResolvedPrice.ts` -- a thin hook that calls the utility with data from `useRegion()`:
-
-```text
-useResolvedPrice(filament) -> {
-  spoolPrice, pricePerKg, formattedSpoolPrice, formattedPricePerKg,
-  isConverted, source, currency
-}
-```
-
-This replaces the inline price calculations in card, table, and detail views.
-
-### Phase 3: Fix Each View to Use the Shared Source
-
-**3a. FilamentCard.tsx**
-- Replace the inline `effectivePrice` / `pricePerKg` calculation with `useResolvedPrice(filament)`
-- Remove the `useCurrentPrice` live-scraping call (this is what causes the sidebar to show different prices; live scraping is unreliable and adds latency)
-- Keep `useRegionalPrice` only for URL resolution (not price)
-
-**3b. FilamentTableView.tsx**
-- Replace the inline `getRegionalPrice` function with `useResolvedPrice` (called per-row via the shared utility, since the hook can't be called in a loop)
-- Instead, use the pure `resolveFilamentPrice()` utility directly inside the `.map()` loop with the region context values passed in
-
-**3c. FilamentDetail.tsx (Sidebar Price)**
-- Replace the complex `sidebarBest` logic with the same `resolveFilamentPrice` for the base product price
-- If `useFilamentStorePricing` returns a better local store price, use that -- but convert it through the same utility for consistency
-- Pass the resolved price to `FilamentPurchaseSidebar` and mark it as final (no further recalculation)
-
-**3d. FilamentPurchaseSidebar.tsx**
-- Remove the independent `useCurrentPrice` call (line 106) -- the sidebar should display whatever the parent tells it, not re-fetch
-- Use the `pricePerKg` prop directly as the display value
-- Format using `useRegion().formatPrice` exclusively (not `useCurrency`)
-
-**3e. BestPricesSection.tsx** (Critical fix)
-- Change from hardcoded `region: 'US', currency: 'USD'` to use the user's actual region and currency from `useRegion()`
-- Replace `useCurrency().formatRegionalPrice` with `useRegion().formatPrice`
-- If prices come back in a different currency than the user's, convert them using `useRegion().convertPrice`
-
-**3f. StickyBuyBar.tsx**
-- Replace `useCurrency()` formatting with `useRegion().formatPrice`
-- Accept `isConverted` as a prop and pass `showApproximate: isConverted` to the formatter
-
-### Phase 4: Deprecate useCurrency for Price Display
-
-- Add a deprecation comment to `useCurrency.tsx` stating all price formatting should use `useRegion().formatPrice`
-- The `useCurrency` hook has hardcoded fallback rates that diverge from the live DB rates in `RegionContext`, causing subtle differences
-
-### Phase 5: Document the Price/True Cost Distinction
-
-Add inline documentation clarifying:
-- **"Price"** column = spool price (what you pay for one spool), calculated as `resolvedPrice / pack_quantity`
-- **"True Cost"** column = per-kg normalized price, calculated as `resolvedPrice / ((net_weight_g / 1000) * pack_quantity)`
-
-## Technical Details
-
-### resolveFilamentPrice Utility Signature
-
-```text
-Input:
-  filament: { variant_price, price_cad, price_eur, price_gbp, price_aud, price_jpy,
-              net_weight_g, pack_quantity }
-  userCurrency: CurrencyCode
-  convertFromUSD: (amount: number) => number | null
-  hasRates: boolean
-
-Output:
-  {
-    spoolPrice: number | null      -- total price for the package
-    pricePerSpool: number | null   -- price per individual spool (spoolPrice / packQty)
-    pricePerKg: number | null      -- normalized per-kg cost
-    currency: CurrencyCode
-    isConverted: boolean           -- true if price was converted (show ~ prefix)
-    source: 'regional' | 'converted' | 'unavailable'
-  }
-```
-
-### Column-to-Currency Mapping (reused from existing code)
-```text
-USD -> variant_price
-CAD -> price_cad
-EUR -> price_eur
-GBP -> price_gbp
-AUD -> price_aud
-JPY -> price_jpy
-```
-
-### Files to Create
-- `src/lib/resolveFilamentPrice.ts` -- pure utility function
-- `src/hooks/useResolvedPrice.ts` -- React hook wrapper
-
-### Files to Modify
-- `src/components/FilamentCard.tsx` -- use shared price, remove live fetch
-- `src/components/FilamentTableView.tsx` -- use shared utility
-- `src/pages/FilamentDetail.tsx` -- simplify sidebarBest, pass resolved price
-- `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` -- remove independent live fetch
-- `src/components/filament/BestPricesSection.tsx` -- use user's region, convert prices
-- `src/components/filament/StickyBuyBar.tsx` -- use `useRegion` formatting
-- `src/hooks/useCurrency.tsx` -- add deprecation notice
-
-### Risk Mitigation
-- The `useCurrentPrice` live-scraping hook will be removed from card and sidebar views. This means prices shown are from the database only. This is actually more reliable since live scraping often returns wrong prices due to geo-redirects (documented in the regional-scraper-constraints memory).
-- The `useFilamentStorePricing` hook (RPC-based) will remain as an additional price source on the detail page, but its output will be normalized through the same formatting pipeline.
-- Exchange rate loading guards (`hasRates`) will be preserved to prevent 1:1 conversion display.
-
+## Technical Notes
+- The Finder page already fetches `select("*")`, so `transmission_distance` is available without query changes
+- The existing `TDValueBadge` component in `CompareActionRow.tsx` can be reused or its styling pattern followed for consistency
+- Only ~0.04% of products currently have TD data, so the badge will be rare and distinctive -- exactly the "premium differentiator" positioning intended
+- No new dependencies required
