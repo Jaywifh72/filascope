@@ -194,12 +194,10 @@ export const MATERIAL_ALIASES: Record<string, string> = {
   'PET-G': 'PETG',
   'PETG Iridescent': 'PETG',
 
-  // High-performance aliases
+  // High-performance aliases (PPS AM230, PPS-GF already defined above at ~165)
   'ESD-PEI': 'PEI 1010',
   'PEI-CF': 'PEI 1010',
   'PPS-CF': 'PPS',
-  'PPS AM230': 'PPS',
-  'PPS-GF': 'PPS',
   'PEKK-A': 'PEKK',
   'PEKK-CF': 'PEKK',
 
@@ -212,17 +210,13 @@ export const MATERIAL_ALIASES: Record<string, string> = {
   'PC Pro': 'PC',
   'ezPC': 'PC',
 
-  // Nylon aliases
+  // Nylon aliases (PPA-CF-Core already defined above at ~161)
   'ESD-PA12': 'PA12',
   'PPA-CF': 'PPA',
-  'PPA-CF-Core': 'PPA',
 
-  // Copolyester aliases
+  // Copolyester aliases (PCTG Premium/CF10/GF10 already defined above at ~70-72)
   'CoPoly-CF': 'CoPoly-nGen',
   'Pro PCTG': 'PCTG',
-  'PCTG Premium': 'PCTG',
-  'PCTG CF10': 'PCTG',
-  'PCTG GF10': 'PCTG',
 
   // Specialty aliases
   'SimuBone': 'PLA',
