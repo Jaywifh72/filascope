@@ -17,7 +17,8 @@ export type SortOption =
   | "price-desc"
   | "strength-desc"
   | "heat-desc"
-  | "print-desc";
+  | "print-desc"
+  | "td-desc";
 
 interface DataInventoryControlBarProps {
   sortBy: SortOption;
@@ -35,6 +36,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "strength-desc", label: "Strength" },
   { value: "heat-desc", label: "Heat Resistance" },
   { value: "print-desc", label: "Printability" },
+  { value: "td-desc", label: "HueForge TD" },
 ];
 
 export function DataInventoryControlBar({ 

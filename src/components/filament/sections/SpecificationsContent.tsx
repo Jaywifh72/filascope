@@ -19,6 +19,7 @@ interface SpecItem {
 export function SpecificationsContent({ filament }: SpecificationsContentProps) {
   const specifications: SpecItem[] = [
     { label: 'Material Type', value: filament.material },
+    { label: 'Transmission Distance (TD)', value: filament.transmission_distance ? `${filament.transmission_distance} mm${filament.transmission_distance >= 2.0 ? ' — HueForge ready' : ''}` : null },
     { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : null, validation: validateDiameter(filament.diameter_nominal_mm) },
     { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null, validation: validateSpec('net_weight', filament.net_weight_g) },
     { label: 'Density', value: filament.density_g_cm3 ? `${filament.density_g_cm3} g/cm³` : null },

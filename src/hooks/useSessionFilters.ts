@@ -31,6 +31,8 @@ export interface FilamentFiltersState {
   selectedColorFamilies: string[];
   hexSearch: string;
   colorTolerance: number;
+  // HueForge
+  hasTdData: boolean;
 }
 
 const defaultFilters: FilamentFiltersState = {
@@ -62,6 +64,8 @@ const defaultFilters: FilamentFiltersState = {
   selectedColorFamilies: [],
   hexSearch: "",
   colorTolerance: 30,
+  // HueForge
+  hasTdData: false,
 };
 
 function getStoredFilters(): FilamentFiltersState | null {
@@ -149,7 +153,9 @@ export function useSessionFilters(urlHexSearch?: string | null, urlColorToleranc
     filters.priceRange[0] !== 0 ||
     filters.priceRange[1] !== 100 ||
     filters.selectedColorFamilies.length > 0 ||
-    filters.hexSearch !== "";
+    filters.hexSearch !== "" ||
+    // HueForge
+    filters.hasTdData;
 
   return {
     filters,

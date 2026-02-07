@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
-import { CheckCircle, XCircle, TreeDeciduous, Layers, Info } from "lucide-react";
+import { CheckCircle, XCircle, TreeDeciduous, Layers, Info, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 import { resolveFilamentPrice, type FilamentForPricing } from "@/lib/resolveFilamentPrice";
@@ -48,6 +48,7 @@ interface Filament {
   high_speed_capable?: boolean | null;
   finish_type?: string | null;
   last_scraped_at?: string | null;
+  transmission_distance?: number | null;
 }
 
 interface FilamentTableViewProps {
@@ -96,6 +97,7 @@ export function FilamentTableView({
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Brand</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Product</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
+            <th className="py-3 px-3 text-xs font-semibold text-amber-400 uppercase tracking-wide text-center">TD</th>
             <th className="py-3 px-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-right">True Cost</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Price</th>
             <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Stock</th>
@@ -228,6 +230,15 @@ export function FilamentTableView({
                       </Badge>
                     )}
                   </div>
+                </td>
+                <td className="py-3 px-3 text-center">
+                  {filament.transmission_distance != null ? (
+                    <span className="font-mono text-sm font-medium text-amber-400">
+                      {filament.transmission_distance.toFixed(1)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </td>
                 <td className="py-3 px-3 text-right">
                   <span className="font-mono text-sm font-bold text-orange-400">

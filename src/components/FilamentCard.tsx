@@ -15,7 +15,8 @@ import {
   Plus,
   MapPin,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Lightbulb
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -94,6 +95,8 @@ interface Filament {
   last_scraped_at?: string | null;
   price_confidence?: string | null;
   price_source?: string | null;
+  // HueForge TD
+  transmission_distance?: number | null;
 }
 
 // Variant indicator data for grouped products
@@ -680,6 +683,14 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           >
             <standoutFeature.icon className="w-3.5 h-3.5" />
             <span className="text-[13px] font-medium">{standoutFeature.label}</span>
+          </div>
+        )}
+        
+        {/* HueForge TD Badge (amber/gold premium indicator) */}
+        {filament.transmission_distance != null && (
+          <div className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 border bg-amber-500/15 border-amber-500/30 text-amber-400">
+            <Lightbulb className="w-3.5 h-3.5" />
+            <span className="text-[13px] font-medium">TD {filament.transmission_distance}</span>
           </div>
         )}
       </div>

@@ -206,6 +206,8 @@ const Finder = () => {
     selectedColorFamilies,
     hexSearch,
     colorTolerance,
+    // HueForge
+    hasTdData,
   } = filters;
   
   // Setter wrappers for convenience
@@ -237,6 +239,7 @@ const Finder = () => {
   const setSelectedColorFamilies = (v: string[]) => updateFilter("selectedColorFamilies", v);
   const setHexSearch = (v: string) => updateFilter("hexSearch", v);
   const setColorTolerance = (v: number) => updateFilter("colorTolerance", v);
+  const setHasTdData = (v: boolean) => updateFilter("hasTdData", v);
   
   // Local UI state (not persisted)
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -319,7 +322,7 @@ const Finder = () => {
   // Reset display count when filters change
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
-  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly]);
+  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, hasTdData]);
   
   // Save pagination state for scroll restoration
   useEffect(() => {
@@ -1305,6 +1308,9 @@ const Finder = () => {
     // Apply large spools filter (1kg+)
     if (largeSpools && (!f.net_weight_g || f.net_weight_g < 1000)) return false;
     
+    // Apply HueForge TD filter
+    if (hasTdData && f.transmission_distance == null) return false;
+    
     // Apply color family filter (OR logic - match any selected family)
     if (selectedColorFamilies.length > 0) {
       // Find which color families this filament's color_hex matches
@@ -1489,13 +1495,18 @@ const Finder = () => {
         return (b.tg_c || b.nozzle_temp_max_c || 0) - (a.tg_c || a.nozzle_temp_max_c || 0);
       case "print-desc":
         return (b.printability_index || 0) - (a.printability_index || 0);
+      case "td-desc": {
+        const tdA = a.transmission_distance ?? -1;
+        const tdB = b.transmission_distance ?? -1;
+        return tdB - tdA;
+      }
       default: {
         const stockDiff = stockCompare(isInStock(a), isInStock(b));
         if (stockDiff !== 0) return stockDiff;
         return getScore(b) - getScore(a);
       }
     }
-  }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
+  }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, hasTdData, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
   // Group filaments by product before pagination
   const groupedFilaments = useMemo(() => {
@@ -1520,11 +1531,12 @@ const Finder = () => {
       highSpeed || matte || silk || metallic || sparkle || translucent ||
       carbonFiber || glassFiber || woodFilled || glow || 
       brassOnly || amsOnly ||
+      hasTdData ||
       selectedColorFamilies.length > 0 ||
       hexSearch !== "" ||
       hasColorSearch
     );
-  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, selectedColorFamilies, hexSearch]);
+  }, [searchTerm, selectedMaterials, selectedBrands, priceRange, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, hasTdData, selectedColorFamilies, hexSearch]);
 
   // Clear all filters function
   const handleClearAllFilters = () => {
@@ -1633,7 +1645,9 @@ const Finder = () => {
           (brassOnly ? 1 : 0) +
           (amsOnly ? 1 : 0) +
           // Spool Size
-          (largeSpools ? 1 : 0)
+          (largeSpools ? 1 : 0) +
+          // HueForge
+          (hasTdData ? 1 : 0)
         }
         sortBy={sortBy}
         onSortChange={setSortBy}
@@ -1668,6 +1682,7 @@ const Finder = () => {
               ...(largeSpools ? [{ id: 'largeSpools', label: 'Large Spools', type: 'property' as const }] : []),
               ...(brassOnly ? [{ id: 'brassOnly', label: 'Brass Safe', type: 'property' as const }] : []),
               ...(amsOnly ? [{ id: 'amsOnly', label: 'AMS Compatible', type: 'property' as const }] : []),
+              ...(hasTdData ? [{ id: 'hasTdData', label: 'HueForge TD', type: 'property' as const }] : []),
               ...selectedColorFamilies.map(c => ({ id: c, label: c, type: 'color' as const })),
             ]}
             onRemove={(id, type) => {
@@ -1697,6 +1712,7 @@ const Finder = () => {
                   case 'largeSpools': setLargeSpools(false); break;
                   case 'brassOnly': setBrassOnly(false); break;
                   case 'amsOnly': setAmsOnly(false); break;
+                  case 'hasTdData': setHasTdData(false); break;
                 }
               }
             }}
@@ -1717,6 +1733,7 @@ const Finder = () => {
               setLargeSpools(false);
               setBrassOnly(false);
               setAmsOnly(false);
+              setHasTdData(false);
               setSelectedColorFamilies([]);
               setHexSearch("");
               setSearchTerm("");
@@ -1775,6 +1792,9 @@ const Finder = () => {
         // Color
         selectedColorFamilies={selectedColorFamilies}
         onColorFamiliesChange={setSelectedColorFamilies}
+        // HueForge
+        hasTdData={hasTdData}
+        onHasTdDataChange={setHasTdData}
         // Filter counts
         filterCounts={filterCounts}
       />
