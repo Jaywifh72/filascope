@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1398,6 +1399,11 @@ const MaterialCompare = () => {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>Material Knowledge Base — Filament Reference & Comparison | FilaScope</title>
+        <meta name="description" content="Compare 3D printing material properties side by side. Explore strength, flexibility, temperature resistance, and printability across PLA, PETG, ABS, TPU, and more." />
+      </Helmet>
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -1439,6 +1445,7 @@ const MaterialCompare = () => {
         </Tabs>
       </div>
     </div>
+    </>
   );
 };
 

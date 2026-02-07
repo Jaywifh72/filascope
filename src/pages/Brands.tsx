@@ -376,7 +376,7 @@ const Brands = () => {
     <>
       <Helmet>
         <title>Filament Brand Directory — Trusted 3D Printing Brands | FilaScope</title>
-        <meta name="description" content="Browse and compare 3D printing filament brands. Find trusted manufacturers with verified products, live pricing, and material variety." />
+        <meta name="description" content="Explore 48 3D printing filament brands. Compare product lines, pricing, and availability across regions." />
       </Helmet>
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}

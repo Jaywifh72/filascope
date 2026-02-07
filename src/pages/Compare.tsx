@@ -404,7 +404,7 @@ const Compare = () => {
     <>
       <Helmet>
         <title>Material Knowledge Base — Filament Reference & Comparison | FilaScope</title>
-        <meta name="description" content="Compare 3D printing filaments side-by-side. Explore material properties, specs, and pricing with our interactive comparison tool." />
+        <meta name="description" content="Compare 3D printing filaments side by side. Analyze material properties, pricing, scores, and specifications with our interactive comparison tool." />
       </Helmet>
       <div className="min-h-screen bg-background relative">
       {/* Subtle background pattern matching site design */}

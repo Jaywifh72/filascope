@@ -35,6 +35,7 @@ import { isAMSCompatible } from "@/lib/amsCompatibility";
 import { useCompare } from "@/hooks/useCompare";
 import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
+import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/HeroSection";
 import { WebSiteSchema, OrganizationSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
@@ -1585,6 +1586,10 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
+        <meta name="description" content="Compare 960+ 3D printer filaments with specs, pricing from 15+ retailers, and transmissivity data. Find the perfect material for your project." />
+      </Helmet>
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />
       <OrganizationSchema />

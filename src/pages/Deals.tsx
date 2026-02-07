@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe } from "lucide-react";
@@ -9,6 +10,7 @@ import { DealNotificationSignup } from "@/components/deals/DealNotificationSignu
 import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
+import { ItemListSchema } from "@/components/seo";
 
 const Deals = () => {
   const {
@@ -44,12 +46,45 @@ const Deals = () => {
     priceRange[1] < maxPrice ||
     showLocalOnly;
 
+  // Compute max discount for dynamic meta description
+  const maxDiscount = useMemo(() => {
+    let max = 0;
+    for (const group of groupedDeals) {
+      const discount = group.bestDiscount ?? 0;
+      if (discount > max && discount <= 60) max = discount;
+    }
+    return Math.round(max);
+  }, [groupedDeals]);
+
+  // Dynamic meta description
+  const metaDescription = totalDeals > 0
+    ? `${totalDeals} active filament deals with discounts up to ${maxDiscount}% off from top 3D printing brands. Updated daily.`
+    : "Find the best deals on 3D printer filaments. Compare discounts across brands and materials, updated daily.";
+
+  // Build deal items for ItemListSchema
+  const dealListItems = useMemo(() => {
+    return groupedDeals.slice(0, 20).map((group, index) => ({
+      name: group.groupKey,
+      url: `https://filascope.com/filament/${group.variants[0]?.id || ''}`,
+      description: `${Math.round(group.bestDiscount ?? 0)}% off`,
+      position: index + 1,
+    }));
+  }, [groupedDeals]);
+
   return (
     <>
       <Helmet>
         <title>Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope</title>
-        <meta name="description" content="Find the best deals on 3D printer filaments. Compare discounts across brands and materials, updated daily." />
+        <meta name="description" content={metaDescription} />
       </Helmet>
+      {dealListItems.length > 0 && (
+        <ItemListSchema
+          name="Today's 3D Printer Filament Deals"
+          description={metaDescription}
+          items={dealListItems}
+          itemListOrder="Descending"
+        />
+      )}
       <div className="min-h-screen flex flex-col">
       <section className="flex-1" role="region" aria-label="Deals listings">
         {/* Hero Section */}
