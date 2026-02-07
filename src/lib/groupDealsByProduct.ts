@@ -14,6 +14,8 @@ export interface GroupedDeal {
   storeRegion: string;
   regionFlag: string;
   isLocal: boolean;
+  lastScrapedAt: string | null;
+  fallbackImages: string[];
 }
 
 export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
@@ -47,6 +49,21 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
         .filter((hex): hex is string => !!hex)
     )];
     
+    // Collect fallback images from variants (excluding the representative's image)
+    const fallbackImages = [...new Set(
+      variants
+        .map(v => v.featured_image)
+        .filter((img): img is string => !!img && img !== representative.featured_image)
+    )];
+
+    // Find the most recent last_scraped_at from all variants
+    const lastScrapedAt = variants.reduce<string | null>((latest, v) => {
+      const ts = v.last_scraped_at || null;
+      if (!ts) return latest;
+      if (!latest) return ts;
+      return ts > latest ? ts : latest;
+    }, null);
+
     return {
       groupKey,
       baseName: getBaseProductName(representative.product_title),
@@ -63,6 +80,8 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
       storeRegion: representative.storeRegion,
       regionFlag: representative.regionFlag,
       isLocal: representative.isLocal,
+      lastScrapedAt,
+      fallbackImages,
     };
   }).sort((a, b) => b.bestDiscount - a.bestDiscount);
 }
