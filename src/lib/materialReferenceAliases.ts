@@ -171,4 +171,32 @@ export const MATERIAL_ALIASES: Record<string, string> = {
   'HTS': 'Support',
   'PC PTFE': 'PC',
   'FR-PC-ABS': 'PC-ABS',
+
+  // PLA variant aliases (hierarchy → reference data keys)
+  'PLA+ 2.0': 'PLA+',
+  'PLA-Basic': 'PLA',
+  'PLA-Blend': 'PLA',
+  'PLA-Meta': 'PLA',
+  'PLA-Tough': 'PLA+',
+  'Standard PLA+': 'PLA+',
+  'EasyPrint PLA': 'PLA',
+  'Silk PLA+': 'PLA Silk',
+  'PLA Magic Silk': 'PLA Silk',
+  'PLA Silk Rainbow': 'PLA Silk',
+  'PLA Matte Dual-Color': 'PLA-Matte',
+  'PLA Thermoactive': 'PLA-Temp',
+  'PLA-Iridescent': 'PLA Silk',
+  'PLA-UV': 'PLA-Temp',
+  'LW-PLA-HT': 'LW-PLA',
+  'HTPLA-CF': 'HTPLA',
+
+  // PETG variant aliases
+  'PET-G': 'PETG',
+  'PETG Iridescent': 'PETG',
+
+  // High-performance aliases
+  'ESD-PEI': 'PEI 1010',
+
+  // Flexible aliases not already present
+  'PEBA Air': 'PEBA',
 };

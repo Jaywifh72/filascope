@@ -1,5 +1,6 @@
 // Comprehensive material reference data for the encyclopedia
 import { EXTENDED_MATERIAL_REFERENCE_DATA } from './materialReferenceDataExtended';
+import { EXTENDED_MATERIAL_REFERENCE_DATA_2 } from './materialReferenceDataExtended2';
 import { MATERIAL_ALIASES } from './materialReferenceAliases';
 
 
@@ -14806,52 +14807,60 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
   },
 };
 
+// Unified lookup across all data sources
+const ALL_REFERENCE_SOURCES = [
+  MATERIAL_REFERENCE_DATA,
+  EXTENDED_MATERIAL_REFERENCE_DATA,
+  EXTENDED_MATERIAL_REFERENCE_DATA_2,
+];
+
+function findInSources(key: string): MaterialReferenceInfo | undefined {
+  for (const source of ALL_REFERENCE_SOURCES) {
+    if (source[key]) return source[key];
+  }
+  return undefined;
+}
+
 export function getMaterialReference(material: string): MaterialReferenceInfo | undefined {
   if (!material) return undefined;
   
-  // 1. Try direct lookup
-  if (MATERIAL_REFERENCE_DATA[material]) {
-    return MATERIAL_REFERENCE_DATA[material];
-  }
+  // 1. Try direct lookup across all sources
+  const direct = findInSources(material);
+  if (direct) return direct;
   
-  // 2. Try extended data lookup
-  if (EXTENDED_MATERIAL_REFERENCE_DATA[material]) {
-    return EXTENDED_MATERIAL_REFERENCE_DATA[material];
-  }
-  
-  // 3. Try alias lookup
+  // 2. Try alias lookup
   const alias = MATERIAL_ALIASES[material];
   if (alias) {
-    if (MATERIAL_REFERENCE_DATA[alias]) return MATERIAL_REFERENCE_DATA[alias];
-    if (EXTENDED_MATERIAL_REFERENCE_DATA[alias]) return EXTENDED_MATERIAL_REFERENCE_DATA[alias];
+    const aliased = findInSources(alias);
+    if (aliased) return aliased;
   }
   
-  // 4. Try case-insensitive lookup
+  // 3. Try case-insensitive lookup
   const lowerMaterial = material.toLowerCase();
   
-  // Check main data keys
-  const mainKey = Object.keys(MATERIAL_REFERENCE_DATA).find(k => k.toLowerCase() === lowerMaterial);
-  if (mainKey) return MATERIAL_REFERENCE_DATA[mainKey];
+  for (const source of ALL_REFERENCE_SOURCES) {
+    const key = Object.keys(source).find(k => k.toLowerCase() === lowerMaterial);
+    if (key) return source[key];
+  }
   
-  // Check extended data keys
-  const extendedKey = Object.keys(EXTENDED_MATERIAL_REFERENCE_DATA).find(k => k.toLowerCase() === lowerMaterial);
-  if (extendedKey) return EXTENDED_MATERIAL_REFERENCE_DATA[extendedKey];
-  
-  // Check alias keys
+  // 4. Check alias keys case-insensitively
   const aliasKey = Object.keys(MATERIAL_ALIASES).find(k => k.toLowerCase() === lowerMaterial);
   if (aliasKey) {
     const canonicalName = MATERIAL_ALIASES[aliasKey];
-    if (MATERIAL_REFERENCE_DATA[canonicalName]) return MATERIAL_REFERENCE_DATA[canonicalName];
-    if (EXTENDED_MATERIAL_REFERENCE_DATA[canonicalName]) return EXTENDED_MATERIAL_REFERENCE_DATA[canonicalName];
+    const result = findInSources(canonicalName);
+    if (result) return result;
   }
 
   return undefined;
 }
 
 export function getAllMaterialsWithReference(): string[] {
-  return [
-    ...Object.keys(MATERIAL_REFERENCE_DATA),
-    ...Object.keys(EXTENDED_MATERIAL_REFERENCE_DATA)
-  ].sort();
+  const allKeys = new Set<string>();
+  for (const source of ALL_REFERENCE_SOURCES) {
+    for (const key of Object.keys(source)) {
+      allKeys.add(key);
+    }
+  }
+  return Array.from(allKeys).sort();
 }
 
