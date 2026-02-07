@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Palette, Layers, Package, Cpu, ExternalLink, TrendingUp, TrendingDown, 
-  CheckCircle2, XCircle, ChevronDown, Thermometer, AlertCircle
+  CheckCircle2, XCircle, ChevronDown, Thermometer, AlertCircle, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -282,15 +283,18 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {materials.map((material) => (
-                    <span 
+                    <Link 
                       key={material}
+                      to={`/?material=${encodeURIComponent(material)}`}
                       className={cn(
-                        "px-3 py-1.5 text-sm font-medium rounded-full border",
+                        "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-200",
+                        "hover:scale-105 hover:shadow-md cursor-pointer",
                         getCategoryColor(category)
                       )}
                     >
                       {material}
-                    </span>
+                      <ArrowRight className="w-3 h-3 opacity-60" />
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -336,17 +340,20 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
             <p className="text-sm text-muted-foreground mb-3">Materials printable at this temperature:</p>
             <div className="flex flex-wrap gap-2">
               {materialTempHints.map((hint) => (
-                <span 
+                <Link 
                   key={hint.material}
+                  to={`/?material=${encodeURIComponent(hint.material)}`}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border border-border/40 bg-muted/30",
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border border-border/40 bg-muted/30 transition-all duration-200",
+                    "hover:scale-105 hover:shadow-md cursor-pointer",
                     hint.color
                   )}
                 >
                   <CheckCircle2 className="w-3 h-3" />
                   {hint.material}
                   <span className="text-muted-foreground/60">({hint.temp}°C)</span>
-                </span>
+                  <ArrowRight className="w-3 h-3 opacity-60" />
+                </Link>
               ))}
             </div>
           </div>
