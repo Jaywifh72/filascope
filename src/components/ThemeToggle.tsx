@@ -1,0 +1,26 @@
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+export function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+
+  return (
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+        <button
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute top-2 left-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Toggle theme</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-sm">
+        {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+      </TooltipContent>
+    </Tooltip>
+  );
+}

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -119,11 +120,11 @@ const Navbar = () => {
         className={cn(
           "relative py-2 px-3 transition-all duration-200 rounded-md",
           "text-xs font-bold uppercase tracking-widest",
-          "hover:text-white hover:bg-white/5",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950",
+          "hover:text-foreground hover:bg-foreground/5",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           active 
-            ? "text-primary bg-white/5" 
-            : "text-gray-400"
+            ? "text-primary bg-foreground/5" 
+            : "text-muted-foreground"
         )}
       >
         {children}
@@ -166,11 +167,11 @@ const Navbar = () => {
         className={cn(
           "flex items-center gap-3 px-4 py-3 transition-all duration-200 relative",
           "text-sm font-medium",
-          "hover:bg-gray-800/50",
-          "focus-visible:outline-none focus-visible:bg-gray-800/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+          "hover:bg-muted/50",
+          "focus-visible:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
           active 
             ? "text-primary bg-primary/10 border-l-2 border-primary" 
-            : "text-gray-300 border-l-2 border-transparent"
+            : "text-muted-foreground border-l-2 border-transparent"
         )}
       >
         {Icon && <Icon className={cn("w-4 h-4", active && "text-primary")} />}
@@ -208,7 +209,7 @@ const Navbar = () => {
   // Flattened items for tablet/mobile "More" dropdown
   const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
-      <nav className="sticky top-0 z-50 bg-gray-950 shadow-lg" aria-label="Main navigation">
+      <nav className="sticky top-0 z-50 bg-background shadow-sm dark:shadow-lg border-b border-border/50" aria-label="Main navigation">
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
@@ -221,7 +222,7 @@ const Navbar = () => {
                 setMobileMenuOpen(false);
               }
             }}
-            className="lg:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
@@ -266,8 +267,8 @@ const Navbar = () => {
                     "group relative flex items-center gap-1.5 py-2 px-3 transition-all duration-200 rounded-md",
                     "text-xs font-bold uppercase tracking-widest",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-white hover:bg-white/5",
-                    isLearnActive ? 'text-primary bg-white/5' : 'text-gray-400'
+                    "hover:text-foreground hover:bg-foreground/5",
+                    isLearnActive ? 'text-primary bg-foreground/5' : 'text-muted-foreground'
                   )}
                 >
                   Learn
@@ -285,7 +286,7 @@ const Navbar = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="center" 
-                className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[400px] p-4"
+                className="bg-popover backdrop-blur-xl border-border min-w-[400px] p-4"
                 onMouseEnter={() => {
                   // Keep dropdown open when hovering over content
                   if (learnHoverTimeoutRef.current) {
@@ -304,7 +305,7 @@ const Navbar = () => {
                     {/* Section Header */}
                     <div className="flex items-center gap-2 px-2 py-2">
                       <section.icon className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">
                         {section.title}
                       </span>
                     </div>
@@ -357,7 +358,7 @@ const Navbar = () => {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-gray-900 border-border text-sm">
+              <TooltipContent side="bottom" className="bg-popover border-border text-sm">
                 Compare materials side-by-side
               </TooltipContent>
             </Tooltip>
@@ -378,8 +379,8 @@ const Navbar = () => {
                     "group relative flex items-center gap-1.5 py-2 px-3 transition-all duration-200 rounded-md",
                     "text-xs font-bold uppercase tracking-widest",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                    "hover:text-white hover:bg-white/5",
-                    isLearnActive ? 'text-primary bg-white/5' : 'text-gray-400'
+                    "hover:text-foreground hover:bg-foreground/5",
+                    isLearnActive ? 'text-primary bg-foreground/5' : 'text-muted-foreground'
                   )}
                 >
                   <MoreHorizontal className="w-4 h-4" />
@@ -392,7 +393,7 @@ const Navbar = () => {
                   />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
+              <DropdownMenuContent align="center" className="bg-popover backdrop-blur-xl border-border min-w-[220px] p-2">
                 {learnItemsFlat.map(item => (
                   <DropdownMenuItem key={item.to} asChild className="rounded-lg">
                     <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
@@ -425,26 +426,27 @@ const Navbar = () => {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-gray-900 border-border text-sm">
+              <TooltipContent side="bottom" className="bg-popover border-border text-sm">
                 Compare materials side-by-side
               </TooltipContent>
             </Tooltip>
           </div>
 
           {/* Right-side utilities */}
-          <div className="hidden md:block h-6 w-px bg-gray-700" />
-          <div className="flex items-center gap-4 shrink-0 ml-auto">
+          <div className="hidden md:block h-6 w-px bg-border" />
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
             <WishlistButton />
             <RegionSelector />
             <CurrencySelector />
+            <ThemeToggle />
             
             {/* User Avatar / Login */}
             {user ? <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label="Open account menu">
-                    <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
+                    <Avatar className="w-9 h-9 border border-border hover:border-primary/50 transition-colors cursor-pointer">
                       <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-                      <AvatarFallback className="text-sm font-medium bg-gray-800 text-white">
+                      <AvatarFallback className="text-sm font-medium bg-muted text-foreground">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -500,9 +502,9 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu> : <button onClick={() => navigate('/auth')} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full" aria-label="Sign in">
-                <Avatar className="w-9 h-9 border border-gray-700 hover:border-teal-500/50 transition-colors cursor-pointer">
-                  <AvatarFallback className="bg-gray-800">
-                    <User className="w-4 h-4 text-gray-400" />
+                <Avatar className="w-9 h-9 border border-border hover:border-primary/50 transition-colors cursor-pointer">
+                  <AvatarFallback className="bg-muted">
+                    <User className="w-4 h-4 text-muted-foreground" />
                   </AvatarFallback>
                 </Avatar>
               </button>}
@@ -514,10 +516,7 @@ const Navbar = () => {
           id="mobile-navigation"
           role="navigation"
           aria-label="Mobile navigation"
-          className={cn("lg:hidden overflow-hidden transition-all duration-300 ease-out", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")} 
-          style={{
-            background: 'hsla(220, 20%, 4%, 0.98)'
-          }}
+          className={cn("lg:hidden overflow-hidden transition-all duration-300 ease-out bg-background", mobileMenuOpen ? "max-h-[calc(100vh-4rem)] opacity-100" : "max-h-0 opacity-0")}
           aria-hidden={!mobileMenuOpen}
         >
           <div className="py-4 border-t border-border/30">
