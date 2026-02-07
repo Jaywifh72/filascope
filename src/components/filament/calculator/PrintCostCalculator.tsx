@@ -4,28 +4,62 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
+// Default electricity rates by region ($/kWh equivalent in local currency)
+const REGIONAL_ELECTRICITY_DEFAULTS: Record<string, string> = {
+  US: '0.12',
+  CA: '0.13',
+  UK: '0.28',
+  EU: '0.25',
+  AU: '0.30',
+  JP: '27',   // ¥27/kWh
+  CN: '0.54',
+};
+
+// Default wear costs by region (local currency per hour)
+const REGIONAL_WEAR_DEFAULTS: Record<string, string> = {
+  US: '0.50',
+  CA: '0.65',
+  UK: '0.40',
+  EU: '0.45',
+  AU: '0.70',
+  JP: '70',
+  CN: '3.50',
+};
+
 interface PrintCostCalculatorProps {
   filamentPrice: number;
   filamentName: string;
   usageGrams?: number;
+  /** Currency symbol to use (e.g., "C$", "€", "£"). Defaults to "$" */
+  currencySymbol?: string;
+  /** User's region code for electricity rate defaults */
+  regionCode?: string;
 }
 
 export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
   filamentPrice,
   filamentName,
-  usageGrams
+  usageGrams,
+  currencySymbol = '$',
+  regionCode = 'US',
 }) => {
   const [filamentGrams, setFilamentGrams] = useState(usageGrams?.toString() || '100');
   const [printTimeHours, setPrintTimeHours] = useState('4');
-  const [electricityRate, setElectricityRate] = useState('0.12');
+  const [electricityRate, setElectricityRate] = useState(REGIONAL_ELECTRICITY_DEFAULTS[regionCode] || '0.12');
   const [printerWattage, setPrinterWattage] = useState('200');
   const [includeWear, setIncludeWear] = useState(false);
-  const [wearCostPerHour, setWearCostPerHour] = useState('0.50');
+  const [wearCostPerHour, setWearCostPerHour] = useState(REGIONAL_WEAR_DEFAULTS[regionCode] || '0.50');
   const [copies, setCopies] = useState(1);
 
   useEffect(() => {
     if (usageGrams) setFilamentGrams(usageGrams.toString());
   }, [usageGrams]);
+
+  // Update defaults when region changes
+  useEffect(() => {
+    setElectricityRate(REGIONAL_ELECTRICITY_DEFAULTS[regionCode] || '0.12');
+    setWearCostPerHour(REGIONAL_WEAR_DEFAULTS[regionCode] || '0.50');
+  }, [regionCode]);
 
   const costs = useMemo(() => {
     const grams = parseFloat(filamentGrams) || 0;
@@ -67,6 +101,13 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
     };
   }, [filamentGrams, printTimeHours, electricityRate, printerWattage, includeWear, wearCostPerHour, copies, filamentPrice]);
 
+  // Use non-decimal formatting for JPY/KRW style currencies
+  const isNonDecimalCurrency = regionCode === 'JP' || regionCode === 'CN';
+  const formatAmount = (amount: number, decimals = 2) => {
+    if (isNonDecimalCurrency) return `${currencySymbol}${Math.round(amount)}`;
+    return `${currencySymbol}${amount.toFixed(decimals)}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -98,7 +139,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            ${filamentPrice.toFixed(2)}/kg for {filamentName}
+            {formatAmount(filamentPrice)}/kg for {filamentName}
           </p>
         </div>
 
@@ -125,7 +166,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
           <label className="text-sm font-semibold text-foreground">Electricity Rate</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-              $
+              {currencySymbol}
             </span>
             <Input
               type="number"
@@ -134,6 +175,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
               min="0.01"
               step="0.01"
               className="pl-7 pr-12 bg-background/30 border-border/50"
+              style={{ paddingLeft: `${Math.max(28, currencySymbol.length * 10 + 16)}px` }}
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
               /kWh
@@ -177,7 +219,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
             <label className="text-sm font-semibold text-foreground">Wear Cost per Hour</label>
             <div className="relative max-w-[140px]">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                $
+                {currencySymbol}
               </span>
               <Input
                 type="number"
@@ -186,6 +228,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
                 min="0"
                 step="0.1"
                 className="pl-7 pr-12 bg-background/30 border-border/50"
+                style={{ paddingLeft: `${Math.max(28, currencySymbol.length * 10 + 16)}px` }}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                 /hour
@@ -229,7 +272,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
               Material
             </span>
             <span className="text-[15px] font-semibold text-foreground">
-              ${costs.material.toFixed(2)}
+              {formatAmount(costs.material)}
             </span>
           </div>
 
@@ -239,7 +282,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
               Electricity
             </span>
             <span className="text-[15px] font-semibold text-foreground">
-              ${costs.electricity.toFixed(2)}
+              {formatAmount(costs.electricity)}
             </span>
           </div>
 
@@ -250,7 +293,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
                 Wear
               </span>
               <span className="text-[15px] font-semibold text-foreground">
-                ${costs.wear.toFixed(2)}
+                {formatAmount(costs.wear)}
               </span>
             </div>
           )}
@@ -259,7 +302,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
           <div className="flex justify-between items-center pt-3 mt-1 border-t border-border/50">
             <span className="text-[15px] font-semibold text-foreground">Total per Print</span>
             <span className="text-xl font-extrabold text-green-500">
-              ${costs.totalPerPrint.toFixed(2)}
+              {formatAmount(costs.totalPerPrint)}
             </span>
           </div>
 
@@ -270,7 +313,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
                 Total for {copies} Copies
               </span>
               <span className="text-xl font-extrabold text-green-500">
-                ${costs.totalAllCopies.toFixed(2)}
+                {formatAmount(costs.totalAllCopies)}
               </span>
             </div>
           )}
@@ -304,10 +347,10 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
               Estimated Savings vs Buying
             </div>
             <div className="text-lg font-bold text-green-500 mt-0.5">
-              Save ~${costs.savings.toFixed(2)} ({Math.round(costs.savingsPercent)}%)
+              Save ~{formatAmount(costs.savings)} ({Math.round(costs.savingsPercent)}%)
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">
-              Compared to estimated retail value of ${costs.estimatedRetailValue.toFixed(2)}
+              Compared to estimated retail value of {formatAmount(costs.estimatedRetailValue)}
             </div>
           </div>
         </div>
@@ -316,7 +359,7 @@ export const PrintCostCalculator: React.FC<PrintCostCalculatorProps> = ({
         <div className="flex justify-between mt-4 p-3 bg-card/30 rounded-lg">
           <span className="text-[13px] text-muted-foreground">Cost per gram</span>
           <span className="text-sm font-bold text-foreground">
-            ${costs.costPerGram.toFixed(3)}/g
+            {formatAmount(costs.costPerGram, 3)}/g
           </span>
         </div>
       </div>

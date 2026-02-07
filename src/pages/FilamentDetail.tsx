@@ -1200,7 +1200,7 @@ const FilamentDetail = () => {
               id: filament.id,
               name: filament.product_title || 'Filament',
               material: filament.material || 'PLA',
-              price: filament.variant_price || 0,
+              price: sidebarPricePerKg ?? filament.variant_price ?? 0,
               density: filament.density_g_cm3,
               spoolWeight: filament.net_weight_g || 1000,
               nozzleTempMin: filament.nozzle_temp_min_c,
@@ -1210,6 +1210,8 @@ const FilamentDetail = () => {
             }}
             isOpen={isCalculatorOpen}
             onClose={() => setIsCalculatorOpen(false)}
+            currencySymbol={({ USD: '$', CAD: 'C$', EUR: '€', GBP: '£', AUD: 'A$', JPY: '¥', CNY: '¥' } as Record<string, string>)[currency] || '$'}
+            regionCode={currentRegionCode}
           />
         </>
       )}

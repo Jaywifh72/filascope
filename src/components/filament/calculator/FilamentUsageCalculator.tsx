@@ -24,6 +24,8 @@ interface FilamentUsageCalculatorProps {
   filamentMaterial?: string;
   buyMoreUrl?: string;
   onCalculate?: (result: FilamentUsageOutput) => void;
+  /** Currency symbol for display (e.g., "C$", "€") */
+  currencySymbol?: string;
 }
 
 export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = ({
@@ -33,7 +35,8 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
   filamentName = 'Filament',
   filamentMaterial = 'PLA',
   buyMoreUrl,
-  onCalculate
+  onCalculate,
+  currencySymbol = '$',
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [method, setMethod] = useState<'dimensions' | 'weight'>('dimensions');
@@ -419,7 +422,7 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
               </div>
             </div>
             <div className="bg-success/10 border border-success/20 rounded-lg p-4 text-center">
-              <div className="text-2xl font-extrabold text-success">${materialCost.toFixed(2)}</div>
+              <div className="text-2xl font-extrabold text-success">{currencySymbol}{materialCost.toFixed(2)}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                 Material Cost
               </div>
