@@ -1,6 +1,7 @@
 // Comprehensive material reference data for the encyclopedia
 import { EXTENDED_MATERIAL_REFERENCE_DATA } from './materialReferenceDataExtended';
 import { EXTENDED_MATERIAL_REFERENCE_DATA_2 } from './materialReferenceDataExtended2';
+import { EXTENDED_MATERIAL_REFERENCE_DATA_3 } from './materialReferenceDataExtended3';
 import { MATERIAL_ALIASES } from './materialReferenceAliases';
 
 
@@ -14812,6 +14813,7 @@ const ALL_REFERENCE_SOURCES = [
   MATERIAL_REFERENCE_DATA,
   EXTENDED_MATERIAL_REFERENCE_DATA,
   EXTENDED_MATERIAL_REFERENCE_DATA_2,
+  EXTENDED_MATERIAL_REFERENCE_DATA_3,
 ];
 
 function findInSources(key: string): MaterialReferenceInfo | undefined {
