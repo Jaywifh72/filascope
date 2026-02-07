@@ -1,177 +1,123 @@
 
+# Fix Data Inconsistency Between Brands Directory and Brand Detail Pages
 
-# Fix Price Instability Across FilaScope
+## Bug Analysis
 
-## Problem Summary
+### Bug 1: Brand Card Shows Different Count Than Brand Detail Page
 
-The same product shows different prices per kilogram depending on which component renders first and which data source "wins" a race condition. For example, Polymaker PC-PBT might show ~C$102.52/kg, ~C$75.94/kg, or ~C$21.26/kg on the same detail page between different loads.
+**Root Cause:** The brand card on `/brands` shows raw **variant count** (every individual filament row), while the brand detail page shows **unique product line count** (grouped by `product_line_id`).
 
-## Root Cause Analysis
+- Brands page query (`Brands.tsx` line 130): Counts every filament row per vendor. For Spectrum Filaments, this gives 623.
+- Brand detail page (`BrandDetail.tsx` line 578): Shows `groupedProducts.length` which groups by `product_line_id`, giving 68 product lines.
+- The brand card label says "X filaments" but the detail page says "68 (623 variants)".
 
-After tracing every pricing pipeline, I identified **5 distinct root causes**:
+**The Fix:** Make the brand card show the same "X products (Y variants)" format as the detail page. This requires computing the product line count per brand on the Brands directory page.
 
-### 1. Multiple Independent Price Sources Racing Each Other
+Two approaches:
+- **Option A (Preferred):** Fetch product line counts per vendor from the database in a single query. This avoids client-side grouping logic and is consistent with how the detail page works.
+- **Option B:** Use the existing `automated_brands.product_count` column -- but this currently stores variant count, not product line count. It would require updating the `update_brand_product_counts()` DB function to also compute a `product_line_count`.
 
-The `FilamentDetail.tsx` page fetches prices from **4 independent async sources** that resolve at different times:
+I recommend a hybrid: add a `product_line_count` column to `automated_brands` (and update the `update_brand_product_counts()` function), then expose it via `v_public_brands`. On the Brands page, use this column for the card count, with `product_count` as the variant count for the "(X variants)" display.
 
-| Source | Hook | What it returns | Per-kg formula |
-|---|---|---|---|
-| Source 1 | `useFilamentListings` (x2: local + US) | Retailer prices from `filament_listings` table | `price / wKg` (lines 300-302) |
-| Source 2 | `useFilamentStorePricing` | Store prices from `filament_prices` table via RPC | `priceDisplay / wKg` (line 323) |
-| Source 3 | `useUnifiedRegionalPricing` | Brand regional store prices from `brand_regional_stores` | `displayPrice / wKg` (line 344) |
-| Source 4 | Legacy Amazon price | `filament.amazon_price_usd` column | `price / wKg` (line 373) |
+### Bug 2: Brands Page Shows "147 Products" While Homepage Shows "962+ Products"
 
-The `sidebarBest` selection (line 257) merges these into a `candidates` array. Whichever sources have loaded when `useMemo` runs determines which candidate "wins." On the next render, a different source may have loaded, changing the winner.
+**Root Cause:** The `catalogCounts` query in `Brands.tsx` (lines 195-202) fetches `product_line_id` values to count unique product lines but **hits the Supabase 1000-row default limit**. It fetches only 1000 rows, then deduplicates them client-side to ~147 unique values. The actual number of unique product lines is 1,073.
 
-### 2. Inconsistent Weight Normalization (Critical Bug)
+```text
+Brands page:   SELECT product_line_id FROM filaments WHERE product_line_id IS NOT NULL
+               --> Gets 1000 rows (capped) --> Set.size = ~147 (wrong!)
 
-The per-kg weight denominator (`wKg`) is calculated differently across components:
-
-**Detail page** (`FilamentDetail.tsx` lines 260-263):
-```
-wKg = (net_weight_g / 1000) * packQty    // Total weight across ALL spools in pack
+Homepage:      Groups all filaments client-side after paginated fetch --> 962 groups (correct)
 ```
 
-**Sidebar** (`FilamentPurchaseSidebar.tsx` lines 175-179):
-```
-effectiveWeightKg = weightGrams / 1000    // Weight of ONE spool (ignores pack_quantity!)
-displayPricePerKg = displayPrice / effectiveWeightKg
-```
+**The Fix:** Replace the client-side deduplication with a server-side count. Use `count: 'exact'` with `head: true` for the overall count, or use a simple aggregate query. Since all filaments now have `product_line_id` assigned (`noLineCount = 0`), we can use:
 
-For a product with `net_weight_g=1350` and `pack_quantity=1`, these agree. But for multi-packs, the sidebar divides by single-spool weight, producing a DIFFERENT per-kg result.
-
-**FilamentCard** uses `useResolvedPrice` which uses yet another formula:
-```
-pricePerKg = spoolPrice / (weightKg * packQty)   // Correct
+```sql
+SELECT COUNT(DISTINCT product_line_id) FROM filaments
 ```
 
-### 3. Spool Price vs Total Pack Price Confusion
+This can't be done directly via the Supabase JS client's `select` method for `COUNT(DISTINCT ...)`, so we either:
+1. Fetch ALL product_line_id values by paginating (similar to `fetchAllFilaments`), or
+2. Use the `automated_brands` product_line_count column (once we add it in Bug 1 fix) and sum across all brands, or
+3. Add a simple RPC function that returns the count.
 
-The `sidebarBest` candidates store `spoolPrice` which is actually the **total price for the whole listing** (not per-spool). But when passed to the sidebar:
-```
-sidebarPricePerSpool = sidebarBest.spoolPrice / packQuantity  // line 864
-```
-The sidebar then RECALCULATES per-kg from this per-spool price using single-spool weight, potentially double-dividing by pack quantity.
+I recommend option 3 -- a lightweight RPC function `get_catalog_counts()` that returns both `product_count` (unique product lines) and `variant_count` (total rows) in one call, eliminating the 1000-row limit problem entirely.
 
-### 4. BestPricesSection Fetches Its Own Data Independently
+### Bug 3: Brand Detail Pages Show "Avg Price: --" Even When Pricing Data Exists
 
-`BestPricesSection.tsx` (line 26-41) makes its own `useFilamentListings` calls with potentially different parameters than the parent page. It also does its own price conversion (line 63-65), which may produce different results than the `sidebarBest` selection, leading to the sidebar saying one price while the Best Prices card says another.
+**Root Cause Investigation:** After checking the database, brands without `variant_price` data (Spectrum Filaments, NinjaTek, VoxelPLA) also have zero rows in `filament_listings` and `filament_prices`. The "Avg Price: --" is **actually correct** for these brands -- they genuinely have no pricing data.
 
-### 5. Currency Conversion Timing
+However, the current avg price calculation only looks at `variant_price` on the filaments table. For brands that have pricing in the `filament_prices` (store pricing) table but not in `variant_price`, it would still show "--". Additionally, the label "Avg Price" with a min-max range like "$11-$169" is misleading -- it shows a range, not an average.
 
-Exchange rate loading is guarded by `hasRates`, but some conversion paths (like `useFilamentStorePricing` via `convertPrice`) may execute before rates are fully cached, while others wait. This means the same USD amount can convert to different local amounts depending on timing.
+**The Fix:** Expand the price aggregation to also check `filament_listings` and `filament_prices` tables for brands where `variant_price` is null. Also rename the label from "Avg Price" to "Price Range" since it shows min-max, not an average.
 
 ---
 
-## Solution Plan
+## Implementation Plan
 
-### Phase 1: Create a Unified Price Resolution Pipeline
+### Step 1: Database Migration -- Add Product Line Count Column and RPC
 
-**File: `src/hooks/useFilamentDetailPricing.ts`** (NEW)
+Add a `product_line_count` column to `automated_brands`, update the `update_brand_product_counts()` function to populate it, add a `get_catalog_counts()` RPC, and update the `v_public_brands` view.
 
-Create a single hook that:
-- Accepts the filament data, all listing/store/unified pricing results, and the user's region context
-- Waits for ALL async sources to settle before computing the final "best" price
-- Returns one canonical `bestPrice` object used by every component on the detail page
+```sql
+-- Add product_line_count column
+ALTER TABLE automated_brands 
+  ADD COLUMN IF NOT EXISTS product_line_count integer DEFAULT 0;
 
-This hook will:
-1. Collect candidates from all sources (listings, store pricing, unified pricing, legacy Amazon) -- same logic as current `sidebarBest` but extracted into a dedicated hook
-2. Use a single, consistent per-kg formula: `totalPrice / ((net_weight_g / 1000) * pack_quantity)`
-3. Expose an `isReady` flag that is only `true` when all non-optional data sources have resolved
-4. Return a single `DetailPricingResult` object containing:
-   - `bestPrice.pricePerKg` (in user's currency)
-   - `bestPrice.spoolPrice` (total pack price in user's currency)
-   - `bestPrice.pricePerSpool` (per individual spool)
-   - `bestPrice.storeName`, `bestPrice.storeRegion`, `bestPrice.productUrl`
-   - `bestPrice.isConverted`, `bestPrice.isLocal`
-   - `allCandidates` (sorted array for the "All Retailers" modal)
-   - `retailerCount`
-   - `isReady` / `isLoading`
+-- Update the count function to also compute product line count
+CREATE OR REPLACE FUNCTION update_brand_product_counts(p_brand_slug text DEFAULT NULL)
+  -- ... (updated to include product_line_count via COUNT(DISTINCT product_line_id))
 
-### Phase 2: Fix the Weight Normalization Bug
+-- Add catalog-wide counts RPC
+CREATE OR REPLACE FUNCTION get_catalog_counts()
+  RETURNS TABLE(product_count bigint, variant_count bigint)
+  -- Uses COUNT(DISTINCT product_line_id) + nulls for products, COUNT(*) for variants
 
-**File: `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`**
-
-Remove the sidebar's independent price recalculation (lines 160-180). Instead, trust the parent-provided `pricePerKg` prop directly without recalculating. The sidebar should be a "dumb display" component that receives fully computed values.
-
-Current problematic code to remove:
-```typescript
-// Lines 175-180: Independent recalculation that ignores pack_quantity
-if (hasValidRegionalPrice && displayPrice && weightGrams) {
-  const effectiveWeightKg = weightGrams / 1000;
-  if (effectiveWeightKg > 0) {
-    displayPricePerKg = displayPrice / effectiveWeightKg;
-  }
-}
+-- Update v_public_brands view to include product_line_count
 ```
 
-Replace with: simply use the `pricePerKg` prop passed from the parent.
+Run `update_brand_product_counts(NULL)` to backfill all brands.
 
-### Phase 3: Wire BestPricesSection to Parent Data
+### Step 2: Update Brand Card Display (`BrandCard.tsx`)
 
-**File: `src/components/filament/BestPricesSection.tsx`**
+- Change the `count` prop to accept both `productLineCount` and `variantCount`
+- Display: "68 products (623 variants)" instead of "623 filaments"
+- If `productLineCount` equals `variantCount`, just show "68 products"
 
-Instead of making independent `useFilamentListings` calls, accept pre-computed candidates as a prop from the parent. This ensures the "Best Prices" card shows the exact same data and ordering as the sidebar.
+### Step 3: Update Brands Page Data Flow (`Brands.tsx`)
 
-Changes:
-- Add a `candidates` prop (optional, for backward compatibility)
-- When `candidates` is provided, use them directly instead of fetching
-- When not provided, fall back to current self-fetching behavior
+- Replace the buggy `catalogCounts` query with the new `get_catalog_counts()` RPC call
+- In the `mergedBrands` logic, use `product_line_count` from `v_public_brands` for the product count, and `product_count` for the variant count
+- Pass both values to `BrandCard`
+- Update BrandsHeroSection text to show consistent numbers
 
-**File: `src/pages/FilamentDetail.tsx`**
+### Step 4: Update Brand Detail Hero (`BrandHeroSection.tsx`)
 
-Pass the `allCandidates` from the new hook into `BestPricesSection`:
-```tsx
-<BestPricesSection
-  filamentId={displayFilament.id}
-  candidates={detailPricing.allCandidates}
-  totalRetailerCount={detailPricing.retailerCount}
-/>
-```
+- Rename "Avg Price" label to "Price Range"
+- No count changes needed -- the detail page already correctly shows "68 (623 variants)"
 
-### Phase 4: Add Loading Guards
+### Step 5: Expand Average Price Calculation (`BrandDetail.tsx`)
 
-**File: `src/pages/FilamentDetail.tsx`**
-
-Show price loading skeletons in the sidebar and sticky bar until `detailPricing.isReady` is true. This prevents the user from seeing intermediate values that change as data sources resolve.
-
-- Sidebar: show a price skeleton placeholder when `!detailPricing.isReady`
-- StickyBuyBar: defer visibility until `detailPricing.isReady`
-- MobileBottomBar: same treatment
-
-### Phase 5: Ensure Card Consistency
-
-**File: `src/components/FilamentCard.tsx`**
-
-The card already uses `useResolvedPrice` (the SSOT utility), which is correct. No changes needed here. However, verify that the formula in `resolveFilamentPrice.ts` matches the detail page formula exactly:
-
-Current `resolveFilamentPrice.ts` (lines in `buildResult`):
-```
-pricePerSpool = spoolPrice / packQty
-pricePerKg = spoolPrice / (weightKg * packQty)
-```
-
-This is correct and consistent with the target formula. The card path is already aligned.
-
----
+- Keep the existing `variant_price` aggregation as primary
+- Add a fallback that checks `filament_listings.current_price` if no `variant_price` data exists
+- Add a second fallback to `filament_prices.price_cents` if neither has data
+- This ensures brands with pricing in any table show a price range
 
 ## Files to Create/Modify
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/hooks/useFilamentDetailPricing.ts` | CREATE | Single source of truth for detail page pricing |
-| `src/pages/FilamentDetail.tsx` | MODIFY | Use new hook, remove inline `sidebarBest` logic, pass unified data to children |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | MODIFY | Remove independent price recalculation, trust parent props |
-| `src/components/filament/BestPricesSection.tsx` | MODIFY | Accept pre-computed candidates prop |
-| `src/components/filament/StickyBuyBar.tsx` | MINOR | No formula changes, just receives correct data from parent |
-| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | MINOR | Same -- receives correct data from parent |
+| Database migration | CREATE | Add `product_line_count` column, `get_catalog_counts()` RPC, update view |
+| `src/components/brands/BrandCard.tsx` | MODIFY | Show "X products (Y variants)" format |
+| `src/pages/Brands.tsx` | MODIFY | Use RPC for catalog counts, pass product_line_count to cards |
+| `src/components/brands/BrandHeroSection.tsx` | MODIFY | Rename "Avg Price" to "Price Range" |
+| `src/pages/BrandDetail.tsx` | MODIFY | Expand price aggregation with fallbacks |
+| `src/components/BrandsHeroSection.tsx` | MINOR | No changes needed -- already receives correct props |
 
 ## Validation Criteria
 
-After implementation:
-1. Load any filament detail page 10 times -- the per-kg price should be identical every time
-2. The listing card, detail sidebar, Best Prices section, and sticky bar should all show the same per-kg value
-3. Multi-pack products (pack_quantity > 1) should calculate per-kg correctly: `totalPackPrice / ((net_weight_g / 1000) * pack_quantity)`
-4. Converted prices always show `~` prefix; native regional prices do not
-5. No price flicker during page load -- skeleton shown until all sources resolve
-
+1. Spectrum Filaments card shows "68 products (623 variants)" matching the detail page
+2. Brands page hero shows ~1,073 products (matching the real count), not 147
+3. Homepage "962+ products" and Brands page product count are in the same ballpark (difference due to homepage applying filters like net_weight_g >= 300)
+4. Brands with pricing data show a price range; brands without show "--"
+5. The "Avg Price" label is renamed to "Price Range" for clarity
