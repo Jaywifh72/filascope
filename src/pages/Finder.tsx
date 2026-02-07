@@ -1508,11 +1508,46 @@ const Finder = () => {
     }
   }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, hasTdData, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
 
+  // Brand diversity interleaving for scoring sort — prevents one brand dominating the top
+  const diversifiedFilaments = useMemo(() => {
+    if (!filteredAndSortedFilaments || filteredAndSortedFilaments.length === 0) return filteredAndSortedFilaments;
+    // Only apply diversity interleaving for default scoring sort with no active brand/material filters
+    const isDefaultSort = sortBy === "scoring-desc";
+    const hasUserFilters = !selectedMaterials.includes("All") || selectedBrands.length > 0 || searchTerm !== "";
+    if (!isDefaultSort || hasUserFilters) return filteredAndSortedFilaments;
+
+    // Interleave: allow max 2 consecutive products from the same brand
+    const MAX_CONSECUTIVE = 2;
+    const result: typeof filteredAndSortedFilaments = [];
+    const deferred: typeof filteredAndSortedFilaments = [];
+    const consecutiveCount: Record<string, number> = {};
+    let lastBrand = "";
+
+    for (const filament of filteredAndSortedFilaments) {
+      const brand = filament.vendor || "Unknown";
+      if (brand === lastBrand) {
+        consecutiveCount[brand] = (consecutiveCount[brand] || 1) + 1;
+      } else {
+        consecutiveCount[brand] = 1;
+      }
+
+      if (consecutiveCount[brand] > MAX_CONSECUTIVE) {
+        deferred.push(filament);
+      } else {
+        result.push(filament);
+        lastBrand = brand;
+      }
+    }
+
+    // Append deferred items (they maintain their relative score order)
+    return [...result, ...deferred];
+  }, [filteredAndSortedFilaments, sortBy, selectedMaterials, selectedBrands, searchTerm]);
+
   // Group filaments by product before pagination
   const groupedFilaments = useMemo(() => {
-    if (!filteredAndSortedFilaments) return [];
-    return groupFilamentsByProduct(filteredAndSortedFilaments);
-  }, [filteredAndSortedFilaments]);
+    if (!diversifiedFilaments) return [];
+    return groupFilamentsByProduct(diversifiedFilaments);
+  }, [diversifiedFilaments]);
 
   // Pagination: slice the grouped results
   const displayedGroups = groupedFilaments.slice(0, displayCount);
@@ -1829,7 +1864,7 @@ const Finder = () => {
             spoolSize={largeSpools ? "large" : "standard"}
             onSpoolSizeChange={(size) => setLargeSpools(size === "large")}
             onClearAll={() => {
-              setSelectedMaterials([]);
+              setSelectedMaterials(["All"]);
               setSelectedBrands([]);
               setCarbonFiber(false);
               setGlassFiber(false);
@@ -1856,7 +1891,10 @@ const Finder = () => {
       {/* Mobile Active Filter Chips - Horizontal scroll */}
       <MobileActiveFilterChips
         filters={[
-          ...selectedMaterials.map(m => ({ id: m, label: m.replace('-family', '').toUpperCase(), type: 'material' as const })),
+          // Only show material chips if user selected specific materials (not the default "All")
+          ...(selectedMaterials.length > 0 && !(selectedMaterials.length === 1 && selectedMaterials[0] === "All")
+            ? selectedMaterials.map(m => ({ id: m, label: m.replace('-family', '').toUpperCase(), type: 'material' as const }))
+            : []),
           ...selectedBrands.map(b => ({ id: b, label: b, type: 'brand' as const })),
           ...(carbonFiber ? [{ id: 'carbon', label: 'Carbon Fiber', type: 'reinforced' as const }] : []),
           ...(glassFiber ? [{ id: 'glass', label: 'Glass Fiber', type: 'reinforced' as const }] : []),
@@ -1864,7 +1902,10 @@ const Finder = () => {
           ...(largeSpools ? [{ id: 'large', label: 'Large Spool', type: 'spool' as const }] : []),
         ]}
         onRemove={(id, type) => {
-          if (type === 'material') setSelectedMaterials(selectedMaterials.filter(m => m !== id));
+          if (type === 'material') {
+            const newMaterials = selectedMaterials.filter(m => m !== id);
+            setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
+          }
           if (type === 'brand') setSelectedBrands(selectedBrands.filter(b => b !== id));
           if (type === 'reinforced') {
             if (id === 'carbon') setCarbonFiber(false);
@@ -1874,7 +1915,7 @@ const Finder = () => {
           if (type === 'spool') setLargeSpools(false);
         }}
         onClearAll={() => {
-          setSelectedMaterials([]);
+          setSelectedMaterials(["All"]);
           setSelectedBrands([]);
           setCarbonFiber(false);
           setGlassFiber(false);

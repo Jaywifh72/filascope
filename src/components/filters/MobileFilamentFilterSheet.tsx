@@ -115,18 +115,21 @@ export function MobileFilamentFilterSheet({
 
   const nozzleConfig = useNozzleConfig(selectedPrinter?.stock_nozzle_diameter_mm);
 
-  // Calculate active filter count
+  // Calculate active filter count — exclude default "All" material and printer (not user-applied filters)
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (selectedMaterials.length > 0) count += selectedMaterials.length;
+    // Only count materials if user explicitly selected something other than "All"
+    const hasRealMaterialFilter = selectedMaterials.length > 0 && 
+      !(selectedMaterials.length === 1 && selectedMaterials[0] === "All");
+    if (hasRealMaterialFilter) count += selectedMaterials.length;
     if (selectedBrands.length > 0) count += selectedBrands.length;
     if (carbonFiber) count++;
     if (glassFiber) count++;
     if (woodFilled) count++;
     if (spoolSize !== "standard") count++;
-    if (selectedPrinterId) count++;
+    // Don't count printer selection as a filter — it's a personalization, not a filter
     return count;
-  }, [selectedMaterials, selectedBrands, carbonFiber, glassFiber, woodFilled, spoolSize, selectedPrinterId]);
+  }, [selectedMaterials, selectedBrands, carbonFiber, glassFiber, woodFilled, spoolSize]);
 
   const localReinforced = [
     ...(carbonFiber ? ["carbon"] : []),
