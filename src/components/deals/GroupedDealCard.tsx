@@ -189,6 +189,12 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const isStoreLocal = group.isLocal;
   const hasLocalAlternative = !isStoreLocal && !!localStore;
 
+  // Region display helpers
+  const REGION_NAMES: Record<string, string> = {
+    US: 'the US', CA: 'Canada', UK: 'the UK', EU: 'Europe', AU: 'Australia', JP: 'Japan', CN: 'China',
+  };
+  const regionName = REGION_NAMES[region] || region;
+
   // Price freshness
   const freshnessText = group.lastScrapedAt
     ? formatDistanceToNow(new Date(group.lastScrapedAt), { addSuffix: false })
@@ -223,6 +229,14 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     }
   };
 
+  const handleLocalStoreClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (localStore) {
+      window.open(localStore.baseUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   const handleExpandClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -247,11 +261,25 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
         )}
       >
-        {/* Best Discount Badge */}
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-green-500 text-background text-xs font-bold">
+        {/* Discount Badge — capped at 60%, shows "Great Deal" for unusual values */}
+        <div className={cn(
+          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold",
+          group.isUnusualDiscount
+            ? "bg-amber-500 text-amber-950"
+            : "bg-green-500 text-background"
+        )}>
           <TrendingDown className="h-3 w-3" />
-          {group.bestDiscount}% OFF
+          {group.isUnusualDiscount ? "Great Deal" : `${group.bestDiscount}% OFF`}
         </div>
+
+        {/* "Available in [Region]" badge for local alternatives */}
+        {hasLocalAlternative && (
+          <div className="absolute top-12 left-3 z-10">
+            <Badge className="bg-emerald-500/90 text-white border-0 text-[10px] gap-1 shadow-md">
+              Available in {regionName}
+            </Badge>
+          </div>
+        )}
 
         {/* Share Button */}
         <Button
@@ -394,7 +422,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             </div>
           )}
 
-          {/* Store Region Info */}
+          {/* Store Region Info — local-first ordering */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
             {isStoreLocal ? (
               // Deal is already from a local store
@@ -405,13 +433,14 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 <span className="text-emerald-400 font-medium">Local</span>
               </>
             ) : hasLocalAlternative && localStore ? (
-              // International deal but local store exists
+              // Local alternative exists — lead with local, US is secondary
               <>
-                <span>{group.regionFlag}</span>
-                <span>{group.storeName}</span>
-                <span>•</span>
                 <span className="text-emerald-400 font-medium">
-                  Also at {localStore.storeName}
+                  {localStore.storeName}
+                </span>
+                <span>•</span>
+                <span className="text-muted-foreground/70">
+                  Also at {group.regionFlag} {group.storeName}
                 </span>
               </>
             ) : group.storeName && group.regionFlag ? (
@@ -425,20 +454,39 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             ) : null}
           </div>
 
-          {/* CTA Button */}
-          {(group.representativeDeal.product_url || hasLocalAlternative) && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-2 text-xs"
-              onClick={handleCheckPrice}
-            >
-              {hasLocalAlternative
-                ? `Check at ${localStore!.storeName}`
-                : "Check if Deal is Active"}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </Button>
-          )}
+          {/* CTA Buttons */}
+          <div className="flex flex-col gap-2">
+            {/* Primary CTA */}
+            {(group.representativeDeal.product_url || hasLocalAlternative) && (
+              <Button
+                variant={hasLocalAlternative ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "w-full gap-2 text-xs",
+                  hasLocalAlternative && "bg-emerald-600 hover:bg-emerald-500 text-white"
+                )}
+                onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
+              >
+                {hasLocalAlternative
+                  ? `Buy at ${localStore!.storeName}`
+                  : "Check if Deal is Active"}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            )}
+
+            {/* Secondary CTA — original store when local alternative takes primary */}
+            {hasLocalAlternative && group.representativeDeal.product_url && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 text-xs text-muted-foreground"
+                onClick={handleCheckPrice}
+              >
+                {group.regionFlag} Check at {group.storeName}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
