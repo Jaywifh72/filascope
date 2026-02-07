@@ -521,6 +521,18 @@ const FilamentDetail = () => {
     refetch();
   }, [refetch]);
 
+  // Callback to scroll to pricing tab and show full price history
+  const handleScrollToPricing = useCallback(() => {
+    setActiveTab("pricing");
+    // Wait for tab content to render, then scroll into view
+    requestAnimationFrame(() => {
+      const pricingSection = document.querySelector('[data-tab="pricing"]');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }, []);
+
 
   const handleRescrapeImage = async () => {
     if (!id || !filament) return;
@@ -1080,6 +1092,7 @@ const FilamentDetail = () => {
             onAdminRefresh={handleAdminRefresh}
             storePricing={storeBestPrice}
             hasStorePricing={hasStorePriceData}
+            onViewPriceHistory={handleScrollToPricing}
           />
         </div>
       </div>
