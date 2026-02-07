@@ -24,6 +24,7 @@ import { PriceConfidence } from '@/hooks/usePriceFreshness';
 import { HonestPriceDisplay, getCtaText } from '@/components/price/HonestPriceDisplay';
 import type { StorePrice } from '@/hooks/useFilamentStorePricing';
 import { StorePricingDisplay } from './StorePricingDisplay';
+import { SidebarPriceHistory } from './SidebarPriceHistory';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -57,6 +58,8 @@ interface FilamentPurchaseSidebarProps {
   storePricing?: StorePrice | null;
   // Flag to indicate if using store pricing vs legacy fallback
   hasStorePricing?: boolean;
+  // Callback to scroll to pricing tab and show full price history
+  onViewPriceHistory?: () => void;
 }
 
 export function FilamentPurchaseSidebar({
@@ -86,6 +89,7 @@ export function FilamentPurchaseSidebar({
   onAdminRefresh,
   storePricing,
   hasStorePricing = false,
+  onViewPriceHistory,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
@@ -261,6 +265,13 @@ export function FilamentPurchaseSidebar({
                 size="small"
               />
             )}
+
+            {/* Price History Sparkline */}
+            <SidebarPriceHistory
+              filamentId={filamentId}
+              currentPrice={displayPricePerKg || displayPrice || null}
+              onViewFullHistory={onViewPriceHistory}
+            />
           </div>
 
 

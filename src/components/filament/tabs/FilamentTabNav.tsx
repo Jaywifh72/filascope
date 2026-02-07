@@ -126,6 +126,7 @@ export function FilamentTabContent({ activeTab, children }: FilamentTabContentPr
       id={`tabpanel-${activeTab}`}
       role="tabpanel"
       aria-labelledby={`tab-${activeTab}`}
+      data-tab={activeTab}
       className="mt-6"
     >
       {children}
