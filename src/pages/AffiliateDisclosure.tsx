@@ -4,7 +4,7 @@ export default function AffiliateDisclosure() {
   return (
     <LegalPageLayout
       title="Affiliate Disclosure"
-      lastUpdated="February 5, 2025"
+      lastUpdated="February 7, 2026"
       metaDescription="FilaScope Affiliate Disclosure - Transparency about how we earn commissions from affiliate links while maintaining editorial independence."
     >
       <LegalSection title="Transparency Statement">

@@ -4,7 +4,7 @@ export default function PrivacyPolicy() {
   return (
     <LegalPageLayout
       title="Privacy Policy"
-      lastUpdated="February 5, 2025"
+      lastUpdated="February 7, 2026"
       metaDescription="FilaScope Privacy Policy - Learn how we collect, use, and protect your personal information when using our 3D printing filament comparison service."
     >
       <LegalSection title="Introduction">
