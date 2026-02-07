@@ -25,6 +25,10 @@ interface PricingTabContentProps {
   livePriceCurrency?: string;
   brandId?: string | null;
   productSlug?: string | null;
+  /** Regional display price (already converted to user's currency if needed) */
+  regionalDisplayPrice?: number | null;
+  /** Whether the regional price is a conversion estimate */
+  isRegionalConverted?: boolean;
 }
 
 // Section header with icon and border
@@ -87,7 +91,9 @@ export function PricingTabContent({
   isLivePrice,
   livePriceCurrency,
   brandId,
-  productSlug
+  productSlug,
+  regionalDisplayPrice,
+  isRegionalConverted,
 }: PricingTabContentProps) {
   const { formatPrice, currency, region, getConversionRate } = useRegion();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
@@ -139,14 +145,14 @@ export function PricingTabContent({
         </div>
 
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-          {/* Main Price Display */}
+          {/* Main Price Display - use regional price if available for consistency with sidebar */}
           <div className="flex-1">
-            {displayPrice ? (
+            {(regionalDisplayPrice ?? displayPrice) ? (
               <div className="space-y-3 sm:space-y-4">
                 <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight">
-                  {formatDisplayPrice(displayPrice)}
+                  {isRegionalConverted ? '~' : ''}{formatDisplayPrice(regionalDisplayPrice ?? displayPrice)}
                 </div>
-                {displayMsrp && displayMsrp > displayPrice && (
+                {displayMsrp && displayMsrp > (displayPrice || 0) && (
                   <div className="flex items-center gap-4">
                     <span className="text-xl text-muted-foreground line-through">
                       {formatDisplayPrice(displayMsrp)}
@@ -159,7 +165,7 @@ export function PricingTabContent({
                     )}
                   </div>
                 )}
-                {displayMsrp && displayMsrp <= displayPrice && (
+                {displayMsrp && (displayPrice || 0) >= displayMsrp && (
                   <div className="data-label">
                     MSRP: {formatDisplayPrice(displayMsrp)}
                   </div>

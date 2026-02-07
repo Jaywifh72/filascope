@@ -55,8 +55,10 @@ export function MobileBottomBar({
     : null;
 
   // Format original price for conversion note
+  // formatPrice from useCurrency already includes symbol + currency code (e.g., "$399.00 USD")
+  // Don't append originalCurrency again to avoid "($399.00 USD USD)"
   const originalPriceText = isConverted && originalPrice && originalCurrency
-    ? `(${formatPrice(originalPrice)} ${originalCurrency})`
+    ? `(${formatPrice(originalPrice, false)} ${originalCurrency})`
     : null;
 
   const affiliateUrl = getAffiliateUrl(officialStoreUrl, brand);

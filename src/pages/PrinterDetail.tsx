@@ -974,6 +974,8 @@ const PrinterDetail = () => {
                   livePriceCurrency={livePriceCurrency}
                   brandId={brandId}
                   productSlug={printer.printer_id || printer.model_name}
+                  regionalDisplayPrice={unifiedPricing.displayPrice}
+                  isRegionalConverted={unifiedPricing.isConverted}
                 />
               )}
             </PrinterTabContent>
