@@ -580,13 +580,17 @@ const BrandDetail = () => {
           topMaterials={availableMaterials}
           avgPriceRange={(() => {
             if (!filaments || filaments.length === 0) return undefined;
+            // Primary: use variant_price from filaments table
             const prices = filaments
               .map(f => f.variant_price)
               .filter((p): p is number => p !== null && p > 0);
-            if (prices.length === 0) return undefined;
-            const min = Math.min(...prices);
-            const max = Math.max(...prices);
-            return `${formatPrice(min).split('.')[0]}-${formatPrice(max).split('.')[0]}`;
+            if (prices.length > 0) {
+              const min = Math.min(...prices);
+              const max = Math.max(...prices);
+              return `${formatPrice(min).split('.')[0]}-${formatPrice(max).split('.')[0]}`;
+            }
+            // No variant_price data — return undefined (will show "—")
+            return undefined;
           })()}
           rating={null}
         />

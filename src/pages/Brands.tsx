@@ -21,7 +21,8 @@ import {
 // Interface for merged brand data with materials
 interface MergedBrand {
   name: string;
-  count: number;
+  productLineCount: number;
+  variantCount: number;
   spoolMaterial: "Cardboard" | "Plastic" | "Mixed" | null;
   hasHighSpeed: boolean;
   hasEcoSpools: boolean;
@@ -66,6 +67,7 @@ interface PublicBrand {
   description: string | null;
   featured: boolean | null;
   product_count: number | null;
+  product_line_count: number | null;
   active_product_count: number | null;
   color_primary: string | null;
   color_secondary: string | null;
@@ -180,38 +182,16 @@ const Brands = () => {
     },
   });
 
-  // Get total variant count (all filament rows) and unique product line count
+  // Get total variant count and unique product line count via RPC
   const { data: catalogCounts, isLoading: isCountLoading } = useQuery({
     queryKey: ["catalog-counts"],
     queryFn: async () => {
-      // Fetch total variants (all rows)
-      const { count: variantCount, error: variantError } = await supabase
-        .from("filaments")
-        .select("*", { count: "exact", head: true });
-      
-      if (variantError) throw variantError;
-
-      // Fetch unique product line count
-      const { data: plData, error: plError } = await supabase
-        .from("filaments")
-        .select("product_line_id")
-        .not("product_line_id", "is", null);
-      
-      if (plError) throw plError;
-      
-      const uniqueProductLines = new Set(plData?.map(r => r.product_line_id)).size;
-      
-      // Count filaments without product_line_id (each is its own "product")
-      const { count: noLineCount, error: noLineError } = await supabase
-        .from("filaments")
-        .select("*", { count: "exact", head: true })
-        .is("product_line_id", null);
-      
-      if (noLineError) throw noLineError;
-
+      const { data, error } = await supabase.rpc("get_catalog_counts");
+      if (error) throw error;
+      const row = data?.[0] || { product_count: 0, variant_count: 0 };
       return {
-        variantCount: variantCount || 0,
-        productCount: uniqueProductLines + (noLineCount || 0),
+        productCount: Number(row.product_count) || 0,
+        variantCount: Number(row.variant_count) || 0,
       };
     },
   });
@@ -236,10 +216,12 @@ const Brands = () => {
              b.name.toLowerCase() === ab.display_name.toLowerCase()
       );
       const spoolMaterial = filamentStats?.spoolMaterial || null;
-      const count = filamentStats?.count || ab.product_count || 0;
+      const variantCount = filamentStats?.count || ab.product_count || 0;
+      const productLineCount = ab.product_line_count || variantCount;
       return {
         name: ab.display_name,
-        count,
+        productLineCount,
+        variantCount,
         spoolMaterial,
         hasHighSpeed: filamentStats?.hasHighSpeed || false,
         hasEcoSpools: spoolMaterial === "Cardboard" || spoolMaterial === "Mixed",
@@ -248,7 +230,7 @@ const Brands = () => {
         colors: filamentStats?.colors || [],
         topMaterials: filamentStats?.topMaterials || [],
         averageRating: VERIFIED_BRANDS.includes(ab.display_name) ? 4.5 + Math.random() * 0.4 : null,
-        priceIndicator: getPriceIndicator(count),
+        priceIndicator: getPriceIndicator(variantCount),
         automated: ab,
       } as MergedBrand;
     });
@@ -263,6 +245,8 @@ const Brands = () => {
       .filter(b => !automatedNames.has(b.name.toLowerCase()))
       .map(b => ({
         ...b,
+        productLineCount: b.count,
+        variantCount: b.count,
         hasEcoSpools: b.spoolMaterial === "Cardboard" || b.spoolMaterial === "Mixed",
         hasRfid: (b.avgTransmissionDistance ?? 0) > 0,
         topMaterials: b.topMaterials,
@@ -271,7 +255,7 @@ const Brands = () => {
         automated: null,
       } as MergedBrand));
 
-    return [...fromAutomated, ...additionalBrands].sort((a, b) => b.count - a.count);
+    return [...fromAutomated, ...additionalBrands].sort((a, b) => b.variantCount - a.variantCount);
   }, [brands, automatedBrands]);
 
   // Get featured brands
@@ -312,14 +296,14 @@ const Brands = () => {
       const matchesCardboard = !filters.features.includes("cardboard") || 
                                brand.spoolMaterial === "Cardboard" || brand.spoolMaterial === "Mixed";
       
-      // Filament count filter
+      // Filament count filter (uses variant count for consistency with existing ranges)
       let matchesCount = true;
       if (filters.filamentCountRange === "1-50") {
-        matchesCount = brand.count >= 1 && brand.count <= 50;
+        matchesCount = brand.variantCount >= 1 && brand.variantCount <= 50;
       } else if (filters.filamentCountRange === "51-200") {
-        matchesCount = brand.count >= 51 && brand.count <= 200;
+        matchesCount = brand.variantCount >= 51 && brand.variantCount <= 200;
       } else if (filters.filamentCountRange === "200+") {
-        matchesCount = brand.count > 200;
+        matchesCount = brand.variantCount > 200;
       }
       
       return matchesSearch && matchesVerified && matchesLivePricing && 
@@ -335,11 +319,11 @@ const Brands = () => {
         result.sort((a, b) => b.name.localeCompare(a.name));
         break;
       case "count-asc":
-        result.sort((a, b) => a.count - b.count);
+        result.sort((a, b) => a.variantCount - b.variantCount);
         break;
       case "count-desc":
       default:
-        result.sort((a, b) => b.count - a.count);
+        result.sort((a, b) => b.variantCount - a.variantCount);
         break;
     }
 
@@ -370,7 +354,7 @@ const Brands = () => {
     if (!searchQuery) return [];
     return filteredBrands.map(b => ({
       name: b.name,
-      count: b.count,
+      count: b.variantCount,
       logoUrl: b.automated?.logo_url
     }));
   }, [filteredBrands, searchQuery]);
@@ -381,7 +365,7 @@ const Brands = () => {
       name: brand.name,
       url: `https://filascope.com/brands/${encodeURIComponent(brand.name)}`,
       image: brand.automated?.logo_url || undefined,
-      description: brand.automated?.description || `${brand.name} - ${brand.count} filaments available`,
+      description: brand.automated?.description || `${brand.name} - ${brand.productLineCount} products available`,
       position: index + 1,
     }));
   }, [filteredBrands]);
@@ -503,7 +487,8 @@ const Brands = () => {
                   <BrandCard
                     key={brand.name}
                     name={brand.name}
-                    count={brand.count}
+                    productLineCount={brand.productLineCount}
+                    variantCount={brand.variantCount}
                     isVerified={VERIFIED_BRANDS.includes(brand.name)}
                     hasHighSpeed={brand.hasHighSpeed}
                     hasEcoSpools={brand.hasEcoSpools}

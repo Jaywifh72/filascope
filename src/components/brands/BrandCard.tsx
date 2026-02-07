@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 
 interface BrandCardProps {
   name: string;
-  count: number;
+  productLineCount: number;
+  variantCount: number;
   isVerified: boolean;
   hasHighSpeed: boolean;
   hasEcoSpools: boolean;
@@ -18,7 +19,8 @@ interface BrandCardProps {
 
 const BrandCard = ({
   name,
-  count,
+  productLineCount,
+  variantCount,
   isVerified,
   hasHighSpeed,
   hasEcoSpools,
@@ -104,7 +106,12 @@ const BrandCard = ({
 
         {/* Key Stats Row */}
         <div className="flex items-center gap-3 text-sm text-gray-400">
-          <span>{count} filaments</span>
+          <span>
+            {productLineCount} products
+            {variantCount > productLineCount && (
+              <span className="text-gray-500"> ({variantCount} variants)</span>
+            )}
+          </span>
           {averageRating && averageRating > 0 && (
             <span className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
