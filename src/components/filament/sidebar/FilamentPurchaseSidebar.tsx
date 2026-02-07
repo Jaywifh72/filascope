@@ -154,9 +154,9 @@ export function FilamentPurchaseSidebar({
     }
   };
 
-  // === SIMPLIFIED PRICING: Use parent-provided prices directly ===
-  // The sidebar no longer does its own live price fetch. The parent (FilamentDetail)
-  // resolves the best price and passes it as pricePerSpool / pricePerKg.
+  // === UNIFIED PRICING: Trust parent-provided values directly ===
+  // The parent (FilamentDetail) uses useFilamentDetailPricing to compute the
+  // canonical best price. The sidebar is a "dumb display" — no recalculation.
   const hasValidRegionalPrice = regionalPriceResult && regionalPriceResult.displayPrice !== null && regionalPriceResult.displayPrice > 0;
   
   const displayPrice = hasValidRegionalPrice 
@@ -168,16 +168,10 @@ export function FilamentPurchaseSidebar({
     ? regionalPriceResult.isConverted 
     : false;
   
-  // Use the parent-provided pricePerKg directly — no re-calculation
-  let displayPricePerKg: number | null = pricePerKg;
-  
-  // Only recalculate if we have a regional display price that differs from the prop
-  if (hasValidRegionalPrice && displayPrice && weightGrams) {
-    const effectiveWeightKg = weightGrams / 1000;
-    if (effectiveWeightKg > 0) {
-      displayPricePerKg = displayPrice / effectiveWeightKg;
-    }
-  }
+  // Use the parent-provided pricePerKg directly — NO independent recalculation.
+  // This ensures the sidebar always agrees with the sticky bar, mobile bar,
+  // and BestPricesSection because they all receive from the same SSOT hook.
+  const displayPricePerKg: number | null = pricePerKg;
 
   // Format price with approximate indicator for converted prices
   const formattedPricePerKg = displayPricePerKg 
