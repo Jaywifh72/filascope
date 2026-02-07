@@ -55,7 +55,7 @@ const PrintersHeroSection = ({
               style={{ animationDelay: "0.15s" }}
             >
               <span className="text-primary">{printerCount.toLocaleString()}</span> units indexed from{" "}
-              <span className="text-primary">{brandCount}+</span> manufacturers. 
+              <span className="text-primary">{brandCount}+</span> brands. 
               <span className="hidden sm:inline"> Compare specs, prices, and capabilities in one unified command center.</span>
             </p>
             

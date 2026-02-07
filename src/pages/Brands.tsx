@@ -179,16 +179,39 @@ const Brands = () => {
     },
   });
 
-  // Get total product count (matching homepage methodology - exact count from DB)
-  const { data: totalProductCount, isLoading: isCountLoading } = useQuery({
-    queryKey: ["total-product-count"],
+  // Get total variant count (all filament rows) and unique product line count
+  const { data: catalogCounts, isLoading: isCountLoading } = useQuery({
+    queryKey: ["catalog-counts"],
     queryFn: async () => {
-      const { count, error } = await supabase
+      // Fetch total variants (all rows)
+      const { count: variantCount, error: variantError } = await supabase
         .from("filaments")
         .select("*", { count: "exact", head: true });
       
-      if (error) throw error;
-      return count || 0;
+      if (variantError) throw variantError;
+
+      // Fetch unique product line count
+      const { data: plData, error: plError } = await supabase
+        .from("filaments")
+        .select("product_line_id")
+        .not("product_line_id", "is", null);
+      
+      if (plError) throw plError;
+      
+      const uniqueProductLines = new Set(plData?.map(r => r.product_line_id)).size;
+      
+      // Count filaments without product_line_id (each is its own "product")
+      const { count: noLineCount, error: noLineError } = await supabase
+        .from("filaments")
+        .select("*", { count: "exact", head: true })
+        .is("product_line_id", null);
+      
+      if (noLineError) throw noLineError;
+
+      return {
+        variantCount: variantCount || 0,
+        productCount: uniqueProductLines + (noLineCount || 0),
+      };
     },
   });
 
@@ -332,8 +355,9 @@ const Brands = () => {
                           filters.hasLivePricing || 
                           filters.filamentCountRange !== null;
 
-  // Stats - use totalProductCount for product total (matches homepage exact count methodology)
-  const totalProducts = totalProductCount || 0;
+  // Stats - use catalogCounts for consistent product/variant terminology
+  const totalProducts = catalogCounts?.productCount || 0;
+  const totalVariants = catalogCounts?.variantCount || 0;
   const brandCount = mergedBrands.length;
   const isStatsLoading = isLoading || isCountLoading || !automatedBrands;
 
@@ -385,6 +409,7 @@ const Brands = () => {
         onSearchChange={setSearchQuery}
         brandCount={brandCount}
         productCount={totalProducts}
+        variantCount={totalVariants}
         isLoading={isStatsLoading}
         onOpenQuiz={handleOpenQuiz}
         brandSuggestions={brandSuggestions}

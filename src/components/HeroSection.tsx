@@ -186,7 +186,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             >
               <span className="text-primary">{displayProductCount.toLocaleString()}+</span> products with{" "}
               <span className="text-primary">{displayVariantCount.toLocaleString()}+</span> variants indexed from{" "}
-              <span className="text-primary">{displayBrandCount}+</span> manufacturers.{" "}
+              <span className="text-primary">{displayBrandCount}+</span> brands.{" "}
               Compare properties, specs, and pricing in one unified data hub.
             </p>
 

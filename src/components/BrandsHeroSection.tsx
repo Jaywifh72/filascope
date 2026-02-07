@@ -15,6 +15,7 @@ interface BrandsHeroSectionProps {
   onSearchChange: (value: string) => void;
   brandCount: number;
   productCount: number;
+  variantCount: number;
   isLoading?: boolean;
   onOpenQuiz?: () => void;
   brandSuggestions?: BrandSuggestion[];
@@ -25,6 +26,7 @@ const BrandsHeroSection = ({
   onSearchChange, 
   brandCount,
   productCount,
+  variantCount,
   isLoading = false,
   onOpenQuiz,
   brandSuggestions = []
@@ -124,7 +126,10 @@ const BrandsHeroSection = ({
               ) : (
                 <>
                   <span className="text-primary">{brandCount}</span> filament brands tracked with{" "}
-                  <span className="text-primary">{productCount.toLocaleString()}</span> products.
+                  <span className="text-primary">{productCount.toLocaleString()}</span> products
+                  {variantCount > productCount && (
+                    <> ({<span className="text-primary">{variantCount.toLocaleString()}</span>} variants)</>
+                  )}.
                 </>
               )}
               <span className="hidden sm:inline"> Find your perfect manufacturer with live pricing and verified data.</span>
@@ -333,7 +338,7 @@ const BrandsHeroSection = ({
                   SYNC_STATUS: {isLoading ? "LOADING" : "OK"}
                 </div>
                 <div className="absolute top-1/2 right-0 font-mono text-[9px] uppercase tracking-wider text-[#FF0055]/70 bg-[#FF0055]/5 border border-[#FF0055]/20 px-2 py-1 rounded">
-                  PRODUCTS: {isLoading ? "..." : productCount.toLocaleString()}
+                  VARIANTS: {isLoading ? "..." : variantCount.toLocaleString()}
                 </div>
               </div>
               
