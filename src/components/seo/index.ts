@@ -8,3 +8,5 @@ export { WebSiteSchema } from './WebSiteSchema';
 export { BreadcrumbSchema } from './BreadcrumbSchema';
 export { OrganizationSchema } from './OrganizationSchema';
 export { CanonicalLink } from './CanonicalLink';
+export { SoftwareApplicationSchema } from './SoftwareApplicationSchema';
+export { BrandOrganizationSchema } from './BrandOrganizationSchema';

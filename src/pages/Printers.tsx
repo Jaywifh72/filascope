@@ -603,7 +603,7 @@ export default function Printers() {
     <>
       <Helmet>
         <title>3D Printer Comparison — Compare FDM & Resin Printers | FilaScope</title>
-        <meta name="description" content="Compare specs, prices, and features of FDM and resin 3D printers. Side-by-side analysis to find your perfect machine." />
+        <meta name="description" content="Compare 118 FDM and resin 3D printers with specs, prices, and build volumes. Find your next printer at the best price." />
       </Helmet>
       <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}

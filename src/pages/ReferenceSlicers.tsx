@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { slicerData } from "@/lib/slicerData";
-import { getSlicersByTier, getSlicerTierInfo, SlicerTierInfo } from "@/lib/slicerTierData";
+import { getSlicersByTier, getSlicerTierInfo, slicerTierData, SlicerTierInfo } from "@/lib/slicerTierData";
+import { SoftwareApplicationSchema } from "@/components/seo";
 import { 
   SlicerFilterState, 
   INITIAL_FILTER_STATE,
@@ -286,8 +287,25 @@ const ReferenceSlicers = () => {
     <SlicerComparisonProvider>
       <Helmet>
         <title>Slicer Guide — Compare 3D Printing Slicers | FilaScope</title>
-        <meta name="description" content="Compare popular 3D printing slicers side-by-side. Find the best slicer software for your printer and workflow." />
+        <meta name="description" content="Compare 20 3D printing slicers with expert ratings, features, and pricing. Find your perfect slicer software." />
       </Helmet>
+      {/* SoftwareApplication JSON-LD for each slicer */}
+      {Object.values(slicerTierData).map((slicer) => {
+        const priceValue = slicer.priceType === 'paid' && slicer.priceValue
+          ? slicer.priceValue.replace(/[^0-9.]/g, '')
+          : '0';
+        return (
+          <SoftwareApplicationSchema
+            key={slicer.name}
+            name={slicer.name}
+            description={slicer.editorialQuote}
+            operatingSystem={slicer.platforms.join(', ')}
+            applicationCategory="DesignApplication"
+            offers={{ price: priceValue, priceCurrency: 'USD' }}
+            aggregateRating={{ ratingValue: slicer.overallScore, bestRating: 10, worstRating: 0 }}
+          />
+        );
+      })}
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
         <SlicerHeroSection 

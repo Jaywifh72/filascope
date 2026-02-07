@@ -21,6 +21,7 @@ import { BrandOverviewTab } from "@/components/brands/tabs/BrandOverviewTab";
 import { BrandAboutTab } from "@/components/brands/tabs/BrandAboutTab";
 import { BrandProductsTab } from "@/components/brands/tabs/BrandProductsTab";
 import { BrandSEO } from "@/components/seo/BrandSEO";
+import { BrandOrganizationSchema } from "@/components/seo";
 
 import { BrandBadgesDisplay, getBrandBadges } from "@/components/brands/BrandBadges";
 import { BrandFAQSection } from "@/components/brands/BrandFAQSection";
@@ -562,6 +563,13 @@ const BrandDetail = () => {
         image={brandLogo}
         productCount={filaments?.length}
         materials={availableMaterials}
+      />
+      <BrandOrganizationSchema
+        name={displayName}
+        url={brandInfo?.website}
+        logo={brandLogo}
+        description={brandInfo?.summary?.slice(0, 160)}
+        productCount={filaments?.length}
       />
 
       <div className="max-w-7xl mx-auto">
