@@ -8,6 +8,7 @@ import {
   Plus,
   Info,
   Package,
+  Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
@@ -51,6 +52,7 @@ interface Filament {
   product_url_au?: string | null;
   product_url_jp?: string | null;
   last_scraped_at?: string | null;
+  transmission_distance?: number | null;
   price_cad?: number | null;
   price_gbp?: number | null;
   price_eur?: number | null;
@@ -406,14 +408,33 @@ export function LabReadoutCard({
           {getDisplayTitle()}
         </h3>
         
-        {/* Material Badge + Price Row */}
+        {/* Material Badge + TD Badge + Price Row */}
         <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
           {/* Material Type Badge */}
           {filament.material && (
             <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
               {filament.material}
             </span>
           )}
+          {/* TD Badge */}
+          {filament.transmission_distance != null && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded cursor-help">
+                  <Lightbulb className="w-3 h-3" />
+                  TD {filament.transmission_distance}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs max-w-[220px]">
+                <p className="font-medium">Transmission Distance</p>
+                <p className="text-muted-foreground">
+                  Transmissivity value for HueForge multi-color prints. Lower = more opaque, higher = more translucent.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          </div>
           
           {/* Price Display - Enhanced with "From $X at [Retailer]" */}
           <div className="text-right flex-shrink-0">

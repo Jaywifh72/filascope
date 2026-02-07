@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette } from 'lucide-react';
+import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, Lightbulb } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MaterialBadge } from '@/components/MaterialBadge';
@@ -227,6 +228,22 @@ export function FilamentHeroSection({
                 <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-primary/20 text-primary border-primary/30">
                   📦 {packQuantity}-Pack
                 </Badge>
+              )}
+              {displayFilament.transmission_distance != null && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-xs px-2.5 py-1 bg-amber-500/10 border-amber-500/30 text-amber-400 cursor-help">
+                      <Lightbulb className="w-3 h-3 mr-1" />
+                      TD {displayFilament.transmission_distance}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                    <p className="font-medium">Transmission Distance</p>
+                    <p className="text-muted-foreground">
+                      Transmissivity value for HueForge multi-color prints. Lower = more opaque, higher = more translucent.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               )}
             </div>
 
