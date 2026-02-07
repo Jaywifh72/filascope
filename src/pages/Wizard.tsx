@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -485,7 +486,12 @@ const Wizard = () => {
   }
 
   return (
-    <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col">
+    <>
+      <Helmet>
+        <title>Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope</title>
+        <meta name="description" content="Answer 5 quick questions and get personalized 3D printer filament recommendations based on your project needs." />
+      </Helmet>
+      <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col">
       <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
         <Card className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col">
           {/* Header */}
@@ -611,6 +617,7 @@ const Wizard = () => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

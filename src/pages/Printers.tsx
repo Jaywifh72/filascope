@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -599,7 +600,12 @@ export default function Printers() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-16">
+    <>
+      <Helmet>
+        <title>3D Printer Comparison — Compare FDM & Resin Printers | FilaScope</title>
+        <meta name="description" content="Compare specs, prices, and features of FDM and resin 3D printers. Side-by-side analysis to find your perfect machine." />
+      </Helmet>
+      <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}
       <PrintersHeroSection
         searchTerm={searchTerm}
@@ -908,5 +914,6 @@ export default function Printers() {
       {/* Tech Footer */}
       <TechFooter />
     </div>
+    </>
   );
 }

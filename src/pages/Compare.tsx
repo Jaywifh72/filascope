@@ -1,5 +1,6 @@
 // Filament comparison page
 import { useEffect, useState, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -410,7 +411,12 @@ const Compare = () => {
   const emptySlots = maxSlots - filaments.length;
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <>
+      <Helmet>
+        <title>Material Knowledge Base — Filament Reference & Comparison | FilaScope</title>
+        <meta name="description" content="Compare 3D printing filaments side-by-side. Explore material properties, specs, and pricing with our interactive comparison tool." />
+      </Helmet>
+      <div className="min-h-screen bg-background relative">
       {/* Subtle background pattern matching site design */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,232,0.03)_0%,_transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,_rgba(255,0,85,0.02)_0%,_transparent_40%)] pointer-events-none" />
@@ -1206,6 +1212,7 @@ const Compare = () => {
         </Tabs>
       </div>
     </div>
+    </>
   );
 };
 

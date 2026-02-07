@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,12 @@ const Deals = () => {
     showLocalOnly;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
+      <Helmet>
+        <title>Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope</title>
+        <meta name="description" content="Find the best deals on 3D printer filaments. Compare discounts across brands and materials, updated daily." />
+      </Helmet>
+      <div className="min-h-screen flex flex-col">
       <section className="flex-1" role="region" aria-label="Deals listings">
         {/* Hero Section */}
         <section className="relative py-12 md:py-16 px-6 md:px-10">
@@ -252,6 +258,7 @@ const Deals = () => {
         </section>
       </section>
     </div>
+    </>
   );
 };
 

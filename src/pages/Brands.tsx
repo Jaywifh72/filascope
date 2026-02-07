@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2 } from "lucide-react";
@@ -364,7 +365,12 @@ const Brands = () => {
   }, [filteredBrands]);
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Filament Brand Directory — Trusted 3D Printing Brands | FilaScope</title>
+        <meta name="description" content="Browse and compare 3D printing filament brands. Find trusted manufacturers with verified products, live pricing, and material variety." />
+      </Helmet>
+      <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
       <ItemListSchema
         name="3D Printer Filament Brands"
@@ -513,6 +519,7 @@ const Brands = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
