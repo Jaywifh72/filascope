@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Table, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -283,6 +284,10 @@ const ReferenceSlicers = () => {
 
   return (
     <SlicerComparisonProvider>
+      <Helmet>
+        <title>Slicer Guide — Compare 3D Printing Slicers | FilaScope</title>
+        <meta name="description" content="Compare popular 3D printing slicers side-by-side. Find the best slicer software for your printer and workflow." />
+      </Helmet>
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
         <SlicerHeroSection 
