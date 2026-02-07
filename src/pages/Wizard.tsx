@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, ArrowRight, Sparkles, Check, ExternalLink, RefreshCw, Filter, Trophy, Lightbulb } from "lucide-react";
+import { useRegion } from "@/contexts/RegionContext";
 
 interface Question {
   id: string;
@@ -94,12 +95,55 @@ interface Recommendation {
 
 const Wizard = () => {
   const navigate = useNavigate();
+  const { convertPrice, formatPrice, hasRates, currencyConfig } = useRegion();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [showResults, setShowResults] = useState(false);
 
-  const currentQuestion = questions[currentStep];
-  const isLastQuestion = currentStep === questions.length - 1;
+  // Regionalize budget thresholds (base values in USD)
+  const budgetThresholds = useMemo(() => {
+    const low = 20;
+    const high = 35;
+
+    if (!hasRates || currencyConfig.code === 'USD') {
+      const sym = currencyConfig.code === 'USD' ? '$' : `~$`;
+      const suffix = currencyConfig.code === 'USD' ? '' : ' USD';
+      return {
+        under: `Under ${sym}${low}${suffix}`,
+        mid: `${sym}${low}${suffix} - ${sym}${high}${suffix}`,
+        premium: `${sym}${high}+${suffix}`,
+      };
+    }
+
+    const convertedLow = Math.round(convertPrice(low, 'USD'));
+    const convertedHigh = Math.round(convertPrice(high, 'USD'));
+    const formatted = (n: number) => formatPrice(n);
+
+    return {
+      under: `Under ${formatted(convertedLow)}`,
+      mid: `${formatted(convertedLow)} - ${formatted(convertedHigh)}`,
+      premium: `${formatted(convertedHigh)}+`,
+    };
+  }, [convertPrice, formatPrice, hasRates, currencyConfig]);
+
+  // Build questions with regionalized budget step
+  const localizedQuestions = useMemo(() => {
+    return questions.map(q => {
+      if (q.id !== 'budget') return q;
+      return {
+        ...q,
+        options: [
+          { value: "budget", label: budgetThresholds.under, description: "Budget-friendly options", icon: "💵" },
+          { value: "mid", label: budgetThresholds.mid, description: "Mid-range quality brands", icon: "💵💵" },
+          { value: "premium", label: budgetThresholds.premium, description: "Premium materials", icon: "💵💵💵" },
+          { value: "any", label: "No Limit", description: "Show me the best options regardless of price", icon: "🎯" },
+        ],
+      };
+    });
+  }, [budgetThresholds]);
+
+  const currentQuestion = localizedQuestions[currentStep];
+  const isLastQuestion = currentStep === localizedQuestions.length - 1;
 
   const handleSingleAnswer = (value: string) => {
     setAnswers({ ...answers, [currentQuestion.id]: value });
@@ -125,11 +169,13 @@ const Wizard = () => {
     } else {
       setCurrentStep(currentStep + 1);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
