@@ -3,6 +3,7 @@ import { Search, Sparkles, Building2, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { toBrandSlug } from "@/utils/brandSlug";
 
 interface BrandSuggestion {
   name: string;
@@ -64,7 +65,7 @@ const BrandsHeroSection = ({
 
   const handleBrandClick = (brandName: string) => {
     setShowDropdown(false);
-    navigate(`/brands/${encodeURIComponent(brandName)}`);
+    navigate(`/brands/${toBrandSlug(brandName)}`);
   };
 
   const handleClearSearch = () => {

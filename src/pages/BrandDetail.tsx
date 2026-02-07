@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toBrandSlug, isEncodedBrandName } from "@/utils/brandSlug";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { ArrowLeft, Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from 
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRegion } from "@/contexts/RegionContext";
 import { normalizeColorHex } from "@/lib/utils";
@@ -301,25 +302,33 @@ const BrandDetail = () => {
   const { brand } = useParams<{ brand: string }>();
   const navigate = useNavigate();
   const decodedBrand = brand ? decodeURIComponent(brand) : "";
+  const brandSlug = toBrandSlug(decodedBrand);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<BrandTab>("overview");
   const { isAdmin } = useAuth();
   const { formatPrice } = useRegion();
 
+  // Redirect old URL format (e.g., /brands/Spectrum%20Filaments) to slug format (/brands/spectrum-filaments)
+  useEffect(() => {
+    if (brand && isEncodedBrandName(brand)) {
+      navigate(`/brands/${brandSlug}`, { replace: true });
+    }
+  }, [brand, brandSlug, navigate]);
+
   // Fetch public brand data (safe for all users)
   const { data: automatedBrand } = useQuery({
-    queryKey: ["public-brand", decodedBrand],
+    queryKey: ["public-brand", brandSlug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("v_public_brands")
         .select("*")
-        .or(`brand_name.ilike.${decodedBrand},brand_slug.eq.${decodedBrand.toLowerCase().replace(/\s+/g, '-')}`)
+        .or(`brand_name.ilike.${decodedBrand},brand_slug.eq.${brandSlug}`)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!decodedBrand,
+    enabled: !!brandSlug,
   });
 
   // Derive proper display name and logo from DB data, falling back to slug/static map
@@ -329,29 +338,29 @@ const BrandDetail = () => {
 
   // Admin-only query for scraping status and sensitive data
   const { data: adminBrandData } = useQuery({
-    queryKey: ["admin-brand-data", decodedBrand, isAdmin],
+    queryKey: ["admin-brand-data", brandSlug, isAdmin],
     queryFn: async () => {
       if (!isAdmin) return null;
       const { data, error } = await supabase
         .from("automated_brands")
         .select("*")
-        .or(`brand_name.ilike.${decodedBrand},brand_slug.eq.${decodedBrand.toLowerCase().replace(/\s+/g, '-')}`)
+        .or(`brand_name.ilike.${decodedBrand},brand_slug.eq.${brandSlug}`)
         .maybeSingle();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!decodedBrand && isAdmin,
+    enabled: !!brandSlug && isAdmin,
   });
 
   const { data: filaments, isLoading } = useQuery({
-    queryKey: ["brand-filaments", decodedBrand],
+    queryKey: ["brand-filaments", brandSlug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
         .select("*")
         .ilike("vendor", decodedBrand.replace(/-/g, ' '))
-        .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
+        .or("net_weight_g.is.null,net_weight_g.gte.300")
         .order("product_title");
 
       if (error) throw error;
@@ -547,7 +556,7 @@ const BrandDetail = () => {
         items={[
           { name: 'Home', url: 'https://filascope.com/' },
           { name: 'Brands', url: 'https://filascope.com/brands' },
-          { name: displayName, url: `https://filascope.com/brands/${encodeURIComponent(decodedBrand)}` },
+          { name: displayName, url: `https://filascope.com/brands/${brandSlug}` },
         ]}
       />
 
@@ -555,7 +564,7 @@ const BrandDetail = () => {
       <BrandSEO
         brandName={displayName}
         description={brandInfo?.summary?.slice(0, 160)}
-        canonicalUrl={`/brands/${encodeURIComponent(decodedBrand)}`}
+        canonicalUrl={`/brands/${brandSlug}`}
         image={brandLogo}
         productCount={filaments?.length}
         materials={availableMaterials}

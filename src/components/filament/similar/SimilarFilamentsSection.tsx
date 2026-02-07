@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import { SimilarFilamentCard, type SimilarFilamentData } from "./SimilarFilamentCard";
 import { useSimilarFilamentsEnhanced } from "@/hooks/useSimilarFilamentsEnhanced";
+import { toBrandSlug } from "@/utils/brandSlug";
 
 interface CurrentFilament {
   id: string;
@@ -139,7 +140,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
               Other {brandName} Materials
             </h2>
             <Link
-              to={`/brands/${encodeURIComponent((currentFilament.vendor || "").toLowerCase().replace(/\s+/g, "-"))}`}
+              to={`/brands/${toBrandSlug(currentFilament.vendor || '')}`}
               className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 transition-colors"
             >
               All Products

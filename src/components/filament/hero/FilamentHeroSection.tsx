@@ -12,6 +12,7 @@ import { normalizeColorHex } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
 import { getProductLineName } from '@/lib/productNameUtils';
 import { getBrandLogo } from '@/lib/brandLogos';
+import { toBrandSlug } from '@/utils/brandSlug';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -120,7 +121,7 @@ export function FilamentHeroSection({
             {/* Brand Logo/Name */}
             <div>
               <Link 
-                to={`/brands/${encodeURIComponent(pricingFilament.vendor || '')}`}
+                to={`/brands/${toBrandSlug(pricingFilament.vendor || '')}`}
                 className="inline-flex items-center gap-1.5 group hover:opacity-80 transition-opacity"
               >
                 {getBrandLogo(pricingFilament.vendor) ? (

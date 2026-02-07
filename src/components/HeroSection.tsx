@@ -113,7 +113,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
       title: "Compare Tool",
       description: "Side-by-side specs & properties",
       icon: Columns3,
-      href: "/compare",
+      href: "/compare?tab=comparison",
       color: "blue",
     },
     {
