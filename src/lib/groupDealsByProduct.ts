@@ -7,6 +7,9 @@ export interface GroupedDeal {
   representativeDeal: DealWithMeta;
   variants: DealWithMeta[];
   bestDiscount: number;
+  /** Capped discount for display — if raw > 60%, shows "Great Deal" instead */
+  displayDiscount: number | null;
+  isUnusualDiscount: boolean;
   priceRange: { min: number; max: number };
   colorHexes: string[];
   colorCount: number;
@@ -33,7 +36,7 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
   }
   
   // Convert to grouped deals
-  return Array.from(groups.entries()).map(([groupKey, variants]) => {
+  const grouped = Array.from(groups.entries()).map(([groupKey, variants]) => {
     // Sort by discount (best first)
     const sorted = [...variants].sort((a, b) => b.discount - a.discount);
     const representative = sorted[0];
@@ -64,12 +67,19 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
       return ts > latest ? ts : latest;
     }, null);
 
+    const bestDiscount = representative.discount;
+    // Flag unusual discounts (> 60%) — likely data quality issues
+    const isUnusualDiscount = bestDiscount > 60;
+    const displayDiscount = isUnusualDiscount ? null : bestDiscount;
+
     return {
       groupKey,
       baseName: getBaseProductName(representative.product_title),
       representativeDeal: representative,
       variants: sorted,
-      bestDiscount: representative.discount,
+      bestDiscount,
+      displayDiscount,
+      isUnusualDiscount,
       priceRange: {
         min: prices.length > 0 ? Math.min(...prices) : 0,
         max: prices.length > 0 ? Math.max(...prices) : 0,
@@ -83,5 +93,14 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
       lastScrapedAt,
       fallbackImages,
     };
-  }).sort((a, b) => b.bestDiscount - a.bestDiscount);
+  });
+
+  // Sort: local deals first, then by discount descending
+  return grouped.sort((a, b) => {
+    // Local deals always first
+    if (a.isLocal && !b.isLocal) return -1;
+    if (!a.isLocal && b.isLocal) return 1;
+    // Then by discount
+    return b.bestDiscount - a.bestDiscount;
+  });
 }
