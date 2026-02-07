@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Palette,
   Thermometer,
+  Lightbulb,
 } from "lucide-react";
 
 // Color family definitions
@@ -76,6 +77,10 @@ interface MoreFiltersModalProps {
   // Spool Size
   largeSpools: boolean;
   onLargeSpoolsChange: (value: boolean) => void;
+  
+  // HueForge
+  hasTdData: boolean;
+  onHasTdDataChange: (value: boolean) => void;
   
   // Color
   selectedColorFamilies: string[];
@@ -154,6 +159,9 @@ export function MoreFiltersModal({
   // Spool Size
   largeSpools,
   onLargeSpoolsChange,
+  // HueForge
+  hasTdData,
+  onHasTdDataChange,
   // Color
   selectedColorFamilies,
   onColorFamiliesChange,
@@ -179,6 +187,8 @@ export function MoreFiltersModal({
     onAmsOnlyChange(false);
     // Spool Size
     onLargeSpoolsChange(false);
+    // HueForge
+    onHasTdDataChange(false);
     // Color
     onColorFamiliesChange([]);
   };
@@ -201,6 +211,8 @@ export function MoreFiltersModal({
     highSpeed, brassOnly, amsOnly,
     // Spool Size
     largeSpools,
+    // HueForge
+    hasTdData,
     // Color
     selectedColorFamilies.length > 0
   ].filter(Boolean).length;
@@ -236,7 +248,7 @@ export function MoreFiltersModal({
         <div className="flex-1 overflow-y-auto">
           <Accordion 
             type="multiple" 
-            defaultValue={["surface", "reinforced", "performance", "spool", "color"]}
+            defaultValue={["surface", "reinforced", "performance", "spool", "hueforge", "color"]}
             className="w-full"
           >
             {/* Surface Finish */}
@@ -370,6 +382,26 @@ export function MoreFiltersModal({
                     count={filterCounts['large_spools']}
                   />
                   <p className="text-[10px] text-muted-foreground px-2">By default only 1kg and smaller are shown</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* HueForge */}
+            <AccordionItem value="hueforge" className="border-b border-border/50">
+              <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <SectionIcon icon={Lightbulb} color="bg-amber-500/10 text-amber-500" />
+                  <span className="font-medium text-foreground">HueForge</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-4">
+                <div className="grid grid-cols-1 gap-1">
+                  <FilterCheckbox 
+                    checked={hasTdData} 
+                    onChange={onHasTdDataChange} 
+                    label="Has TD (Transmissivity) Data"
+                  />
+                  <p className="text-[10px] text-muted-foreground px-2">Show only filaments with measured transmission distance values for HueForge projects</p>
                 </div>
               </AccordionContent>
             </AccordionItem>
