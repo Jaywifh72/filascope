@@ -34,15 +34,15 @@ export function FilamentMobileBottomBar({
     US: '🇺🇸', CA: '🇨🇦', UK: '🇬🇧', EU: '🇪🇺', AU: '🇦🇺', JP: '🇯🇵', CN: '🇨🇳', GLOBAL: '🌐'
   };
   
+  // Normalize region code to uppercase for consistent comparison
+  const normalizedStoreRegion = storeRegion?.toUpperCase() || null;
+  
   // Show flag if store region differs from user region
-  const showRegionFlag = storeRegion && storeRegion !== userRegion && storeRegion !== 'GLOBAL';
-  const regionFlag = storeRegion ? regionFlags[storeRegion] || '' : '';
+  const showRegionFlag = !!normalizedStoreRegion && normalizedStoreRegion !== userRegion && normalizedStoreRegion !== 'GLOBAL';
+  const regionFlag = normalizedStoreRegion ? regionFlags[normalizedStoreRegion] || '' : '';
 
-  // Remove trailing region codes like "Amazon US" -> "Amazon"
-  // (only when we're already showing the flag separately)
-  const cleanStoreName = showRegionFlag
-    ? storeName.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '')
-    : storeName;
+  // Always strip trailing region codes to avoid redundancy like "Amazon US us"
+  const cleanStoreName = storeName.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '').trim();
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;

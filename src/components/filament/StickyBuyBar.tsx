@@ -35,10 +35,10 @@ const regionFlags: Record<string, string> = {
   US: '🇺🇸', CA: '🇨🇦', UK: '🇬🇧', EU: '🇪🇺', AU: '🇦🇺', JP: '🇯🇵', CN: '🇨🇳', GLOBAL: '🌐'
 };
 
-/** Strip trailing region codes from store names when flag is shown separately */
-function cleanStoreName(name: string, showFlag: boolean): string {
-  if (!showFlag) return name;
-  return name.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '');
+/** Strip trailing region codes from store names to avoid redundancy like "Amazon US us" */
+function cleanStoreName(name: string): string {
+  // Always strip trailing region codes — the region is shown via flag or implied by "local"
+  return name.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '').trim();
 }
 
 export function StickyBuyBar({ 
@@ -55,12 +55,15 @@ export function StickyBuyBar({
   const { trackStoreClick } = useConversionTracking();
   const { formatPrice, region: userRegion } = useRegion();
 
+  // Normalize region code to uppercase for consistent comparison
+  const normalizedStoreRegion = storeRegion?.toUpperCase() || null;
+  
   // Determine if store is from a different region
-  const showRegionFlag = !!storeRegion && storeRegion !== userRegion && storeRegion !== 'GLOBAL';
-  const regionFlag = storeRegion ? regionFlags[storeRegion] || '' : '';
+  const showRegionFlag = !!normalizedStoreRegion && normalizedStoreRegion !== userRegion && normalizedStoreRegion !== 'GLOBAL';
+  const regionFlag = normalizedStoreRegion ? regionFlags[normalizedStoreRegion] || '' : '';
 
-  // Resolve display name: use storeName from sidebarBest, fallback to vendor
-  const displayStoreName = cleanStoreName(storeName || filament.vendor || 'Store', showRegionFlag);
+  // Resolve display name: always strip trailing region codes to avoid "Amazon US us"
+  const displayStoreName = cleanStoreName(storeName || filament.vendor || 'Store');
   const hasTrackedImpression = useRef(false);
   
   // Format using useRegion's formatPrice with approximate indicator for converted prices

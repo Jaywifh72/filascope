@@ -625,19 +625,20 @@ const FilamentDetail = () => {
         : null
     : null;
 
-  // ─── Sidebar props from unified pricing hook ───
+  // ─── Sidebar props from unified pricing hook (SSOT — no fallback to independent hooks) ───
+  // When detailPricing has resolved, trust it exclusively. Only fall back to legacy
+  // sources when detailPricing hasn't found anything at all.
   const sidebarAffiliateUrl = detailPricing.affiliateUrl
     || getAffiliateUrl(
-        storeBestPrice?.productUrl || selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament?.product_url || '',
+        pricingFilament?.product_url || '',
         pricingFilament?.vendor
       );
   const sidebarRetailerName = detailPricing.storeName
-    || storeBestPrice?.storeName || unifiedPricing.storeName || pricingFilament?.vendor || undefined;
+    || pricingFilament?.vendor || undefined;
   const sidebarPricePerKg = detailPricing.pricePerKg ?? rawPricePerKg;
   const sidebarPricePerSpool = detailPricing.pricePerSpool ?? rawPricePerSpool;
   const sidebarProductUrl = detailPricing.productUrl
-    || storeBestPrice?.productUrl || selectedVariant?.product_url
-    || unifiedPricing.storeUrl || pricingFilament?.product_url || '';
+    || pricingFilament?.product_url || '';
 
   const baseProductName = getBaseName(filament.product_title);
   
@@ -879,7 +880,7 @@ const FilamentDetail = () => {
         pricePerKg={sidebarPricePerKg}
         affiliateUrl={sidebarAffiliateUrl}
         storeName={sidebarRetailerName || 'Store'}
-        storeRegion={detailPricing.storeRegion || unifiedPricing.storeRegion}
+        storeRegion={detailPricing.storeRegion || undefined}
         isConverted={detailPricing.isConverted}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
@@ -1001,7 +1002,7 @@ const FilamentDetail = () => {
           isVisible={stickyBarVisible}
           isConverted={detailPricing.isConverted}
           storeName={sidebarRetailerName || undefined}
-          storeRegion={detailPricing.storeRegion || unifiedPricing.storeRegion}
+          storeRegion={detailPricing.storeRegion || undefined}
         />
       )}
 
