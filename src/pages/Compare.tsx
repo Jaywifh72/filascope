@@ -23,8 +23,9 @@ import { CompareActionRow, TDValueBadge } from "@/components/compare/CompareActi
 import { MobileCompareView } from "@/components/compare/MobileCompareView";
 import { MobileStickyBuyBar } from "@/components/compare/MobileStickyBuyBar";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
-import { useCurrency } from "@/hooks/useCurrency";
 import { useCompare } from "@/hooks/useCompare";
+import { useCompareRegionalPrices } from "@/hooks/useCompareRegionalPrices";
+import { useRegion } from "@/contexts/RegionContext";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   RadarChart,
@@ -54,7 +55,10 @@ const Compare = () => {
   const [error, setError] = useState<string | null>(null);
   const [diffMode, setDiffMode] = useState(false);
   const { getAffiliateUrl } = useAffiliateLinks();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useRegion();
+  
+  // Resolve regional prices for all filaments
+  const { prices: resolvedPrices, bestPriceIndices: regionalBestPriceIndices, isLoading: pricesLoading } = useCompareRegionalPrices(filaments);
   
   // Access the compare tray context
   const { items: compareItems, removeItem: removeFromContext } = useCompare();
@@ -214,23 +218,9 @@ const Compare = () => {
     setSearchParams(newParams);
   };
 
-  const getPricePerKg = (price: number | null, weight: number | null): number | null => {
-    if (!price || !weight) return null;
-    return (price / weight) * 1000;
-  };
-
-  const getPricePerKgFormatted = (price: number | null, weight: number | null): string | null => {
-    const pricePerKg = getPricePerKg(price, weight);
-    return pricePerKg !== null ? pricePerKg.toFixed(2) : null;
-  };
-
-  // Find the index of the filament with the best (lowest) price per kg
-  const pricesPerKg = filaments.map(f => getPricePerKg(f.variant_price, f.net_weight_g));
-  const validPrices = pricesPerKg.filter((p): p is number => p !== null);
-  const bestPricePerKg = validPrices.length > 0 ? Math.min(...validPrices) : null;
-  const bestPriceIndices = pricesPerKg
-    .map((p, idx) => (p !== null && p === bestPricePerKg ? idx : -1))
-    .filter(idx => idx !== -1);
+  // Use regional prices for best price calculation
+  const pricesPerKg = filaments.map(f => resolvedPrices.get(f.id)?.pricePerKg ?? null);
+  const bestPriceIndices = regionalBestPriceIndices;
 
   // Find best values: "higher" = higher is better, "lower" = lower is better
   const findBestIndices = (values: (string | number | null | boolean)[], mode: CompareMode): number[] => {
@@ -567,6 +557,7 @@ const Compare = () => {
           bestPriceIndices={bestPriceIndices}
           overallWinnerIndices={overallWinnerIndices}
           totalCategories={totalCategories}
+          resolvedPrices={resolvedPrices}
         />
 
         {/* Mobile Sticky Buy Bar */}
@@ -574,6 +565,7 @@ const Compare = () => {
           filaments={filaments}
           overallWinnerIndices={overallWinnerIndices}
           bestPriceIndices={bestPriceIndices}
+          resolvedPrices={resolvedPrices}
         />
 
         {/* Desktop Sticky Filament Headers */}
@@ -581,8 +573,8 @@ const Compare = () => {
           <div className="grid gap-4" style={{ gridTemplateColumns: `200px repeat(${maxSlots}, 1fr)` }}>
             <div></div>
             {filaments.map((filament, idx) => {
-              const affiliateUrl = getAffiliateUrl(filament.product_url, filament.vendor);
-              const inStock = filament.variant_available !== false;
+              const resolved = resolvedPrices.get(filament.id);
+              const inStock = resolved?.inStock ?? filament.variant_available !== false;
               const isWinner = overallWinnerIndices.includes(idx);
               const filamentSlug = filament.product_handle || filament.id;
               
@@ -612,7 +604,6 @@ const Compare = () => {
                       
                       {/* Image and brand row */}
                       <div className="flex items-start gap-3">
-                        {/* Filament image or color swatch */}
                         <div className="shrink-0">
                           {filament.featured_image ? (
                             <img
@@ -631,8 +622,6 @@ const Compare = () => {
                             </div>
                           )}
                         </div>
-                        
-                        {/* Brand logo */}
                         <div className="flex-1 min-w-0">
                           {filament.vendor && getBrandLogo(filament.vendor) ? (
                             <img
@@ -654,21 +643,23 @@ const Compare = () => {
                         <div className="flex gap-1 flex-wrap">
                           {filament.material && <Badge variant="outline" className="text-xs">{filament.material}</Badge>}
                         </div>
-                        {filament.variant_price && filament.net_weight_g && (
-                          <div className={`text-lg font-bold shrink-0 ${bestPriceIndices.includes(filaments.indexOf(filament)) ? "text-amber-500" : "text-primary"}`}>
+                        {resolved?.formattedPricePerKg && (
+                          <div className={`text-lg font-bold shrink-0 ${bestPriceIndices.includes(idx) ? "text-amber-500" : "text-primary"}`}>
                             <div className="flex items-center gap-1">
-                              {bestPriceIndices.includes(filaments.indexOf(filament)) && (
+                              {bestPriceIndices.includes(idx) && (
                                 <Trophy className="w-4 h-4 shrink-0" />
                               )}
-                              <span>${getPricePerKgFormatted(filament.variant_price, filament.net_weight_g)}/kg</span>
+                              <span>{resolved.formattedPricePerKg}/kg</span>
                             </div>
+                            {resolved.isConverted && (
+                              <span className="text-[10px] text-muted-foreground font-normal">(converted)</span>
+                            )}
                           </div>
                         )}
                       </div>
                       
                       {/* Action buttons row */}
                       <div className="flex gap-2">
-                        {/* View Details link */}
                         <Button
                           asChild
                           variant="ghost"
@@ -681,8 +672,7 @@ const Compare = () => {
                           </a>
                         </Button>
                         
-                        {/* Buy button */}
-                        {affiliateUrl && (
+                        {resolved?.affiliateUrl && (
                           <Button
                             asChild
                             size="sm"
@@ -694,7 +684,7 @@ const Compare = () => {
                             )}
                           >
                             <a 
-                              href={affiliateUrl} 
+                              href={resolved.affiliateUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               onClick={(e) => {
@@ -702,7 +692,7 @@ const Compare = () => {
                               }}
                             >
                               <ShoppingCart className="w-3.5 h-3.5" />
-                              {inStock ? "Buy" : "Out"}
+                              {inStock ? (resolved.storeName ? `Buy` : "Buy") : "Out"}
                               <ExternalLink className="w-3 h-3 opacity-60" />
                             </a>
                           </Button>

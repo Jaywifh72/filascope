@@ -5,7 +5,10 @@ import { getBrandLogo } from "@/lib/brandLogos";
 import { CompareItem } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { useResolvedPrice } from "@/hooks/useResolvedPrice";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { getRegionalUrlForCurrency } from "@/hooks/useRegionalPrice";
+import { useRegion } from "@/contexts/RegionContext";
 import {
   Tooltip,
   TooltipContent,
@@ -68,12 +71,16 @@ export function MiniFilamentCard({
   cardIndex,
 }: MiniFilamentCardProps) {
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { currency } = useRegion();
   const brandLogo = item.vendor ? getBrandLogo(item.vendor) : null;
-  const pricePerKg = item.variant_price && item.net_weight_g 
-    ? item.variant_price / (item.net_weight_g / 1000) 
-    : null;
-  const affiliateUrl = (item as any).product_url 
-    ? getAffiliateUrl((item as any).product_url, item.vendor) 
+  
+  // Use the canonical resolved price hook for regional pricing
+  const resolved = useResolvedPrice(item as any);
+  
+  // Get regional URL for affiliate link
+  const regionalUrl = getRegionalUrlForCurrency(item as any, currency);
+  const affiliateUrl = regionalUrl
+    ? getAffiliateUrl(regionalUrl, item.vendor)
     : null;
 
   // Clean title - remove brand name and size/weight suffixes
@@ -225,9 +232,9 @@ export function MiniFilamentCard({
 
         {/* Price & Quick Buy */}
         <div className="flex items-center justify-between mt-auto gap-2">
-          {pricePerKg && pricePerKg > 0 && pricePerKg < 500 && (
+          {resolved.formattedPricePerKg && (
             <p className="text-sm font-mono font-bold text-primary">
-              ${pricePerKg.toFixed(2)}/kg
+              {resolved.formattedPricePerKg}/kg
             </p>
           )}
           {affiliateUrl && (
