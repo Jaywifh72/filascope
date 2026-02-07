@@ -1,91 +1,96 @@
 
-# Fix Sticky Bar and Mobile Bottom Bar Regional Store Alignment
 
-## Problem Analysis
+# Fix Brand Cards to Show Accurate Material Tags
 
-Three components display pricing on the filament detail page, and they currently source their data differently:
+## Problem
 
-| Component | Store Name Source | Price Source | Store/Region Source |
-|-----------|------------------|-------------|---------------------|
-| **Sidebar** (desktop) | `sidebarBest.name` via `sidebarRegionalPrice` | `sidebarPricePerKg` (from `sidebarBest`) | `sidebarRegionalPrice.store.regionCode` |
-| **Mobile Bottom Bar** | `sidebarRetailerName` (correct) | `sidebarPricePerKg` (correct) | `sidebarBest?.storeRegion` (correct) |
-| **Sticky Buy Bar** | `filament.vendor` (WRONG - hardcoded) | `sidebarPricePerKg` (correct) | No region awareness at all |
+The `detectMaterialsForBrand()` function in `src/pages/Brands.tsx` (lines 78-84) is a placeholder that generates material tags using a hash of the brand name against a static list `["PLA", "PETG", "ABS", "TPU", "ASA"]`. This means nearly every brand shows the same generic tags.
 
-The `sidebarBest` calculation (lines 257-406 in FilamentDetail.tsx) is a well-designed unified best-price resolver that collects candidates from 4 sources (filament_listings, store pricing RPC, brand regional stores, and legacy Amazon), converts them all to the user's currency, and picks the cheapest local store (falling back to international). The sidebar and mobile bottom bar already receive this data. **The sticky buy bar does not.**
+**Example**: Proto-Pasta currently shows "PLA, ABS, TPU" but their actual database products are:
+- HTPLA: 328 products
+- PLA-CF: 12 products
+- PLA: 11 products
+- HTPLA-CF: 5 products
+- PLA-Conductive: 3 products
 
-### Root Causes
+## Solution
 
-1. **StickyBuyBar hardcodes vendor as store name**: Line 184 shows `{filament.vendor || 'Store'}` in the CTA button. It has no `storeName` prop -- it always displays the filament's brand name, not the actual best-price retailer.
-
-2. **StickyBuyBar has no "from [Store]" display**: Unlike the mobile bottom bar which shows "from Polymaker Canada", the sticky bar shows no store attribution at all.
-
-3. **Mobile bottom bar `isConverted` is wrong**: Line 1107 passes `isConverted={unifiedPricing.isConverted}` which reads from the `useUnifiedRegionalPricing` hook (Source 3 only), ignoring whether `sidebarBest` came from a listing or store pricing source. Should use `sidebarBest?.isConverted`.
-
-4. **"Amazon US us" duplication**: The `retailer_name` from the `retailers` table may already contain "Amazon US". When the mobile bar then appends a region flag for non-local stores, if the regionFlags lookup fails (e.g., region code is lowercase or unexpected), it produces empty text or a raw code like "us" next to the already-suffixed name. The fix is to strip region suffixes from store names before display.
+Add `material` to the existing filaments query and aggregate the top 3 materials per vendor from real database data, replacing the placeholder function entirely.
 
 ## Changes
 
-### 1. Update `StickyBuyBar` to accept store info props
-**File:** `src/components/filament/StickyBuyBar.tsx`
+### 1. Extend the existing filaments query (`src/pages/Brands.tsx`)
 
-Add new props:
-- `storeName?: string` -- the best retailer's display name
-- `storeRegion?: string` -- the store's region code (for flag/local detection)
+The query on line 119 already fetches `vendor, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g`. Add `material` to this select list.
 
-Changes to the component:
-- In the desktop CTA button (line 184), replace `{filament.vendor || 'Store'}` with `{storeName || filament.vendor || 'Store'}`
-- In the desktop price section (around line 150-155), add a small "from [StoreName]" attribution line below the price, matching the mobile bottom bar's format
-- In the mobile CTA button (line 248), add the store name display
+### 2. Aggregate top materials per vendor in the reducer
 
-### 2. Pass `sidebarBest` data to `StickyBuyBar`
-**File:** `src/pages/FilamentDetail.tsx`
+Inside the existing `brandStats` reducer (lines 127-155), collect material counts per vendor. Then, when building the `BrandStats` array (lines 157-178), derive the top 3 materials sorted by count.
 
-Update the `StickyBuyBar` render (lines 1218-1226) to pass:
-- `storeName={sidebarRetailerName}` -- already computed at line 860
-- `storeRegion={sidebarBest?.storeRegion || unifiedPricing.storeRegion}` -- same pattern used for mobile bar
-- `isConverted={sidebarBest?.isConverted ?? unifiedPricing.isConverted}` -- fix to use sidebarBest first
-
-### 3. Fix mobile bottom bar `isConverted` prop
-**File:** `src/pages/FilamentDetail.tsx`
-
-Change line 1107 from:
+The aggregation logic:
 ```
-isConverted={unifiedPricing.isConverted}
-```
-to:
-```
-isConverted={sidebarBest?.isConverted ?? unifiedPricing.isConverted}
+For each filament row:
+  - Track material counts in a Map<string, number> per vendor
+  - Skip null/empty materials
+
+When building BrandStats:
+  - Sort each vendor's materials by count descending
+  - Take the top 4 (matching the BrandCard display limit)
+  - Return as topMaterials string[]
 ```
 
-This ensures the conversion indicator matches the actual price source displayed.
+### 3. Update the BrandStats interface
 
-### 4. Clean store name to prevent region code duplication
-**File:** `src/components/filament/sidebar/FilamentMobileBottomBar.tsx`
+Add `topMaterials: string[]` to the `BrandStats` interface (lines 50-57) since materials will now come from the query rather than the placeholder function.
 
-Add a small utility to strip trailing region codes from store names before rendering, since the region is already shown via the flag:
+### 4. Remove `detectMaterialsForBrand` function
+
+Delete the entire placeholder function (lines 78-84) and update both merge locations (lines 248 and 267) to use the actual `topMaterials` from `filamentStats` instead.
+
+### 5. Fix the sidebar `materialCounts` placeholder
+
+The `materialCounts` memo (lines 282-295) also uses hardcoded percentages. Replace it with actual counts derived from the same query data -- count how many distinct brands carry each material type.
+
+## Technical Details
+
+**Query change** (line 120):
 ```typescript
-// Remove trailing region codes like "Amazon US" -> "Amazon"
-// (only when we're already showing the flag separately)
-const cleanStoreName = showRegionFlag
-  ? storeName.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '')
-  : storeName;
+.select("vendor, material, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g")
 ```
 
-Apply the same logic in `StickyBuyBar.tsx` for consistency.
+**Reducer addition** (inside the existing loop):
+```typescript
+// Track material counts per vendor
+if (f.material) {
+  const mat = f.material;
+  acc[f.vendor].materialCounts.set(mat, (acc[f.vendor].materialCounts.get(mat) || 0) + 1);
+}
+```
 
-## Files Changed
+**Top materials extraction** (in the BrandStats mapping):
+```typescript
+topMaterials: [...stats.materialCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 4)
+  .map(([material]) => material)
+```
 
-| File | Change |
-|------|--------|
-| `src/components/filament/StickyBuyBar.tsx` | Add `storeName`, `storeRegion` props; show store attribution; use store name in CTA |
-| `src/pages/FilamentDetail.tsx` | Pass `storeName`, `storeRegion`, fix `isConverted` on both sticky bar and mobile bar |
-| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Clean store name to prevent region duplication |
+**Merge references** (lines 248 and 267):
+```typescript
+// Before (placeholder):
+topMaterials: detectMaterialsForBrand(ab.display_name),
 
-## Verification
+// After (real data):
+topMaterials: filamentStats?.topMaterials || [],
+```
 
-After implementation, the following should hold true:
-- Desktop sticky bar shows: `$21.26/kg` + "from Polymaker Canada" + CTA "BUY NOW | Polymaker Canada"
-- Mobile bottom bar shows: `$21.26/kg` + "from Polymaker Canada" + CTA "Buy at Polymaker Canada"
-- Sidebar shows: Same store and price as above
-- When region switches to US, all three update together to show the US best price
-- No "Amazon US us" duplication -- store names are cleaned when flags are shown separately
+## Files Modified
+
+- `src/pages/Brands.tsx` -- All changes are in this single file
+
+## What stays the same
+
+- `BrandCard.tsx` component -- already supports dynamic `topMaterials` prop with up to 4 badges and a "+N" overflow indicator
+- No database changes needed -- the `material` column already exists with good data coverage
+- No new queries needed -- we extend the existing one
+
