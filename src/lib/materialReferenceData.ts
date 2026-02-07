@@ -1,4 +1,7 @@
 // Comprehensive material reference data for the encyclopedia
+import { EXTENDED_MATERIAL_REFERENCE_DATA } from './materialReferenceDataExtended';
+import { MATERIAL_ALIASES } from './materialReferenceAliases';
+
 
 export interface TDSProperty {
   name: string;
@@ -14804,9 +14807,51 @@ export const MATERIAL_REFERENCE_DATA: Record<string, MaterialReferenceInfo> = {
 };
 
 export function getMaterialReference(material: string): MaterialReferenceInfo | undefined {
-  return MATERIAL_REFERENCE_DATA[material];
+  if (!material) return undefined;
+  
+  // 1. Try direct lookup
+  if (MATERIAL_REFERENCE_DATA[material]) {
+    return MATERIAL_REFERENCE_DATA[material];
+  }
+  
+  // 2. Try extended data lookup
+  if (EXTENDED_MATERIAL_REFERENCE_DATA[material]) {
+    return EXTENDED_MATERIAL_REFERENCE_DATA[material];
+  }
+  
+  // 3. Try alias lookup
+  const alias = MATERIAL_ALIASES[material];
+  if (alias) {
+    if (MATERIAL_REFERENCE_DATA[alias]) return MATERIAL_REFERENCE_DATA[alias];
+    if (EXTENDED_MATERIAL_REFERENCE_DATA[alias]) return EXTENDED_MATERIAL_REFERENCE_DATA[alias];
+  }
+  
+  // 4. Try case-insensitive lookup
+  const lowerMaterial = material.toLowerCase();
+  
+  // Check main data keys
+  const mainKey = Object.keys(MATERIAL_REFERENCE_DATA).find(k => k.toLowerCase() === lowerMaterial);
+  if (mainKey) return MATERIAL_REFERENCE_DATA[mainKey];
+  
+  // Check extended data keys
+  const extendedKey = Object.keys(EXTENDED_MATERIAL_REFERENCE_DATA).find(k => k.toLowerCase() === lowerMaterial);
+  if (extendedKey) return EXTENDED_MATERIAL_REFERENCE_DATA[extendedKey];
+  
+  // Check alias keys
+  const aliasKey = Object.keys(MATERIAL_ALIASES).find(k => k.toLowerCase() === lowerMaterial);
+  if (aliasKey) {
+    const canonicalName = MATERIAL_ALIASES[aliasKey];
+    if (MATERIAL_REFERENCE_DATA[canonicalName]) return MATERIAL_REFERENCE_DATA[canonicalName];
+    if (EXTENDED_MATERIAL_REFERENCE_DATA[canonicalName]) return EXTENDED_MATERIAL_REFERENCE_DATA[canonicalName];
+  }
+
+  return undefined;
 }
 
 export function getAllMaterialsWithReference(): string[] {
-  return Object.keys(MATERIAL_REFERENCE_DATA);
+  return [
+    ...Object.keys(MATERIAL_REFERENCE_DATA),
+    ...Object.keys(EXTENDED_MATERIAL_REFERENCE_DATA)
+  ].sort();
 }
+
