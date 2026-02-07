@@ -26,6 +26,7 @@ interface FilamentHeroSectionProps {
     product_title: string;
     net_weight_g: number | null;
     product_url: string | null;
+    variant_available?: boolean | null;
   }>;
   onSelectColor: (variant: any) => void;
   getColorFromTitle: (title: string, baseName: string) => string | null;

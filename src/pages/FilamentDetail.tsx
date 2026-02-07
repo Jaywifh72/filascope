@@ -961,6 +961,7 @@ const FilamentDetail = () => {
                 product_title: v.product_title,
                 net_weight_g: v.net_weight_g,
                 product_url: v.product_url,
+                variant_available: v.variant_available,
               }))}
               onSelectColor={(variant) => {
                 const fullVariant = colorVariants.find(v => v.id === variant.id);
