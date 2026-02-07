@@ -54,8 +54,8 @@ import {
   usePrinterActivityStats
 } from "@/hooks/usePrinterAnalytics";
 import { useNavigate } from "react-router-dom";
+import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import {
-  ArrowLeft,
   Box,
   Cpu,
   Gauge,
@@ -93,7 +93,7 @@ import {
   Upload,
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
-import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
+import { ProductSEO, ProductJsonLd } from "@/components/seo";
 
 const PrinterDetail = () => {
   const { id } = useParams();
@@ -600,15 +600,7 @@ const PrinterDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20 lg:pb-0">
-      {/* Breadcrumb Schema */}
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://filascope.com/' },
-          { name: 'Printers', url: 'https://filascope.com/printers' },
-          ...(printerBrand ? [{ name: printerBrand, url: `https://filascope.com/printers?brand=${encodeURIComponent(printerBrand)}` }] : []),
-          { name: printerModel, url: `https://filascope.com/printer/${printer.printer_id || printer.id}` },
-        ]}
-      />
+      {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
 
       {/* SEO Meta Tags */}
       <ProductSEO
@@ -643,10 +635,14 @@ const PrinterDetail = () => {
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
         {/* Navigation */}
-        <Button variant="ghost" onClick={() => navigate('/printers')} className="mb-4 sm:mb-6 hover:bg-accent/50 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+        <DetailBreadcrumb
+          segments={[
+            { label: "Printers", href: "/printers" },
+            ...(printerBrand ? [{ label: printerBrand, href: `/printers?brand=${encodeURIComponent(printerBrand)}` }] : []),
+            { label: printerModel, href: `/printers/${printer.printer_id || printer.id}` },
+          ]}
+          mobileBackLabel="Printers"
+        />
 
         {/* Main Content with Sticky Sidebar Container - spans full page */}
         <div className="flex gap-6 lg:gap-8 items-start">

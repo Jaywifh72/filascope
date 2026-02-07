@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toBrandSlug, isEncodedBrandName } from "@/utils/brandSlug";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { getBrandInfo } from "@/lib/brandInfo";
 import type { Tables } from "@/integrations/supabase/types";
@@ -20,7 +21,7 @@ import { BrandOverviewTab } from "@/components/brands/tabs/BrandOverviewTab";
 import { BrandAboutTab } from "@/components/brands/tabs/BrandAboutTab";
 import { BrandProductsTab } from "@/components/brands/tabs/BrandProductsTab";
 import { BrandSEO } from "@/components/seo/BrandSEO";
-import { BreadcrumbSchema } from "@/components/seo";
+
 import { BrandBadgesDisplay, getBrandBadges } from "@/components/brands/BrandBadges";
 import { BrandFAQSection } from "@/components/brands/BrandFAQSection";
 
@@ -551,14 +552,7 @@ const BrandDetail = () => {
 
   return (
     <div className="min-h-screen p-8">
-      {/* Breadcrumb Schema */}
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://filascope.com/' },
-          { name: 'Brands', url: 'https://filascope.com/brands' },
-          { name: displayName, url: `https://filascope.com/brands/${brandSlug}` },
-        ]}
-      />
+      {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
 
       {/* Brand SEO */}
       <BrandSEO
@@ -571,10 +565,13 @@ const BrandDetail = () => {
       />
 
       <div className="max-w-7xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate("/brands")} className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Brands
-        </Button>
+        <DetailBreadcrumb
+          segments={[
+            { label: "Brands", href: "/brands" },
+            { label: displayName, href: `/brands/${brandSlug}` },
+          ]}
+          mobileBackLabel="Brands"
+        />
 
         {/* Brand Hero Section */}
         <BrandHeroSection

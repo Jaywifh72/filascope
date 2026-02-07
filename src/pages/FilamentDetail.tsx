@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ExternalLink, Printer } from "lucide-react";
+import { ExternalLink, Printer } from "lucide-react";
+import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +44,7 @@ import type { RegionCode, CurrencyCode } from "@/types/regional";
 import { REGIONS } from "@/config/regions";
 import { RegionNotAvailable } from "@/components/filament/RegionNotAvailable";
 import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
-import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
+import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
@@ -530,10 +531,10 @@ const FilamentDetail = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
         <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-accent/50 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+          <DetailBreadcrumb
+            segments={[{ label: "Filaments", href: "/" }]}
+            mobileBackLabel="Filaments"
+          />
           
           <Card className="max-w-2xl mx-auto bg-card/50 border-border/50">
             <CardContent className="p-8 text-center">
@@ -570,10 +571,10 @@ const FilamentDetail = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
         <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-accent/50 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+          <DetailBreadcrumb
+            segments={[{ label: "Filaments", href: "/" }]}
+            mobileBackLabel="Filaments"
+          />
           
           <RegionNotAvailable
             productTitle={displayFilament.product_title}
@@ -662,15 +663,7 @@ const FilamentDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Breadcrumb Schema */}
-      <BreadcrumbSchema
-        items={[
-          { name: 'Home', url: 'https://filascope.com/' },
-          { name: 'Materials', url: 'https://filascope.com/' },
-          ...(displayFilament.vendor ? [{ name: displayFilament.vendor, url: `https://filascope.com/brands/${brandSlug}` }] : []),
-          { name: productLineName, url: `https://filascope.com/filament/${displayFilament.id}` },
-        ]}
-      />
+      {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
 
       {/* SEO Meta Tags - Uses product line name for better SEO */}
       <ProductSEO
@@ -712,10 +705,14 @@ const FilamentDetail = () => {
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-accent/50 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+        <DetailBreadcrumb
+          segments={[
+            { label: "Filaments", href: "/" },
+            ...(displayFilament.vendor ? [{ label: displayFilament.vendor, href: `/brands/${brandSlug}` }] : []),
+            { label: productLineName, href: `/filament/${displayFilament.id}` },
+          ]}
+          mobileBackLabel={displayFilament.vendor || "Filaments"}
+        />
 
         {/* Main Layout: Content + Sidebar */}
         <div className="flex gap-8">
