@@ -1,101 +1,91 @@
 
-# Add Price History Sparkline to Product Detail Sidebar
+# Fix Sticky Bar and Mobile Bottom Bar Regional Store Alignment
 
-## Overview
-Add a compact, interactive price history sparkline to the filament detail sidebar that provides visual proof of price trends. Clicking it scrolls to (or opens) the full price history chart already in the Pricing tab. For products with insufficient data, show a "Price tracking started [date]" message instead.
+## Problem Analysis
 
-## Data Reality Check
-- **669** filaments have price history records (out of ~7,500 total)
-- **659** of those have only **1 data point** (not enough for a sparkline)
-- **10** filaments have 2+ points; **7** have 3+ points
-- The sparkline will show for a small subset now, but the infrastructure scales as weekly scraping continues
+Three components display pricing on the filament detail page, and they currently source their data differently:
 
-This means the "insufficient data" fallback state will be the **most commonly seen** state initially, making it critical to design well.
+| Component | Store Name Source | Price Source | Store/Region Source |
+|-----------|------------------|-------------|---------------------|
+| **Sidebar** (desktop) | `sidebarBest.name` via `sidebarRegionalPrice` | `sidebarPricePerKg` (from `sidebarBest`) | `sidebarRegionalPrice.store.regionCode` |
+| **Mobile Bottom Bar** | `sidebarRetailerName` (correct) | `sidebarPricePerKg` (correct) | `sidebarBest?.storeRegion` (correct) |
+| **Sticky Buy Bar** | `filament.vendor` (WRONG - hardcoded) | `sidebarPricePerKg` (correct) | No region awareness at all |
 
-## Implementation Approach
+The `sidebarBest` calculation (lines 257-406 in FilamentDetail.tsx) is a well-designed unified best-price resolver that collects candidates from 4 sources (filament_listings, store pricing RPC, brand regional stores, and legacy Amazon), converts them all to the user's currency, and picks the cheapest local store (falling back to international). The sidebar and mobile bottom bar already receive this data. **The sticky buy bar does not.**
 
-### 1. New Component: `SidebarPriceHistory`
-**File:** `src/components/filament/sidebar/SidebarPriceHistory.tsx` (new)
+### Root Causes
 
-A self-contained component that wraps the existing `usePriceHistory` hook and renders one of three states:
+1. **StickyBuyBar hardcodes vendor as store name**: Line 184 shows `{filament.vendor || 'Store'}` in the CTA button. It has no `storeName` prop -- it always displays the filament's brand name, not the actual best-price retailer.
 
-**State A -- Sparkline (3+ data points):**
-- Reuses the existing `PriceSparkline` SVG component (zero additional bundle cost -- pure SVG, no Recharts)
-- Height: 40px (matching existing sparkline sizing), full sidebar width
-- Shows min/max point markers (green dot for low, red for high)
-- Below the sparkline: a single-line summary like "Low: $18.50 | Avg: $21.30 | High: $24.00" in small text
-- The entire sparkline area is clickable -- clicking scrolls to the Pricing tab and opens the full `PriceHistoryChart`
-- Subtle hover effect with "View full history" tooltip
+2. **StickyBuyBar has no "from [Store]" display**: Unlike the mobile bottom bar which shows "from Polymaker Canada", the sticky bar shows no store attribution at all.
 
-**State B -- Early tracking (1-2 data points):**
-- Small text: "Price tracking started [formatted date]" with a clock icon
-- No chart rendered, keeping the sidebar clean
-- Clickable to scroll to the Pricing tab
+3. **Mobile bottom bar `isConverted` is wrong**: Line 1107 passes `isConverted={unifiedPricing.isConverted}` which reads from the `useUnifiedRegionalPricing` hook (Source 3 only), ignoring whether `sidebarBest` came from a listing or store pricing source. Should use `sidebarBest?.isConverted`.
 
-**State C -- No data at all:**
-- Renders nothing (silent absence, consistent with project convention for missing premium data like TD badges)
+4. **"Amazon US us" duplication**: The `retailer_name` from the `retailers` table may already contain "Amazon US". When the mobile bar then appends a region flag for non-local stores, if the regionFlags lookup fails (e.g., region code is lowercase or unexpected), it produces empty text or a raw code like "us" next to the already-suffixed name. The fix is to strip region suffixes from store names before display.
 
-### 2. Integrate into `FilamentPurchaseSidebar`
-**File:** `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`
+## Changes
 
-- Import and place `SidebarPriceHistory` between the `PriceUrgencyBadge` block (line ~263) and the primary CTA button (line ~268)
-- Pass `filamentId`, `currentPrice` (using `displayPricePerKg`), and a callback for scrolling to the pricing tab
-- The component uses the user's regional currency via the existing `useRegion` context (already available in the sidebar)
+### 1. Update `StickyBuyBar` to accept store info props
+**File:** `src/components/filament/StickyBuyBar.tsx`
 
-### 3. Add Scroll-to-Pricing-Tab Callback
+Add new props:
+- `storeName?: string` -- the best retailer's display name
+- `storeRegion?: string` -- the store's region code (for flag/local detection)
+
+Changes to the component:
+- In the desktop CTA button (line 184), replace `{filament.vendor || 'Store'}` with `{storeName || filament.vendor || 'Store'}`
+- In the desktop price section (around line 150-155), add a small "from [StoreName]" attribution line below the price, matching the mobile bottom bar's format
+- In the mobile CTA button (line 248), add the store name display
+
+### 2. Pass `sidebarBest` data to `StickyBuyBar`
 **File:** `src/pages/FilamentDetail.tsx`
 
-- Add a `handleScrollToPricing` callback that:
-  1. Sets the active tab to "pricing" (the tab containing `PriceHistoryChart`)
-  2. Scrolls the pricing section into view using `scrollIntoView({ behavior: 'smooth' })`
-- Pass this callback down through `FilamentPurchaseSidebar` as a new `onViewPriceHistory` prop
+Update the `StickyBuyBar` render (lines 1218-1226) to pass:
+- `storeName={sidebarRetailerName}` -- already computed at line 860
+- `storeRegion={sidebarBest?.storeRegion || unifiedPricing.storeRegion}` -- same pattern used for mobile bar
+- `isConverted={sidebarBest?.isConverted ?? unifiedPricing.isConverted}` -- fix to use sidebarBest first
 
-### 4. Currency Integration
-- The sparkline component uses `useRegion().formatPrice` for the min/avg/high summary line -- same pattern as the rest of the sidebar
-- The `usePriceHistory` hook returns raw numeric values; formatting happens at the display layer
-- The `currencySymbol` prop on `PriceHistoryChart` (full chart) already receives the user's currency symbol from `PricingTabContent`
+### 3. Fix mobile bottom bar `isConverted` prop
+**File:** `src/pages/FilamentDetail.tsx`
 
-## Component Structure
-
-```text
-FilamentPurchaseSidebar
-  +-- Material Badge
-  +-- HonestPriceDisplay (price)
-  +-- PriceUrgencyBadge ("Lowest in 6mo")
-  +-- SidebarPriceHistory  <-- NEW
-  |     State A: PriceSparkline + min/avg/high stats
-  |     State B: "Price tracking started Jan 18" 
-  |     State C: (renders nothing)
-  +-- Buy Button (CTA)
-  +-- Compare Button
-  ...
+Change line 1107 from:
+```
+isConverted={unifiedPricing.isConverted}
+```
+to:
+```
+isConverted={sidebarBest?.isConverted ?? unifiedPricing.isConverted}
 ```
 
-## Technical Details
+This ensures the conversion indicator matches the actual price source displayed.
 
-**No new dependencies** -- reuses:
-- `PriceSparkline` (existing pure SVG component)
-- `usePriceHistory` (existing hook, fetches from `price_history` table)
-- `useRegion` (existing context for currency formatting)
+### 4. Clean store name to prevent region code duplication
+**File:** `src/components/filament/sidebar/FilamentMobileBottomBar.tsx`
 
-**Props for `SidebarPriceHistory`:**
-- `filamentId: string`
-- `currentPrice: number | null` -- the resolved regional price per kg
-- `onViewFullHistory?: () => void` -- callback to scroll/switch to pricing tab
+Add a small utility to strip trailing region codes from store names before rendering, since the region is already shown via the flag:
+```typescript
+// Remove trailing region codes like "Amazon US" -> "Amazon"
+// (only when we're already showing the flag separately)
+const cleanStoreName = showRegionFlag
+  ? storeName.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '')
+  : storeName;
+```
 
-**Performance:**
-- The `usePriceHistory` hook is already called by `PriceUrgencyBadge` in the sidebar with the same `filamentId`. Both will share the same Supabase query result via React's render cycle (same effect dependencies). No duplicate network requests.
-- The `PriceSparkline` is pure SVG with `useMemo` -- renders in microseconds.
-
-**Responsive behavior:**
-- Desktop (lg+): Sparkline appears in the 300px sticky sidebar
-- Mobile: Not shown in the mobile bottom bar (too compact). Users can still access the full chart via the Pricing tab. The mobile bar remains focused on price + buy CTA.
+Apply the same logic in `StickyBuyBar.tsx` for consistency.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/filament/sidebar/SidebarPriceHistory.tsx` | New component |
-| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | Add SidebarPriceHistory below urgency badge |
-| `src/components/filament/sidebar/index.ts` | Export new component (if needed) |
-| `src/pages/FilamentDetail.tsx` | Add `onViewPriceHistory` callback, pass to sidebar |
+| `src/components/filament/StickyBuyBar.tsx` | Add `storeName`, `storeRegion` props; show store attribution; use store name in CTA |
+| `src/pages/FilamentDetail.tsx` | Pass `storeName`, `storeRegion`, fix `isConverted` on both sticky bar and mobile bar |
+| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | Clean store name to prevent region duplication |
+
+## Verification
+
+After implementation, the following should hold true:
+- Desktop sticky bar shows: `$21.26/kg` + "from Polymaker Canada" + CTA "BUY NOW | Polymaker Canada"
+- Mobile bottom bar shows: `$21.26/kg` + "from Polymaker Canada" + CTA "Buy at Polymaker Canada"
+- Sidebar shows: Same store and price as above
+- When region switches to US, all three update together to show the US best price
+- No "Amazon US us" duplication -- store names are cleaned when flags are shown separately
