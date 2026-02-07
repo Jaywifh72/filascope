@@ -140,16 +140,16 @@ export function PurchaseSidebar({
                 <Shield className="h-4 w-4 text-primary" />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-base font-medium text-white">
+                <span className="text-base font-medium text-foreground">
                   {warrantyYears} Year{warrantyYears > 1 ? 's' : ''} Warranty
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   From {brand || 'manufacturer'}
                 </span>
               </div>
             </div>
             {warrantyCoverage && (
-              <p className="text-xs text-gray-500 leading-relaxed mt-1">
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1">
                 {warrantyCoverage}
               </p>
             )}

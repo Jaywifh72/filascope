@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
+import { ThemeProvider } from "./components/ThemeProvider";
 import { SiteFooter } from "./components/SiteFooter";
 import { RegionProvider } from "./contexts/RegionContext";
 import { CurrencyProvider } from "./hooks/useCurrency";
@@ -128,6 +129,7 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <ErrorBoundary>
+  <ThemeProvider>
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <RegionProvider>
@@ -269,6 +271,7 @@ const App = () => (
       </RegionProvider>
     </QueryClientProvider>
   </HelmetProvider>
+  </ThemeProvider>
   </ErrorBoundary>
 );
 

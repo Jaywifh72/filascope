@@ -363,7 +363,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
                 <div className="absolute top-4 right-0 font-mono text-[9px] uppercase tracking-wider text-primary/70 bg-primary/5 border border-primary/20 px-2 py-1 rounded">
                   MATERIAL_DB: ACTIVE
                 </div>
-                <div className="absolute bottom-8 left-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground bg-white/5 border border-white/10 px-2 py-1 rounded">
+                <div className="absolute bottom-8 left-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground bg-foreground/5 border border-foreground/10 px-2 py-1 rounded">
                   T_NOZZLE: 215°C
                 </div>
                 <div className="absolute top-1/2 right-0 font-mono text-[9px] uppercase tracking-wider text-[#FF0055]/70 bg-[#FF0055]/5 border border-[#FF0055]/20 px-2 py-1 rounded">
