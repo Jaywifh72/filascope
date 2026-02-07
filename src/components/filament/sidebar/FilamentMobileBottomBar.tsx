@@ -38,6 +38,12 @@ export function FilamentMobileBottomBar({
   const showRegionFlag = storeRegion && storeRegion !== userRegion && storeRegion !== 'GLOBAL';
   const regionFlag = storeRegion ? regionFlags[storeRegion] || '' : '';
 
+  // Remove trailing region codes like "Amazon US" -> "Amazon"
+  // (only when we're already showing the flag separately)
+  const cleanStoreName = showRegionFlag
+    ? storeName.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '')
+    : storeName;
+
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
@@ -69,7 +75,7 @@ export function FilamentMobileBottomBar({
                 <span className="text-sm text-muted-foreground">/kg</span>
               </div>
               <span className="text-xs text-muted-foreground truncate">
-                from {storeName} {showRegionFlag && regionFlag}
+                from {cleanStoreName} {showRegionFlag && regionFlag}
               </span>
             </div>
           ) : (
@@ -109,7 +115,7 @@ export function FilamentMobileBottomBar({
               )}
             >
               <ShoppingCart className="h-4 w-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">Buy at {storeName}</span>
+              <span className="whitespace-nowrap">Buy at {cleanStoreName}</span>
               <ExternalLink className="h-3 w-3 opacity-70 flex-shrink-0" />
             </Button>
           ) : (
