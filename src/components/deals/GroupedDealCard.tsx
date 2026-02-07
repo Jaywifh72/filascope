@@ -9,8 +9,32 @@ import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPri
 import { DealShareModal } from "./DealShareModal";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useRegionalStores } from "@/hooks/useRegionalStores";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
+
+/** Color-coded freshness badge for deal cards */
+function DealFreshnessBadge({ lastScrapedAt, freshnessText }: { lastScrapedAt: string | null | undefined; freshnessText: string }) {
+  const getFreshnessColor = () => {
+    if (!lastScrapedAt) return { text: 'text-muted-foreground', border: 'border-muted', bg: 'bg-muted/30' };
+    const days = differenceInDays(new Date(), new Date(lastScrapedAt));
+    if (days < 3) return { text: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' };
+    if (days < 14) return { text: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' };
+    if (days < 30) return { text: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' };
+    return { text: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10' };
+  };
+
+  const colors = getFreshnessColor();
+
+  return (
+    <Badge
+      variant="outline"
+      className={cn("gap-1 text-[10px] mb-2", colors.border, colors.bg, colors.text)}
+    >
+      <Clock className="h-3 w-3" />
+      Checked {freshnessText} ago
+    </Badge>
+  );
+}
 
 interface GroupedDealCardProps {
   group: GroupedDeal;
@@ -295,15 +319,9 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             />
           )}
 
-          {/* Price Freshness Badge */}
+          {/* Price Freshness Badge with color coding */}
           {freshnessText && (
-            <Badge
-              variant="outline"
-              className="gap-1 text-[10px] border-muted bg-muted/30 text-muted-foreground mb-2"
-            >
-              <Clock className="h-3 w-3" />
-              Checked {freshnessText} ago
-            </Badge>
+            <DealFreshnessBadge lastScrapedAt={group.lastScrapedAt} freshnessText={freshnessText} />
           )}
 
           {/* Color Swatches */}
