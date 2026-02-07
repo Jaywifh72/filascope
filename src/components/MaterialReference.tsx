@@ -36,7 +36,7 @@ import {
   Leaf,
   Printer,
   BookOpen,
-  Check,
+  FileQuestion,
   Filter
 } from "lucide-react";
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
@@ -1024,7 +1024,7 @@ const MaterialReference = () => {
                           {hasReference ? (
                             <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
                           ) : (
-                            <Check className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                            <FileQuestion className="w-3.5 h-3.5 text-amber-500/60 shrink-0" />
                           )}
                         </button>
                       ))}
