@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeIlikeInput } from "../_shared/sanitize-input.ts";
 import { getBrandFixPrompt, MODULARIZED_BRANDS } from '../_shared/post-sync-check/brand-prompts/index.ts';
 import { CheckResult, PostSyncCheckReport } from '../_shared/post-sync-check/types.ts';
 import { 
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
     const { data: filaments, count: totalProducts } = await supabase
       .from('filaments')
       .select('id, product_title, product_line_id, color_hex, color_family, material, variant_price, featured_image, product_url, vendor', { count: 'exact' })
-      .ilike('vendor', brandName);
+      .ilike('vendor', sanitizeIlikeInput(brandName));
 
     console.log(`[PostSyncCheck] Found ${totalProducts} products for ${brandName}`);
 

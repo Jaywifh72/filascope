@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sanitizeIlikeInput } from '../_shared/sanitize-input.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -91,7 +92,8 @@ Deno.serve(async (req) => {
       .limit(limit)
 
     if (vendor) {
-      query = query.ilike('vendor', `%${vendor}%`)
+      const safeVendor = sanitizeIlikeInput(vendor)
+      query = query.ilike('vendor', `%${safeVendor}%`)
     }
 
     const { data: filaments, error: fetchError } = await query
