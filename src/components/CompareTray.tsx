@@ -23,6 +23,8 @@ import { KeyboardHints } from "@/components/compare/KeyboardHints";
 import { ClearConfirmDialog } from "@/components/compare/ClearConfirmDialog";
 import { SaveComparisonDialog } from "@/components/compare/SaveComparisonDialog";
 import { MobileCompareTray } from "@/components/compare/MobileCompareTray";
+import { CompareTrayPill } from "@/components/compare/CompareTrayPill";
+import { useCompareTrayMode } from "@/hooks/useCompareTrayMode";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,6 +41,7 @@ export function CompareTray() {
   const navigate = useNavigate();
   const location = useLocation();
   const trayRef = useRef<HTMLDivElement>(null);
+  const trayMode = useCompareTrayMode();
   const [hasEntered, setHasEntered] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -139,6 +142,16 @@ export function CompareTray() {
   // Don't render if no items
   if (count === 0) {
     return null;
+  }
+
+  // Hidden on active comparison page
+  if (trayMode === "hidden") {
+    return null;
+  }
+
+  // Pill mode on non-filament pages
+  if (trayMode === "pill") {
+    return <CompareTrayPill />;
   }
 
   const canCompare = count >= 2;

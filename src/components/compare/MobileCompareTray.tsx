@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GitCompare, X, ChevronUp, Share2, Trash2, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
+import { useCompareTrayMode } from "@/hooks/useCompareTrayMode";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -23,6 +24,7 @@ export function MobileCompareTray({ onSaveForLater }: MobileCompareTrayProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { items, count, removeItem, clearAll, reorderItems } = useCompare();
+  const trayMode = useCompareTrayMode();
   const [user, setUser] = useState<any>(null);
 
   // Check auth status
@@ -30,7 +32,11 @@ export function MobileCompareTray({ onSaveForLater }: MobileCompareTrayProps) {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
   });
 
-  if (count === 0) return null;
+  // Hidden on active comparison page or no items
+  if (count === 0 || trayMode === "hidden") return null;
+
+  // On non-filament pages, the pill is handled by CompareTrayPill (desktop+mobile)
+  if (trayMode === "pill") return null;
 
   const canCompare = count >= 2;
 
