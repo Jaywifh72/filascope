@@ -275,20 +275,27 @@ export function PricingTabContent({
       const isLocal = store.regionCode === region;
       const regionConfig = REGIONS[store.regionCode as keyof typeof REGIONS];
       
-      // Get native price (if available) or estimate from pricePerKg
-      const nativePrice = pricePerKg; // This would ideally come from store-specific pricing
-      const convertedPrice = nativePrice && !isLocal 
-        ? convertPrice(nativePrice, store.currencyCode as CurrencyCode)
-        : nativePrice;
+      // pricePerKg is already in the user's currency (e.g., EUR for EU users)
+      // Compute the native price in the store's own currency by reverse-converting
+      const storeCurrencyCode = store.currencyCode as CurrencyCode;
+      let nativePriceInStoreCurrency: number | null = null;
+      if (pricePerKg) {
+        if (storeCurrencyCode === currency) {
+          nativePriceInStoreCurrency = pricePerKg;
+        } else {
+          const rate = getConversionRate(currency as CurrencyCode, storeCurrencyCode);
+          nativePriceInStoreCurrency = Math.round(pricePerKg * rate * 100) / 100;
+        }
+      }
       
       items.push({
         id: store.id,
         name: store.storeName,
         regionCode: store.regionCode,
         regionFlag: regionConfig?.flag || '🌐',
-        nativePrice: nativePrice,
+        nativePrice: nativePriceInStoreCurrency,
         nativeCurrency: store.currencyCode,
-        convertedPrice: convertedPrice,
+        convertedPrice: pricePerKg, // already in user's currency
         userCurrency: currency,
         isLocal,
         url: storeUrl,
@@ -319,11 +326,29 @@ export function PricingTabContent({
       const isLocal = retailerRegion === region;
       const regionConfig = REGIONS[retailerRegion as keyof typeof REGIONS];
       
-      // Use retailer price if available
-      const nativePrice = retailer.price || pricePerKg;
-      const convertedPrice = nativePrice && !isLocal
-        ? convertPrice(nativePrice, retailerCurrency as CurrencyCode)
-        : nativePrice;
+      // retailer.price is in the retailer's native currency if from listings,
+      // pricePerKg fallback is already in user's currency
+      const hasRetailerNativePrice = !!retailer.price;
+      let nativePrice: number | null;
+      let convertedPrice: number | null;
+      
+      if (hasRetailerNativePrice && retailer.price) {
+        // retailer.price is in the retailer's native currency
+        nativePrice = retailer.price;
+        convertedPrice = isLocal ? retailer.price : convertPrice(retailer.price, retailerCurrency as CurrencyCode);
+      } else if (pricePerKg) {
+        // pricePerKg is in user's currency — reverse-convert to get native price
+        if (retailerCurrency === currency) {
+          nativePrice = pricePerKg;
+        } else {
+          const rate = getConversionRate(currency as CurrencyCode, retailerCurrency as CurrencyCode);
+          nativePrice = Math.round(pricePerKg * rate * 100) / 100;
+        }
+        convertedPrice = pricePerKg; // already in user's currency
+      } else {
+        nativePrice = null;
+        convertedPrice = null;
+      }
       
       items.push({
         id: retailer.id,
@@ -429,7 +454,7 @@ export function PricingTabContent({
       
       return priceA - priceB;
     });
-  }, [allStores, retailers, region, currency, pricePerKg, productSku, filament.product_handle, convertPrice]);
+  }, [allStores, retailers, region, currency, pricePerKg, productSku, filament.product_handle, convertPrice, getConversionRate]);
 
   return (
     <div className="space-y-6">
