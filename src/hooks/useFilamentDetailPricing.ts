@@ -241,11 +241,11 @@ export function useFilamentDetailPricing(
         pricePerSpool: price / packQty,
         productUrl: listing.product_url,
         affiliateUrl: getAffiliateUrl(rawUrl, filament.vendor) || rawUrl,
-        storeRegion: listing.region,
+        storeRegion: listing.region?.toUpperCase() || null,
         isBrandDirect: listing.retailer_name.toLowerCase() === (filament.vendor || '').toLowerCase(),
         isConverted: converted,
         originalCurrency: origCurrency,
-        isLocal: listing.region === region,
+        isLocal: (listing.region?.toUpperCase() || '') === region,
         retailerLogo: listing.retailer_logo,
       });
     }
@@ -262,11 +262,11 @@ export function useFilamentDetailPricing(
         pricePerSpool: sp.priceDisplay / packQty,
         productUrl: rawUrl,
         affiliateUrl: getAffiliateUrl(rawUrl, filament.vendor) || rawUrl,
-        storeRegion: sp.storeRegion,
+        storeRegion: sp.storeRegion?.toUpperCase() || null,
         isBrandDirect: sp.storeType === 'brand_direct',
         isConverted: sp.isConverted,
         originalCurrency: sp.originalCurrency || null,
-        isLocal: sp.isLocalStore,
+        isLocal: (sp.storeRegion?.toUpperCase() || '') === region || sp.isLocalStore,
       });
     }
     
@@ -280,7 +280,7 @@ export function useFilamentDetailPricing(
         pricePerSpool: unifiedPricing.displayPrice / packQty,
         productUrl: unifiedPricing.storeUrl,
         affiliateUrl: getAffiliateUrl(unifiedPricing.storeUrl, filament.vendor) || unifiedPricing.storeUrl,
-        storeRegion: unifiedPricing.storeRegion,
+        storeRegion: unifiedPricing.storeRegion?.toUpperCase() || null,
         isBrandDirect: true,
         isConverted: unifiedPricing.isConverted,
         originalCurrency: unifiedPricing.originalCurrency || null,
