@@ -1562,7 +1562,7 @@ const Finder = () => {
         onSearchChange={setSearchTerm}
         filamentCount={filamentCount || 0}
         productCount={totalCount}
-        brandCount={brands?.length || 23}
+        brandCount={brands?.length || 42}
         compatibleCount={totalCount}
         isLoading={isLoading || filamentCount === undefined}
       />
