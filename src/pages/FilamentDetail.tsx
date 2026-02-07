@@ -1104,7 +1104,7 @@ const FilamentDetail = () => {
         affiliateUrl={sidebarAffiliateUrl}
         storeName={sidebarRetailerName || 'Store'}
         storeRegion={sidebarBest?.storeRegion || unifiedPricing.storeRegion}
-        isConverted={unifiedPricing.isConverted}
+        isConverted={sidebarBest?.isConverted ?? unifiedPricing.isConverted}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
 
@@ -1221,7 +1221,9 @@ const FilamentDetail = () => {
           affiliateUrl={sidebarAffiliateUrl}
           pricePerKg={sidebarPricePerKg}
           isVisible={stickyBarVisible}
-          isConverted={unifiedPricing.isConverted || !hasActualRegionalPrice}
+          isConverted={sidebarBest?.isConverted ?? unifiedPricing.isConverted ?? !hasActualRegionalPrice}
+          storeName={sidebarRetailerName || undefined}
+          storeRegion={sidebarBest?.storeRegion || unifiedPricing.storeRegion}
         />
       )}
 

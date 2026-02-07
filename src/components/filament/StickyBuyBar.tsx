@@ -24,6 +24,21 @@ interface StickyBuyBarProps {
   stockQuantity?: number | null;
   /** Whether the displayed price was converted from another currency */
   isConverted?: boolean;
+  /** Best retailer's display name (from sidebarBest) */
+  storeName?: string;
+  /** Store's region code for flag/local detection */
+  storeRegion?: string;
+}
+
+// Region flags for display
+const regionFlags: Record<string, string> = {
+  US: '🇺🇸', CA: '🇨🇦', UK: '🇬🇧', EU: '🇪🇺', AU: '🇦🇺', JP: '🇯🇵', CN: '🇨🇳', GLOBAL: '🌐'
+};
+
+/** Strip trailing region codes from store names when flag is shown separately */
+function cleanStoreName(name: string, showFlag: boolean): string {
+  if (!showFlag) return name;
+  return name.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '');
 }
 
 export function StickyBuyBar({ 
@@ -34,9 +49,18 @@ export function StickyBuyBar({
   stockStatus = 'in_stock',
   stockQuantity,
   isConverted = false,
+  storeName,
+  storeRegion,
 }: StickyBuyBarProps) {
   const { trackStoreClick } = useConversionTracking();
-  const { formatPrice } = useRegion();
+  const { formatPrice, region: userRegion } = useRegion();
+
+  // Determine if store is from a different region
+  const showRegionFlag = !!storeRegion && storeRegion !== userRegion && storeRegion !== 'GLOBAL';
+  const regionFlag = storeRegion ? regionFlags[storeRegion] || '' : '';
+
+  // Resolve display name: use storeName from sidebarBest, fallback to vendor
+  const displayStoreName = cleanStoreName(storeName || filament.vendor || 'Store', showRegionFlag);
   const hasTrackedImpression = useRef(false);
   
   // Format using useRegion's formatPrice with approximate indicator for converted prices
@@ -148,9 +172,14 @@ export function StickyBuyBar({
               size="small"
             />
             {formattedPrice && (
-              <div className="text-2xl font-bold text-white tracking-tight">
-                {formattedPrice}
-                <span className="text-sm font-medium text-slate-400 ml-1">/kg</span>
+              <div className="flex flex-col items-end">
+                <div className="text-2xl font-bold text-white tracking-tight">
+                  {formattedPrice}
+                  <span className="text-sm font-medium text-slate-400 ml-1">/kg</span>
+                </div>
+                <span className="text-xs text-slate-400">
+                  from {displayStoreName} {showRegionFlag && regionFlag}
+                </span>
               </div>
             )}
           </div>
@@ -181,7 +210,7 @@ export function StickyBuyBar({
               <span>BUY NOW</span>
               <span className="ml-3 pl-3 border-l border-primary-foreground/20 flex items-center gap-1.5 text-sm font-semibold opacity-80">
                 <ExternalLink className="w-3.5 h-3.5" />
-                {filament.vendor || 'Store'}
+                {displayStoreName}
               </span>
             </Button>
           </div>
@@ -245,7 +274,7 @@ export function StickyBuyBar({
             aria-label={`Buy ${filament.product_title}`}
           >
             <ShoppingCart className="w-5 h-5 mr-2.5" />
-            BUY NOW
+            Buy at {displayStoreName}
           </Button>
         </div>
       </div>
