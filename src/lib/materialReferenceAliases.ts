@@ -196,7 +196,38 @@ export const MATERIAL_ALIASES: Record<string, string> = {
 
   // High-performance aliases
   'ESD-PEI': 'PEI 1010',
+  'PEI-CF': 'PEI 1010',
+  'PPS-CF': 'PPS',
+  'PPS AM230': 'PPS',
+  'PPS-GF': 'PPS',
+  'PEKK-A': 'PEKK',
+  'PEKK-CF': 'PEKK',
 
   // Flexible aliases not already present
   'PEBA Air': 'PEBA',
+  'ESD-TPU': 'TPU',
+
+  // Polycarbonate aliases
+  'PC Blend': 'PC',
+  'PC Pro': 'PC',
+  'ezPC': 'PC',
+
+  // Nylon aliases
+  'ESD-PA12': 'PA12',
+  'PPA-CF': 'PPA',
+  'PPA-CF-Core': 'PPA',
+
+  // Copolyester aliases
+  'CoPoly-CF': 'CoPoly-nGen',
+  'Pro PCTG': 'PCTG',
+  'PCTG Premium': 'PCTG',
+  'PCTG CF10': 'PCTG',
+  'PCTG GF10': 'PCTG',
+
+  // Specialty aliases
+  'SimuBone': 'PLA',
+  'Ryno': 'Nylon-CF',
+  'Carbon Fiber': 'PLA-CF',
+  'Wood PLA': 'PLA-Wood',
+  'PLA-Starlight': 'PLA-Galaxy',
 };

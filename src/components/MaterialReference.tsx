@@ -873,7 +873,7 @@ const MaterialReference = () => {
             name: normalizedName,
             normalizedName,
             category: category.name,
-            hasReference: !!MATERIAL_REFERENCE_DATA[materialName] || !!MATERIAL_REFERENCE_DATA[normalizedName],
+            hasReference: !!getMaterialReference(materialName) || !!getMaterialReference(normalizedName),
             originalNames: [materialName],
           });
         }
