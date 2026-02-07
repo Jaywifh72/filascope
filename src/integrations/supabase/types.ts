@@ -388,6 +388,7 @@ export type Database = {
           price_extraction_config: Json | null
           price_selectors: Json | null
           product_count: number | null
+          product_line_count: number | null
           product_list_selector: string | null
           product_url_pattern: string | null
           products_created: number | null
@@ -468,6 +469,7 @@ export type Database = {
           price_extraction_config?: Json | null
           price_selectors?: Json | null
           product_count?: number | null
+          product_line_count?: number | null
           product_list_selector?: string | null
           product_url_pattern?: string | null
           products_created?: number | null
@@ -548,6 +550,7 @@ export type Database = {
           price_extraction_config?: Json | null
           price_selectors?: Json | null
           product_count?: number | null
+          product_line_count?: number | null
           product_list_selector?: string | null
           product_url_pattern?: string | null
           products_created?: number | null
@@ -8967,6 +8970,7 @@ export type Database = {
           is_visible: boolean | null
           logo_url: string | null
           product_count: number | null
+          product_line_count: number | null
           website_url: string | null
         }
         Insert: {
@@ -8983,6 +8987,7 @@ export type Database = {
           is_visible?: boolean | null
           logo_url?: string | null
           product_count?: number | null
+          product_line_count?: number | null
           website_url?: string | null
         }
         Update: {
@@ -8999,6 +9004,7 @@ export type Database = {
           is_visible?: boolean | null
           logo_url?: string | null
           product_count?: number | null
+          product_line_count?: number | null
           website_url?: string | null
         }
         Relationships: []
@@ -9121,6 +9127,13 @@ export type Database = {
           last_scrape_at: string
           platform_type: string
           scrape_frequency_hours: number
+        }[]
+      }
+      get_catalog_counts: {
+        Args: never
+        Returns: {
+          product_count: number
+          variant_count: number
         }[]
       }
       get_deal_alerts: {

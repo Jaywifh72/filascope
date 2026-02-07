@@ -184,7 +184,7 @@ export function BrandHeroSection({
             />
             <SpecCard
               icon={<Tag className="w-5 h-5" />}
-              label="Avg Price"
+              label="Price Range"
               value={avgPriceRange || '—'}
             />
             <SpecCard
