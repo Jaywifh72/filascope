@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ShoppingCart, ExternalLink } from "lucide-react";
+import { ShoppingCart, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useRegion } from "@/contexts/RegionContext";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { PriceUrgencyBadge } from "./urgency/PriceUrgencyBadge";
 import { StockUrgencyIndicator } from "./urgency/StockUrgencyIndicator";
 import { ShippingCountdown } from "./urgency/ShippingCountdown";
+import { differenceInDays } from "date-fns";
 
 interface StickyBuyBarProps {
   filament: {
@@ -16,6 +17,7 @@ interface StickyBuyBarProps {
     featured_image: string | null;
     variant_price: number | null;
     net_weight_g: number | null;
+    last_scraped_at?: string | null;
   };
   affiliateUrl: string | null;
   pricePerKg: number | null;
@@ -70,6 +72,18 @@ export function StickyBuyBar({
   const formattedPrice = pricePerKg 
     ? formatPrice(pricePerKg, { showApproximate: isConverted })
     : null;
+
+  // Price freshness for display
+  const priceUpdatedText = (() => {
+    const lastScraped = filament.last_scraped_at;
+    if (!lastScraped) return null;
+    const date = new Date(lastScraped);
+    if (isNaN(date.getTime())) return null;
+    const days = differenceInDays(new Date(), date);
+    if (days < 1) return 'Updated today';
+    if (days === 1) return 'Updated 1d ago';
+    return `Updated ${days}d ago`;
+  })();
 
   // Track impression when bar becomes visible
   useEffect(() => {
@@ -180,9 +194,17 @@ export function StickyBuyBar({
                   {formattedPrice}
                   <span className="text-sm font-medium text-slate-400 ml-1">/kg</span>
                 </div>
-                <span className="text-xs text-slate-400">
-                  from {displayStoreName} {showRegionFlag && regionFlag}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">
+                    from {displayStoreName} {showRegionFlag && regionFlag}
+                  </span>
+                  {priceUpdatedText && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-slate-500">
+                      <Clock className="w-2.5 h-2.5" />
+                      {priceUpdatedText}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -250,6 +272,12 @@ export function StickyBuyBar({
                   {formattedPrice}
                   <span className="text-xs font-medium text-slate-400 ml-0.5">/kg</span>
                 </div>
+              )}
+              {priceUpdatedText && (
+                <span className="flex items-center gap-0.5 text-[10px] text-slate-500 justify-end">
+                  <Clock className="w-2.5 h-2.5" />
+                  {priceUpdatedText}
+                </span>
               )}
               <PriceUrgencyBadge
                 filamentId={filament.id}

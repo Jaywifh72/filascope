@@ -12,8 +12,10 @@ import {
   ArrowDown,
   Globe,
   Truck,
-  ShoppingCart
+  ShoppingCart,
+  Clock
 } from 'lucide-react';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
 import { useRegion } from '@/contexts/RegionContext';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
@@ -77,12 +79,24 @@ interface UnifiedStoreItem {
   url: string;
   type: 'official' | 'marketplace' | 'retailer';
   inStock: boolean;
+  lastChecked?: string | null;
 }
 
 // Store Row Component
-function StoreRow({ store, userCurrencySymbol }: { store: UnifiedStoreItem; userCurrencySymbol: string }) {
+function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: UnifiedStoreItem; userCurrencySymbol: string; lastScrapedAt?: string | null }) {
   const nativeSymbol = CURRENCY_SYMBOLS[store.nativeCurrency] || store.nativeCurrency;
   
+  // Determine freshness for display
+  const checkedAt = store.lastChecked || lastScrapedAt;
+  const freshnessText = checkedAt ? (() => {
+    const date = new Date(checkedAt);
+    if (isNaN(date.getTime())) return null;
+    const days = differenceInDays(new Date(), date);
+    if (days < 1) return 'Today';
+    if (days === 1) return '1 day ago';
+    return `${days} days ago`;
+  })() : null;
+
   const handleClick = () => {
     window.open(store.url, '_blank', 'noopener,noreferrer');
   };
@@ -130,6 +144,13 @@ function StoreRow({ store, userCurrencySymbol }: { store: UnifiedStoreItem; user
               </>
             )}
           </div>
+          {/* Last checked timestamp */}
+          {freshnessText && (
+            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-muted-foreground/70">
+              <Clock className="w-2.5 h-2.5" />
+              <span>Last checked: {freshnessText}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -501,6 +522,7 @@ export function PricingTabContent({
                   key={store.id} 
                   store={store} 
                   userCurrencySymbol={userCurrencySymbol}
+                  lastScrapedAt={filament.last_scraped_at}
                 />
               ))}
             </div>
