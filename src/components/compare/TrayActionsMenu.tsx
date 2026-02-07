@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { CompareItem } from "@/hooks/useCompare";
 
 interface TrayActionsMenuProps {
@@ -65,14 +66,17 @@ export function TrayActionsMenu({
     if (!canExport) return;
     
     const headers = ['Name', 'Brand', 'Material', 'Price/kg'];
-    const rows = items.map(item => [
-      item.product_title,
-      item.vendor || '',
-      item.material || '',
-      item.variant_price && item.net_weight_g 
-        ? `$${((item.variant_price / item.net_weight_g) * 1000).toFixed(2)}`
-        : '',
-    ]);
+    const rows = items.map(item => {
+      const ppkg = item.variant_price
+        ? computePricePerKg(item.variant_price, item.net_weight_g, (item as any).pack_quantity)
+        : null;
+      return [
+        item.product_title,
+        item.vendor || '',
+        item.material || '',
+        ppkg ? `$${ppkg.toFixed(2)}` : '',
+      ];
+    });
     
     const csvContent = [headers, ...rows]
       .map(row => row.map(cell => `"${cell}"`).join(','))
@@ -97,8 +101,8 @@ export function TrayActionsMenu({
       brand: item.vendor,
       material: item.material,
       color: item.color_hex,
-      pricePerKg: item.variant_price && item.net_weight_g 
-        ? (item.variant_price / item.net_weight_g) * 1000
+      pricePerKg: item.variant_price
+        ? computePricePerKg(item.variant_price, item.net_weight_g, (item as any).pack_quantity)
         : null,
     }));
     
@@ -121,13 +125,14 @@ export function TrayActionsMenu({
       '',
       '| Name | Brand | Material | Price/kg |',
       '|------|-------|----------|----------|',
-      ...items.map(item => 
-        `| ${item.product_title} | ${item.vendor || '-'} | ${item.material || '-'} | ${
-          item.variant_price && item.net_weight_g 
-            ? `$${((item.variant_price / item.net_weight_g) * 1000).toFixed(2)}`
-            : '-'
-        } |`
-      ),
+      ...items.map(item => {
+        const ppkg = item.variant_price
+          ? computePricePerKg(item.variant_price, item.net_weight_g, (item as any).pack_quantity)
+          : null;
+        return `| ${item.product_title} | ${item.vendor || '-'} | ${item.material || '-'} | ${
+          ppkg ? `$${ppkg.toFixed(2)}` : '-'
+        } |`;
+      }),
     ];
     
     const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });

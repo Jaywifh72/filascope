@@ -22,6 +22,7 @@ import { SelectableCardOverlay } from "./BatchSelectControls";
 import { WishlistBadge } from "./WishlistBadge";
 import { PrinterCompatibilityIndicator } from "./PrinterCompatibilityIndicator";
 import { toast } from "sonner";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface SimilarMaterialCardProps {
@@ -148,9 +149,9 @@ export function SimilarMaterialCard({
     d => 'realWorldImpact' in d && d.realWorldImpact
   );
 
-  // Calculate current price per kg for dialog
-  const currentPricePerKg = currentFilament?.variant_price && currentFilament?.net_weight_g
-    ? (currentFilament.variant_price / currentFilament.net_weight_g) * 1000
+  // Calculate current price per kg for dialog using canonical utility
+  const currentPricePerKg = currentFilament?.variant_price
+    ? computePricePerKg(currentFilament.variant_price, currentFilament.net_weight_g, (currentFilament as any).pack_quantity)
     : null;
 
   const cardContent = (

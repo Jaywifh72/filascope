@@ -10,6 +10,7 @@ import {
   generateChartAnnotations,
   type SuggestedComparison 
 } from '@/lib/performanceProfileService';
+import { computePricePerKg } from '@/lib/resolveFilamentPrice';
 import { PerformanceRadarChart } from './PerformanceRadarChart';
 import { MetricBreakdownCard } from './MetricBreakdownCard';
 import { PerformanceProfile } from './PerformanceProfile';
@@ -31,6 +32,7 @@ interface PerformanceAtAGlanceProps {
   value_score: number | null;
   variant_price: number | null;
   net_weight_g: number | null;
+  pack_quantity: number | null;
 }
 
 export function PerformanceAtAGlance({
@@ -43,13 +45,14 @@ export function PerformanceAtAGlance({
   strength_index,
   value_score,
   variant_price,
-  net_weight_g
+  net_weight_g,
+  pack_quantity
 }: PerformanceAtAGlanceProps) {
   const { addItem, items } = useCompare();
 
-  // Calculate price per kg
-  const pricePerKg = variant_price && net_weight_g 
-    ? (variant_price / net_weight_g) * 1000 
+  // Calculate price per kg using canonical utility
+  const pricePerKg = variant_price
+    ? computePricePerKg(variant_price, net_weight_g, pack_quantity)
     : null;
 
   // Get similar filaments for comparison suggestions

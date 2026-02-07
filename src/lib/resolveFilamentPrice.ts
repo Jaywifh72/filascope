@@ -144,6 +144,32 @@ export function resolveFilamentPrice(
   };
 }
 
+// ─── Canonical Per-Kg Utility ───────────────────────────────────────────────
+
+/**
+ * Canonical per-kg price calculation.
+ * DO NOT compute price-per-kg inline anywhere else in the codebase.
+ * Always use this function or the useResolvedPrice hook.
+ *
+ * Formula: totalSpoolPrice / ((netWeightG / 1000) * packQuantity)
+ *
+ * @param totalSpoolPrice - The total price for the package (all spools)
+ * @param netWeightG      - Net weight of a single spool in grams
+ * @param packQuantity    - Number of spools in the pack (defaults to 1)
+ * @returns Price per kilogram, or null if inputs are invalid
+ */
+export function computePricePerKg(
+  totalSpoolPrice: number,
+  netWeightG: number | null | undefined,
+  packQuantity: number | null | undefined = 1
+): number | null {
+  const pq = packQuantity || 1;
+  if (!netWeightG || netWeightG <= 0) return null;
+  const weightKg = netWeightG / 1000;
+  if (weightKg <= 0) return null;
+  return totalSpoolPrice / (weightKg * pq);
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function buildResult(
