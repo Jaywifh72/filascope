@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,56 +8,103 @@ import { cn } from "@/lib/utils";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { DealShareModal } from "./DealShareModal";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useRegionalStores } from "@/hooks/useRegionalStores";
+import { formatDistanceToNow } from "date-fns";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 interface GroupedDealCardProps {
   group: GroupedDeal;
 }
 
+const IMAGE_LOAD_TIMEOUT_MS = 6000;
+
 /**
- * Deal card image with eager loading and rich fallback
+ * Deal card image with fallback chain:
+ * 1. Primary image (representative deal)
+ * 2. Other variant images from the group
+ * 3. Rich branded placeholder with material/vendor
  */
-function DealCardImage({ 
-  src, 
-  alt, 
-  colorHex, 
+function DealCardImage({
+  src,
+  fallbackSrcs = [],
+  alt,
+  colorHex,
   vendor,
   material,
-}: { 
-  src: string | null | undefined; 
-  alt: string; 
-  colorHex?: string | null; 
+}: {
+  src: string | null | undefined;
+  fallbackSrcs?: string[];
+  alt: string;
+  colorHex?: string | null;
   vendor?: string | null;
   material?: string | null;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const [errored, setErrored] = useState(false);
+  const [currentSrcIndex, setCurrentSrcIndex] = useState(-1); // -1 = primary src
+  const [showFallbackPlaceholder, setShowFallbackPlaceholder] = useState(false);
 
-  const showFallback = !src || errored;
+  // Build the full image chain: primary + fallbacks
+  const allSrcs = [src, ...fallbackSrcs].filter((s): s is string => !!s);
+  const activeSrc = currentSrcIndex === -1 ? src : allSrcs[currentSrcIndex] || null;
 
-  // Generate a deterministic accent color from vendor name when no color_hex
+  // If no sources at all, show placeholder immediately
+  const showPlaceholder = showFallbackPlaceholder || allSrcs.length === 0;
+
+  // Timeout: if image doesn't load in time, try next or show fallback
+  useEffect(() => {
+    if (showPlaceholder || loaded) return;
+
+    const timer = setTimeout(() => {
+      handleImageError();
+    }, IMAGE_LOAD_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [currentSrcIndex, loaded, showPlaceholder]);
+
+  // Reset state when src changes
+  useEffect(() => {
+    setLoaded(false);
+    setCurrentSrcIndex(-1);
+    setShowFallbackPlaceholder(false);
+  }, [src]);
+
+  const handleImageError = () => {
+    const nextIndex = currentSrcIndex + 1;
+    if (nextIndex < allSrcs.length) {
+      setCurrentSrcIndex(nextIndex);
+      setLoaded(false);
+    } else {
+      setShowFallbackPlaceholder(true);
+    }
+  };
+
+  // Generate accent color from vendor name
   const accentHue = vendor
-    ? vendor.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0) % 360
+    ? vendor.split("").reduce((sum, c) => sum + c.charCodeAt(0), 0) % 360
     : 200;
   const accentColor = colorHex || `hsl(${accentHue}, 40%, 50%)`;
 
   return (
-    <div 
+    <div
       className="relative h-40 bg-muted/30 flex items-center justify-center overflow-hidden"
-      style={showFallback ? { 
-        background: `linear-gradient(135deg, hsl(${accentHue}, 20%, 12%) 0%, hsl(${accentHue}, 15%, 8%) 100%)`
-      } : undefined}
+      style={
+        showPlaceholder
+          ? {
+              background: `linear-gradient(135deg, hsl(${accentHue}, 20%, 12%) 0%, hsl(${accentHue}, 15%, 8%) 100%)`,
+            }
+          : undefined
+      }
     >
       {/* Color accent bar at top */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-1 opacity-70" 
-        style={{ backgroundColor: accentColor }} 
+      <div
+        className="absolute top-0 left-0 right-0 h-1 opacity-70"
+        style={{ backgroundColor: accentColor }}
       />
 
-      {showFallback ? (
+      {showPlaceholder ? (
         <div className="flex flex-col items-center gap-2 text-center p-4">
           {colorHex ? (
-            <div 
+            <div
               className="w-14 h-14 rounded-full border-2 border-white/10 shadow-lg"
               style={{ backgroundColor: colorHex }}
             />
@@ -83,31 +130,45 @@ function DealCardImage({
           {!loaded && (
             <div className="absolute inset-0 bg-muted/30 animate-pulse" />
           )}
-          <img
-            src={src}
-            alt={alt}
-            loading="eager"
-            decoding="async"
-            onLoad={() => setLoaded(true)}
-            onError={() => setErrored(true)}
-            className={cn(
-              "h-full w-full p-4 object-contain transition-opacity duration-300",
-              loaded ? "opacity-100" : "opacity-0"
-            )}
-          />
+          {activeSrc && (
+            <img
+              src={activeSrc}
+              alt={alt}
+              loading="eager"
+              decoding="async"
+              onLoad={() => setLoaded(true)}
+              onError={handleImageError}
+              className={cn(
+                "h-full w-full p-4 object-contain transition-opacity duration-300",
+                loaded ? "opacity-100" : "opacity-0"
+              )}
+            />
+          )}
         </>
       )}
     </div>
   );
 }
+
 export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { getLocalStore, region } = useRegionalStores();
 
   const hasPriceRange = group.priceRange.min !== group.priceRange.max;
   const hasColors = group.colorHexes.length > 0;
   const showColorCount = group.colorCount > 1;
+
+  // Regional store lookup
+  const localStore = getLocalStore(group.representativeDeal.vendor);
+  const isStoreLocal = group.isLocal;
+  const hasLocalAlternative = !isStoreLocal && !!localStore;
+
+  // Price freshness
+  const freshnessText = group.lastScrapedAt
+    ? formatDistanceToNow(new Date(group.lastScrapedAt), { addSuffix: false })
+    : null;
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -118,12 +179,23 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const handleCheckPrice = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // If user has a local store for this brand, prefer that URL
+    if (hasLocalAlternative && localStore) {
+      window.open(localStore.baseUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if (group.representativeDeal.product_url) {
       const affiliateUrl = getAffiliateUrl(
-        group.representativeDeal.product_url, 
+        group.representativeDeal.product_url,
         group.representativeDeal.vendor
       );
-      window.open(affiliateUrl || group.representativeDeal.product_url, '_blank', 'noopener,noreferrer');
+      window.open(
+        affiliateUrl || group.representativeDeal.product_url,
+        "_blank",
+        "noopener,noreferrer"
+      );
     }
   };
 
@@ -135,11 +207,13 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
 
   // Find variant by color hex
   const getVariantByHex = (hex: string) => {
-    return group.variants.find(v => (v as any).color_hex === hex);
+    return group.variants.find((v) => (v as any).color_hex === hex);
   };
 
   // Get representative color hex for fallback
-  const representativeColorHex = (group.representativeDeal as any).color_hex as string | null;
+  const representativeColorHex = (group.representativeDeal as any).color_hex as
+    | string
+    | null;
 
   return (
     <>
@@ -166,10 +240,14 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           <Share2 className="h-4 w-4" aria-hidden="true" />
         </Button>
 
-        {/* Image with eager loading and rich fallback */}
-        <Link to={`/filament/${group.representativeDeal.id}`} className="block">
+        {/* Image with fallback chain */}
+        <Link
+          to={`/filament/${group.representativeDeal.id}`}
+          className="block"
+        >
           <DealCardImage
             src={group.representativeDeal.featured_image}
+            fallbackSrcs={group.fallbackImages}
             alt={group.baseName}
             colorHex={representativeColorHex}
             vendor={group.representativeDeal.vendor}
@@ -193,18 +271,39 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           {/* Price Range or Single Price */}
           {hasPriceRange ? (
             <div className="flex items-center gap-1 mb-2 text-lg font-bold text-foreground">
-              <RegionalPrice amount={group.priceRange.min} sourceCurrency="USD" size="lg" />
+              <RegionalPrice
+                amount={group.priceRange.min}
+                sourceCurrency="USD"
+                size="lg"
+              />
               <span className="text-muted-foreground">-</span>
-              <RegionalPrice amount={group.priceRange.max} sourceCurrency="USD" size="lg" />
+              <RegionalPrice
+                amount={group.priceRange.max}
+                sourceCurrency="USD"
+                size="lg"
+              />
             </div>
           ) : (
             <RegionalPricePair
               saleAmount={group.priceRange.min}
-              originalAmount={group.representativeDeal.variant_compare_at_price}
+              originalAmount={
+                group.representativeDeal.variant_compare_at_price
+              }
               sourceCurrency="USD"
               size="lg"
               className="mb-2"
             />
+          )}
+
+          {/* Price Freshness Badge */}
+          {freshnessText && (
+            <Badge
+              variant="outline"
+              className="gap-1 text-[10px] border-muted bg-muted/30 text-muted-foreground mb-2"
+            >
+              <Clock className="h-3 w-3" />
+              Checked {freshnessText} ago
+            </Badge>
           )}
 
           {/* Color Swatches */}
@@ -216,7 +315,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                   return (
                     <Link
                       key={i}
-                      to={variant ? `/filament/${variant.id}` : `/filament/${group.representativeDeal.id}`}
+                      to={
+                        variant
+                          ? `/filament/${variant.id}`
+                          : `/filament/${group.representativeDeal.id}`
+                      }
                       onClick={(e) => e.stopPropagation()}
                       className="w-5 h-5 rounded-full border border-border/50 hover:scale-125 hover:border-primary transition-all shadow-sm"
                       style={{ backgroundColor: hex }}
@@ -230,7 +333,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                     className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
                     +{group.colorHexes.length - 5} more
-                    {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    {expanded ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
                   </button>
                 )}
               </div>
@@ -243,7 +350,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                     return (
                       <Link
                         key={i}
-                        to={variant ? `/filament/${variant.id}` : `/filament/${group.representativeDeal.id}`}
+                        to={
+                          variant
+                            ? `/filament/${variant.id}`
+                            : `/filament/${group.representativeDeal.id}`
+                        }
                         onClick={(e) => e.stopPropagation()}
                         className="w-5 h-5 rounded-full border border-border/50 hover:scale-125 hover:border-primary transition-all shadow-sm"
                         style={{ backgroundColor: hex }}
@@ -259,36 +370,54 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           {/* Variant Count Badge */}
           {showColorCount && (
             <div className="text-xs text-muted-foreground mb-2">
-              {hasColors 
+              {hasColors
                 ? `Available in ${group.colorCount} colors`
-                : `${group.colorCount} variants available`
-              }
+                : `${group.colorCount} variants available`}
             </div>
           )}
 
           {/* Store Region Info */}
-          {group.storeName && group.regionFlag && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <span>{group.regionFlag}</span>
-              <span>{group.storeName}</span>
-              <span>•</span>
-              {group.isLocal ? (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+            {isStoreLocal ? (
+              // Deal is already from a local store
+              <>
+                <span>{group.regionFlag}</span>
+                <span>{group.storeName}</span>
+                <span>•</span>
                 <span className="text-emerald-400 font-medium">Local</span>
-              ) : (
+              </>
+            ) : hasLocalAlternative && localStore ? (
+              // International deal but local store exists
+              <>
+                <span>{group.regionFlag}</span>
+                <span>{group.storeName}</span>
+                <span>•</span>
+                <span className="text-emerald-400 font-medium">
+                  Also at {localStore.storeName}
+                </span>
+              </>
+            ) : group.storeName && group.regionFlag ? (
+              // International deal, no local store
+              <>
+                <span>{group.regionFlag}</span>
+                <span>{group.storeName}</span>
+                <span>•</span>
                 <span>International</span>
-              )}
-            </div>
-          )}
+              </>
+            ) : null}
+          </div>
 
           {/* CTA Button */}
-          {group.representativeDeal.product_url && (
+          {(group.representativeDeal.product_url || hasLocalAlternative) && (
             <Button
               variant="outline"
               size="sm"
               className="w-full gap-2 text-xs"
               onClick={handleCheckPrice}
             >
-              Check if Deal is Active
+              {hasLocalAlternative
+                ? `Check at ${localStore!.storeName}`
+                : "Check if Deal is Active"}
               <ExternalLink className="h-3.5 w-3.5" />
             </Button>
           )}
