@@ -9,6 +9,7 @@ import { normalizeColorHex } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalFiltering, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
 import { Skeleton } from "@/components/ui/skeleton";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 
 interface Filament {
   id: string;
@@ -111,13 +112,10 @@ const BentoGrid = () => {
 
 
   const getTrueCost = (filament: Filament) => {
-    if (!filament.variant_price || !filament.net_weight_g) return null;
-    const packQty = filament.pack_quantity || 1;
-    const weightKg = filament.net_weight_g / 1000;
-    const totalWeightKg = weightKg * packQty;
-    const pricePerKg = filament.variant_price / totalWeightKg;
+    if (!filament.variant_price) return null;
+    const pricePerKg = computePricePerKg(filament.variant_price, filament.net_weight_g, filament.pack_quantity);
     // Validate: must be reasonable per-kg price
-    if (pricePerKg < 5 || pricePerKg > 500) return null;
+    if (!pricePerKg || pricePerKg < 5 || pricePerKg > 500) return null;
     return pricePerKg;
   };
 

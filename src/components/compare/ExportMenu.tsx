@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 
 interface FilamentData {
   id: string;
@@ -31,9 +32,10 @@ interface ExportMenuProps {
 }
 
 export function ExportMenu({ filaments }: ExportMenuProps) {
-  const getPricePerKg = (price: number | null, weight: number | null) => {
-    if (!price || !weight || weight === 0) return null;
-    return (price / (weight / 1000)).toFixed(2);
+  const getPricePerKg = (f: FilamentData) => {
+    if (!f.variant_price) return null;
+    const val = computePricePerKg(f.variant_price, f.net_weight_g, (f as any).pack_quantity);
+    return val ? val.toFixed(2) : null;
   };
 
   const exportToCSV = () => {
@@ -59,7 +61,7 @@ export function ExportMenu({ filaments }: ExportMenuProps) {
       f.material || "",
       f.variant_price?.toFixed(2) || "",
       f.net_weight_g?.toString() || "",
-      getPricePerKg(f.variant_price, f.net_weight_g) || "",
+      getPricePerKg(f) || "",
       f.nozzle_temp_min_c?.toString() || "",
       f.nozzle_temp_max_c?.toString() || "",
       f.bed_temp_min_c?.toString() || "",
@@ -127,7 +129,7 @@ export function ExportMenu({ filaments }: ExportMenuProps) {
                 </td>
                 <td>${f.material || '-'}</td>
                 <td class="price">$${f.variant_price?.toFixed(2) || '-'}</td>
-                <td>$${getPricePerKg(f.variant_price, f.net_weight_g) || '-'}/kg</td>
+                <td>$${getPricePerKg(f) || '-'}/kg</td>
                 <td>${f.nozzle_temp_min_c || '-'}–${f.nozzle_temp_max_c || '-'}°C</td>
                 <td>${f.bed_temp_min_c || '-'}–${f.bed_temp_max_c || '-'}°C</td>
               </tr>

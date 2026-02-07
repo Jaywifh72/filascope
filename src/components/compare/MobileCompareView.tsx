@@ -8,6 +8,7 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { cn } from "@/lib/utils";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Filament = Tables<"filaments">;
@@ -32,9 +33,9 @@ export function MobileCompareView({
   const { formatPrice } = useCurrency();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const getPricePerKg = (price: number | null, weight: number | null): number | null => {
-    if (!price || !weight) return null;
-    return (price / weight) * 1000;
+  const getPricePerKg = (f: Filament): number | null => {
+    if (!f.variant_price) return null;
+    return computePricePerKg(f.variant_price, f.net_weight_g, f.pack_quantity);
   };
 
   const handlePrev = () => {
@@ -47,7 +48,7 @@ export function MobileCompareView({
 
   const filament = filaments[activeIndex];
   const affiliateUrl = getAffiliateUrl(filament.product_url, filament.vendor);
-  const pricePerKg = getPricePerKg(filament.variant_price, filament.net_weight_g);
+  const pricePerKg = getPricePerKg(filament);
   const isWinner = overallWinnerIndices.includes(activeIndex);
   const isBestPrice = bestPriceIndices.includes(activeIndex);
   const inStock = filament.variant_available !== false;
@@ -250,7 +251,7 @@ export function MobileCompareView({
           <h4 className="text-sm font-semibold mb-3">Quick Comparison</h4>
           <div className="space-y-2">
             {filaments.map((f, idx) => {
-              const fPricePerKg = getPricePerKg(f.variant_price, f.net_weight_g);
+              const fPricePerKg = getPricePerKg(f);
               const fIsWinner = overallWinnerIndices.includes(idx);
               return (
                 <button

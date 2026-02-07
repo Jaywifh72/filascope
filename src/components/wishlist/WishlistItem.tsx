@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { WishlistItem as WishlistItemType } from "@/hooks/useWishlist";
 import { WishlistCollection } from "@/hooks/useWishlistCollections";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { formatDistanceToNow } from "date-fns";
 
 interface WishlistItemProps {
@@ -63,10 +64,9 @@ export function WishlistItemCard({
 
   const currentCollection = collections.find((c) => c.id === item.collection_id);
 
-  const trueCost =
-    item.filament?.variant_price && item.filament?.net_weight_g
-      ? (item.filament.variant_price / item.filament.net_weight_g) * 1000
-      : null;
+  const trueCost = item.filament?.variant_price
+    ? computePricePerKg(item.filament.variant_price, item.filament.net_weight_g, (item.filament as any).pack_quantity)
+    : null;
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim()) {

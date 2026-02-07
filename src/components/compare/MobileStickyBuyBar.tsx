@@ -5,6 +5,7 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useBestPrices } from "@/hooks/useBestPrice";
 import { cn } from "@/lib/utils";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Filament = Tables<"filaments">;
@@ -35,9 +36,9 @@ export function MobileStickyBuyBar({
     currency: currency,
   });
 
-  const getPricePerKg = (price: number | null, weight: number | null): number | null => {
-    if (!price || !weight) return null;
-    return (price / weight) * 1000;
+  const getPricePerKg = (price: number | null, weight: number | null, packQty?: number | null): number | null => {
+    if (!price) return null;
+    return computePricePerKg(price, weight, packQty);
   };
 
   useEffect(() => {
@@ -61,7 +62,7 @@ export function MobileStickyBuyBar({
   const affiliateUrl = productUrl 
     ? (bestListing?.affiliate_url || getAffiliateUrl(productUrl, retailerName))
     : null;
-  const pricePerKg = getPricePerKg(price, featuredFilament.net_weight_g);
+  const pricePerKg = getPricePerKg(price, featuredFilament.net_weight_g, featuredFilament.pack_quantity);
   const isWinner = overallWinnerIndices.includes(featuredIndex);
   const inStock = bestListing?.available ?? featuredFilament.variant_available !== false;
 

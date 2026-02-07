@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { CompareItem } from "@/hooks/useCompare";
 
 export type TrayFilter = 'food-safe' | 'heat-resistant' | 'non-abrasive';
@@ -179,21 +180,21 @@ export function sortTrayItems(items: CompareItem[], sortOption: TraySortOption):
   switch (sortOption) {
     case 'price-low':
       return sorted.sort((a, b) => {
-        const priceA = a.variant_price && a.net_weight_g 
-          ? (a.variant_price / a.net_weight_g) * 1000 
+        const priceA = a.variant_price
+          ? computePricePerKg(a.variant_price, a.net_weight_g, (a as any).pack_quantity) ?? Infinity
           : Infinity;
-        const priceB = b.variant_price && b.net_weight_g 
-          ? (b.variant_price / b.net_weight_g) * 1000 
+        const priceB = b.variant_price
+          ? computePricePerKg(b.variant_price, b.net_weight_g, (b as any).pack_quantity) ?? Infinity
           : Infinity;
         return priceA - priceB;
       });
     case 'price-high':
       return sorted.sort((a, b) => {
-        const priceA = a.variant_price && a.net_weight_g 
-          ? (a.variant_price / a.net_weight_g) * 1000 
+        const priceA = a.variant_price
+          ? computePricePerKg(a.variant_price, a.net_weight_g, (a as any).pack_quantity) ?? -Infinity
           : -Infinity;
-        const priceB = b.variant_price && b.net_weight_g 
-          ? (b.variant_price / b.net_weight_g) * 1000 
+        const priceB = b.variant_price
+          ? computePricePerKg(b.variant_price, b.net_weight_g, (b as any).pack_quantity) ?? -Infinity
           : -Infinity;
         return priceB - priceA;
       });

@@ -11,6 +11,7 @@ import {
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { RegionalPrice } from "@/components/price/RegionalPrice";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
 
 export type SimilarityReason = 
@@ -74,9 +75,9 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
   const isInCompare = items.some((item) => item.id === filament.id);
   const brandLogo = getBrandLogo(filament.vendor);
   
-  // Calculate price per kg
-  const pricePerKg = filament.variant_price && filament.net_weight_g
-    ? (filament.variant_price / (filament.net_weight_g / 1000))
+  // Calculate price per kg using canonical utility
+  const pricePerKg = filament.variant_price
+    ? computePricePerKg(filament.variant_price, filament.net_weight_g, (filament as any).pack_quantity)
     : null;
   
   // Format nozzle temp range

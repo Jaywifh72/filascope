@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
 
 interface SideBySideComparisonDialogProps {
@@ -88,8 +89,8 @@ export function SideBySideComparisonDialog({
 
   const currentPricePerKg =
     currentFilament.pricePerKg ||
-    (currentFilament.variant_price && currentFilament.net_weight_g
-      ? (currentFilament.variant_price / currentFilament.net_weight_g) * 1000
+    (currentFilament.variant_price
+      ? computePricePerKg(currentFilament.variant_price, currentFilament.net_weight_g, (currentFilament as any).pack_quantity)
       : null);
 
   const rows: ComparisonRow[] = [
