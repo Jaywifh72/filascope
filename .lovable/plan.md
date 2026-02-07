@@ -1,96 +1,177 @@
 
 
-# Fix Brand Cards to Show Accurate Material Tags
+# Fix Price Instability Across FilaScope
 
-## Problem
+## Problem Summary
 
-The `detectMaterialsForBrand()` function in `src/pages/Brands.tsx` (lines 78-84) is a placeholder that generates material tags using a hash of the brand name against a static list `["PLA", "PETG", "ABS", "TPU", "ASA"]`. This means nearly every brand shows the same generic tags.
+The same product shows different prices per kilogram depending on which component renders first and which data source "wins" a race condition. For example, Polymaker PC-PBT might show ~C$102.52/kg, ~C$75.94/kg, or ~C$21.26/kg on the same detail page between different loads.
 
-**Example**: Proto-Pasta currently shows "PLA, ABS, TPU" but their actual database products are:
-- HTPLA: 328 products
-- PLA-CF: 12 products
-- PLA: 11 products
-- HTPLA-CF: 5 products
-- PLA-Conductive: 3 products
+## Root Cause Analysis
 
-## Solution
+After tracing every pricing pipeline, I identified **5 distinct root causes**:
 
-Add `material` to the existing filaments query and aggregate the top 3 materials per vendor from real database data, replacing the placeholder function entirely.
+### 1. Multiple Independent Price Sources Racing Each Other
 
-## Changes
+The `FilamentDetail.tsx` page fetches prices from **4 independent async sources** that resolve at different times:
 
-### 1. Extend the existing filaments query (`src/pages/Brands.tsx`)
+| Source | Hook | What it returns | Per-kg formula |
+|---|---|---|---|
+| Source 1 | `useFilamentListings` (x2: local + US) | Retailer prices from `filament_listings` table | `price / wKg` (lines 300-302) |
+| Source 2 | `useFilamentStorePricing` | Store prices from `filament_prices` table via RPC | `priceDisplay / wKg` (line 323) |
+| Source 3 | `useUnifiedRegionalPricing` | Brand regional store prices from `brand_regional_stores` | `displayPrice / wKg` (line 344) |
+| Source 4 | Legacy Amazon price | `filament.amazon_price_usd` column | `price / wKg` (line 373) |
 
-The query on line 119 already fetches `vendor, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g`. Add `material` to this select list.
+The `sidebarBest` selection (line 257) merges these into a `candidates` array. Whichever sources have loaded when `useMemo` runs determines which candidate "wins." On the next render, a different source may have loaded, changing the winner.
 
-### 2. Aggregate top materials per vendor in the reducer
+### 2. Inconsistent Weight Normalization (Critical Bug)
 
-Inside the existing `brandStats` reducer (lines 127-155), collect material counts per vendor. Then, when building the `BrandStats` array (lines 157-178), derive the top 3 materials sorted by count.
+The per-kg weight denominator (`wKg`) is calculated differently across components:
 
-The aggregation logic:
+**Detail page** (`FilamentDetail.tsx` lines 260-263):
 ```
-For each filament row:
-  - Track material counts in a Map<string, number> per vendor
-  - Skip null/empty materials
-
-When building BrandStats:
-  - Sort each vendor's materials by count descending
-  - Take the top 4 (matching the BrandCard display limit)
-  - Return as topMaterials string[]
+wKg = (net_weight_g / 1000) * packQty    // Total weight across ALL spools in pack
 ```
 
-### 3. Update the BrandStats interface
+**Sidebar** (`FilamentPurchaseSidebar.tsx` lines 175-179):
+```
+effectiveWeightKg = weightGrams / 1000    // Weight of ONE spool (ignores pack_quantity!)
+displayPricePerKg = displayPrice / effectiveWeightKg
+```
 
-Add `topMaterials: string[]` to the `BrandStats` interface (lines 50-57) since materials will now come from the query rather than the placeholder function.
+For a product with `net_weight_g=1350` and `pack_quantity=1`, these agree. But for multi-packs, the sidebar divides by single-spool weight, producing a DIFFERENT per-kg result.
 
-### 4. Remove `detectMaterialsForBrand` function
+**FilamentCard** uses `useResolvedPrice` which uses yet another formula:
+```
+pricePerKg = spoolPrice / (weightKg * packQty)   // Correct
+```
 
-Delete the entire placeholder function (lines 78-84) and update both merge locations (lines 248 and 267) to use the actual `topMaterials` from `filamentStats` instead.
+### 3. Spool Price vs Total Pack Price Confusion
 
-### 5. Fix the sidebar `materialCounts` placeholder
+The `sidebarBest` candidates store `spoolPrice` which is actually the **total price for the whole listing** (not per-spool). But when passed to the sidebar:
+```
+sidebarPricePerSpool = sidebarBest.spoolPrice / packQuantity  // line 864
+```
+The sidebar then RECALCULATES per-kg from this per-spool price using single-spool weight, potentially double-dividing by pack quantity.
 
-The `materialCounts` memo (lines 282-295) also uses hardcoded percentages. Replace it with actual counts derived from the same query data -- count how many distinct brands carry each material type.
+### 4. BestPricesSection Fetches Its Own Data Independently
 
-## Technical Details
+`BestPricesSection.tsx` (line 26-41) makes its own `useFilamentListings` calls with potentially different parameters than the parent page. It also does its own price conversion (line 63-65), which may produce different results than the `sidebarBest` selection, leading to the sidebar saying one price while the Best Prices card says another.
 
-**Query change** (line 120):
+### 5. Currency Conversion Timing
+
+Exchange rate loading is guarded by `hasRates`, but some conversion paths (like `useFilamentStorePricing` via `convertPrice`) may execute before rates are fully cached, while others wait. This means the same USD amount can convert to different local amounts depending on timing.
+
+---
+
+## Solution Plan
+
+### Phase 1: Create a Unified Price Resolution Pipeline
+
+**File: `src/hooks/useFilamentDetailPricing.ts`** (NEW)
+
+Create a single hook that:
+- Accepts the filament data, all listing/store/unified pricing results, and the user's region context
+- Waits for ALL async sources to settle before computing the final "best" price
+- Returns one canonical `bestPrice` object used by every component on the detail page
+
+This hook will:
+1. Collect candidates from all sources (listings, store pricing, unified pricing, legacy Amazon) -- same logic as current `sidebarBest` but extracted into a dedicated hook
+2. Use a single, consistent per-kg formula: `totalPrice / ((net_weight_g / 1000) * pack_quantity)`
+3. Expose an `isReady` flag that is only `true` when all non-optional data sources have resolved
+4. Return a single `DetailPricingResult` object containing:
+   - `bestPrice.pricePerKg` (in user's currency)
+   - `bestPrice.spoolPrice` (total pack price in user's currency)
+   - `bestPrice.pricePerSpool` (per individual spool)
+   - `bestPrice.storeName`, `bestPrice.storeRegion`, `bestPrice.productUrl`
+   - `bestPrice.isConverted`, `bestPrice.isLocal`
+   - `allCandidates` (sorted array for the "All Retailers" modal)
+   - `retailerCount`
+   - `isReady` / `isLoading`
+
+### Phase 2: Fix the Weight Normalization Bug
+
+**File: `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx`**
+
+Remove the sidebar's independent price recalculation (lines 160-180). Instead, trust the parent-provided `pricePerKg` prop directly without recalculating. The sidebar should be a "dumb display" component that receives fully computed values.
+
+Current problematic code to remove:
 ```typescript
-.select("vendor, material, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g")
-```
-
-**Reducer addition** (inside the existing loop):
-```typescript
-// Track material counts per vendor
-if (f.material) {
-  const mat = f.material;
-  acc[f.vendor].materialCounts.set(mat, (acc[f.vendor].materialCounts.get(mat) || 0) + 1);
+// Lines 175-180: Independent recalculation that ignores pack_quantity
+if (hasValidRegionalPrice && displayPrice && weightGrams) {
+  const effectiveWeightKg = weightGrams / 1000;
+  if (effectiveWeightKg > 0) {
+    displayPricePerKg = displayPrice / effectiveWeightKg;
+  }
 }
 ```
 
-**Top materials extraction** (in the BrandStats mapping):
-```typescript
-topMaterials: [...stats.materialCounts.entries()]
-  .sort((a, b) => b[1] - a[1])
-  .slice(0, 4)
-  .map(([material]) => material)
+Replace with: simply use the `pricePerKg` prop passed from the parent.
+
+### Phase 3: Wire BestPricesSection to Parent Data
+
+**File: `src/components/filament/BestPricesSection.tsx`**
+
+Instead of making independent `useFilamentListings` calls, accept pre-computed candidates as a prop from the parent. This ensures the "Best Prices" card shows the exact same data and ordering as the sidebar.
+
+Changes:
+- Add a `candidates` prop (optional, for backward compatibility)
+- When `candidates` is provided, use them directly instead of fetching
+- When not provided, fall back to current self-fetching behavior
+
+**File: `src/pages/FilamentDetail.tsx`**
+
+Pass the `allCandidates` from the new hook into `BestPricesSection`:
+```tsx
+<BestPricesSection
+  filamentId={displayFilament.id}
+  candidates={detailPricing.allCandidates}
+  totalRetailerCount={detailPricing.retailerCount}
+/>
 ```
 
-**Merge references** (lines 248 and 267):
-```typescript
-// Before (placeholder):
-topMaterials: detectMaterialsForBrand(ab.display_name),
+### Phase 4: Add Loading Guards
 
-// After (real data):
-topMaterials: filamentStats?.topMaterials || [],
+**File: `src/pages/FilamentDetail.tsx`**
+
+Show price loading skeletons in the sidebar and sticky bar until `detailPricing.isReady` is true. This prevents the user from seeing intermediate values that change as data sources resolve.
+
+- Sidebar: show a price skeleton placeholder when `!detailPricing.isReady`
+- StickyBuyBar: defer visibility until `detailPricing.isReady`
+- MobileBottomBar: same treatment
+
+### Phase 5: Ensure Card Consistency
+
+**File: `src/components/FilamentCard.tsx`**
+
+The card already uses `useResolvedPrice` (the SSOT utility), which is correct. No changes needed here. However, verify that the formula in `resolveFilamentPrice.ts` matches the detail page formula exactly:
+
+Current `resolveFilamentPrice.ts` (lines in `buildResult`):
+```
+pricePerSpool = spoolPrice / packQty
+pricePerKg = spoolPrice / (weightKg * packQty)
 ```
 
-## Files Modified
+This is correct and consistent with the target formula. The card path is already aligned.
 
-- `src/pages/Brands.tsx` -- All changes are in this single file
+---
 
-## What stays the same
+## Files to Create/Modify
 
-- `BrandCard.tsx` component -- already supports dynamic `topMaterials` prop with up to 4 badges and a "+N" overflow indicator
-- No database changes needed -- the `material` column already exists with good data coverage
-- No new queries needed -- we extend the existing one
+| File | Action | Purpose |
+|---|---|---|
+| `src/hooks/useFilamentDetailPricing.ts` | CREATE | Single source of truth for detail page pricing |
+| `src/pages/FilamentDetail.tsx` | MODIFY | Use new hook, remove inline `sidebarBest` logic, pass unified data to children |
+| `src/components/filament/sidebar/FilamentPurchaseSidebar.tsx` | MODIFY | Remove independent price recalculation, trust parent props |
+| `src/components/filament/BestPricesSection.tsx` | MODIFY | Accept pre-computed candidates prop |
+| `src/components/filament/StickyBuyBar.tsx` | MINOR | No formula changes, just receives correct data from parent |
+| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | MINOR | Same -- receives correct data from parent |
+
+## Validation Criteria
+
+After implementation:
+1. Load any filament detail page 10 times -- the per-kg price should be identical every time
+2. The listing card, detail sidebar, Best Prices section, and sticky bar should all show the same per-kg value
+3. Multi-pack products (pack_quantity > 1) should calculate per-kg correctly: `totalPackPrice / ((net_weight_g / 1000) * pack_quantity)`
+4. Converted prices always show `~` prefix; native regional prices do not
+5. No price flicker during page load -- skeleton shown until all sources resolve
 
