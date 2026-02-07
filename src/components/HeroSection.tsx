@@ -12,6 +12,7 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 interface CachedStats {
   filamentCount: number;
+  productCount: number;
   brandCount: number;
   timestamp: number;
 }
@@ -31,10 +32,11 @@ function getCachedStats(): CachedStats | null {
   }
 }
 
-function setCachedStats(filamentCount: number, brandCount: number) {
+function setCachedStats(filamentCount: number, productCount: number, brandCount: number) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({
       filamentCount,
+      productCount,
       brandCount,
       timestamp: Date.now(),
     }));
@@ -73,17 +75,21 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
   const resolvedFilamentCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? FALLBACK_FILAMENT_COUNT);
   const resolvedBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? FALLBACK_BRAND_COUNT);
+  const resolvedProductCount = productCount > 0 ? productCount : (cached?.productCount ?? null);
 
-  // Cache successful live values
+  // Cache successful live values (all three must be valid)
   useEffect(() => {
-    if (filamentCount > 0 && brandCount > 0) {
-      setCachedStats(filamentCount, brandCount);
+    if (filamentCount > 0 && brandCount > 0 && productCount > 0) {
+      setCachedStats(filamentCount, productCount, brandCount);
     }
-  }, [filamentCount, brandCount]);
+  }, [filamentCount, productCount, brandCount]);
+
+  // Determine if we're still waiting for the real product count
+  const isProductCountLoading = productCount <= 0 && !cached?.productCount;
 
   // Always show a number — use fallbacks so the hero never renders blank
   const displayVariantCount = resolvedFilamentCount;
-  const displayProductCount = productCount > 0 ? productCount : 1000;
+  const displayProductCount = resolvedProductCount;
   const displayBrandCount = resolvedBrandCount;
 
   // Dynamic quick start paths
@@ -97,7 +103,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
     },
     {
       title: "Browse Filaments",
-      description: `Explore ${displayProductCount.toLocaleString()}+ products`,
+      description: displayProductCount != null ? `Explore ${displayProductCount.toLocaleString()}+ products` : 'Explore all products',
       icon: Search,
       href: "#system-config",
       color: "primary",
@@ -184,7 +190,11 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
-              <span className="text-primary">{displayProductCount.toLocaleString()}+</span> products with{" "}
+              {isProductCountLoading ? (
+                <span className="inline-block w-10 h-4 bg-primary/20 rounded animate-pulse align-middle" />
+              ) : (
+                <span className="text-primary">{displayProductCount != null ? displayProductCount.toLocaleString() : '—'}+</span>
+              )}{" "}products with{" "}
               <span className="text-primary">{displayVariantCount.toLocaleString()}+</span> variants indexed from{" "}
               <span className="text-primary">{displayBrandCount}+</span> brands.{" "}
               Compare properties, specs, and pricing in one unified data hub.
