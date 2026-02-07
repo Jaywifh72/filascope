@@ -10,6 +10,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getColorHex, getColorFamily, extractColorFromTitle, COLOR_HEX_MAP } from "../_shared/color-mapping.ts";
+import { sanitizeIlikeInput } from "../_shared/sanitize-input.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -724,10 +725,11 @@ serve(async (req) => {
       .select('id, product_title, vendor, color_hex, color_family, variant_sku');
     
     if (targetVendor) {
-      query = query.ilike('vendor', `%${targetVendor}%`);
+      const safeVendor = sanitizeIlikeInput(targetVendor);
+      query = query.ilike('vendor', `%${safeVendor}%`);
     } else {
-      // Build OR condition for all low-coverage brands
-      const orConditions = lowCoverageBrands.map(b => `vendor.ilike.%${b}%`).join(',');
+      // Build OR condition for all low-coverage brands (hardcoded list, safe)
+      const orConditions = lowCoverageBrands.map(b => `vendor.ilike.%${sanitizeIlikeInput(b)}%`).join(',');
       query = query.or(orConditions);
     }
     

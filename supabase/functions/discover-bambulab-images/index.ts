@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeIlikeInput } from "../_shared/sanitize-input.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -183,7 +184,7 @@ serve(async (req) => {
           .from("filaments")
           .select("id, product_title")
           .eq("vendor", "Bambu Lab")
-          .ilike("product_title", `%ABS%${colorName}%`)
+          .ilike("product_title", `%ABS%${sanitizeIlikeInput(colorName)}%`)
           .single();
 
         if (findError || !filament) {
