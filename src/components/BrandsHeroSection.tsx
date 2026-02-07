@@ -210,7 +210,7 @@ const BrandsHeroSection = ({
                               <p className="text-sm font-medium text-white truncate">
                                 {highlightMatch(brand.name, searchTerm)}
                               </p>
-                              <p className="text-xs text-gray-400">{brand.count} filaments</p>
+                              <p className="text-xs text-gray-400">{brand.count.toLocaleString()} variants</p>
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors" />
                           </button>
