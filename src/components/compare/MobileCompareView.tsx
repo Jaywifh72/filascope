@@ -4,12 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
-import { useCurrency } from "@/hooks/useCurrency";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { cn } from "@/lib/utils";
-import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { Tables } from "@/integrations/supabase/types";
+import type { ResolvedComparePrice } from "@/hooks/useCompareRegionalPrices";
 
 type Filament = Tables<"filaments">;
 
@@ -19,6 +17,8 @@ interface MobileCompareViewProps {
   bestPriceIndices: number[];
   overallWinnerIndices: number[];
   totalCategories: number;
+  /** Resolved regional prices from useCompareRegionalPrices */
+  resolvedPrices: Map<string, ResolvedComparePrice>;
 }
 
 export function MobileCompareView({ 
@@ -26,17 +26,11 @@ export function MobileCompareView({
   winCounts, 
   bestPriceIndices, 
   overallWinnerIndices,
-  totalCategories 
+  totalCategories,
+  resolvedPrices,
 }: MobileCompareViewProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const { getAffiliateUrl } = useAffiliateLinks();
-  const { formatPrice } = useCurrency();
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const getPricePerKg = (f: Filament): number | null => {
-    if (!f.variant_price) return null;
-    return computePricePerKg(f.variant_price, f.net_weight_g, f.pack_quantity);
-  };
 
   const handlePrev = () => {
     setActiveIndex(prev => Math.max(0, prev - 1));
@@ -47,11 +41,10 @@ export function MobileCompareView({
   };
 
   const filament = filaments[activeIndex];
-  const affiliateUrl = getAffiliateUrl(filament.product_url, filament.vendor);
-  const pricePerKg = getPricePerKg(filament);
+  const resolved = resolvedPrices.get(filament.id);
   const isWinner = overallWinnerIndices.includes(activeIndex);
   const isBestPrice = bestPriceIndices.includes(activeIndex);
-  const inStock = filament.variant_available !== false;
+  const inStock = resolved?.inStock ?? filament.variant_available !== false;
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
 
   // Key specs to highlight
@@ -153,18 +146,23 @@ export function MobileCompareView({
             {/* Price section */}
             <div className="flex items-center justify-between">
               <div>
-                {pricePerKg && (
+                {resolved?.formattedPricePerKg && (
                   <p className={cn(
                     "font-mono font-bold text-2xl",
                     isBestPrice ? "text-amber-400" : "text-primary"
                   )}>
-                    {formatPrice(pricePerKg)}/kg
+                    {resolved.formattedPricePerKg}/kg
                   </p>
                 )}
-                {filament.variant_price && (
+                {resolved?.formattedSpoolPrice && (
                   <p className="text-sm text-muted-foreground">
-                    {formatPrice(filament.variant_price)} per spool
+                    {resolved.formattedSpoolPrice} per spool
                   </p>
+                )}
+                {resolved?.isConverted && (
+                  <Badge variant="outline" className="text-[10px] mt-1 text-muted-foreground">
+                    converted
+                  </Badge>
                 )}
               </div>
               <div className="text-right">
@@ -212,7 +210,7 @@ export function MobileCompareView({
             <Separator />
 
             {/* Buy button */}
-            {affiliateUrl ? (
+            {resolved?.affiliateUrl ? (
               <Button
                 asChild
                 size="lg"
@@ -224,7 +222,7 @@ export function MobileCompareView({
                 )}
               >
                 <a 
-                  href={affiliateUrl} 
+                  href={resolved.affiliateUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   onClick={(e) => {
@@ -232,7 +230,7 @@ export function MobileCompareView({
                   }}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  {inStock ? `Buy from ${filament.vendor}` : "Out of Stock"}
+                  {inStock ? `Buy from ${resolved.storeName || filament.vendor}` : "Out of Stock"}
                   <ExternalLink className="w-4 h-4 opacity-60" />
                 </a>
               </Button>
@@ -251,7 +249,7 @@ export function MobileCompareView({
           <h4 className="text-sm font-semibold mb-3">Quick Comparison</h4>
           <div className="space-y-2">
             {filaments.map((f, idx) => {
-              const fPricePerKg = getPricePerKg(f);
+              const fResolved = resolvedPrices.get(f.id);
               const fIsWinner = overallWinnerIndices.includes(idx);
               return (
                 <button
@@ -273,12 +271,12 @@ export function MobileCompareView({
                     <p className="text-xs text-muted-foreground">{f.vendor}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    {fPricePerKg && (
+                    {fResolved?.formattedPricePerKg && (
                       <p className={cn(
                         "text-sm font-mono font-bold",
                         bestPriceIndices.includes(idx) ? "text-amber-400" : "text-primary"
                       )}>
-                        {formatPrice(fPricePerKg)}/kg
+                        {fResolved.formattedPricePerKg}/kg
                       </p>
                     )}
                     {fIsWinner && (

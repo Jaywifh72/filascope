@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { ShoppingCart, Trophy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
-import { useCurrency } from "@/hooks/useCurrency";
-import { useBestPrices } from "@/hooks/useBestPrice";
 import { cn } from "@/lib/utils";
-import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { Tables } from "@/integrations/supabase/types";
+import type { ResolvedComparePrice } from "@/hooks/useCompareRegionalPrices";
 
 type Filament = Tables<"filaments">;
 
@@ -14,32 +11,21 @@ interface MobileStickyBuyBarProps {
   filaments: Filament[];
   overallWinnerIndices: number[];
   bestPriceIndices: number[];
+  /** Resolved regional prices from useCompareRegionalPrices */
+  resolvedPrices: Map<string, ResolvedComparePrice>;
 }
 
 export function MobileStickyBuyBar({ 
   filaments, 
   overallWinnerIndices,
-  bestPriceIndices 
+  bestPriceIndices,
+  resolvedPrices,
 }: MobileStickyBuyBarProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const { getAffiliateUrl } = useAffiliateLinks();
-  const { formatPrice, currency } = useCurrency();
 
   // Get the winner or best price filament
   const featuredIndex = overallWinnerIndices[0] ?? bestPriceIndices[0] ?? 0;
   const featuredFilament = filaments[featuredIndex];
-  
-  // Fetch best prices from listings
-  const filamentIds = filaments.map(f => f.id);
-  const { data: bestPricesMap } = useBestPrices(filamentIds, {
-    region: currency === 'GBP' ? 'UK' : currency === 'EUR' ? 'DE' : 'US',
-    currency: currency,
-  });
-
-  const getPricePerKg = (price: number | null, weight: number | null, packQty?: number | null): number | null => {
-    if (!price) return null;
-    return computePricePerKg(price, weight, packQty);
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,20 +39,11 @@ export function MobileStickyBuyBar({
 
   if (!featuredFilament || !isVisible) return null;
 
-  // Get best listing for featured filament
-  const bestListing = bestPricesMap?.get(featuredFilament.id);
-  const price = bestListing?.current_price ?? featuredFilament.variant_price;
-  const productUrl = bestListing?.product_url ?? featuredFilament.product_url;
-  const retailerName = bestListing?.retailer_name ?? featuredFilament.vendor;
-  
-  const affiliateUrl = productUrl 
-    ? (bestListing?.affiliate_url || getAffiliateUrl(productUrl, retailerName))
-    : null;
-  const pricePerKg = getPricePerKg(price, featuredFilament.net_weight_g, featuredFilament.pack_quantity);
+  const resolved = resolvedPrices.get(featuredFilament.id);
   const isWinner = overallWinnerIndices.includes(featuredIndex);
-  const inStock = bestListing?.available ?? featuredFilament.variant_available !== false;
+  const inStock = resolved?.inStock ?? featuredFilament.variant_available !== false;
 
-  if (!affiliateUrl) return null;
+  if (!resolved?.affiliateUrl) return null;
 
   return (
     <div className={cn(
@@ -85,12 +62,12 @@ export function MobileStickyBuyBar({
             </span>
           </div>
           <p className="text-sm font-medium truncate">{featuredFilament.product_title}</p>
-          {pricePerKg && (
+          {resolved.formattedPricePerKg && (
             <p className={cn(
               "font-mono font-bold",
               isWinner ? "text-amber-400" : "text-primary"
             )}>
-              {formatPrice(pricePerKg)}/kg
+              {resolved.formattedPricePerKg}/kg
             </p>
           )}
         </div>
@@ -106,7 +83,7 @@ export function MobileStickyBuyBar({
           )}
         >
           <a 
-            href={affiliateUrl} 
+            href={resolved.affiliateUrl} 
             target="_blank" 
             rel="noopener noreferrer"
             onClick={(e) => {

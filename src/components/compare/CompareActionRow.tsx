@@ -2,10 +2,8 @@ import { ShoppingCart, ExternalLink, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
-import { useCurrency } from "@/hooks/useCurrency";
-import { useBestPrices } from "@/hooks/useBestPrice";
 import { cn } from "@/lib/utils";
+import type { ResolvedComparePrice } from "@/hooks/useCompareRegionalPrices";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Filament = Tables<"filaments">;
@@ -14,28 +12,16 @@ interface CompareActionRowProps {
   filaments: Filament[];
   bestPriceIndices: number[];
   overallWinnerIndices: number[];
+  /** Resolved regional prices from useCompareRegionalPrices */
+  resolvedPrices: Map<string, ResolvedComparePrice>;
 }
 
 export function CompareActionRow({ 
   filaments, 
   bestPriceIndices, 
-  overallWinnerIndices 
+  overallWinnerIndices,
+  resolvedPrices,
 }: CompareActionRowProps) {
-  const { getAffiliateUrl } = useAffiliateLinks();
-  const { formatPrice, currency } = useCurrency();
-  
-  // Fetch best prices for all filaments from listings table
-  const filamentIds = filaments.map(f => f.id);
-  const { data: bestPricesMap, isLoading: pricesLoading } = useBestPrices(filamentIds, {
-    region: currency === 'GBP' ? 'UK' : currency === 'EUR' ? 'DE' : 'US',
-    currency: currency,
-  });
-
-  const getPricePerKg = (price: number | null, weight: number | null): number | null => {
-    if (!price || !weight) return null;
-    return (price / weight) * 1000;
-  };
-
   return (
     <div 
       className="grid gap-4 py-4 border-t border-border/50 mt-4" 
@@ -45,19 +31,10 @@ export function CompareActionRow({
         <span className="text-sm font-semibold text-foreground">Quick Buy</span>
       </div>
       {filaments.map((filament, idx) => {
-        // Use best price from listings if available, fallback to filament data
-        const bestListing = bestPricesMap?.get(filament.id);
-        const price = bestListing?.current_price ?? filament.variant_price;
-        const productUrl = bestListing?.product_url ?? filament.product_url;
-        const retailerName = bestListing?.retailer_name ?? filament.vendor;
-        
-        const affiliateUrl = productUrl 
-          ? (bestListing?.affiliate_url || getAffiliateUrl(productUrl, retailerName))
-          : null;
-        const pricePerKg = getPricePerKg(price, filament.net_weight_g);
+        const resolved = resolvedPrices.get(filament.id);
         const isWinner = overallWinnerIndices.includes(idx);
         const isBestPrice = bestPriceIndices.includes(idx);
-        const inStock = bestListing?.available ?? filament.variant_available !== false;
+        const inStock = resolved?.inStock ?? filament.variant_available !== false;
         
         return (
           <div key={filament.id} className="flex flex-col items-center gap-2">
@@ -78,27 +55,32 @@ export function CompareActionRow({
                   Out of Stock
                 </Badge>
               )}
+              {resolved?.isConverted && (
+                <Badge variant="outline" className="text-muted-foreground text-[10px]">
+                  converted
+                </Badge>
+              )}
             </div>
 
             {/* Price */}
-            {pricePerKg && (
+            {resolved?.formattedPricePerKg && (
               <div className="text-center">
                 <span className={cn(
                   "font-mono font-bold text-lg",
                   isBestPrice ? "text-amber-400" : "text-primary"
                 )}>
-                  {formatPrice(pricePerKg)}/kg
+                  {resolved.formattedPricePerKg}/kg
                 </span>
-                {price && (
+                {resolved.formattedSpoolPrice && (
                   <p className="text-xs text-muted-foreground">
-                    {formatPrice(price)} per spool
+                    {resolved.formattedSpoolPrice} per spool
                   </p>
                 )}
               </div>
             )}
 
             {/* Buy Button */}
-            {affiliateUrl ? (
+            {resolved?.affiliateUrl ? (
               <Button
                 asChild
                 size="lg"
@@ -110,7 +92,7 @@ export function CompareActionRow({
                 )}
               >
                 <a 
-                  href={affiliateUrl} 
+                  href={resolved.affiliateUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   onClick={(e) => {
@@ -130,10 +112,10 @@ export function CompareActionRow({
               </Button>
             )}
 
-            {/* Vendor/Retailer link */}
-            {retailerName && (
+            {/* Store name */}
+            {resolved?.storeName && (
               <span className="text-xs text-muted-foreground">
-                from {retailerName}
+                from {resolved.storeName}
               </span>
             )}
           </div>
