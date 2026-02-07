@@ -989,6 +989,12 @@ const PrinterDetail = () => {
             // Use regional store URL if available, otherwise fall back to original
             const regionalStoreUrl = unifiedPricing.storeUrl || printer.official_store_url;
             
+            // Use regional price from unified pricing (same as mobile bar)
+            const regionalPrice = unifiedPricing.displayPrice ?? displayPrice;
+            const regionalMsrp = unifiedPricing.isConverted && displayMsrp 
+              ? displayMsrp * (unifiedPricing.conversionRate || 1)
+              : displayMsrp;
+            
             return (
               <PurchaseSidebar
                 printer={{
@@ -1001,8 +1007,8 @@ const PrinterDetail = () => {
                   price_confidence: unifiedPricing.priceConfidence ?? (printer as any).price_confidence,
                 }}
                 brand={brand}
-                displayPrice={displayPrice}
-                displayMsrp={displayMsrp}
+                displayPrice={regionalPrice}
+                displayMsrp={regionalMsrp}
                 displayImageUrl={heroDisplayImages[0] || null}
                 isLivePrice={isLivePrice}
                 livePriceCurrency={livePriceCurrency}
@@ -1013,6 +1019,9 @@ const PrinterDetail = () => {
                 isLocalStore={unifiedPricing.isLocalStore}
                 storeRegion={unifiedPricing.storeRegion}
                 shipsFromCountry={unifiedPricing.shipsFromCountry}
+                isConverted={unifiedPricing.isConverted}
+                originalPrice={unifiedPricing.originalPrice}
+                originalCurrency={unifiedPricing.originalCurrency}
               />
             );
           })()}

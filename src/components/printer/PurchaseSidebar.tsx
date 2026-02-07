@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PriceSection } from "./PriceSection";
 import { CTAButtons } from "./CTAButtons";
 import { REGIONS } from "@/config/regions";
-import { RegionCode } from "@/types/regional";
+import { RegionCode, CurrencyCode } from "@/types/regional";
 
 import { PriceConfidence } from "@/hooks/usePriceFreshness";
 
@@ -30,6 +30,12 @@ interface PurchaseSidebarProps {
   isLocalStore?: boolean;
   storeRegion?: string | null;
   shipsFromCountry?: string | null;
+  /** Whether the displayed price is a conversion estimate */
+  isConverted?: boolean;
+  /** Original price before conversion (shown in parentheses) */
+  originalPrice?: number | null;
+  /** Original currency code before conversion */
+  originalCurrency?: CurrencyCode | null;
 }
 
 export function PurchaseSidebar({
@@ -47,6 +53,9 @@ export function PurchaseSidebar({
   isLocalStore,
   storeRegion,
   shipsFromCountry,
+  isConverted = false,
+  originalPrice,
+  originalCurrency,
 }: PurchaseSidebarProps) {
   const navigate = useNavigate();
 
@@ -73,11 +82,14 @@ export function PurchaseSidebar({
               period: 'sale' 
             } : undefined}
             isDiscontinued={printer.discontinued}
-            priceCurrency={isLivePrice ? livePriceCurrency : 'USD'}
             compact
             pricesLastUpdatedAt={printer.prices_last_updated_at}
             priceSource={printer.price_source}
             priceConfidence={printer.price_confidence as PriceConfidence | null}
+            isRegionalPrice
+            isConverted={isConverted}
+            originalPrice={originalPrice}
+            originalCurrency={originalCurrency}
           />
         </div>
 
