@@ -54,6 +54,7 @@ interface BrandStats {
   hasHighSpeed: boolean;
   avgTransmissionDistance: number | null;
   colors: string[];
+  topMaterials: string[];
 }
 
 // Public brand type - matches v_public_brands view (no scraping config)
@@ -73,16 +74,6 @@ interface PublicBrand {
   is_visible: boolean | null;
   display_order: number | null;
 }
-
-// Helper to detect material type from color/description
-const detectMaterialsForBrand = (brandName: string): string[] => {
-  // This is placeholder logic - in production you'd query actual material data per brand
-  const commonMaterials = ["PLA", "PETG", "ABS", "TPU", "ASA"];
-  // Return a subset based on brand name hash for variety
-  const hash = brandName.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  return commonMaterials.filter((_, i) => (hash + i) % 3 !== 0).slice(0, 3);
-};
-
 
 
 const Brands = () => {
@@ -117,7 +108,7 @@ const Brands = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("filaments")
-        .select("vendor, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g")
+        .select("vendor, material, spool_material, transmission_distance, high_speed_capable, color_hex, net_weight_g")
         .not("vendor", "is", null)
         .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
         .limit(10000); // Override default 1000 row limit
@@ -133,6 +124,7 @@ const Brands = () => {
             hasHighSpeed: false,
             transmissionDistances: [] as number[],
             colorSet: new Set<string>(),
+            materialCounts: new Map<string, number>(),
           };
         }
         acc[f.vendor].count += 1;
@@ -151,8 +143,12 @@ const Brands = () => {
         if (f.color_hex && /^#[0-9A-Fa-f]{6}$/.test(f.color_hex)) {
           acc[f.vendor].colorSet.add(f.color_hex);
         }
+        if (f.material) {
+          const mat = f.material;
+          acc[f.vendor].materialCounts.set(mat, (acc[f.vendor].materialCounts.get(mat) || 0) + 1);
+        }
         return acc;
-      }, {} as Record<string, { count: number; hasCardboard: boolean; hasPlastic: boolean; hasHighSpeed: boolean; transmissionDistances: number[]; colorSet: Set<string> }>);
+      }, {} as Record<string, { count: number; hasCardboard: boolean; hasPlastic: boolean; hasHighSpeed: boolean; transmissionDistances: number[]; colorSet: Set<string>; materialCounts: Map<string, number> }>);
       
       return Object.entries(brandStats)
         .map(([name, stats]): BrandStats => {
@@ -164,6 +160,10 @@ const Brands = () => {
           } else if (stats.hasPlastic) {
             spoolMaterial = "Plastic";
           }
+          const topMaterials = [...stats.materialCounts.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 4)
+            .map(([material]) => material);
           return {
             name,
             count: stats.count,
@@ -173,6 +173,7 @@ const Brands = () => {
               ? Math.round(stats.transmissionDistances.reduce((a, b) => a + b, 0) / stats.transmissionDistances.length)
               : null,
             colors: Array.from(stats.colorSet),
+            topMaterials,
           };
         })
         .sort((a, b) => b.count - a.count);
@@ -245,7 +246,7 @@ const Brands = () => {
         hasRfid: (filamentStats?.avgTransmissionDistance ?? 0) > 0,
         avgTransmissionDistance: filamentStats?.avgTransmissionDistance || null,
         colors: filamentStats?.colors || [],
-        topMaterials: detectMaterialsForBrand(ab.display_name),
+        topMaterials: filamentStats?.topMaterials || [],
         averageRating: VERIFIED_BRANDS.includes(ab.display_name) ? 4.5 + Math.random() * 0.4 : null,
         priceIndicator: getPriceIndicator(count),
         automated: ab,
@@ -264,7 +265,7 @@ const Brands = () => {
         ...b,
         hasEcoSpools: b.spoolMaterial === "Cardboard" || b.spoolMaterial === "Mixed",
         hasRfid: (b.avgTransmissionDistance ?? 0) > 0,
-        topMaterials: detectMaterialsForBrand(b.name),
+        topMaterials: b.topMaterials,
         averageRating: VERIFIED_BRANDS.includes(b.name) ? 4.5 + Math.random() * 0.4 : null,
         priceIndicator: getPriceIndicator(b.count),
         automated: null,
@@ -278,21 +279,18 @@ const Brands = () => {
     return mergedBrands.filter(b => b.automated?.featured);
   }, [mergedBrands]);
 
-  // Calculate material counts for sidebar (based on brand data - how many brands have each material)
+  // Calculate material counts for sidebar — count how many brands carry each material
   const materialCounts = useMemo(() => {
-    // This is a placeholder - in a real app, we'd query which brands have which materials
-    // For now, we show approximate counts
-    return {
-      "PLA": Math.floor(mergedBrands.length * 0.9),
-      "PETG": Math.floor(mergedBrands.length * 0.7),
-      "ABS": Math.floor(mergedBrands.length * 0.5),
-      "ASA": Math.floor(mergedBrands.length * 0.3),
-      "TPU": Math.floor(mergedBrands.length * 0.4),
-      "Nylon": Math.floor(mergedBrands.length * 0.25),
-      "PC": Math.floor(mergedBrands.length * 0.2),
-      "Other": Math.floor(mergedBrands.length * 0.15),
-    };
-  }, [mergedBrands.length]);
+    const counts: Record<string, number> = {};
+    for (const brand of mergedBrands) {
+      for (const mat of brand.topMaterials) {
+        counts[mat] = (counts[mat] || 0) + 1;
+      }
+    }
+    // Sort by count descending, take top entries
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return Object.fromEntries(sorted.slice(0, 10));
+  }, [mergedBrands]);
 
   // Filter brands with all criteria
   const filteredBrands = useMemo(() => {
