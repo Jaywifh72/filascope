@@ -139,13 +139,13 @@ const GuidePrintSettings = () => {
                 <BookOpen className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Full guide with per-filament profiles coming soon. In the meantime, check our Material Encyclopedia for detailed specs on hundreds of filaments.
+                    Full guide with per-filament profiles coming soon. In the meantime, check our Material Knowledge Base for detailed specs on hundreds of filaments.
                   </p>
                   <Link 
                     to="/compare"
                     className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
                   >
-                    Browse Material Encyclopedia
+                    Browse Material Knowledge Base
                     <ArrowLeft className="w-4 h-4 rotate-180" />
                   </Link>
                 </div>

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { toBrandSlug } from "@/utils/brandSlug";
 import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ const BrandCard = ({
   const resolvedLogoUrl = logoUrl || getBrandLogo(name);
 
   const handleClick = () => {
-    navigate(`/brands/${encodeURIComponent(name)}`);
+    navigate(`/brands/${toBrandSlug(name)}`);
   };
 
   // Collect feature badges (max 2)

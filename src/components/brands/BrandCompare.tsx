@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { X, ArrowRight, Scale, Package, Star, Zap, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toBrandSlug } from '@/utils/brandSlug';
 
 interface BrandCompareBarProps {
   className?: string;
@@ -172,7 +173,7 @@ export function BrandComparisonView() {
                   </div>
                   <h2 className="text-xl font-semibold text-white">{brand.name}</h2>
                   <Link
-                    to={`/brands/${encodeURIComponent(brand.name)}`}
+                    to={`/brands/${toBrandSlug(brand.name)}`}
                     className="text-sm text-primary hover:underline"
                   >
                     View Details
@@ -283,7 +284,7 @@ export function BrandComparisonView() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => navigate(`/brands/${encodeURIComponent(brand.name)}`)}
+                    onClick={() => navigate(`/brands/${toBrandSlug(brand.name)}`)}
                   >
                     View Filaments
                   </Button>

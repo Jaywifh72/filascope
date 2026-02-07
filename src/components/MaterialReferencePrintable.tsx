@@ -282,7 +282,7 @@ export const MaterialReferencePrintable = ({ reference }: MaterialReferencePrint
 
       {/* Footer */}
       <div className="mt-6 pt-3 border-t border-gray-300 text-center text-[10px] text-gray-500">
-        <p>Generated from FilaScope Material Encyclopedia • filascope.com</p>
+        <p>Generated from FilaScope Material Knowledge Base • filascope.com</p>
       </div>
     </div>
   );
@@ -458,7 +458,7 @@ export const printMaterialReference = (reference: MaterialReferenceInfo) => {
     </div>
 
     <div class="footer">
-      Generated from FilaScope Material Encyclopedia • filascope.com • ${new Date().toLocaleDateString()}
+      Generated from FilaScope Material Knowledge Base • filascope.com • ${new Date().toLocaleDateString()}
     </div>
   </div>
   <script>window.onload = function() { window.print(); }</script>

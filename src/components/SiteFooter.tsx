@@ -93,11 +93,11 @@ export function SiteFooter() {
     { name: "Printers", href: "/printers" },
     { name: "Brands", href: "/brands" },
     { name: "Deals", href: "/deals" },
-    { name: "Knowledge Base", href: "/reference/slicers" },
+    { name: "Knowledge Base", href: "/compare" },
   ];
 
   const resourceLinks = [
-    { name: "Material Encyclopedia", href: "/compare" },
+    { name: "Material Knowledge Base", href: "/compare" },
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Slicer Directory", href: "/reference/slicers" },
     { name: "Model Repositories", href: "/reference/repos" },

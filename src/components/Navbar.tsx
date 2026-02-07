@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, Box, FolderGit2, Youtube, Puzzle, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe, SlidersHorizontal, AlertCircle, FileText } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import filascopeLogo from "@/assets/logo-filascope.jpg";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -185,9 +185,7 @@ const Navbar = () => {
       title: 'Guides & References',
       icon: BookOpen,
       items: [
-        { to: '/compare', label: 'Material Encyclopedia', icon: BookOpen },
-        { to: '/guides/print-settings', label: 'Print Settings Guide', icon: SlidersHorizontal, comingSoon: true },
-        { to: '/guides/troubleshooting', label: 'Troubleshooting', icon: AlertCircle, comingSoon: true },
+        { to: '/compare', label: 'Material Knowledge Base', icon: BookOpen },
       ]
     },
     {
@@ -195,8 +193,6 @@ const Navbar = () => {
       icon: Wrench,
       items: [
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
-        { to: '/reference/cad', label: '3D Modeling Software', icon: Box, comingSoon: true },
-        { to: '/resources/profiles', label: 'Print Profiles', icon: FileText, comingSoon: true },
       ]
     },
     {
@@ -204,9 +200,8 @@ const Navbar = () => {
       icon: Globe,
       items: [
         { to: '/reference/repos', label: 'Model Repositories', icon: FolderGit2 },
-        { to: '/reference/influencers', label: 'Creator Spotlights', icon: Youtube, comingSoon: true },
-        { to: '/accessories', label: 'Accessories & Upgrades', icon: Puzzle, comingSoon: true },
-      ]
+      ],
+      comingSoonNote: 'More resources coming soon...',
     }
   ];
 
@@ -316,30 +311,17 @@ const Navbar = () => {
                     
                     {/* Section Items */}
                     {section.items.map(item => (
-                      item.comingSoon ? (
-                        <div 
-                          key={item.to}
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground/50 cursor-not-allowed rounded-lg"
-                        >
-                          <item.icon className="w-4 h-4 text-muted-foreground/40" />
+                      <DropdownMenuItem 
+                        key={item.to} 
+                        asChild 
+                        className="rounded-lg"
+                        onClick={() => setLearnDropdownOpen(false)}
+                      >
+                        <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
                           {item.label}
-                          <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
-                            Soon
-                          </span>
-                        </div>
-                      ) : (
-                        <DropdownMenuItem 
-                          key={item.to} 
-                          asChild 
-                          className="rounded-lg"
-                          onClick={() => setLearnDropdownOpen(false)}
-                        >
-                          <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                            <item.icon className="w-4 h-4 text-muted-foreground" />
-                            {item.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      )
+                        </Link>
+                      </DropdownMenuItem>
                     ))}
                     
                     {/* Divider between sections */}
@@ -411,27 +393,14 @@ const Navbar = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="bg-[hsl(220,15%,7%)] backdrop-blur-xl border-border min-w-[220px] p-2">
-                {learnItemsFlat.map(item => 
-                  item.comingSoon ? (
-                    <div 
-                      key={item.to}
-                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground/50 cursor-not-allowed rounded-lg"
-                    >
-                      <item.icon className="w-4 h-4 text-muted-foreground/40" />
+                {learnItemsFlat.map(item => (
+                  <DropdownMenuItem key={item.to} asChild className="rounded-lg">
+                    <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
+                      <item.icon className="w-4 h-4 text-muted-foreground" />
                       {item.label}
-                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
-                        Soon
-                      </span>
-                    </div>
-                  ) : (
-                    <DropdownMenuItem key={item.to} asChild className="rounded-lg">
-                      <Link to={item.to} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium">
-                        <item.icon className="w-4 h-4 text-muted-foreground" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                )}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -590,34 +559,26 @@ const Navbar = () => {
             {learnMenuSections.map((section, sectionIndex) => (
               <div key={section.title}>
                 <div className="px-4 py-2 flex items-center gap-2">
-                  <section.icon className="w-4 h-4 text-gray-500" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                  <section.icon className="w-4 h-4 text-muted-foreground/60" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
                     {section.title}
                   </span>
                 </div>
                 {section.items.map(item => (
-                  item.comingSoon ? (
-                    <div 
-                      key={item.to}
-                      className="flex items-center px-4 py-3 text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
-                    >
-                      {item.icon && <item.icon className="w-4 h-4 mr-3 text-muted-foreground/40" />}
-                      {item.label}
-                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60 bg-muted/30 px-1.5 py-0.5 rounded">
-                        Soon
-                      </span>
-                    </div>
-                  ) : (
-                    <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
-                      {item.label}
-                    </MobileNavLink>
-                  )
+                  <MobileNavLink key={item.to} to={item.to} icon={item.icon}>
+                    {item.label}
+                  </MobileNavLink>
                 ))}
                 {sectionIndex < learnMenuSections.length - 1 && (
                   <div className="border-t border-border/30 my-2" />
                 )}
               </div>
             ))}
+
+            {/* More coming soon note */}
+            <div className="px-4 py-3 mt-1">
+              <span className="text-xs text-muted-foreground/50 italic">More resources coming soon...</span>
+            </div>
           </div>
         </div>
       </nav>

@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { checkPrinterFilamentCompatibility } from "@/lib/printerCompatibility";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { toBrandSlug } from "@/utils/brandSlug";
 import { useCurrency } from "@/hooks/useCurrency";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { useAchievements } from "@/hooks/useAchievements";
@@ -657,7 +658,7 @@ const FilamentDetail = () => {
   }${rawPricePerKg ? `From $${rawPricePerKg.toFixed(2)}/kg. ` : ''}Compare specs & prices at FilaScope.`;
 
   // Build brand slug for breadcrumb link
-  const brandSlug = displayFilament.vendor ? encodeURIComponent(displayFilament.vendor) : '';
+  const brandSlug = displayFilament.vendor ? toBrandSlug(displayFilament.vendor) : '';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">

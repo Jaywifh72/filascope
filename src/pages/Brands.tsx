@@ -10,6 +10,7 @@ import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ItemListSchema } from "@/components/seo";
+import { toBrandSlug } from "@/utils/brandSlug";
 import {
   Select,
   SelectContent,
@@ -363,7 +364,7 @@ const Brands = () => {
   const brandListItems = useMemo(() => {
     return filteredBrands.map((brand, index) => ({
       name: brand.name,
-      url: `https://filascope.com/brands/${encodeURIComponent(brand.name)}`,
+      url: `https://filascope.com/brands/${toBrandSlug(brand.name)}`,
       image: brand.automated?.logo_url || undefined,
       description: brand.automated?.description || `${brand.name} - ${brand.productLineCount} products available`,
       position: index + 1,
