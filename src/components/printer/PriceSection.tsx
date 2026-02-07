@@ -82,8 +82,10 @@ export function PriceSection({
   };
 
   // Format original price for conversion note
+  // Use formatCurrencyPrice which already includes the currency symbol (e.g., "$399.00")
+  // Don't append the currency code again to avoid "($399.00 USD USD)"
   const originalPriceText = isConverted && originalPrice && originalCurrency
-    ? `(${formatCurrencyPrice(originalPrice, originalCurrency)} ${originalCurrency})`
+    ? `(${formatCurrencyPrice(originalPrice, originalCurrency)})`
     : null;
 
   const getTrendColor = () => {
