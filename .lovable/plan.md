@@ -1,123 +1,140 @@
 
-# Fix Data Inconsistency Between Brands Directory and Brand Detail Pages
 
-## Bug Analysis
+# Unify Per-Kg Price Calculation Across the Entire Application
 
-### Bug 1: Brand Card Shows Different Count Than Brand Detail Page
+## Problem Statement
 
-**Root Cause:** The brand card on `/brands` shows raw **variant count** (every individual filament row), while the brand detail page shows **unique product line count** (grouped by `product_line_id`).
+The per-kg price is calculated in **at least 6 different ways** across 15+ files, leading to inconsistent values between views. The root causes are:
 
-- Brands page query (`Brands.tsx` line 130): Counts every filament row per vendor. For Spectrum Filaments, this gives 623.
-- Brand detail page (`BrandDetail.tsx` line 578): Shows `groupedProducts.length` which groups by `product_line_id`, giving 68 product lines.
-- The brand card label says "X filaments" but the detail page says "68 (623 variants)".
+1. **Formula divergence**: Some files use `price / (weight_g / 1000)`, others use `(price / weight_g) * 1000`, and some account for `pack_quantity` while others do not.
+2. **Price source divergence**: Cards and tables use `resolveFilamentPrice` (which picks the best regional column like `price_cad`), while the detail page uses `useFilamentDetailPricing` (which picks the best marketplace listing like Amazon). These are fundamentally different price sources yielding different per-kg values.
+3. **Inline calculations everywhere**: Many components compute `variant_price / net_weight_g * 1000` inline, ignoring `pack_quantity` and regional pricing entirely.
 
-**The Fix:** Make the brand card show the same "X products (Y variants)" format as the detail page. This requires computing the product line count per brand on the Brands directory page.
+## Audit: Every Per-Kg Calculation Site
 
-Two approaches:
-- **Option A (Preferred):** Fetch product line counts per vendor from the database in a single query. This avoids client-side grouping logic and is consistent with how the detail page works.
-- **Option B:** Use the existing `automated_brands.product_count` column -- but this currently stores variant count, not product line count. It would require updating the `update_brand_product_counts()` DB function to also compute a `product_line_count`.
+| Location | Formula | Uses pack_qty? | Uses regional price? | Source |
+|---|---|---|---|---|
+| `resolveFilamentPrice.ts` | `spoolPrice / (weightKg * packQty)` | Yes | Yes (column priority) | Cards, Table |
+| `useFilamentDetailPricing.ts` | `price / totalWeightKg` where `totalWeightKg = weightKg * packQty` | Yes | Yes (marketplace listings) | Detail page |
+| `BentoGrid.tsx` | `variant_price / (weightKg * packQty)` | Yes | No (USD only) | Homepage |
+| `SimilarFilamentCard.tsx` | `variant_price / (net_weight_g / 1000)` | **No** | No | Similar cards |
+| `SimilarMaterialCard.tsx` | `(variant_price / net_weight_g) * 1000` | **No** | No | Similar materials |
+| `PerformanceAtAGlance.tsx` | `(variant_price / net_weight_g) * 1000` | **No** | No | Performance section |
+| `MobileStickyBuyBar.tsx` (compare) | `(price / weight) * 1000` | **No** | No | Compare tray |
+| `MobileCompareView.tsx` | `(price / weight) * 1000` | **No** | No | Compare mobile |
+| `WishlistItem.tsx` | `(variant_price / net_weight_g) * 1000` | **No** | No | Wishlist |
+| `TrayActionsMenu.tsx` | `(variant_price / net_weight_g) * 1000` | **No** | No | Compare export |
+| `ExportMenu.tsx` | inline calculation | **No** | No | Compare export |
+| `SideBySideComparisonDialog.tsx` | fallback inline | **No** | No | Compare dialog |
+| `TrayFilters.tsx` | `(variant_price / net_weight_g) * 1000` | **No** | No | Compare sort |
+| `performanceProfileService.ts` | receives as param | N/A | N/A | Service |
 
-I recommend a hybrid: add a `product_line_count` column to `automated_brands` (and update the `update_brand_product_counts()` function), then expose it via `v_public_brands`. On the Brands page, use this column for the card count, with `product_count` as the variant count for the "(X variants)" display.
+## Solution: Two-Tier Approach
 
-### Bug 2: Brands Page Shows "147 Products" While Homepage Shows "962+ Products"
+The key insight is that there are **two valid per-kg values** for different contexts:
 
-**Root Cause:** The `catalogCounts` query in `Brands.tsx` (lines 195-202) fetches `product_line_id` values to count unique product lines but **hits the Supabase 1000-row default limit**. It fetches only 1000 rows, then deduplicates them client-side to ~147 unique values. The actual number of unique product lines is 1,073.
+- **Catalog per-kg** (cards, tables, comparisons): Based on the product's static database price resolved through `resolveFilamentPrice`. This is the "MSRP-like" value for comparison across products.
+- **Best-deal per-kg** (detail page sidebar, sticky bar): Based on live marketplace listings. This is the "best available price" from a specific retailer.
+
+Both are legitimate, but they must be **internally consistent** within their context. The problem is that 10+ files compute catalog per-kg with incorrect formulas (missing `pack_quantity`).
+
+### Step 1: Create a shared pure utility function
+
+Add a `computePricePerKg` function to `resolveFilamentPrice.ts` (the existing SSOT file) that encapsulates the canonical formula:
 
 ```text
-Brands page:   SELECT product_line_id FROM filaments WHERE product_line_id IS NOT NULL
-               --> Gets 1000 rows (capped) --> Set.size = ~147 (wrong!)
-
-Homepage:      Groups all filaments client-side after paginated fetch --> 962 groups (correct)
+function computePricePerKg(
+  totalSpoolPrice: number, 
+  netWeightG: number, 
+  packQuantity: number = 1
+): number | null
 ```
 
-**The Fix:** Replace the client-side deduplication with a server-side count. Use `count: 'exact'` with `head: true` for the overall count, or use a simple aggregate query. Since all filaments now have `product_line_id` assigned (`noLineCount = 0`), we can use:
+Formula: `totalSpoolPrice / ((netWeightG / 1000) * packQuantity)`
 
-```sql
-SELECT COUNT(DISTINCT product_line_id) FROM filaments
+This is a pure function with no hooks or dependencies -- usable everywhere.
+
+### Step 2: Replace all inline calculations
+
+Replace every inline `variant_price / net_weight_g * 1000` with a call to `computePricePerKg`, passing `pack_quantity` correctly. Files to update:
+
+1. `SimilarFilamentCard.tsx` -- add `pack_quantity` support
+2. `SimilarMaterialCard.tsx` -- add `pack_quantity` support
+3. `PerformanceAtAGlance.tsx` -- add `pack_quantity` support
+4. `MobileStickyBuyBar.tsx` (compare) -- replace inline `getPricePerKg`
+5. `MobileCompareView.tsx` -- replace inline `getPricePerKg`
+6. `WishlistItem.tsx` -- add `pack_quantity` support
+7. `TrayActionsMenu.tsx` -- replace inline calculations
+8. `ExportMenu.tsx` -- replace inline calculations
+9. `TrayFilters.tsx` -- replace inline sort calculations
+10. `SideBySideComparisonDialog.tsx` -- replace fallback calculation
+11. `BentoGrid.tsx` -- already correct, switch to shared function for consistency
+
+### Step 3: Guard against future drift
+
+Add a JSDoc comment and `@deprecated` tag pattern to discourage inline calculations:
+
+```typescript
+/**
+ * Canonical per-kg price calculation.
+ * DO NOT compute price-per-kg inline anywhere else.
+ * Always use this function or useResolvedPrice hook.
+ */
+export function computePricePerKg(...)
 ```
 
-This can't be done directly via the Supabase JS client's `select` method for `COUNT(DISTINCT ...)`, so we either:
-1. Fetch ALL product_line_id values by paginating (similar to `fetchAllFilaments`), or
-2. Use the `automated_brands` product_line_count column (once we add it in Bug 1 fix) and sum across all brands, or
-3. Add a simple RPC function that returns the count.
+## Technical Details
 
-I recommend option 3 -- a lightweight RPC function `get_catalog_counts()` that returns both `product_count` (unique product lines) and `variant_count` (total rows) in one call, eliminating the 1000-row limit problem entirely.
+### The shared function (added to `resolveFilamentPrice.ts`)
 
-### Bug 3: Brand Detail Pages Show "Avg Price: --" Even When Pricing Data Exists
-
-**Root Cause Investigation:** After checking the database, brands without `variant_price` data (Spectrum Filaments, NinjaTek, VoxelPLA) also have zero rows in `filament_listings` and `filament_prices`. The "Avg Price: --" is **actually correct** for these brands -- they genuinely have no pricing data.
-
-However, the current avg price calculation only looks at `variant_price` on the filaments table. For brands that have pricing in the `filament_prices` (store pricing) table but not in `variant_price`, it would still show "--". Additionally, the label "Avg Price" with a min-max range like "$11-$169" is misleading -- it shows a range, not an average.
-
-**The Fix:** Expand the price aggregation to also check `filament_listings` and `filament_prices` tables for brands where `variant_price` is null. Also rename the label from "Avg Price" to "Price Range" since it shows min-max, not an average.
-
----
-
-## Implementation Plan
-
-### Step 1: Database Migration -- Add Product Line Count Column and RPC
-
-Add a `product_line_count` column to `automated_brands`, update the `update_brand_product_counts()` function to populate it, add a `get_catalog_counts()` RPC, and update the `v_public_brands` view.
-
-```sql
--- Add product_line_count column
-ALTER TABLE automated_brands 
-  ADD COLUMN IF NOT EXISTS product_line_count integer DEFAULT 0;
-
--- Update the count function to also compute product line count
-CREATE OR REPLACE FUNCTION update_brand_product_counts(p_brand_slug text DEFAULT NULL)
-  -- ... (updated to include product_line_count via COUNT(DISTINCT product_line_id))
-
--- Add catalog-wide counts RPC
-CREATE OR REPLACE FUNCTION get_catalog_counts()
-  RETURNS TABLE(product_count bigint, variant_count bigint)
-  -- Uses COUNT(DISTINCT product_line_id) + nulls for products, COUNT(*) for variants
-
--- Update v_public_brands view to include product_line_count
+```typescript
+export function computePricePerKg(
+  totalSpoolPrice: number,
+  netWeightG: number | null | undefined,
+  packQuantity: number | null | undefined = 1
+): number | null {
+  const pq = packQuantity || 1;
+  if (!netWeightG || netWeightG <= 0) return null;
+  const weightKg = netWeightG / 1000;
+  if (weightKg <= 0) return null;
+  return totalSpoolPrice / (weightKg * pq);
+}
 ```
 
-Run `update_brand_product_counts(NULL)` to backfill all brands.
+### Files to modify (11 files)
 
-### Step 2: Update Brand Card Display (`BrandCard.tsx`)
+Each file gets the same pattern: replace the inline math with an import of `computePricePerKg` from `@/lib/resolveFilamentPrice`.
 
-- Change the `count` prop to accept both `productLineCount` and `variantCount`
-- Display: "68 products (623 variants)" instead of "623 filaments"
-- If `productLineCount` equals `variantCount`, just show "68 products"
+Example transformation in `SimilarFilamentCard.tsx`:
 
-### Step 3: Update Brands Page Data Flow (`Brands.tsx`)
+Before:
+```typescript
+const pricePerKg = filament.variant_price && filament.net_weight_g
+  ? (filament.variant_price / (filament.net_weight_g / 1000))
+  : null;
+```
 
-- Replace the buggy `catalogCounts` query with the new `get_catalog_counts()` RPC call
-- In the `mergedBrands` logic, use `product_line_count` from `v_public_brands` for the product count, and `product_count` for the variant count
-- Pass both values to `BrandCard`
-- Update BrandsHeroSection text to show consistent numbers
+After:
+```typescript
+import { computePricePerKg } from '@/lib/resolveFilamentPrice';
+// ...
+const pricePerKg = filament.variant_price
+  ? computePricePerKg(filament.variant_price, filament.net_weight_g, filament.pack_quantity)
+  : null;
+```
 
-### Step 4: Update Brand Detail Hero (`BrandHeroSection.tsx`)
+### No changes needed to
 
-- Rename "Avg Price" label to "Price Range"
-- No count changes needed -- the detail page already correctly shows "68 (623 variants)"
+- `resolveFilamentPrice.ts` core logic (already correct internally, just adding the export)
+- `useResolvedPrice.ts` (wraps `resolveFilamentPrice`, already correct)
+- `useFilamentDetailPricing.ts` (already correct with `totalWeightKg`)
+- `FilamentCard.tsx` (already uses `useResolvedPrice`)
+- `FilamentTableView.tsx` (already uses `resolveFilamentPrice`)
 
-### Step 5: Expand Average Price Calculation (`BrandDetail.tsx`)
+### Risk mitigation
 
-- Keep the existing `variant_price` aggregation as primary
-- Add a fallback that checks `filament_listings.current_price` if no `variant_price` data exists
-- Add a second fallback to `filament_prices.price_cents` if neither has data
-- This ensures brands with pricing in any table show a price range
+- The formula change only affects products with `pack_quantity > 1` (multi-packs). For the majority of single-spool products (`pack_quantity = 1` or null), the result is identical.
+- All existing validation thresholds (min $5/kg, max $500/kg) remain unchanged.
+- No database changes required.
+- No new dependencies.
 
-## Files to Create/Modify
-
-| File | Action | Purpose |
-|---|---|---|
-| Database migration | CREATE | Add `product_line_count` column, `get_catalog_counts()` RPC, update view |
-| `src/components/brands/BrandCard.tsx` | MODIFY | Show "X products (Y variants)" format |
-| `src/pages/Brands.tsx` | MODIFY | Use RPC for catalog counts, pass product_line_count to cards |
-| `src/components/brands/BrandHeroSection.tsx` | MODIFY | Rename "Avg Price" to "Price Range" |
-| `src/pages/BrandDetail.tsx` | MODIFY | Expand price aggregation with fallbacks |
-| `src/components/BrandsHeroSection.tsx` | MINOR | No changes needed -- already receives correct props |
-
-## Validation Criteria
-
-1. Spectrum Filaments card shows "68 products (623 variants)" matching the detail page
-2. Brands page hero shows ~1,073 products (matching the real count), not 147
-3. Homepage "962+ products" and Brands page product count are in the same ballpark (difference due to homepage applying filters like net_weight_g >= 300)
-4. Brands with pricing data show a price range; brands without show "--"
-5. The "Avg Price" label is renamed to "Price Range" for clarity
