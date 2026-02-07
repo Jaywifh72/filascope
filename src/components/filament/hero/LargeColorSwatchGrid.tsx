@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { normalizeColorHex } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check } from 'lucide-react';
 
 interface ColorVariant {
   id: string;
@@ -11,6 +11,7 @@ interface ColorVariant {
   product_title: string;
   net_weight_g: number | null;
   product_url?: string | null;
+  variant_available?: boolean | null;
 }
 
 interface LargeColorSwatchGridProps {
@@ -32,6 +33,11 @@ export function LargeColorSwatchGrid({
   
   if (colorVariants.length <= 1) return null;
 
+  const currentVariant = colorVariants.find(v => v.id === currentVariantId);
+  const currentColorName = currentVariant 
+    ? (getColorName(currentVariant.product_title) || currentVariant.color_family || 'Color')
+    : 'Color';
+
   // Show first 10 colors, then expandable
   const visibleCount = isExpanded ? colorVariants.length : 10;
   const visibleColors = colorVariants.slice(0, visibleCount);
@@ -41,8 +47,9 @@ export function LargeColorSwatchGrid({
   return (
     <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          {colorVariants.length} Colors Available
+        <label className="text-sm text-muted-foreground">
+          Color: <span className="font-semibold text-foreground">{currentColorName}</span>
+          <span className="ml-2 text-xs text-muted-foreground/70">({colorVariants.length} available)</span>
         </label>
         {hasMore && (
           <button
@@ -59,7 +66,10 @@ export function LargeColorSwatchGrid({
       </div>
       
       <TooltipProvider delayDuration={150}>
-        <div className="flex flex-wrap gap-2">
+        <div className={cn(
+          "flex flex-wrap gap-2",
+          isExpanded && "max-h-[240px] overflow-y-auto pr-1 scrollbar-thin"
+        )}>
           {visibleColors.map((variant) => {
             const colorName = getColorName(variant.product_title) || variant.color_family || 'Color';
             const isSelected = variant.id === currentVariantId;
@@ -68,20 +78,25 @@ export function LargeColorSwatchGrid({
             const isTransparent = colorName.toLowerCase().includes('clear') || 
                                    colorName.toLowerCase().includes('transparent') ||
                                    colorName.toLowerCase().includes('natural');
+            const isOutOfStock = variant.variant_available === false;
+            // Determine if the color is dark for checkmark contrast
+            const isDarkColor = colorHex ? isDark(colorHex) : true;
             
             return (
               <Tooltip key={variant.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => onSelectColor(variant)}
+                    onClick={() => !isOutOfStock && onSelectColor(variant)}
+                    disabled={isOutOfStock}
                     className={cn(
-                      "w-8 h-8 rounded-full transition-all duration-200",
+                      "relative flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200",
                       "border-2 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                       isSelected 
                         ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 border-primary" 
                         : isWhite || isTransparent
                           ? "border-border hover:border-primary/50"
-                          : "border-transparent hover:border-white/30"
+                          : "border-transparent hover:border-white/30",
+                      isOutOfStock && "opacity-50 cursor-not-allowed hover:scale-100"
                     )}
                     style={{ 
                       backgroundColor: colorHex || '#888',
@@ -91,12 +106,32 @@ export function LargeColorSwatchGrid({
                       backgroundSize: isTransparent ? '8px 8px' : undefined,
                       backgroundPosition: isTransparent ? '0 0, 0 4px, 4px -4px, -4px 0px' : undefined,
                     }}
-                    aria-label={colorName}
+                    aria-label={`${colorName}${isSelected ? ', selected' : ''}${isOutOfStock ? ', out of stock' : ''}`}
                     aria-pressed={isSelected}
-                  />
+                  >
+                    {/* Checkmark overlay for selected */}
+                    {isSelected && (
+                      <Check 
+                        className={cn(
+                          "w-4 h-4 drop-shadow-md",
+                          isDarkColor ? "text-primary-foreground" : "text-foreground"
+                        )} 
+                        strokeWidth={3} 
+                      />
+                    )}
+                    {/* Out of stock diagonal line */}
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-[130%] h-0.5 bg-destructive rounded-full rotate-45" />
+                      </div>
+                    )}
+                  </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
                   <div className="font-medium">{colorName}</div>
+                  {isOutOfStock && (
+                    <div className="text-destructive font-medium">Out of Stock</div>
+                  )}
                   {variant.color_hex && (
                     <div className="text-muted-foreground font-mono text-[10px]">
                       {variant.color_hex.toUpperCase()}
@@ -110,4 +145,14 @@ export function LargeColorSwatchGrid({
       </TooltipProvider>
     </div>
   );
+}
+
+/** Simple luminance check to determine if a hex color is dark */
+function isDark(hex: string): boolean {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  // Relative luminance
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
 }
