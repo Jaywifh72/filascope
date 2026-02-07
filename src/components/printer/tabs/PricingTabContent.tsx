@@ -122,13 +122,25 @@ export function PricingTabContent({
     ? Math.round((savings / displayMsrp) * 100) 
     : null;
 
-  // Format price based on whether it's a live regional price or database USD
-  const formatDisplayPrice = (price: number | null | undefined) => {
-    if (price === null || price === undefined) return null;
-    return formatPrice(price);
+  // displayPrice and displayMsrp are always USD values from the DB
+  const isUserCurrencyUsd = currency === 'USD';
+  const usdToUserRate = isUserCurrencyUsd ? 1 : getConversionRate('USD', currency);
+
+  // Format a USD price into the user's currency with proper conversion label
+  const formatUsdAsUserCurrency = (usdPrice: number): string => {
+    if (isUserCurrencyUsd) {
+      return formatCurrencyPrice(usdPrice, 'USD');
+    }
+    const converted = usdPrice * usdToUserRate;
+    return `~${formatCurrencyPrice(converted, currency)}`;
   };
 
   const hasAnyAmazonLink = printer.amazon_link_us || printer.amazon_link_uk || printer.amazon_link_de;
+
+  // Detect potentially unconverted store prices (store price equals MSRP exactly)
+  const storePrice = printer.current_price_usd_store;
+  const msrpUsd = printer.msrp_usd;
+  const storePriceSuspect = storePrice && msrpUsd && storePrice === msrpUsd;
 
   return (
     <div className="tab-content">
@@ -150,12 +162,12 @@ export function PricingTabContent({
             {(regionalDisplayPrice ?? displayPrice) ? (
               <div className="space-y-3 sm:space-y-4">
                 <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight">
-                  {isRegionalConverted ? '~' : ''}{formatDisplayPrice(regionalDisplayPrice ?? displayPrice)}
+                  {isRegionalConverted ? '~' : ''}{formatPrice(regionalDisplayPrice ?? displayPrice!)}
                 </div>
                 {displayMsrp && displayMsrp > (displayPrice || 0) && (
                   <div className="flex items-center gap-4">
                     <span className="text-xl text-muted-foreground line-through">
-                      {formatDisplayPrice(displayMsrp)}
+                      {isRegionalConverted ? '~' : ''}{formatPrice(displayMsrp * (isRegionalConverted ? usdToUserRate : 1))}
                     </span>
                     {savingsPercent && (
                       <Badge className="bg-green-500/20 text-green-500 border-green-500/30 text-sm px-3 py-1">
@@ -166,8 +178,11 @@ export function PricingTabContent({
                   </div>
                 )}
                 {displayMsrp && (displayPrice || 0) >= displayMsrp && (
-                  <div className="data-label">
-                    MSRP: {formatDisplayPrice(displayMsrp)}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>MSRP: {formatCurrencyPrice(displayMsrp, 'USD')}</span>
+                    {!isUserCurrencyUsd && (
+                      <span className="text-xs">({formatUsdAsUserCurrency(displayMsrp)})</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -176,24 +191,51 @@ export function PricingTabContent({
             )}
           </div>
 
-          {/* Price Sources Grid - Responsive */}
+          {/* Price Sources Grid - Responsive: always show USD source prices with conversion */}
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:w-[400px]">
+            {/* Store Price Card */}
             <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Store className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mx-auto mb-2 sm:mb-3" />
-              <div className="text-xs sm:text-sm text-gray-400 mb-1">Store</div>
-              <div className="text-sm sm:text-lg font-bold text-foreground">
-                {printer.current_price_usd_store 
-                  ? formatPrice(printer.current_price_usd_store)
-                  : <span className="text-gray-500 italic text-sm font-normal">Not available</span>
-                }
-              </div>
+              <Store className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground mx-auto mb-2 sm:mb-3" />
+              <div className="text-xs sm:text-sm text-muted-foreground mb-1">Store</div>
+              {storePrice ? (
+                <div>
+                  <div className="text-sm sm:text-lg font-bold text-foreground">
+                    {formatCurrencyPrice(storePrice, 'USD')}
+                  </div>
+                  {!isUserCurrencyUsd && (
+                    <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                      {formatUsdAsUserCurrency(storePrice)}
+                    </div>
+                  )}
+                  {storePriceSuspect && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-[10px] text-amber-400 mt-1 cursor-help">⚠ May be MSRP</div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs max-w-xs">
+                        Store price matches MSRP exactly — this may be the list price rather than a live store price.
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              ) : (
+                <span className="text-muted-foreground/50 italic text-sm font-normal">Not available</span>
+              )}
             </div>
+            {/* Amazon Price Card */}
             <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mx-auto mb-2 sm:mb-3" />
-              <div className="text-xs sm:text-sm text-gray-400 mb-1">Amazon</div>
+              <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground mx-auto mb-2 sm:mb-3" />
+              <div className="text-xs sm:text-sm text-muted-foreground mb-1">Amazon</div>
               {printer.current_price_usd_amazon ? (
-                <div className="text-sm sm:text-lg font-bold text-foreground">
-                  {formatPrice(printer.current_price_usd_amazon)}
+                <div>
+                  <div className="text-sm sm:text-lg font-bold text-foreground">
+                    {formatCurrencyPrice(printer.current_price_usd_amazon, 'USD')}
+                  </div>
+                  {!isUserCurrencyUsd && (
+                    <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                      {formatUsdAsUserCurrency(printer.current_price_usd_amazon)}
+                    </div>
+                  )}
                 </div>
               ) : hasAnyAmazonLink ? (
                 <a 
@@ -205,18 +247,27 @@ export function PricingTabContent({
                   Check Amazon <ExternalLink className="w-3 h-3" />
                 </a>
               ) : (
-                <span className="text-gray-500 italic text-sm font-normal">Not available</span>
+                <span className="text-muted-foreground/50 italic text-sm font-normal">Not available</span>
               )}
             </div>
+            {/* MSRP Card - always shown in USD */}
             <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40 text-center">
-              <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mx-auto mb-2 sm:mb-3" />
-              <div className="text-xs sm:text-sm text-gray-400 mb-1">MSRP</div>
-              <div className="text-sm sm:text-lg font-bold text-foreground">
-                {printer.msrp_usd 
-                  ? formatPrice(printer.msrp_usd)
-                  : <span className="text-gray-500 italic text-sm font-normal">Not set</span>
-                }
-              </div>
+              <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground mx-auto mb-2 sm:mb-3" />
+              <div className="text-xs sm:text-sm text-muted-foreground mb-1">MSRP</div>
+              {msrpUsd ? (
+                <div>
+                  <div className="text-sm sm:text-lg font-bold text-foreground">
+                    {formatCurrencyPrice(msrpUsd, 'USD')}
+                  </div>
+                  {!isUserCurrencyUsd && (
+                    <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                      {formatUsdAsUserCurrency(msrpUsd)}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="text-muted-foreground/50 italic text-sm font-normal">Not set</span>
+              )}
             </div>
           </div>
         </div>
@@ -245,7 +296,7 @@ export function PricingTabContent({
             </a>
           ) : (
             <div className="flex items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
-              <span className="text-sm text-gray-400">No official store link</span>
+              <span className="text-sm text-muted-foreground">No official store link</span>
             </div>
           )}
 
@@ -268,13 +319,13 @@ export function PricingTabContent({
             </a>
           ) : (
             <div className="flex items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
-              <span className="text-sm text-gray-400">Not available on Amazon</span>
+              <span className="text-sm text-muted-foreground">Not available on Amazon</span>
             </div>
           )}
 
           {/* Other Retailers Placeholder */}
           <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-border/50 rounded-xl">
-            <span className="text-sm text-gray-400">More retailers coming soon</span>
+            <span className="text-sm text-muted-foreground">More retailers coming soon</span>
           </div>
         </div>
 
@@ -307,32 +358,28 @@ export function PricingTabContent({
         )}
       </section>
 
+      {/* Price by Region - uses actual MSRP columns with proper formatting */}
       <section className="section-card">
         <SectionHeader icon={Globe} title="Price by Region (MSRP)" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {([
-            { regionCode: 'US', label: '🇺🇸 USD', msrp: printer.msrp_usd, symbol: '$', currency: 'USD' as const },
-            { regionCode: 'CA', label: '🇨🇦 CAD', msrp: printer.msrp_cad, symbol: 'C$', currency: 'CAD' as const },
-            { regionCode: 'EU', label: '🇪🇺 EUR', msrp: printer.msrp_eur, symbol: '€', currency: 'EUR' as const },
-            { regionCode: 'UK', label: '🇬🇧 GBP', msrp: printer.msrp_gbp, symbol: '£', currency: 'GBP' as const },
-          ] as const).map(({ regionCode, label, msrp, symbol, currency: regionCurrency }) => {
-            // Fallback: find a store price for this region when MSRP is not set
-            const storeFallback = !msrp && displayPrice
-              ? (() => {
-                  const store = allStores.find(s => s.region_code === regionCode);
-                  if (store) {
-                    const rate = regionCurrency === 'USD' ? 1 : getConversionRate('USD', regionCurrency);
-                    return (displayPrice || 0) * rate;
-                  }
-                  return null;
-                })()
+            { regionCode: 'US', label: '🇺🇸 USD', msrp: printer.msrp_usd, currency: 'USD' as CurrencyCode },
+            { regionCode: 'CA', label: '🇨🇦 CAD', msrp: printer.msrp_cad, currency: 'CAD' as CurrencyCode },
+            { regionCode: 'EU', label: '🇪🇺 EUR', msrp: printer.msrp_eur, currency: 'EUR' as CurrencyCode },
+            { regionCode: 'UK', label: '🇬🇧 GBP', msrp: printer.msrp_gbp, currency: 'GBP' as CurrencyCode },
+          ]).map(({ regionCode, label, msrp, currency: regionCurrency }) => {
+            // If MSRP exists for this region, show it in native currency
+            // If not, convert from USD as an estimate
+            const hasNativeMsrp = msrp !== null && msrp !== undefined;
+            const estimatedFromUsd = !hasNativeMsrp && msrpUsd && regionCurrency !== 'USD'
+              ? msrpUsd * getConversionRate('USD', regionCurrency)
               : null;
             
-            const displayValue = msrp 
-              ? `${symbol}${msrp}` 
-              : storeFallback 
-                ? `~${symbol}${storeFallback.toFixed(2)}`
-                : null;
+            // Check: if regional MSRP equals USD MSRP exactly, it's likely unconverted data
+            const suspectSameAsUsd = hasNativeMsrp && msrpUsd && regionCurrency !== 'USD' && msrp === msrpUsd;
+            
+            const priceValue = hasNativeMsrp ? msrp : estimatedFromUsd;
+            const isEstimate = !hasNativeMsrp && estimatedFromUsd !== null;
 
             return (
               <div key={regionCode} className={cn(
@@ -342,22 +389,41 @@ export function PricingTabContent({
                   : "bg-muted/30 border-border/40"
               )}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs sm:text-sm text-gray-400">{label}</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{label}</span>
                   {region === regionCode && (
                     <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0">
-                      Selected
+                      Your Region
                     </Badge>
                   )}
                 </div>
-                <div className={cn(
-                  "text-sm sm:text-lg font-bold",
-                  !displayValue ? "text-gray-500/50 italic font-normal" : "",
-                  storeFallback && !msrp ? "text-muted-foreground" : "text-foreground"
-                )}>
-                  {displayValue || 'Not set'}
-                </div>
-                {storeFallback && !msrp && (
-                  <span className="text-[10px] text-muted-foreground/70">Store price</span>
+                {priceValue ? (
+                  <div>
+                    <div className={cn(
+                      "text-sm sm:text-lg font-bold",
+                      isEstimate || suspectSameAsUsd ? "text-muted-foreground" : "text-foreground"
+                    )}>
+                      {isEstimate ? '~' : ''}{formatCurrencyPrice(priceValue, regionCurrency)}
+                    </div>
+                    {isEstimate && (
+                      <span className="text-[10px] text-muted-foreground/70">
+                        Converted from {formatCurrencyPrice(msrpUsd!, 'USD')}
+                      </span>
+                    )}
+                    {suspectSameAsUsd && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[10px] text-amber-400 cursor-help">⚠ Unverified</span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs max-w-xs">
+                          This regional MSRP matches the USD price exactly ({formatCurrencyPrice(msrpUsd!, 'USD')}), which may indicate unconverted data.
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-sm sm:text-lg text-muted-foreground/50 italic font-normal">
+                    Not set
+                  </div>
                 )}
               </div>
             );
@@ -380,7 +446,7 @@ export function PricingTabContent({
         <SectionHeader icon={Clock} title="Availability & Status" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs sm:text-sm text-gray-400 mb-1">Status</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mb-1">Status</div>
             {printer.discontinued ? (
               <Badge variant="destructive" className="text-xs sm:text-sm">Discontinued</Badge>
             ) : (
@@ -390,28 +456,28 @@ export function PricingTabContent({
             )}
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs sm:text-sm text-gray-400 mb-1">Release Date</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mb-1">Release Date</div>
             <div className={cn(
               "text-sm sm:text-base font-medium",
-              !printer.release_date ? "text-gray-500 italic" : "text-white"
+              !printer.release_date ? "text-muted-foreground italic" : "text-foreground"
             )}>
               {printer.release_date || 'Not specified'}
             </div>
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs sm:text-sm text-gray-400 mb-1">Price Tier</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mb-1">Price Tier</div>
             {printer.price_tier ? (
               <Badge variant="secondary" className="capitalize text-xs sm:text-sm">{printer.price_tier}</Badge>
             ) : (
-              <span className="text-sm sm:text-base text-gray-500 italic">Not set</span>
+              <span className="text-sm sm:text-base text-muted-foreground italic">Not set</span>
             )}
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-xs sm:text-sm text-gray-400 mb-1">Target User</div>
+            <div className="text-xs sm:text-sm text-muted-foreground mb-1">Target User</div>
             {printer.target_user_segment ? (
               <Badge variant="secondary" className="text-xs sm:text-sm">{printer.target_user_segment}</Badge>
             ) : (
-              <span className="text-sm sm:text-base text-gray-500 italic">Not set</span>
+              <span className="text-sm sm:text-base text-muted-foreground italic">Not set</span>
             )}
           </div>
         </div>
@@ -442,17 +508,22 @@ export function PricingTabContent({
                 const needsConversion = storeCurrency !== currency;
                 
                 // Get the base price in the store's native currency
-                // If store currency matches base (USD), use displayPrice directly
-                // Otherwise, convert from USD to store's currency first
+                // Convert from USD to store's native currency
                 const baseUsdPrice = displayPrice || 0;
                 const usdToStoreRate = storeCurrency === 'USD' ? 1 : getConversionRate('USD', storeCurrency);
                 const nativePriceInStoreCurrency = baseUsdPrice * usdToStoreRate;
+                
+                // Flag if native price suspiciously equals the USD price (likely unconverted)
+                const isSuspectPrice = storeCurrency !== 'USD' && nativePriceInStoreCurrency === baseUsdPrice;
                 
                 // Now convert store's native price to user's currency if needed
                 const storeToUserRate = needsConversion 
                   ? getConversionRate(storeCurrency, currency) 
                   : 1;
                 const convertedDisplayPrice = nativePriceInStoreCurrency * storeToUserRate;
+
+                // All store prices are estimates from USD conversion
+                const isEstimate = storeCurrency !== 'USD';
 
                 // Generate product-specific URL using interpolation
                 const storeUrl = store.product_url_pattern && productSlug
@@ -499,25 +570,20 @@ export function PricingTabContent({
 
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="flex items-center gap-1 font-bold">
-                          {needsConversion && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs max-w-xs">
-                                <p className="font-medium">Store Price: {formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)}</p>
-                                <p className="text-muted-foreground">Rate: 1 {storeCurrency} = {storeToUserRate.toFixed(4)} {currency}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          <span className={needsConversion ? "text-muted-foreground" : ""}>
-                            {needsConversion ? '~' : ''}{formatCurrencyPrice(convertedDisplayPrice, currency)}
-                          </span>
+                        {/* Show native store currency price */}
+                        <div className="text-sm font-bold text-foreground">
+                          {isEstimate ? '~' : ''}{formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)}
                         </div>
+                        {/* If user's currency differs from store currency, show converted */}
                         {needsConversion && (
                           <div className="text-xs text-muted-foreground">
-                            {formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)} native
+                            ~{formatCurrencyPrice(convertedDisplayPrice, currency)}
+                          </div>
+                        )}
+                        {/* Source label for converted prices */}
+                        {isEstimate && (
+                          <div className="text-[10px] text-muted-foreground/60">
+                            est. from {formatCurrencyPrice(baseUsdPrice, 'USD')}
                           </div>
                         )}
                       </div>
