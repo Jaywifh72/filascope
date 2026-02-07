@@ -714,8 +714,14 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
         .trim();
     }
     
-    // Combine material and line name
-    return lineName ? `${material} ${lineName}`.trim() : material.trim();
+    // Combine material and line name, avoiding duplication
+    if (!lineName) return material.trim();
+    // If lineName already starts with the material, don't prepend
+    if (lineName.toLowerCase().startsWith(material.toLowerCase() + ' ') ||
+        lineName.toLowerCase() === material.toLowerCase()) {
+      return lineName;
+    }
+    return `${material} ${lineName}`.trim();
   }
   
   if (parts.length >= 3) {
@@ -818,6 +824,13 @@ export function formatProductLineIdForDisplay(productLineId: string, fallbackTit
     // If lineName is now empty (e.g., "bambulab__abs-gf__composite"), just return material
     if (!lineName) {
       return material;
+    }
+    
+    // Avoid duplicated material prefix: if lineName already starts with the material type,
+    // don't prepend it again. e.g., material="ABS" + lineName="ABS Extrafill" → "ABS Extrafill"
+    if (lineName.toLowerCase().startsWith(material.toLowerCase() + ' ') ||
+        lineName.toLowerCase() === material.toLowerCase()) {
+      return lineName;
     }
     
     return `${material} ${lineName}`.trim();
