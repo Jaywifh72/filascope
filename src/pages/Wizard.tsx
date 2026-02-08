@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,21 @@ const Wizard = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [showResults, setShowResults] = useState(false);
+  const wizardCardRef = useRef<HTMLDivElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // Scroll wizard card into view and focus the step heading for a11y
+  const scrollToWizardTop = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (wizardCardRef.current) {
+        const navOffset = 80;
+        const top = wizardCardRef.current.getBoundingClientRect().top + window.scrollY - navOffset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+      // Focus step heading for screen readers
+      stepHeadingRef.current?.focus();
+    });
+  }, []);
 
   // Regionalize budget thresholds (base values in USD)
   const budgetThresholds = useMemo(() => {
@@ -162,13 +177,13 @@ const Wizard = () => {
     } else {
       setCurrentStep(currentStep + 1);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToWizardTop();
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToWizardTop();
     }
   };
 
@@ -198,7 +213,7 @@ const Wizard = () => {
       </Helmet>
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col">
       <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
-        <Card className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col">
+        <Card ref={wizardCardRef} className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -221,7 +236,7 @@ const Wizard = () => {
 
           {/* Question */}
           <div className="mb-8">
-            <h3 className="text-lg md:text-xl font-semibold mb-2">{currentQuestion.question}</h3>
+            <h3 ref={stepHeadingRef} tabIndex={-1} className="text-lg md:text-xl font-semibold mb-2 outline-none">{currentQuestion.question}</h3>
             {currentQuestion.subtitle && (
               <p className="text-sm text-muted-foreground mb-6">{currentQuestion.subtitle}</p>
             )}
