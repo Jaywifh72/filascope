@@ -226,7 +226,8 @@ export function LabReadoutCard({
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
         "group relative rounded-2xl overflow-hidden",
-        "border border-gray-700",
+        "border border-border",
+        "bg-card/80 backdrop-blur-xl",
         // Faster transition (150ms) with enhanced hover effects
         "transition-all duration-150 ease-out",
         "hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/15 hover:border-primary/60",
@@ -239,9 +240,6 @@ export function LabReadoutCard({
         // Animation respects prefers-reduced-motion via CSS media query
         // Cap animation delay to first 12 cards to avoid long waits
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${Math.min(index, 12) * 0.05}s both`,
-        background: "rgba(10, 12, 16, 0.6)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -252,8 +250,8 @@ export function LabReadoutCard({
 
       {/* Out of Stock Overlay */}
       {isOutOfStock && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 pointer-events-none rounded-2xl">
-          <span className="text-xs font-semibold uppercase tracking-wider text-white/80 bg-black/70 px-3 py-1.5 rounded">
+        <div className="absolute inset-0 bg-background/60 flex items-center justify-center z-10 pointer-events-none rounded-2xl">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted px-3 py-1.5 rounded">
             Out of Stock
           </span>
         </div>
@@ -262,7 +260,7 @@ export function LabReadoutCard({
       {/* Sale Badge - Top Left */}
       {isOnSale && discountPercent > 0 && (
         <div className="absolute top-3 left-3 z-10">
-          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-500/20 border border-green-500/30 text-green-400 rounded">
+          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-green-500/20 border border-green-500/30 text-green-700 dark:text-green-400 rounded">
             -{discountPercent}%
           </span>
         </div>
@@ -271,7 +269,7 @@ export function LabReadoutCard({
       {/* ═══════════════════════════════════════════════════════════════
           HEADER: Dark header area with brand logo
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative bg-[#14171C] px-4 pt-4 pb-4 h-[72px]">
+      <div className="relative bg-muted/60 px-4 pt-4 pb-4 h-[72px]">
         {/* Compare Button - Persistent with enhanced visibility */}
         <div 
           className="absolute top-3 right-3 z-10"
@@ -292,7 +290,7 @@ export function LabReadoutCard({
                 ? "w-6 h-6 bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.5)]"
                 : cn(
                     // Default state - subtle but visible
-                    "w-5 h-5 bg-gray-800/60 border border-gray-600/60 opacity-50",
+                    "w-5 h-5 bg-muted border border-border opacity-50",
                     // Hover state - prominent
                     "group-hover:w-6 group-hover:h-6 group-hover:opacity-100",
                     "group-hover:border-primary/60 group-hover:bg-primary/20",
@@ -305,7 +303,7 @@ export function LabReadoutCard({
               <Check className="w-3.5 h-3.5 text-white animate-check-draw" strokeWidth={3} />
             ) : (
               <Plus className={cn(
-                "text-gray-400 transition-all duration-200",
+                "text-muted-foreground transition-all duration-200",
                 "w-3 h-3 group-hover:w-3.5 group-hover:h-3.5 group-hover:text-primary"
               )} />
             )}
@@ -313,7 +311,7 @@ export function LabReadoutCard({
           
           {/* Tooltip */}
           {showTooltip && !isSelected && !isCompareDisabled && (
-            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap z-20 shadow-lg border border-gray-700">
+            <div className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-popover text-popover-foreground text-[10px] rounded whitespace-nowrap z-20 shadow-lg border border-border">
               Add to Compare
             </div>
           )}
@@ -345,13 +343,13 @@ export function LabReadoutCard({
         </div>
         
         {/* Subtle bottom border instead of scan line */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
           PRODUCT IMAGE SECTION - Always shows with fallback for missing images
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative h-32 bg-gradient-to-b from-black/20 to-black/40 border-b border-gray-700/50 flex items-center justify-center overflow-hidden">
+      <div className="relative h-32 bg-muted/30 border-b border-border/50 flex items-center justify-center overflow-hidden">
         {filament.featured_image && !imageError ? (
           <OptimizedImage
             src={filament.featured_image}
@@ -370,7 +368,7 @@ export function LabReadoutCard({
             {/* Color swatch as main visual when no image */}
             {filament.color_hex ? (
               <div 
-                className="w-16 h-16 rounded-xl shadow-lg border border-white/10"
+                className="w-16 h-16 rounded-xl shadow-lg border border-border"
                 style={{ backgroundColor: filament.color_hex }}
               />
             ) : (
@@ -393,13 +391,13 @@ export function LabReadoutCard({
         )}
         
         {/* Subtle gradient overlay for better text contrast below */}
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
           BODY: Material Name, Badge, Price, Temp
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-4 py-4 bg-black/20">
+      <div className="px-4 py-4">
         {/* Material Name */}
         <h3 className="text-lg font-semibold text-foreground truncate leading-tight mb-3">
           {getDisplayTitle()}
@@ -410,7 +408,7 @@ export function LabReadoutCard({
           <div className="flex items-center gap-2 flex-wrap">
           {/* Material Type Badge */}
           {filament.material && (
-            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-400 rounded">
+          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 rounded">
               {filament.material}
             </span>
           )}
@@ -418,7 +416,7 @@ export function LabReadoutCard({
           {filament.transmission_distance != null && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded cursor-help">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded cursor-help">
                   <Lightbulb className="w-3 h-3" />
                   TD {filament.transmission_distance}
                 </span>
@@ -439,7 +437,7 @@ export function LabReadoutCard({
               <div className="flex flex-col items-end">
                 {/* Original price with strikethrough if on sale */}
                 {isOnSale && originalPricePerKg && (
-                  <span className="text-xs text-gray-500 line-through">
+                  <span className="text-xs text-muted-foreground line-through">
                     {formatPrice(originalPricePerKg)}/kg
                   </span>
                 )}
@@ -527,7 +525,7 @@ export function LabReadoutCard({
       {/* ═══════════════════════════════════════════════════════════════
           FOOTER: Rating + View Details Button
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-4 py-3 border-t border-white/[0.05]">
+      <div className="px-4 py-3 border-t border-border/30">
         {/* Star Rating - Enhanced brightness and contrast */}
         <div 
           className="flex items-center gap-1 mb-2"
@@ -542,7 +540,7 @@ export function LabReadoutCard({
                 "w-4 h-4",
                 i < starCount 
                   ? "fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" 
-                  : "fill-transparent text-gray-600"
+                  : "fill-transparent text-muted-foreground/40"
               )}
             />
           ))}
