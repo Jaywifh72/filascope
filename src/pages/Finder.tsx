@@ -960,16 +960,22 @@ const Finder = () => {
   const { data: catalogCounts } = useQuery({
     queryKey: ["catalog-counts"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_catalog_counts");
-      if (error) throw error;
-      const row = data?.[0] || { product_count: 0, variant_count: 0 };
+      // Fetch product/variant counts AND brand count in parallel
+      const [rpcResult, brandResult] = await Promise.all([
+        supabase.rpc("get_catalog_counts"),
+        supabase.from("v_public_brands").select("id", { count: "exact", head: true }),
+      ]);
+      if (rpcResult.error) throw rpcResult.error;
+      const row = rpcResult.data?.[0] || { product_count: 0, variant_count: 0 };
       return {
         productCount: Number(row.product_count) || 0,
         variantCount: Number(row.variant_count) || 0,
+        brandCount: brandResult.count || 0,
       };
     },
   });
   const unfilteredProductCount = catalogCounts?.productCount || 0;
+  const unfilteredBrandCount = catalogCounts?.brandCount || 0;
 
   const toggleMaterial = (material: string) => {
     if (material === "All") {
@@ -1631,8 +1637,8 @@ const Finder = () => {
       ]} />
       <Helmet>
         <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
-        <meta name="description" content={`Compare ${unfilteredProductCount || filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
-        <meta property="og:description" content={`Compare ${unfilteredProductCount || filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta name="description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta property="og:description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
       </Helmet>
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />
@@ -1646,7 +1652,7 @@ const Finder = () => {
         onSearchChange={setSearchTerm}
         filamentCount={filamentCount || 0}
         productCount={unfilteredProductCount}
-        brandCount={brands?.length || 42}
+        brandCount={unfilteredBrandCount || brands?.length || 0}
         compatibleCount={totalCount}
         isLoading={isLoading || filamentCount === undefined}
       />
@@ -1678,6 +1684,7 @@ const Finder = () => {
       {/* Results Header with Context */}
       <ResultsHeader
         count={totalCount}
+        totalCatalogCount={unfilteredProductCount}
         selectedPrinter={selectedPrinter}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearAllFilters}
@@ -2030,9 +2037,9 @@ const Finder = () => {
               <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
             ) : (
               <>
-                {totalCount} products{filteredAndSortedFilaments && filteredAndSortedFilaments.length !== totalCount 
-                  ? ` (${filteredAndSortedFilaments.length} variants)` 
-                  : ''}
+                {totalCount.toLocaleString()} products{filteredAndSortedFilaments && filteredAndSortedFilaments.length !== totalCount 
+                  ? ` (${filteredAndSortedFilaments.length.toLocaleString()} variants)` 
+                  : ''}{unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}
               </>
             )}
           </p>
