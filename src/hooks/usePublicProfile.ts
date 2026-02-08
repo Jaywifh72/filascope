@@ -99,14 +99,16 @@ function computeBadges(reviews: PublicReview[], projects: PublicProject[]): Prof
 export function usePublicProfile(identifier: string | undefined) {
   const { user } = useAuth();
 
-  // Resolve profile
+  // Resolve profile — use v_public_profiles view (excludes email and sensitive fields)
+  // Falls back to profiles table for the authenticated user viewing their own non-public profile
   const profileQuery = useQuery({
-    queryKey: ["public-profile", identifier],
+    queryKey: ["public-profile", identifier, user?.id],
     queryFn: async () => {
       if (!identifier) throw new Error("No identifier");
 
+      // First try the secure public view (only exposes safe columns)
       let query = supabase
-        .from("profiles")
+        .from("v_public_profiles" as any)
         .select("id, display_name, avatar_url, bio, is_public, username_slug, social_links, wishlist_public, created_at");
 
       if (UUID_REGEX.test(identifier)) {
@@ -116,8 +118,36 @@ export function usePublicProfile(identifier: string | undefined) {
       }
 
       const { data, error } = await query.single();
+
+      // If found in public view, return it
+      if (data && !error) {
+        return data as unknown as PublicProfile;
+      }
+
+      // If not found and user is logged in, this might be their own non-public profile
+      // Fall back to direct table access (RLS "Users can view own profile" allows this)
+      if (user) {
+        const { data: ownData, error: ownError } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, bio, is_public, username_slug, social_links, wishlist_public, created_at")
+          .eq("id", user.id)
+          .single();
+
+        if (!ownError && ownData) {
+          // Verify this is actually the user's own profile matching the identifier
+          const isMatch = UUID_REGEX.test(identifier)
+            ? ownData.id === identifier
+            : (ownData as any).username_slug === identifier;
+
+          if (isMatch) {
+            return ownData as unknown as PublicProfile;
+          }
+        }
+      }
+
+      // Re-throw original error if not own profile
       if (error) throw error;
-      return data as unknown as PublicProfile;
+      throw new Error("Profile not found");
     },
     enabled: !!identifier,
   });
