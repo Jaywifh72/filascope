@@ -17,6 +17,7 @@ import { useFilamentStorePricing, type StorePrice } from './useFilamentStorePric
 import { useUnifiedRegionalPricing, type UnifiedRegionalPricingResult } from './useUnifiedRegionalPricing';
 import { useAffiliateLinks } from './useAffiliateLinks';
 import { extractProductSlug } from './useRegionalPricing';
+import { computePricePerKg } from '@/lib/resolveFilamentPrice';
 import { REGIONS } from '@/config/regions';
 import type { RegionCode, CurrencyCode } from '@/types/regional';
 
@@ -81,6 +82,10 @@ export interface DetailPricingResult {
   isConverted: boolean;
   /** Whether best retailer is local */
   isLocal: boolean;
+  
+  // ── Sticky bar accessor (local-first, global fallback) ──
+  /** Price candidate for sticky/mobile bar: cheapestLocal ?? bestPrice */
+  stickyBarPrice: PriceCandidate | null;
   
   // ── Sidebar-compatible regional price result ──
   sidebarRegionalPrice: {
@@ -188,6 +193,12 @@ export function useFilamentDetailPricing(
       return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
     }
     
+    // ── GATE: Don't build candidates until ALL sources have resolved ──
+    // This prevents the "best price" from jumping as sources resolve incrementally.
+    if (isLoading) {
+      return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
+    }
+    
     const packQty = (filament as any).pack_quantity || 1;
     const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
     // Total weight across all spools in pack — the universal denominator
@@ -238,7 +249,7 @@ export function useFilamentDetailPricing(
       const rawUrl = listing.affiliate_url || listing.product_url;
       addCandidate({
         name: listing.retailer_name,
-        pricePerKg: price / totalWeightKg,
+        pricePerKg: computePricePerKg(price, filament.net_weight_g, packQty) ?? (price / totalWeightKg),
         spoolPrice: price,
         pricePerSpool: price / packQty,
         productUrl: listing.product_url,
@@ -259,7 +270,7 @@ export function useFilamentDetailPricing(
       const rawUrl = sp.productUrl;
       addCandidate({
         name: sp.storeName,
-        pricePerKg: sp.priceDisplay / totalWeightKg,
+        pricePerKg: computePricePerKg(sp.priceDisplay, filament.net_weight_g, packQty) ?? (sp.priceDisplay / totalWeightKg),
         spoolPrice: sp.priceDisplay,
         pricePerSpool: sp.priceDisplay / packQty,
         productUrl: rawUrl,
@@ -277,7 +288,7 @@ export function useFilamentDetailPricing(
       const name = unifiedPricing.storeName || filament.vendor || 'Store';
       addCandidate({
         name,
-        pricePerKg: unifiedPricing.displayPrice / totalWeightKg,
+        pricePerKg: computePricePerKg(unifiedPricing.displayPrice, filament.net_weight_g, packQty) ?? (unifiedPricing.displayPrice / totalWeightKg),
         spoolPrice: unifiedPricing.displayPrice,
         pricePerSpool: unifiedPricing.displayPrice / packQty,
         productUrl: unifiedPricing.storeUrl,
@@ -313,7 +324,7 @@ export function useFilamentDetailPricing(
         if (price > 0) {
           addCandidate({
             name: 'Amazon US',
-            pricePerKg: price / totalWeightKg,
+            pricePerKg: computePricePerKg(price, filament.net_weight_g, packQty) ?? (price / totalWeightKg),
             spoolPrice: price,
             pricePerSpool: price / packQty,
             productUrl: filament.amazon_link_us,
@@ -357,6 +368,7 @@ export function useFilamentDetailPricing(
     unifiedPricing.storeRegion, unifiedPricing.isConverted, unifiedPricing.isLocalStore,
     unifiedPricing.originalCurrency,
     currency, region, hasRates, regionConvertPrice, getAffiliateUrl, getAmazonUrl,
+    isLoading, // re-evaluate when loading state changes
   ]);
   
   // ── Build sidebar-compatible regional price result ──
@@ -384,6 +396,9 @@ export function useFilamentDetailPricing(
     };
   }, [bestPrice, currency, formatPrice]);
   
+  // ── Sticky bar price: local-first, global fallback ──
+  const stickyBarPrice = cheapestLocal ?? bestPrice;
+  
   return {
     bestPrice,
     cheapestLocal,
@@ -403,6 +418,7 @@ export function useFilamentDetailPricing(
     isConverted: bestPrice?.isConverted ?? false,
     isLocal: bestPrice?.isLocal ?? false,
     
+    stickyBarPrice,
     sidebarRegionalPrice,
   };
 }

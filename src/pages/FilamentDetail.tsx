@@ -607,7 +607,9 @@ const FilamentDetail = () => {
   // Use converted price from the new hook if available
   const hasActualRegionalPrice = !!(regionalPriceResult && regionalPriceResult.displayPrice > 0);
   
-  const rawPricePerKg = hasActualRegionalPrice
+  // ── VALIDATION ONLY: rawPricePerKg for SEO meta and price sanity checks ──
+  // Do NOT use this for display — all display values come from detailPricing (SSOT)
+  const validationPricePerKg = hasActualRegionalPrice
     ? (regionalPriceResult.displayPrice / totalWeightKg)
     : pricingFilament.variant_price 
       ? (pricingFilament.variant_price / totalWeightKg) 
@@ -622,12 +624,6 @@ const FilamentDetail = () => {
     pricingFilament.product_url
   );
   
-  const rawPricePerSpool = hasActualRegionalPrice
-    ? (regionalPriceResult.displayPrice / packQuantity)
-    : pricingFilament.variant_price 
-      ? (pricingFilament.variant_price / packQuantity)
-      : null;
-  
   const totalPackPrice = isMultiPack 
     ? hasActualRegionalPrice && regionalPriceResult?.displayPrice
       ? regionalPriceResult.formattedPrice
@@ -637,8 +633,7 @@ const FilamentDetail = () => {
     : null;
 
   // ─── Sidebar props from unified pricing hook (SSOT — no fallback to independent hooks) ───
-  // When detailPricing has resolved, trust it exclusively. Only fall back to legacy
-  // sources when detailPricing hasn't found anything at all.
+  // detailPricing is the single source of truth. No rawPricePerKg fallbacks.
   const sidebarAffiliateUrl = detailPricing.affiliateUrl
     || getAffiliateUrl(
         pricingFilament?.product_url || '',
@@ -646,10 +641,16 @@ const FilamentDetail = () => {
       );
   const sidebarRetailerName = detailPricing.storeName
     || pricingFilament?.vendor || undefined;
-  const sidebarPricePerKg = detailPricing.pricePerKg ?? rawPricePerKg;
-  const sidebarPricePerSpool = detailPricing.pricePerSpool ?? rawPricePerSpool;
+  const sidebarPricePerKg = detailPricing.pricePerKg;
+  const sidebarPricePerSpool = detailPricing.pricePerSpool;
   const sidebarProductUrl = detailPricing.productUrl
     || pricingFilament?.product_url || '';
+  
+  // Sticky/mobile bar uses local-first pricing
+  const stickyBarCandidate = detailPricing.stickyBarPrice;
+  const stickyBarPricePerKg = stickyBarCandidate?.pricePerKg ?? sidebarPricePerKg;
+  const stickyBarAffiliateUrl = stickyBarCandidate?.affiliateUrl ?? sidebarAffiliateUrl;
+  const stickyBarRetailerName = stickyBarCandidate?.name ?? sidebarRetailerName;
 
   const baseProductName = getBaseName(filament.product_title);
   
@@ -690,7 +691,7 @@ const FilamentDetail = () => {
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
         material={displayFilament.material}
-        price={rawPricePerKg}
+        price={validationPricePerKg}
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}
         productType="filament"
@@ -708,7 +709,7 @@ const FilamentDetail = () => {
         material={displayFilament.material}
         color={displayFilament.color_family}
         url={`https://filascope.com/filament/${displayFilament.id}`}
-        price={rawPricePerKg}
+        price={validationPricePerKg}
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}
         nozzleTempMin={displayFilament.nozzle_temp_min_c}
@@ -819,8 +820,8 @@ const FilamentDetail = () => {
                 <PricingTabContent
                   filament={displayFilament}
                   retailers={retailers}
-                  pricePerKg={rawPricePerKg}
-                  pricePerSpool={rawPricePerSpool}
+                  pricePerKg={sidebarPricePerKg}
+                  pricePerSpool={sidebarPricePerSpool}
                   affiliateUrl={getAffiliateUrl(
                     selectedVariant?.product_url || unifiedPricing.storeUrl || pricingFilament.product_url || '', 
                     pricingFilament.vendor
@@ -906,14 +907,14 @@ const FilamentDetail = () => {
         </div>
       </div>
 
-      {/* Mobile Bottom Bar */}
+      {/* Mobile Bottom Bar — uses local-first pricing */}
       <FilamentMobileBottomBar
         filamentId={displayFilament.id}
-        pricePerKg={sidebarPricePerKg}
-        affiliateUrl={sidebarAffiliateUrl}
-        storeName={sidebarRetailerName || 'Store'}
-        storeRegion={detailPricing.storeRegion || undefined}
-        isConverted={detailPricing.isConverted}
+        pricePerKg={stickyBarPricePerKg}
+        affiliateUrl={stickyBarAffiliateUrl}
+        storeName={stickyBarRetailerName || 'Store'}
+        storeRegion={stickyBarCandidate?.storeRegion || detailPricing.storeRegion || undefined}
+        isConverted={stickyBarCandidate?.isConverted ?? detailPricing.isConverted}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
 
@@ -1031,12 +1032,12 @@ const FilamentDetail = () => {
       {pricingFilament && (
         <StickyBuyBar
           filament={pricingFilament}
-          affiliateUrl={sidebarAffiliateUrl}
-          pricePerKg={sidebarPricePerKg}
+          affiliateUrl={stickyBarAffiliateUrl}
+          pricePerKg={stickyBarPricePerKg}
           isVisible={stickyBarVisible}
-          isConverted={detailPricing.isConverted}
-          storeName={sidebarRetailerName || undefined}
-          storeRegion={detailPricing.storeRegion || undefined}
+          isConverted={stickyBarCandidate?.isConverted ?? detailPricing.isConverted}
+          storeName={stickyBarRetailerName || undefined}
+          storeRegion={stickyBarCandidate?.storeRegion || detailPricing.storeRegion || undefined}
         />
       )}
 
