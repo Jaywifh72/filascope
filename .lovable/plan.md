@@ -1,106 +1,125 @@
 
 
-# Fix Price Instability Across FilaScope
+# Fix Brand Data Inconsistency: Counts and Pricing
 
-## Problem Analysis
+## Problem Summary
 
-After tracing the complete pricing data flow, I identified **four root causes** of price instability:
+After investigating the database and component code, three root causes were identified:
 
-### Root Cause 1: Two Different Exchange Rate Tables
-- `RegionContext.convertPrice()` reads from `currency_exchange_rates` (legacy base/target pairs)
-- `useFilamentStorePricing` reads from `exchange_rates` (normalized `rate_to_usd` values)
-- These tables can contain different rates updated at different times, causing the same conversion to produce different results depending on which component does the math
+### Bug 1: Brand Card Counts Can Drift from Reality
+The `/brands` directory uses pre-stored `product_count` and `product_line_count` columns from the `automated_brands` table (exposed via `v_public_brands` view). These are static values that must be manually updated whenever products are added or removed. Currently they happen to match (e.g., Spectrum: 623 variants, 68 product lines), but they have drifted in the past (the "307" the user saw) and will drift again.
 
-### Root Cause 2: Race Conditions in Detail Page Pricing
-- `useFilamentDetailPricing` fires 4 async data sources in parallel: local retailer listings, US retailer listings, store pricing (RPC), and unified regional pricing
-- Each resolves at a different time, causing the `useMemo` to recompute and the "best price" to jump between candidates
-- On one render the cheapest might be an Amazon listing at C$75/kg; on the next, a store-pricing RPC result at C$102/kg resolves and becomes the new "best"
+Meanwhile, the brand detail page computes counts live from the `filaments` table (`filaments.length` for variants, `groupedProducts.length` for product lines). This guarantees accuracy on the detail page but creates a mismatch with the directory whenever the stored values are stale.
 
-### Root Cause 3: Duplicate Per-Kg Calculation in FilamentDetail.tsx
-- Lines 610-614 independently compute `rawPricePerKg` using `regionalPriceResult.displayPrice / totalWeightKg`
-- Meanwhile, `detailPricing.pricePerKg` computes per-kg using listing spool prices
-- The sidebar uses `detailPricing.pricePerKg ?? rawPricePerKg` -- so it flip-flops between these two different values as async sources load
+### Bug 2: Brands Page Total Product Count
+The brands hero section displays `totalProducts` from the `get_catalog_counts()` RPC, which counts ALL filaments in the catalog (1,073 product lines / 8,069 variants). This is the same source the homepage uses, so they should agree. The "147" figure the user observed was likely from a prior state. No code change is needed for this, but we should ensure the label language is consistent (both pages should say "products" meaning product lines, not variants).
 
-### Root Cause 4: Listing Cards vs Detail Pages Use Completely Different Pricing Paths
-- `FilamentCard` uses `useResolvedPrice` (deterministic, DB-column-only, no async fetching)
-- `FilamentDetail` uses `useFilamentDetailPricing` (async aggregator across 4 sources)
-- These fundamentally different approaches can produce different per-kg values for the same product
+### Bug 3: Average Price Shows "---" Despite Pricing Data Existing
+The brand detail page computes `avgPriceRange` exclusively from `filaments.variant_price`. For brands like Spectrum Filaments, `variant_price` is NULL across all 623 rows, so the hero shows "---". However, some brands may have pricing data in regional price columns (`price_cad`, `price_eur`, `price_gbp`, `price_aud`, `price_jpy`) even when `variant_price` is empty. The calculation should cascade through these sources.
 
 ---
 
 ## Implementation Plan
 
-### Step 1: Unify Exchange Rate Source
+### Step 1: Replace Static Counts with Live-Computed Counts
 
-Consolidate all exchange rate conversions to use a single source.
+Create a database view that joins `automated_brands` with live filament counts, eliminating the staleness problem entirely.
 
-**Changes:**
-- **`src/contexts/RegionContext.tsx`**: Change `loadExchangeRates()` to read from the `exchange_rates` table (using `rate_to_usd`) instead of the legacy `currency_exchange_rates` table. Build the `fromCurrency_toCurrency` map from these normalized rates. This ensures `RegionContext.convertPrice()` and `useExchangeRateMap()` return identical conversion results.
-- **`src/hooks/useExchangeRates.ts`**: Add a `staleTime` alignment comment to confirm it matches RegionContext's caching window (1 hour).
+**Database migration -- new view `v_brand_directory`:**
+- Join `automated_brands` (for display_name, logo_url, slug, etc.) with a live aggregation from `filaments` (counting rows and distinct product_line_id values per vendor)
+- Include the `net_weight_g IS NULL OR net_weight_g >= 300` filter to exclude sample spools (matching both pages)
+- This replaces the static `product_count` / `product_line_count` columns as the source of truth for the directory
 
-### Step 2: Stabilize `useFilamentDetailPricing` Against Race Conditions
+**Changes to `src/pages/Brands.tsx`:**
+- Replace the `v_public_brands` query with the new `v_brand_directory` view
+- Use the live `variant_count` and `product_line_count` from the view instead of the stored values
+- Remove the separate filaments stats query (the view already provides counts, top materials can be kept as a lightweight client query or added to the view)
 
-Prevent the "best price" from jumping as async sources resolve incrementally.
+### Step 2: Ensure Both Pages Use the Same Count Logic
 
-**Changes to `src/hooks/useFilamentDetailPricing.ts`:**
-- Add an `isReady` gate to the `useMemo` that builds candidates: only compute and return candidates when **all** sources have finished loading (not just some)
-- While loading, return a stable "pending" state with `bestPrice: null` and `isLoading: true`
-- This means the price appears once (correctly) rather than flickering through intermediate states
-- Keep the existing `isReady` flag semantics but enforce it: `allCandidates` returns empty until `isReady === true`
+**`src/pages/BrandDetail.tsx`** (line 358-372):
+- The detail page fetches filaments with `.or("net_weight_g.is.null,net_weight_g.gte.300")` -- this matches the filter used by the directory
+- No changes needed here, but we verify the grouping logic produces numbers consistent with the view
+- Pass `filaments.length` as `variantCount` and `groupedProducts.length` as `productLineCount` (already correct)
 
-### Step 3: Remove Duplicate Per-Kg Calculation from FilamentDetail.tsx
+**`src/components/brands/BrandCard.tsx`:**
+- The card already receives and displays `productLineCount` and `variantCount` correctly
+- Format: `"{productLineCount} products ({variantCount} variants)"`
+- No changes needed
 
-Eliminate the competing `rawPricePerKg` logic that conflicts with the SSOT hook.
+### Step 3: Fix Average Price Calculation with Multi-Source Fallback
 
-**Changes to `src/pages/FilamentDetail.tsx`:**
-- Remove the independent `rawPricePerKg` and `rawPricePerSpool` calculations (lines 610-629)
-- Change `sidebarPricePerKg` to use `detailPricing.pricePerKg` exclusively (no `?? rawPricePerKg` fallback)
-- Same for `sidebarPricePerSpool` -- use only `detailPricing.pricePerSpool`
-- Keep `rawPricePerKg` only for the pricing validation call and SEO meta (where it's needed as a simple sanity check), clearly labeled as "validation-only"
-- The sticky bar, mobile bar, and sidebar will now all receive the exact same value from `detailPricing`
+**Changes to `src/pages/BrandDetail.tsx`** (lines 595-608):
 
-### Step 4: Align FilamentCard with the Same Per-Kg Formula
+Replace the current `avgPriceRange` calculation that only checks `variant_price` with a cascading resolution:
 
-Ensure listing page cards produce the same number as the detail page.
+1. First try `variant_price` (the primary USD spool price)
+2. If fewer than 10% of products have `variant_price`, fall back to regional price columns (`price_cad`, `price_eur`, `price_gbp`, `price_aud`) using the user's region preference
+3. If still no prices found, display "---" (genuinely no data)
 
-**Changes:**
-- **`src/components/FilamentCard.tsx`**: `useResolvedPrice` already uses `resolveFilamentPrice` which uses `computePricePerKg` -- this is correct and deterministic. No changes needed to the card's core price logic.
-- **`src/hooks/useFilamentDetailPricing.ts`**: Ensure the per-kg computation uses `computePricePerKg()` from `resolveFilamentPrice.ts` instead of inline `price / totalWeightKg` division. This guarantees the same formula is used everywhere.
-- Specifically, replace the inline `pricePerKg: price / totalWeightKg` with `pricePerKg: computePricePerKg(price, filament.net_weight_g, packQty)` for every candidate
+This requires the filaments query to already include regional price columns, which it does since it fetches `SELECT *`.
 
-### Step 5: Make the Sticky Bar Prefer Local Stores
+The price range calculation will also be updated to use the region-aware `formatPrice()` from `useRegion()` (already imported) so the displayed range uses the user's local currency.
 
-Ensure the mobile bottom bar and sticky bar show the best local price first.
+### Step 4: Align Terminology Across Pages
 
-**Changes to `src/hooks/useFilamentDetailPricing.ts`:**
-- Add a new convenience accessor: `stickyBarPrice` that returns `cheapestLocal ?? bestPrice` (local-first, global fallback)
-- Update the return type and value
+**`src/components/BrandsHeroSection.tsx`** (line 129-133):
+- Currently shows: "{brandCount} filament brands tracked with {productCount} products ({variantCount} variants)"
+- `productCount` comes from `get_catalog_counts()` = unique product lines (1,073)
+- This is correct and matches the homepage
 
-**Changes to `src/pages/FilamentDetail.tsx`:**
-- Update sticky bar and mobile bottom bar props to use `detailPricing.stickyBarPrice` instead of `detailPricing.bestPrice` for the displayed price
-- The sidebar still shows `bestPrice` (absolute cheapest globally) since it has room for the full store context
+**`src/pages/Brands.tsx` footer** (lines 509-528):
+- Line 512 shows `brands?.length` as "Total Brands" -- this is the count from the filaments stats query (unique vendor names), which may differ from `mergedBrands.length`
+- Change to use `brandCount` (mergedBrands.length) for consistency
+- Line 516 shows `totalProducts` as "Total Filaments" -- but `totalProducts` is product line count, not filament/variant count. Fix label to "Product Lines" or change to show `totalVariants`
 
 ---
 
 ## Technical Details
 
+### New Database View
+
+```sql
+CREATE OR REPLACE VIEW v_brand_directory AS
+SELECT
+  ab.id,
+  ab.brand_name,
+  ab.brand_slug,
+  ab.display_name,
+  ab.description,
+  ab.logo_url,
+  ab.website_url,
+  ab.featured,
+  ab.display_order,
+  ab.is_visible,
+  COALESCE(stats.variant_count, 0) AS variant_count,
+  COALESCE(stats.product_line_count, 0) AS product_line_count
+FROM automated_brands ab
+LEFT JOIN LATERAL (
+  SELECT
+    COUNT(*) AS variant_count,
+    COUNT(DISTINCT product_line_id) AS product_line_count
+  FROM filaments f
+  WHERE (LOWER(f.vendor) = LOWER(ab.brand_name) 
+         OR LOWER(f.vendor) = LOWER(ab.display_name))
+    AND (f.net_weight_g IS NULL OR f.net_weight_g >= 300)
+) stats ON true
+WHERE ab.is_visible = true;
+```
+
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/contexts/RegionContext.tsx` | Switch from `currency_exchange_rates` to `exchange_rates` table |
-| `src/hooks/useFilamentDetailPricing.ts` | Gate candidates behind `isReady`; use `computePricePerKg`; add `stickyBarPrice` |
-| `src/pages/FilamentDetail.tsx` | Remove `rawPricePerKg`/`rawPricePerSpool` fallbacks; use SSOT values exclusively |
-| `src/lib/resolveFilamentPrice.ts` | No changes (already correct -- exports `computePricePerKg`) |
-| `src/components/FilamentCard.tsx` | No changes (already uses `useResolvedPrice` correctly) |
-| `src/components/filament/StickyBuyBar.tsx` | No structural changes (receives correct props from parent) |
-| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | No structural changes |
+| `supabase/migrations/..._v_brand_directory.sql` | New view for live brand counts |
+| `src/pages/Brands.tsx` | Use `v_brand_directory` view; fix footer labels |
+| `src/pages/BrandDetail.tsx` | Multi-source avgPriceRange fallback |
+| `src/components/BrandsHeroSection.tsx` | Minor: no structural changes needed |
 
-### Expected Outcome
+### Expected Outcomes
 
-After these changes:
-1. The same product will show identical per-kg prices on listing cards, detail hero, sidebar, sticky bar, and mobile bar
-2. Prices will appear once (after all sources resolve) instead of flickering
-3. Currency conversion will be consistent across all components since they share one rate source
-4. The sticky bar will prefer showing local store prices, falling back to international only when no local option exists
+1. Brand cards on `/brands` show the same product/variant counts as brand detail pages -- always in sync because both derive from the same `filaments` table
+2. The brands page hero total matches the homepage because both use `get_catalog_counts()` RPC
+3. Average price displays real values for brands that have pricing data in any column, and "---" only for brands with genuinely no pricing data
+4. Footer stats use consistent terminology matching the hero section
 
