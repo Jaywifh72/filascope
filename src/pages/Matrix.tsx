@@ -71,7 +71,7 @@ const Matrix = () => {
   const filteredResults = useMemo(() => {
     return compatibilityResults.filter((result) => {
       const matchesSearch =
-        result.filament.product_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (result.filament.product_title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         result.filament.vendor?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesMaterial =

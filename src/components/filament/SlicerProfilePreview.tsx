@@ -198,7 +198,7 @@ export function SlicerProfilePreview({
   const handleDownload = () => {
     const content = formatProfileForSlicer(profile, slicer);
     const extension = SLICERS[slicer].extension;
-    const filename = `${filament.product_title.replace(/[^a-z0-9]/gi, '_')}${extension}`;
+    const filename = `${(filament.product_title || 'filament').replace(/[^a-z0-9]/gi, '_')}${extension}`;
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);

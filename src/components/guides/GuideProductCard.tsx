@@ -117,7 +117,7 @@ function PriceDisplay({ filament }: { filament: GuideFilament }) {
 
 export function GuideProductCard({ filament, rank }: GuideProductCardProps) {
   const displayTitle = cleanFilamentDisplayName(
-    filament.product_title.replace(new RegExp(`^${filament.vendor}\\s*`, 'i'), '').trim()
+    (filament.product_title || '').replace(new RegExp(`^${filament.vendor || ''}\\s*`, 'i'), '').trim()
   );
   const pros = generateWhyWePicked(filament);
   const cons = generateCons(filament);

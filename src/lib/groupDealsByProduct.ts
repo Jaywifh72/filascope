@@ -28,7 +28,7 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
   
   // Group deals by vendor + base product name
   for (const deal of deals) {
-    const baseName = getBaseProductName(deal.product_title);
+    const baseName = getBaseProductName(deal.product_title || '');
     const groupKey = `${(deal.vendor || 'unknown').toLowerCase()}-${baseName.toLowerCase().replace(/\s+/g, '-')}`;
     
     if (!groups.has(groupKey)) {

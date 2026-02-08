@@ -59,7 +59,7 @@ export function useFilamentVariantCounts(
         } else {
           // Priority 2: Fallback to base name matching
           matchingVariants = (data || []).filter(f => {
-            const fBaseName = getBaseProductName(f.product_title);
+            const fBaseName = getBaseProductName(f.product_title || '');
             if (fBaseName.toLowerCase() !== baseName.toLowerCase()) return false;
             if (f.id === filamentId) return true;
             const color = getColorFromTitle(f.product_title, baseName);
