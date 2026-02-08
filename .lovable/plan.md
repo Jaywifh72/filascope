@@ -1,167 +1,106 @@
 
-# Public User Profile Page
 
-## Overview
+# Fix Price Instability Across FilaScope
 
-Add a public-facing profile page at `/user/:userId` that showcases a user's reviews, public projects, and activity stats. This requires schema changes to the `profiles` table (new columns for bio, social links, public visibility, and username slug), new RLS policies for public profile access, a new page component, and updates to the Settings page for editing the new fields.
+## Problem Analysis
 
-## Current State
+After tracing the complete pricing data flow, I identified **four root causes** of price instability:
 
-- `profiles` table exists with: `id`, `email`, `display_name`, `avatar_url`, `created_at`, `updated_at`, plus various preference columns
-- RLS on `profiles`: users can only view/update their own profile; admins can view all
-- No public profile page or route exists
-- No `bio`, `social_links`, `is_public`, or `username_slug` columns
-- `product_reviews` already has a public read policy (is_public + published)
-- `projects` already has a public read policy (is_public)
-- `project_materials` and `project_log_entries` also have public read policies
+### Root Cause 1: Two Different Exchange Rate Tables
+- `RegionContext.convertPrice()` reads from `currency_exchange_rates` (legacy base/target pairs)
+- `useFilamentStorePricing` reads from `exchange_rates` (normalized `rate_to_usd` values)
+- These tables can contain different rates updated at different times, causing the same conversion to produce different results depending on which component does the math
 
-## Database Changes
+### Root Cause 2: Race Conditions in Detail Page Pricing
+- `useFilamentDetailPricing` fires 4 async data sources in parallel: local retailer listings, US retailer listings, store pricing (RPC), and unified regional pricing
+- Each resolves at a different time, causing the `useMemo` to recompute and the "best price" to jump between candidates
+- On one render the cheapest might be an Amazon listing at C$75/kg; on the next, a store-pricing RPC result at C$102/kg resolves and becomes the new "best"
 
-### 1. Add columns to `profiles` table
+### Root Cause 3: Duplicate Per-Kg Calculation in FilamentDetail.tsx
+- Lines 610-614 independently compute `rawPricePerKg` using `regionalPriceResult.displayPrice / totalWeightKg`
+- Meanwhile, `detailPricing.pricePerKg` computes per-kg using listing spool prices
+- The sidebar uses `detailPricing.pricePerKg ?? rawPricePerKg` -- so it flip-flops between these two different values as async sources load
 
-| Column | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `bio` | text | null | Short bio, max 280 chars |
-| `is_public` | boolean | false | Master toggle for profile visibility |
-| `username_slug` | text | null | Unique URL slug (e.g. "makerjohn") |
-| `social_links` | jsonb | '{}' | Links to Printables, Thingiverse, YouTube, Instagram |
-| `wishlist_public` | boolean | false | Whether wishlist is shown on public profile |
+### Root Cause 4: Listing Cards vs Detail Pages Use Completely Different Pricing Paths
+- `FilamentCard` uses `useResolvedPrice` (deterministic, DB-column-only, no async fetching)
+- `FilamentDetail` uses `useFilamentDetailPricing` (async aggregator across 4 sources)
+- These fundamentally different approaches can produce different per-kg values for the same product
 
-### 2. Add unique index on `username_slug`
+---
 
-Partial unique index where `username_slug IS NOT NULL` to allow multiple nulls.
+## Implementation Plan
 
-### 3. New RLS policy on `profiles`
+### Step 1: Unify Exchange Rate Source
 
-Add a SELECT policy: "Anyone can view public profiles" with `qual: (is_public = true)`. This allows unauthenticated visitors to fetch basic profile data for public users.
+Consolidate all exchange rate conversions to use a single source.
 
-### 4. New RLS policy on `user_favorites`
+**Changes:**
+- **`src/contexts/RegionContext.tsx`**: Change `loadExchangeRates()` to read from the `exchange_rates` table (using `rate_to_usd`) instead of the legacy `currency_exchange_rates` table. Build the `fromCurrency_toCurrency` map from these normalized rates. This ensures `RegionContext.convertPrice()` and `useExchangeRateMap()` return identical conversion results.
+- **`src/hooks/useExchangeRates.ts`**: Add a `staleTime` alignment comment to confirm it matches RegionContext's caching window (1 hour).
 
-Add a SELECT policy: "Anyone can view public wishlist" with qual joining to profiles where both `profiles.is_public = true` AND `profiles.wishlist_public = true`.
+### Step 2: Stabilize `useFilamentDetailPricing` Against Race Conditions
 
-## Route
+Prevent the "best price" from jumping as async sources resolve incrementally.
 
-- URL pattern: `/user/:userId`
-- When a `username_slug` is set, the page also supports `/user/:slug` -- the hook will try UUID first, then fall back to slug lookup
-- No authentication required (public page)
+**Changes to `src/hooks/useFilamentDetailPricing.ts`:**
+- Add an `isReady` gate to the `useMemo` that builds candidates: only compute and return candidates when **all** sources have finished loading (not just some)
+- While loading, return a stable "pending" state with `bestPrice: null` and `isLoading: true`
+- This means the price appears once (correctly) rather than flickering through intermediate states
+- Keep the existing `isReady` flag semantics but enforce it: `allCandidates` returns empty until `isReady === true`
 
-## Component Architecture
+### Step 3: Remove Duplicate Per-Kg Calculation from FilamentDetail.tsx
 
-```text
-src/pages/UserProfile.tsx                          (page component)
-src/components/profile/ProfileHeader.tsx            (avatar, name, bio, badges, stats)
-src/components/profile/ProfileReviewsTab.tsx        (public reviews grid)
-src/components/profile/ProfileProjectsTab.tsx       (public projects grid)
-src/components/profile/ProfileCollectionTab.tsx     (public wishlist, if enabled)
-src/components/profile/ProfileActivityTab.tsx       (recent public actions)
-src/hooks/usePublicProfile.ts                       (fetch profile + public data)
-```
+Eliminate the competing `rawPricePerKg` logic that conflicts with the SSOT hook.
 
-## Detailed UI Design
+**Changes to `src/pages/FilamentDetail.tsx`:**
+- Remove the independent `rawPricePerKg` and `rawPricePerSpool` calculations (lines 610-629)
+- Change `sidebarPricePerKg` to use `detailPricing.pricePerKg` exclusively (no `?? rawPricePerKg` fallback)
+- Same for `sidebarPricePerSpool` -- use only `detailPricing.pricePerSpool`
+- Keep `rawPricePerKg` only for the pricing validation call and SEO meta (where it's needed as a simple sanity check), clearly labeled as "validation-only"
+- The sticky bar, mobile bar, and sidebar will now all receive the exact same value from `detailPricing`
 
-### A. Profile Header (`ProfileHeader`)
+### Step 4: Align FilamentCard with the Same Per-Kg Formula
 
-- Large avatar (with initials fallback) centered or left-aligned
-- Display name as heading
-- "Member since [month year]" subtitle
-- Bio text (if set)
-- Badge row: dynamically computed from user's data
-  - "Top Reviewer" -- 20+ public reviews
-  - "Active Reviewer" -- 5-19 public reviews
-  - "Project Creator" -- 1+ public projects
-  - "Verified Buyer" -- has verified purchase reviews
-- Stats row: "X Reviews" | "X Projects" | "X Helpful Votes"
-- Social links row: icon buttons linking to external profiles (Printables, Thingiverse, YouTube, Instagram) -- only shown if configured
-- "Follow" button placeholder (disabled, styled, with tooltip "Coming soon")
+Ensure listing page cards produce the same number as the detail page.
 
-### B. Tab Navigation
+**Changes:**
+- **`src/components/FilamentCard.tsx`**: `useResolvedPrice` already uses `resolveFilamentPrice` which uses `computePricePerKg` -- this is correct and deterministic. No changes needed to the card's core price logic.
+- **`src/hooks/useFilamentDetailPricing.ts`**: Ensure the per-kg computation uses `computePricePerKg()` from `resolveFilamentPrice.ts` instead of inline `price / totalWeightKg` division. This guarantees the same formula is used everywhere.
+- Specifically, replace the inline `pricePerKg: price / totalWeightKg` with `pricePerKg: computePricePerKg(price, filament.net_weight_g, packQty)` for every candidate
 
-Horizontal tabs using the existing Tabs component:
+### Step 5: Make the Sticky Bar Prefer Local Stores
 
-1. **Reviews** (default) -- all public published reviews
-2. **Projects** -- all public projects
-3. **Collection** -- public wishlist items (only visible if `wishlist_public = true`)
-4. **Activity** -- recent public actions timeline
+Ensure the mobile bottom bar and sticky bar show the best local price first.
 
-### C. Reviews Tab (`ProfileReviewsTab`)
+**Changes to `src/hooks/useFilamentDetailPricing.ts`:**
+- Add a new convenience accessor: `stickyBarPrice` that returns `cheapestLocal ?? bestPrice` (local-first, global fallback)
+- Update the return type and value
 
-- Grid of product cards the user has reviewed
-- Each card: product image, product name, star rating overlay, headline snippet
-- Click navigates to `/filament/:id` (community tab)
-- Sort by: Most Recent | Highest Rated | Most Helpful
-- Uses existing `product_reviews` public read policy (no new RLS needed)
+**Changes to `src/pages/FilamentDetail.tsx`:**
+- Update sticky bar and mobile bottom bar props to use `detailPricing.stickyBarPrice` instead of `detailPricing.bestPrice` for the displayed price
+- The sidebar still shows `bestPrice` (absolute cheapest globally) since it has room for the full store context
 
-### D. Projects Tab (`ProfileProjectsTab`)
+---
 
-- Grid of public project cards: cover gradient, name, type badge, status badge, material count
-- Click navigates to `/vault?tab=projects&project=:id` (existing public project view)
-- Uses existing `projects` public read policy
+## Technical Details
 
-### E. Collection Tab (`ProfileCollectionTab`)
+### Files Modified
 
-- Only rendered if the profile has `wishlist_public = true`
-- Shows filament cards from `user_favorites` with product details
-- Read-only view -- no add/remove buttons
-- Requires new RLS policy on `user_favorites`
+| File | Change |
+|------|--------|
+| `src/contexts/RegionContext.tsx` | Switch from `currency_exchange_rates` to `exchange_rates` table |
+| `src/hooks/useFilamentDetailPricing.ts` | Gate candidates behind `isReady`; use `computePricePerKg`; add `stickyBarPrice` |
+| `src/pages/FilamentDetail.tsx` | Remove `rawPricePerKg`/`rawPricePerSpool` fallbacks; use SSOT values exclusively |
+| `src/lib/resolveFilamentPrice.ts` | No changes (already correct -- exports `computePricePerKg`) |
+| `src/components/FilamentCard.tsx` | No changes (already uses `useResolvedPrice` correctly) |
+| `src/components/filament/StickyBuyBar.tsx` | No structural changes (receives correct props from parent) |
+| `src/components/filament/sidebar/FilamentMobileBottomBar.tsx` | No structural changes |
 
-### F. Activity Tab (`ProfileActivityTab`)
+### Expected Outcome
 
-- Recent public actions aggregated from:
-  - Reviews posted (from `product_reviews` where `is_public = true`)
-  - Projects created/completed (from `projects` where `is_public = true`)
-- Displayed as a simple timeline list: icon, action description, timestamp
-- Limited to last 20 items
+After these changes:
+1. The same product will show identical per-kg prices on listing cards, detail hero, sidebar, sticky bar, and mobile bar
+2. Prices will appear once (after all sources resolve) instead of flickering
+3. Currency conversion will be consistent across all components since they share one rate source
+4. The sticky bar will prefer showing local store prices, falling back to international only when no local option exists
 
-### G. Own-Profile Detection
-
-When the logged-in user views their own profile:
-- Show an "Edit Profile" button linking to `/settings`
-- Show a subtle banner: "This is how others see your profile"
-- If profile is private (`is_public = false`), show the page content with a warning: "Your profile is currently private. Only you can see this page."
-
-## Settings Page Updates
-
-Add a new "Public Profile" card section to `/settings` with:
-
-1. **Bio** -- textarea, max 280 chars, character counter
-2. **Username** -- text input with slug validation (lowercase, alphanumeric + hyphens, 3-30 chars). Shows preview: "filascope.lovable.app/user/[slug]". Validates uniqueness on blur
-3. **Social Links** -- four optional URL inputs: Printables, Thingiverse, YouTube, Instagram
-4. **Privacy Toggles**:
-   - "Make my profile public" -- master toggle
-   - "Show my wishlist on my profile" -- secondary toggle (only active if profile is public)
-5. **Profile Preview** button -- links to `/user/:userId` in a new tab
-
-## Data Hook: `usePublicProfile`
-
-```text
-usePublicProfile(identifier: string)
--- identifier can be a UUID or username slug
--- Returns: { profile, reviews, projects, wishlistItems, activity, isLoading, isOwnProfile }
--- Fetches profile from profiles table (public RLS)
--- Fetches reviews from product_reviews (public RLS) with filament/printer enrichment
--- Fetches projects from projects (public RLS)
--- Conditionally fetches wishlist if wishlist_public is true
--- Computes badges from data
-```
-
-## Implementation Sequence
-
-1. Database migration -- add columns to `profiles`, add RLS policies for public profiles and public wishlist
-2. Create `usePublicProfile` hook
-3. Create `ProfileHeader` component
-4. Create `ProfileReviewsTab` component
-5. Create `ProfileProjectsTab` component
-6. Create `ProfileCollectionTab` component
-7. Create `ProfileActivityTab` component
-8. Create `UserProfile` page (orchestrator with tabs)
-9. Add route `/user/:userId` to App.tsx
-10. Update Settings page with bio, username, social links, and privacy toggles
-11. Add "View Profile" link to VaultHeroBar
-
-## Edge Cases
-
-- **Profile not found**: Show a 404-style message: "This profile doesn't exist or is set to private"
-- **Private profile visited by non-owner**: Same 404 message (do not reveal that the user exists)
-- **Username slug conflicts**: Validated at save time with uniqueness check; show inline error
-- **No public content**: Profile page shows header but tabs show appropriate empty states ("No public reviews yet")
-- **Deleted reviews**: Already filtered by `deleted_at IS NULL` in existing policies
