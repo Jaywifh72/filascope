@@ -6,11 +6,16 @@
  * MUST use this function (or the useResolvedPrice hook wrapper) to ensure
  * consistent pricing across the entire site.
  * 
- * ## Price Resolution Priority
- * 1. Direct regional price column (e.g., `price_cad` for CAD users) — native, no conversion
+ * ## Price Resolution Strategy (Best Available Price)
+ * Computes prices from all available sources and returns the CHEAPEST:
+ * 1. Direct regional price column (e.g., `price_cad` for CAD users)
  * 2. Nearby region conversion (e.g., `price_eur` → CHF via exchange rates)
  * 3. USD (`variant_price`) converted to user's currency
- * 4. null (no price available)
+ * 4. Amazon price (`amazon_price_usd`) converted to user's currency
+ * 
+ * The cheapest option becomes the primary price. If a direct regional price
+ * exists but isn't the cheapest, it's surfaced as `localPricePerKg` so cards
+ * can show "Local: C$XX.XX/kg" as a secondary line.
  * 
  * ## Terminology
  * - **"Price" (spool price)**: What you pay for one spool = spoolPrice / pack_quantity
@@ -23,6 +28,7 @@ import type { CurrencyCode } from '@/types/regional';
 
 export interface FilamentForPricing {
   variant_price?: number | null;
+  amazon_price_usd?: number | null;
   price_cad?: number | null;
   price_eur?: number | null;
   price_gbp?: number | null;
@@ -43,7 +49,7 @@ export interface PriceResolutionContext {
 
 // ─── Output Types ───────────────────────────────────────────────────────────
 
-export type PriceSource = 'regional' | 'converted' | 'unavailable';
+export type PriceSource = 'regional' | 'converted' | 'amazon' | 'unavailable';
 
 export interface ResolvedPrice {
   /** Total price for the package (all spools in the pack) in user's currency */
@@ -58,6 +64,10 @@ export interface ResolvedPrice {
   isConverted: boolean;
   /** How the price was resolved */
   source: PriceSource;
+  /** Per-kg price from a local/regional store, if different from the best price. Null if best IS local or no regional price exists. */
+  localPricePerKg: number | null;
+  /** Whether the best price is from a local (regional) source */
+  bestIsLocal: boolean;
 }
 
 // ─── Column Mapping ─────────────────────────────────────────────────────────
@@ -98,16 +108,29 @@ export function resolveFilamentPrice(
   const packQty = filament.pack_quantity || 1;
   const weightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
 
-  // ── Priority 1: Direct regional column match ──
+  // Collect all possible price candidates
+  interface PriceOption {
+    spoolPrice: number;
+    isConverted: boolean;
+    source: PriceSource;
+    isLocal: boolean;
+  }
+  
+  const options: PriceOption[] = [];
+  let regionalOption: PriceOption | null = null;
+
+  // ── Option 1: Direct regional column match ──
   const directColumn = CURRENCY_TO_COLUMN[userCurrency];
   if (directColumn) {
     const directPrice = filament[directColumn] as number | null | undefined;
     if (directPrice != null && directPrice > 0) {
-      return buildResult(directPrice, packQty, weightKg, userCurrency, false, 'regional');
+      const opt: PriceOption = { spoolPrice: directPrice, isConverted: false, source: 'regional', isLocal: true };
+      options.push(opt);
+      regionalOption = opt;
     }
   }
 
-  // ── Priority 2: Nearby region conversion ──
+  // ── Option 2: Nearby region conversion ──
   if (hasRates) {
     const nearbyCurrency = NEARBY_CURRENCY_FALLBACK[userCurrency];
     if (nearbyCurrency) {
@@ -116,31 +139,74 @@ export function resolveFilamentPrice(
         const nearbyPrice = filament[nearbyColumn] as number | null | undefined;
         if (nearbyPrice != null && nearbyPrice > 0) {
           const converted = convertFromCurrency(nearbyPrice, nearbyCurrency);
-          return buildResult(converted, packQty, weightKg, userCurrency, true, 'converted');
+          options.push({ spoolPrice: converted, isConverted: true, source: 'converted', isLocal: false });
         }
       }
     }
   }
 
-  // ── Priority 3: USD fallback ──
+  // ── Option 3: USD fallback (variant_price) ──
   if (filament.variant_price != null && filament.variant_price > 0) {
     if (userCurrency === 'USD') {
-      return buildResult(filament.variant_price, packQty, weightKg, 'USD', false, 'regional');
-    }
-    if (hasRates) {
+      // Already added via directColumn for USD users — don't double-add
+      if (!options.some(o => o.source === 'regional' && o.spoolPrice === filament.variant_price)) {
+        options.push({ spoolPrice: filament.variant_price, isConverted: false, source: 'regional', isLocal: true });
+      }
+    } else if (hasRates) {
       const converted = convertFromCurrency(filament.variant_price, 'USD');
-      return buildResult(converted, packQty, weightKg, userCurrency, true, 'converted');
+      // Don't add if it's the same as the regional option (for USD column match)
+      if (!options.some(o => Math.abs(o.spoolPrice - converted) < 0.01)) {
+        options.push({ spoolPrice: converted, isConverted: true, source: 'converted', isLocal: false });
+      }
     }
   }
 
-  // ── Priority 4: No price available ──
+  // ── Option 4: Amazon price ──
+  if (filament.amazon_price_usd != null && filament.amazon_price_usd > 0) {
+    if (userCurrency === 'USD') {
+      options.push({ spoolPrice: filament.amazon_price_usd, isConverted: false, source: 'amazon', isLocal: true });
+    } else if (hasRates) {
+      const converted = convertFromCurrency(filament.amazon_price_usd, 'USD');
+      options.push({ spoolPrice: converted, isConverted: true, source: 'amazon', isLocal: false });
+    }
+  }
+
+  // ── Pick the cheapest option ──
+  if (options.length === 0) {
+    return {
+      spoolPrice: null,
+      pricePerSpool: null,
+      pricePerKg: null,
+      currency: userCurrency,
+      isConverted: false,
+      source: 'unavailable',
+      localPricePerKg: null,
+      bestIsLocal: false,
+    };
+  }
+
+  // Sort by per-kg price (or spool price if no weight) to find cheapest
+  const getComparablePrice = (opt: PriceOption) => {
+    if (weightKg && weightKg > 0) {
+      return opt.spoolPrice / (weightKg * packQty);
+    }
+    return opt.spoolPrice;
+  };
+
+  options.sort((a, b) => getComparablePrice(a) - getComparablePrice(b));
+  const best = options[0];
+
+  // Compute local price for secondary display if it differs from best
+  let localPricePerKg: number | null = null;
+  if (regionalOption && regionalOption !== best && weightKg && weightKg > 0) {
+    localPricePerKg = regionalOption.spoolPrice / (weightKg * packQty);
+  }
+
+  const result = buildResult(best.spoolPrice, packQty, weightKg, userCurrency, best.isConverted, best.source);
   return {
-    spoolPrice: null,
-    pricePerSpool: null,
-    pricePerKg: null,
-    currency: userCurrency,
-    isConverted: false,
-    source: 'unavailable',
+    ...result,
+    localPricePerKg,
+    bestIsLocal: best.isLocal,
   };
 }
 
@@ -179,7 +245,7 @@ function buildResult(
   currency: CurrencyCode,
   isConverted: boolean,
   source: PriceSource
-): ResolvedPrice {
+): Omit<ResolvedPrice, 'localPricePerKg' | 'bestIsLocal'> {
   const pricePerSpool = spoolPrice / packQty;
   const pricePerKg = weightKg && weightKg > 0
     ? spoolPrice / (weightKg * packQty)
