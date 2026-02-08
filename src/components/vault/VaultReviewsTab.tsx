@@ -14,13 +14,33 @@ export function VaultReviewsTab() {
     queryKey: ["vault-reviews", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      // Fetch from new product_reviews table (public reviews only)
       const { data, error } = await supabase
-        .from("filament_reviews")
-        .select("*, filament:filaments(id, product_title, vendor, featured_image, material)")
+        .from("product_reviews")
+        .select("*")
         .eq("user_id", user!.id)
+        .eq("is_public", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Enrich with filament data
+      const filamentIds = (data || [])
+        .filter((r: any) => r.product_type === "filament")
+        .map((r: any) => r.product_id);
+
+      let filamentMap = new Map();
+      if (filamentIds.length > 0) {
+        const { data: filaments } = await supabase
+          .from("filaments")
+          .select("id, product_title, vendor, featured_image, material")
+          .in("id", filamentIds);
+        filamentMap = new Map((filaments || []).map((f: any) => [f.id, f]));
+      }
+
+      return (data || []).map((review: any) => ({
+        ...review,
+        filament: filamentMap.get(review.product_id) || null,
+      }));
     },
   });
 
@@ -52,22 +72,22 @@ export function VaultReviewsTab() {
                 )}
                 <div className="min-w-0">
                   <Link
-                    to={`/filament/${review.filament?.id}`}
+                    to={`/filament/${review.product_id}`}
                     className="hover:text-primary transition-colors"
                   >
                     <CardTitle className="text-base truncate">
-                      {review.filament?.product_title}
+                      {review.filament?.product_title || review.headline}
                     </CardTitle>
                   </Link>
                   <p className="text-xs text-muted-foreground">{review.filament?.vendor}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-0.5 shrink-0">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
                     className={`w-3.5 h-3.5 ${
-                      i < review.rating
+                      i < review.overall_rating
                         ? "fill-primary text-primary"
                         : "text-muted-foreground/30"
                     }`}
@@ -77,15 +97,14 @@ export function VaultReviewsTab() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            {review.review_text && (
-              <p className="text-sm text-foreground/80 mb-3">{review.review_text}</p>
+            <h4 className="font-medium text-sm mb-1">{review.headline}</h4>
+            {review.body && (
+              <p className="text-sm text-foreground/80 mb-3 line-clamp-3">{review.body}</p>
             )}
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span>{new Date(review.created_at).toLocaleDateString()}</span>
-              {review.verified_purchase && (
-                <Badge variant="secondary" className="text-xs">
-                  Verified Purchase
-                </Badge>
+              {review.is_verified_purchase && (
+                <Badge variant="secondary" className="text-xs">Verified Purchase</Badge>
               )}
               {(review.helpful_count ?? 0) > 0 && (
                 <span className="flex items-center gap-1">
