@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, RefreshCcw, BookOpen, ShoppingCart, ExternalLink, Lightbulb, X, Eye } from "lucide-react";
 import { GitCompare, ArrowLeft, Trophy, Share2, Plus, Loader2 } from "lucide-react";
+import { SharePopover } from "@/components/sharing/SharePopover";
 import { FilamentComparisonEmptyState } from "@/components/compare/FilamentComparisonEmptyState";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -150,16 +151,14 @@ const Compare = () => {
     navigate(lastParams ? `/?${lastParams}` : '/');
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied!", {
-        description: "Share this comparison with others"
-      });
-    } catch {
-      toast.error("Failed to copy link");
+  const getShareUrl = () => window.location.href;
+  const getShareText = () => {
+    if (filaments.length >= 2) {
+      const names = filaments.map(f => `${f.vendor} ${f.material}`).slice(0, 3);
+      const label = names.length > 2 ? `${names.slice(0, 2).join(', ')} & more` : names.join(' vs ');
+      return `Comparing ${label} on FilaScope`;
     }
+    return "Check out this filament comparison on FilaScope";
   };
 
   const handleAddMore = () => {
@@ -543,10 +542,16 @@ const Compare = () => {
                       </Label>
                     </div>
                     <ExportMenu filaments={filaments} />
-                    <Button variant="outline" onClick={handleShare} className="gap-2">
-                      <Share2 className="w-4 h-4" />
-                      Share
-                    </Button>
+                    <SharePopover
+                      shareUrl={getShareUrl()}
+                      shareText={getShareText()}
+                      title="Share comparison"
+                    >
+                      <Button variant="outline" className="gap-2">
+                        <Share2 className="w-4 h-4" />
+                        Share
+                      </Button>
+                    </SharePopover>
                   </div>
                 </div>
 

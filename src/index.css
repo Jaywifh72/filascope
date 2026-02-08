@@ -1777,3 +1777,16 @@ select:focus-visible,
     scroll-snap-align: start;
   }
 }
+
+/* =========================================
+   EMBED MODE — hide site chrome for iframes
+   ========================================= */
+body.embed-mode nav,
+body.embed-mode footer,
+body.embed-mode [data-compare-tray],
+body.embed-mode .skip-link,
+body.embed-mode .region-welcome-banner,
+body.embed-mode .pwa-install-banner,
+body.embed-mode .offline-banner {
+  display: none !important;
+}

@@ -108,6 +108,7 @@ const BrandComparePage = lazy(() => import("./pages/BrandComparePage"));
 const GuidePrintSettings = lazy(() => import("./pages/GuidePrintSettings"));
 const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
 const BuyingGuide = lazy(() => import("./pages/BuyingGuide"));
+const EmbedProduct = lazy(() => import("./pages/EmbedProduct"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 const Install = lazy(() => import("./pages/Install"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -250,6 +251,8 @@ const App = () => (
                   <Route path="/compatibility-matrix" element={<CompatibilityMatrix />} />
                   <Route path="/slicer-directory" element={<SlicerDirectory />} />
                   <Route path="/model-repositories" element={<ModelRepositories />} />
+                  {/* Embed route — lightweight, no navbar/footer */}
+                  <Route path="/embed/:id" element={<EmbedProduct />} />
                   {/* Redirects for legacy/broken links */}
                   <Route path="/knowledge-base" element={<Navigate to="/compare" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
