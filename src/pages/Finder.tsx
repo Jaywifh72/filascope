@@ -1,9 +1,10 @@
-import { useMemo, useEffect, useState, useRef, useCallback } from "react"; // v4
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useMemo, useEffect, useState, useRef, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAllFilaments, type FetchProgressCallback } from "@/lib/supabaseHelpers";
+import { useFinderQuery, type FinderFilters } from "@/hooks/useFinderQuery";
+import { useFilterCounts } from "@/hooks/useFilterCounts";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
 import { useRegionalFiltering } from "@/hooks/useRegionalFiltering";
@@ -52,7 +53,6 @@ import { ViewToggle } from "@/components/ViewToggle";
 import { FilamentTableView } from "@/components/FilamentTableView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
-import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productNameUtils";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
@@ -61,19 +61,9 @@ import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFi
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
-import { LoadingProgress } from "@/components/LoadingProgress";
 import { RegionTransitionIndicator, RegionLoadingSpinner } from "@/components/RegionTransitionIndicator";
-import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
-import { calculateUnifiedScore, type FilamentForScoring as UnifiedFilamentForScoring } from "@/lib/unifiedFilamentScore";
-import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
 import { useBulkCommunityRatings } from "@/hooks/useCommunityReviewStats";
-import { 
-  tokenizeSearchQuery, 
-  matchesAllTerms, 
-  analyzeSearchQuery, 
-  getPreFilterTerm,
-  type FilamentSearchable 
-} from "@/lib/multiTermSearch";
+import { analyzeSearchQuery } from "@/lib/multiTermSearch";
 
 // Color family definitions with representative HEX colors
 const COLOR_FAMILIES = [
@@ -156,18 +146,6 @@ const Finder = () => {
   
   // Scroll restoration for back/forward navigation
   const { savePaginationState, restorePaginationState } = useScrollRestoration('finder');
-  
-  // Loading progress state for progressive feedback
-  const [loadingProgress, setLoadingProgress] = useState<{ loaded: number; total: number | null; phase: "fetching" | "processing" | "rendering" }>({
-    loaded: 0,
-    total: null,
-    phase: "fetching",
-  });
-  
-  // Progress callback for data fetching - memoized to prevent rerenders
-  const handleLoadingProgress = useCallback<FetchProgressCallback>((progress) => {
-    setLoadingProgress(progress);
-  }, []);
   
   // Search analytics tracking
   const { startSearchTimer, trackSearch } = useFilterAnalytics();
@@ -285,11 +263,8 @@ const Finder = () => {
 
   const MAX_PRICE_LIMIT = 100;
   
-  // Pagination state - restore from session on back navigation
-  const ITEMS_PER_PAGE = 16;
-  const [displayCount, setDisplayCount] = useState(() => 
-    restorePaginationState(ITEMS_PER_PAGE)
-  );
+  // Server-side pagination page number
+  const [currentPage, setCurrentPage] = useState(0);
   // Multi-select mode keyboard listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -336,15 +311,10 @@ const Finder = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
   
-  // Reset display count when filters change
+  // Reset page when filters change
   useEffect(() => {
-    setDisplayCount(ITEMS_PER_PAGE);
+    setCurrentPage(0);
   }, [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy, hexSearch, selectedColorFamilies, highSpeed, matte, silk, metallic, sparkle, translucent, carbonFiber, glassFiber, woodFilled, glow, brassOnly, amsOnly, hasTdData]);
-  
-  // Save pagination state for scroll restoration
-  useEffect(() => {
-    savePaginationState(displayCount);
-  }, [displayCount, savePaginationState]);
   
   // Track search analytics - start timer on search change
   useEffect(() => {
@@ -370,9 +340,7 @@ const Finder = () => {
   // Region hook for displaying current region
   const { regionConfig } = useRegion();
   
-  // Track region transitions for smooth UI updates
-  const [previousRegion, setPreviousRegion] = useState<string | null>(null);
-  const [isRegionTransitioning, setIsRegionTransitioning] = useState(false);
+  // Region transition state moved to after useFinderQuery
 
   // Normalize variant names to group similar variants
   const normalizeVariantName = (material: string, base: string): string => {
@@ -774,152 +742,66 @@ const Finder = () => {
     enabled: Object.keys(brandNameMap).length > 0,
   });
 
-  const { data: filaments, isLoading, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ["filaments", currentRegion, searchTerm, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials, brandNameMap, carbonFiber, glassFiber, woodFilled],
-    enabled: !!materials && !!brandsData, // Wait for materials and brands to load first
-    // Keep showing previous data while new region data loads - prevents "0 MATERIALS" flash
-    placeholderData: keepPreviousData,
-    queryFn: async () => {
-      // Build the query function that will be called for each page
-      const buildQuery = () => {
-        // Select only the columns needed for listing cards (Change 1: ~75% payload reduction)
-        let query = supabase.from("filaments").select(
-          "id, product_title, product_handle, vendor, material, color_hex, color_family, " +
-          "variant_price, variant_compare_at_price, net_weight_g, pack_quantity, " +
-          "featured_image, variant_available, product_line_id, finish_type, " +
-          "is_nozzle_abrasive, high_speed_capable, carbon_fiber_percentage, " +
-          "glass_fiber_percentage, wood_powder_percentage, product_url, " +
-          "product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, " +
-          "price_cad, price_gbp, price_eur, price_aud, price_jpy, last_scraped_at, " +
-          "transmission_distance, nozzle_temp_min_c, nozzle_temp_max_c, " +
-          "bed_temp_min_c, bed_temp_max_c, tensile_strength_xy_mpa, density_g_cm3, " +
-          "ease_of_printing_score, strength_index, printability_index, value_score, " +
-          "amazon_price_usd, diameter_nominal_mm, print_speed_max_mms, display_name, " +
-          "moisture_sensitivity_level, brand_id"
-        );
+  // === SERVER-SIDE PAGINATED QUERY (replaces fetch-all + client-side processing) ===
+  const finderFilters: FinderFilters = useMemo(() => ({
+    searchTerm,
+    selectedMaterials,
+    selectedBrands,
+    priceRange,
+    sortBy,
+    matte, silk, metallic, sparkle, translucent, glow,
+    carbonFiber, glassFiber, woodFilled,
+    highSpeed, largeSpools, amsOnly, brassOnly,
+    selectedColorFamilies,
+    hasTdData,
+  }), [searchTerm, selectedMaterials, selectedBrands, priceRange, sortBy,
+    matte, silk, metallic, sparkle, translucent, glow,
+    carbonFiber, glassFiber, woodFilled, highSpeed, largeSpools, amsOnly, brassOnly,
+    selectedColorFamilies, hasTdData]);
 
-        // Filter 1: Exclude non-filament products (null material = not a filament)
-        query = query.not("material", "is", null);
+  const { groups: displayedGroups, totalCount, isLoading, isFetching, isPlaceholderData } = 
+    useFinderQuery(finderFilters, currentPage, brandNameMap);
 
-        // Filter 2: Exclude sample/small spools (< 300g) but allow null weights
-        query = query.or("net_weight_g.is.null,net_weight_g.gte.300");
+  // === SERVER-SIDE FILTER COUNTS ===
+  const { data: serverFilterCounts } = useFilterCounts(
+    searchTerm, selectedMaterials, selectedBrands, priceRange, brandNameMap
+  );
+  const filterCounts = useMemo(() => {
+    if (!serverFilterCounts) return {};
+    const counts: Record<string, number> = {};
+    // Map material counts
+    if (serverFilterCounts.materials) {
+      Object.entries(serverFilterCounts.materials).forEach(([mat, count]) => {
+        counts[`material_${mat}`] = count as number;
+      });
+    }
+    // Map brand counts
+    if (serverFilterCounts.brands) {
+      Object.entries(serverFilterCounts.brands).forEach(([brand, count]) => {
+        counts[`brand_${brand}`] = count as number;
+      });
+    }
+    // Map filter counts
+    if (serverFilterCounts.filters) {
+      Object.entries(serverFilterCounts.filters).forEach(([key, count]) => {
+        counts[key] = count as number;
+      });
+    }
+    return counts;
+  }, [serverFilterCounts]);
 
-        // Check if search term is a color name - if so, skip text search (will filter by color later)
-        const isColorSearch = searchTerm ? extractColorFromText(searchTerm) : null;
-        
-        // Multi-term search: Use the most specific (longest) term for database pre-filtering
-        // Client-side filtering will handle matching ALL terms across fields
-        if (searchTerm && !isColorSearch) {
-          const terms = tokenizeSearchQuery(searchTerm);
-          const preFilterTerm = getPreFilterTerm(terms);
-          
-          if (preFilterTerm) {
-            // Pre-filter in database with the most specific term across all searchable fields
-            query = query.or(
-              `product_title.ilike.%${preFilterTerm}%,` +
-              `vendor.ilike.%${preFilterTerm}%,` +
-              `material.ilike.%${preFilterTerm}%,` +
-              `finish_type.ilike.%${preFilterTerm}%`
-            );
-          }
-        }
+  const hasMore = false; // Server returns one page at a time; use page navigation
 
-        if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
-          // Check if any base materials have specific variants selected
-          const allRawMaterials: string[] = [];
-          selectedMaterials.forEach(baseMaterial => {
-            const selectedNormalizedVariants = selectedVariants[baseMaterial];
-            if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
-              // Expand normalized variants to raw material names
-              selectedNormalizedVariants.forEach(normalizedVariant => {
-                const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
-                allRawMaterials.push(...rawMaterials);
-              });
-            }
-          });
-          
-          // If specific variants are selected, filter by those raw material names
-          // Otherwise filter by base materials
-          if (allRawMaterials.length > 0) {
-            const materialFilters = allRawMaterials.map(m => `material.eq.${m}`).join(",");
-            query = query.or(materialFilters);
-          } else {
-            // Check if any selected materials are category IDs (e.g., "nylon-family")
-            // If so, expand them to include all materials in that category
-            const expandedMaterials: string[] = [];
-            selectedMaterials.forEach(m => {
-              const category = MATERIAL_CATEGORIES.find(c => c.id === m);
-              if (category) {
-                // It's a category ID - add all materials from this category
-                expandedMaterials.push(...category.materials);
-              } else {
-                // It's a direct material name - add as-is
-                expandedMaterials.push(m);
-              }
-            });
-            
-            // Build OR filter for all expanded materials
-            if (expandedMaterials.length > 0) {
-              const materialFilters = expandedMaterials.map(m => `material.eq.${m}`).join(",");
-              query = query.or(materialFilters);
-            }
-          }
-        }
+  // Track region transitions for smooth UI updates
+  const [previousRegion, setPreviousRegion] = useState<string | null>(null);
+  const [isRegionTransitioning, setIsRegionTransitioning] = useState(false);
 
-        if (brassOnly) {
-          query = query.eq("is_nozzle_abrasive", false);
-        }
-
-        // AMS filtering is done client-side using isAMSCompatible function
-
-        if (selectedBrands.length > 0) {
-          // Use brandNameMap to convert display names to actual vendor names for filtering
-          const vendorNames = selectedBrands.map(b => brandNameMap[b] || b);
-          const brandFilters = vendorNames.map(v => `vendor.eq.${v}`).join(",");
-          query = query.or(brandFilters);
-        }
-
-        // Add finish_type filters for reinforced materials (moves filtering to database)
-        if (carbonFiber) {
-          query = query.eq("finish_type", "Carbon");
-        }
-        if (glassFiber) {
-          query = query.eq("finish_type", "Glass Fiber");
-        }
-        if (woodFilled) {
-          query = query.eq("finish_type", "Wood");
-        }
-
-        return query;
-      };
-
-      // Use pagination to fetch all matching filaments (bypasses 1000-row limit)
-      // Pass progress callback for loading indicator
-      const data = await fetchAllFilaments(buildQuery, 1000, handleLoadingProgress);
-      
-      // Update progress to rendering phase
-      handleLoadingProgress({ loaded: data.length, total: data.length, phase: "rendering" });
-      
-      return data;
-    },
-  });
-
-  // Apply regional filtering to filaments
-  const regionalFilaments = useMemo(() => {
-    if (!filaments) return undefined;
-    return filterByRegion(filaments);
-  }, [filaments, filterByRegion]);
-  
-  // Track search results when they're displayed
+  // Search analytics tracking
   const prevSearchTermRef = useRef<string>("");
   useEffect(() => {
-    // Only track when we have a search term and results have loaded
-    if (searchTerm && searchTerm.trim().length > 0 && !isLoading && regionalFilaments !== undefined) {
-      // Only track if search term changed (avoid duplicate tracking)
+    if (searchTerm && searchTerm.trim().length > 0 && !isLoading && displayedGroups.length >= 0) {
       if (prevSearchTermRef.current !== searchTerm) {
         prevSearchTermRef.current = searchTerm;
-        
-        // Get the active filters as strings
         const appliedFilters: string[] = [];
         if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
           appliedFilters.push(`material:${selectedMaterials.join(",")}`);
@@ -927,27 +809,19 @@ const Finder = () => {
         if (selectedBrands.length > 0) {
           appliedFilters.push(`brand:${selectedBrands.join(",")}`);
         }
-        if (priceRange[0] > 0 || priceRange[1] < 100) {
-          appliedFilters.push(`price:${priceRange[0]}-${priceRange[1]}`);
-        }
-        
-        // Calculate result count
-        const resultCount = regionalFilaments?.length || 0;
-        
         trackSearch({
           query: searchTerm,
-          result_count: resultCount,
-          has_results: resultCount > 0,
+          result_count: totalCount,
+          has_results: totalCount > 0,
           filters_applied: appliedFilters,
         });
       }
     }
-  }, [searchTerm, isLoading, regionalFilaments, selectedMaterials, selectedBrands, priceRange, trackSearch]);
+  }, [searchTerm, isLoading, displayedGroups, selectedMaterials, selectedBrands, trackSearch, totalCount]);
 
   // Track region changes for smooth transitions
   useEffect(() => {
     if (previousRegion !== null && previousRegion !== currentRegion) {
-      // Region changed - start transition
       setIsRegionTransitioning(true);
     }
     setPreviousRegion(currentRegion);
@@ -959,23 +833,22 @@ const Finder = () => {
       setIsRegionTransitioning(false);
     }
   }, [isFetching, isRegionTransitioning]);
+
+  // Catalog counts for hero section
   const { data: filamentCount } = useQuery({
     queryKey: ["filamentCount"],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("filaments")
         .select("*", { count: "exact", head: true });
-      
       if (error) throw error;
       return count || 0;
     },
   });
 
-  // Unfiltered product count (unique product lines) — consistent with Brands page
   const { data: catalogCounts } = useQuery({
     queryKey: ["catalog-counts"],
     queryFn: async () => {
-      // Fetch product/variant counts AND brand count in parallel
       const [rpcResult, brandResult] = await Promise.all([
         supabase.rpc("get_catalog_counts"),
         supabase.from("v_public_brands").select("id", { count: "exact", head: true }),
@@ -991,628 +864,6 @@ const Finder = () => {
   });
   const unfilteredProductCount = catalogCounts?.productCount || 0;
   const unfilteredBrandCount = catalogCounts?.brandCount || 0;
-
-  const toggleMaterial = (material: string) => {
-    if (material === "All") {
-      setSelectedMaterials(["All"]);
-      setSelectedVariants({});
-    } else {
-      const newMaterials = selectedMaterials.includes("All") 
-        ? [material]
-        : selectedMaterials.includes(material)
-          ? selectedMaterials.filter(m => m !== material)
-          : [...selectedMaterials, material];
-      
-      // Clear variants for deselected materials
-      if (!newMaterials.includes(material)) {
-        const newVariants = { ...selectedVariants };
-        delete newVariants[material];
-        setSelectedVariants(newVariants);
-      }
-      
-      setSelectedMaterials(newMaterials.length === 0 ? ["All"] : newMaterials);
-    }
-  };
-
-  const toggleVariant = (baseMaterial: string, variant: string) => {
-    const currentVariants = selectedVariants[baseMaterial] || [];
-    const newVariants = currentVariants.includes(variant)
-      ? currentVariants.filter(v => v !== variant)
-      : [...currentVariants, variant];
-    
-    setSelectedVariants({
-      ...selectedVariants,
-      [baseMaterial]: newVariants
-    });
-  };
-
-  // Compare functions removed - now using global useCompare context
-
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return "text-green-400";
-    if (score >= 6) return "text-cyan-400";
-    return "text-orange-400";
-  };
-
-  // Helper to check if filament is a wood filament
-  const isWoodFilament = (filament: any): boolean => {
-    const material = filament.material?.toLowerCase() || '';
-    const title = filament.product_title?.toLowerCase() || '';
-    const hasWoodContent = filament.wood_powder_percentage !== null && filament.wood_powder_percentage !== undefined && filament.wood_powder_percentage > 0;
-    const finishType = filament.finish_type?.toLowerCase() || '';
-    if (finishType === 'wood') return true;
-    // Exclude color names that contain "wood"
-    if (/hollywood|rosewood|driftwood|deadwood|cherrywood/i.test(title)) return false;
-    return hasWoodContent || /\bwood\b|timber|bamboo/i.test(title) || /\bwood\b|cork/i.test(material);
-  };
-
-  // Get wood percentage for display
-  const getWoodPercentage = (filament: any): number | null => {
-    return filament.wood_powder_percentage ?? null;
-  };
-
-  // Helper to check if filament is a glass fiber filament
-  const isGlassFiberFilament = (filament: any): boolean => {
-    const material = filament.material?.toLowerCase() || '';
-    const title = filament.product_title?.toLowerCase() || '';
-    const hasGFContent = filament.glass_fiber_percentage !== null && filament.glass_fiber_percentage !== undefined && filament.glass_fiber_percentage > 0;
-    const finishType = filament.finish_type?.toLowerCase() || '';
-    
-    // Check finish_type variations
-    if (finishType.includes('glass') || finishType.includes('gf')) return true;
-    
-    return hasGFContent || /glass\s*fiber|glass-fiber|-gf\b|\+gf\b|gf\s*\d|fiberglass/i.test(title) || /glass\s*fiber|-gf\b|\+gf\b/i.test(material);
-  };
-
-  // Get glass fiber percentage for display
-  const getGlassFiberPercentage = (filament: any): number | null => {
-    return filament.glass_fiber_percentage ?? null;
-  };
-
-  // Helper to check if filament is a carbon fiber filament
-  const isCarbonFiberFilament = (filament: any): boolean => {
-    // Primary: check normalized finish_type
-    if (filament.finish_type === 'Carbon') return true;
-    
-    // Secondary: check carbon_fiber_percentage
-    if (filament.carbon_fiber_percentage && filament.carbon_fiber_percentage > 0) return true;
-    
-    // Fallback: pattern match for any missed cases (but avoid Polycarbonate false positives)
-    const text = ((filament.product_title || '') + ' ' + (filament.material || '')).toLowerCase();
-    const hasPolycarbonate = /polycarbonate/i.test(text) && !/carbon\s*fiber/i.test(text);
-    if (hasPolycarbonate) return false;
-    
-    return /-cf\b|\+cf\b|\bcf\d+|carbon\s*fiber/i.test(text);
-  };
-
-  // Get carbon fiber percentage for display
-  const getCarbonFiberPercentage = (filament: any): number | null => {
-    return filament.carbon_fiber_percentage ?? null;
-  };
-
-  // Helper to strip vendor name from product title
-  const getDisplayTitle = (filament: any): string => {
-    const title = filament.product_title || '';
-    const vendor = filament.vendor || '';
-    if (vendor && title.toLowerCase().startsWith(vendor.toLowerCase())) {
-      return title.slice(vendor.length).trim();
-    }
-    return title;
-  };
-
-  // Calculate filter counts based on currently applied filters (excluding the filter being counted)
-  const filterCounts = useMemo(() => {
-    if (!regionalFilaments) return {};
-
-    const counts: Record<string, number> = {};
-
-    // Apply base filters (search, price, compatibility, brand) to get filtered set
-    const baseFiltered = regionalFilaments.filter(f => {
-      // Apply search filter
-      if (searchTerm && f.product_title && f.vendor) {
-        const searchLower = searchTerm.toLowerCase();
-        if (!f.product_title.toLowerCase().includes(searchLower) && 
-            !f.vendor.toLowerCase().includes(searchLower)) {
-          return false;
-        }
-      }
-      
-      // Apply price filter - variant_price is already per-kg
-      if (maxPrice && f.variant_price) {
-        if (f.variant_price > parseFloat(maxPrice)) return false;
-      }
-      
-      return true;
-    });
-
-    // Count by material (excluding material filter itself to show total available)
-    baseFiltered.forEach(f => {
-      const material = f.material;
-      if (material) {
-        // Count by base material
-        const baseMaterial = material.split(' ')[0];
-        counts[`material_${baseMaterial}`] = (counts[`material_${baseMaterial}`] || 0) + 1;
-        
-        // Count by full material name (for variants)
-        counts[`material_${material}`] = (counts[`material_${material}`] || 0) + 1;
-      }
-      
-      // Count by pack quantity
-      const packQty = f.pack_quantity || 1;
-      if (packQty === 1) {
-        counts['pack_single'] = (counts['pack_single'] || 0) + 1;
-      } else {
-        counts['pack_multi'] = (counts['pack_multi'] || 0) + 1;
-      }
-      
-      // Count large spools (>1kg)
-      const weightG = f.net_weight_g || 1000;
-      if (weightG > 1000) {
-        counts['large_spools'] = (counts['large_spools'] || 0) + 1;
-      }
-      
-      // Count advanced filters (surface finish, reinforced, performance)
-      const finishType = f.finish_type?.toLowerCase() || '';
-      const titleLower = f.product_title?.toLowerCase() || '';
-      const materialLower = f.material?.toLowerCase() || '';
-      
-      // Surface Finish counts
-      if (finishType === 'matte' || titleLower.includes('matte')) {
-        counts['matte'] = (counts['matte'] || 0) + 1;
-      }
-      if (finishType === 'silk' || finishType.includes('shimmer') || titleLower.includes('silk') || titleLower.includes('shimmer')) {
-        counts['silk'] = (counts['silk'] || 0) + 1;
-      }
-      if (finishType === 'metallic' || finishType.includes('metal') || titleLower.includes('metallic')) {
-        counts['metallic'] = (counts['metallic'] || 0) + 1;
-      }
-      if (finishType === 'sparkle' || finishType.includes('glitter') || finishType.includes('galaxy') || 
-          titleLower.includes('sparkle') || titleLower.includes('glitter') || titleLower.includes('galaxy')) {
-        counts['sparkle'] = (counts['sparkle'] || 0) + 1;
-      }
-      if (finishType === 'translucent' || finishType.includes('transparent') || finishType.includes('clear') ||
-          titleLower.includes('translucent') || titleLower.includes('transparent')) {
-        counts['translucent'] = (counts['translucent'] || 0) + 1;
-      }
-      if (finishType === 'glow' || materialLower.includes('glow') || titleLower.includes('glow')) {
-        counts['glow'] = (counts['glow'] || 0) + 1;
-      }
-      
-      // Reinforced Materials counts
-      if (isCarbonFiberFilament(f)) {
-        counts['carbonFiber'] = (counts['carbonFiber'] || 0) + 1;
-      }
-      if (isGlassFiberFilament(f)) {
-        counts['glassFiber'] = (counts['glassFiber'] || 0) + 1;
-      }
-      if (isWoodFilament(f)) {
-        counts['woodFilled'] = (counts['woodFilled'] || 0) + 1;
-      }
-      
-      // Performance counts
-      if (f.high_speed_capable || /high[\s-]?speed|highspeed|-hs\b|hs-|\brapid\b/i.test(titleLower + ' ' + materialLower)) {
-        counts['highSpeed'] = (counts['highSpeed'] || 0) + 1;
-      }
-      if (f.is_nozzle_abrasive === false) {
-        counts['brassOnly'] = (counts['brassOnly'] || 0) + 1;
-      }
-      if (isAMSCompatible(f)) {
-        counts['amsOnly'] = (counts['amsOnly'] || 0) + 1;
-      }
-    });
-
-    // Count by brand (apply all filters except brand)
-    const forBrandCount = baseFiltered.filter(f => {
-      // Apply material filters
-      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
-        const allRawMaterials: string[] = [];
-        selectedMaterials.forEach(baseMaterial => {
-          const selectedNormalizedVariants = selectedVariants[baseMaterial];
-          if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
-            selectedNormalizedVariants.forEach(normalizedVariant => {
-              const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
-              allRawMaterials.push(...rawMaterials);
-            });
-          }
-        });
-        
-        if (allRawMaterials.length > 0) {
-          if (!allRawMaterials.includes(f.material || '')) return false;
-        } else {
-          const matchesMaterial = selectedMaterials.some(m => f.material?.includes(m));
-          if (!matchesMaterial) return false;
-        }
-      }
-      
-      // Apply compatibility filters
-      if (brassOnly && f.is_nozzle_abrasive !== false) return false;
-      if (amsOnly && !isAMSCompatible(f)) return false;
-      
-      return true;
-    });
-    
-    forBrandCount.forEach(f => {
-      if (f.vendor) {
-        counts[`brand_${f.vendor}`] = (counts[`brand_${f.vendor}`] || 0) + 1;
-      }
-    });
-
-    // Count compatibility options (apply all filters except the compatibility filter being counted)
-    const forCompatCount = baseFiltered.filter(f => {
-      // Apply material filters
-      if (!selectedMaterials.includes("All") && selectedMaterials.length > 0) {
-        const allRawMaterials: string[] = [];
-        selectedMaterials.forEach(baseMaterial => {
-          const selectedNormalizedVariants = selectedVariants[baseMaterial];
-          if (selectedNormalizedVariants && selectedNormalizedVariants.length > 0) {
-            selectedNormalizedVariants.forEach(normalizedVariant => {
-              const rawMaterials = materials?.normalizedToRaw?.[baseMaterial]?.[normalizedVariant] || [];
-              allRawMaterials.push(...rawMaterials);
-            });
-          }
-        });
-        
-        if (allRawMaterials.length > 0) {
-          if (!allRawMaterials.includes(f.material || '')) return false;
-        } else {
-          const matchesMaterial = selectedMaterials.some(m => f.material?.includes(m));
-          if (!matchesMaterial) return false;
-        }
-      }
-      
-      // Apply brand filter
-      if (selectedBrands.length > 0 && !selectedBrands.includes(f.vendor || '')) return false;
-      
-      return true;
-    });
-    
-    forCompatCount.forEach(f => {
-      if (f.is_nozzle_abrasive === false) {
-        counts['brass_safe'] = (counts['brass_safe'] || 0) + 1;
-      }
-      if (isAMSCompatible(f)) {
-        counts['ams_fit'] = (counts['ams_fit'] || 0) + 1;
-      }
-    });
-
-    return counts;
-  }, [regionalFilaments, searchTerm, maxPrice, selectedMaterials, selectedVariants, brassOnly, amsOnly, selectedBrands, materials]);
-
-  // Helper function to get count for a material (checks both base and variants)
-  const getMaterialCount = (baseMaterial: string) => {
-    if (!materials || !regionalFilaments) return 0;
-    
-    // Check if this material has variants
-    const variants = materials.variantsByBase?.[baseMaterial] || [];
-    const normalizedToRaw = materials.normalizedToRaw?.[baseMaterial] || {};
-    
-    let count = 0;
-    
-    // If it has variants, count all raw materials under this base
-    if (variants.length > 0) {
-      Object.values(normalizedToRaw).forEach(rawMaterials => {
-        rawMaterials.forEach(rawMaterial => {
-          count += filterCounts[`material_${rawMaterial}`] || 0;
-        });
-      });
-    } else {
-      // Otherwise count materials that match the base
-      count = regionalFilaments.filter(f => f.material?.includes(baseMaterial)).length;
-    }
-    
-    return count;
-  };
-
-  // Helper function to get count for a specific variant
-  const getVariantCount = (baseMaterial: string, variant: string) => {
-    if (!materials || !regionalFilaments) return 0;
-    
-    const rawMaterials = materials.normalizedToRaw?.[baseMaterial]?.[variant] || [];
-    return rawMaterials.reduce((sum, rawMaterial) => {
-      return sum + (filterCounts[`material_${rawMaterial}`] || 0);
-    }, 0);
-  };
-
-  // Create scoring context from the full dataset for relative scoring
-  const scoringContext = useMemo(() => {
-    if (!regionalFilaments || regionalFilaments.length === 0) return null;
-    return createScoringContext(regionalFilaments as FilamentForScoring[]);
-  }, [regionalFilaments]);
-
-  const filteredAndSortedFilaments = useMemo(() => regionalFilaments?.filter(f => {
-    // Apply price range filter
-    if (f.variant_price) {
-      if (f.variant_price < priceRange[0] || f.variant_price > priceRange[1]) return false;
-    }
-    
-    // Apply AMS filter client-side (since it's calculated dynamically)
-    if (amsOnly && !isAMSCompatible(f)) return false;
-    
-    // Apply high speed filter
-    if (highSpeed && !f.high_speed_capable) return false;
-    
-    // Apply matte filter
-    if (matte && f.finish_type?.toLowerCase() !== 'matte') return false;
-    
-    // Apply carbon fiber filter
-    if (carbonFiber && !isCarbonFiberFilament(f)) return false;
-    
-    // Apply glass fiber filter
-    if (glassFiber && !isGlassFiberFilament(f)) return false;
-    
-    // Apply wood filled filter
-    if (woodFilled && !isWoodFilament(f)) return false;
-    
-    // Apply glow filter
-    if (glow && !f.material?.toLowerCase().includes('glow') && !f.product_title?.toLowerCase().includes('glow')) return false;
-    
-    // Apply silk filter
-    if (silk && !isSilkFilament(f)) return false;
-    
-    // Apply metallic filter  
-    if (metallic && !isMetallicFilament(f)) return false;
-    
-    // Apply sparkle filter
-    if (sparkle && !isSparkleFilament(f)) return false;
-    
-    // Apply translucent filter
-    if (translucent && !isTranslucentFilament(f)) return false;
-    
-    // Apply large spools filter (1kg+)
-    if (largeSpools && (!f.net_weight_g || f.net_weight_g < 1000)) return false;
-    
-    // Apply HueForge TD filter
-    if (hasTdData && f.transmission_distance == null) return false;
-    
-    // Apply color family filter (OR logic - match any selected family)
-    if (selectedColorFamilies.length > 0) {
-      // Find which color families this filament's color_hex matches
-      if (!f.color_hex) return false;
-      
-      const matchesAnyFamily = selectedColorFamilies.some(familyName => {
-        const familyDef = COLOR_FAMILIES.find(cf => cf.name === familyName);
-        if (!familyDef || familyDef.name === 'Multi' || familyDef.name === 'Glow') {
-          // For Multi/Glow, check product_title or material for keywords
-          if (familyDef?.name === 'Multi') {
-            const title = f.product_title?.toLowerCase() || '';
-            const mat = f.material?.toLowerCase() || '';
-            return familyDef.families.some(kw => title.includes(kw.toLowerCase()) || mat.includes(kw.toLowerCase()));
-          }
-          if (familyDef?.name === 'Glow') {
-            const title = f.product_title?.toLowerCase() || '';
-            const mat = f.material?.toLowerCase() || '';
-            return familyDef.families.some(kw => title.includes(kw.toLowerCase()) || mat.includes(kw.toLowerCase()));
-          }
-          return false;
-        }
-        // Calculate color distance to the family's representative hex
-        const distance = colorDistance(familyDef.hex, f.color_hex!);
-        return distance <= 45; // More generous tolerance for family matching
-      });
-      
-      if (!matchesAnyFamily) return false;
-    }
-    
-    // Apply hex-based color search (precise matching)
-    if (hexSearch) {
-      if (!f.color_hex) return false;
-      const distance = colorDistance(hexSearch, f.color_hex);
-      if (distance > colorTolerance) return false;
-    }
-    
-    // Apply multi-term search filter client-side
-    // This ensures ALL search terms match across ANY combination of fields
-    if (searchTerm && searchTerm.trim().length > 0) {
-      const colorFromSearchCheck = extractColorFromText(searchTerm);
-      
-      // Skip text matching if this is a pure color search
-      if (!colorFromSearchCheck) {
-        const terms = tokenizeSearchQuery(searchTerm);
-        
-        if (terms.length > 0) {
-          // Use multi-term matching: ALL terms must match across ANY fields
-          if (!matchesAllTerms(f as FilamentSearchable, terms)) {
-            return false;
-          }
-        }
-      }
-    }
-    
-    // Apply intelligent color name search (e.g., "orange" finds filaments with orange-like hex colors)
-    const colorFromSearch = searchTerm ? extractColorFromText(searchTerm) : null;
-    if (colorFromSearch && !hexSearch) {
-      const filamentHex = f.color_hex;
-      if (!filamentHex) return false;
-      const distance = colorDistance(colorFromSearch.hex, filamentHex);
-      // Use a more generous tolerance for color name searches (50 delta)
-      if (distance > 60) return false;
-    }
-    
-    return true;
-  }).sort((a, b) => {
-    // Calculate true per-kg price in user's currency
-    // Uses the same regional price resolution as FilamentCard for consistency
-    const getPricePerKg = (filament: typeof a) => {
-      if (!filament.net_weight_g) return 999999;
-      
-      const packQty = (filament as any).pack_quantity || 1;
-      const weightKg = filament.net_weight_g / 1000;
-      
-      // Only these currencies have dedicated database columns with real prices.
-      // All other currencies must convert from USD (or a nearby region).
-      const directPriceColumns: Record<string, keyof typeof filament> = {
-        USD: 'variant_price',
-        CAD: 'price_cad',
-        GBP: 'price_gbp',
-        EUR: 'price_eur',
-        AUD: 'price_aud',
-        JPY: 'price_jpy',
-      };
-      
-      // Nearby region sources for currencies without dedicated columns
-      const nearbyRegionMap: Record<string, { column: keyof typeof filament; sourceCurrency: string }> = {
-        CHF: { column: 'price_eur', sourceCurrency: 'EUR' },
-        SEK: { column: 'price_eur', sourceCurrency: 'EUR' },
-        PLN: { column: 'price_eur', sourceCurrency: 'EUR' },
-        CZK: { column: 'price_eur', sourceCurrency: 'EUR' },
-        NZD: { column: 'price_aud', sourceCurrency: 'AUD' },
-      };
-
-      const currCode = currencyInfo.code;
-      
-      // Priority 1: Use actual regional price if currency has a dedicated column
-      if (directPriceColumns[currCode]) {
-        const priceColumn = directPriceColumns[currCode];
-        const regionalPrice = filament[priceColumn] as number | null;
-        if (regionalPrice && regionalPrice > 0) {
-          return regionalPrice / (weightKg * packQty);
-        }
-      }
-      
-      // Priority 2: Convert from nearby region (e.g., EUR→CHF, AUD→NZD)
-      const nearbySource = nearbyRegionMap[currCode];
-      if (nearbySource) {
-        const nearbyPrice = filament[nearbySource.column] as number | null;
-        if (nearbyPrice && nearbyPrice > 0) {
-          // Convert nearby price to user's currency via convertPrice (USD-intermediated)
-          // First convert nearby currency to USD, then to target
-          // convertPrice expects USD input, so we need to adjust
-          // nearbyPrice is in sourceCurrency, variant_price is in USD
-          // Use the ratio: if we have EUR price and USD price, the EUR→target conversion
-          // is more accurate. But convertPrice only converts from USD.
-          // So just use variant_price as fallback for conversion.
-          const usdPrice = filament.variant_price;
-          if (usdPrice && usdPrice > 0) {
-            const convertedPrice = convertPrice(usdPrice) || usdPrice;
-            return convertedPrice / (weightKg * packQty);
-          }
-        }
-      }
-      
-      // Priority 3: Convert from variant_price (USD) to user's currency
-      const basePrice = filament.variant_price;
-      if (!basePrice) return 999999;
-      
-      const convertedPrice = convertPrice(basePrice) || basePrice;
-      return convertedPrice / (weightKg * packQty);
-    };
-
-    // Use the unified score for consistent sorting with card display
-    const getScore = (filament: typeof a) => {
-      const { score } = calculateUnifiedScore(filament as UnifiedFilamentForScoring);
-      return score ?? 0; // Treat null/unrated as 0 for sorting
-    };
-
-    // Check if product is in stock - consider it in stock if variant_available is true
-    // or if it has a price (meaning it's available somewhere)
-    const isInStock = (filament: typeof a): boolean => {
-      // Explicit variant_available flag
-      if (filament.variant_available === true) return true;
-      if (filament.variant_available === false) return false;
-      // Fallback: if no explicit flag, assume in stock if there's a price
-      return (filament.variant_price ?? 0) > 0;
-    };
-
-    // Primary sort: in-stock items first (for score-based sorting)
-    const stockCompare = (stockA: boolean, stockB: boolean): number => {
-      if (stockA === stockB) return 0;
-      return stockB ? 1 : -1; // in-stock (true) comes first
-    };
-
-    switch (sortBy) {
-      case "scoring-asc": {
-        const stockDiff = stockCompare(isInStock(a), isInStock(b));
-        if (stockDiff !== 0) return -stockDiff; // Reverse for ascending
-        return getScore(a) - getScore(b);
-      }
-      case "scoring-desc": {
-        const stockDiff = stockCompare(isInStock(a), isInStock(b));
-        if (stockDiff !== 0) return stockDiff;
-        const scoreA = getScore(a);
-        const scoreB = getScore(b);
-        if (scoreB !== scoreA) return scoreB - scoreA;
-        // Secondary sort by price (lower first) for products with same score
-        return getPricePerKg(a) - getPricePerKg(b);
-      }
-      case "alpha-asc":
-        return (a.product_title || '').localeCompare(b.product_title || '');
-      case "alpha-desc":
-        return (b.product_title || '').localeCompare(a.product_title || '');
-      case "price-asc":
-        return getPricePerKg(a) - getPricePerKg(b);
-      case "price-desc":
-        return getPricePerKg(b) - getPricePerKg(a);
-      case "strength-desc":
-        return (b.strength_index || 0) - (a.strength_index || 0);
-      case "heat-desc":
-        return (b.tg_c || b.nozzle_temp_max_c || 0) - (a.tg_c || a.nozzle_temp_max_c || 0);
-      case "print-desc":
-        return (b.printability_index || 0) - (a.printability_index || 0);
-      case "td-desc": {
-        const tdA = a.transmission_distance ?? -1;
-        const tdB = b.transmission_distance ?? -1;
-        return tdB - tdA;
-      }
-      case "community-desc": {
-        const ratingA = communityRatingsMap?.get(a.id);
-        const ratingB = communityRatingsMap?.get(b.id);
-        const scoreA = ratingA ? ratingA.avgRating * 1000 + ratingA.reviewCount : -1;
-        const scoreB = ratingB ? ratingB.avgRating * 1000 + ratingB.reviewCount : -1;
-        return scoreB - scoreA;
-      }
-      default: {
-        const stockDiff = stockCompare(isInStock(a), isInStock(b));
-        if (stockDiff !== 0) return stockDiff;
-        return getScore(b) - getScore(a);
-      }
-    }
-  }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, hasTdData, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice, communityRatingsMap]);
-
-  // Brand diversity interleaving for scoring sort — prevents one brand dominating the top
-  const diversifiedFilaments = useMemo(() => {
-    if (!filteredAndSortedFilaments || filteredAndSortedFilaments.length === 0) return filteredAndSortedFilaments;
-    // Only apply diversity interleaving for default scoring sort with no active brand/material filters
-    const isDefaultSort = sortBy === "scoring-desc";
-    const hasUserFilters = !selectedMaterials.includes("All") || selectedBrands.length > 0 || searchTerm !== "";
-    if (!isDefaultSort || hasUserFilters) return filteredAndSortedFilaments;
-
-    // Interleave: allow max 2 consecutive products from the same brand
-    const MAX_CONSECUTIVE = 2;
-    const result: typeof filteredAndSortedFilaments = [];
-    const deferred: typeof filteredAndSortedFilaments = [];
-    const consecutiveCount: Record<string, number> = {};
-    let lastBrand = "";
-
-    for (const filament of filteredAndSortedFilaments) {
-      const brand = filament.vendor || "Unknown";
-      if (brand === lastBrand) {
-        consecutiveCount[brand] = (consecutiveCount[brand] || 1) + 1;
-      } else {
-        consecutiveCount[brand] = 1;
-      }
-
-      if (consecutiveCount[brand] > MAX_CONSECUTIVE) {
-        deferred.push(filament);
-      } else {
-        result.push(filament);
-        lastBrand = brand;
-      }
-    }
-
-    // Append deferred items (they maintain their relative score order)
-    return [...result, ...deferred];
-  }, [filteredAndSortedFilaments, sortBy, selectedMaterials, selectedBrands, searchTerm]);
-
-  // Group filaments by product before pagination
-  const groupedFilaments = useMemo(() => {
-    if (!diversifiedFilaments) return [];
-    return groupFilamentsByProduct(diversifiedFilaments);
-  }, [diversifiedFilaments]);
-
-  // Pagination: slice the grouped results
-  const displayedGroups = groupedFilaments.slice(0, displayCount);
-  const totalCount = groupedFilaments.length;
-  const hasMore = displayCount < totalCount;
 
   // Check if any filters are active (including search term)
   const hasActiveFilters = useMemo(() => {
@@ -2053,9 +1304,7 @@ const Finder = () => {
               <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
             ) : (
               <>
-                {totalCount.toLocaleString()} products{filteredAndSortedFilaments && filteredAndSortedFilaments.length !== totalCount 
-                  ? ` (${filteredAndSortedFilaments.length.toLocaleString()} variants)` 
-                  : ''}{unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}
+                {totalCount.toLocaleString()} products{unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}
               </>
             )}
           </p>
@@ -2096,15 +1345,7 @@ const Finder = () => {
         {isLoading && !isPlaceholderData ? (
           <div className="space-y-6">
             {/* Show skeleton grid immediately for visual feedback */}
-            <FilamentCardSkeletonGrid count={8} />
-            {/* Progress indicator overlay */}
-            <LoadingProgress
-              loaded={loadingProgress.loaded}
-              total={loadingProgress.total}
-              phase={loadingProgress.phase}
-              className="!py-4"
-            />
-          </div>
+            <FilamentCardSkeletonGrid count={12} />
         ) : displayedGroups.length > 0 ? (
           <>
           {
