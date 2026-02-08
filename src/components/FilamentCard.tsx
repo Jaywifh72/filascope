@@ -654,9 +654,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               </div>
             </TooltipContent>
           </Tooltip>
-        ) : (
-          <span className="text-xs text-muted-foreground/60">No reviews yet</span>
-        )}
+        ) : null}
       </div>
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 3: Price

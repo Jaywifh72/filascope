@@ -576,9 +576,7 @@ export function LabReadoutCard({
                 </div>
               </TooltipContent>
             </Tooltip>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/50">No reviews yet</span>
-          )}
+          ) : null}
         </div>
 
         {/* View Details Button - Full width, solid bg-primary */}
