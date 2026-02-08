@@ -1,24 +1,28 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency, CURRENCIES, CurrencyCode } from "@/hooks/useCurrency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, User, Globe, Shield, Loader2, Camera, Trash2, TrendingUp } from "lucide-react";
+import { ArrowLeft, User, Globe, Shield, Loader2, Camera, Trash2, TrendingUp, Eye, ExternalLink } from "lucide-react";
 import { z } from "zod";
 import { ProgressDashboard } from "@/components/filament/education/ProgressDashboard";
 
 const displayNameSchema = z.string().trim().max(50, "Display name must be less than 50 characters").optional();
+const slugSchema = z.string().regex(/^[a-z0-9-]{3,30}$/, "3-30 characters: lowercase letters, numbers, hyphens only");
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_BIO_LENGTH = 280;
 
 const Settings = () => {
   const { user, isAdmin } = useAuth();
@@ -30,6 +34,13 @@ const Settings = () => {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bio, setBio] = useState("");
+  const [usernameSlug, setUsernameSlug] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [wishlistPublic, setWishlistPublic] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [savingPublicProfile, setSavingPublicProfile] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -44,7 +55,7 @@ const Settings = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, email, avatar_url")
+        .select("display_name, email, avatar_url, bio, is_public, username_slug, social_links, wishlist_public")
         .eq("id", user.id)
         .single();
 
@@ -52,6 +63,11 @@ const Settings = () => {
         setDisplayName(data.display_name || "");
         setEmail(data.email || user.email || "");
         setAvatarUrl(data.avatar_url || null);
+        setBio((data as any).bio || "");
+        setUsernameSlug((data as any).username_slug || "");
+        setIsPublic((data as any).is_public || false);
+        setWishlistPublic((data as any).wishlist_public || false);
+        setSocialLinks(((data as any).social_links as Record<string, string>) || {});
       } else {
         setEmail(user.email || "");
       }
@@ -96,6 +112,67 @@ const Settings = () => {
         title: "Profile Updated",
         description: "Your profile has been saved successfully.",
       });
+    }
+  };
+
+  const validateSlug = useCallback(async (slug: string) => {
+    if (!slug) {
+      setSlugError(null);
+      return;
+    }
+    const result = slugSchema.safeParse(slug);
+    if (!result.success) {
+      setSlugError(result.error.errors[0]?.message || "Invalid slug");
+      return;
+    }
+    // Check uniqueness
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username_slug", slug)
+      .neq("id", user?.id || "")
+      .maybeSingle();
+    if (data) {
+      setSlugError("This username is already taken");
+    } else {
+      setSlugError(null);
+    }
+  }, [user?.id]);
+
+  const handleSavePublicProfile = async () => {
+    if (!user) return;
+    if (slugError) return;
+
+    // Validate slug if provided
+    if (usernameSlug) {
+      const result = slugSchema.safeParse(usernameSlug);
+      if (!result.success) {
+        toast({ title: "Invalid username", description: result.error.errors[0]?.message, variant: "destructive" });
+        return;
+      }
+    }
+
+    setSavingPublicProfile(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        bio: bio.trim() || null,
+        username_slug: usernameSlug.trim() || null,
+        is_public: isPublic,
+        wishlist_public: wishlistPublic,
+        social_links: socialLinks,
+        updated_at: new Date().toISOString(),
+      } as any)
+      .eq("id", user.id);
+
+    setSavingPublicProfile(false);
+    if (error) {
+      const msg = error.message.includes("idx_profiles_username_slug")
+        ? "This username is already taken."
+        : "Failed to save. Please try again.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    } else {
+      toast({ title: "Public Profile Updated", description: "Your public profile settings have been saved." });
     }
   };
 
@@ -399,7 +476,140 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            {/* Preferences Section */}
+            {/* Public Profile Section */}
+            <Card className="border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Eye className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Public Profile</CardTitle>
+                    <CardDescription>Control what others can see about you</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Bio */}
+                <div className="space-y-2">
+                  <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value.slice(0, MAX_BIO_LENGTH))}
+                    placeholder="Tell the community about yourself..."
+                    maxLength={MAX_BIO_LENGTH}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {bio.length}/{MAX_BIO_LENGTH}
+                  </p>
+                </div>
+
+                <Separator className="bg-border/50" />
+
+                {/* Username slug */}
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
+                  <Input
+                    id="username"
+                    value={usernameSlug}
+                    onChange={(e) => {
+                      const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                      setUsernameSlug(val);
+                    }}
+                    onBlur={() => validateSlug(usernameSlug)}
+                    placeholder="e.g. makerjohn"
+                    maxLength={30}
+                  />
+                  {slugError && (
+                    <p className="text-xs text-destructive">{slugError}</p>
+                  )}
+                  {usernameSlug && !slugError && (
+                    <p className="text-xs text-muted-foreground">
+                      Profile URL: filascope.lovable.app/user/{usernameSlug}
+                    </p>
+                  )}
+                </div>
+
+                <Separator className="bg-border/50" />
+
+                {/* Social Links */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Social Links</Label>
+                  {[
+                    { key: "printables", label: "Printables", placeholder: "https://www.printables.com/@username" },
+                    { key: "thingiverse", label: "Thingiverse", placeholder: "https://www.thingiverse.com/username" },
+                    { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/@channel" },
+                    { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/username" },
+                  ].map((platform) => (
+                    <div key={platform.key} className="space-y-1">
+                      <Label htmlFor={`social-${platform.key}`} className="text-xs text-muted-foreground">
+                        {platform.label}
+                      </Label>
+                      <Input
+                        id={`social-${platform.key}`}
+                        value={socialLinks[platform.key] || ""}
+                        onChange={(e) =>
+                          setSocialLinks((prev) => ({ ...prev, [platform.key]: e.target.value }))
+                        }
+                        placeholder={platform.placeholder}
+                        type="url"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <Separator className="bg-border/50" />
+
+                {/* Privacy Toggles */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Make my profile public</p>
+                      <p className="text-xs text-muted-foreground">Allow others to see your profile, reviews, and projects</p>
+                    </div>
+                    <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Show my wishlist on my profile</p>
+                      <p className="text-xs text-muted-foreground">Let visitors see your saved filaments</p>
+                    </div>
+                    <Switch
+                      checked={wishlistPublic}
+                      onCheckedChange={setWishlistPublic}
+                      disabled={!isPublic}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handleSavePublicProfile}
+                    disabled={savingPublicProfile || !!slugError}
+                  >
+                    {savingPublicProfile ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Public Profile"
+                    )}
+                  </Button>
+                  {user && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={`/user/${usernameSlug || user.id}`} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Preview Profile
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="border-border/50">
               <CardHeader>
                 <div className="flex items-center gap-3">

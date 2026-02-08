@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { Settings } from "lucide-react";
+import { Settings, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { VaultProfile, VaultCounts } from "@/hooks/useVaultProfile";
@@ -58,13 +58,21 @@ export function VaultHeroBar({ profile, counts, onStatClick }: VaultHeroBarProps
           </div>
         </div>
 
-        {/* Edit Profile */}
-        <Button variant="outline" size="sm" asChild className="shrink-0">
-          <Link to="/settings">
-            <Settings className="w-4 h-4 mr-2" />
-            Edit Profile
-          </Link>
-        </Button>
+        {/* Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="ghost" size="sm" asChild className="shrink-0">
+            <Link to={`/user/${profile?.id || ""}`}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View Profile
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild className="shrink-0">
+            <Link to="/settings">
+              <Settings className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Row */}
