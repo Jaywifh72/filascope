@@ -68,7 +68,8 @@ export function useVaultProfile() {
             .from("product_reviews")
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id)
-            .eq("is_public", true),
+            .eq("is_public", true)
+            .is("deleted_at", null),
           supabase
             .from("user_notes")
             .select("id", { count: "exact", head: true })

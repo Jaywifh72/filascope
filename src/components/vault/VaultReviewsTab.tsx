@@ -1,121 +1,149 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Star, ThumbsUp } from "lucide-react";
+import { useState } from "react";
+import { Star } from "lucide-react";
+import { useVaultReviews } from "@/hooks/useVaultReviews";
+import type {
+  ReviewSortOption,
+  ReviewProductFilter,
+  ReviewRatingFilter,
+  VaultReview,
+} from "@/hooks/useVaultReviews";
+import { ReviewStatsBar } from "./reviews/ReviewStatsBar";
+import { ReviewFilters } from "./reviews/ReviewFilters";
+import { VaultReviewCard } from "./reviews/VaultReviewCard";
+import { ReviewGridCard } from "./reviews/ReviewGridCard";
+import { ReviewEditDialog } from "./reviews/ReviewEditDialog";
 import { VaultEmptyState } from "./VaultEmptyState";
 
 export function VaultReviewsTab() {
-  const { user } = useAuth();
+  const {
+    reviews,
+    stats,
+    isLoading,
+    updateReview,
+    isUpdating,
+    deleteReview,
+    isDeleting,
+  } = useVaultReviews();
 
-  const { data: reviews } = useQuery({
-    queryKey: ["vault-reviews", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      // Fetch from new product_reviews table (public reviews only)
-      const { data, error } = await supabase
-        .from("product_reviews")
-        .select("*")
-        .eq("user_id", user!.id)
-        .eq("is_public", true)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+  const [sortBy, setSortBy] = useState<ReviewSortOption>("recent");
+  const [productFilter, setProductFilter] = useState<ReviewProductFilter>("all");
+  const [ratingFilter, setRatingFilter] = useState<ReviewRatingFilter>(0);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [editingReview, setEditingReview] = useState<VaultReview | null>(null);
 
-      // Enrich with filament data
-      const filamentIds = (data || [])
-        .filter((r: any) => r.product_type === "filament")
-        .map((r: any) => r.product_id);
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-32 rounded-xl bg-muted/30 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
 
-      let filamentMap = new Map();
-      if (filamentIds.length > 0) {
-        const { data: filaments } = await supabase
-          .from("filaments")
-          .select("id, product_title, vendor, featured_image, material")
-          .in("id", filamentIds);
-        filamentMap = new Map((filaments || []).map((f: any) => [f.id, f]));
-      }
-
-      return (data || []).map((review: any) => ({
-        ...review,
-        filament: filamentMap.get(review.product_id) || null,
-      }));
-    },
-  });
-
-  if (!reviews?.length) {
+  if (!reviews.length) {
     return (
       <VaultEmptyState
         icon={Star}
         title="No reviews yet"
-        description="Share your experience with filaments to help the community make better choices."
+        description="Share your experience with filaments and printers to help the community make better choices."
         actionLabel="Browse Filaments to Review"
         actionHref="/"
       />
     );
   }
 
+  // Apply filters
+  let filtered = [...reviews];
+
+  if (productFilter !== "all") {
+    filtered = filtered.filter((r) => r.product_type === productFilter);
+  }
+
+  if (ratingFilter > 0) {
+    filtered = filtered.filter((r) => r.overall_rating === ratingFilter);
+  }
+
+  // Apply sort
+  filtered.sort((a, b) => {
+    switch (sortBy) {
+      case "helpful":
+        return b.helpful_count - a.helpful_count;
+      case "highest":
+        return b.overall_rating - a.overall_rating;
+      case "lowest":
+        return a.overall_rating - b.overall_rating;
+      case "recent":
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
+  const handleEditSave = (reviewId: string, data: any) => {
+    updateReview(
+      { reviewId, data },
+      { onSuccess: () => setEditingReview(null) }
+    );
+  };
+
   return (
     <div className="space-y-4">
-      {reviews.map((review: any) => (
-        <Card key={review.id}>
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                {review.filament?.featured_image && (
-                  <img
-                    src={review.filament.featured_image}
-                    alt=""
-                    className="w-10 h-10 rounded object-cover shrink-0"
-                  />
-                )}
-                <div className="min-w-0">
-                  <Link
-                    to={`/filament/${review.product_id}`}
-                    className="hover:text-primary transition-colors"
-                  >
-                    <CardTitle className="text-base truncate">
-                      {review.filament?.product_title || review.headline}
-                    </CardTitle>
-                  </Link>
-                  <p className="text-xs text-muted-foreground">{review.filament?.vendor}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-0.5 shrink-0">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3.5 h-3.5 ${
-                      i < review.overall_rating
-                        ? "fill-primary text-primary"
-                        : "text-muted-foreground/30"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <h4 className="font-medium text-sm mb-1">{review.headline}</h4>
-            {review.body && (
-              <p className="text-sm text-foreground/80 mb-3 line-clamp-3">{review.body}</p>
-            )}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span>{new Date(review.created_at).toLocaleDateString()}</span>
-              {review.is_verified_purchase && (
-                <Badge variant="secondary" className="text-xs">Verified Purchase</Badge>
-              )}
-              {(review.helpful_count ?? 0) > 0 && (
-                <span className="flex items-center gap-1">
-                  <ThumbsUp className="w-3 h-3" />
-                  {review.helpful_count} helpful
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {/* Heading */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">
+          My Public Reviews{" "}
+          <span className="text-muted-foreground font-normal">({stats.totalReviews})</span>
+        </h2>
+      </div>
+
+      {/* Stats */}
+      <ReviewStatsBar stats={stats} />
+
+      {/* Filters */}
+      <ReviewFilters
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        productFilter={productFilter}
+        onProductFilterChange={setProductFilter}
+        ratingFilter={ratingFilter}
+        onRatingFilterChange={setRatingFilter}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
+
+      {/* Content */}
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">
+          No reviews match your filters.
+        </p>
+      ) : viewMode === "list" ? (
+        <div className="space-y-3">
+          {filtered.map((review) => (
+            <VaultReviewCard
+              key={review.id}
+              review={review}
+              onEdit={setEditingReview}
+              onDelete={deleteReview}
+              isDeleting={isDeleting}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {filtered.map((review) => (
+            <ReviewGridCard key={review.id} review={review} />
+          ))}
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      <ReviewEditDialog
+        review={editingReview}
+        open={!!editingReview}
+        onOpenChange={(open) => !open && setEditingReview(null)}
+        onSave={handleEditSave}
+        isSaving={isUpdating}
+      />
     </div>
   );
 }
