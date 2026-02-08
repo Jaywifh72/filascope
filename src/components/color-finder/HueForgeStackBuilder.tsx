@@ -1,145 +1,147 @@
-import { useState, useMemo } from 'react';
-import { Plus, Trash2, Copy, Lightbulb } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { normalizeColorHex, isValidHexColor } from '@/lib/utils';
-import { colorDistance } from '@/lib/colorMatchUtils';
-import { COLOR_FAMILIES } from '@/lib/colorMatchUtils';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { isValidHexColor, normalizeColorHex } from '@/lib/utils';
+import { colorDistance, getColorMatchPercent } from '@/lib/colorMatchUtils';
+import { HueForgeLayerRow, type LayerData } from './hueforge/HueForgeLayerRow';
+import { HueForgeStackSummary } from './hueforge/HueForgeStackSummary';
+import { HueForgeEducation } from './hueforge/HueForgeEducation';
 import type { ColorFinderFilament } from '@/hooks/useColorFinderFilaments';
+import { useSearchParams } from 'react-router-dom';
 
-interface StackSlot {
-  hex: string;
-  label: string;
-}
+const DEFAULT_LAYERS: LayerData[] = [
+  { hex: '#FFFFFF', label: 'White (base)' },
+  { hex: '#87CEEB', label: 'Light color' },
+  { hex: '#2E4057', label: 'Dark color' },
+  { hex: '#000000', label: 'Black (top)' },
+];
+
+const MAX_LAYERS = 8;
+const MIN_LAYERS = 2;
+const MATCHES_PER_LAYER = 5;
 
 interface HueForgeStackBuilderProps {
   filaments: ColorFinderFilament[];
 }
 
 export function HueForgeStackBuilder({ filaments }: HueForgeStackBuilderProps) {
-  const [slots, setSlots] = useState<StackSlot[]>([
-    { hex: '#FFFFFF', label: 'Layer 1' },
-    { hex: '#000000', label: 'Layer 2' },
-  ]);
+  const [searchParams] = useSearchParams();
 
-  const tdFilaments = useMemo(
-    () => filaments.filter(f => f.transmission_distance != null && f.color_hex),
-    [filaments]
-  );
+  // Initialize layers from URL ?stack= param or defaults
+  const [layers, setLayers] = useState<LayerData[]>(() => {
+    const stackParam = searchParams.get('stack');
+    if (stackParam) {
+      const hexes = stackParam.split(',').map(h => `#${h}`).filter(isValidHexColor);
+      if (hexes.length >= MIN_LAYERS) {
+        return hexes.slice(0, MAX_LAYERS).map((hex, i) => ({
+          hex: hex.toUpperCase(),
+          label: i === 0 ? 'Base layer' : i === hexes.length - 1 ? 'Top layer' : `Layer ${i + 1}`,
+        }));
+      }
+    }
+    return DEFAULT_LAYERS;
+  });
 
-  const addSlot = () => {
-    if (slots.length >= 5) return;
-    setSlots(prev => [...prev, { hex: '#808080', label: `Layer ${prev.length + 1}` }]);
-  };
+  // Filaments with TD data are prioritized, but also include non-TD filaments
+  const { tdFilaments, allWithColor } = useMemo(() => {
+    const withColor = filaments.filter(f => f.color_hex);
+    const withTd = withColor.filter(f => f.transmission_distance != null);
+    return { tdFilaments: withTd, allWithColor: withColor };
+  }, [filaments]);
 
-  const removeSlot = (index: number) => {
-    if (slots.length <= 2) return;
-    setSlots(prev => prev.filter((_, i) => i !== index));
-  };
+  // Compute matches for each layer
+  const layerMatches = useMemo(() => {
+    return layers.map(layer => {
+      if (!isValidHexColor(layer.hex)) return [];
 
-  const updateSlotHex = (index: number, hex: string) => {
-    setSlots(prev => prev.map((s, i) => i === index ? { ...s, hex } : s));
-  };
+      // Score all filaments: TD filaments get priority
+      const scored = allWithColor.map(f => {
+        const matchPercent = getColorMatchPercent(layer.hex, normalizeColorHex(f.color_hex));
+        const hasTd = f.transmission_distance != null;
+        // Sort score: prioritize TD availability, then match quality
+        const sortScore = (hasTd ? 100000 : 0) + matchPercent;
+        return { ...f, matchPercent, sortScore };
+      });
 
-  const getMatchesForSlot = (hex: string) => {
-    return tdFilaments
-      .map(f => ({
-        ...f,
-        dist: colorDistance(hex, normalizeColorHex(f.color_hex)),
-      }))
-      .sort((a, b) => a.dist - b.dist)
-      .slice(0, 5);
-  };
+      // Sort by TD priority first, then match quality
+      scored.sort((a, b) => b.sortScore - a.sortScore);
 
-  const handleCopyStack = () => {
-    const lines = slots.map((slot, i) => {
-      const matches = getMatchesForSlot(slot.hex);
-      const best = matches[0];
-      return `Layer ${i + 1}: ${slot.hex} → ${best ? `${best.product_title} (TD ${best.transmission_distance})` : 'No match'}`;
+      return scored.slice(0, MATCHES_PER_LAYER);
     });
-    navigator.clipboard.writeText(lines.join('\n'));
-    toast.success('Stack copied to clipboard');
+  }, [layers, allWithColor]);
+
+  // Layer management
+  const addLayer = () => {
+    if (layers.length >= MAX_LAYERS) return;
+    setLayers(prev => [
+      ...prev.slice(0, -1),
+      { hex: '#808080', label: `Layer ${prev.length}` },
+      prev[prev.length - 1], // Keep the last layer (black/top) at the end
+    ]);
   };
+
+  const removeLayer = (index: number) => {
+    if (layers.length <= MIN_LAYERS) return;
+    setLayers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateLayerHex = (index: number, hex: string) => {
+    setLayers(prev => prev.map((l, i) => i === index ? { ...l, hex } : l));
+  };
+
+  // Build summary data with best match per layer
+  const summaryLayers = useMemo(() => {
+    return layers.map((layer, i) => ({
+      hex: layer.hex,
+      label: layer.label,
+      bestMatch: layerMatches[i]?.[0] || null,
+    }));
+  }, [layers, layerMatches]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Educational intro */}
+      <HueForgeEducation />
+
+      {/* Header + Add Layer */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Lightbulb className="w-4 h-4 text-amber-400" />
-          HueForge Stack Builder
-        </h3>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={addSlot} disabled={slots.length >= 5} className="text-xs">
-            <Plus className="w-3 h-3 mr-1" /> Add Layer
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleCopyStack} className="text-xs">
-            <Copy className="w-3 h-3 mr-1" /> Copy Stack
-          </Button>
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-amber-400" />
+          <h2 className="text-lg font-semibold text-foreground">Build Your Stack</h2>
+          <span className="text-xs text-muted-foreground">
+            ({layers.length} layer{layers.length !== 1 ? 's' : ''})
+          </span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addLayer}
+          disabled={layers.length >= MAX_LAYERS}
+          className="text-xs"
+        >
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          Add Layer
+        </Button>
       </div>
 
+      {/* Layer list */}
       <div className="space-y-3">
-        {slots.map((slot, idx) => (
-          <div key={idx} className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-md border border-border/50"
-                style={{ backgroundColor: slot.hex }}
-              />
-              <Input
-                value={slot.hex}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  updateSlotHex(idx, val);
-                }}
-                className="h-8 text-xs font-mono w-28"
-                maxLength={7}
-              />
-              <span className="text-xs text-muted-foreground">{slot.label}</span>
-              {slots.length > 2 && (
-                <button
-                  onClick={() => removeSlot(idx)}
-                  className="ml-auto text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-              {/* Quick color buttons */}
-              <div className="ml-auto flex gap-1">
-                {COLOR_FAMILIES.slice(0, 6).filter(f => !f.hex.includes('gradient')).map(f => (
-                  <button
-                    key={f.name}
-                    className="w-4 h-4 rounded-full border border-border/50"
-                    style={{ backgroundColor: f.hex }}
-                    onClick={() => updateSlotHex(idx, f.hex)}
-                    title={f.name}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Top matches with TD */}
-            {isValidHexColor(slot.hex) && (
-              <div className="space-y-1">
-                {getMatchesForSlot(slot.hex).map(match => (
-                  <div key={match.id} className="flex items-center gap-2 text-xs text-muted-foreground py-0.5">
-                    <span
-                      className="w-3 h-3 rounded-full border border-border/50 shrink-0"
-                      style={{ backgroundColor: normalizeColorHex(match.color_hex) }}
-                    />
-                    <span className="truncate flex-1">{match.product_title}</span>
-                    <span className="text-amber-400 font-mono shrink-0">
-                      TD {match.transmission_distance}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {layers.map((layer, idx) => (
+          <HueForgeLayerRow
+            key={idx}
+            layer={layer}
+            index={idx}
+            totalLayers={layers.length}
+            matches={layerMatches[idx] || []}
+            onHexChange={(hex) => updateLayerHex(idx, hex)}
+            onRemove={() => removeLayer(idx)}
+            canRemove={layers.length > MIN_LAYERS}
+          />
         ))}
       </div>
+
+      {/* Stack Summary */}
+      <HueForgeStackSummary layers={summaryLayers} />
     </div>
   );
 }

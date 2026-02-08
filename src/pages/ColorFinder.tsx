@@ -176,7 +176,7 @@ export default function ColorFinder() {
           </div>
         ) : (
           /* HueForge Stack Mode */
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <HueForgeStackBuilder filaments={filaments} />
           </div>
         )}
