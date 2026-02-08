@@ -209,7 +209,8 @@ const Wizard = () => {
     <>
       <Helmet>
         <title>Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope</title>
-        <meta name="description" content="Answer 5 quick questions and get personalized 3D printer filament recommendations based on your project needs." />
+        <meta name="description" content="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations." />
+        <meta property="og:description" content="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations." />
       </Helmet>
       <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col">
       <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">

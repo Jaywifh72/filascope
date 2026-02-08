@@ -64,20 +64,12 @@ export function ProductSEO({
     seoTitle = `Buy ${title.trim()} in ${regionName} | FilaScope`;
   }
 
-  // Build meta description with key specs, price, and region
+  // Use the description as-is — callers are responsible for building dynamic descriptions.
+  // Only add HueForge note if transmission distance exists and isn't already mentioned.
   let metaDesc = description;
   
-  // Add HueForge targeting if applicable
   if (transmissionDistance && !description.toLowerCase().includes('hueforge')) {
     metaDesc = `TD ${transmissionDistance} for HueForge lithophanes. ${description}`;
-  }
-  
-  // Add regional availability note
-  if (price) {
-    const priceStr = `From ${currencyConfig.symbol}${price.toFixed(2)}`;
-    if (!metaDesc.includes(priceStr)) {
-      metaDesc = `${metaDesc} ${priceStr} in ${regionName}.`;
-    }
   }
   
   // Truncate to 160 chars

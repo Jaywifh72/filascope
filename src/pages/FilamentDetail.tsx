@@ -653,16 +653,24 @@ const FilamentDetail = () => {
   // Get the best product line name for SEO and display
   const productLineName = getProductLineName(displayFilament.material, displayFilament.product_title);
 
-  // Build SEO description with product line name
-  const seoDescription = `${displayFilament.vendor || ''} ${productLineName} filament${displayFilament.transmission_distance ? ` with TD ${displayFilament.transmission_distance} for HueForge` : ''}. ${
-    displayFilament.nozzle_temp_min_c && displayFilament.nozzle_temp_max_c
-      ? `Nozzle: ${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C. `
-      : ''
-  }${
-    displayFilament.bed_temp_min_c && displayFilament.bed_temp_max_c
-      ? `Bed: ${displayFilament.bed_temp_min_c}-${displayFilament.bed_temp_max_c}°C. `
-      : ''
-  }${rawPricePerKg ? `From $${rawPricePerKg.toFixed(2)}/kg. ` : ''}Compare specs & prices at FilaScope.`;
+  // Build SEO description with product line name — dynamic template:
+  // "Buy [Brand] [Product] [Material] filament — [Temps], [Weight], from [Price] in [Region]. Compare prices from [X] retailers on FilaScope."
+  const regionName = getRegionDisplayName(currentRegionCode as any);
+  const weightDisplay = pricingFilament.net_weight_g 
+    ? `${pricingFilament.net_weight_g >= 1000 ? `${(pricingFilament.net_weight_g / 1000).toFixed(pricingFilament.net_weight_g % 1000 === 0 ? 0 : 1)}kg` : `${pricingFilament.net_weight_g}g`}`
+    : null;
+  const tempDisplay = displayFilament.nozzle_temp_min_c && displayFilament.nozzle_temp_max_c
+    ? `${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C`
+    : null;
+  const retailerCount = detailPricing.retailerCount || retailers.length || 0;
+  const seoDescParts = [
+    `Buy ${displayFilament.vendor || ''} ${productLineName} ${displayFilament.material || ''} filament`,
+    tempDisplay || weightDisplay ? ' — ' : '',
+    [tempDisplay, weightDisplay].filter(Boolean).join(', '),
+    sidebarPricePerSpool ? `, from ${formatPrice(sidebarPricePerSpool)} in ${regionName}` : ` in ${regionName}`,
+    retailerCount > 0 ? `. Compare prices from ${retailerCount} retailer${retailerCount !== 1 ? 's' : ''} on FilaScope.` : '. Compare specs & prices on FilaScope.',
+  ];
+  const seoDescription = seoDescParts.join('').replace(/\s+/g, ' ').trim();
 
   // Build brand slug for breadcrumb link
   const brandSlug = displayFilament.vendor ? toBrandSlug(displayFilament.vendor) : '';

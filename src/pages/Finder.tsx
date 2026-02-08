@@ -1595,7 +1595,8 @@ const Finder = () => {
       ]} />
       <Helmet>
         <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
-        <meta name="description" content="Compare 960+ 3D printer filaments with specs, pricing from 15+ retailers, and transmissivity data. Find the perfect material for your project." />
+        <meta name="description" content={`Compare ${filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta property="og:description" content={`Compare ${filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
       </Helmet>
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />

@@ -287,7 +287,8 @@ const ReferenceSlicers = () => {
     <SlicerComparisonProvider>
       <Helmet>
         <title>Slicer Guide — Compare 3D Printing Slicers | FilaScope</title>
-        <meta name="description" content="Compare 20 3D printing slicers with expert ratings, features, and pricing. Find your perfect slicer software." />
+        <meta name="description" content="Compare 20 3D printing slicers with expert ratings across 15 features. Find your perfect slicer software — free and paid options reviewed." />
+        <meta property="og:description" content="Compare 20 3D printing slicers with expert ratings across 15 features. Find your perfect slicer software — free and paid options reviewed." />
       </Helmet>
       {/* SoftwareApplication JSON-LD for each slicer */}
       {Object.values(slicerTierData).map((slicer) => {

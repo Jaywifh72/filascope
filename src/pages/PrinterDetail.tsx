@@ -595,15 +595,19 @@ const PrinterDetail = () => {
   const printerName = `${printerBrand || ''} ${printerModel}`.trim();
   const isDiscontinued = printer.discontinued === true;
   
-  const seoDescription = `${printerName} 3D printer. ${
-    printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
-      ? `Build volume: ${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}mm. `
-      : ''
-  }${
-    printer.max_print_speed_mms ? `Up to ${printer.max_print_speed_mms}mm/s. ` : ''
-  }${
-    displayPrice ? `From ${formatPrice(displayPrice)}. ` : ''
-  }Compare specs, prices & reviews at FilaScope.`;
+  const buildVolumeDisplay = printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
+    ? `${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}mm`
+    : null;
+  const speedDisplay = printer.max_print_speed_mms ? `up to ${printer.max_print_speed_mms}mm/s` : null;
+  const printerPriceDisplay = displayPrice ? `from ${formatPrice(displayPrice)}` : null;
+  const seoDescParts = [
+    `Buy ${printerName} 3D printer`,
+    buildVolumeDisplay || speedDisplay ? ' — ' : '',
+    [buildVolumeDisplay, speedDisplay].filter(Boolean).join(', '),
+    printerPriceDisplay ? `, ${printerPriceDisplay}` : '',
+    '. Detailed specs and price comparison on FilaScope.',
+  ];
+  const seoDescription = seoDescParts.join('').replace(/\s+/g, ' ').trim();
 
   // Get primary image for SEO
   const seoImage = productImages[0] || null;
