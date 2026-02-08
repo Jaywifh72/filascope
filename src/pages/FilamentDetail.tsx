@@ -755,10 +755,12 @@ const FilamentDetail = () => {
         <DetailBreadcrumb
           segments={[
             { label: "Filaments", href: "/" },
+            ...(displayFilament.material ? [{ label: displayFilament.material, href: `/?material=${encodeURIComponent(displayFilament.material)}` }] : []),
             ...(displayFilament.vendor ? [{ label: displayFilament.vendor, href: `/brands/${brandSlug}` }] : []),
             { label: productLineName, href: `/filament/${id}` },
           ]}
           mobileBackLabel={displayFilament.vendor || "Filaments"}
+          hideHome
         />
 
         {/* Main Layout: Content + Sidebar */}
