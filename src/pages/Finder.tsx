@@ -942,6 +942,21 @@ const Finder = () => {
     },
   });
 
+  // Unfiltered product count (unique product lines) — consistent with Brands page
+  const { data: catalogCounts } = useQuery({
+    queryKey: ["catalog-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_catalog_counts");
+      if (error) throw error;
+      const row = data?.[0] || { product_count: 0, variant_count: 0 };
+      return {
+        productCount: Number(row.product_count) || 0,
+        variantCount: Number(row.variant_count) || 0,
+      };
+    },
+  });
+  const unfilteredProductCount = catalogCounts?.productCount || 0;
+
   const toggleMaterial = (material: string) => {
     if (material === "All") {
       setSelectedMaterials(["All"]);
@@ -1595,8 +1610,8 @@ const Finder = () => {
       ]} />
       <Helmet>
         <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
-        <meta name="description" content={`Compare ${filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
-        <meta property="og:description" content={`Compare ${filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta name="description" content={`Compare ${unfilteredProductCount || filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta property="og:description" content={`Compare ${unfilteredProductCount || filamentCount || '960'}+ 3D printer filaments from 42+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
       </Helmet>
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />
@@ -1609,7 +1624,7 @@ const Finder = () => {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         filamentCount={filamentCount || 0}
-        productCount={totalCount}
+        productCount={unfilteredProductCount}
         brandCount={brands?.length || 42}
         compatibleCount={totalCount}
         isLoading={isLoading || filamentCount === undefined}
