@@ -32,17 +32,17 @@ function SpecCard({ icon, label, value, isDefault, defaultTooltip }: SpecCardPro
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-2.5 sm:p-4 flex items-start gap-2 sm:gap-3 min-w-0">
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-2 sm:p-3 xl:p-4 flex items-start gap-2 sm:gap-3 min-w-0">
             <div className="text-primary flex-shrink-0 mt-0.5">
               {icon}
             </div>
-            <div className="min-w-0 overflow-hidden">
+            <div className="min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1 truncate">
                 {label}
                 {isDefault && <Info className="inline w-2.5 h-2.5 ml-1 text-muted-foreground/70" />}
               </p>
               <p className={cn(
-                "text-sm sm:text-lg font-semibold leading-tight truncate",
+                "text-sm sm:text-base xl:text-lg font-semibold leading-tight whitespace-nowrap",
                 isDefault ? "text-gray-300" : "text-white"
               )}>{value}</p>
             </div>
@@ -142,8 +142,8 @@ export function FilamentQuickSpecsGrid({
 
   return (
     <div className={cn(
-      "grid gap-3",
-      specs.length <= 2 ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4",
+      "grid gap-2 sm:gap-3",
+      specs.length <= 2 ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4",
       className,
     )}>
       {specs.map((spec) => (
