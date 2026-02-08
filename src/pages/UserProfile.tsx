@@ -42,7 +42,7 @@ const UserProfile = () => {
         <div className="container max-w-4xl py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Profile Not Found</h1>
           <p className="text-muted-foreground">
-            This profile doesn't exist or is set to private.
+            This maker hasn't set up their profile yet, or it's set to private.
           </p>
         </div>
       </div>
@@ -51,14 +51,16 @@ const UserProfile = () => {
 
   const showCollection = profile.wishlist_public && wishlistItems.length > 0;
   const pageTitle = profile.display_name
-    ? `${profile.display_name}'s Profile | FilaScope`
-    : "User Profile | FilaScope";
+    ? `${profile.display_name} | FilaScope Maker Profile`
+    : "Maker Profile | FilaScope";
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>{pageTitle}</title>
+        <meta property="og:title" content={pageTitle} />
         {profile.bio && <meta name="description" content={profile.bio} />}
+        {profile.bio && <meta property="og:description" content={profile.bio} />}
       </Helmet>
 
       <div className="container max-w-4xl py-8 px-4 sm:px-6">

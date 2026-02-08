@@ -8,6 +8,8 @@ export interface VaultProfile {
   avatar_url: string | null;
   email: string | null;
   created_at: string | null;
+  username_slug: string | null;
+  is_public: boolean;
 }
 
 export interface VaultCounts {
@@ -30,7 +32,7 @@ export function useVaultProfile() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, email, created_at")
+        .select("id, display_name, avatar_url, email, created_at, username_slug, is_public")
         .eq("id", user.id)
         .single();
 
