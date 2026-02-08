@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 interface ResultsHeaderProps {
   count: number;
+  totalCatalogCount?: number;
   selectedPrinter?: { model_name: string; printer_brands?: { brand: string } | null } | null;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
@@ -14,6 +15,7 @@ interface ResultsHeaderProps {
 
 const ResultsHeader = ({ 
   count, 
+  totalCatalogCount,
   selectedPrinter, 
   hasActiveFilters, 
   onClearFilters,
@@ -50,6 +52,9 @@ const ResultsHeader = ({
               )}
               <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
                 {hasActiveFilters ? "Matching" : "Products"}
+                {totalCatalogCount && totalCatalogCount > count ? (
+                  <span className="text-muted-foreground/60"> of {totalCatalogCount.toLocaleString()}</span>
+                ) : null}
               </span>
             </h2>
           </div>
