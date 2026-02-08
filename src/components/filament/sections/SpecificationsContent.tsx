@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { AlertTriangle, Info } from 'lucide-react';
 import { validateSpec, validateDiameter, type SpecValidationResult } from '@/lib/specValidation';
 import { resolveNozzleTemp, resolveBedTemp } from '@/lib/materialDefaults';
+import { isValidFinishType } from '@/lib/finishTypeValidation';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -43,7 +44,7 @@ export function SpecificationsContent({ filament }: SpecificationsContentProps) 
     { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null, validation: validateSpec('net_weight', filament.net_weight_g) },
     { label: 'Density', value: filament.density_g_cm3 ? `${filament.density_g_cm3} g/cm³` : null },
     { label: 'Color Family', value: filament.color_family },
-    { label: 'Finish Type', value: filament.finish_type && !/^\d+(\.\d+)?$/.test(filament.finish_type) ? filament.finish_type : null },
+    { label: 'Finish Type', value: filament.finish_type && isValidFinishType(filament.finish_type) ? filament.finish_type : null },
     { label: 'Spool Material', value: filament.spool_material },
     { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm ? `${filament.spool_outer_d_mm}mm` : null, validation: validateSpec('spool_outer_diameter', filament.spool_outer_d_mm) },
     { label: 'Spool Width', value: filament.spool_width_mm ? `${filament.spool_width_mm}mm` : null, validation: validateSpec('spool_width', filament.spool_width_mm) },

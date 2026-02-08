@@ -10,7 +10,7 @@
  * its own prices. This eliminates race conditions and formula drift.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useRegion } from '@/contexts/RegionContext';
 import { useFilamentListings, type FilamentListing } from './useFilamentListings';
 import { useFilamentStorePricing, type StorePrice } from './useFilamentStorePricing';
@@ -193,6 +193,12 @@ export function useFilamentDetailPricing(
   const isReady = !isLoading && !isFetching && (currency === 'USD' || hasRates);
   
   // ── Build candidates ──
+  // Use a ref to preserve the last stable candidate set during background refetching.
+  // This prevents the sidebar from flickering between states on reload.
+  const lastStableRef = useRef<{ allCandidates: PriceCandidate[]; bestPrice: PriceCandidate | null; cheapestLocal: PriceCandidate | null; retailerCount: number }>({
+    allCandidates: [], bestPrice: null, cheapestLocal: null, retailerCount: 0,
+  });
+  
   const { allCandidates, bestPrice, cheapestLocal, retailerCount } = useMemo(() => {
     if (!filament) {
       return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
@@ -200,11 +206,14 @@ export function useFilamentDetailPricing(
     
     // ── GATE: Don't build candidates until ALL sources have resolved ──
     // This prevents the "best price" from jumping as sources resolve incrementally.
-    // We gate on isLoading (first load) but NOT isFetching (background refetch),
-    // because gating on isFetching would flash empty state on revisits.
-    // Instead, isFetching affects isReady to inform the UI.
     if (isLoading) {
       return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
+    }
+    
+    // During background refetch, return the last stable set to prevent flickering.
+    // New candidates will be built once all sources have settled.
+    if (isFetching && lastStableRef.current.allCandidates.length > 0) {
+      return lastStableRef.current;
     }
     
     const packQty = (filament as any).pack_quantity || 1;
@@ -213,7 +222,7 @@ export function useFilamentDetailPricing(
     const totalWeightKg = weightKg ? weightKg * packQty : packQty;
     
     if (totalWeightKg <= 0) {
-      return { allCandidates: [] as PriceCandidate[], bestPrice: null, retailerCount: 0 };
+      return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
     }
     
     const candidates: PriceCandidate[] = [];
@@ -390,26 +399,78 @@ export function useFilamentDetailPricing(
       return a.name.localeCompare(b.name);
     };
     
-    const sorted = [...candidates].sort(sortByPrice);
+    // ── Cross-region dedup: Remove stale MSRP duplicates ──
+    // If the same vendor appears in multiple regions (e.g., "Polymaker" in US and CA),
+    // and one entry is significantly more expensive (likely an MSRP/converted estimate),
+    // keep only the cheapest per vendor base name.
+    const vendorBestMap = new Map<string, PriceCandidate>();
+    for (const c of candidates) {
+      const vendorKey = c.name.toLowerCase()
+        .replace(/\s+(us|uk|eu|ca|au|jp|cn|de|global)$/i, '')
+        .replace(/\s+store$/i, '')
+        .replace(/\s+/g, '');
+      const existing = vendorBestMap.get(vendorKey);
+      if (!existing || c.pricePerKg < existing.pricePerKg) {
+        vendorBestMap.set(vendorKey, c);
+      }
+    }
+    
+    // Filter: keep a candidate if it's the best for its vendor OR if it's in a different
+    // region from the vendor's best (allow one entry per region for genuine multi-region stores)
+    const vendorRegionSeen = new Map<string, Set<string>>();
+    const dedupedCandidates = candidates.filter(c => {
+      const vendorKey = c.name.toLowerCase()
+        .replace(/\s+(us|uk|eu|ca|au|jp|cn|de|global)$/i, '')
+        .replace(/\s+store$/i, '')
+        .replace(/\s+/g, '');
+      const best = vendorBestMap.get(vendorKey)!;
+      const regionKey = `${vendorKey}_${c.storeRegion || 'unknown'}`;
+      
+      // Always keep the best candidate
+      if (c === best) return true;
+      
+      // Keep if it's in a different region and price is within 50% of the best
+      // (genuine regional pricing, not a stale MSRP)
+      if (c.storeRegion !== best.storeRegion && c.pricePerKg < best.pricePerKg * 1.5) {
+        if (!vendorRegionSeen.has(vendorKey)) vendorRegionSeen.set(vendorKey, new Set());
+        const regions = vendorRegionSeen.get(vendorKey)!;
+        if (!regions.has(c.storeRegion || 'unknown')) {
+          regions.add(c.storeRegion || 'unknown');
+          return true;
+        }
+      }
+      
+      // Keep if different vendor name (different actual retailer)
+      if (c.name !== best.name) return true;
+      
+      return false;
+    });
+    
+    const sorted = [...dedupedCandidates].sort(sortByPrice);
     
     // Best price: absolute cheapest globally
     const best = sorted.length > 0 ? sorted[0] : null;
     // Cheapest local: cheapest among local candidates
     const local = sorted.find(c => c.isLocal) || null;
     
-    return {
+    const result = {
       allCandidates: sorted,
       bestPrice: best,
       cheapestLocal: local,
       retailerCount: sorted.length,
     };
+    
+    // Store as last stable result for use during background refetches
+    lastStableRef.current = result;
+    
+    return result;
   }, [
     filament, localRetailerListings, usRetailerListings, storeAllPrices,
     unifiedPricing.displayPrice, unifiedPricing.storeUrl, unifiedPricing.storeName,
     unifiedPricing.storeRegion, unifiedPricing.isConverted, unifiedPricing.isLocalStore,
     unifiedPricing.originalCurrency,
     currency, region, hasRates, regionConvertPrice, getAffiliateUrl, getAmazonUrl,
-    isLoading, // re-evaluate when loading state changes
+    isLoading, isFetching, // re-evaluate when loading/fetching state changes
   ]);
   // ── Build sidebar-compatible regional price result ──
   const sidebarRegionalPrice = useMemo(() => {
