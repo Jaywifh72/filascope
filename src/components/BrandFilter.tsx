@@ -36,10 +36,10 @@ export function BrandFilter({
   const { data: brands, isLoading } = useQuery({
     queryKey: ["automated-brands-filter-synced"],
     queryFn: async () => {
-      // Use public view to avoid exposing scraping configuration
+      // Use v_brand_directory for live-computed counts
       const { data, error } = await supabase
-        .from("v_public_brands")
-        .select("brand_slug, display_name, product_count");
+        .from("v_brand_directory")
+        .select("brand_slug, display_name, variant_count");
 
       if (error) throw error;
       // Filter to only include brands in the sync manager, then sort with numbers first, then alphabetically
@@ -75,7 +75,7 @@ export function BrandFilter({
             <div className="flex items-center justify-between gap-2 w-full">
               <span>{brand.display_name}</span>
               <span className="text-xs text-muted-foreground tabular-nums">
-                {brand.product_count}
+                {brand.variant_count}
               </span>
             </div>
           </SelectItem>

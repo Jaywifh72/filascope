@@ -59,7 +59,7 @@ interface BrandStats {
   topMaterials: string[];
 }
 
-// Public brand type - matches v_public_brands view (no scraping config)
+// Public brand type - matches v_brand_directory view (live counts from filaments)
 interface PublicBrand {
   id: string;
   brand_name: string;
@@ -67,8 +67,8 @@ interface PublicBrand {
   display_name: string;
   description: string | null;
   featured: boolean | null;
-  product_count: number | null;
-  product_line_count: number | null;
+  variant_count: number;
+  product_line_count: number;
   active_product_count: number | null;
   color_primary: string | null;
   color_secondary: string | null;
@@ -90,13 +90,13 @@ const Brands = () => {
     sortBy: "count-desc",
   });
 
-  // Fetch automated brands metadata
+  // Fetch automated brands metadata with live-computed counts
   const { data: automatedBrands } = useQuery({
-    queryKey: ["automated-brands-metadata"],
+    queryKey: ["automated-brands-directory"],
     queryFn: async () => {
-      // Use public view to avoid exposing sensitive scraping configuration
+      // Use v_brand_directory view with live filament counts (never stale)
       const { data, error } = await supabase
-        .from("v_public_brands")
+        .from("v_brand_directory")
         .select("*")
         .order("display_order");
       
@@ -217,8 +217,8 @@ const Brands = () => {
              b.name.toLowerCase() === ab.display_name.toLowerCase()
       );
       const spoolMaterial = filamentStats?.spoolMaterial || null;
-      // Prefer pre-computed DB counts (accurate) over client-side counts (may be truncated by query limits)
-      const variantCount = ab.product_count || filamentStats?.count || 0;
+      // Use live-computed counts from v_brand_directory (always in sync with detail page)
+      const variantCount = ab.variant_count || filamentStats?.count || 0;
       const productLineCount = ab.product_line_count || variantCount;
       return {
         name: ab.display_name,
@@ -289,8 +289,8 @@ const Brands = () => {
       // Verified filter
       const matchesVerified = !filters.verifiedOnly || VERIFIED_BRANDS.includes(brand.name);
       
-      // Live pricing filter - check if brand has product_count (simplified)
-      const matchesLivePricing = !filters.hasLivePricing || (brand.automated?.product_count ?? 0) > 0;
+      // Live pricing filter - check if brand has variants (simplified)
+      const matchesLivePricing = !filters.hasLivePricing || (brand.automated?.variant_count ?? 0) > 0;
       
       // Features filter
       const matchesHighSpeed = !filters.features.includes("highSpeed") || brand.hasHighSpeed;
@@ -376,8 +376,8 @@ const Brands = () => {
     <>
       <Helmet>
         <title>Filament Brand Directory — Trusted 3D Printing Brands | FilaScope</title>
-        <meta name="description" content={`Explore ${brands?.length || 48} 3D printing filament brands with ${totalProducts.toLocaleString()}+ products. Compare product lines, materials, pricing, and verified data on FilaScope.`} />
-        <meta property="og:description" content={`Explore ${brands?.length || 48} 3D printing filament brands with ${totalProducts.toLocaleString()}+ products. Compare product lines, materials, pricing, and verified data on FilaScope.`} />
+        <meta name="description" content={`Explore ${brandCount || 48} 3D printing filament brands with ${totalProducts.toLocaleString()}+ products. Compare product lines, materials, pricing, and verified data on FilaScope.`} />
+        <meta property="og:description" content={`Explore ${brandCount || 48} 3D printing filament brands with ${totalProducts.toLocaleString()}+ products. Compare product lines, materials, pricing, and verified data on FilaScope.`} />
       </Helmet>
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
@@ -509,16 +509,16 @@ const Brands = () => {
         <div className="mt-12 p-6 bg-card border border-border rounded-lg">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <p className="text-3xl font-bold text-primary">{brands?.length || 0}</p>
+              <p className="text-3xl font-bold text-primary">{brandCount}</p>
               <p className="text-sm text-muted-foreground">Total Brands</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-primary">{totalProducts.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Total Filaments</p>
+              <p className="text-sm text-muted-foreground">Product Lines</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{brandCount}</p>
-              <p className="text-sm text-muted-foreground">Tracked Brands</p>
+              <p className="text-3xl font-bold text-primary">{totalVariants.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">Total Variants</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-primary">{featuredBrands.length}</p>

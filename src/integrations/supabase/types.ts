@@ -295,6 +295,13 @@ export type Database = {
             foreignKeyName: "affiliate_configs_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
@@ -656,6 +663,13 @@ export type Database = {
             foreignKeyName: "brand_regional_stores_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_regional_stores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
@@ -712,6 +726,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_representatives_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
           {
@@ -828,6 +849,13 @@ export type Database = {
             foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_scraper_profiles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
@@ -926,6 +954,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sync_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
           {
@@ -2898,6 +2933,13 @@ export type Database = {
             foreignKeyName: "filaments_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
@@ -3467,6 +3509,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_extraction_logs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
           {
@@ -5017,6 +5066,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "v_active_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_discovery_queue_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "v_brand_directory"
             referencedColumns: ["id"]
           },
           {
@@ -8506,6 +8562,13 @@ export type Database = {
             foreignKeyName: "filaments_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
+            referencedRelation: "v_brand_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filaments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "v_brands_overview"
             referencedColumns: ["id"]
           },
@@ -9255,6 +9318,26 @@ export type Database = {
           products_with_prices: number | null
           scraping_active: boolean | null
           scraping_enabled: boolean | null
+          website_url: string | null
+        }
+        Relationships: []
+      }
+      v_brand_directory: {
+        Row: {
+          active_product_count: number | null
+          brand_name: string | null
+          brand_slug: string | null
+          color_primary: string | null
+          color_secondary: string | null
+          description: string | null
+          display_name: string | null
+          display_order: number | null
+          featured: boolean | null
+          id: string | null
+          is_visible: boolean | null
+          logo_url: string | null
+          product_line_count: number | null
+          variant_count: number | null
           website_url: string | null
         }
         Relationships: []

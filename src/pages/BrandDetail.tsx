@@ -594,16 +594,43 @@ const BrandDetail = () => {
           topMaterials={availableMaterials}
           avgPriceRange={(() => {
             if (!filaments || filaments.length === 0) return undefined;
-            // Primary: use variant_price from filaments table
-            const prices = filaments
+            
+            // Cascading price resolution:
+            // 1. Try variant_price (primary USD spool price)
+            const usdPrices = filaments
               .map(f => f.variant_price)
               .filter((p): p is number => p !== null && p > 0);
-            if (prices.length > 0) {
-              const min = Math.min(...prices);
-              const max = Math.max(...prices);
-              return `${formatPrice(min).split('.')[0]}-${formatPrice(max).split('.')[0]}`;
+            
+            if (usdPrices.length >= filaments.length * 0.1) {
+              // At least 10% coverage — use variant_price
+              const min = Math.min(...usdPrices);
+              const max = Math.max(...usdPrices);
+              return `${formatPrice(min).split('.')[0]}–${formatPrice(max).split('.')[0]}`;
             }
-            // No variant_price data — return undefined (will show "—")
+            
+            // 2. Fall back to regional price columns
+            const regionalPriceKeys = ['price_cad', 'price_eur', 'price_gbp', 'price_aud', 'price_jpy'] as const;
+            for (const col of regionalPriceKeys) {
+              const regionalPrices = filaments
+                .map(f => (f as Record<string, unknown>)[col] as number | null)
+                .filter((p): p is number => p !== null && p > 0);
+              if (regionalPrices.length >= filaments.length * 0.1) {
+                const min = Math.min(...regionalPrices);
+                const max = Math.max(...regionalPrices);
+                // Show with currency hint since these aren't in user's currency
+                const currencyLabel = col === 'price_cad' ? 'CA$' : col === 'price_eur' ? '€' : col === 'price_gbp' ? '£' : col === 'price_aud' ? 'A$' : '¥';
+                return `${currencyLabel}${Math.round(min)}–${currencyLabel}${Math.round(max)}`;
+              }
+            }
+            
+            // 3. Also try USD prices even if < 10% — show what we have
+            if (usdPrices.length > 0) {
+              const min = Math.min(...usdPrices);
+              const max = Math.max(...usdPrices);
+              return `${formatPrice(min).split('.')[0]}–${formatPrice(max).split('.')[0]}`;
+            }
+            
+            // 4. Genuinely no pricing data
             return undefined;
           })()}
           rating={null}
