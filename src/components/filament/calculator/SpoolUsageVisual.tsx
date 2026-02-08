@@ -1,6 +1,7 @@
 import React from 'react';
-import { Package, Printer, ShoppingCart, Share2 } from 'lucide-react';
+import { Package, Printer, ShoppingCart, Share2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface SpoolUsageVisualProps {
@@ -41,7 +42,7 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
   const prefix = isConverted ? '~' : '';
   const costPerPrint = (usagePerPrint / 1000) * filamentPrice;
   const printsPerSpool = Math.floor(spoolWeight / usagePerPrint);
-  const costPerPrintFromSpool = filamentPrice / printsPerSpool;
+  const pricePerG = filamentPrice / 1000;
   
   // Visual spool representation
   const spoolSegments = 10;
@@ -172,13 +173,25 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
       </div>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <div className="text-lg font-bold text-foreground">
             {prefix}{currencySymbol}{costPerPrint.toFixed(2)}
           </div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-            Cost/Print
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center justify-center gap-1">
+            Material Cost
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3 h-3 text-muted-foreground/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px] text-xs">
+                  <p className="font-medium mb-1">Calculation:</p>
+                  <p>{usagePerPrint.toFixed(1)}g × {prefix}{currencySymbol}{pricePerG.toFixed(4)}/g</p>
+                  <p className="text-muted-foreground mt-0.5">= {prefix}{currencySymbol}{costPerPrint.toFixed(2)} {currencyCode}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
@@ -187,14 +200,6 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
           </div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
             Prints/Spool
-          </div>
-        </div>
-        <div className="bg-muted/20 rounded-lg p-3 text-center">
-          <div className="text-lg font-bold text-foreground">
-            {prefix}{currencySymbol}{costPerPrintFromSpool.toFixed(2)}
-          </div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-            {currencyCode}/Print
           </div>
         </div>
       </div>
