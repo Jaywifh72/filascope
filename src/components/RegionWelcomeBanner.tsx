@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRegion } from '@/contexts/RegionContext';
 import { RegionSelector } from '@/components/RegionSelector';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const BANNER_KEY = 'filascope_region_banner_dismissed';
 
@@ -11,6 +12,7 @@ export function RegionWelcomeBanner() {
   const { regionConfig, isLoading } = useRegion();
   const [isVisible, setIsVisible] = useState(false);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Only show if not previously dismissed and region is loaded
@@ -35,6 +37,73 @@ export function RegionWelcomeBanner() {
 
   if (!isVisible || isLoading) return null;
 
+  // ── Compact mobile banner: single line ──
+  if (isMobile) {
+    return (
+      <div
+        className={cn(
+          "relative bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20",
+          "animate-in slide-in-from-top-2 duration-300"
+        )}
+        role="banner"
+        aria-label="Region confirmation"
+      >
+        <div className="container mx-auto px-3 py-2">
+          {showRegionPicker ? (
+            <div className="flex items-center gap-2">
+              <RegionSelector />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowRegionPicker(false);
+                  handleDismiss();
+                }}
+                className="text-xs h-8 px-2"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="text-sm">
+                  {regionConfig.flag} Prices for {regionConfig.name}
+                </span>
+                <button
+                  onClick={() => setShowRegionPicker(true)}
+                  className="text-xs text-primary hover:text-primary/80 font-medium flex-shrink-0"
+                >
+                  Change
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleConfirm}
+                  className="text-xs h-7 px-2"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={handleDismiss}
+                  aria-label="Dismiss region banner"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Desktop banner ──
   return (
     <div 
       className={cn(

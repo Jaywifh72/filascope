@@ -26,7 +26,10 @@ interface FilamentTabNavProps {
 
 export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) {
   const tabsRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
+  const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(false);
 
   // Handle scroll to detect sticky state
   useEffect(() => {
@@ -39,6 +42,26 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Detect horizontal scroll position for fade indicators
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const updateFades = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      setShowLeftFade(scrollLeft > 4);
+      setShowRightFade(scrollLeft + clientWidth < scrollWidth - 4);
+    };
+
+    updateFades();
+    container.addEventListener("scroll", updateFades, { passive: true });
+    window.addEventListener("resize", updateFades);
+    return () => {
+      container.removeEventListener("scroll", updateFades);
+      window.removeEventListener("resize", updateFades);
+    };
   }, []);
 
   // Sync with URL hash on mount
@@ -62,54 +85,68 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
         isSticky && "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
       )}
     >
-      {/* Horizontal scroll container for mobile with snap behavior */}
-      <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0 scroll-smooth snap-x snap-mandatory">
-        <nav
-          className="flex gap-1 min-w-max py-3 snap-start"
-          role="tablist"
-          aria-label="Filament details tabs"
+      {/* Horizontal scroll container for mobile with fade edges */}
+      <div className="relative">
+        {/* Left fade indicator */}
+        {showLeftFade && (
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none lg:hidden" />
+        )}
+        {/* Right fade indicator */}
+        {showRightFade && (
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none lg:hidden" />
+        )}
+
+        <div
+          ref={scrollContainerRef}
+          className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0 scroll-smooth snap-x snap-mandatory"
         >
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              aria-controls={`tabpanel-${tab.id}`}
-              onClick={() => handleTabClick(tab)}
-              className={cn(
-                "relative px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation snap-start",
-                "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                "active:scale-95 transition-transform min-h-[44px]",
-                "flex items-center gap-2",
-                activeTab === tab.id
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {tab.label}
-              {tab.badge === "coming-soon" && (
-                <Badge 
-                  variant="outline" 
-                  className="text-[10px] px-1.5 py-0 h-4 font-normal border-amber-500/50 text-amber-500 bg-amber-500/10"
-                >
-                  Soon
-                </Badge>
-              )}
-              {tab.badge === "new" && (
-                <Badge 
-                  variant="outline" 
-                  className="text-[10px] px-1.5 py-0 h-4 font-normal border-primary/50 text-primary bg-primary/10"
-                >
-                  New
-                </Badge>
-              )}
-              {/* Active indicator - teal underline */}
-              {activeTab === tab.id && (
-                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-              )}
-            </button>
-          ))}
-        </nav>
+          <nav
+            className="flex gap-1 min-w-max py-3 snap-start"
+            role="tablist"
+            aria-label="Filament details tabs"
+          >
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`tabpanel-${tab.id}`}
+                onClick={() => handleTabClick(tab)}
+                className={cn(
+                  "relative px-3 sm:px-4 py-2.5 text-[13px] sm:text-sm font-medium whitespace-nowrap rounded-lg transition-colors touch-manipulation snap-start",
+                  "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  "active:scale-95 transition-transform min-h-[44px]",
+                  "flex items-center gap-2",
+                  activeTab === tab.id
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label}
+                {tab.badge === "coming-soon" && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-[10px] px-1.5 py-0 h-4 font-normal border-amber-500/50 text-amber-500 bg-amber-500/10"
+                  >
+                    Soon
+                  </Badge>
+                )}
+                {tab.badge === "new" && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-[10px] px-1.5 py-0 h-4 font-normal border-primary/50 text-primary bg-primary/10"
+                  >
+                    New
+                  </Badge>
+                )}
+                {/* Active indicator - teal underline */}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );

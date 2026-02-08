@@ -83,7 +83,7 @@ export function FilamentHeroSection({
   return (
     <div className="space-y-6">
       {/* Hero Section - Dark Background like PrinterDetail */}
-      <div className="relative bg-[#0A0A0A] rounded-2xl py-8 md:py-12 px-6 md:px-10 overflow-hidden">
+      <div className="relative bg-[#0A0A0A] rounded-2xl py-6 sm:py-8 md:py-12 px-3 sm:px-6 md:px-10 overflow-hidden">
         {/* Subtle gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
         
