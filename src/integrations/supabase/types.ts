@@ -7133,6 +7133,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_notes: {
+        Row: {
+          created_at: string
+          id: string
+          note_text: string
+          product_id: string
+          product_type: string
+          status: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note_text?: string
+          product_id: string
+          product_type?: string
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note_text?: string
+          product_id?: string
+          product_type?: string
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_printer_preferences: {
         Row: {
           auto_filter: boolean | null

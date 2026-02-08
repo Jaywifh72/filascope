@@ -26,6 +26,8 @@ import type { StorePrice } from '@/hooks/useFilamentStorePricing';
 import { StorePricingDisplay } from './StorePricingDisplay';
 import { SidebarPriceHistory } from './SidebarPriceHistory';
 import { PriceAlertPopover } from './PriceAlertPopover';
+import { PrivateNotePopover } from '@/components/notes/PrivateNotePopover';
+import { PrivateNoteIndicator } from '@/components/notes/PrivateNoteIndicator';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -331,6 +333,20 @@ export function FilamentPurchaseSidebar({
             <GitCompare className="w-4 h-4 mr-2" />
             {isComparing ? 'Remove from Compare' : 'Add to Compare'}
           </Button>
+
+          {/* Private Note Button */}
+          <PrivateNotePopover
+            productId={filamentId}
+            productType="filament"
+            productTitle={productTitle}
+          />
+
+          {/* Private Note Indicator (shows existing note) */}
+          <PrivateNoteIndicator
+            productId={filamentId}
+            productType="filament"
+            productTitle={productTitle || undefined}
+          />
 
           {/* Store Region Badge */}
           {storeRegionCode && (
