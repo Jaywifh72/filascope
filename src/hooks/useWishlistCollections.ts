@@ -11,6 +11,8 @@ export interface WishlistCollection {
   color: string;
   sort_order: number;
   is_default: boolean;
+  is_public: boolean;
+  slug: string | null;
   created_at: string;
   item_count?: number;
 }
@@ -72,12 +74,18 @@ export function useWishlistCollections() {
       description?: string;
       icon?: string;
       color?: string;
+      is_public?: boolean;
     }
   ) => {
     if (!user) {
       toast.error("Please sign in to create collections");
       return null;
     }
+
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
 
     try {
       const { data, error } = await supabase
@@ -89,6 +97,8 @@ export function useWishlistCollections() {
           icon: options?.icon || "folder",
           color: options?.color || "#00d9ff",
           sort_order: collections.length,
+          is_public: options?.is_public || false,
+          slug,
         })
         .select()
         .single();
@@ -112,6 +122,7 @@ export function useWishlistCollections() {
       description?: string | null;
       icon?: string;
       color?: string;
+      is_public?: boolean;
     }
   ) => {
     if (!user) return false;
