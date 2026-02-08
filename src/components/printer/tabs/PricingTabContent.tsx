@@ -125,12 +125,16 @@ export function PricingTabContent({
   // displayPrice and displayMsrp are always USD values from the DB
   const isUserCurrencyUsd = currency === 'USD';
   const usdToUserRate = isUserCurrencyUsd ? 1 : getConversionRate('USD', currency);
+  // Guard: if rates haven't loaded yet, usdToUserRate will be 1 (fallback)
+  // In that case, don't show "converted" prices — they'd be misleading
+  const ratesReady = isUserCurrencyUsd || usdToUserRate !== 1;
 
   // Format a USD price into the user's currency with proper conversion label
   const formatUsdAsUserCurrency = (usdPrice: number): string => {
     if (isUserCurrencyUsd) {
       return formatCurrencyPrice(usdPrice, 'USD');
     }
+    if (!ratesReady) return '...';
     const converted = usdPrice * usdToUserRate;
     return `~${formatCurrencyPrice(converted, currency)}`;
   };
@@ -162,26 +166,34 @@ export function PricingTabContent({
             {(regionalDisplayPrice ?? displayPrice) ? (
               <div className="space-y-3 sm:space-y-4">
                 <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight">
-                  {isRegionalConverted ? '~' : ''}{formatPrice(regionalDisplayPrice ?? displayPrice!)}
+                  {/* regionalDisplayPrice is already in user's currency from unified pricing */}
+                  {regionalDisplayPrice != null ? (
+                    <>{isRegionalConverted ? '~' : ''}{formatCurrencyPrice(regionalDisplayPrice, currency)}</>
+                  ) : (
+                    /* displayPrice is raw USD — show as USD */
+                    <>{formatCurrencyPrice(displayPrice!, 'USD')}</>
+                  )}
                 </div>
-                {displayMsrp && displayMsrp > (displayPrice || 0) && (
+                {/* Show USD MSRP line when price >= MSRP (no discount) */}
+                {displayMsrp && (regionalDisplayPrice ?? displayPrice ?? 0) >= (isRegionalConverted && ratesReady ? displayMsrp * usdToUserRate : displayMsrp) && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>MSRP: {formatCurrencyPrice(displayMsrp, 'USD')}</span>
+                    {!isUserCurrencyUsd && ratesReady && (
+                      <span className="text-xs">({formatUsdAsUserCurrency(displayMsrp)})</span>
+                    )}
+                  </div>
+                )}
+                {/* Show discount when price < MSRP */}
+                {displayMsrp && displayPrice && displayPrice < displayMsrp && (
                   <div className="flex items-center gap-4">
                     <span className="text-xl text-muted-foreground line-through">
-                      {isRegionalConverted ? '~' : ''}{formatPrice(displayMsrp * (isRegionalConverted ? usdToUserRate : 1))}
+                      {formatCurrencyPrice(displayMsrp, 'USD')}
                     </span>
                     {savingsPercent && (
                       <Badge className="bg-green-500/20 text-green-500 border-green-500/30 text-sm px-3 py-1">
                         <TrendingDown className="h-4 w-4 mr-1" />
                         -{savingsPercent}% OFF
                       </Badge>
-                    )}
-                  </div>
-                )}
-                {displayMsrp && (displayPrice || 0) >= displayMsrp && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>MSRP: {formatCurrencyPrice(displayMsrp, 'USD')}</span>
-                    {!isUserCurrencyUsd && (
-                      <span className="text-xs">({formatUsdAsUserCurrency(displayMsrp)})</span>
                     )}
                   </div>
                 )}
@@ -511,7 +523,11 @@ export function PricingTabContent({
                 // Convert from USD to store's native currency
                 const baseUsdPrice = displayPrice || 0;
                 const usdToStoreRate = storeCurrency === 'USD' ? 1 : getConversionRate('USD', storeCurrency);
-                const nativePriceInStoreCurrency = baseUsdPrice * usdToStoreRate;
+                // Guard against 1:1 fallback rate when rates aren't loaded
+                const storeRatesReady = storeCurrency === 'USD' || usdToStoreRate !== 1;
+                const nativePriceInStoreCurrency = storeRatesReady 
+                  ? baseUsdPrice * usdToStoreRate 
+                  : null;
                 
                 // Flag if native price suspiciously equals the USD price (likely unconverted)
                 const isSuspectPrice = storeCurrency !== 'USD' && nativePriceInStoreCurrency === baseUsdPrice;
@@ -520,7 +536,9 @@ export function PricingTabContent({
                 const storeToUserRate = needsConversion 
                   ? getConversionRate(storeCurrency, currency) 
                   : 1;
-                const convertedDisplayPrice = nativePriceInStoreCurrency * storeToUserRate;
+                const convertedDisplayPrice = nativePriceInStoreCurrency != null 
+                  ? nativePriceInStoreCurrency * storeToUserRate 
+                  : null;
 
                 // All store prices are estimates from USD conversion
                 const isEstimate = storeCurrency !== 'USD';
@@ -570,21 +588,27 @@ export function PricingTabContent({
 
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        {/* Show native store currency price */}
-                        <div className="text-sm font-bold text-foreground">
-                          {isEstimate ? '~' : ''}{formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)}
-                        </div>
-                        {/* If user's currency differs from store currency, show converted */}
-                        {needsConversion && (
-                          <div className="text-xs text-muted-foreground">
-                            ~{formatCurrencyPrice(convertedDisplayPrice, currency)}
-                          </div>
-                        )}
-                        {/* Source label for converted prices */}
-                        {isEstimate && (
-                          <div className="text-[10px] text-muted-foreground/60">
-                            est. from {formatCurrencyPrice(baseUsdPrice, 'USD')}
-                          </div>
+                        {nativePriceInStoreCurrency != null ? (
+                          <>
+                            {/* Show native store currency price */}
+                            <div className="text-sm font-bold text-foreground">
+                              {isEstimate ? '~' : ''}{formatCurrencyPrice(nativePriceInStoreCurrency, storeCurrency)}
+                            </div>
+                            {/* If user's currency differs from store currency, show converted */}
+                            {needsConversion && convertedDisplayPrice != null && (
+                              <div className="text-xs text-muted-foreground">
+                                ~{formatCurrencyPrice(convertedDisplayPrice, currency)}
+                              </div>
+                            )}
+                            {/* Source label for converted prices */}
+                            {isEstimate && (
+                              <div className="text-[10px] text-muted-foreground/60">
+                                est. from {formatCurrencyPrice(baseUsdPrice, 'USD')}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-sm text-muted-foreground italic">Loading...</div>
                         )}
                       </div>
                       <Button
