@@ -6,6 +6,7 @@ import { REGIONS } from "@/config/regions";
 import { RegionCode, CurrencyCode } from "@/types/regional";
 import { PrivateNotePopover } from "@/components/notes/PrivateNotePopover";
 import { PrivateNoteIndicator } from "@/components/notes/PrivateNoteIndicator";
+import { MarkPurchasedButton } from "@/components/purchases/MarkPurchasedDialog";
 
 import { PriceConfidence } from "@/hooks/usePriceFreshness";
 
@@ -133,6 +134,15 @@ export function PurchaseSidebar({
             stackedButtons
           />
         </div>
+
+        {/* Mark as Purchased */}
+        <MarkPurchasedButton
+          productId={printer.id}
+          productType="printer"
+          productName={printer.model_name}
+          currentPrice={displayPrice}
+          storeName={brand || undefined}
+        />
 
         {/* Private Note Button */}
         <PrivateNotePopover
