@@ -5385,77 +5385,197 @@ export type Database = {
         }
         Relationships: []
       }
-      project_filaments: {
+      project_accessories: {
         Row: {
-          added_at: string | null
-          filament_id: string
+          created_at: string
+          currency: string
           id: string
+          name: string
+          price: number | null
           project_id: string
+          purchase_status: string
+          sort_order: number
+          url: string | null
         }
         Insert: {
-          added_at?: string | null
-          filament_id: string
+          created_at?: string
+          currency?: string
           id?: string
+          name: string
+          price?: number | null
           project_id: string
+          purchase_status?: string
+          sort_order?: number
+          url?: string | null
         }
         Update: {
-          added_at?: string | null
-          filament_id?: string
+          created_at?: string
+          currency?: string
           id?: string
+          name?: string
+          price?: number | null
           project_id?: string
+          purchase_status?: string
+          sort_order?: number
+          url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_accessories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_log_entries: {
+        Row: {
+          created_at: string
+          entry_text: string
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_text: string
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_text?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_log_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_log_photos: {
+        Row: {
+          created_at: string
+          id: string
+          log_entry_id: string
+          photo_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_entry_id: string
+          photo_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_entry_id?: string
+          photo_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_log_photos_log_entry_id_fkey"
+            columns: ["log_entry_id"]
+            isOneToOne: false
+            referencedRelation: "project_log_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_materials: {
+        Row: {
+          created_at: string
+          filament_id: string
+          id: string
+          note: string
+          project_id: string
+          purchase_status: string
+          quantity_grams: number | null
+          quantity_spools: number
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          filament_id: string
+          id?: string
+          note?: string
+          project_id: string
+          purchase_status?: string
+          quantity_grams?: number | null
+          quantity_spools?: number
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          filament_id?: string
+          id?: string
+          note?: string
+          project_id?: string
+          purchase_status?: string
+          quantity_grams?: number | null
+          quantity_spools?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "all_time_low_prices"
             referencedColumns: ["filament_id"]
           },
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "filaments_with_regional"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "price_trends_90d"
             referencedColumns: ["filament_id"]
           },
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "recent_price_drops"
             referencedColumns: ["filament_id"]
           },
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_filaments_normalized"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_filaments_filament_id_fkey"
+            foreignKeyName: "project_materials_filament_id_fkey"
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_suspect_regional_prices"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "project_filaments_project_id_fkey"
+            foreignKeyName: "project_materials_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -5465,30 +5585,68 @@ export type Database = {
       }
       projects: {
         Row: {
+          budget: number | null
+          budget_currency: string | null
+          cover_image_url: string | null
           created_at: string | null
           description: string | null
           id: string
+          is_public: boolean
           name: string
+          printer_id: string | null
+          project_type: string
+          slug: string | null
+          status: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          budget?: number | null
+          budget_currency?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           name: string
+          printer_id?: string | null
+          project_type?: string
+          slug?: string | null
+          status?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          budget?: number | null
+          budget_currency?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           name?: string
+          printer_id?: string | null
+          project_type?: string
+          slug?: string | null
+          status?: string
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_user_id_fkey"
             columns: ["user_id"]
