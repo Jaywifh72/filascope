@@ -28,13 +28,13 @@ function SpecCard({ icon, label, value }: SpecCardProps) {
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0">
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-2.5 sm:p-4 flex items-start gap-2 sm:gap-3 min-w-0">
             <div className="text-primary flex-shrink-0 mt-0.5">
               {icon}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs text-gray-400 mb-1 whitespace-nowrap">{label}</p>
-              <p className="text-lg font-semibold text-white leading-tight whitespace-nowrap">{value}</p>
+            <div className="min-w-0 overflow-hidden">
+              <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1 truncate">{label}</p>
+              <p className="text-sm sm:text-lg font-semibold text-white leading-tight truncate">{value}</p>
             </div>
           </div>
         </TooltipTrigger>

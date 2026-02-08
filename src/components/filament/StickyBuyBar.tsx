@@ -300,16 +300,18 @@ export function StickyBuyBar({
               "w-full h-14",
               "bg-gradient-to-r from-primary to-primary/80",
               "hover:from-primary/90 hover:to-primary/70",
-              "text-primary-foreground font-bold text-[17px] tracking-wide",
+              "text-primary-foreground font-bold text-[15px] sm:text-[17px] tracking-wide",
               "shadow-[0_4px_15px_rgba(0,212,212,0.3)]",
               "rounded-xl",
               "transition-all duration-200",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
-            aria-label={`Buy ${filament.product_title}`}
+            aria-label={`Buy ${filament.product_title} from ${displayStoreName}`}
           >
-            <ShoppingCart className="w-5 h-5 mr-2.5" />
-            Buy at {displayStoreName}
+            <ShoppingCart className="w-5 h-5 mr-2 flex-shrink-0" />
+            <span className="truncate">
+              Buy{formattedPrice ? ` — ${formattedPrice}/kg` : ` at ${displayStoreName}`}
+            </span>
           </Button>
         </div>
       </div>
