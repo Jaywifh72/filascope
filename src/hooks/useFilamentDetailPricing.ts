@@ -217,7 +217,7 @@ export function useFilamentDetailPricing(
     }
     
     const candidates: PriceCandidate[] = [];
-    const seenKeys = new Set<string>();
+    const seenKeys = new Map<string, number>(); // key → index in candidates array
     
     // Normalize store name for deduplication — handles variations like
     // "Polymaker Canada", "Polymaker (CA)", "Polymaker Store" for same physical store
@@ -236,8 +236,19 @@ export function useFilamentDetailPricing(
     
     const addCandidate = (c: PriceCandidate) => {
       const key = normalizeStoreKey(c.name, c.storeRegion);
-      if (seenKeys.has(key)) return;
-      seenKeys.add(key);
+      const existingIdx = seenKeys.get(key);
+      if (existingIdx !== undefined) {
+        // Keep the cheaper candidate; on tie, prefer the one with a more specific name
+        const existing = candidates[existingIdx];
+        if (c.pricePerSpool < existing.pricePerSpool) {
+          candidates[existingIdx] = c;
+        } else if (c.pricePerSpool === existing.pricePerSpool && c.name.length > existing.name.length) {
+          // Same price but more descriptive name (e.g., "Polymaker US" > "Polymaker")
+          candidates[existingIdx] = c;
+        }
+        return;
+      }
+      seenKeys.set(key, candidates.length);
       candidates.push(c);
     };
     
