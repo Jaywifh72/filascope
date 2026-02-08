@@ -391,7 +391,8 @@ export function LabReadoutCard({
           <div 
             className="absolute bottom-2 right-2 w-6 h-6 rounded-full border-2 border-white/40 shadow-md ring-1 ring-black/20"
             style={{ backgroundColor: filament.color_hex }}
-            title={`Color: ${filament.color_hex}`}
+            role="img"
+            aria-label={`Color swatch: ${filament.color_hex}`}
           />
         )}
         
@@ -474,8 +475,8 @@ export function LabReadoutCard({
                   {isConverted && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button className="text-muted-foreground hover:text-foreground transition-colors">
-                          <Info className="w-3 h-3" />
+                        <button className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Converted price information">
+                           <Info className="w-3 h-3" aria-hidden="true" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-xs max-w-[200px]">
@@ -526,10 +527,15 @@ export function LabReadoutCard({
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-4 py-3 border-t border-white/[0.05]">
         {/* Star Rating - Enhanced brightness and contrast */}
-        <div className="flex items-center gap-1 mb-3">
+        <div 
+          className="flex items-center gap-1 mb-3"
+          role="img"
+          aria-label={overallScore ? `FilaScore rating: ${overallScore.toFixed(1)} out of 10` : 'Not yet rated'}
+        >
           {[...Array(5)].map((_, i) => (
             <Star 
               key={i}
+              aria-hidden="true"
               className={cn(
                 "w-4 h-4",
                 i < starCount 
@@ -539,7 +545,7 @@ export function LabReadoutCard({
             />
           ))}
           {overallScore && (
-            <span className="ml-1.5 text-sm font-medium text-amber-400/90">
+            <span className="ml-1.5 text-sm font-medium text-amber-400/90" aria-hidden="true">
               {overallScore.toFixed(1)}
             </span>
           )}

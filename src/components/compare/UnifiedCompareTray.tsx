@@ -122,10 +122,13 @@ export function UnifiedCompareTray() {
       aria-label="Comparison tray"
     >
       {/* Tab Bar */}
-      <div className="flex items-center border-b border-border/30">
+      <div className="flex items-center border-b border-border/30" role="tablist" aria-label="Comparison type">
         {/* Filaments Tab */}
         <button
           onClick={() => setActiveTab("filaments")}
+          role="tab"
+          aria-selected={activeTab === "filaments"}
+          aria-controls="compare-filaments-panel"
           className={cn(
             "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors relative",
             activeTab === "filaments"
@@ -153,6 +156,9 @@ export function UnifiedCompareTray() {
         {/* Printers Tab */}
         <button
           onClick={() => setActiveTab("printers")}
+          role="tab"
+          aria-selected={activeTab === "printers"}
+          aria-controls="compare-printers-panel"
           className={cn(
             "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors relative",
             activeTab === "printers"
@@ -199,9 +205,10 @@ export function UnifiedCompareTray() {
                       </div>
                       <button
                         onClick={() => removeFilament(item.id)}
+                        aria-label={`Remove ${item.product_title} from comparison`}
                         className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                       >
-                        <X className="h-3 w-3 text-white" />
+                        <X className="h-3 w-3 text-white" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -239,9 +246,10 @@ export function UnifiedCompareTray() {
                             )}
                             <button
                               onClick={() => removePrinter(printer.id)}
+                              aria-label={`Remove ${printer.name} from comparison`}
                               className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
                             >
-                              <X className="h-3 w-3 text-white" />
+                              <X className="h-3 w-3 text-white" aria-hidden="true" />
                             </button>
                           </div>
                         </TooltipTrigger>
@@ -275,9 +283,10 @@ export function UnifiedCompareTray() {
               variant="ghost"
               size="icon"
               onClick={handleClearActive}
+              aria-label={`Clear all ${activeTab}`}
               className="h-9 w-9 text-muted-foreground hover:text-destructive"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
             </Button>
 
             <Button
