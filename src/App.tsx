@@ -13,9 +13,10 @@ import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
 import { CompareTray } from "./components/CompareTray";
 import { PrinterCompareProvider } from "./hooks/usePrinterCompare";
-import { PrinterCompareBar } from "./components/PrinterCompareBar";
 import { BrandCompareProvider } from "./hooks/useBrandCompare";
 import { BrandCompareBar } from "./components/brands/BrandCompare";
+import { UnifiedCompareTray } from "./components/compare/UnifiedCompareTray";
+import { UnifiedMobileCompareTray } from "./components/compare/UnifiedMobileCompareTray";
 import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatibleCount";
 import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 import { SkipLink } from "./components/accessibility/SkipLink";
@@ -255,7 +256,8 @@ const App = () => (
                   </main>
               </Suspense>
               <CompareTray />
-                <PrinterCompareBar />
+                <UnifiedCompareTray />
+                <UnifiedMobileCompareTray />
                 <BrandCompareBar />
                 {/* PWA: Install prompt banner */}
                 <PWAInstallBanner />
