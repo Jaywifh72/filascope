@@ -17,6 +17,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import type { VaultProfile, VaultCounts } from "@/hooks/useVaultProfile";
 import type { VaultTab } from "./VaultSidebar";
+import { FilamentLibrary } from "./library/FilamentLibrary";
 
 interface VaultDashboardProps {
   profile: VaultProfile | null;
@@ -50,6 +51,9 @@ export function VaultDashboard({ profile, counts, onNavigate }: VaultDashboardPr
         <OnboardingCard />
       ) : (
         <>
+          {/* My Filament Library */}
+          {user && <FilamentLibrary />}
+
           {/* Recent Activity */}
           {user && <RecentActivityFeed userId={user.id} />}
 
