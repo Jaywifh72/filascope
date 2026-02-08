@@ -70,14 +70,20 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   MXN: 'MX$',
 };
 
-// Unified store item for the list
+// Unified store item for the list — now built directly from PriceCandidate
 interface UnifiedStoreItem {
   id: string;
   name: string;
   regionCode: string;
   regionFlag: string;
+  /** Price per kg in user's currency */
+  pricePerKg: number | null;
+  /** Price per spool in user's currency */
+  pricePerSpool: number | null;
+  /** Native price per kg (reverse-converted to store's currency for international) */
   nativePrice: number | null;
   nativeCurrency: string;
+  /** Converted price per kg in user's currency */
   convertedPrice: number | null;
   userCurrency: string;
   isLocal: boolean;
@@ -86,10 +92,16 @@ interface UnifiedStoreItem {
   type: 'official' | 'marketplace' | 'retailer';
   inStock: boolean;
   lastChecked?: string | null;
+  retailerLogo?: string | null;
 }
 
 // Store Row Component
-function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: UnifiedStoreItem; userCurrencySymbol: string; lastScrapedAt?: string | null }) {
+function StoreRow({ store, userCurrencySymbol, lastScrapedAt, formatPrice }: { 
+  store: UnifiedStoreItem; 
+  userCurrencySymbol: string; 
+  lastScrapedAt?: string | null;
+  formatPrice: (value: number, opts?: { showApproximate?: boolean }) => string;
+}) {
   const nativeSymbol = CURRENCY_SYMBOLS[store.nativeCurrency] || store.nativeCurrency;
   
   // Determine freshness for display
@@ -128,13 +140,28 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: Unified
     >
       {/* Store Info */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        {/* Store Icon/Logo placeholder */}
-        <div className={cn(
-          "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
-          store.type === 'official' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-        )}>
-          <Store className="w-4 h-4" />
-        </div>
+        {/* Store Icon/Logo */}
+        {store.retailerLogo ? (
+          <img
+            src={store.retailerLogo}
+            alt={store.name}
+            className="w-8 h-8 rounded-lg object-contain flex-shrink-0"
+            onError={(e) => {
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              target.parentElement!.insertAdjacentHTML('afterbegin',
+                `<div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-muted text-muted-foreground"><span class="text-xs font-bold">${store.name.charAt(0)}</span></div>`
+              );
+            }}
+          />
+        ) : (
+          <div className={cn(
+            "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+            store.type === 'official' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+          )}>
+            <Store className="w-4 h-4" />
+          </div>
+        )}
         
         {/* Name & Region */}
         <div className="min-w-0 flex-1">
@@ -173,25 +200,16 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: Unified
       {/* Price */}
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="text-right">
-          {store.nativePrice !== null ? (
+          {store.pricePerSpool !== null ? (
             <>
-              {store.isLocal && !store.isConverted ? (
-                <div className="font-semibold text-sm">
-                  {nativeSymbol}{store.nativePrice.toFixed(2)}/kg
+              <div className="font-semibold text-sm">
+                {formatPrice(store.pricePerSpool, { showApproximate: store.isConverted })}
+                <span className="text-xs font-normal text-muted-foreground ml-0.5">/spool</span>
+              </div>
+              {store.pricePerKg !== null && (
+                <div className="text-xs text-muted-foreground">
+                  {formatPrice(store.pricePerKg, { showApproximate: store.isConverted })}/kg
                 </div>
-              ) : store.isLocal && store.isConverted ? (
-                <div className="font-semibold text-sm">
-                  ~{nativeSymbol}{store.nativePrice.toFixed(2)}/kg
-                </div>
-              ) : (
-                <>
-                  <div className="font-semibold text-sm">
-                    ~{userCurrencySymbol}{store.convertedPrice?.toFixed(2) || '—'}/kg
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    ({nativeSymbol}{store.nativePrice.toFixed(2)})
-                  </div>
-                </>
               )}
             </>
           ) : (
@@ -282,106 +300,58 @@ export function PricingTabContent({
     ? (CURRENCY_SYMBOLS[livePriceCurrency] || '$')
     : '$';
 
-  // Build unified store list from priceCandidates (real per-store prices)
-  // instead of allStores metadata (which had no per-store prices)
+  // Build unified store list directly from priceCandidates
+  // NO re-deduplication here — the hook already handles it, ensuring
+  // consistent counts and prices across Overview and Pricing tabs.
   const unifiedStoreList = useMemo((): UnifiedStoreItem[] => {
-    // If we have real price candidates from useFilamentDetailPricing, use them
-    if (priceCandidates && priceCandidates.length > 0) {
-      const items: UnifiedStoreItem[] = priceCandidates.map((candidate, idx) => {
-        const regionConfig = REGIONS[candidate.storeRegion as keyof typeof REGIONS];
-        const isLocal = candidate.isLocal;
-        
-        // Determine store's native currency from the region
-        const storeCurrencyCode = regionConfig?.defaultCurrency || currency;
-        
-        // For local stores: price is already in user's currency, show directly
-        // For international stores: reverse-convert from user's currency to store's native currency
-        let nativePrice: number | null = null;
-        let nativeCurrency: string = storeCurrencyCode as string;
-        
-        if (isLocal || !candidate.isConverted) {
-          // Local store or not converted — pricePerKg IS in user's/native currency
-          nativePrice = candidate.pricePerKg;
-          nativeCurrency = currency;
-        } else if (candidate.originalCurrency) {
-          // International store with known original currency
-          // Reverse-convert from user's currency back to store's native currency
-          nativeCurrency = candidate.originalCurrency;
-          const rate = getConversionRate(currency as CurrencyCode, candidate.originalCurrency as CurrencyCode);
+    if (!priceCandidates || priceCandidates.length === 0) return [];
+    
+    return priceCandidates.map((candidate, idx) => {
+      const regionConfig = REGIONS[candidate.storeRegion as keyof typeof REGIONS];
+      const storeCurrencyCode = (regionConfig?.defaultCurrency || currency) as string;
+      
+      // Reverse-convert for international stores to show native price
+      let nativePrice: number | null = null;
+      let nativeCurrency: string = storeCurrencyCode;
+      
+      if (candidate.isLocal || !candidate.isConverted) {
+        nativePrice = candidate.pricePerKg;
+        nativeCurrency = currency;
+      } else if (candidate.originalCurrency) {
+        nativeCurrency = candidate.originalCurrency;
+        const rate = getConversionRate(currency as CurrencyCode, candidate.originalCurrency as CurrencyCode);
+        nativePrice = Math.round(candidate.pricePerKg * rate * 100) / 100;
+      } else {
+        nativeCurrency = storeCurrencyCode;
+        if (storeCurrencyCode !== currency) {
+          const rate = getConversionRate(currency as CurrencyCode, storeCurrencyCode as CurrencyCode);
           nativePrice = Math.round(candidate.pricePerKg * rate * 100) / 100;
         } else {
-          // Fallback: use the region's default currency for reverse conversion
-          nativeCurrency = storeCurrencyCode;
-          if (storeCurrencyCode !== currency) {
-            const rate = getConversionRate(currency as CurrencyCode, storeCurrencyCode as CurrencyCode);
-            nativePrice = Math.round(candidate.pricePerKg * rate * 100) / 100;
-          } else {
-            nativePrice = candidate.pricePerKg;
-          }
+          nativePrice = candidate.pricePerKg;
         }
-        
-        return {
-          id: `candidate-${idx}-${candidate.name}`,
-          name: candidate.name,
-          regionCode: candidate.storeRegion || region,
-          regionFlag: regionConfig?.flag || '🌐',
-          nativePrice,
-          nativeCurrency,
-          convertedPrice: candidate.pricePerKg, // already in user's currency
-          userCurrency: currency,
-          isLocal,
-          isConverted: candidate.isConverted,
-          url: candidate.affiliateUrl || candidate.productUrl,
-          type: candidate.isBrandDirect ? 'official' 
-            : candidate.name.toLowerCase().includes('amazon') ? 'marketplace' 
-            : 'retailer',
-          inStock: true,
-        };
-      });
+      }
       
-      // Deduplicate: group by normalized name + region, pick best price
-      const deduplicatedItems: UnifiedStoreItem[] = [];
-      const seenGroups = new Map<string, UnifiedStoreItem[]>();
-      
-      items.forEach((item) => {
-        const baseName = item.name
-          .replace(/\s*\((US|EU|UK|CA|AU|JP|CN|DE|FR|IT|ES)\)\s*/gi, '')
-          .replace(/\s*(US|EU|UK|CA|AU|JP|CN)\s*$/gi, '')
-          .trim()
-          .toLowerCase();
-        const groupKey = `${baseName}::${item.regionCode}`;
-        if (!seenGroups.has(groupKey)) {
-          seenGroups.set(groupKey, []);
-        }
-        seenGroups.get(groupKey)!.push(item);
-      });
-      
-      seenGroups.forEach((groupItems) => {
-        if (groupItems.length === 1) {
-          deduplicatedItems.push(groupItems[0]);
-        } else {
-          // Keep the one with best (lowest) converted price
-          const sorted = [...groupItems].sort((a, b) => {
-            const priceA = a.convertedPrice ?? Infinity;
-            const priceB = b.convertedPrice ?? Infinity;
-            return priceA - priceB;
-          });
-          deduplicatedItems.push(sorted[0]);
-        }
-      });
-      
-      // Sort: local stores first, then by converted price
-      return deduplicatedItems.sort((a, b) => {
-        if (a.isLocal && !b.isLocal) return -1;
-        if (!a.isLocal && b.isLocal) return 1;
-        const priceA = a.convertedPrice ?? Infinity;
-        const priceB = b.convertedPrice ?? Infinity;
-        return priceA - priceB;
-      });
-    }
-    
-    // Fallback: no candidates available — return empty
-    return [];
+      return {
+        id: `candidate-${idx}-${candidate.name}`,
+        name: candidate.name,
+        regionCode: candidate.storeRegion || region,
+        regionFlag: regionConfig?.flag || '🌐',
+        pricePerKg: candidate.pricePerKg,
+        pricePerSpool: candidate.pricePerSpool,
+        nativePrice,
+        nativeCurrency,
+        convertedPrice: candidate.pricePerKg,
+        userCurrency: currency,
+        isLocal: candidate.isLocal,
+        isConverted: candidate.isConverted,
+        url: candidate.affiliateUrl || candidate.productUrl,
+        type: candidate.isBrandDirect ? 'official' 
+          : candidate.name.toLowerCase().includes('amazon') ? 'marketplace' 
+          : 'retailer',
+        inStock: true,
+        retailerLogo: candidate.retailerLogo,
+      };
+    });
   }, [priceCandidates, region, currency, getConversionRate]);
 
   // Check if any store has converted prices (for exchange rate indicator)
@@ -443,6 +413,7 @@ export function PricingTabContent({
                   store={store} 
                   userCurrencySymbol={userCurrencySymbol}
                   lastScrapedAt={filament.last_scraped_at}
+                  formatPrice={formatPrice}
                 />
               ))}
             </div>
