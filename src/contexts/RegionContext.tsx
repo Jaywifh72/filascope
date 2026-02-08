@@ -80,25 +80,56 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [exchangeRates, setExchangeRates] = useState<Map<string, number>>(new Map());
 
-  // Load exchange rates from Supabase
+  // Load exchange rates from the canonical `exchange_rates` table (rate_to_usd).
+  // This is the SAME table used by useExchangeRateMap(), ensuring all components
+  // in the app use identical conversion rates. See: architecture/exchange-rate-automation-v2-final
   const loadExchangeRates = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('currency_exchange_rates')
-        .select('base_currency, target_currency, rate');
+        .from('exchange_rates')
+        .select('currency_code, rate_to_usd');
       
       if (error) throw error;
       
       const rates = new Map<string, number>();
+      // USD is always 1:1
+      rates.set('USD_USD', 1);
+      
+      // Build pairwise rates from rate_to_usd values.
+      // rate_to_usd means: 1 unit of currency = X USD
+      // So to convert FROM currency A TO currency B:
+      //   amount_in_B = amount_in_A * (rateA_to_usd / rateB_to_usd)
+      const rateMap: Record<string, number> = { USD: 1 };
       data?.forEach(row => {
-        rates.set(`${row.base_currency}_${row.target_currency}`, row.rate);
-        // Also store inverse for convenience
-        if (row.rate > 0) {
-          rates.set(`${row.target_currency}_${row.base_currency}`, 1 / row.rate);
+        if (row.rate_to_usd > 0) {
+          rateMap[row.currency_code] = row.rate_to_usd;
         }
       });
-      // USD to USD is always 1
-      rates.set('USD_USD', 1);
+      
+      // Build USD_X and X_USD pairs for all currencies
+      for (const [code, rateToUsd] of Object.entries(rateMap)) {
+        if (code === 'USD') continue;
+        // USD -> X: divide by rate_to_usd (since rate_to_usd = how many USD per 1 unit)
+        // e.g., if CAD rate_to_usd = 0.74, then 1 USD = 1/0.74 CAD = 1.351 CAD
+        rates.set(`USD_${code}`, 1 / rateToUsd);
+        rates.set(`${code}_USD`, rateToUsd);
+      }
+      
+      // Build cross-currency pairs (e.g., CAD_EUR) via USD pivot
+      const codes = Object.keys(rateMap);
+      for (const from of codes) {
+        for (const to of codes) {
+          if (from === to) continue;
+          const key = `${from}_${to}`;
+          if (!rates.has(key)) {
+            const fromRate = rateMap[from];
+            const toRate = rateMap[to];
+            if (fromRate > 0 && toRate > 0) {
+              rates.set(key, fromRate / toRate);
+            }
+          }
+        }
+      }
       
       setExchangeRates(rates);
     } catch (error) {

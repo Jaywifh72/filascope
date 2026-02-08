@@ -34,7 +34,7 @@ export function useExchangeRates() {
       if (error) throw error;
       return data as ExchangeRate[];
     },
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 60, // 1 hour — matches RegionContext's caching window
   });
 }
 
