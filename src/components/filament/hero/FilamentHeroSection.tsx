@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, Lightbulb, Star, Info } from 'lucide-react';
+import { ExternalLink, Package, Zap, Lightbulb, Star, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MaterialBadge } from '@/components/MaterialBadge';
 import { FilamentHeroGallery } from './FilamentHeroGallery';
@@ -40,17 +39,6 @@ interface FilamentHeroSectionProps {
   isMultiPack: boolean;
   packQuantity: number;
   
-  // Admin controls
-  isAdmin?: boolean;
-  rescrapingImage?: boolean;
-  scrapingData?: boolean;
-  scrapingColors?: boolean;
-  onEditImage?: () => void;
-  onRescrapeImage?: () => void;
-  onEditUrl?: () => void;
-  onScrapeData?: () => void;
-  onScrapeColors?: () => void;
-  
   // Community rating
   communityRating?: CommunityReviewStats | null;
   onNavigateToCommunity?: () => void;
@@ -65,15 +53,6 @@ export function FilamentHeroSection({
   getColorFromTitle,
   isMultiPack,
   packQuantity,
-  isAdmin,
-  rescrapingImage,
-  scrapingData,
-  scrapingColors,
-  onEditImage,
-  onRescrapeImage,
-  onEditUrl,
-  onScrapeData,
-  onScrapeColors,
   communityRating,
   onNavigateToCommunity,
 }: FilamentHeroSectionProps) {
@@ -107,29 +86,6 @@ export function FilamentHeroSection({
                 />
               </div>
             </div>
-            {isAdmin && (
-              <div className="absolute bottom-4 right-4 flex gap-2 z-10">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={onEditImage}
-                  title="Edit product image URL"
-                >
-                  <ImageIcon className="w-4 h-4" />
-                </Button>
-                {pricingFilament.product_url && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={onRescrapeImage}
-                    disabled={rescrapingImage}
-                    title={`Rescrape image from: ${pricingFilament.product_url}`}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${rescrapingImage ? 'animate-spin' : ''}`} />
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Right Column - Info & Purchase (60%) */}
@@ -160,36 +116,9 @@ export function FilamentHeroSection({
             </div>
             
             {/* Product Line Name - Primary Heading */}
-            <div className="flex items-start gap-4">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-                {productLineName}
-              </h1>
-              {isAdmin && (
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button size="sm" variant="outline" onClick={onEditUrl} title="Edit product URL">
-                    <Link2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={onScrapeData}
-                    disabled={scrapingData || !pricingFilament.product_url}
-                    title={pricingFilament.product_url ? `Scrape all data` : "No product URL"}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${scrapingData ? 'animate-spin' : ''}`} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={onScrapeColors}
-                    disabled={scrapingColors || !pricingFilament.product_url}
-                    title="Scrape color variants"
-                  >
-                    <Palette className={`w-4 h-4 ${scrapingColors ? 'animate-pulse' : ''}`} />
-                  </Button>
-                </div>
-              )}
-            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
+              {productLineName}
+            </h1>
 
             {/* Material & Feature Badges */}
             <div className="flex items-center gap-3 flex-wrap">
