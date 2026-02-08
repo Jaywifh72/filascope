@@ -675,7 +675,7 @@ const FilamentDetail = () => {
       <ProductSEO
         title={`${displayFilament.vendor || ''} ${productLineName}`}
         description={seoDescription}
-        canonicalUrl={`/filament/${displayFilament.id}`}
+        canonicalUrl={`/filament/${id}`}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
         material={displayFilament.material}
@@ -715,7 +715,7 @@ const FilamentDetail = () => {
           segments={[
             { label: "Filaments", href: "/" },
             ...(displayFilament.vendor ? [{ label: displayFilament.vendor, href: `/brands/${brandSlug}` }] : []),
-            { label: productLineName, href: `/filament/${displayFilament.id}` },
+            { label: productLineName, href: `/filament/${id}` },
           ]}
           mobileBackLabel={displayFilament.vendor || "Filaments"}
         />
