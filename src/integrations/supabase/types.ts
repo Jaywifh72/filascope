@@ -5339,9 +5339,15 @@ export type Database = {
           email: string | null
           id: string
           is_public: boolean
+          notification_settings: Json
+          preferences: Json
           preferred_currency: string | null
           preferred_slicer: string | null
+          printing_setup: Json
+          projects_public: boolean
+          purchases_public: boolean
           retailer_memberships: Json | null
+          reviews_public: boolean
           settings_visibility: string | null
           shipping_country: string | null
           shipping_zip_code: string | null
@@ -5364,9 +5370,15 @@ export type Database = {
           email?: string | null
           id: string
           is_public?: boolean
+          notification_settings?: Json
+          preferences?: Json
           preferred_currency?: string | null
           preferred_slicer?: string | null
+          printing_setup?: Json
+          projects_public?: boolean
+          purchases_public?: boolean
           retailer_memberships?: Json | null
+          reviews_public?: boolean
           settings_visibility?: string | null
           shipping_country?: string | null
           shipping_zip_code?: string | null
@@ -5389,9 +5401,15 @@ export type Database = {
           email?: string | null
           id?: string
           is_public?: boolean
+          notification_settings?: Json
+          preferences?: Json
           preferred_currency?: string | null
           preferred_slicer?: string | null
+          printing_setup?: Json
+          projects_public?: boolean
+          purchases_public?: boolean
           retailer_memberships?: Json | null
+          reviews_public?: boolean
           settings_visibility?: string | null
           shipping_country?: string | null
           shipping_zip_code?: string | null
