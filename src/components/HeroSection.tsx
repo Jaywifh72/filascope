@@ -1,12 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw, Palette } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 
-// Static fallback values shown while real data loads or if query fails
-const FALLBACK_FILAMENT_COUNT = 8000;
-const FALLBACK_BRAND_COUNT = 42;
 const CACHE_KEY = "hero_stats_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -45,6 +42,52 @@ function setCachedStats(filamentCount: number, productCount: number, brandCount:
   }
 }
 
+/**
+ * Smoothly animated stat number that transitions between values.
+ * Renders a shimmer skeleton when value is null (no cache, still loading).
+ */
+function AnimatedStat({ value, suffix = "+" }: { value: number | null; suffix?: string }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const prevValue = useRef(value);
+
+  useEffect(() => {
+    if (value === null) return;
+
+    // First real value — set immediately (no animation from skeleton)
+    if (prevValue.current === null) {
+      setDisplayValue(value);
+      prevValue.current = value;
+      return;
+    }
+
+    // Same value — skip animation
+    if (value === prevValue.current) return;
+
+    // Animate from previous to new value
+    const start = prevValue.current;
+    const end = value;
+    const duration = 400;
+    const startTime = performance.now();
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.round(start + (end - start) * easeOut));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+
+    requestAnimationFrame(step);
+    prevValue.current = value;
+  }, [value]);
+
+  if (displayValue === null) {
+    return <span className="inline-block w-10 h-4 bg-primary/20 rounded animate-pulse align-middle" />;
+  }
+
+  return <span className="text-primary tabular-nums">{displayValue.toLocaleString()}{suffix}</span>;
+}
+
 interface HeroSectionProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -70,12 +113,14 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
   const { data: dealsData, isLoading: isDealsLoading } = useDealsCount();
   const dealsCount = dealsData?.uniqueProducts || 0;
 
-  // Resolve display counts with fallback chain: live data → localStorage cache → static fallback
+  // Read cache once on mount
   const cached = useMemo(() => getCachedStats(), []);
 
-  const resolvedFilamentCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? FALLBACK_FILAMENT_COUNT);
-  const resolvedBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? FALLBACK_BRAND_COUNT);
-  const resolvedProductCount = productCount > 0 ? productCount : (cached?.productCount ?? null);
+  // Resolve display values: live data → cache → null (skeleton)
+  // Never use hardcoded fallbacks — show skeleton instead of wrong numbers
+  const displayProductCount = productCount > 0 ? productCount : (cached?.productCount ?? null);
+  const displayVariantCount = filamentCount > 0 ? filamentCount : (cached?.filamentCount ?? null);
+  const displayBrandCount = brandCount > 0 ? brandCount : (cached?.brandCount ?? null);
 
   // Cache successful live values (all three must be valid)
   useEffect(() => {
@@ -83,14 +128,6 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
       setCachedStats(filamentCount, productCount, brandCount);
     }
   }, [filamentCount, productCount, brandCount]);
-
-  // Determine if we're still waiting for the real product count
-  const isProductCountLoading = productCount <= 0 && !cached?.productCount;
-
-  // Always show a number — use fallbacks so the hero never renders blank
-  const displayVariantCount = resolvedFilamentCount;
-  const displayProductCount = resolvedProductCount;
-  const displayBrandCount = resolvedBrandCount;
 
   // Dynamic quick start paths
   const quickStartPaths = useMemo(() => [
@@ -199,13 +236,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
-              {isProductCountLoading ? (
-                <span className="inline-block w-10 h-4 bg-primary/20 rounded animate-pulse align-middle" />
-              ) : (
-                <span className="text-primary">{displayProductCount != null ? displayProductCount.toLocaleString() : '—'}+</span>
-              )}{" "}products with{" "}
-              <span className="text-primary">{displayVariantCount.toLocaleString()}+</span> variants indexed from{" "}
-              <span className="text-primary">{displayBrandCount}+</span> brands.{" "}
+              <AnimatedStat value={displayProductCount} />{" "}products with{" "}
+              <AnimatedStat value={displayVariantCount} /> variants indexed from{" "}
+              <AnimatedStat value={displayBrandCount} /> brands.{" "}
               Compare properties, specs, and pricing in one unified data hub.
             </p>
 
