@@ -75,6 +75,7 @@ interface LabReadoutCardProps {
   displayTitle?: string;
   variantIndicators?: VariantIndicators;
   communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
+  showCostPerPrint?: boolean;
 }
 
 export function LabReadoutCard({ 
@@ -82,7 +83,8 @@ export function LabReadoutCard({
   index = 0, 
   displayTitle, 
   variantIndicators,
-  communityRating 
+  communityRating,
+  showCostPerPrint = false,
 }: LabReadoutCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -458,6 +460,12 @@ export function LabReadoutCard({
                     /kg
                   </span>
                 </div>
+                {/* Cost per print estimate */}
+                {showCostPerPrint && pricePerKg && (
+                  <span className="text-[10px] text-muted-foreground">
+                    ~{formatPrice(pricePerKg * 0.1)} per 100g print
+                  </span>
+                )}
                 {/* Retailer hint + Regional indicator */}
                 <div className="flex items-center gap-1.5">
                   {/* Regional flag indicator */}
