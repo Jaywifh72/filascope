@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, memo } from "react";
+import { Package } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,10 @@ interface OptimizedImageProps {
   sizes?: string;
   aspectRatio?: "square" | "video" | "portrait" | "auto";
   fallback?: React.ReactNode;
+  /** Color hex for tinted fallback placeholder when image fails */
+  colorHex?: string | null;
+  /** Material name for fallback label */
+  material?: string | null;
   onLoad?: () => void;
   onError?: () => void;
   /** Base64 blur placeholder for blur-up effect */
@@ -136,6 +141,8 @@ export const OptimizedImage = memo(function OptimizedImage({
   onError,
   blurDataUrl,
   objectFit = "contain",
+  colorHex,
+  material,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
@@ -185,10 +192,27 @@ export const OptimizedImage = memo(function OptimizedImage({
         )}
       >
         {fallback || (
-          <div className="flex flex-col items-center gap-1 text-muted-foreground">
-            <span className="text-2xl">📦</span>
-            <span className="text-[10px] opacity-50">No image</span>
-          </div>
+          colorHex ? (
+            <div className="flex flex-col items-center justify-center gap-2 w-full h-full" style={{ backgroundColor: `${colorHex}18` }}>
+              <div
+                className="w-12 h-12 rounded-full shadow-lg border border-white/15 ring-1 ring-black/10"
+                style={{ backgroundColor: colorHex }}
+                role="img"
+                aria-label={`Color: ${colorHex}`}
+              />
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Package className="w-4 h-4 opacity-40" />
+                <span className="text-[10px] uppercase tracking-wider opacity-50 font-medium">
+                  {material?.split(/[\s-]/)[0] || "Filament"}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1 text-muted-foreground">
+              <Package className="w-8 h-8 opacity-30" />
+              <span className="text-[10px] opacity-50">No image</span>
+            </div>
+          )
         )}
       </div>
     );
