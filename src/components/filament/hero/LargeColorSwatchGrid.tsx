@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { normalizeColorHex } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Palette } from 'lucide-react';
 
 interface ColorVariant {
   id: string;
@@ -143,6 +144,17 @@ export function LargeColorSwatchGrid({
           })}
         </div>
       </TooltipProvider>
+
+      {/* Find similar colors link */}
+      {currentVariant?.color_hex && (
+        <Link
+          to={`/colors?hex=${normalizeColorHex(currentVariant.color_hex).replace('#', '')}`}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <Palette className="w-3 h-3" />
+          Find similar colors from other brands
+        </Link>
+      )}
     </div>
   );
 }

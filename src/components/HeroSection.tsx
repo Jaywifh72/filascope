@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw } from "lucide-react";
+import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw, Palette } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 
@@ -117,6 +117,13 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
       color: "blue",
     },
     {
+      title: "Find by Color",
+      description: "Match any color to real filaments",
+      icon: Palette,
+      href: "/colors",
+      color: "pink",
+    },
+    {
       title: "Today's Deals",
       description: isDealsLoading ? "Loading deals..." : `${dealsCount} active deals`,
       icon: Tag,
@@ -151,6 +158,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
         return 'border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400 hover:shadow-purple-500/10';
       case 'green':
         return 'border-green-500/30 hover:border-green-500/60 bg-green-500/5 hover:bg-green-500/10 text-green-400 hover:shadow-green-500/10';
+      case 'pink':
+        return 'border-pink-500/30 hover:border-pink-500/60 bg-pink-500/5 hover:bg-pink-500/10 text-pink-400 hover:shadow-pink-500/10';
       default:
         return 'border-gray-500/30 hover:border-gray-500/60 bg-gray-500/5 hover:bg-gray-500/10 text-gray-400';
     }
@@ -232,7 +241,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
             {/* Quick Start Paths - 4 cards */}
             <div 
-              className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full max-w-[600px] animate-fade-in mb-12 sm:mb-16 md:mb-20"
+              className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 w-full max-w-[720px] animate-fade-in mb-12 sm:mb-16 md:mb-20"
               style={{ animationDelay: "0.35s" }}
             >
               {quickStartPaths.map((path) => {
