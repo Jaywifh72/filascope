@@ -1,13 +1,7 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
+import { ScrollCarousel, ScrollCarouselItem } from "@/components/ui/scroll-carousel";
 import { SimilarFilamentCard, type SimilarFilamentData } from "./SimilarFilamentCard";
 import { useSimilarFilamentsEnhanced } from "@/hooks/useSimilarFilamentsEnhanced";
 import { SimilarSortControls } from "./SimilarSortControls";
@@ -44,27 +38,17 @@ function FilamentCarousel({
   if (filaments.length === 0) return null;
 
   return (
-    <Carousel
-      opts={{ align: "start", loop: false }}
-      className="w-full"
-    >
-      <CarouselContent className="-ml-3 md:-ml-4">
-        {filaments.map((filament) => (
-          <CarouselItem
-            key={filament.id}
-            className="pl-3 md:pl-4 basis-auto"
-          >
-            <SimilarFilamentCard
-              filament={filament}
-              showCompareToggle={!filament.isCurrent}
-              currentPricePerKg={currentPricePerKg}
-            />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious className="hidden md:flex -left-4 lg:-left-6 h-10 w-10 bg-card/80 border-border hover:bg-card" />
-      <CarouselNext className="hidden md:flex -right-4 lg:-right-6 h-10 w-10 bg-card/80 border-border hover:bg-card" />
-    </Carousel>
+    <ScrollCarousel>
+      {filaments.map((filament) => (
+        <ScrollCarouselItem key={filament.id}>
+          <SimilarFilamentCard
+            filament={filament}
+            showCompareToggle={!filament.isCurrent}
+            currentPricePerKg={currentPricePerKg}
+          />
+        </ScrollCarouselItem>
+      ))}
+    </ScrollCarousel>
   );
 }
 
