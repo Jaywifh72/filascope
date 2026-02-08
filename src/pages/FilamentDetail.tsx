@@ -231,12 +231,13 @@ const FilamentDetail = () => {
   const handleViewRetailers = () => {
     if (filament) {
       trackStoreClick({
-        moduleName: 'view_all_retailers_modal',
+        moduleName: 'view_all_retailers_pricing_tab',
         entityId: filament.id,
         entityType: 'filament',
       });
     }
-    setRetailersModalOpen(true);
+    // Switch to the Pricing tab instead of opening a modal
+    setActiveTab("pricing");
   };
 
   const handleRetailerClick = (retailer: Retailer) => {
@@ -830,6 +831,7 @@ const FilamentDetail = () => {
                   priceCandidates={detailPricing.allCandidates}
                   priceCandidatesLoading={detailPricing.isLoading}
                   totalRetailerCount={detailPricing.retailerCount}
+                  onNavigateToPricing={() => setActiveTab("pricing")}
                   onNavigateToCommunity={() => setActiveTab("community")}
                 />
               )}
