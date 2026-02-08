@@ -793,6 +793,7 @@ const FilamentDetail = () => {
                   priceCandidates={detailPricing.allCandidates}
                   priceCandidatesLoading={detailPricing.isLoading}
                   totalRetailerCount={detailPricing.retailerCount}
+                  onNavigateToCommunity={() => setActiveTab("community")}
                 />
               )}
 
