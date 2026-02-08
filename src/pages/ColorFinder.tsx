@@ -63,7 +63,8 @@ export default function ColorFinder() {
     <>
       <Helmet>
         <title>Find by Color | FilaScope</title>
-        <meta name="description" content="Find 3D printer filaments by color. Pick any color and discover matching filaments sorted by color proximity." />
+        <meta name="description" content="Find 3D printer filaments by color — pick any color or enter a hex code to discover matching filaments from 42+ brands with pricing." />
+        <meta property="og:description" content="Find 3D printer filaments by color — pick any color or enter a hex code to discover matching filaments from 42+ brands with pricing." />
       </Helmet>
 
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 py-8 space-y-8">

@@ -22,11 +22,13 @@ export function BrandSEO({
   // Build SEO-optimized title
   const seoTitle = `${brandName} Filaments — Prices, Reviews & Specs | FilaScope`;
 
-  // Build meta description
+  // Build meta description — template: "[Brand] filaments — [X] products across [Y] material types. Compare specs, pricing, and availability on FilaScope."
   const materialList = materials.slice(0, 3).join(', ');
-  const defaultDesc = productCount 
-    ? `Explore ${productCount}+ ${brandName} filaments including ${materialList || 'PLA, PETG, ABS'}. Compare prices, specs, and find the best deals on ${brandName} 3D printing filaments.`
-    : `Browse ${brandName} 3D printing filaments. Compare prices, specifications, and read reviews. Find the perfect ${brandName} filament for your 3D printer.`;
+  const defaultDesc = productCount && materials.length > 0
+    ? `${brandName} filaments — ${productCount}+ products across ${materials.length} material types. Compare specs, pricing, and availability on FilaScope.`
+    : productCount 
+      ? `${brandName} filaments — ${productCount}+ products including ${materialList || 'PLA, PETG, ABS'}. Compare specs, pricing, and availability on FilaScope.`
+      : `Browse ${brandName} 3D printing filaments. Compare prices, specifications, and availability on FilaScope.`;
   
   const seoDescription = (description || defaultDesc).length > 160 
     ? (description || defaultDesc).substring(0, 157) + '...'

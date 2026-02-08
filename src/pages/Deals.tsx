@@ -58,8 +58,8 @@ const Deals = () => {
 
   // Dynamic meta description
   const metaDescription = totalDeals > 0
-    ? `${totalDeals} active filament deals with discounts up to ${maxDiscount}% off from top 3D printing brands. Updated daily.`
-    : "Find the best deals on 3D printer filaments. Compare discounts across brands and materials, updated daily.";
+    ? `Today's best 3D printer filament deals — ${totalDeals} active discounts up to ${maxDiscount}% off. Compare sale prices from top brands on FilaScope.`
+    : "Today's best 3D printer filament deals. Compare sale prices and discounts from top brands on FilaScope.";
 
   // Build deal items for ItemListSchema
   const dealListItems = useMemo(() => {
@@ -76,6 +76,7 @@ const Deals = () => {
       <Helmet>
         <title>Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope</title>
         <meta name="description" content={metaDescription} />
+        <meta property="og:description" content={metaDescription} />
       </Helmet>
       {dealListItems.length > 0 && (
         <ItemListSchema
