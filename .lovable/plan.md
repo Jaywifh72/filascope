@@ -1,128 +1,234 @@
 
 
-# Community Reviews and Photos: Activation Plan
+# Finder Page Performance Optimization
 
-## Current State Assessment
+## Problem Summary
 
-After a thorough audit, the review and community photo systems are **already fully implemented** in both the database and frontend. Here is what exists:
+The Finder page (homepage) currently fetches **all 8,001 filament rows** from the database before rendering anything. This requires **9 sequential paginated API calls** (1000 rows each), followed by heavy client-side processing:
 
-### Already Built (Database)
-- `product_reviews` table with all requested columns (rating, headline, body, pros, cons, print settings, verified purchase, helpful count, status, soft delete)
-- `review_photos` table for review image attachments
-- `product_review_votes` table for "Was this helpful?" votes
-- `community_photos` table with caption, printer, print settings, model source, like count
-- `community_photo_files` for multi-photo uploads
-- `community_photo_likes` for photo likes with a trigger to auto-update `like_count`
-- RLS policies on all tables (read public reviews, users CRUD own data, vote tracking)
-- Storage buckets: `review-photos` (public) and `community-photos` (public)
+1. **Regional filtering** -- iterates all 8,001 rows
+2. **Filter counts** -- iterates all rows multiple times per filter category
+3. **Client-side filtering** -- 20+ filter predicates on every row
+4. **Unified score calculation** -- computed per-filament during sort (expensive math)
+5. **Brand diversity interleaving** -- another full pass
+6. **Product grouping** -- groups ~8,001 variants into ~1,048 product lines
 
-### Already Built (Frontend)
-- **ReviewForm** (`src/components/reviews/ReviewForm.tsx`): Full form with star ratings (Quality, Ease, Value, Overall), headline, body, pros/cons tag input, printer selector, print settings (collapsible), photo upload (up to 5), visibility toggle
-- **ReviewDisplay** (`src/components/reviews/ReviewDisplay.tsx`): Summary bar with distribution chart, review cards with avatar, verified badge, expand/collapse, photo lightbox, "Helpful" voting, "Report" button, sort (Recent/Highest/Helpful) and filter (Has Photos, Verified)
-- **CommunityPhotoGallery** (`src/components/community-photos/CommunityPhotoGallery.tsx`): Masonry grid, sort by recent/popular, filter by printer/mine, likes, lightbox
-- **SharePrintDialog** (`src/components/community-photos/SharePrintDialog.tsx`): Drag-and-drop photo upload, caption, printer selector, print settings, model source
-- **useProductReviews hook**: Fetches reviews with profiles, printers, photos, vote status; handles submit, vote toggle
-- **useCommunityPhotos hook**: Fetches photos with files, profiles, printers, like status; handles upload, like toggle, report, delete
-- **Vault "My Reviews" tab** (`src/components/vault/VaultReviewsTab.tsx`): Full management with stats bar, filters, list/grid view, edit dialog, delete confirmation
-- **FilamentCard community rating**: Already receives and displays `communityRating` prop with tooltip showing sub-ratings
-- **useBulkCommunityRatings / useCommunityReviewStats**: Hooks for listing page and detail page aggregation
+Users see a loading spinner with "Loading 500 of 8000 products..." for several seconds before any cards appear.
 
-### Already Wired Into the Community Tab
-The `CommunityTabContent.tsx` already integrates:
-- `useProductReviews` hook
-- `ReviewForm` component
-- `ReviewSummaryBar` and `ReviewList` components
-- `CommunityPhotoGallery` component (which includes `SharePrintDialog`)
+## Root Cause Analysis
 
-**There are no "Coming Soon" badges on the Community tab itself.** The "Coming Soon" labels found in the codebase are on unrelated pages (Resources/Profiles, CAD Quiz, Troubleshooting Database, Diagnose tool, etc.).
+```text
+  [User opens homepage]
+         |
+         v
+  [Query 1: fetch rows 0-999]       ~200ms
+  [Query 2: fetch rows 1000-1999]   ~200ms
+  [Query 3: fetch rows 2000-2999]   ~200ms
+  ... (9 total queries)             ~1.8s total network
+         |
+         v
+  [Regional filter: 8001 items]     ~50ms
+  [Filter counts: 8001 x N]         ~200ms
+  [Client filter + sort: 8001]      ~300ms (score calc on each)
+  [Group by product: 8001 -> 1048]  ~100ms
+  [Render 16 cards]                 ~50ms
+         |
+         v
+  [First meaningful paint]          ~2.5-3s total
+```
 
-## What Is Actually Needed
+The fundamental issue: we fetch and process **100% of the catalog** to display **16 cards**.
 
-Since the infrastructure is complete, the remaining work falls into two small areas:
+## Optimization Plan
 
-### 1. Review Moderation System (New)
-The "Report" button on reviews currently has no backend action. A `review_flags` table and basic admin queue are needed.
+### Phase 1: Pre-Compute FilaScope Score in Database (High Impact)
 
-**Database migration:**
-- Create `review_flags` table: `id`, `review_id` (FK to product_reviews), `reporter_id` (user_id), `reason` (enum: spam, inappropriate, fake, other), `details` (text, optional), `status` (pending/reviewed/dismissed), `reviewed_by`, `reviewed_at`, `created_at`
-- Add unique constraint on (review_id, reporter_id) to prevent duplicate reports
-- RLS: authenticated users can INSERT their own flags, admins can SELECT/UPDATE all
-- When a review gets 3+ flags, auto-set its `status` to `'pending'` (moderation hold)
+Currently, `calculateUnifiedScore()` runs on every filament during every sort operation. Since the score inputs only change when product data is updated (not on every page load), we can pre-compute it.
 
-**Frontend changes:**
-- Wire the existing "Report" button in `ReviewDisplay.tsx` to open a small dialog asking for a reason (dropdown: Spam, Inappropriate, Fake Review, Other) and optional details, then insert into `review_flags`
-- Show toast confirmation after report
+**Changes:**
+- Add a `filascope_score NUMERIC(3,1)` column to the `filaments` table
+- Create a Postgres trigger function that recalculates the score on INSERT/UPDATE of relevant fields
+- Backfill all existing rows with a one-time migration
+- Update `Finder.tsx` sorting to use the database column instead of calling `calculateUnifiedScore()` per item
+- Keep the client-side `calculateUnifiedScore()` for detail pages, tooltips, and hover cards where factor breakdowns are needed
 
-### 2. Verified Purchase Badge Logic (Enhancement)
-The `is_verified_purchase` column exists but is always `false`. Connect it to the user's wishlist/purchase data.
+**Impact:** Eliminates ~8,000 score calculations per page load, and enables server-side sorting.
 
-**Frontend change in ReviewForm:**
-- Query the user's `wishlist_items` or purchase collection to check if they own the filament being reviewed
-- If found, auto-check a "I own this filament" indicator and set `is_verified_purchase: true` on submission
-- Display as a non-editable badge if auto-detected, or allow manual toggle if not auto-detected
+### Phase 2: Server-Side Paginated Query with Filtering (Critical Path)
 
-### 3. "Lowest Rated" Sort Missing from Community Tab (Minor Fix)
-The Community tab's `ReviewList` only has "Recent", "Highest", and "Helpful" sort options. Add "Lowest Rated" to match the Vault's sort options.
+Replace `fetchAllFilaments()` with a single, targeted database query that returns only the page of results needed.
 
-## Implementation Phases
+**New Postgres Function: `search_filaments_paginated`**
 
-### Phase 1: Review Flagging/Moderation
-1. Create `review_flags` table with migration (with RLS)
-2. Add a `ReportReviewDialog` component with reason selector
-3. Wire the existing "Report" button in `ReviewDisplay.tsx` to use it
-4. Add a review flag count check: if a review has 3+ unresolved flags, hide it from public view by updating its status to `'flagged'`
+```sql
+CREATE FUNCTION search_filaments_paginated(
+  p_region TEXT DEFAULT 'US',
+  p_materials TEXT[] DEFAULT NULL,
+  p_brands TEXT[] DEFAULT NULL,
+  p_search TEXT DEFAULT NULL,
+  p_sort TEXT DEFAULT 'scoring-desc',
+  p_page_size INT DEFAULT 48,
+  p_offset INT DEFAULT 0,
+  -- Boolean filters
+  p_high_speed BOOLEAN DEFAULT FALSE,
+  p_brass_only BOOLEAN DEFAULT FALSE,
+  p_ams_only BOOLEAN DEFAULT FALSE,
+  p_carbon_fiber BOOLEAN DEFAULT FALSE,
+  p_glass_fiber BOOLEAN DEFAULT FALSE,
+  p_wood_filled BOOLEAN DEFAULT FALSE,
+  p_has_td BOOLEAN DEFAULT FALSE,
+  -- Price range
+  p_price_min NUMERIC DEFAULT NULL,
+  p_price_max NUMERIC DEFAULT NULL
+)
+RETURNS TABLE (
+  -- return grouped product data
+  product_line_id TEXT,
+  representative_id UUID,
+  variant_count INT,
+  total_count BIGINT,  -- total matching rows for pagination
+  ...columns needed for cards
+)
+```
 
-### Phase 2: Verified Purchase Auto-Detection
-1. In `ReviewForm.tsx`, query user's wishlist items for the current product
-2. If found in an "inventory" or "purchased" collection, auto-set `is_verified_purchase` to `true`
-3. Show a visual indicator ("Verified Owner" badge) in the form
+This function will:
+- Apply all filters in SQL (material, brand, search, boolean flags)
+- Handle regional filtering server-side (checking product_url fields)
+- Sort by pre-computed `filascope_score` or price
+- GROUP BY `product_line_id` to return product-level results (not individual variants)
+- Return only the requested page (48 items) plus a total count
+- Use a `LATERAL` subquery to pick representative filaments per group
 
-### Phase 3: Minor Polish
-1. Add "Lowest Rated" sort option to `ReviewList` in `ReviewDisplay.tsx`
-2. Ensure the "Report" button shows disabled state for non-logged-in users with a sign-in prompt
+**Impact:** Reduces data transfer from ~8,001 rows to ~48 rows. Eliminates 9 sequential API calls.
+
+### Phase 3: Separate Count Query for Filter Facets
+
+Instead of computing filter counts client-side by iterating all 8,001 items, create a lightweight RPC function:
+
+**New Postgres Function: `get_filter_counts`**
+
+```sql
+CREATE FUNCTION get_filter_counts(
+  p_region TEXT DEFAULT 'US',
+  p_materials TEXT[] DEFAULT NULL,
+  p_brands TEXT[] DEFAULT NULL,
+  p_search TEXT DEFAULT NULL
+)
+RETURNS JSONB
+```
+
+This returns a JSON object with counts for each filter option (material counts, brand counts, finish type counts, etc.). It runs as a separate query that can be cached aggressively (5-minute staleTime).
+
+**Impact:** Removes the expensive `filterCounts` useMemo that iterates all rows multiple times.
+
+### Phase 4: Move Product Grouping to Database View
+
+Since all 8,014 filaments have `product_line_id`, create a materialized view or indexed view:
+
+**New View: `v_product_lines_summary`**
+
+```sql
+CREATE MATERIALIZED VIEW v_product_lines_summary AS
+SELECT
+  product_line_id,
+  vendor,
+  material,
+  array_agg(DISTINCT color_hex) FILTER (WHERE color_hex IS NOT NULL) as colors,
+  array_agg(DISTINCT net_weight_g) FILTER (WHERE net_weight_g IS NOT NULL) as weights,
+  count(*) as variant_count,
+  min(variant_price) as price_min,
+  max(variant_price) as price_max,
+  bool_or(variant_available) as any_in_stock,
+  max(filascope_score) as best_score
+FROM filaments
+WHERE material IS NOT NULL
+GROUP BY product_line_id, vendor, material;
+```
+
+This pre-groups the ~8,001 variants into ~1,048 product lines, eliminating `groupFilamentsByProduct()` on every render.
+
+**Impact:** Eliminates client-side grouping entirely.
+
+### Phase 5: Frontend Refactoring
+
+**Finder.tsx Changes:**
+- Replace the monolithic `useQuery` that fetches all filaments with a paginated `useQuery` calling `search_filaments_paginated`
+- Replace the `filterCounts` useMemo with a separate `useQuery` calling `get_filter_counts`
+- Replace the `groupFilamentsByProduct` call with data already grouped by the database
+- Replace `displayCount` state + "Load More" with infinite scroll or cursor-based pagination
+- Remove `fetchAllFilaments` import and the progress callback infrastructure
+- Remove client-side `calculateUnifiedScore()` from sorting (use DB column)
+- Keep `calculateUnifiedScore()` only in hover cards and detail pages
+
+**Remove/simplify these heavy client-side operations:**
+- `filteredAndSortedFilaments` useMemo (~200 lines of filter/sort logic) -- replaced by SQL
+- `diversifiedFilaments` useMemo (brand interleaving) -- move to SQL with `ROW_NUMBER() OVER (PARTITION BY vendor)`
+- `groupedFilaments` useMemo -- pre-grouped in DB
+- `filterCounts` useMemo (~175 lines) -- replaced by `get_filter_counts` RPC
+- `regionalFilaments` useMemo -- regional check moved to SQL
+
+**Hook Refactoring:**
+- Create a new `useFinderQuery` hook that encapsulates the paginated query, filter state, and pagination logic
+- This hook manages `page`, `filters`, `sort`, and returns `{ products, totalCount, filterCounts, isLoading, loadMore }`
+
+### Phase 6: Instant Skeleton Rendering
+
+While the first page of results loads (now a single ~100ms query):
+- Show skeleton cards immediately (already implemented as `FilamentCardSkeletonGrid`)
+- Remove the `LoadingProgress` component with its "Loading 500 of 8000" counter (no longer needed since we only fetch one page)
+- Use React Query's `placeholderData` to keep previous results visible during filter changes
+
+## Expected Performance After Optimization
+
+```text
+  [User opens homepage]
+         |
+         v
+  [Skeleton cards render]            ~0ms (instant)
+  [Single DB query: 48 results]      ~80-120ms
+  [Render 48 cards]                   ~30ms
+         |
+         v
+  [First meaningful paint]           ~150ms (vs ~2.5-3s before)
+  
+  [Filter counts query (parallel)]   ~100ms (background)
+```
 
 ## Technical Details
 
-### review_flags Table Schema
+### Migration SQL Summary
 
-```text
-review_flags
-+------------------+------------------------+
-| Column           | Type                   |
-+------------------+------------------------+
-| id               | uuid (PK, default)     |
-| review_id        | uuid (FK product_reviews) |
-| reporter_id      | uuid (auth.uid)        |
-| reason           | text (NOT NULL)        |
-| details          | text (nullable)        |
-| status           | text (default 'pending') |
-| reviewed_by      | uuid (nullable)        |
-| reviewed_at      | timestamptz (nullable) |
-| created_at       | timestamptz (default now) |
-+------------------+------------------------+
-UNIQUE(review_id, reporter_id)
-```
+1. `ALTER TABLE filaments ADD COLUMN filascope_score NUMERIC(3,1);`
+2. Create trigger function to compute score on data change
+3. Backfill existing rows
+4. Create `search_filaments_paginated` RPC function
+5. Create `get_filter_counts` RPC function
+6. Create `v_product_lines_summary` materialized view
+7. Add indexes: `CREATE INDEX idx_filaments_score ON filaments(filascope_score DESC NULLS LAST);`
 
-### RLS Policies for review_flags
-- SELECT: Admins only (using `has_role(auth.uid(), 'admin')`) + users can see their own flags
-- INSERT: Authenticated users where `auth.uid() = reporter_id`
-- UPDATE: Admins only (for status changes)
-- No DELETE policy (flags should not be deletable)
+### Files to Create/Modify
 
-### Files to Create
-- `src/components/reviews/ReportReviewDialog.tsx` -- Report reason dialog
+| File | Action | Purpose |
+|------|--------|---------|
+| `supabase/migrations/xxx.sql` | Create | Database functions, column, view, indexes |
+| `src/hooks/useFinderQuery.ts` | Create | New paginated query hook |
+| `src/pages/Finder.tsx` | Major refactor | Replace fetch-all with paginated queries |
+| `src/lib/supabaseHelpers.ts` | Remove `fetchAllFilaments` | No longer needed |
+| `src/components/LoadingProgress.tsx` | Remove | No longer needed |
 
-### Files to Modify
-- `src/components/reviews/ReviewDisplay.tsx` -- Wire Report button to dialog, add "Lowest Rated" sort
-- `src/components/reviews/ReviewForm.tsx` -- Add verified purchase auto-detection from wishlist
-- `src/hooks/useProductReviews.ts` -- Add flag mutation, filter out heavily-flagged reviews from public view
+### What Stays the Same
 
-### No Changes Needed
-- Database tables (product_reviews, review_photos, product_review_votes, community_photos, community_photo_files, community_photo_likes) -- all exist
-- ReviewForm functionality (star ratings, title, body, pros/cons, print settings, photo upload) -- all working
-- ReviewDisplay (summary bar, cards, voting, filtering) -- all working  
-- CommunityPhotoGallery + SharePrintDialog -- all working
-- Vault "My Reviews" tab with edit/delete -- all working
-- FilamentCard aggregate ratings -- already wired
-- Storage buckets and RLS -- already configured
+- `FilamentCard` / `LabReadoutCard` rendering logic (unchanged)
+- `calculateUnifiedScore()` for detail pages and tooltips
+- URL filter sync and session filter persistence
+- Color search, hex matching, and color distance calculations (moved to SQL WHERE clauses)
+- Mobile filter sheet and horizontal filter bar UI components
+- Brand diversity interleaving logic (moved to SQL)
+
+### Risk Mitigation
+
+- The materialized view refresh can be scheduled via a cron trigger (every 5 minutes) to keep data fresh
+- Fallback: if the RPC fails, the existing client-side approach can be kept as a degraded mode
+- Search quality: the SQL `ILIKE` approach already exists; multi-term matching will use `AND` chains of `ILIKE` on searchable columns
+- Regional filtering logic in SQL must precisely mirror the TypeScript `isFilamentAvailableInRegion()` function -- this is the highest-risk area and needs thorough testing
 
