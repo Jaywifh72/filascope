@@ -25,6 +25,7 @@ import { HonestPriceDisplay, getCtaText } from '@/components/price/HonestPriceDi
 import type { StorePrice } from '@/hooks/useFilamentStorePricing';
 import { StorePricingDisplay } from './StorePricingDisplay';
 import { SidebarPriceHistory } from './SidebarPriceHistory';
+import { PriceAlertPopover } from './PriceAlertPopover';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -216,27 +217,42 @@ export function FilamentPurchaseSidebar({
 
           {/* Price Section - Honest Display */}
           <div className="space-y-3">
-            {/* Honest Price Display with confidence-aware messaging */}
-            <HonestPriceDisplay
-              price={displayPricePerKg}
-              confidence={priceConfidence}
-              lastVerifiedAt={lastScrapedAt}
-              storeName={regionalPriceResult?.store?.name || finalRetailerName}
-              storeUrl={affiliateUrl}
-              isConverted={isConvertedPrice}
-              conversionTooltip={
-                isConvertedPrice && hasValidRegionalPrice && regionalPriceResult
-                  ? `Converted from ${regionalPriceResult.originalCurrency}${regionalPriceResult.conversionRate ? ` (Rate: 1 ${regionalPriceResult.originalCurrency} = ${regionalPriceResult.conversionRate.toFixed(4)} ${currency})` : ''}`
-                  : null
-              }
-              size="lg"
-              showCTA={false}
-              showPerKg={true}
-              filamentId={filamentId}
-              productUrl={affiliateUrl || productUrl || undefined}
-              onAdminRefresh={handleAdminRefresh}
-              netWeightGrams={weightGrams}
-            />
+            {/* Price + Alert Bell */}
+            <div className="flex items-start gap-1">
+              <div className="flex-1">
+                {/* Honest Price Display with confidence-aware messaging */}
+                <HonestPriceDisplay
+                  price={displayPricePerKg}
+                  confidence={priceConfidence}
+                  lastVerifiedAt={lastScrapedAt}
+                  storeName={regionalPriceResult?.store?.name || finalRetailerName}
+                  storeUrl={affiliateUrl}
+                  isConverted={isConvertedPrice}
+                  conversionTooltip={
+                    isConvertedPrice && hasValidRegionalPrice && regionalPriceResult
+                      ? `Converted from ${regionalPriceResult.originalCurrency}${regionalPriceResult.conversionRate ? ` (Rate: 1 ${regionalPriceResult.originalCurrency} = ${regionalPriceResult.conversionRate.toFixed(4)} ${currency})` : ''}`
+                      : null
+                  }
+                  size="lg"
+                  showCTA={false}
+                  showPerKg={true}
+                  filamentId={filamentId}
+                  productUrl={affiliateUrl || productUrl || undefined}
+                  onAdminRefresh={handleAdminRefresh}
+                  netWeightGrams={weightGrams}
+                />
+              </div>
+              {displayPricePerKg && (
+                <div className="pt-1">
+                  <PriceAlertPopover
+                    filamentId={filamentId}
+                    currentPricePerKg={displayPricePerKg}
+                    productTitle={productTitle}
+                    isConverted={isConvertedPrice}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Per-spool price secondary line — connects /kg price to actual purchase price */}
             {bestSpoolPrice != null && bestSpoolStoreName && (
