@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { GUIDES, type GuideMetadata } from './LearningCenter';
 import { GuideRelatedProducts, GuideReadNext } from '@/components/guides/GuideComponents';
+import { BUYING_GUIDE_SLUGS } from '@/components/guides/guideConfigs';
 
 // Guide content components - will be imported dynamically
 import GuidePLAvsPETGvsABS from '@/components/guides/content/GuidePLAvsPETGvsABS';
@@ -91,6 +92,16 @@ function getCategoryConfig(category: string) {
 
 export default function GuideDetail() {
   const { slug } = useParams();
+
+  // Redirect buying guide slugs to /guides/:slug — before any hooks
+  if (slug && BUYING_GUIDE_SLUGS.includes(slug)) {
+    return <Navigate to={`/guides/${slug}`} replace />;
+  }
+
+  return <GuideDetailContent slug={slug} />;
+}
+
+function GuideDetailContent({ slug }: { slug: string | undefined }) {
   const navigate = useNavigate();
   const [tocItems, setTocItems] = useState<TOCItem[]>([]);
   const [activeSection, setActiveSection] = useState('');

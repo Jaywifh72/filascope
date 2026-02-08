@@ -107,6 +107,7 @@ const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const BrandComparePage = lazy(() => import("./pages/BrandComparePage"));
 const GuidePrintSettings = lazy(() => import("./pages/GuidePrintSettings"));
 const GuideTroubleshooting = lazy(() => import("./pages/GuideTroubleshooting"));
+const BuyingGuide = lazy(() => import("./pages/BuyingGuide"));
 const ResourcesProfiles = lazy(() => import("./pages/ResourcesProfiles"));
 const Install = lazy(() => import("./pages/Install"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -237,6 +238,7 @@ const App = () => (
                   <Route path="/learn/:slug" element={<GuideDetail />} />
                   <Route path="/guides/print-settings" element={<GuidePrintSettings />} />
                   <Route path="/guides/troubleshooting" element={<GuideTroubleshooting />} />
+                  <Route path="/guides/:slug" element={<BuyingGuide />} />
                   <Route path="/resources/profiles" element={<ResourcesProfiles />} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
