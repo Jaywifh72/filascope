@@ -1,178 +1,234 @@
 
 
-# My Vault Redesign: Personal Dashboard
+# Projects Feature Rebuild: 3D Print Project Planner
 
 ## Overview
 
-Transform the `/vault` page from a flat tab-strip layout into a rich, visually engaging personal dashboard with a sidebar navigation, hero stats bar, and a new Dashboard landing tab -- making it feel like a personal command center even when data is empty.
+Transform the Projects feature from a simple name+description container into a full build planner where users can track materials, accessories, costs, progress logs, and optionally share projects publicly.
 
 ## Current State
 
-- Single heading + 6-column horizontal `TabsList` that truncates at medium widths
-- Each empty tab shows a single line of text with no onboarding guidance
-- No user identity display, no stats summary, no quick actions
-- The entire page is a single 670-line monolithic component (`Vault.tsx`)
+- `projects` table has only: `id`, `user_id`, `name`, `description`, `created_at`, `updated_at`
+- `project_filaments` is a simple join table: `id`, `project_id`, `filament_id`, `added_at`
+- No project types, statuses, cover images, budgets, accessories, or log entries
+- Zero existing project data in the database (safe to modify schema)
+- RLS is already in place for owner-only access on both tables
 
-## Architecture
+## Database Changes
 
-The redesign splits the monolith into focused components:
+### 1. Alter `projects` table (add new columns)
+
+Since there are zero rows, we can safely add columns:
+
+| Column | Type | Default | Purpose |
+|--------|------|---------|---------|
+| `project_type` | text | `'single_print'` | `single_print`, `multi_part`, `collection`, `custom` |
+| `status` | text | `'planning'` | `planning`, `in_progress`, `completed`, `archived` |
+| `cover_image_url` | text | null | Optional cover photo |
+| `is_public` | boolean | false | Whether project is publicly discoverable |
+| `printer_id` | uuid | null | FK to `printers(id)` -- optional |
+| `budget` | numeric | null | Optional budget in user's currency |
+| `budget_currency` | text | null | Currency code for the budget |
+| `slug` | text | null | URL-friendly slug for public sharing |
+
+### 2. Alter `project_filaments` table (rename + expand to `project_materials`)
+
+Since zero rows exist, drop and recreate as `project_materials`:
+
+| Column | Type | Default | Purpose |
+|--------|------|---------|---------|
+| `id` | uuid | gen_random_uuid() | PK |
+| `project_id` | uuid | -- | FK to projects |
+| `filament_id` | uuid | -- | FK to filaments |
+| `quantity_grams` | integer | null | Estimated grams needed |
+| `quantity_spools` | numeric | 1 | Number of spools |
+| `note` | text | '' | e.g. "for the body" |
+| `sort_order` | integer | 0 | Drag-to-reorder |
+| `purchase_status` | text | 'need_to_buy' | `need_to_buy`, `purchased`, `in_use`, `done` |
+| `created_at` | timestamptz | now() | -- |
+
+### 3. New `project_accessories` table
+
+| Column | Type | Default | Purpose |
+|--------|------|---------|---------|
+| `id` | uuid | gen_random_uuid() | PK |
+| `project_id` | uuid | -- | FK to projects |
+| `name` | text | -- | e.g. "0.4mm hardened nozzle" |
+| `url` | text | null | Optional purchase link |
+| `price` | numeric | null | Manual price entry |
+| `currency` | text | 'USD' | Currency for the price |
+| `purchase_status` | text | 'need_to_buy' | Same statuses as materials |
+| `sort_order` | integer | 0 | Ordering |
+| `created_at` | timestamptz | now() | -- |
+
+### 4. New `project_log_entries` table
+
+| Column | Type | Default | Purpose |
+|--------|------|---------|---------|
+| `id` | uuid | gen_random_uuid() | PK |
+| `project_id` | uuid | -- | FK to projects |
+| `user_id` | uuid | -- | Author |
+| `entry_text` | text | -- | Log content |
+| `created_at` | timestamptz | now() | -- |
+
+### 5. New `project_log_photos` table
+
+| Column | Type | Default | Purpose |
+|--------|------|---------|---------|
+| `id` | uuid | gen_random_uuid() | PK |
+| `log_entry_id` | uuid | -- | FK to project_log_entries |
+| `photo_url` | text | -- | Storage URL |
+| `created_at` | timestamptz | now() | -- |
+
+### 6. Storage bucket
+
+- Create `project-images` bucket for cover images and log photos
+
+### 7. RLS Policies
+
+- **projects**: Keep existing owner-only policies; add a new SELECT policy for public projects (`is_public = true`) accessible to everyone
+- **project_materials**: Owner-only via project ownership join (same pattern as current `project_filaments`)
+- **project_accessories**: Same pattern as materials
+- **project_log_entries**: Owner-only for private projects; public read for public projects
+- **project_log_photos**: Same access as their parent log entry's project
+
+### 8. updated_at trigger
+
+Add trigger for `projects.updated_at` column auto-update.
+
+## Component Architecture
 
 ```text
-src/pages/Vault.tsx                        (orchestrator, ~150 lines)
-src/components/vault/VaultHeroBar.tsx       (avatar + stats strip)
-src/components/vault/VaultSidebar.tsx       (desktop sidebar nav)
-src/components/vault/VaultMobileNav.tsx     (mobile horizontal scroll tabs)
-src/components/vault/VaultDashboard.tsx     (new default landing tab)
-src/components/vault/VaultWishlistTab.tsx   (extracted from current Vault.tsx)
-src/components/vault/VaultPurchasedTab.tsx  (extracted)
-src/components/vault/VaultProjectsTab.tsx   (extracted)
-src/components/vault/VaultReviewsTab.tsx    (replaces "Comments" -- public reviews)
-src/components/vault/VaultNotesTab.tsx      (private notes, split from comments)
-src/components/vault/VaultAlertsTab.tsx     (wraps PriceAlertsSection)
-src/components/vault/VaultHistoryTab.tsx    (wraps ViewHistorySection)
-src/components/vault/VaultEmptyState.tsx    (reusable rich empty state)
-src/hooks/useVaultProfile.ts               (fetch profile + aggregate counts)
+src/components/vault/VaultProjectsTab.tsx      (list view -- rewritten)
+src/components/projects/ProjectCreateDialog.tsx (multi-step creation form)
+src/components/projects/ProjectDetail.tsx       (full detail view)
+src/components/projects/ProjectHeader.tsx       (cover + name + status + actions)
+src/components/projects/ProjectMaterials.tsx    (filament list with costs)
+src/components/projects/ProjectAccessories.tsx  (accessory list)
+src/components/projects/ProjectLog.tsx          (build journal)
+src/components/projects/ProjectCostSummary.tsx  (total cost breakdown)
+src/components/projects/FilamentSearchDialog.tsx (search & add filaments)
+src/hooks/useProject.ts                         (single project CRUD + data)
+src/hooks/useProjectCost.ts                     (cost calculation with regional pricing)
 ```
 
-## Detailed Design
+## Detailed UI Design
 
-### A. Hero/Stats Bar (`VaultHeroBar`)
+### A. Projects List (VaultProjectsTab -- rewritten)
 
-- Fetches profile data from `profiles` table (display_name, avatar_url, created_at)
-- Displays: Avatar (with initials fallback) | display name | "Member since [month year]"
-- Quick stats row rendered as a horizontal set of stat chips:
-  - Wishlist count (from `useWishlist`)
-  - Purchased count (from purchases query)
-  - Projects count (from projects query)
-  - Reviews count (from `filament_reviews` query)
-  - Alerts count (from `useDatabasePriceAlerts`)
-- Each stat is clickable and navigates to its corresponding section
-- "Edit Profile" link navigates to `/settings`
-- On mobile, the avatar shrinks and stats wrap into a 2-row grid
+- "New Project" button opens multi-step creation dialog
+- Project cards display: cover image (or gradient), name, type badge, status badge, material count, estimated cost
+- Cards are clickable to open the detail view (rendered inline within the Vault, not a separate route)
+- Filter bar: by status (Planning / In Progress / Completed / Archived)
+- Sort: by date or name
 
-### B. Sidebar Navigation (`VaultSidebar` + `VaultMobileNav`)
+### B. Project Creation Dialog (3 Steps)
 
-**Desktop (>=1024px):** A vertical sidebar on the left using simple styled nav buttons (not the full Shadcn Sidebar component, to avoid the fixed-position complexity and conflicts with the main site layout). The sidebar will be a static `aside` element within a flex layout.
+**Step 1 -- Basics:**
+- Project name (required, text input)
+- Description (optional, textarea)
+- Project type: radio group -- "Single Print" | "Multi-Part Build" | "Collection/Series" | "Custom"
+- Cover image upload (optional, drag-and-drop or click)
+- Visibility: radio -- "Private" | "Public"
 
-Each nav item includes:
-| Icon | Label | Count Badge |
-|------|-------|------------|
-| LayoutDashboard | Dashboard | -- |
-| Heart | Wishlist | N |
-| ShoppingBag | Purchased | N |
-| FolderOpen | Projects | N |
-| Star | My Reviews | N |
-| FileText | Private Notes | N |
-| Bell | Price Alerts | N |
-| History | History | N |
-| Settings | Settings | (link to /settings) |
+**Step 2 -- Printer:**
+- "What printer will you use?" -- searchable dropdown from the `printers` table (model_name)
+- "Skip for now" button to proceed without selecting
+- Selection shows printer model name + brand as confirmation
 
-Active item highlighted with primary accent border-left and background tint.
+**Step 3 -- Materials (optional, can add later):**
+- Prompt: "Add filaments you'll need (you can always add more later)"
+- "Add Filament" button opens the FilamentSearchDialog
+- Each added filament shows: color swatch, name, quantity input (grams/spools toggle), note input
+- "Create Project" final submit button
 
-**Tablet (768-1024px):** Same sidebar but collapsible via a toggle button. Defaults to collapsed (icon-only mode, 56px wide).
+### C. Project Detail View
 
-**Mobile (<768px):** Horizontal scrollable tab strip (`overflow-x-auto`) at the top of the content area, replacing the current `grid-cols-6` that causes truncation. Each tab shows icon + short label.
+Rendered inline within the Vault tab (not a new page route). The `VaultProjectsTab` manages state: list view vs. detail view for a selected project ID.
 
-### C. Dashboard Tab (`VaultDashboard`) -- New Default Landing
+**Header Section:**
+- Cover image (or generated gradient based on project type)
+- Project name (editable inline)
+- Type badge + Status selector dropdown (Planning -> In Progress -> Completed -> Archived)
+- Action buttons: "Share" (copy link) | "Duplicate" | "Delete"
+- Back arrow to return to project list
 
-This is the key addition that makes the vault feel alive:
+**Materials Section:**
+- Card/table of all filaments in the project
+- Each row: color swatch (from `color_hex`), product name (linked to `/filament/[handle]`), brand, quantity, unit price (from `resolveFilamentPrice`), total line cost, purchase status dropdown, remove button
+- "Total Materials Cost" at bottom
+- "Add Filament" button
+- Drag handles for reordering (`sort_order`)
 
-1. **Greeting**: "Welcome back, [display_name]!" (or "Welcome to your Vault!" for new users)
+**Accessories Section:**
+- Similar layout to materials but with free-text entries
+- Each row: name, optional URL (shows as link), price input, currency, purchase status, remove
+- "Total Accessories Cost" at bottom
+- "Add Accessory" inline form
 
-2. **Quick Actions Row**: Four action cards in a responsive grid:
-   - "Write a Review" -- links to `/` with a toast prompt
-   - "Start a Project" -- opens the create project dialog
-   - "Set Price Alert" -- links to `/`
-   - "Browse Filaments" -- links to `/`
+**Build Journal (Log):**
+- Timestamped entries shown newest-first
+- "Add Entry" form: textarea + optional photo upload (up to 3 per entry)
+- Each entry shows: text, photos as thumbnail row, timestamp
+- Edit and delete buttons on own entries
 
-3. **Recent Activity Feed**: Aggregates the last 5 actions across all sections:
-   - Recently viewed items (from browse history)
-   - Recent wishlist additions
-   - Recent reviews written
-   - Recent price alerts set
-   - Displayed as a timeline with icons, timestamps, and links
+**Cost Summary Card:**
+- Materials subtotal + Accessories subtotal = Total estimated cost
+- All prices shown in user's regional currency via `useRegion()`
+- Optional "Budget" field -- if set, shows progress bar (spent vs budget)
+- Converted prices show approximate indicator
 
-4. **Your Projects Summary**: Latest 3 project cards showing name, filament count, and creation date. "View All" links to Projects tab.
+### D. Filament Search Dialog
 
-5. **Active Alerts Summary**: Shows triggered or pending alerts (max 3). "View All" links to Alerts tab.
+- Modal with search input that queries `filaments` table by `product_title` (ilike)
+- Results show: featured image thumbnail, product title, brand, material, color swatch, price
+- Click to add -- then prompted for quantity and note
+- Prevents duplicates (already-added filaments show "Added" badge)
 
-6. **Zero-Data State**: When the user has no data at all, the dashboard shows an onboarding card:
-   - "Get started with your Vault"
-   - Step-by-step visual guide: "1. Browse filaments  2. Save favorites  3. Set price alerts  4. Track your collection"
-   - Each step links to the relevant page
+### E. Public Sharing (deferred -- minimal v1)
 
-### D. Improved Empty States (`VaultEmptyState`)
+For v1, public projects will be viewable at `/vault?tab=projects&project=[id]` when `is_public = true`. A dedicated `/projects/:user/:slug` route can be added later. The "Share" button copies the project URL to clipboard.
 
-A reusable component replacing the current single-line empty text. Each section gets:
-- A large muted icon
-- A descriptive heading
-- A helpful subtitle with guidance
-- A primary CTA button
+## Data Flow and Hooks
 
-Examples:
-- **Wishlist empty**: Heart icon, "Your wishlist is empty", "Save filaments you're interested in to compare later", [Browse Filaments] button
-- **Reviews empty**: Star icon, "No reviews yet", "Share your experience to help the community", [Browse Filaments to Review] button
-- **Projects empty**: FolderOpen icon, "No projects yet", "Organize filaments by print project", [Create First Project] button
+### `useProject(projectId)`
 
-### E. Reviews/Notes Split
+Fetches a single project with all related data:
+- Project record with printer join
+- Materials with filament joins (for pricing and display)
+- Accessories
+- Log entries with photos
+- Provides mutations: updateProject, addMaterial, removeMaterial, updateMaterial, reorderMaterials, addAccessory, removeAccessory, addLogEntry, deleteLogEntry
 
-The current "Comments" tab merges public and private comments. The redesign splits this into:
-- **My Reviews** (`VaultReviewsTab`): Queries `filament_reviews` table for user's public reviews (with rating, review text, helpful count)
-- **Private Notes** (`VaultNotesTab`): Queries `filament_comments` where `is_private = true` for the user's private notes
+### `useProjectCost(materials, accessories)`
 
-### F. URL-Based Tab State
-
-Replace the current uncontrolled `Tabs defaultValue` with URL search parameter syncing:
-- `/vault` defaults to Dashboard
-- `/vault?tab=wishlist`, `/vault?tab=reviews`, etc.
-- Enables deep linking from other pages (e.g., the existing `/vault?tab=history` link from `RecentlyViewedSection`)
-
-### G. Skeleton Update
-
-Update `VaultSkeleton` to match the new layout (hero bar skeleton + sidebar skeleton + content skeleton).
-
-## Technical Details
-
-### State Management
-
-A new `useVaultProfile` hook consolidates all count data:
-```typescript
-// Fetches profile + aggregates counts from existing hooks
-// Returns: { profile, counts, isLoading }
-// counts = { wishlist, purchased, projects, reviews, notes, alerts, history }
-```
-
-### Responsive Breakpoints
-
-- `>=1024px` (lg): Full sidebar + content
-- `768-1024px` (md): Collapsible sidebar + content
-- `<768px`: Mobile horizontal nav + full-width content
-
-### Tab Routing
-
-Uses `useSearchParams` from react-router-dom:
-```typescript
-const [searchParams, setSearchParams] = useSearchParams();
-const activeTab = searchParams.get("tab") || "dashboard";
-const setActiveTab = (tab: string) => setSearchParams({ tab });
-```
-
-### No Database Changes Required
-
-All data sources already exist:
-- `profiles` table has display_name, avatar_url, created_at
-- `user_favorites`, `user_purchases`, `projects`, `filament_reviews`, `filament_comments`, `price_alerts`, `user_browse_history` are all present
+Pure calculation hook:
+- Takes materials (with filament pricing data) and accessories
+- Uses `useRegion()` and `resolveFilamentPrice()` for each material
+- Returns: materialsCost, accessoriesCost, totalCost, currency, itemizedCosts[]
 
 ## Implementation Sequence
 
-1. Create `useVaultProfile` hook (profile data + counts aggregation)
-2. Create `VaultEmptyState` reusable component
-3. Create `VaultHeroBar` component
-4. Create `VaultSidebar` and `VaultMobileNav` components
-5. Extract existing tab content into individual tab components (Wishlist, Purchased, Projects, Alerts, History)
-6. Create new `VaultReviewsTab` and `VaultNotesTab` (splitting Comments)
-7. Create `VaultDashboard` component (greeting, quick actions, activity feed, summaries)
-8. Rewrite `Vault.tsx` as the orchestrator with URL-based tab routing
-9. Update `VaultSkeleton` to match new layout
-10. Test responsive behavior at all three breakpoints
+1. **Database migration** -- Alter `projects`, drop/recreate `project_materials` (replacing `project_filaments`), create `project_accessories`, `project_log_entries`, `project_log_photos`, storage bucket, RLS policies
+2. **Hooks** -- `useProject.ts` and `useProjectCost.ts`
+3. **FilamentSearchDialog** -- Reusable filament picker component
+4. **ProjectCreateDialog** -- Multi-step creation form (Steps 1-3)
+5. **ProjectDetail** -- Header, Materials, Accessories, Log, Cost Summary sub-components
+6. **VaultProjectsTab** -- Rewrite with list/detail view toggle, filters, and improved cards
+7. **VaultDashboard** -- Update `ProjectsSummary` to show new fields (status badge, cost)
+8. **Update references** -- Any code referencing `project_filaments` must switch to `project_materials`
+
+## Migration Safety
+
+- `projects` table: 0 rows -- safe to alter freely
+- `project_filaments` table: 0 rows -- safe to drop and replace with `project_materials`
+- The `VaultDashboard.tsx` `ProjectsSummary` component queries `project_filaments(id)` -- will be updated to `project_materials(id)`
+- No other components reference `project_filaments` outside of `VaultProjectsTab` and `VaultDashboard`
+
+## Edge Cases
+
+- Filaments without pricing: show "Price unavailable" in cost column, exclude from total
+- Deleted filaments: materials reference `filament_id` as FK -- if a filament is removed from the DB, the material row shows "Filament unavailable" gracefully
+- Zero-quantity materials: treated as "1 spool" for cost calculation
+- Budget currency mismatch: budget is stored with its own currency; displayed in user's currency via conversion
 
