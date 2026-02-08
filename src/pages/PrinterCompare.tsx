@@ -495,6 +495,12 @@ const PrinterCompare = () => {
                   icon={<Wifi className="h-4 w-4" />}
                 />
                 <ComparisonRow label="Remote Monitoring" values={printers.map(p => p.remote_monitoring_supported)} />
+                <ComparisonRow label="Filament Runout Sensor" values={printers.map(p => p.filament_runout_detection)} />
+                <ComparisonRow label="Camera / AI Detection" values={printers.map(p => p.ai_spaghetti_detection)} />
+                <ComparisonRow 
+                  label="Touchscreen" 
+                  values={printers.map(p => p.screen_type ? p.screen_type : null)} 
+                />
                 <ComparisonRow label="Power Loss Recovery" values={printers.map(p => p.power_loss_recovery)} />
               </Card>
 
