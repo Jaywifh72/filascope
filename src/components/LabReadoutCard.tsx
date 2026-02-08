@@ -361,12 +361,8 @@ export function LabReadoutCard({
             width={200}
             height={128}
             onError={() => setImageError(true)}
-            fallback={
-              <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                <Package className="w-8 h-8 opacity-40" />
-                <span className="text-[10px] uppercase tracking-wider opacity-60">No Image</span>
-              </div>
-            }
+            colorHex={filament.color_hex}
+            material={filament.material}
           />
         ) : (
           /* Fallback placeholder when no image or error */

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Package, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { getBrandLogo } from '@/lib/brandLogos';
@@ -16,22 +16,15 @@ export function WizardProductCard({ product }: WizardProductCardProps) {
     <div className="flex-shrink-0 w-[180px] sm:w-[200px] rounded-xl border border-border bg-card overflow-hidden flex flex-col">
       {/* Image area */}
       <div className="h-32 bg-muted/20 flex items-center justify-center overflow-hidden">
-        {product.featuredImage ? (
-          <OptimizedImage
-            src={product.featuredImage}
-            alt={product.productTitle}
-            className="w-full h-full"
-            objectFit="contain"
-            width={200}
-          />
-        ) : product.colorHex ? (
-          <div
-            className="w-16 h-16 rounded-full border border-border/50 shadow-inner"
-            style={{ backgroundColor: product.colorHex }}
-          />
-        ) : (
-          <Package className="h-10 w-10 text-muted-foreground/40" />
-        )}
+        <OptimizedImage
+          src={product.featuredImage}
+          alt={product.productTitle}
+          className="w-full h-full"
+          objectFit="contain"
+          width={200}
+          colorHex={product.colorHex}
+          material={product.material}
+        />
       </div>
 
       {/* Content */}

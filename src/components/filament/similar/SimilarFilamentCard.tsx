@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Star, ThermometerSun, Check, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { RegionalPrice } from "@/components/price/RegionalPrice";
 import { useRegion } from "@/contexts/RegionContext";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
+import { FilamentImageFallback } from "@/components/ui/FilamentImageFallback";
 
 export type SimilarityReason = 
   | "same_material" 
@@ -73,6 +75,7 @@ function getMaterialColor(material: string | null): string {
 }
 
 export function SimilarFilamentCard({ filament, showCompareToggle = true, currentPricePerKg }: SimilarFilamentCardProps) {
+  const [imageError, setImageError] = useState(false);
   const { items, addItem, removeItem } = useCompare();
   const { currency, convertPrice, hasRates, formatPrice } = useRegion();
   
@@ -207,19 +210,20 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
 
       {/* Product Image */}
       <div className="aspect-square w-full mb-3 rounded-lg bg-muted/30 overflow-hidden">
-        {filament.featured_image ? (
+        {filament.featured_image && !imageError ? (
           <img
             src={filament.featured_image}
             alt={filament.product_title}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+            onError={() => setImageError(true)}
+            loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <div
-              className="w-12 h-12 rounded-full"
-              style={{ backgroundColor: filament.color_hex || "#888" }}
-            />
-          </div>
+          <FilamentImageFallback
+            colorHex={filament.color_hex}
+            material={filament.material}
+            size="md"
+          />
         )}
       </div>
 

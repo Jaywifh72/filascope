@@ -95,13 +95,20 @@ export function WishlistItemCard({
               src={item.filament.featured_image}
               alt={item.filament.product_title}
               className="h-full w-full object-cover hover:scale-105 transition-transform"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling;
+                if (fallback) (fallback as HTMLElement).style.display = 'block';
+              }}
             />
-          ) : (
-            <div
-              className="h-full w-full"
-              style={{ backgroundColor: item.filament?.color_hex || "#333" }}
-            />
-          )}
+          ) : null}
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundColor: item.filament?.color_hex || "#333",
+              display: item.filament?.featured_image ? 'none' : 'block',
+            }}
+          />
         </Link>
 
         {/* Content */}

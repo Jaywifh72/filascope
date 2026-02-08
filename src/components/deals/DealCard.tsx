@@ -116,7 +116,7 @@ export function DealCard({
               aspectRatio="auto"
               objectFit="contain"
               width={320}
-              fallback={<span className="text-4xl text-muted-foreground">📦</span>}
+              material={deal.material}
             />
           </div>
 
