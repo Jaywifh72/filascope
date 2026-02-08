@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -14,12 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TrendingDown, TrendingUp, Calendar, ArrowDown, Minus, Clock, Bell } from 'lucide-react';
 import { usePriceHistory, PricePoint } from '@/hooks/usePriceHistory';
+import { useRegion } from '@/contexts/RegionContext';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface PriceHistoryChartProps {
   filamentId: string;
   currentPrice: number | null;
+  /** @deprecated – currency symbol is now derived from useRegion */
   currencySymbol?: string;
 }
 
@@ -28,10 +30,10 @@ type TimeRange = 30 | 90 | 180;
 export function PriceHistoryChart({ 
   filamentId, 
   currentPrice,
-  currencySymbol = '$'
 }: PriceHistoryChartProps) {
   // Default to 6M (180 days) for best historical context
   const [timeRange, setTimeRange] = useState<TimeRange>(180);
+  const { convertPrice, currency, hasRates } = useRegion();
   
   const { 
     prices, 
@@ -46,8 +48,33 @@ export function PriceHistoryChart({
     maxPoint
   } = usePriceHistory(filamentId, currentPrice, timeRange);
 
+  // Convert all USD price history values to user's currency
+  const converted = useMemo(() => {
+    const conv = (val: number) => {
+      if (currency === 'USD' || !hasRates) return val;
+      return convertPrice(val, 'USD') ?? val;
+    };
+    return {
+      prices: prices.map(p => ({ ...p, price: conv(p.price) })),
+      min: conv(min),
+      max: conv(max),
+      avg: conv(avg),
+      currentPrice: currentPrice != null ? conv(currentPrice) : null,
+      minPoint: minPoint ? { ...minPoint, price: conv(minPoint.price) } : null,
+      maxPoint: maxPoint ? { ...maxPoint, price: conv(maxPoint.price) } : null,
+    };
+  }, [prices, min, max, avg, currentPrice, minPoint, maxPoint, currency, hasRates, convertPrice]);
+
+  // Currency symbol map
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    USD: '$', CAD: 'C$', EUR: '€', GBP: '£', AUD: 'A$',
+    JPY: '¥', CNY: '¥', KRW: '₩', PLN: 'zł', CZK: 'Kč',
+    SEK: 'kr', CHF: 'CHF', INR: '₹', MXN: 'MX$',
+  };
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || currency;
+
   // Get the most recent scraped price point
-  const latestPoint = prices.length > 0 ? prices[prices.length - 1] : null;
+  const latestPoint = converted.prices.length > 0 ? converted.prices[converted.prices.length - 1] : null;
 
   if (isLoading) {
     return (
@@ -78,8 +105,8 @@ export function PriceHistoryChart({
     );
   }
 
-  // Format price for display
-  const formatPrice = (value: number) => `${currencySymbol}${value.toFixed(2)}`;
+  // Format price for display — use converted values
+  const formatDisplayPrice = (value: number) => `${currencySymbol}${value.toFixed(2)}`;
   
   // Format date for tooltip
   const formatDate = (dateStr: string) => {
@@ -99,10 +126,10 @@ export function PriceHistoryChart({
     }
   };
 
-  // Calculate domain padding
-  const pricePadding = (max - min) * 0.1;
-  const yMin = Math.max(0, min - pricePadding);
-  const yMax = max + pricePadding;
+  // Calculate domain padding using converted min/max
+  const pricePadding = (converted.max - converted.min) * 0.1;
+  const yMin = Math.max(0, converted.min - pricePadding);
+  const yMax = converted.max + pricePadding;
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -113,7 +140,7 @@ export function PriceHistoryChart({
             {formatDate(label)}
           </p>
           <p className="text-lg font-bold text-foreground">
-            {formatPrice(payload[0].value)}
+            {formatDisplayPrice(payload[0].value)}
           </p>
         </div>
       );
@@ -203,7 +230,7 @@ export function PriceHistoryChart({
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={prices}
+            data={converted.prices}
             margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
           >
             <XAxis 
@@ -227,16 +254,16 @@ export function PriceHistoryChart({
             
             {/* Average line */}
             <ReferenceLine 
-              y={avg} 
+              y={converted.avg} 
               stroke="hsl(var(--muted-foreground))" 
               strokeDasharray="3 3"
               strokeOpacity={0.5}
             />
             
             {/* Current price line */}
-            {currentPrice && (
+            {converted.currentPrice && (
               <ReferenceLine 
-                y={currentPrice} 
+                y={converted.currentPrice} 
                 stroke="hsl(var(--primary))" 
                 strokeDasharray="5 5"
                 strokeOpacity={0.7}
@@ -259,10 +286,10 @@ export function PriceHistoryChart({
             />
 
             {/* Min point marker */}
-            {minPoint && (
+            {converted.minPoint && (
               <ReferenceDot
-                x={minPoint.date}
-                y={minPoint.price}
+                x={converted.minPoint.date}
+                y={converted.minPoint.price}
                 r={5}
                 fill="hsl(142 76% 36%)"
                 stroke="hsl(var(--background))"
@@ -271,10 +298,10 @@ export function PriceHistoryChart({
             )}
             
             {/* Max point marker */}
-            {maxPoint && (
+            {converted.maxPoint && (
               <ReferenceDot
-                x={maxPoint.date}
-                y={maxPoint.price}
+                x={converted.maxPoint.date}
+                y={converted.maxPoint.price}
                 r={5}
                 fill="hsl(0 84% 60%)"
                 stroke="hsl(var(--background))"
@@ -289,18 +316,18 @@ export function PriceHistoryChart({
       <div className="grid grid-cols-3 gap-4 pt-2">
         <div className="text-center p-3 bg-muted/20 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">Lowest</div>
-          <div className="text-sm font-semibold text-emerald-400">{formatPrice(min)}</div>
-          {minPoint && (
-            <div className="text-xs text-muted-foreground mt-0.5">{formatStatDate(minPoint.date)}</div>
+          <div className="text-sm font-semibold text-emerald-400">{formatDisplayPrice(converted.min)}</div>
+          {converted.minPoint && (
+            <div className="text-xs text-muted-foreground mt-0.5">{formatStatDate(converted.minPoint.date)}</div>
           )}
         </div>
         <div className="text-center p-3 bg-muted/20 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">Average</div>
-          <div className="text-sm font-semibold">{formatPrice(avg)}</div>
+          <div className="text-sm font-semibold">{formatDisplayPrice(converted.avg)}</div>
         </div>
         <div className="text-center p-3 bg-muted/20 rounded-lg">
           <div className="text-xs text-muted-foreground mb-1">Current</div>
-          <div className="text-sm font-semibold">{latestPoint ? formatPrice(latestPoint.price) : formatPrice(currentPrice || 0)}</div>
+          <div className="text-sm font-semibold">{latestPoint ? formatDisplayPrice(latestPoint.price) : formatDisplayPrice(converted.currentPrice || 0)}</div>
           {latestPoint && (
             <div className="text-xs text-muted-foreground mt-0.5">{formatStatDate(latestPoint.date)}</div>
           )}

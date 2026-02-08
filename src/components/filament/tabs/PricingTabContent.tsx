@@ -269,11 +269,19 @@ export function PricingTabContent({
     currency: livePriceCurrency
   } = useCurrentPrice(productUrl, pricePerSpool, originalUsUrl);
 
-  // Get price history data
+  // Get price history data — raw USD values from DB
   const { 
-    min: historicalLow,
+    min: historicalLowRaw,
     isLoading: historyLoading
   } = usePriceHistory(filament.id, pricePerKg, 180);
+
+  // Convert historical low to user's currency
+  const historicalLow = useMemo(() => {
+    if (historicalLowRaw == null || historicalLowRaw <= 0) return null;
+    if (currency === 'USD') return historicalLowRaw;
+    const c = convertPrice(historicalLowRaw, 'USD' as any);
+    return c ?? historicalLowRaw;
+  }, [historicalLowRaw, currency, convertPrice]);
 
   // Calculate display price for alerts/charts
   const liveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : null;
@@ -294,11 +302,6 @@ export function PricingTabContent({
 
   // Currency symbol for user's currency
   const userCurrencySymbol = CURRENCY_SYMBOLS[currency] || currency;
-  
-  // For price history display
-  const historyCurrencySymbol = isLivePrice 
-    ? (CURRENCY_SYMBOLS[livePriceCurrency] || '$')
-    : '$';
 
   // Build unified store list directly from priceCandidates
   // NO re-deduplication here — the hook already handles it, ensuring
@@ -494,14 +497,13 @@ export function PricingTabContent({
                 <ArrowDown className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm text-emerald-400">Lowest recorded in 6 months:</span>
               </div>
-              <span className="font-bold text-emerald-400">{historyCurrencySymbol}{historicalLow.toFixed(2)}/kg</span>
+              <span className="font-bold text-emerald-400">{userCurrencySymbol}{historicalLow.toFixed(2)}/kg</span>
             </div>
           )}
           
           <PriceHistoryChart
             filamentId={filament.id}
             currentPrice={displayPricePerKg}
-            currencySymbol={historyCurrencySymbol}
           />
           
           <p className="text-xs text-muted-foreground mt-4 text-center">

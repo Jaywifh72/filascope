@@ -15,6 +15,7 @@ import { getProductLineName } from '@/lib/productNameUtils';
 import { getBrandLogo } from '@/lib/brandLogos';
 import { toBrandSlug } from '@/utils/brandSlug';
 import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type FilamentForScoring } from '@/lib/unifiedFilamentScore';
+import { isValidFinishType } from '@/lib/finishTypeValidation';
 import type { CommunityReviewStats } from '@/hooks/useCommunityReviewStats';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -189,7 +190,7 @@ export function FilamentHeroSection({
                   {displayFilament.net_weight_g}g
                 </Badge>
               )}
-              {displayFilament.finish_type && !/^\d+(\.\d+)?$/.test(displayFilament.finish_type) && (
+              {displayFilament.finish_type && isValidFinishType(displayFilament.finish_type) && (
                 <Badge variant="secondary" className="text-xs px-2.5 py-1">{displayFilament.finish_type}</Badge>
               )}
               {displayFilament.is_nozzle_abrasive && (

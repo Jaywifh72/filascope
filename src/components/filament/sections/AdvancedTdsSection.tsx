@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { validateSpec, validateDiameter, type SpecValidationResult } from '@/lib/specValidation';
+import { isValidFinishType } from '@/lib/finishTypeValidation';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -62,7 +63,7 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
         { label: 'Transmission Distance', value: filament.transmission_distance ? `${filament.transmission_distance}` : null },
         { label: 'Color Family', value: filament.color_family },
         { label: 'Color Hex', value: filament.color_hex ? `#${filament.color_hex}` : null },
-        { label: 'Finish Type', value: filament.finish_type && !/^\d+(\.\d+)?$/.test(filament.finish_type) ? filament.finish_type : null },
+        { label: 'Finish Type', value: filament.finish_type && isValidFinishType(filament.finish_type) ? filament.finish_type : null },
         { label: 'Food Contact Rating', value: filament.food_contact_rating },
       ],
     },
