@@ -56,6 +56,7 @@ import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productName
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
+import { ContinueBrowsingSection } from "@/components/ContinueBrowsingSection";
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
@@ -1653,6 +1654,11 @@ const Finder = () => {
       {/* Welcome Banner for New Visitors */}
       <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
         <WelcomeBanner />
+      </div>
+
+      {/* Continue Browsing (logged-in users, current session) */}
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        <ContinueBrowsingSection />
       </div>
 
       {/* Recently Viewed Section */}
