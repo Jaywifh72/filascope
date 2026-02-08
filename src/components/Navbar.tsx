@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import filascopeLogo from "@/assets/logo-filascope.jpg";
+import filascopeLogo from "@/assets/logo-filascope.webp";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { RegionSelector } from "@/components/RegionSelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
@@ -232,8 +232,16 @@ const Navbar = () => {
 
           {/* Logo - Only icon and wordmark */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <img src={filascopeLogo} alt="FilaScope" className="h-8 md:h-9 w-auto object-contain" />
-            
+            <img
+              src={filascopeLogo}
+              alt="FilaScope"
+              className="h-8 md:h-9 w-auto object-contain"
+              width={144}
+              height={36}
+              loading="eager"
+              // @ts-ignore – fetchpriority valid HTML
+              fetchpriority="high"
+            />
           </Link>
 
           {/* Desktop Navigation Links (lg and up) */}

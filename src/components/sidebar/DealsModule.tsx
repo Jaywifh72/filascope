@@ -70,6 +70,9 @@ export function DealsModule() {
                     src={deal.featured_image}
                     alt={deal.product_title}
                     className="w-full h-full object-cover"
+                    width={48}
+                    height={48}
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">

@@ -439,6 +439,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               src={brandLogo} 
               alt={`${filament.vendor} logo`}
               className="w-5 h-5 rounded object-contain"
+              width={20}
+              height={20}
+              loading="lazy"
               onError={() => setImageError(true)}
             />
           ) : null}

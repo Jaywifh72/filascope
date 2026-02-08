@@ -75,10 +75,16 @@ export function ZoomImage({
         />
       )}
 
-      {/* Main Image */}
+      {/* Main Image — hero product image: eager + high priority */}
       <img
         src={src}
         alt={alt}
+        width={800}
+        height={800}
+        loading="eager"
+        decoding="async"
+        // @ts-ignore – fetchpriority valid HTML
+        fetchpriority="high"
         className={cn(
           "w-full h-full object-contain transition-all duration-300",
           isLoaded ? "opacity-100" : "opacity-0",

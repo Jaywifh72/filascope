@@ -156,6 +156,9 @@ export default function LargeFeaturedPrinterCard({
                     src={productImage} 
                     alt={`${printer.brand?.brand} ${printer.model_name}`}
                     className="w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                    width={280}
+                    height={280}
+                    loading="lazy"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                       (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -276,6 +279,9 @@ export default function LargeFeaturedPrinterCard({
                 src={getBrandLogo(printer.brand?.brand || null)!} 
                 alt={`${printer.brand?.brand} logo`}
                 className="h-auto max-w-[40px] object-contain"
+                width={40}
+                height={40}
+                loading="lazy"
               />
             </div>
           )}
