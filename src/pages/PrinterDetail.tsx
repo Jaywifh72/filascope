@@ -616,7 +616,7 @@ const PrinterDetail = () => {
       <ProductSEO
         title={printerName}
         description={seoDescription}
-        canonicalUrl={`/printer/${printer.printer_id || printer.id}`}
+        canonicalUrl={`/printers/${id}`}
         image={seoImage}
         brand={printerBrand}
         price={displayPrice}
