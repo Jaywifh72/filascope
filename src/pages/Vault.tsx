@@ -3,6 +3,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useVaultProfile } from "@/hooks/useVaultProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { VaultHeroBar } from "@/components/vault/VaultHeroBar";
 import { VaultSidebar, type VaultTab } from "@/components/vault/VaultSidebar";
 import { VaultMobileNav } from "@/components/vault/VaultMobileNav";
@@ -37,6 +38,7 @@ const Vault = () => {
   const { user, loading } = useAuth();
   const { profile, counts, isLoading: profileLoading } = useVaultProfile();
   const isMobile = useIsMobile();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [searchParams, setSearchParams] = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -63,13 +65,16 @@ const Vault = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  // Show mobile nav at anything below desktop (< 1024px)
+  const showMobileNav = !isDesktop;
+
   return (
     <div className="container mx-auto py-6 px-4">
       {/* Hero Bar */}
       <VaultHeroBar profile={profile} counts={counts} onStatClick={setActiveTab} />
 
-      {/* Mobile Nav */}
-      {isMobile && (
+      {/* Mobile / Tablet Nav (< 1024px) */}
+      {showMobileNav && (
         <div className="mb-4">
           <VaultMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
@@ -77,8 +82,8 @@ const Vault = () => {
 
       {/* Desktop/Tablet: Sidebar + Content */}
       <div className="flex gap-6">
-        {/* Sidebar - hidden on mobile */}
-        {!isMobile && (
+        {/* Sidebar - only on desktop */}
+        {isDesktop && (
           <VaultSidebar
             activeTab={activeTab}
             counts={counts}
