@@ -117,6 +117,8 @@ interface FilamentCardProps {
   // For grouped product display
   displayTitle?: string;           // Override title for grouped products
   variantIndicators?: VariantIndicators;  // Show color swatches and weight options
+  // Community rating (from bulk hook)
+  communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
 }
 
 // Get the single most important standout feature
@@ -159,7 +161,7 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
   return null;
 }
 
-export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators, communityRating }: FilamentCardProps) {
   // For grouped products (multiple variants), only show out of stock if ALL variants are out
   // For single products, use the individual filament's status
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
@@ -591,6 +593,37 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         )}
       </div>
 
+      {/* ═══════════════════════════════════════════════════════════════
+          ELEMENT 2b: Community Rating
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="px-6 pb-2 -mt-1" data-card-element="2b">
+        {communityRating && communityRating.reviewCount > 0 ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to={`/filament/${filament.id}?tab=community`}
+                className="inline-flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity"
+              >
+                <Star className="w-3.5 h-3.5 fill-primary text-primary" aria-hidden="true" />
+                <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
+                <span className="text-muted-foreground text-xs">
+                  ({communityRating.reviewCount} review{communityRating.reviewCount !== 1 ? 's' : ''})
+                </span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+              <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} average from {communityRating.reviewCount} reviews</p>
+              <div className="space-y-0.5 text-muted-foreground">
+                {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
+                {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
+                {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="text-xs text-muted-foreground/60">No reviews yet</span>
+        )}
+      </div>
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 3: Price
           ═══════════════════════════════════════════════════════════════ */}
