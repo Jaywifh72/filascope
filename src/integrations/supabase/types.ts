@@ -5329,11 +5329,13 @@ export type Database = {
         Row: {
           amazon_prime_member: boolean | null
           avatar_url: string | null
+          bio: string | null
           completed_tutorials: Json | null
           created_at: string | null
           display_name: string | null
           email: string | null
           id: string
+          is_public: boolean
           preferred_currency: string | null
           preferred_slicer: string | null
           retailer_memberships: Json | null
@@ -5341,19 +5343,24 @@ export type Database = {
           shipping_country: string | null
           shipping_zip_code: string | null
           skill_level: string | null
+          social_links: Json
           updated_at: string | null
+          username_slug: string | null
           wishlist_email_digest: boolean | null
           wishlist_price_alerts: boolean | null
+          wishlist_public: boolean
           wishlist_restock_alerts: boolean | null
         }
         Insert: {
           amazon_prime_member?: boolean | null
           avatar_url?: string | null
+          bio?: string | null
           completed_tutorials?: Json | null
           created_at?: string | null
           display_name?: string | null
           email?: string | null
           id: string
+          is_public?: boolean
           preferred_currency?: string | null
           preferred_slicer?: string | null
           retailer_memberships?: Json | null
@@ -5361,19 +5368,24 @@ export type Database = {
           shipping_country?: string | null
           shipping_zip_code?: string | null
           skill_level?: string | null
+          social_links?: Json
           updated_at?: string | null
+          username_slug?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
+          wishlist_public?: boolean
           wishlist_restock_alerts?: boolean | null
         }
         Update: {
           amazon_prime_member?: boolean | null
           avatar_url?: string | null
+          bio?: string | null
           completed_tutorials?: Json | null
           created_at?: string | null
           display_name?: string | null
           email?: string | null
           id?: string
+          is_public?: boolean
           preferred_currency?: string | null
           preferred_slicer?: string | null
           retailer_memberships?: Json | null
@@ -5381,9 +5393,12 @@ export type Database = {
           shipping_country?: string | null
           shipping_zip_code?: string | null
           skill_level?: string | null
+          social_links?: Json
           updated_at?: string | null
+          username_slug?: string | null
           wishlist_email_digest?: boolean | null
           wishlist_price_alerts?: boolean | null
+          wishlist_public?: boolean
           wishlist_restock_alerts?: boolean | null
         }
         Relationships: []

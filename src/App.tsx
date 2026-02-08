@@ -92,6 +92,7 @@ const HotendDetail = lazy(() => import("./pages/HotendDetail"));
 const BuildPlateDetail = lazy(() => import("./pages/BuildPlateDetail"));
 const AMSDetail = lazy(() => import("./pages/AMSDetail"));
 const Settings = lazy(() => import("./pages/Settings"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
 const ReferenceSlicers = lazy(() => import("./pages/ReferenceSlicers"));
 const ReferenceCAD = lazy(() => import("./pages/ReferenceCAD"));
 const ReferenceRepos = lazy(() => import("./pages/ReferenceRepos"));
@@ -253,6 +254,8 @@ const App = () => (
                   <Route path="/model-repositories" element={<ModelRepositories />} />
                   {/* Embed route — lightweight, no navbar/footer */}
                   <Route path="/embed/:id" element={<EmbedProduct />} />
+                  {/* Public user profile */}
+                  <Route path="/user/:userId" element={<UserProfile />} />
                   {/* Redirects for legacy/broken links */}
                   <Route path="/knowledge-base" element={<Navigate to="/compare" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
