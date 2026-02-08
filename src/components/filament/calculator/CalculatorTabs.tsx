@@ -24,8 +24,12 @@ interface CalculatorTabsProps {
   onClose: () => void;
   /** Currency symbol for the user's region (e.g., "C$", "€") */
   currencySymbol?: string;
+  /** Currency code (e.g., "CAD", "EUR") */
+  currencyCode?: string;
   /** User's region code for regional defaults */
   regionCode?: string;
+  /** Whether the price is a converted estimate */
+  isConverted?: boolean;
 }
 
 type TabId = 'usage' | 'cost' | 'settings' | 'compare';
@@ -42,7 +46,9 @@ export const CalculatorTabs: React.FC<CalculatorTabsProps> = ({
   isOpen,
   onClose,
   currencySymbol = '$',
+  currencyCode = 'USD',
   regionCode = 'US',
+  isConverted = false,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('usage');
   const [usageResult, setUsageResult] = useState<FilamentUsageOutput | null>(null);
@@ -145,6 +151,8 @@ export const CalculatorTabs: React.FC<CalculatorTabsProps> = ({
               filamentMaterial={filament.material}
               onCalculate={setUsageResult}
               currencySymbol={currencySymbol}
+              currencyCode={currencyCode}
+              isConverted={isConverted}
             />
           )}
 
@@ -154,7 +162,10 @@ export const CalculatorTabs: React.FC<CalculatorTabsProps> = ({
               filamentName={filament.name}
               usageGrams={usageResult?.totalGrams}
               currencySymbol={currencySymbol}
+              currencyCode={currencyCode}
               regionCode={regionCode}
+              isConverted={isConverted}
+              spoolWeight={filament.spoolWeight || 1000}
             />
           )}
 

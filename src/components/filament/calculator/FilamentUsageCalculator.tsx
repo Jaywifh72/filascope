@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { FilamentUsageOutput } from './types';
 import { SpoolUsageVisual } from './SpoolUsageVisual';
 import { CalculatorShareModal } from './CalculatorShareModal';
+import { GcodeParser } from './GcodeParser';
 
 interface FilamentUsageCalculatorProps {
   filamentDensity: number; // g/cm³
@@ -26,6 +27,10 @@ interface FilamentUsageCalculatorProps {
   onCalculate?: (result: FilamentUsageOutput) => void;
   /** Currency symbol for display (e.g., "C$", "€") */
   currencySymbol?: string;
+  /** Currency code (e.g., "CAD", "EUR") */
+  currencyCode?: string;
+  /** Whether the price is a converted estimate */
+  isConverted?: boolean;
 }
 
 export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = ({
@@ -37,9 +42,11 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
   buyMoreUrl,
   onCalculate,
   currencySymbol = '$',
+  currencyCode = 'USD',
+  isConverted = false,
 }) => {
   const [showShareModal, setShowShareModal] = useState(false);
-  const [method, setMethod] = useState<'dimensions' | 'weight'>('dimensions');
+  const [method, setMethod] = useState<'dimensions' | 'weight' | 'gcode'>('dimensions');
   const [length, setLength] = useState('100');
   const [width, setWidth] = useState('100');
   const [height, setHeight] = useState('50');
@@ -50,10 +57,11 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
   const [layerHeight, setLayerHeight] = useState('0.2');
   const [supportEnabled, setSupportEnabled] = useState(false);
   const [supportDensity, setSupportDensity] = useState(15);
+  const [gcodeParseTime, setGcodeParseTime] = useState<string | null>(null);
 
   const result = useMemo<FilamentUsageOutput | null>(() => {
-    // Weight-based calculation (from slicer)
-    if (method === 'weight' && slicerWeight) {
+    // Weight-based calculation (from slicer or gcode)
+    if ((method === 'weight' || method === 'gcode') && slicerWeight) {
       const weight = parseFloat(slicerWeight);
       if (isNaN(weight) || weight <= 0) return null;
 
@@ -71,7 +79,7 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
         spoolsNeeded: Math.ceil(totalWithWaste / spoolWeight),
         spoolPercentUsed: Math.round((totalWithWaste / spoolWeight) * 100 * 10) / 10,
         wasteEstimate: Math.round(wasteEstimate * 10) / 10,
-        confidenceLevel: 'high',
+        confidenceLevel: method === 'gcode' ? 'high' : 'high',
         breakdown: {
           walls: Math.round(weight * 0.3 * 10) / 10,
           infill: Math.round(weight * 0.4 * 10) / 10,
@@ -164,6 +172,7 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
     }
   }, [result, onCalculate]);
 
+  const prefix = isConverted ? '~' : '';
   const materialCost = result ? (result.totalGrams / 1000) * currentPrice : 0;
 
   return (
@@ -184,19 +193,19 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
         <button
           onClick={() => setMethod('dimensions')}
           className={cn(
-            "flex items-center gap-2 flex-1 px-4 py-2.5 rounded-md text-sm font-semibold transition-all",
+            "flex items-center gap-2 flex-1 px-3 py-2.5 rounded-md text-sm font-semibold transition-all",
             method === 'dimensions'
               ? "bg-primary/15 border border-primary/40 text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
         >
           <Box className="w-4 h-4" />
-          By Dimensions
+          Dimensions
         </button>
         <button
           onClick={() => setMethod('weight')}
           className={cn(
-            "flex items-center gap-2 flex-1 px-4 py-2.5 rounded-md text-sm font-semibold transition-all",
+            "flex items-center gap-2 flex-1 px-3 py-2.5 rounded-md text-sm font-semibold transition-all",
             method === 'weight'
               ? "bg-primary/15 border border-primary/40 text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -204,6 +213,18 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
         >
           <Layers className="w-4 h-4" />
           From Slicer
+        </button>
+        <button
+          onClick={() => setMethod('gcode')}
+          className={cn(
+            "flex items-center gap-2 flex-1 px-3 py-2.5 rounded-md text-sm font-semibold transition-all",
+            method === 'gcode'
+              ? "bg-primary/15 border border-primary/40 text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <Calculator className="w-4 h-4" />
+          .gcode
         </button>
       </div>
 
@@ -289,96 +310,125 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
         </div>
       )}
 
-      {/* Print Settings */}
-      <div className="mb-5 pb-5 border-b border-border/50">
-        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 block">
-          Print Settings
-        </Label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Infill */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label className="text-xs text-muted-foreground">Infill</Label>
-              <span className="text-xs font-bold text-primary">{infill}%</span>
-            </div>
-            <Slider
-              value={[infill]}
-              onValueChange={([v]) => setInfill(v)}
-              min={0}
-              max={100}
-              step={5}
-              className="w-full"
-            />
-          </div>
-
-          {/* Wall Count */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Walls</Label>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setWallCount(Math.max(1, wallCount - 1))}
-                className="w-8 h-8 rounded-md bg-muted/50 hover:bg-muted text-foreground font-bold transition-colors"
-              >
-                −
-              </button>
-              <span className="w-8 text-center font-bold text-foreground">{wallCount}</span>
-              <button
-                onClick={() => setWallCount(Math.min(10, wallCount + 1))}
-                className="w-8 h-8 rounded-md bg-muted/50 hover:bg-muted text-foreground font-bold transition-colors"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {/* Layer Height */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Layer Height</Label>
-            <Select value={layerHeight} onValueChange={setLayerHeight}>
-              <SelectTrigger className="bg-background/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0.1">0.1mm (Fine)</SelectItem>
-                <SelectItem value="0.16">0.16mm (Quality)</SelectItem>
-                <SelectItem value="0.2">0.2mm (Standard)</SelectItem>
-                <SelectItem value="0.28">0.28mm (Draft)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Supports Toggle */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Supports</Label>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={supportEnabled}
-                onCheckedChange={setSupportEnabled}
-              />
-              <span className="text-sm text-foreground">
-                {supportEnabled ? 'On' : 'Off'}
-              </span>
-            </div>
-          </div>
+      {/* Gcode File Upload */}
+      {method === 'gcode' && (
+        <div className="mb-5 pb-5 border-b border-border/50">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 block">
+            Import from .gcode File
+          </Label>
+          <GcodeParser
+            onParsed={(result) => {
+              if (result.weightGrams) {
+                setSlicerWeight(result.weightGrams.toString());
+              }
+              if (result.printTime) {
+                setGcodeParseTime(result.printTime);
+              }
+              if (result.layerHeight) {
+                setLayerHeight(result.layerHeight.toString());
+              }
+            }}
+          />
+          {gcodeParseTime && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Estimated print time from gcode: <span className="font-medium text-foreground">{gcodeParseTime}</span>
+            </p>
+          )}
         </div>
+      )}
 
-        {/* Support Density */}
-        {supportEnabled && (
-          <div className="mt-4 max-w-xs">
-            <div className="flex justify-between items-center mb-2">
-              <Label className="text-xs text-muted-foreground">Support Density</Label>
-              <span className="text-xs font-bold text-primary">{supportDensity}%</span>
+      {/* Print Settings (for dimensions mode) */}
+      {method === 'dimensions' && (
+        <div className="mb-5 pb-5 border-b border-border/50">
+          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 block">
+            Print Settings
+          </Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Infill */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs text-muted-foreground">Infill</Label>
+                <span className="text-xs font-bold text-primary">{infill}%</span>
+              </div>
+              <Slider
+                value={[infill]}
+                onValueChange={([v]) => setInfill(v)}
+                min={0}
+                max={100}
+                step={5}
+                className="w-full"
+              />
             </div>
-            <Slider
-              value={[supportDensity]}
-              onValueChange={([v]) => setSupportDensity(v)}
-              min={5}
-              max={50}
-              step={5}
-            />
+
+            {/* Wall Count */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Walls</Label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setWallCount(Math.max(1, wallCount - 1))}
+                  className="w-8 h-8 rounded-md bg-muted/50 hover:bg-muted text-foreground font-bold transition-colors"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center font-bold text-foreground">{wallCount}</span>
+                <button
+                  onClick={() => setWallCount(Math.min(10, wallCount + 1))}
+                  className="w-8 h-8 rounded-md bg-muted/50 hover:bg-muted text-foreground font-bold transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Layer Height */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Layer Height</Label>
+              <Select value={layerHeight} onValueChange={setLayerHeight}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0.1">0.1mm (Fine)</SelectItem>
+                  <SelectItem value="0.16">0.16mm (Quality)</SelectItem>
+                  <SelectItem value="0.2">0.2mm (Standard)</SelectItem>
+                  <SelectItem value="0.28">0.28mm (Draft)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Supports Toggle */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Supports</Label>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={supportEnabled}
+                  onCheckedChange={setSupportEnabled}
+                />
+                <span className="text-sm text-foreground">
+                  {supportEnabled ? 'On' : 'Off'}
+                </span>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Support Density */}
+          {supportEnabled && (
+            <div className="mt-4 max-w-xs">
+              <div className="flex justify-between items-center mb-2">
+                <Label className="text-xs text-muted-foreground">Support Density</Label>
+                <span className="text-xs font-bold text-primary">{supportDensity}%</span>
+              </div>
+              <Slider
+                value={[supportDensity]}
+                onValueChange={([v]) => setSupportDensity(v)}
+                min={5}
+                max={50}
+                step={5}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Results */}
       {result && (
@@ -422,9 +472,11 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
               </div>
             </div>
             <div className="bg-success/10 border border-success/20 rounded-lg p-4 text-center">
-              <div className="text-2xl font-extrabold text-success">{currencySymbol}{materialCost.toFixed(2)}</div>
+              <div className="text-2xl font-extrabold text-success">
+                {prefix}{currencySymbol}{materialCost.toFixed(2)}
+              </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-                Material Cost
+                Material Cost {currencyCode}
               </div>
             </div>
           </div>
@@ -485,6 +537,9 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
             filamentPrice={currentPrice}
             buyMoreUrl={buyMoreUrl}
             onShare={() => setShowShareModal(true)}
+            currencySymbol={currencySymbol}
+            currencyCode={currencyCode}
+            isConverted={isConverted}
           />
         </div>
       )}
@@ -501,6 +556,10 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
             totalCost: materialCost,
             printsPerSpool: Math.floor(spoolWeight / result.totalGrams),
             costPerPrint: materialCost,
+            currencySymbol,
+            currencyCode,
+            isConverted,
+            spoolWeight,
           }}
         />
       )}

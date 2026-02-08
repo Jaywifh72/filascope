@@ -11,6 +11,12 @@ interface SpoolUsageVisualProps {
   filamentPrice: number;
   onShare?: () => void;
   buyMoreUrl?: string;
+  /** Currency symbol (e.g., "C$", "€") */
+  currencySymbol?: string;
+  /** Currency code (e.g., "CAD", "EUR") */
+  currencyCode?: string;
+  /** Whether price is a converted estimate */
+  isConverted?: boolean;
 }
 
 export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
@@ -21,6 +27,9 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
   filamentPrice,
   onShare,
   buyMoreUrl,
+  currencySymbol = '$',
+  currencyCode = 'USD',
+  isConverted = false,
 }) => {
   // Calculate metrics
   const remaining = currentSpoolRemaining ?? spoolWeight;
@@ -28,6 +37,11 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
   const remainingPercent = (remaining / spoolWeight) * 100;
   const printsRemaining = Math.floor(remaining / usagePerPrint);
   const isRunningLow = printsRemaining <= 3;
+
+  const prefix = isConverted ? '~' : '';
+  const costPerPrint = (usagePerPrint / 1000) * filamentPrice;
+  const printsPerSpool = Math.floor(spoolWeight / usagePerPrint);
+  const costPerPrintFromSpool = filamentPrice / printsPerSpool;
   
   // Visual spool representation
   const spoolSegments = 10;
@@ -161,7 +175,7 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <div className="text-lg font-bold text-foreground">
-            {(usagePerPrint / 1000 * filamentPrice).toFixed(2)}
+            {prefix}{currencySymbol}{costPerPrint.toFixed(2)}
           </div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
             Cost/Print
@@ -169,7 +183,7 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <div className="text-lg font-bold text-foreground">
-            {(spoolWeight / usagePerPrint).toFixed(0)}
+            {printsPerSpool}
           </div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
             Prints/Spool
@@ -177,10 +191,10 @@ export const SpoolUsageVisual: React.FC<SpoolUsageVisualProps> = ({
         </div>
         <div className="bg-muted/20 rounded-lg p-3 text-center">
           <div className="text-lg font-bold text-foreground">
-            ${(filamentPrice / (spoolWeight / usagePerPrint)).toFixed(2)}
+            {prefix}{currencySymbol}{costPerPrintFromSpool.toFixed(2)}
           </div>
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-            $/Print
+            {currencyCode}/Print
           </div>
         </div>
       </div>
