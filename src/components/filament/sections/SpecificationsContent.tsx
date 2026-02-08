@@ -1,8 +1,9 @@
 import React from 'react';
 import { Database } from '@/integrations/supabase/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 import { validateSpec, validateDiameter, type SpecValidationResult } from '@/lib/specValidation';
+import { resolveNozzleTemp, resolveBedTemp } from '@/lib/materialDefaults';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -14,12 +15,30 @@ interface SpecItem {
   label: string;
   value: string | null | undefined;
   validation?: SpecValidationResult;
+  isDefault?: boolean;
+  defaultTooltip?: string;
 }
 
 export function SpecificationsContent({ filament }: SpecificationsContentProps) {
+  // Resolve temps with material defaults
+  const nozzle = resolveNozzleTemp(filament.nozzle_temp_min_c, filament.nozzle_temp_max_c, filament.material);
+  const bed = resolveBedTemp(filament.bed_temp_min_c, filament.bed_temp_max_c, filament.material);
+
   const specifications: SpecItem[] = [
     { label: 'Material Type', value: filament.material },
     { label: 'Transmission Distance (TD)', value: filament.transmission_distance ? `${filament.transmission_distance} mm${filament.transmission_distance >= 2.0 ? ' — HueForge ready' : ''}` : null },
+    { 
+      label: 'Nozzle Temperature', 
+      value: nozzle?.value ?? null,
+      isDefault: nozzle?.isDefault,
+      defaultTooltip: nozzle?.isDefault ? `Typical for ${nozzle.materialLabel}` : undefined,
+    },
+    { 
+      label: 'Bed Temperature', 
+      value: bed?.value ?? null,
+      isDefault: bed?.isDefault,
+      defaultTooltip: bed?.isDefault ? `Typical for ${bed.materialLabel}` : undefined,
+    },
     { label: 'Diameter', value: filament.diameter_nominal_mm ? `${filament.diameter_nominal_mm}mm` : null, validation: validateDiameter(filament.diameter_nominal_mm) },
     { label: 'Net Weight', value: filament.net_weight_g ? `${filament.net_weight_g}g` : null, validation: validateSpec('net_weight', filament.net_weight_g) },
     { label: 'Density', value: filament.density_g_cm3 ? `${filament.density_g_cm3} g/cm³` : null },
@@ -61,7 +80,17 @@ export function SpecificationsContent({ filament }: SpecificationsContentProps) 
                 </TooltipContent>
               </Tooltip>
             )}
-            <span className="text-sm font-semibold text-foreground max-[500px]:text-left">
+            {spec.isDefault && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-xs">
+                  <p className="text-xs">{spec.defaultTooltip} — verify with manufacturer TDS</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <span className={`text-sm font-semibold max-[500px]:text-left ${spec.isDefault ? 'text-muted-foreground' : 'text-foreground'}`}>
               {spec.value}
             </span>
           </div>

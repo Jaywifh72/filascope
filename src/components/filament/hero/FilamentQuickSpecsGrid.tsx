@@ -1,4 +1,4 @@
-import { Thermometer, Circle, Weight } from 'lucide-react';
+import { Thermometer, Circle, Weight, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { resolveNozzleTemp, resolveBedTemp, type ResolvedSpec } from '@/lib/materialDefaults';
 
 interface FilamentQuickSpecsGridProps {
   nozzleTempMin?: number | null;
@@ -14,6 +15,7 @@ interface FilamentQuickSpecsGridProps {
   bedTempMax?: number | null;
   diameter?: number | null;
   netWeight?: number | null;
+  material?: string | null;
   className?: string;
 }
 
@@ -21,9 +23,11 @@ interface SpecCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
+  isDefault?: boolean;
+  defaultTooltip?: string;
 }
 
-function SpecCard({ icon, label, value }: SpecCardProps) {
+function SpecCard({ icon, label, value, isDefault, defaultTooltip }: SpecCardProps) {
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
@@ -33,13 +37,19 @@ function SpecCard({ icon, label, value }: SpecCardProps) {
               {icon}
             </div>
             <div className="min-w-0 overflow-hidden">
-              <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1 truncate">{label}</p>
-              <p className="text-sm sm:text-lg font-semibold text-white leading-tight truncate">{value}</p>
+              <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1 truncate">
+                {label}
+                {isDefault && <Info className="inline w-2.5 h-2.5 ml-1 text-muted-foreground/70" />}
+              </p>
+              <p className={cn(
+                "text-sm sm:text-lg font-semibold leading-tight truncate",
+                isDefault ? "text-gray-300" : "text-white"
+              )}>{value}</p>
             </div>
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p>{label}: {value}</p>
+          <p>{isDefault ? defaultTooltip : `${label}: ${value}`}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -73,55 +83,79 @@ export function FilamentQuickSpecsGrid({
   bedTempMax,
   diameter,
   netWeight,
+  material,
   className,
 }: FilamentQuickSpecsGridProps) {
-  // Format temperature range
-  const formatTempRange = (min?: number | null, max?: number | null) => {
-    if (min && max) {
-      return `${min}-${max}°C`;
-    } else if (min) {
-      return `${min}°C+`;
-    } else if (max) {
-      return `≤${max}°C`;
-    }
-    return '—';
-  };
+  // Resolve temps with material-based defaults
+  const nozzle = resolveNozzleTemp(nozzleTempMin, nozzleTempMax, material);
+  const bed = resolveBedTemp(bedTempMin, bedTempMax, material);
 
-  const nozzleTemp = formatTempRange(nozzleTempMin, nozzleTempMax);
-  const bedTemp = formatTempRange(bedTempMin, bedTempMax);
-  const diameterValue = diameter ? `${diameter}mm` : '—';
+  const diameterValue = diameter ? `${diameter}mm` : null;
   const weightValue = netWeight
     ? netWeight >= 1000
       ? `${(netWeight / 1000).toFixed(netWeight % 1000 === 0 ? 0 : netWeight % 100 === 0 ? 1 : 2)}kg`
       : `${netWeight}g`
-    : '—';
+    : null;
 
-  // Only render if we have at least one value
-  const hasAnyData = nozzleTempMin || nozzleTempMax || bedTempMin || bedTempMax || diameter || netWeight;
+  // Only render if we have at least one value (including defaults)
+  const hasAnyData = nozzle || bed || diameterValue || weightValue;
   if (!hasAnyData) return null;
 
+  const specs: (SpecCardProps & { icon: React.ReactNode; key: string })[] = [];
+
+  if (nozzle) {
+    specs.push({
+      key: 'nozzle',
+      icon: <Thermometer className="w-5 h-5" />,
+      label: "Nozzle Temp",
+      value: nozzle.value,
+      isDefault: nozzle.isDefault,
+      defaultTooltip: `Typical for ${nozzle.materialLabel} — verify with manufacturer TDS`,
+    });
+  }
+  if (bed) {
+    specs.push({
+      key: 'bed',
+      icon: <BedIcon className="w-5 h-5" />,
+      label: "Bed Temp",
+      value: bed.value,
+      isDefault: bed.isDefault,
+      defaultTooltip: `Typical for ${bed.materialLabel} — verify with manufacturer TDS`,
+    });
+  }
+  if (diameterValue) {
+    specs.push({
+      key: 'dia',
+      icon: <Circle className="w-5 h-5" />,
+      label: "Diameter",
+      value: diameterValue,
+    });
+  }
+  if (weightValue) {
+    specs.push({
+      key: 'weight',
+      icon: <Weight className="w-5 h-5" />,
+      label: "Net Weight",
+      value: weightValue,
+    });
+  }
+
   return (
-    <div className={cn("grid grid-cols-2 lg:grid-cols-4 gap-3", className)}>
-      <SpecCard
-        icon={<Thermometer className="w-5 h-5" />}
-        label="Nozzle Temp"
-        value={nozzleTemp}
-      />
-      <SpecCard
-        icon={<BedIcon className="w-5 h-5" />}
-        label="Bed Temp"
-        value={bedTemp}
-      />
-      <SpecCard
-        icon={<Circle className="w-5 h-5" />}
-        label="Diameter"
-        value={diameterValue}
-      />
-      <SpecCard
-        icon={<Weight className="w-5 h-5" />}
-        label="Net Weight"
-        value={weightValue}
-      />
+    <div className={cn(
+      "grid gap-3",
+      specs.length <= 2 ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4",
+      className,
+    )}>
+      {specs.map((spec) => (
+        <SpecCard
+          key={spec.key}
+          icon={spec.icon}
+          label={spec.label}
+          value={spec.value}
+          isDefault={spec.isDefault}
+          defaultTooltip={spec.defaultTooltip}
+        />
+      ))}
     </div>
   );
 }

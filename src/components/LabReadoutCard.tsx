@@ -10,6 +10,7 @@ import {
   Package,
   Lightbulb,
 } from "lucide-react";
+import { resolveNozzleTemp, type ResolvedSpec } from "@/lib/materialDefaults";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
@@ -166,18 +167,16 @@ export function LabReadoutCard({
 
   const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
   
-  // Temp calculations
-  const nozzleTemp = filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
-    ? `${filament.nozzle_temp_min_c}–${filament.nozzle_temp_max_c}°C`
-    : filament.nozzle_temp_min_c 
-      ? `${filament.nozzle_temp_min_c}°C`
-      : filament.nozzle_temp_max_c
-        ? `${filament.nozzle_temp_max_c}°C`
-        : "—";
+  // Temp calculations with material-based defaults
+  const nozzleResolved = resolveNozzleTemp(
+    filament.nozzle_temp_min_c,
+    filament.nozzle_temp_max_c,
+    filament.material,
+  );
   
   const volumetricFlow = filament.print_speed_max_mms 
     ? `${filament.print_speed_max_mms} mm/s`
-    : "—";
+    : null;
 
   const handleCompareToggle = () => {
     if (isMultiSelectMode) {
@@ -509,17 +508,37 @@ export function LabReadoutCard({
         </div>
         
         {/* Nozzle Temp */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5">
-            <Thermometer className="w-3 h-3 text-primary" />
-            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-              Nozzle Temp
+        {nozzleResolved && (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Thermometer className="w-3 h-3 text-primary" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                Nozzle Temp
+                {nozzleResolved.isDefault && (
+                  <Info className="inline w-2.5 h-2.5 ml-1 text-muted-foreground/60" />
+                )}
+              </span>
+            </div>
+            <span className={`text-sm font-semibold block ${nozzleResolved.isDefault ? 'text-muted-foreground' : 'text-foreground'}`}>
+              {nozzleResolved.value}
             </span>
           </div>
-          <span className="text-sm font-semibold text-foreground block">
-            {nozzleTemp}
-          </span>
-        </div>
+        )}
+
+        {/* Print Speed - only show if data available */}
+        {volumetricFlow && (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Package className="w-3 h-3 text-primary" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                Max Speed
+              </span>
+            </div>
+            <span className="text-sm font-semibold text-foreground block">
+              {volumetricFlow}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
