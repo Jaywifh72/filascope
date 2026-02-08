@@ -142,14 +142,14 @@ export function useFilamentDetailPricing(
   const userCurrency = REGIONS[region as RegionCode]?.defaultCurrency || 'USD';
   
   // ── Source 1: Retailer listings (user's region) ──
-  const { data: localRetailerListings, isLoading: localListingsLoading } = useFilamentListings(
+  const { data: localRetailerListings, isLoading: localListingsLoading, isFetching: localListingsFetching } = useFilamentListings(
     filament?.id,
     { region, currency: userCurrency, includeUnavailable: false }
   );
   
   // ── Source 1b: Retailer listings (US fallback) ──
   const isUserUS = region === 'US';
-  const { data: usRetailerListings, isLoading: usListingsLoading } = useFilamentListings(
+  const { data: usRetailerListings, isLoading: usListingsLoading, isFetching: usListingsFetching } = useFilamentListings(
     !isUserUS ? filament?.id : undefined,
     { region: 'US', currency: 'USD', includeUnavailable: false }
   );
@@ -159,6 +159,7 @@ export function useFilamentDetailPricing(
     bestPrice: storeBestPrice,
     allPrices: storeAllPrices,
     isLoading: storePriceLoading,
+    isFetching: storePriceFetching,
   } = useFilamentStorePricing(filament?.id);
   
   // ── Source 3: Unified regional pricing (brand_regional_stores) ──
@@ -183,9 +184,13 @@ export function useFilamentDetailPricing(
   });
   
   // ── Loading state ──
+  // isLoading: true on first load with no cache (gates candidate building)
   const isLoading = localListingsLoading || usListingsLoading || storePriceLoading || unifiedPricing.isLoading;
+  // isFetching: true when any source is refreshing in the background
+  // We gate on this too to prevent partial stale data from producing wrong "best price"
+  const isFetching = localListingsFetching || usListingsFetching || storePriceFetching;
   // isReady = all sources settled AND exchange rates loaded (if needed)
-  const isReady = !isLoading && (currency === 'USD' || hasRates);
+  const isReady = !isLoading && !isFetching && (currency === 'USD' || hasRates);
   
   // ── Build candidates ──
   const { allCandidates, bestPrice, cheapestLocal, retailerCount } = useMemo(() => {
@@ -195,6 +200,9 @@ export function useFilamentDetailPricing(
     
     // ── GATE: Don't build candidates until ALL sources have resolved ──
     // This prevents the "best price" from jumping as sources resolve incrementally.
+    // We gate on isLoading (first load) but NOT isFetching (background refetch),
+    // because gating on isFetching would flash empty state on revisits.
+    // Instead, isFetching affects isReady to inform the UI.
     if (isLoading) {
       return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
     }
@@ -211,8 +219,23 @@ export function useFilamentDetailPricing(
     const candidates: PriceCandidate[] = [];
     const seenKeys = new Set<string>();
     
+    // Normalize store name for deduplication — handles variations like
+    // "Polymaker Canada", "Polymaker (CA)", "Polymaker Store" for same physical store
+    const normalizeStoreKey = (name: string, storeRegion: string | null): string => {
+      let key = name.toLowerCase().replace(/\s+/g, '');
+      // Strip trailing region codes (us, uk, eu, ca, au, jp, cn) and parenthetical regions
+      key = key.replace(/\(?(us|uk|eu|ca|au|jp|cn|global)\)?$/i, '');
+      // Strip "store" suffix
+      key = key.replace(/store$/, '');
+      // Append region to create a unique key per store-region combination
+      if (storeRegion) {
+        key += `_${storeRegion.toLowerCase()}`;
+      }
+      return key;
+    };
+    
     const addCandidate = (c: PriceCandidate) => {
-      const key = c.name.toLowerCase().replace(/\s+/g, '');
+      const key = normalizeStoreKey(c.name, c.storeRegion);
       if (seenKeys.has(key)) return;
       seenKeys.add(key);
       candidates.push(c);
@@ -339,14 +362,21 @@ export function useFilamentDetailPricing(
       }
     }
     
-    // ── Sort: globally by price-per-kg ascending (absolute cheapest first) ──
+    // ── Sort: fully deterministic ──
+    // Priority: price ascending → local first → brand-direct first → name alphabetical
     const sortByPrice = (a: PriceCandidate, b: PriceCandidate) => {
+      // 1. Price ascending (primary)
       const diff = a.pricePerKg - b.pricePerKg;
-      if (Math.abs(diff) < 0.01) {
-        if (a.isBrandDirect !== b.isBrandDirect) return a.isBrandDirect ? -1 : 1;
-        return 0;
-      }
-      return diff;
+      if (Math.abs(diff) >= 0.01) return diff;
+      
+      // 2. Local stores win ties
+      if (a.isLocal !== b.isLocal) return a.isLocal ? -1 : 1;
+      
+      // 3. Brand-direct stores win ties
+      if (a.isBrandDirect !== b.isBrandDirect) return a.isBrandDirect ? -1 : 1;
+      
+      // 4. Final tiebreaker: name alphabetical for full determinism
+      return a.name.localeCompare(b.name);
     };
     
     const sorted = [...candidates].sort(sortByPrice);
@@ -370,7 +400,6 @@ export function useFilamentDetailPricing(
     currency, region, hasRates, regionConvertPrice, getAffiliateUrl, getAmazonUrl,
     isLoading, // re-evaluate when loading state changes
   ]);
-  
   // ── Build sidebar-compatible regional price result ──
   const sidebarRegionalPrice = useMemo(() => {
     if (!bestPrice) return null;

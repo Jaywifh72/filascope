@@ -7,6 +7,7 @@
  * Returns the best price for the user's region along with all available prices.
  */
 
+import { useMemo } from 'react';
 import { useFilamentRegionalPrices } from './useFilamentPrices';
 import { useExchangeRateMap, convertPrice } from './useExchangeRates';
 import { useRegion } from '@/contexts/RegionContext';
@@ -60,8 +61,10 @@ export interface UseFilamentStorePricingResult {
   bestPrice: StorePrice | null;
   /** All available prices sorted by relevance */
   allPrices: StorePrice[];
-  /** Loading state */
+  /** Loading state (first load, no cache) */
   isLoading: boolean;
+  /** Fetching state (background refetch) */
+  isFetching: boolean;
   /** Error message if any */
   error: string | null;
   /** Whether any price data exists in the store listings */
@@ -145,23 +148,27 @@ export function useFilamentStorePricing(
   // Fetch regional prices from the RPC function
   const { 
     data: rpcResults, 
-    isLoading: pricesLoading, 
+    isLoading: pricesLoading,
+    isFetching: pricesFetching,
     error 
   } = useFilamentRegionalPrices(filamentId, region);
   
   const isLoading = pricesLoading || ratesLoading;
+  const isFetching = pricesFetching;
   
-  // Transform RPC results to StorePrice format
-  const allPrices: StorePrice[] = [];
-  
-  if (rpcResults && rpcResults.length > 0 && exchangeRates) {
+  // Memoize the transformed prices to prevent reference instability
+  // (previously created a new array every render, triggering downstream useMemo recalcs)
+  const allPrices = useMemo(() => {
+    if (!rpcResults || rpcResults.length === 0 || !exchangeRates) return [];
+    
+    const prices: StorePrice[] = [];
     for (const result of rpcResults) {
-      // Only include prices with valid amounts
       if (result.price_cents > 0) {
-        allPrices.push(transformRpcResult(result, currency, exchangeRates));
+        prices.push(transformRpcResult(result, currency, exchangeRates));
       }
     }
-  }
+    return prices;
+  }, [rpcResults, exchangeRates, currency]);
   
   const bestPrice = allPrices.length > 0 ? allPrices[0] : null;
   const hasPriceData = allPrices.length > 0;
@@ -170,11 +177,11 @@ export function useFilamentStorePricing(
     bestPrice,
     allPrices,
     isLoading,
+    isFetching,
     error: error?.message ?? null,
     hasPriceData,
   };
 }
-
 /**
  * Get shipping display text for a store price
  */
