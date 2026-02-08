@@ -81,6 +81,7 @@ interface UnifiedStoreItem {
   convertedPrice: number | null;
   userCurrency: string;
   isLocal: boolean;
+  isConverted: boolean;
   url: string;
   type: 'official' | 'marketplace' | 'retailer';
   inStock: boolean;
@@ -174,9 +175,13 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: Unified
         <div className="text-right">
           {store.nativePrice !== null ? (
             <>
-              {store.isLocal ? (
+              {store.isLocal && !store.isConverted ? (
                 <div className="font-semibold text-sm">
                   {nativeSymbol}{store.nativePrice.toFixed(2)}/kg
+                </div>
+              ) : store.isLocal && store.isConverted ? (
+                <div className="font-semibold text-sm">
+                  ~{nativeSymbol}{store.nativePrice.toFixed(2)}/kg
                 </div>
               ) : (
                 <>
@@ -325,6 +330,7 @@ export function PricingTabContent({
           convertedPrice: candidate.pricePerKg, // already in user's currency
           userCurrency: currency,
           isLocal,
+          isConverted: candidate.isConverted,
           url: candidate.affiliateUrl || candidate.productUrl,
           type: candidate.isBrandDirect ? 'official' 
             : candidate.name.toLowerCase().includes('amazon') ? 'marketplace' 
