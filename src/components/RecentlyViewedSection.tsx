@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { History, X, ChevronRight } from "lucide-react";
-import { useBrowseHistory, type BrowseHistoryItem } from "@/hooks/useBrowseHistory";
+import { useBrowseHistory, getPrinterImageFromHistory, type BrowseHistoryItem } from "@/hooks/useBrowseHistory";
 import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
     ? item.filament!.product_title
     : item.printer!.display_name || item.printer!.model_name;
 
-  const image = isFilament ? item.filament!.featured_image : item.printer!.image_url;
+  const image = isFilament ? item.filament!.featured_image : getPrinterImageFromHistory(item.printer);
   const colorHex = isFilament ? item.filament!.color_hex : null;
   const subtitle = isFilament
     ? `${item.filament!.material || ""}${item.filament!.vendor ? ` • ${item.filament!.vendor}` : ""}`

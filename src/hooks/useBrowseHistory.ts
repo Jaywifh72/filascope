@@ -34,9 +34,18 @@ export interface BrowseHistoryItem {
     id: string;
     model_name: string;
     display_name: string | null;
-    image_url: string | null;
+    scraped_data: unknown;
     current_price_usd_store: number | null;
   } | null;
+}
+
+/** Extract the first product image URL from printer scraped_data */
+export function getPrinterImageFromHistory(printer: BrowseHistoryItem["printer"]): string | null {
+  if (!printer?.scraped_data) return null;
+  const sd = printer.scraped_data as Record<string, unknown>;
+  const images = sd?.images as Record<string, unknown> | null;
+  const productImages = images?.product_images as string[] | null;
+  return productImages?.[0] || null;
 }
 
 // ============================
@@ -123,7 +132,7 @@ export function useBrowseHistory(limit = 10) {
               id,
               model_name,
               display_name,
-              image_url,
+              scraped_data,
               current_price_usd_store
             )
           `)
@@ -174,7 +183,7 @@ export function useBrowseHistory(limit = 10) {
         printerIds.length > 0
           ? supabase
               .from("printers")
-              .select("id, model_name, display_name, image_url, current_price_usd_store")
+              .select("id, model_name, display_name, scraped_data, current_price_usd_store")
               .in("id", printerIds)
           : { data: [], error: null },
       ]);
