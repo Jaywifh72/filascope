@@ -60,6 +60,10 @@ interface FilamentPurchaseSidebarProps {
   hasStorePricing?: boolean;
   // Callback to scroll to pricing tab and show full price history
   onViewPriceHistory?: () => void;
+  // Per-spool price and store name from the best (cheapest) retailer
+  bestSpoolPrice?: number | null;
+  bestSpoolStoreName?: string | null;
+  bestSpoolIsConverted?: boolean;
 }
 
 export function FilamentPurchaseSidebar({
@@ -90,6 +94,9 @@ export function FilamentPurchaseSidebar({
   storePricing,
   hasStorePricing = false,
   onViewPriceHistory,
+  bestSpoolPrice,
+  bestSpoolStoreName,
+  bestSpoolIsConverted = false,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
@@ -230,6 +237,13 @@ export function FilamentPurchaseSidebar({
               onAdminRefresh={handleAdminRefresh}
               netWeightGrams={weightGrams}
             />
+
+            {/* Per-spool price secondary line — connects /kg price to actual purchase price */}
+            {bestSpoolPrice != null && bestSpoolStoreName && (
+              <div className="text-xs text-muted-foreground px-1">
+                {formatPrice(bestSpoolPrice, { showApproximate: bestSpoolIsConverted })}/spool at {bestSpoolStoreName}
+              </div>
+            )}
 
             {/* Fallback region warning - show when price is from a different region */}
             {!isLocalStore && storeRegionCode && (

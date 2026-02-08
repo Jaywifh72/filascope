@@ -49,9 +49,11 @@ export interface PriceCandidate {
 }
 
 export interface DetailPricingResult {
-  /** The single best price candidate (local-first, then cheapest) */
+  /** The single best price candidate (absolute cheapest globally) */
   bestPrice: PriceCandidate | null;
-  /** All candidates sorted: local cheapest first, then international cheapest */
+  /** Cheapest candidate in the user's region, or null */
+  cheapestLocal: PriceCandidate | null;
+  /** All candidates sorted by price-per-kg ascending (cheapest first globally) */
   allCandidates: PriceCandidate[];
   /** Deduplicated count of unique retailers */
   retailerCount: number;
@@ -181,9 +183,9 @@ export function useFilamentDetailPricing(
   const isReady = !isLoading && (currency === 'USD' || hasRates);
   
   // ── Build candidates ──
-  const { allCandidates, bestPrice, retailerCount } = useMemo(() => {
+  const { allCandidates, bestPrice, cheapestLocal, retailerCount } = useMemo(() => {
     if (!filament) {
-      return { allCandidates: [] as PriceCandidate[], bestPrice: null, retailerCount: 0 };
+      return { allCandidates: [] as PriceCandidate[], bestPrice: null, cheapestLocal: null, retailerCount: 0 };
     }
     
     const packQty = (filament as any).pack_quantity || 1;
@@ -326,7 +328,7 @@ export function useFilamentDetailPricing(
       }
     }
     
-    // ── Sort: local first (cheapest per kg), then international (cheapest per kg) ──
+    // ── Sort: globally by price-per-kg ascending (absolute cheapest first) ──
     const sortByPrice = (a: PriceCandidate, b: PriceCandidate) => {
       const diff = a.pricePerKg - b.pricePerKg;
       if (Math.abs(diff) < 0.01) {
@@ -336,16 +338,17 @@ export function useFilamentDetailPricing(
       return diff;
     };
     
-    const localCandidates = candidates.filter(c => c.isLocal).sort(sortByPrice);
-    const intlCandidates = candidates.filter(c => !c.isLocal).sort(sortByPrice);
-    const sorted = [...localCandidates, ...intlCandidates];
+    const sorted = [...candidates].sort(sortByPrice);
     
-    // Best price: prefer local, fall back to international
-    const best = localCandidates.length > 0 ? localCandidates[0] : intlCandidates[0] || null;
+    // Best price: absolute cheapest globally
+    const best = sorted.length > 0 ? sorted[0] : null;
+    // Cheapest local: cheapest among local candidates
+    const local = sorted.find(c => c.isLocal) || null;
     
     return {
       allCandidates: sorted,
       bestPrice: best,
+      cheapestLocal: local,
       retailerCount: sorted.length,
     };
   }, [
@@ -383,6 +386,7 @@ export function useFilamentDetailPricing(
   
   return {
     bestPrice,
+    cheapestLocal,
     allCandidates,
     retailerCount,
     isReady,

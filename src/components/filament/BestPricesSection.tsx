@@ -77,24 +77,31 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
   // Build the display list from either candidates (preferred) or fallback
   const topRetailers = React.useMemo(() => {
     if (candidates) {
+      // Candidates are already sorted by pricePerKg ascending (cheapest first)
       return candidates.slice(0, 3).map((c, idx) => ({
         key: `${c.name}-${idx}`,
         name: c.name,
         url: c.affiliateUrl || c.productUrl,
         displayPrice: c.spoolPrice,
+        pricePerKg: c.pricePerKg,
         isConverted: c.isConverted,
+        isLocal: c.isLocal,
+        isCheapest: idx === 0, // First item is the absolute cheapest after global sort
         logo: c.retailerLogo || null,
       }));
     }
-    return fallbackListings.slice(0, 3).map(r => ({
+    return fallbackListings.slice(0, 3).map((r, idx) => ({
       key: r.listing_id,
       name: r.retailer_name,
       url: r.affiliate_url || r.product_url,
       displayPrice: r.displayPrice,
+      pricePerKg: null as number | null,
       isConverted: r.isConverted,
+      isLocal: (r.region?.toUpperCase() || '') === region,
+      isCheapest: idx === 0,
       logo: r.retailer_logo || null,
     }));
-  }, [candidates, fallbackListings]);
+  }, [candidates, fallbackListings, region]);
 
   const totalCount = totalRetailerCount ?? (candidates ? candidates.length : fallbackListings.length);
 
@@ -140,7 +147,7 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
         </div>
 
         <div className="space-y-2">
-          {topRetailers.map((retailer, idx) => (
+          {topRetailers.map((retailer) => (
             <a
               key={retailer.key}
               href={retailer.url}
@@ -149,7 +156,7 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
               className={cn(
                 "flex items-center justify-between p-3 rounded-lg border transition-all",
                 "hover:scale-[1.01] hover:shadow-md",
-                idx === 0
+                retailer.isCheapest
                   ? "bg-emerald-500/10 border-emerald-500/30"
                   : "bg-muted/20 border-border hover:bg-muted/40"
               )}
@@ -172,26 +179,41 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
                   </div>
                 )}
                 <div>
-                  <span className="font-medium text-sm">{retailer.name}</span>
-                  {idx === 0 && (
-                    <Badge className="ml-2 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
-                      Best Price
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-medium text-sm">{retailer.name}</span>
+                    {retailer.isCheapest && (
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                        Best Price
+                      </Badge>
+                    )}
+                    {retailer.isLocal && (
+                      <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">
+                        Local
+                      </Badge>
+                    )}
+                  </div>
                   {retailer.isConverted && (
-                    <span className="ml-1 text-[10px] text-muted-foreground">(converted)</span>
+                    <span className="text-[10px] text-muted-foreground">(converted)</span>
                   )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className={cn(
-                  "font-bold",
-                  idx === 0 ? "text-emerald-400 text-lg" : "text-foreground"
-                )}>
-                  {retailer.displayPrice != null 
-                    ? formatPrice(retailer.displayPrice, { showApproximate: retailer.isConverted })
-                    : 'N/A'}
-                </span>
+                <div className="text-right">
+                  <div className={cn(
+                    "font-bold",
+                    retailer.isCheapest ? "text-emerald-400 text-lg" : "text-foreground"
+                  )}>
+                    {retailer.displayPrice != null 
+                      ? formatPrice(retailer.displayPrice, { showApproximate: retailer.isConverted })
+                      : 'N/A'}
+                    <span className="text-xs font-normal text-muted-foreground ml-0.5">/spool</span>
+                  </div>
+                  {retailer.pricePerKg != null && (
+                    <div className="text-[11px] text-muted-foreground">
+                      {formatPrice(retailer.pricePerKg, { showApproximate: retailer.isConverted })}/kg
+                    </div>
+                  )}
+                </div>
                 <ExternalLink className="w-4 h-4 text-muted-foreground" />
               </div>
             </a>
