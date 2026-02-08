@@ -162,7 +162,7 @@ const FilamentDetail = () => {
   const regionalPriceResult = detailPricing.sidebarRegionalPrice;
   const regionalPriceLoading = detailPricing.isLoading;
   const regionalStores = unifiedPricing.allStores;
-  const hasLocalStore = detailPricing.isLocal;
+  const hasLocalStore = detailPricing.cheapestLocal != null;
 
   const compatibility = selectedPrinter && displayFilament 
     ? checkPrinterFilamentCompatibility(selectedPrinter, displayFilament)
@@ -885,6 +885,9 @@ const FilamentDetail = () => {
             storePricing={storeBestPrice}
             hasStorePricing={hasStorePriceData}
             onViewPriceHistory={handleScrollToPricing}
+            bestSpoolPrice={detailPricing.bestPrice?.spoolPrice ?? null}
+            bestSpoolStoreName={detailPricing.bestPrice?.name ?? null}
+            bestSpoolIsConverted={detailPricing.bestPrice?.isConverted ?? false}
           />
         </div>
       </div>
