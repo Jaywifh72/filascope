@@ -112,12 +112,16 @@ export function FilamentPurchaseSidebar({
   // Determine the primary retailer name
   const displayRetailer = retailerName || vendor || 'Store';
   
+  /** Strip trailing region codes (US, UK, EU, etc.) from store names to avoid
+   *  redundancy like "Amazon US" when a region badge is already shown */
+  const cleanName = (name: string) => name.replace(/\s+(US|UK|EU|CA|AU|JP|CN|DE)$/i, '').trim();
+  
   // Check if this is actually an Amazon link (must contain amazon domain)
   const isAmazon = affiliateUrl?.toLowerCase().includes('amazon.com') || 
                    affiliateUrl?.toLowerCase().includes('amazon.co.') ||
                    affiliateUrl?.toLowerCase().includes('amazon.de') ||
                    affiliateUrl?.toLowerCase().includes('amzn.');
-  const finalRetailerName = isAmazon ? 'Amazon' : `${displayRetailer} Store`;
+  const finalRetailerName = isAmazon ? 'Amazon' : `${cleanName(displayRetailer)} Store`;
 
   const isComparing = isInCompare(filamentId);
   
@@ -266,7 +270,7 @@ export function FilamentPurchaseSidebar({
             {/* Per-spool price secondary line — connects /kg price to actual purchase price */}
             {bestSpoolPrice != null && bestSpoolStoreName && (
               <div className="text-xs text-muted-foreground px-1">
-                {formatPrice(bestSpoolPrice, { showApproximate: bestSpoolIsConverted })}/spool at {bestSpoolStoreName}
+                {formatPrice(bestSpoolPrice, { showApproximate: bestSpoolIsConverted })}/spool at {cleanName(bestSpoolStoreName)}
               </div>
             )}
 
@@ -324,7 +328,7 @@ export function FilamentPurchaseSidebar({
             )}
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
-            {getCtaText(regionalPriceResult?.store?.name || finalRetailerName)}
+            {getCtaText(cleanName(regionalPriceResult?.store?.name || finalRetailerName))}
             <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
           </Button>
 
@@ -353,7 +357,7 @@ export function FilamentPurchaseSidebar({
             productType="filament"
             productName={productTitle || 'Filament'}
             currentPrice={displayPrice}
-            storeName={regionalPriceResult?.store?.name || finalRetailerName}
+            storeName={cleanName(regionalPriceResult?.store?.name || finalRetailerName)}
           />
 
           {/* Private Note Button */}
@@ -394,7 +398,7 @@ export function FilamentPurchaseSidebar({
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium">Best Price:</span>
             <span className="font-bold text-foreground/80">
-              {regionalPriceResult?.store?.name || finalRetailerName}
+              {cleanName(regionalPriceResult?.store?.name || finalRetailerName)}
             </span>
             <ExternalLink className="w-3.5 h-3.5" />
           </div>
