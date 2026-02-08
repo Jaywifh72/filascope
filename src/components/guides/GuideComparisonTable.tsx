@@ -43,7 +43,7 @@ export function GuideComparisonTable({ filaments }: GuideComparisonTableProps) {
           {filaments.map((f, i) => {
             const rank = i + 1;
             const title = cleanFilamentDisplayName(
-              f.product_title.replace(new RegExp(`^${f.vendor}\\s*`, 'i'), '').trim()
+              (f.product_title || '').replace(new RegExp(`^${f.vendor || ''}\\s*`, 'i'), '').trim()
             );
             const slug = generateFilamentSlug(f.vendor, f.material, f.product_title, f.color_family);
             const scoreColor = getScoreNumberColor(f.score.score);

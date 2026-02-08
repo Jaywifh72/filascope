@@ -100,6 +100,7 @@ export const COLOR_WORDS = [
  * Groups color variants under a single product name
  */
 export const getBaseProductName = (title: string, material?: string | null): string => {
+  if (!title) return '';
   // Normalize the title first - merge variant names into base product
   let normalizedTitle = title
     .replace(/\bPLA\s+PRO\+/gi, 'PLA+')  // "PLA PRO+" -> "PLA+"

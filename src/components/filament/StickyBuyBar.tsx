@@ -115,7 +115,7 @@ export function StickyBuyBar({
 
   // Get product name without brand prefix
   const getDisplayName = () => {
-    const title = filament.product_title;
+    const title = filament.product_title || '';
     if (filament.vendor && title.toLowerCase().startsWith(filament.vendor.toLowerCase())) {
       return title.slice(filament.vendor.length).trim();
     }

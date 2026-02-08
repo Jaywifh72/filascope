@@ -50,6 +50,7 @@ export function cleanProductTitle(title: string): string {
 }
 
 export function getBaseProductName(title: string): string {
+  if (!title) return '';
   // First, clean the title by removing diameter/weight suffixes
   const cleanedForDisplay = cleanFilamentDisplayName(title);
   const cleanedTitle = cleanProductTitle(cleanedForDisplay);
@@ -503,9 +504,9 @@ export function useFilamentColorVariants(
       }
 
       try {
-        const baseName = getBaseProductName(filament.product_title);
-        const isPrusament = filament.vendor.toLowerCase().includes('prusa');
-        const isElegoo = filament.vendor.toLowerCase() === 'elegoo';
+        const baseName = getBaseProductName(filament.product_title || '');
+        const isPrusament = (filament.vendor || '').toLowerCase().includes('prusa');
+        const isElegoo = (filament.vendor || '').toLowerCase() === 'elegoo';
         
         let productLineKey: string | null = null;
         if (isPrusament) {
@@ -539,7 +540,7 @@ export function useFilamentColorVariants(
               const fLineInfo = extractPrusamentProductLine(f.product_title);
               return fLineInfo?.productLine === productLineKey;
             } else {
-              const fBaseName = getBaseProductName(f.product_title);
+              const fBaseName = getBaseProductName(f.product_title || '');
               if (fBaseName.toLowerCase() !== baseName.toLowerCase()) return false;
               if (f.id === filament.id) return true;
               const color = getColorFromTitle(f.product_title, baseName);

@@ -188,7 +188,7 @@ export function exportFilamentToFullCSV(filament: Filament): void {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   
-  const filename = `${filament.product_title.replace(/[^a-z0-9]/gi, '_')}_full_data.csv`;
+  const filename = `${(filament.product_title || 'filament').replace(/[^a-z0-9]/gi, '_')}_full_data.csv`;
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
@@ -213,7 +213,7 @@ export function exportFilamentToFlatCSV(filament: Filament): void {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   
-  const filename = `${filament.product_title.replace(/[^a-z0-9]/gi, '_')}_flat.csv`;
+  const filename = `${(filament.product_title || 'filament').replace(/[^a-z0-9]/gi, '_')}_flat.csv`;
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
