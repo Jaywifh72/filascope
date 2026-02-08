@@ -17,7 +17,7 @@ export function PriceAlertsSection() {
 
   if (isLoading) {
     return (
-      <Card className="bg-gray-800/50 border-gray-700">
+      <Card className="bg-card/50 border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Bell className="w-5 h-5 text-primary" />
@@ -27,7 +27,7 @@ export function PriceAlertsSection() {
         <CardContent>
           <div className="animate-pulse space-y-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-16 bg-gray-700/50 rounded-lg" />
+              <div key={i} className="h-16 bg-muted rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -37,7 +37,7 @@ export function PriceAlertsSection() {
 
   if (alerts.length === 0) {
     return (
-      <Card className="bg-gray-800/50 border-gray-700">
+      <Card className="bg-card/50 border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Bell className="w-5 h-5 text-primary" />
@@ -46,9 +46,9 @@ export function PriceAlertsSection() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <BellOff className="w-10 h-10 text-gray-500 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm mb-2">No price alerts set</p>
-            <p className="text-gray-500 text-xs">
+            <BellOff className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm mb-2">No price alerts set</p>
+            <p className="text-muted-foreground/70 text-xs">
               Browse filaments and click "Set Price Alert" to get notified when prices drop.
             </p>
           </div>
@@ -58,7 +58,7 @@ export function PriceAlertsSection() {
   }
 
   return (
-    <Card className="bg-gray-800/50 border-gray-700">
+    <Card className="bg-card/50 border-border">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-lg">
@@ -86,11 +86,11 @@ export function PriceAlertsSection() {
               className={`flex items-center gap-3 p-3 rounded-lg border ${
                 isTriggered 
                   ? 'bg-green-500/10 border-green-500/30' 
-                  : 'bg-gray-700/30 border-gray-700'
+                  : 'bg-muted/30 border-border'
               }`}
             >
               {/* Image */}
-              <div className="w-12 h-12 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                 {alert.filament?.featured_image ? (
                   <img
                     src={alert.filament.featured_image}
@@ -98,7 +98,7 @@ export function PriceAlertsSection() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                     <Bell className="w-5 h-5" />
                   </div>
                 )}
@@ -108,11 +108,11 @@ export function PriceAlertsSection() {
               <div className="flex-1 min-w-0">
                 <Link 
                   to={`/filament/${alert.filament_id}`}
-                  className="text-sm font-medium text-white hover:text-primary transition-colors line-clamp-1"
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-1"
                 >
                   {alert.filament?.product_title || 'Unknown filament'}
                 </Link>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>Alert: {formatPrice(alert.target_price)}</span>
                   {currentPrice && (
                     <>
@@ -149,7 +149,7 @@ export function PriceAlertsSection() {
                   variant="ghost"
                   size="icon"
                   onClick={() => removeAlert(alert.filament_id)}
-                  className="h-8 w-8 text-gray-400 hover:text-red-400"
+                  className="h-8 w-8 text-muted-foreground hover:text-red-400"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>

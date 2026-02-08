@@ -57,7 +57,7 @@ export function useDatabasePriceAlerts() {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Create or update a price alert
+  // Create or update a price alert (logged-in user)
   const setAlertMutation = useMutation({
     mutationFn: async ({ 
       filamentId, 
@@ -95,6 +95,49 @@ export function useDatabasePriceAlerts() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["price-alerts"] });
       toast.success("Price alert set! We'll notify you when the price drops.");
+    },
+    onError: (error) => {
+      toast.error("Failed to set price alert");
+      console.error(error);
+    },
+  });
+
+  // Create a guest price alert (email only, no account)
+  const setGuestAlertMutation = useMutation({
+    mutationFn: async ({
+      filamentId,
+      targetPrice,
+      currentPrice,
+      email,
+    }: {
+      filamentId: string;
+      targetPrice: number;
+      currentPrice?: number;
+      email: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("price_alerts")
+        .upsert({
+          user_id: null,
+          filament_id: filamentId,
+          target_price: targetPrice,
+          current_price_when_set: currentPrice,
+          email,
+          email_notifications: true,
+          is_active: true,
+          triggered_at: null,
+          triggered_price: null,
+        }, {
+          onConflict: "email,filament_id",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Price alert set! We'll email you when the price drops.");
     },
     onError: (error) => {
       toast.error("Failed to set price alert");
@@ -146,5 +189,7 @@ export function useDatabasePriceAlerts() {
     hasAlert,
     getAlert,
     isSettingAlert: setAlertMutation.isPending,
+    setGuestAlert: setGuestAlertMutation.mutate,
+    isSettingGuestAlert: setGuestAlertMutation.isPending,
   };
 }

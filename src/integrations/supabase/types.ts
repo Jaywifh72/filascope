@@ -3176,42 +3176,51 @@ export type Database = {
       price_alerts: {
         Row: {
           created_at: string
+          currency: string | null
           current_price_when_set: number | null
+          email: string | null
           email_notifications: boolean | null
           filament_id: string
           id: string
           is_active: boolean | null
+          region: string | null
           target_price: number
           triggered_at: string | null
           triggered_price: number | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
+          currency?: string | null
           current_price_when_set?: number | null
+          email?: string | null
           email_notifications?: boolean | null
           filament_id: string
           id?: string
           is_active?: boolean | null
+          region?: string | null
           target_price: number
           triggered_at?: string | null
           triggered_price?: number | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
+          currency?: string | null
           current_price_when_set?: number | null
+          email?: string | null
           email_notifications?: boolean | null
           filament_id?: string
           id?: string
           is_active?: boolean | null
+          region?: string | null
           target_price?: number
           triggered_at?: string | null
           triggered_price?: number | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

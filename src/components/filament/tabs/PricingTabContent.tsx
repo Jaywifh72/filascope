@@ -20,12 +20,12 @@ import { Database } from '@/integrations/supabase/types';
 import { useRegion } from '@/contexts/RegionContext';
 import { useCurrentPrice } from '@/hooks/useCurrentPrice';
 import { usePriceHistory } from '@/hooks/usePriceHistory';
-import { usePriceAlerts } from '@/hooks/usePriceAlerts';
+import { useDatabasePriceAlerts } from '@/hooks/useDatabasePriceAlerts';
 import { useUnifiedRegionalPricing, RegionalStoreData } from '@/hooks/useUnifiedRegionalPricing';
 import { cn } from '@/lib/utils';
 import type { Retailer } from '../hero/RetailersModal';
 import { PriceHistoryChart } from '../PriceHistoryChart';
-import { PriceAlertModal } from '../PriceAlertModal';
+import { DatabasePriceAlertModal } from '../DatabasePriceAlertModal';
 import { REGIONS } from '@/config/regions';
 import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
 import type { CurrencyCode } from '@/types/regional';
@@ -215,7 +215,7 @@ export function PricingTabContent({
   productSku,
 }: PricingTabContentProps) {
   const { formatPrice, currency, region, convertPrice, getConversionRate } = useRegion();
-  const { hasAlert, getAlert } = usePriceAlerts();
+  const { hasAlert, getAlert } = useDatabasePriceAlerts();
   const [priceAlertModalOpen, setPriceAlertModalOpen] = useState(false);
 
   // Use unified regional pricing for stores
@@ -565,7 +565,7 @@ export function PricingTabContent({
             <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
               <p className="text-sm text-primary flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
-                Alert set for {userCurrencySymbol}{existingAlert.targetPrice.toFixed(2)}/kg
+                Alert set for {userCurrencySymbol}{existingAlert.target_price.toFixed(2)}/kg
               </p>
             </div>
           )}
@@ -609,7 +609,7 @@ export function PricingTabContent({
       </Card>
 
       {/* Price Alert Modal */}
-      <PriceAlertModal
+      <DatabasePriceAlertModal
         filamentId={filament.id}
         filamentName={filament.product_title}
         currentPrice={displayPricePerKg}
