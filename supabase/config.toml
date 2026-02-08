@@ -449,3 +449,6 @@ verify_jwt = false
 
 [functions.migrate-amazon-links]
 verify_jwt = true
+
+[functions.sitemap-xml]
+verify_jwt = false
