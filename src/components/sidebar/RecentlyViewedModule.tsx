@@ -23,27 +23,35 @@ export function RecentlyViewedModule() {
       <div className="space-y-3">
         {/* Thumbnail strip */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {history.slice(0, 5).map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(`/filament/${item.filament_id}`)}
-              className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
-              title={item.filament?.product_title || "View filament"}
-            >
-              {item.filament?.featured_image ? (
-                <img
-                  src={item.filament.featured_image}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div
-                  className="w-full h-full"
-                  style={{ backgroundColor: item.filament?.color_hex || "#ccc" }}
-                />
-              )}
-            </button>
-          ))}
+          {history.slice(0, 5).map((item) => {
+            const href = item.product_type === "printer" 
+              ? `/printers/${item.product_id}` 
+              : `/filament/${item.product_id}`;
+            const image = item.filament?.featured_image || item.printer?.image_url;
+            const title = item.filament?.product_title || item.printer?.display_name || item.printer?.model_name || "View product";
+            const colorHex = item.filament?.color_hex || "#ccc";
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(href)}
+                className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                title={title}
+              >
+                {image ? (
+                  <img
+                    src={image}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full"
+                    style={{ backgroundColor: colorHex }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Continue comparison prompt */}
@@ -74,26 +82,31 @@ export function RecentlyViewedModule() {
 
         {/* Recent list with details */}
         <div className="space-y-1.5">
-          {history.slice(0, 3).map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(`/filament/${item.filament_id}`)}
-              className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-left"
-            >
-              <div
-                className="w-6 h-6 rounded shrink-0"
-                style={{ backgroundColor: item.filament?.color_hex || "#ccc" }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs truncate">
-                  {item.filament?.product_title || "Unknown"}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {item.filament?.material} • {item.filament?.vendor}
-                </p>
-              </div>
-            </button>
-          ))}
+          {history.slice(0, 3).map((item) => {
+            const href = item.product_type === "printer"
+              ? `/printers/${item.product_id}`
+              : `/filament/${item.product_id}`;
+            const name = item.filament?.product_title || item.printer?.display_name || item.printer?.model_name || "Unknown";
+            const subtitle = item.product_type === "printer"
+              ? "Printer"
+              : `${item.filament?.material || ""} • ${item.filament?.vendor || ""}`;
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(href)}
+                className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-left"
+              >
+                <div
+                  className="w-6 h-6 rounded shrink-0"
+                  style={{ backgroundColor: item.filament?.color_hex || "#ccc" }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs truncate">{name}</p>
+                  <p className="text-[10px] text-muted-foreground">{subtitle}</p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </SidebarModule>

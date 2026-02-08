@@ -54,6 +54,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
 import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productNameUtils";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
+import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
@@ -1610,6 +1611,11 @@ const Finder = () => {
       {/* Welcome Banner for New Visitors */}
       <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
         <WelcomeBanner />
+      </div>
+
+      {/* Recently Viewed Section */}
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        <RecentlyViewedSection limit={10} showClear title="Recently Viewed" />
       </div>
 
       {/* Visual Section Separator - tight spacing */}

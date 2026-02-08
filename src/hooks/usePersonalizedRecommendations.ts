@@ -94,7 +94,7 @@ export function usePersonalizedRecommendations() {
     const wishlistIds = wishlistItems.map((item) => item.filament_id);
 
     // Get viewed filament IDs
-    const viewedFilamentIds = browseHistory.map((item) => item.filament_id);
+    const viewedFilamentIds = browseHistory.map((item) => item.product_id);
 
     return {
       userId: user?.id || null,

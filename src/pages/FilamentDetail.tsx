@@ -51,6 +51,8 @@ import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
 import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
+import { useBrowseHistory } from "@/hooks/useBrowseHistory";
+import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -268,9 +270,13 @@ const FilamentDetail = () => {
     fetchBrandId();
   }, [filament?.vendor]);
 
+  // Track browse history
+  const { addToHistory } = useBrowseHistory();
+  
   useEffect(() => {
     if (filament?.id) {
       incrementStat('materials_explored');
+      addToHistory(filament.id, 'filament');
     }
   }, [filament?.id]);
 
@@ -819,6 +825,17 @@ const FilamentDetail = () => {
                 <CommunityTabContent filament={displayFilament} />
               )}
             </FilamentTabContent>
+
+            {/* Recently Viewed Section */}
+            <div className="mt-8">
+              <RecentlyViewedSection
+                limit={5}
+                excludeId={displayFilament.id}
+                showClear={false}
+                compact
+                title="Recently Viewed"
+              />
+            </div>
 
             {/* Similar Filaments Section - Below tabs, visible on all tabs */}
             <SimilarFilamentsSection
