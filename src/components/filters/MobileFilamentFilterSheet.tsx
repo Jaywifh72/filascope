@@ -301,7 +301,7 @@ export function MobileFilamentFilterSheet({
                 <div className="flex items-center gap-2">
                   <Atom className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-white">Material Types</span>
-                  {selectedMaterials.length > 0 && (
+                  {selectedMaterials.length > 0 && !(selectedMaterials.length === 1 && selectedMaterials[0] === "All") && (
                     <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
                       {selectedMaterials.length}
                     </span>
