@@ -98,7 +98,7 @@ export function BrandHeroSection({
 
   // Build products display: "40 Products (227 variants)"
   const productsDisplay = variantCount > productLineCount
-    ? `${productLineCount} (${variantCount} variants)`
+    ? `${productLineCount} (${variantCount} ${variantCount === 1 ? 'variant' : 'variants'})`
     : `${productLineCount}`;
 
 

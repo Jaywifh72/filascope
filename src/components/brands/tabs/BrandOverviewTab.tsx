@@ -88,7 +88,7 @@ export function BrandOverviewTab({
     cards.push({
       icon: <Package className="w-6 h-6" />,
       title: "Wide Selection",
-      description: `${groupedProducts.length} products across ${availableMaterials.length} material types`,
+      description: `${groupedProducts.length} ${groupedProducts.length === 1 ? 'product' : 'products'} across ${availableMaterials.length} material ${availableMaterials.length === 1 ? 'type' : 'types'}`,
     });
 
     // Add feature-specific cards
@@ -340,7 +340,7 @@ export function BrandOverviewTab({
                   </span>
                 </div>
                 <div className="text-xs text-gray-400">
-                  {materialCounts[material] || 0} products
+                  {(materialCounts[material] || 0) === 1 ? '1 product' : `${materialCounts[material] || 0} products`}
                 </div>
               </button>
             ))}
