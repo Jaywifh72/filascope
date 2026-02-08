@@ -708,7 +708,7 @@ const FilamentDetail = () => {
         productType="filament"
       />
       
-      {/* JSON-LD Structured Data */}
+      {/* JSON-LD Structured Data — enriched with offers, ratings, and weight */}
       <ProductJsonLd
         name={seoFullName}
         description={seoDescription}
@@ -731,6 +731,24 @@ const FilamentDetail = () => {
         printSpeedMax={displayFilament.print_speed_max_mms}
         weightGrams={displayFilament.net_weight_g}
         diameter={displayFilament.diameter_nominal_mm}
+        // ── Rich offers from detail pricing (enables Google price range snippets) ──
+        regionalOffers={
+          detailPricing.allCandidates.length > 0
+            ? detailPricing.allCandidates.map(c => ({
+                region: (c.storeRegion || currentRegionCode) as any,
+                price: c.pricePerSpool,
+                currency: (c.originalCurrency || currency) as any,
+                url: c.affiliateUrl || c.productUrl,
+                availability: true,
+                sellerName: c.name,
+              }))
+            : undefined
+        }
+        // ── Community rating (enables Google star rating snippets) ──
+        ratingValue={communityReviewStats?.avgRating ?? null}
+        ratingCount={communityReviewStats?.reviewCount ?? null}
+        bestRating={5}
+        worstRating={1}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">

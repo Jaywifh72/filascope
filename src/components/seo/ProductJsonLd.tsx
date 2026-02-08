@@ -207,30 +207,39 @@ export function ProductJsonLd({
 
   // Build offers array for regional pricing (Schema.org AggregateOffer)
   const buildOffers = () => {
-    // If we have regional offers, create multiple offers
+    // If we have regional offers, create AggregateOffer + individual Offers
     if (regionalOffers && regionalOffers.length > 0) {
+      // All offer prices are already in user's currency (converted by detail pricing hook)
+      const prices = regionalOffers.map(o => o.price).filter(p => p > 0);
+      if (prices.length === 0) return undefined;
+
       return {
         '@type': 'AggregateOffer',
         priceCurrency: activeCurrency,
-        lowPrice: Math.min(...regionalOffers.map(o => o.price)).toFixed(2),
-        highPrice: Math.max(...regionalOffers.map(o => o.price)).toFixed(2),
+        lowPrice: Math.min(...prices).toFixed(2),
+        highPrice: Math.max(...prices).toFixed(2),
         offerCount: regionalOffers.length,
+        availability: regionalOffers.some(o => o.availability !== false)
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
         offers: regionalOffers.map(offer => ({
           '@type': 'Offer',
-          priceCurrency: offer.currency,
+          priceCurrency: activeCurrency,
           price: offer.price.toFixed(2),
           availability: offer.availability !== false
             ? 'https://schema.org/InStock'
             : 'https://schema.org/OutOfStock',
           url: offer.url || url,
-          eligibleRegion: {
-            '@type': 'Place',
-            name: REGION_COUNTRY_CODES[offer.region],
-          },
           ...(offer.sellerName && {
             seller: {
               '@type': 'Organization',
               name: offer.sellerName,
+            },
+          }),
+          ...(offer.region && {
+            eligibleRegion: {
+              '@type': 'Place',
+              name: REGION_COUNTRY_CODES[offer.region],
             },
           }),
         })),
@@ -280,16 +289,24 @@ export function ProductJsonLd({
     ...(gtin && { gtin13: gtin }),
     ...(mpn && { mpn }),
     url,
+    // Weight as QuantitativeValue (Schema.org standard)
+    ...(weightGrams && {
+      weight: {
+        '@type': 'QuantitativeValue',
+        value: weightGrams >= 1000 ? +(weightGrams / 1000).toFixed(2) : weightGrams,
+        unitCode: weightGrams >= 1000 ? 'KGM' : 'GRM',
+      },
+    }),
     ...(additionalProperties.length > 0 && { additionalProperty: additionalProperties }),
     ...(offers && { offers }),
-    // Aggregate rating from FilaScope scores
-    ...(ratingValue != null && {
+    // Aggregate rating from community reviews
+    ...(ratingValue != null && ratingCount != null && ratingCount > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
         ratingValue: ratingValue.toFixed(1),
         bestRating: bestRating.toString(),
         worstRating: worstRating.toString(),
-        ...(ratingCount != null && { ratingCount: ratingCount.toString() }),
+        ratingCount: ratingCount.toString(),
       },
     }),
   };
