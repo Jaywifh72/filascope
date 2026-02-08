@@ -476,7 +476,10 @@ export const FilamentUsageCalculator: React.FC<FilamentUsageCalculatorProps> = (
                 {prefix}{currencySymbol}{materialCost.toFixed(2)}
               </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
-                Material Cost {currencyCode}
+                Material Cost
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {result.totalGrams}g × {prefix}{currencySymbol}{(currentPrice / 1000).toFixed(4)}/g
               </div>
             </div>
           </div>
