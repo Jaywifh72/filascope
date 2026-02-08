@@ -29,7 +29,7 @@ export async function getUrlValidationFromCache(url: string): Promise<UrlValidat
       .from('url_validation_cache')
       .select('*')
       .eq('url', url)
-      .single();
+      .maybeSingle();
     
     if (error || !data) return null;
     

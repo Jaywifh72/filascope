@@ -92,9 +92,12 @@ export function useAchievements() {
     try {
       const { error } = await supabase
         .from('user_achievements')
-        .insert({
+        .upsert({
           user_id: user.id,
           achievement_id: achievementId,
+        }, {
+          onConflict: 'user_id,achievement_id',
+          ignoreDuplicates: true,
         });
 
       if (!error) {
