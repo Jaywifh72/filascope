@@ -745,25 +745,26 @@ const Finder = () => {
   const brands = brandsData?.displayNames;
   const brandNameMap = brandsData?.brandNameMap || {};
 
-  // Fetch true filament counts per brand (matching Sync Manager logic exactly)
+  // Fetch true filament counts per brand in a SINGLE query (replaces N+1 loop)
   const { data: brandFilamentCounts } = useQuery({
     queryKey: ["brand-filament-counts", brandNameMap],
     queryFn: async () => {
-      // Get all brand names we care about
       const brandNames = Object.values(brandNameMap);
       if (brandNames.length === 0) return {};
       
-      // Fetch counts for each brand using the same logic as Sync Manager
-      const counts: Record<string, number> = {};
+      // Single query: fetch vendor column for all brands, then count client-side
+      const { data, error } = await supabase
+        .from("filaments")
+        .select("vendor")
+        .in("vendor", brandNames);
       
-      for (const brandName of brandNames) {
-        const { count, error } = await supabase
-          .from("filaments")
-          .select("*", { count: "exact", head: true })
-          .ilike("vendor", brandName);
-        
-        if (!error && count !== null) {
-          counts[brandName] = count;
+      if (error) throw error;
+      
+      // Group and count client-side
+      const counts: Record<string, number> = {};
+      for (const row of data || []) {
+        if (row.vendor) {
+          counts[row.vendor] = (counts[row.vendor] || 0) + 1;
         }
       }
       
@@ -781,7 +782,21 @@ const Finder = () => {
     queryFn: async () => {
       // Build the query function that will be called for each page
       const buildQuery = () => {
-        let query = supabase.from("filaments").select("*");
+        // Select only the columns needed for listing cards (Change 1: ~75% payload reduction)
+        let query = supabase.from("filaments").select(
+          "id, product_title, product_handle, vendor, material, color_hex, color_family, " +
+          "variant_price, variant_compare_at_price, net_weight_g, pack_quantity, " +
+          "featured_image, variant_available, product_line_id, finish_type, " +
+          "is_nozzle_abrasive, high_speed_capable, carbon_fiber_percentage, " +
+          "glass_fiber_percentage, wood_powder_percentage, product_url, " +
+          "product_url_ca, product_url_uk, product_url_eu, product_url_au, product_url_jp, " +
+          "price_cad, price_gbp, price_eur, price_aud, price_jpy, last_scraped_at, " +
+          "transmission_distance, nozzle_temp_min_c, nozzle_temp_max_c, " +
+          "bed_temp_min_c, bed_temp_max_c, tensile_strength_xy_mpa, density_g_cm3, " +
+          "ease_of_printing_score, strength_index, printability_index, value_score, " +
+          "amazon_price_usd, diameter_nominal_mm, print_speed_max_mms, display_name, " +
+          "moisture_sensitivity_level, brand_id"
+        );
 
         // Filter 1: Exclude non-filament products (null material = not a filament)
         query = query.not("material", "is", null);

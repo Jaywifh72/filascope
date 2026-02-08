@@ -80,10 +80,85 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [exchangeRates, setExchangeRates] = useState<Map<string, number>>(new Map());
 
-  // Load exchange rates from the canonical `exchange_rates` table (rate_to_usd).
-  // This is the SAME table used by useExchangeRateMap(), ensuring all components
-  // in the app use identical conversion rates. See: architecture/exchange-rate-automation-v2-final
+  // Change 5: localStorage cache for exchange rates with 1-hour TTL
+  const RATES_CACHE_KEY = 'filascope_exchange_rates_cache';
+  const RATES_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+  /**
+   * Build pairwise rate map from raw rate_to_usd data
+   */
+  const buildRateMap = useCallback((rawRates: Array<{ currency_code: string; rate_to_usd: number }>): Map<string, number> => {
+    const rates = new Map<string, number>();
+    rates.set('USD_USD', 1);
+    
+    const rateMap: Record<string, number> = { USD: 1 };
+    rawRates.forEach(row => {
+      if (row.rate_to_usd > 0) {
+        rateMap[row.currency_code] = row.rate_to_usd;
+      }
+    });
+    
+    // Build USD_X and X_USD pairs
+    for (const [code, rateToUsd] of Object.entries(rateMap)) {
+      if (code === 'USD') continue;
+      rates.set(`USD_${code}`, 1 / rateToUsd);
+      rates.set(`${code}_USD`, rateToUsd);
+    }
+    
+    // Build cross-currency pairs via USD pivot
+    const codes = Object.keys(rateMap);
+    for (const from of codes) {
+      for (const to of codes) {
+        if (from === to) continue;
+        const key = `${from}_${to}`;
+        if (!rates.has(key)) {
+          const fromRate = rateMap[from];
+          const toRate = rateMap[to];
+          if (fromRate > 0 && toRate > 0) {
+            rates.set(key, fromRate / toRate);
+          }
+        }
+      }
+    }
+    
+    return rates;
+  }, []);
+
+  // Load exchange rates with localStorage caching
   const loadExchangeRates = useCallback(async () => {
+    // Try localStorage cache first
+    try {
+      const cached = localStorage.getItem(RATES_CACHE_KEY);
+      if (cached) {
+        const { data: cachedData, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < RATES_CACHE_TTL && Array.isArray(cachedData) && cachedData.length > 0) {
+          // Use cached rates immediately
+          const rates = buildRateMap(cachedData);
+          setExchangeRates(rates);
+          
+          // Still fetch fresh rates in background (stale-while-revalidate)
+          supabase
+            .from('exchange_rates')
+            .select('currency_code, rate_to_usd')
+            .then(({ data, error }) => {
+              if (!error && data && data.length > 0) {
+                const freshRates = buildRateMap(data);
+                setExchangeRates(freshRates);
+                localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({
+                  data,
+                  timestamp: Date.now(),
+                }));
+              }
+            });
+          
+          return; // Return early — cached rates are already set
+        }
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+
+    // No valid cache — fetch from database
     try {
       const { data, error } = await supabase
         .from('exchange_rates')
@@ -91,50 +166,20 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
       
-      const rates = new Map<string, number>();
-      // USD is always 1:1
-      rates.set('USD_USD', 1);
-      
-      // Build pairwise rates from rate_to_usd values.
-      // rate_to_usd means: 1 unit of currency = X USD
-      // So to convert FROM currency A TO currency B:
-      //   amount_in_B = amount_in_A * (rateA_to_usd / rateB_to_usd)
-      const rateMap: Record<string, number> = { USD: 1 };
-      data?.forEach(row => {
-        if (row.rate_to_usd > 0) {
-          rateMap[row.currency_code] = row.rate_to_usd;
-        }
-      });
-      
-      // Build USD_X and X_USD pairs for all currencies
-      for (const [code, rateToUsd] of Object.entries(rateMap)) {
-        if (code === 'USD') continue;
-        // USD -> X: divide by rate_to_usd (since rate_to_usd = how many USD per 1 unit)
-        // e.g., if CAD rate_to_usd = 0.74, then 1 USD = 1/0.74 CAD = 1.351 CAD
-        rates.set(`USD_${code}`, 1 / rateToUsd);
-        rates.set(`${code}_USD`, rateToUsd);
-      }
-      
-      // Build cross-currency pairs (e.g., CAD_EUR) via USD pivot
-      const codes = Object.keys(rateMap);
-      for (const from of codes) {
-        for (const to of codes) {
-          if (from === to) continue;
-          const key = `${from}_${to}`;
-          if (!rates.has(key)) {
-            const fromRate = rateMap[from];
-            const toRate = rateMap[to];
-            if (fromRate > 0 && toRate > 0) {
-              rates.set(key, fromRate / toRate);
-            }
-          }
-        }
-      }
-      
+      const rates = buildRateMap(data || []);
       setExchangeRates(rates);
+      
+      // Cache for next visit
+      try {
+        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        }));
+      } catch {
+        // Ignore localStorage write errors
+      }
     } catch (error) {
       console.error('Failed to load exchange rates:', error);
-      // Set default rates as fallback
       const defaultRates = new Map<string, number>([
         ['USD_USD', 1],
         ['USD_CAD', 1.36],
@@ -146,7 +191,7 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
       ]);
       setExchangeRates(defaultRates);
     }
-  }, []);
+  }, [buildRateMap]);
 
   const savePreferences = useCallback((reg: RegionCode, curr: CurrencyCode) => {
     try {

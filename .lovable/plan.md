@@ -111,8 +111,8 @@ Time to interactive   8-12s       2-4s        ~70%
 
 ## Implementation sequence
 
-1. Change 2 (brand counts N+1) -- quick, isolated fix
-2. Change 3 (remove live price scraping from cards) -- high impact, isolated
-3. Change 1 (slim column selection) -- biggest payload reduction
-4. Change 4 (deals count optimization) -- medium impact
-5. Change 5 (localStorage exchange rate cache) -- nice-to-have
+1. ✅ Change 2 (brand counts N+1) — replaced 48 queries with 1 single `.in()` query
+2. ✅ Change 3 (remove live price scraping from cards) — removed `useCurrentPrice` from LabReadoutCard
+3. ✅ Change 1 (slim column selection) — explicit ~40 column select instead of `select("*")`
+4. ✅ Change 4 (deals count optimization) — single HEAD request with `count: 'exact'`
+5. ✅ Change 5 (localStorage exchange rate cache) — 1-hour TTL with stale-while-revalidate

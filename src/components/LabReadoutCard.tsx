@@ -15,7 +15,6 @@ import { getBrandLogo } from "@/lib/brandLogos";
 import { useCompare } from "@/hooks/useCompare";
 import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
-import { useCurrentPrice } from "@/hooks/useCurrentPrice";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor, SCORE_EXPLANATION } from "@/lib/unifiedFilamentScore";
 import { OptimizedImage } from "@/components/ui/optimized-image";
@@ -110,11 +109,8 @@ export function LabReadoutCard({
   // Use priceSource for accurate conversion detection (matches FilamentCard behavior)
   const isConverted = priceSource === 'converted';
   
-  const {
-    currentPrice: livePrice,
-    isLivePrice,
-    weightGrams: liveWeightGrams,
-  } = useCurrentPrice(regionalUrl || filament.product_url, regionalPrice, fallbackUrl);
+  // Change 3: Removed live price scraping (useCurrentPrice) from listing cards.
+  // Cards now use database-sourced prices only. Live scraping only happens on detail pages.
   
   const { 
     addItem, 
@@ -132,8 +128,8 @@ export function LabReadoutCard({
   const isPendingSelection = isPending(filament.id);
   const isCompareDisabled = isFull && !isSelected;
 
-  const effectivePrice = isLivePrice && livePrice ? livePrice : regionalPrice;
-  const effectiveWeightKg = liveWeightGrams ? liveWeightGrams / 1000 : (filament.net_weight_g ? filament.net_weight_g / 1000 : null);
+  const effectivePrice = regionalPrice;
+  const effectiveWeightKg = filament.net_weight_g ? filament.net_weight_g / 1000 : null;
 
   const packQty = filament.pack_quantity || 1;
   const pricePerKg = (effectivePrice && effectiveWeightKg)
