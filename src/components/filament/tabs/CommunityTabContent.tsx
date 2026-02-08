@@ -13,6 +13,7 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { useProductReviews } from '@/hooks/useProductReviews';
+import { useReviewFlags } from '@/hooks/useReviewFlags';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewSummaryBar, ReviewList } from '@/components/reviews/ReviewDisplay';
 import { CommunityPhotoGallery } from '@/components/community-photos/CommunityPhotoGallery';
@@ -44,6 +45,12 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
     voteHelpful,
     isVoting,
   } = useProductReviews(filament.id, "filament");
+
+  const { flagReview, isFlagging } = useReviewFlags(filament.id);
+
+  const handleFlagReview = (reviewId: string, reason: string, details?: string) => {
+    flagReview({ reviewId, reason, details });
+  };
 
   const forumLinks = [
     {
@@ -113,6 +120,8 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
             reviews={reviews}
             onVoteHelpful={voteHelpful}
             isVoting={isVoting}
+            onFlagReview={handleFlagReview}
+            isFlagging={isFlagging}
           />
 
           {reviews.length === 0 && !isLoading && (

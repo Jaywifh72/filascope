@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
@@ -200,7 +201,31 @@ export function ReviewForm({
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [verifiedPurchase, setVerifiedPurchase] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if the user owns this filament (has it in any collection)
+  const { data: ownsFilament } = useQuery({
+    queryKey: ["user-owns-filament", productId, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { count } = await supabase
+        .from("user_favorites")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("filament_id", productId);
+      return (count || 0) > 0;
+    },
+    enabled: !!user?.id && productType === "filament",
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Auto-set verified purchase when ownership is detected
+  useEffect(() => {
+    if (ownsFilament) {
+      setVerifiedPurchase(true);
+    }
+  }, [ownsFilament]);
 
   // Fetch printers for dropdown
   const { data: printers } = useQuery({
@@ -270,6 +295,7 @@ export function ReviewForm({
       pros,
       cons,
       is_public: isPublic,
+      is_verified_purchase: verifiedPurchase,
       photos,
     });
   };
@@ -493,6 +519,33 @@ export function ReviewForm({
             onChange={handlePhotoAdd}
             className="hidden"
           />
+        </div>
+
+        {/* Verified Purchase */}
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
+          <input
+            type="checkbox"
+            id="verified-purchase"
+            checked={verifiedPurchase}
+            onChange={(e) => {
+              if (!ownsFilament) {
+                setVerifiedPurchase(e.target.checked);
+              }
+            }}
+            disabled={ownsFilament === true}
+            className="rounded border-border"
+          />
+          <div className="flex-1">
+            <Label htmlFor="verified-purchase" className="text-sm font-medium cursor-pointer flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+              I own this filament
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {ownsFilament
+                ? "Auto-detected from your collection — Verified Owner badge will show"
+                : "Check if you own this filament for a Verified badge"}
+            </p>
+          </div>
         </div>
 
         {/* Visibility */}
