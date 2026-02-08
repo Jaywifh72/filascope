@@ -1,118 +1,128 @@
 
-# Performance Optimization: Reduce Homepage Fetch Requests
 
-## Problem Summary
+# Community Reviews and Photos: Activation Plan
 
-The homepage currently makes ~86-128 fetch requests during initial load, transferring ~32MB of data. This is caused by five major issues, listed by impact.
+## Current State Assessment
 
-## Root Cause Breakdown
+After a thorough audit, the review and community photo systems are **already fully implemented** in both the database and frontend. Here is what exists:
 
-```text
-Source                        Requests    Data Size    Notes
---------------------------    --------    ---------    -----
-Filament data (paginated)     7-8         ~28 MB       select * from 7,000+ rows
-Brand filament counts (N+1)   ~48         ~50 KB       One COUNT(*) per brand
-Live price scraping/card      ~16         ~100 KB      Edge function call per card
-Deals count (paginated)       2-3         ~2 MB        Paginates entire table
-Misc (auth, rates, etc.)      ~15         ~500 KB      Exchange rates, reviews, etc.
---------------------------    --------    ---------
-TOTAL                         ~86-128     ~32 MB
-```
+### Already Built (Database)
+- `product_reviews` table with all requested columns (rating, headline, body, pros, cons, print settings, verified purchase, helpful count, status, soft delete)
+- `review_photos` table for review image attachments
+- `product_review_votes` table for "Was this helpful?" votes
+- `community_photos` table with caption, printer, print settings, model source, like count
+- `community_photo_files` for multi-photo uploads
+- `community_photo_likes` for photo likes with a trigger to auto-update `like_count`
+- RLS policies on all tables (read public reviews, users CRUD own data, vote tracking)
+- Storage buckets: `review-photos` (public) and `community-photos` (public)
 
-## Optimization Plan (6 changes)
+### Already Built (Frontend)
+- **ReviewForm** (`src/components/reviews/ReviewForm.tsx`): Full form with star ratings (Quality, Ease, Value, Overall), headline, body, pros/cons tag input, printer selector, print settings (collapsible), photo upload (up to 5), visibility toggle
+- **ReviewDisplay** (`src/components/reviews/ReviewDisplay.tsx`): Summary bar with distribution chart, review cards with avatar, verified badge, expand/collapse, photo lightbox, "Helpful" voting, "Report" button, sort (Recent/Highest/Helpful) and filter (Has Photos, Verified)
+- **CommunityPhotoGallery** (`src/components/community-photos/CommunityPhotoGallery.tsx`): Masonry grid, sort by recent/popular, filter by printer/mine, likes, lightbox
+- **SharePrintDialog** (`src/components/community-photos/SharePrintDialog.tsx`): Drag-and-drop photo upload, caption, printer selector, print settings, model source
+- **useProductReviews hook**: Fetches reviews with profiles, printers, photos, vote status; handles submit, vote toggle
+- **useCommunityPhotos hook**: Fetches photos with files, profiles, printers, like status; handles upload, like toggle, report, delete
+- **Vault "My Reviews" tab** (`src/components/vault/VaultReviewsTab.tsx`): Full management with stats bar, filters, list/grid view, edit dialog, delete confirmation
+- **FilamentCard community rating**: Already receives and displays `communityRating` prop with tooltip showing sub-ratings
+- **useBulkCommunityRatings / useCommunityReviewStats**: Hooks for listing page and detail page aggregation
 
-### Change 1: Only fetch columns needed for listing cards (BIGGEST WIN)
+### Already Wired Into the Community Tab
+The `CommunityTabContent.tsx` already integrates:
+- `useProductReviews` hook
+- `ReviewForm` component
+- `ReviewSummaryBar` and `ReviewList` components
+- `CommunityPhotoGallery` component (which includes `SharePrintDialog`)
 
-**Current**: `select("*")` fetches ALL ~120 columns per filament row, including TDS URLs, sync metadata, admin notes, scrape configs, etc. Most columns are null and never used on cards.
+**There are no "Coming Soon" badges on the Community tab itself.** The "Coming Soon" labels found in the codebase are on unrelated pages (Resources/Profiles, CAD Quiz, Troubleshooting Database, Diagnose tool, etc.).
 
-**Fix**: Replace `select("*")` with an explicit column list containing only the ~25 fields cards actually use:
-- id, product_title, product_handle, vendor, material, color_hex, color_family, variant_price, variant_compare_at_price, net_weight_g, pack_quantity, featured_image, variant_available, product_line_id, finish_type, is_nozzle_abrasive, high_speed_capable, carbon_fiber_percentage, glass_fiber_percentage, wood_powder_percentage, product_url, product_url_ca/uk/eu/au/jp, price_cad/gbp/eur/aud/jpy, last_scraped_at, transmission_distance, nozzle_temp_min_c, nozzle_temp_max_c, bed_temp_min_c, bed_temp_max_c, tensile_strength_xy_mpa, density_g_cm3, ease_of_printing_score, strength_index, printability_index, value_score, amazon_price_usd
+## What Is Actually Needed
 
-**Impact**: Each row drops from ~3.5KB to ~800 bytes. Total payload drops from ~28MB to ~6MB. Pagination still needed but each page transfers 4x less.
+Since the infrastructure is complete, the remaining work falls into two small areas:
 
-**Files**: `src/pages/Finder.tsx` (the main filaments query), `src/lib/supabaseHelpers.ts`
+### 1. Review Moderation System (New)
+The "Report" button on reviews currently has no backend action. A `review_flags` table and basic admin queue are needed.
 
-### Change 2: Eliminate the N+1 brand count query
+**Database migration:**
+- Create `review_flags` table: `id`, `review_id` (FK to product_reviews), `reporter_id` (user_id), `reason` (enum: spam, inappropriate, fake, other), `details` (text, optional), `status` (pending/reviewed/dismissed), `reviewed_by`, `reviewed_at`, `created_at`
+- Add unique constraint on (review_id, reporter_id) to prevent duplicate reports
+- RLS: authenticated users can INSERT their own flags, admins can SELECT/UPDATE all
+- When a review gets 3+ flags, auto-set its `status` to `'pending'` (moderation hold)
 
-**Current**: Lines 749-774 in `Finder.tsx` loop through ~48 brand names and fire a separate `SELECT count(*) FROM filaments WHERE vendor ILIKE brandName` for each one. This creates ~48 sequential requests.
+**Frontend changes:**
+- Wire the existing "Report" button in `ReviewDisplay.tsx` to open a small dialog asking for a reason (dropdown: Spam, Inappropriate, Fake Review, Other) and optional details, then insert into `review_flags`
+- Show toast confirmation after report
 
-**Fix**: Replace the loop with a single aggregate query:
-```sql
-SELECT vendor, count(*) as cnt 
-FROM filaments 
-WHERE vendor IN ('brand1', 'brand2', ...)
-GROUP BY vendor
-```
-This uses a single `.in()` filter with `.select('vendor')` and client-side grouping, or better yet, a single RPC call.
+### 2. Verified Purchase Badge Logic (Enhancement)
+The `is_verified_purchase` column exists but is always `false`. Connect it to the user's wishlist/purchase data.
 
-**Impact**: 48 requests reduced to 1.
+**Frontend change in ReviewForm:**
+- Query the user's `wishlist_items` or purchase collection to check if they own the filament being reviewed
+- If found, auto-check a "I own this filament" indicator and set `is_verified_purchase: true` on submission
+- Display as a non-editable badge if auto-detected, or allow manual toggle if not auto-detected
 
-**Files**: `src/pages/Finder.tsx` (the `brand-filament-counts` query)
+### 3. "Lowest Rated" Sort Missing from Community Tab (Minor Fix)
+The Community tab's `ReviewList` only has "Recent", "Highest", and "Helpful" sort options. Add "Lowest Rated" to match the Vault's sort options.
 
-### Change 3: Disable live price scraping on listing cards
+## Implementation Phases
 
-**Current**: `LabReadoutCard` calls `useCurrentPrice()` which invokes the `get-current-price` edge function for each visible card. With 16 cards visible, that's 16 edge function calls that each scrape an external website.
+### Phase 1: Review Flagging/Moderation
+1. Create `review_flags` table with migration (with RLS)
+2. Add a `ReportReviewDialog` component with reason selector
+3. Wire the existing "Report" button in `ReviewDisplay.tsx` to use it
+4. Add a review flag count check: if a review has 3+ unresolved flags, hide it from public view by updating its status to `'flagged'`
 
-**Fix**: Remove the `useCurrentPrice` call from `LabReadoutCard`. The database already has `variant_price`, `price_cad`, etc. Live price scraping should only happen on the detail page where a single product is in view. The card should use `useResolvedPrice` (same as `FilamentCard`) for consistent, database-sourced pricing.
+### Phase 2: Verified Purchase Auto-Detection
+1. In `ReviewForm.tsx`, query user's wishlist items for the current product
+2. If found in an "inventory" or "purchased" collection, auto-set `is_verified_purchase` to `true`
+3. Show a visual indicator ("Verified Owner" badge) in the form
 
-**Impact**: 16 edge function calls eliminated per page load. Also reduces external scraping load and improves card render time.
+### Phase 3: Minor Polish
+1. Add "Lowest Rated" sort option to `ReviewList` in `ReviewDisplay.tsx`
+2. Ensure the "Report" button shows disabled state for non-logged-in users with a sign-in prompt
 
-**Files**: `src/components/LabReadoutCard.tsx`
+## Technical Details
 
-### Change 4: Replace deals count pagination with a single count query
-
-**Current**: `useDealsCount` paginates through the entire filaments table to count deals client-side, fetching full rows across 2-3 paginated requests.
-
-**Fix**: Replace with a single `SELECT count(*) FROM filaments WHERE variant_compare_at_price IS NOT NULL AND variant_price IS NOT NULL AND variant_compare_at_price > variant_price` using `.select('*', { count: 'exact', head: true })` with the appropriate filters. For the "unique products" count, use a lightweight RPC or accept the variant count for the hero badge.
-
-**Impact**: 2-3 large requests reduced to 1 lightweight HEAD request.
-
-**Files**: `src/hooks/useDealsCount.ts`
-
-### Change 5: Cache exchange rates in localStorage with 1-hour TTL
-
-**Current**: Exchange rates are fetched from the database on every page load via `RegionContext`.
-
-**Fix**: Add a localStorage cache layer (similar to the hero stats cache already in `HeroSection.tsx`):
-1. On fetch, store rates + timestamp in localStorage
-2. On load, read from localStorage if < 1 hour old
-3. Still fetch in background to keep fresh, but display cached rates immediately
-
-This eliminates the blocking exchange rate fetch that delays price rendering.
-
-**Impact**: Eliminates 1 blocking request on repeat visits. Prices render instantly from cache.
-
-**Files**: `src/contexts/RegionContext.tsx`
-
-### Change 6: Use `select("material")` for the materials filter query
-
-**Current**: The materials query (line 578-706) fetches all material values to build the filter sidebar. It uses `select("material")` which is already good, but can be made a head-only distinct query.
-
-**Fix**: This is already reasonably efficient. No change needed.
-
-## Expected Results
+### review_flags Table Schema
 
 ```text
-Metric                Before      After       Reduction
---------------------  ----------  ----------  ---------
-Total fetch requests  86-128      ~12-15      ~85%
-Total payload size    ~32 MB      ~6-7 MB     ~80%
-Time to interactive   8-12s       2-4s        ~70%
+review_flags
++------------------+------------------------+
+| Column           | Type                   |
++------------------+------------------------+
+| id               | uuid (PK, default)     |
+| review_id        | uuid (FK product_reviews) |
+| reporter_id      | uuid (auth.uid)        |
+| reason           | text (NOT NULL)        |
+| details          | text (nullable)        |
+| status           | text (default 'pending') |
+| reviewed_by      | uuid (nullable)        |
+| reviewed_at      | timestamptz (nullable) |
+| created_at       | timestamptz (default now) |
++------------------+------------------------+
+UNIQUE(review_id, reporter_id)
 ```
 
-## What stays the same
+### RLS Policies for review_flags
+- SELECT: Admins only (using `has_role(auth.uid(), 'admin')`) + users can see their own flags
+- INSERT: Authenticated users where `auth.uid() = reporter_id`
+- UPDATE: Admins only (for status changes)
+- No DELETE policy (flags should not be deletable)
 
-- Pagination approach for the main filament query (still needed for 7,000+ rows)
-- 16 items per page with "Load More"
-- All existing client-side filtering and sorting logic
-- VirtualizedProductGrid thresholds
-- React Query caching configuration
-- Exchange rate refresh hooks for admin
+### Files to Create
+- `src/components/reviews/ReportReviewDialog.tsx` -- Report reason dialog
 
-## Implementation sequence
+### Files to Modify
+- `src/components/reviews/ReviewDisplay.tsx` -- Wire Report button to dialog, add "Lowest Rated" sort
+- `src/components/reviews/ReviewForm.tsx` -- Add verified purchase auto-detection from wishlist
+- `src/hooks/useProductReviews.ts` -- Add flag mutation, filter out heavily-flagged reviews from public view
 
-1. ✅ Change 2 (brand counts N+1) — replaced 48 queries with 1 single `.in()` query
-2. ✅ Change 3 (remove live price scraping from cards) — removed `useCurrentPrice` from LabReadoutCard
-3. ✅ Change 1 (slim column selection) — explicit ~40 column select instead of `select("*")`
-4. ✅ Change 4 (deals count optimization) — single HEAD request with `count: 'exact'`
-5. ✅ Change 5 (localStorage exchange rate cache) — 1-hour TTL with stale-while-revalidate
+### No Changes Needed
+- Database tables (product_reviews, review_photos, product_review_votes, community_photos, community_photo_files, community_photo_likes) -- all exist
+- ReviewForm functionality (star ratings, title, body, pros/cons, print settings, photo upload) -- all working
+- ReviewDisplay (summary bar, cards, voting, filtering) -- all working  
+- CommunityPhotoGallery + SharePrintDialog -- all working
+- Vault "My Reviews" tab with edit/delete -- all working
+- FilamentCard aggregate ratings -- already wired
+- Storage buckets and RLS -- already configured
+
