@@ -1,137 +1,170 @@
 
+# Find by Color -- Visual Color Search Feature
 
-# Price Drop Alert Feature -- Gap Analysis and Completion Plan
+## Overview
 
-## Current State
+Add a dedicated `/colors` page with an interactive HSL color picker, hex code input, popular color shortcuts, and live-filtered filament results sorted by color proximity. Integrate this into the homepage, existing sidebar filters, and product detail pages.
 
-This feature is roughly 70% built already. Here is what exists and what needs to be connected:
+## Current Infrastructure
 
-**Already working:**
-- Database table `price_alerts` with all needed columns (id, user_id, filament_id, target_price, current_price_when_set, email_notifications, triggered_at, triggered_price, is_active, created_at)
-- RLS policies (users can only CRUD their own alerts)
-- Unique constraint on (user_id, filament_id)
-- `DatabasePriceAlertModal` -- a polished modal with slider, email toggle, and login prompt for guests
-- `useDatabasePriceAlerts` hook -- full Supabase CRUD with React Query
-- `PriceAlertsSection` -- account-level card showing all alerts with triggered status
-- Bell button already visible on the Pricing tab of every filament detail page
+The codebase already has substantial color matching infrastructure:
+- **`colorMatchUtils.ts`**: Redmean color distance, `getColorMatchPercent`, `hslToHex`, `hexToRgb` utilities
+- **`colorIntelligence.ts`**: 230+ color names mapped to hex codes, `extractColorFromText`, `getColorSuggestions`, `getColorFamily`
+- **`COLOR_FAMILIES`** (16 families): Used in `MoreFiltersModal` color grid and `Finder.tsx` filtering
+- **Database**: 8,063 filaments with `color_hex` values, 1,402 unique colors
+- **Existing filter flow**: `Finder.tsx` already supports `hexSearch` + `colorTolerance` URL params and filters by color distance
+- **HueForge page**: `/hueforge` already queries filaments with TD values
 
-**What is broken or missing:**
-1. The bell button on filament pages uses the OLD localStorage-based modal instead of the database-backed one
-2. The `PriceAlertsSection` component exists but is NOT rendered on any page
-3. No edge function to check alerts against current prices (Phase 2 of notifications)
-4. Guest alert flow (email-only, no account) is not supported by the current schema
-5. Hardcoded dark-mode colors in `PriceAlertsSection` need semantic tokens for the new light/dark mode
+## Implementation Plan
 
-## Changes Required
+### 1. New Page: `/colors` -- Find by Color
 
-### 1. Switch Filament Detail Page to Database-Backed Alerts
+**File: `src/pages/ColorFinder.tsx`**
 
-**File: `src/components/filament/tabs/PricingTabContent.tsx`**
+The main dedicated page with three zones:
 
-- Replace the import of `PriceAlertModal` with `DatabasePriceAlertModal`
-- Replace the import of `usePriceAlerts` with `useDatabasePriceAlerts`
-- Update all references: `hasAlert(filamentId)` becomes `hasAlert(filamentId)` (same API), `existingAlert?.targetPrice` becomes `existingAlert?.target_price`
-- Swap the `<PriceAlertModal>` JSX at the bottom for `<DatabasePriceAlertModal>` with the same props
-- The bell button, slider, and existing alert status display all stay the same structurally
+**Zone A -- Color Picker (top)**
+- An HSL spectrum canvas (not a library -- pure canvas with mouse/touch tracking)
+- Horizontal hue bar (0-360 degrees) + square saturation/lightness area
+- Live preview circle showing the selected color
+- Hex code display: "Selected: #FF5733" with copy button
+- Manual hex input field: "Enter hex code: #______" with validation using existing `isValidHexColor`
+- When user moves cursor on the canvas, convert position to HSL, then use existing `hslToHex` to get the hex code
 
-### 2. Add Price Alerts Tab to My Vault Page
+**Zone B -- Popular Color Shortcuts (below picker)**
+- Grid of 16 color family buttons reusing `COLOR_FAMILIES` from `colorMatchUtils.ts`
+- Clicking one sets the hex to that family's representative color
+- Additional row of "trending" colors pulled from the database (most common `color_hex` values)
 
-**File: `src/pages/Vault.tsx`**
+**Zone C -- Results (below shortcuts)**
+- Query filaments from Supabase: `select id, product_title, vendor, material, color_hex, color_family, variant_price, net_weight_g, featured_image, product_handle, transmission_distance, pack_quantity, price_cad, price_eur, price_gbp, price_aud, price_jpy`
+- Client-side sort by `colorDistance` (existing utility) from the selected hex
+- Each result card shows:
+  - Color swatch (the filament's actual `color_hex`)
+  - Match percentage badge using existing `getColorMatchPercent`
+  - Product name, brand, material type badge (reuse `MaterialBadge`)
+  - Regional price (reuse `useCurrency` hook)
+  - TD value badge if available (reuse existing TD badge pattern)
+- Filter controls on the results: material type dropdown, brand dropdown, price range slider
+- Sort options: "Best Color Match" (default), "Lowest Price", "Highest Rated"
+- Limit display to top 50 matches (with "Load More")
+- URL state: `?hex=FF5733&tolerance=30&material=PLA` for shareability
 
-- Import `PriceAlertsSection` and `Bell` icon
-- Add a 5th tab to the TabsList: "Price Alerts" with a bell icon and count from `useDatabasePriceAlerts`
-- Add a corresponding `TabsContent` that renders `<PriceAlertsSection />`
-- Update grid-cols from 4 to 5
+### 2. Color Picker Canvas Component
 
-### 3. Fix Theme Compatibility in PriceAlertsSection
+**File: `src/components/color-finder/ColorPickerCanvas.tsx`**
 
-**File: `src/components/account/PriceAlertsSection.tsx`**
+A reusable HSL color picker built with HTML Canvas:
+- Hue strip (horizontal bar, 360px wide): renders all hues at full saturation
+- Saturation-Lightness square (below hue strip): given the selected hue, renders the full S/L range
+- Mouse/touch events update the selected color in real-time
+- Debounced output (50ms) to avoid excessive re-renders during drag
+- Mobile-friendly: touch events with `touch-action: none` to prevent scroll interference
+- Converts canvas position to HSL values, then uses `hslToHex` from `colorMatchUtils.ts`
 
-- Replace hardcoded `bg-gray-800/50 border-gray-700` with `bg-card/50 border-border`
-- Replace `bg-gray-700/50` skeleton with `bg-muted`
-- Replace `text-gray-400`, `text-gray-500` with `text-muted-foreground`
-- Replace `bg-gray-700/30 border-gray-700` on alert rows with `bg-muted/30 border-border`
-- Replace `text-white` on filament names with `text-foreground`
-- All green triggered-state classes remain as-is (they work in both themes)
+### 3. Color Result Card Component
 
-### 4. Add Guest Email Alert Support (Database Schema)
+**File: `src/components/color-finder/ColorResultCard.tsx`**
 
-**Database migration** -- add an `email` column for non-logged-in users:
+Compact card for color search results:
+- Large color swatch (left side, 48x48px rounded)
+- Product info (right side): title, vendor, material badge
+- Match percentage badge: "98% match" with color-coded background (green >90%, yellow >70%, orange >50%)
+- Regional price using `useCurrency`
+- TD badge if `transmission_distance` is not null (gold Lightbulb icon pattern)
+- Click navigates to `/filaments/[product_handle]`
 
-```sql
-ALTER TABLE price_alerts ALTER COLUMN user_id DROP NOT NULL;
-ALTER TABLE price_alerts ADD COLUMN email TEXT;
-ALTER TABLE price_alerts ADD COLUMN currency TEXT DEFAULT 'USD';
-ALTER TABLE price_alerts ADD COLUMN region TEXT DEFAULT 'US';
-```
+### 4. HueForge Color Stack Builder
 
-Add a CHECK constraint ensuring either user_id or email is provided:
+**File: `src/components/color-finder/HueForgeStackBuilder.tsx`**
 
-```sql
-ALTER TABLE price_alerts ADD CONSTRAINT price_alerts_user_or_email 
-  CHECK (user_id IS NOT NULL OR email IS NOT NULL);
-```
+A mode toggle on the `/colors` page:
+- "Single Color" mode (default) vs "HueForge Stack" mode
+- In stack mode, user can select 4-5 color slots
+- Each slot has its own color picker (simplified -- just a hex input + popular colors)
+- For each slot, shows the top 5 matching filaments that have TD values
+- Each result displays the TD value prominently
+- Summary panel shows the complete stack with all selected filaments and their TD values
+- "Copy Stack" button formats the selection as text for sharing
 
-Add RLS policy for anonymous inserts (with email):
+### 5. Homepage Integration
 
-```sql
-CREATE POLICY "Anyone can create email-based price alerts" 
-  ON price_alerts FOR INSERT 
-  WITH CHECK (user_id IS NULL AND email IS NOT NULL);
-```
+**File: `src/components/HeroSection.tsx`**
 
-### 5. Update DatabasePriceAlertModal for Guest Flow
+Add a 5th quick start card to the hero section grid:
+- Title: "Find by Color"
+- Icon: `Palette` from lucide-react
+- Description: "Match any color to real filaments"
+- Link: `/colors`
+- Color theme: pink/magenta (`border-pink-500/30`, etc.)
+- Update grid from `grid-cols-2 sm:grid-cols-4` to `grid-cols-2 sm:grid-cols-5` (5 cards fit well at the sm breakpoint)
 
-**File: `src/components/filament/DatabasePriceAlertModal.tsx`**
+### 6. Sidebar Color Swatch Filter Enhancement
 
-- When user is NOT logged in, instead of showing "Sign in" prompt, show:
-  - The same target price slider/input
-  - An email input field: "Enter your email to get notified"
-  - A "Set Alert" button that inserts directly with email (no user_id)
-- Keep the existing "Sign in for more features" as a secondary CTA below
+**File: `src/components/TechnicalConsoleSidebar.tsx`**
 
-### 6. Update useDatabasePriceAlerts Hook for Guest Support
+The existing sidebar already handles material/brand/spool filters. Add a collapsible "Color" section:
+- Show the 16 `COLOR_FAMILIES` as clickable swatches (same pattern as `MoreFiltersModal`)
+- A "Custom Color" link that opens a popover with hex input
+- When a color is selected, set `hexSearch` URL param and redirect to the Finder with the filter active
+- This connects to the existing `hexSearch` + `colorTolerance` filtering logic in `Finder.tsx`
 
-**File: `src/hooks/useDatabasePriceAlerts.ts`**
+### 7. Product Detail Page -- "Find Similar Colors" Link
 
-- Add a `setGuestAlert` mutation that inserts with email instead of user_id
-- The query for fetching alerts remains user-only (guests can't see their alerts without logging in, which is acceptable)
+**File: `src/components/filament/hero/LargeColorSwatchGrid.tsx`**
 
-### 7. Price Check Edge Function (Infrastructure for Phase 2)
+Add a small "Find similar colors from other brands" link below the color swatch grid:
+- Links to `/colors?hex=[current_color_hex]`
+- Only shows when the filament has a valid `color_hex`
+- Uses the existing `Palette` icon + text link pattern
 
-**File: `supabase/functions/check-price-alerts/index.ts`**
+### 8. Route Registration
 
-- Query all active price alerts with their target prices
-- Join with current filament prices
-- For any alert where current price is at or below target:
-  - Update the alert: set `triggered_at = NOW()`, `triggered_price = current_price`
-  - Log the trigger event
-- This function does NOT send emails yet (Phase 2) -- it just marks alerts as triggered
-- Can be called manually or scheduled via cron
+**File: `src/App.tsx`**
 
-### 8. Clean Up Legacy localStorage Code
+- Add: `<Route path="/colors" element={<ColorFinder />} />`
+- Lazy-load the page for bundle size optimization
 
-**Files to remove or deprecate:**
-- `src/components/filament/PriceAlertModal.tsx` -- the old localStorage-based modal; delete it
-- `src/hooks/usePriceAlerts.tsx` -- the old localStorage hook; delete it (verify no other consumers first)
+## Technical Details
 
-## Summary of File Changes
+### Color Distance Algorithm
+
+The existing `colorDistance` in `colorMatchUtils.ts` uses the **Redmean** formula, which is a good perceptual approximation. The plan references CIEDE2000, but Redmean is already implemented and performs well for the use case. Upgrading to CIEDE2000 would require LAB color space conversion and is significantly more complex -- the existing Redmean approach provides sufficient perceptual accuracy for filament color matching and avoids adding a dependency or 100+ lines of color science code.
+
+### Data Query Strategy
+
+Rather than creating a new Supabase RPC, the page will fetch filaments with `color_hex IS NOT NULL` (8,063 rows) and perform color distance calculations client-side. This is fast because:
+- The data is already cached via React Query from the Finder page
+- Color distance is a simple arithmetic operation (sub-millisecond per filament)
+- Sorting 8,000 items by distance takes <10ms in JS
+
+The query will select only the columns needed for display (no TDS data, no full specs) to keep payload small.
+
+### URL State for Shareability
+
+The page will use `useSearchParams` to sync:
+- `hex` -- the selected color (6-char hex, no #)
+- `tolerance` -- color distance tolerance (default 30)
+- `material` -- optional material filter
+- `brand` -- optional brand filter
+- `mode` -- "single" or "hueforge"
+- `stack` -- comma-separated hex codes for HueForge mode
+
+This enables shareable URLs like `/colors?hex=FF5733&material=PLA`.
+
+## File Summary
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/filament/tabs/PricingTabContent.tsx` | Edit | Switch from localStorage modal to database modal |
-| `src/pages/Vault.tsx` | Edit | Add "Price Alerts" as 5th tab |
-| `src/components/account/PriceAlertsSection.tsx` | Edit | Fix hardcoded colors for light/dark mode |
-| `src/components/filament/DatabasePriceAlertModal.tsx` | Edit | Add guest email flow |
-| `src/hooks/useDatabasePriceAlerts.ts` | Edit | Add guest alert mutation |
-| `supabase/functions/check-price-alerts/index.ts` | Create | Edge function to check and trigger alerts |
-| `src/components/filament/PriceAlertModal.tsx` | Delete | Remove legacy localStorage modal |
-| `src/hooks/usePriceAlerts.tsx` | Delete | Remove legacy localStorage hook |
-| Database migration | Execute | Add email, currency, region columns; update constraints and RLS |
+| `src/pages/ColorFinder.tsx` | Create | Main Find by Color page |
+| `src/components/color-finder/ColorPickerCanvas.tsx` | Create | HSL canvas color picker |
+| `src/components/color-finder/ColorResultCard.tsx` | Create | Compact result card with match % |
+| `src/components/color-finder/PopularColors.tsx` | Create | Popular color shortcuts grid |
+| `src/components/color-finder/ColorFinderResults.tsx` | Create | Results list with filters and sorting |
+| `src/components/color-finder/HueForgeStackBuilder.tsx` | Create | Multi-color stack builder for HueForge |
+| `src/components/HeroSection.tsx` | Edit | Add 5th "Find by Color" quick start card |
+| `src/components/TechnicalConsoleSidebar.tsx` | Edit | Add color swatch section to sidebar |
+| `src/components/filament/hero/LargeColorSwatchGrid.tsx` | Edit | Add "Find similar colors" link |
+| `src/App.tsx` | Edit | Register `/colors` route |
 
-## Technical Notes
-
-- The unique constraint `(user_id, filament_id)` will need to be adjusted since user_id becomes nullable. A partial unique index will replace it: one for logged-in users `(user_id, filament_id) WHERE user_id IS NOT NULL` and one for guests `(email, filament_id) WHERE email IS NOT NULL`.
-- The edge function will use `SUPABASE_SERVICE_ROLE_KEY` (already configured) to bypass RLS when querying all alerts.
-- No email sending in this implementation -- the edge function only marks alerts as triggered. The `PriceAlertsSection` in the Vault already highlights triggered alerts with green badges.
-
+No database changes required -- all data already exists in the `filaments` table.
