@@ -26,6 +26,10 @@ import { getPrinterImage } from "@/lib/printerCardUtils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { PrinterRadarChart } from "@/components/printers/compare/PrinterRadarChart";
+import { PrinterWinnerBadges } from "@/components/printers/compare/PrinterWinnerBadges";
+import { QuickComparisonSidebar } from "@/components/printers/compare/QuickComparisonSidebar";
+import { RecommendedFilaments } from "@/components/printers/compare/RecommendedFilaments";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -266,9 +270,23 @@ const PrinterCompare = () => {
           </p>
         </div>
 
-        {/* Scrollable comparison container */}
-        <div className="overflow-x-auto -mx-4 md:-mx-6">
-          <div className="min-w-max px-4 md:px-6">
+        {/* Winner Badges */}
+        <PrinterWinnerBadges printers={printers} />
+
+        {/* Main layout: sidebar + comparison */}
+        <div className="flex gap-6">
+          {/* Quick Comparison Sidebar - desktop only */}
+          <div className="hidden xl:block w-[280px] flex-shrink-0 sticky top-4 self-start">
+            <Card className="p-4 bg-card/50 border-border/50">
+              <QuickComparisonSidebar printers={printers} />
+            </Card>
+          </div>
+
+          {/* Main comparison content */}
+          <div className="flex-1 min-w-0 space-y-6">
+            {/* Scrollable comparison container */}
+            <div className="overflow-x-auto">
+          <div className="min-w-max">
             {/* Printer Cards Header - Sticky */}
             <div 
               className="grid gap-4 sticky top-0 z-20 bg-background/95 backdrop-blur-sm py-4" 
@@ -551,7 +569,29 @@ const PrinterCompare = () => {
                 <ComparisonRow label="Reliability" values={printers.map(p => p.rating_reliability)} highlight />
                 <ComparisonRow label="Value for Money" values={printers.map(p => p.rating_value_for_money)} highlight />
               </Card>
+
+              {/* Performance Radar Chart */}
+              <Card className="p-4 md:p-6">
+                <h2 className="text-lg font-bold mb-4 text-primary border-b border-primary/20 pb-2">
+                  📊 Performance Overview
+                </h2>
+                <PrinterRadarChart printers={printers} />
+              </Card>
+
+              {/* Recommended Filaments */}
+              <Card className="p-4 md:p-6">
+                <RecommendedFilaments printers={printers} />
+              </Card>
             </div>
+          </div>
+          </div>
+          </div>
+
+          {/* Quick Comparison on mobile (below main content) */}
+          <div className="xl:hidden">
+            <Card className="p-4 bg-card/50 border-border/50">
+              <QuickComparisonSidebar printers={printers} />
+            </Card>
           </div>
         </div>
       </div>

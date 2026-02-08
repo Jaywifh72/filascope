@@ -26,8 +26,11 @@ export function useCompareTrayMode(): CompareTrayMode {
     const pathname = location.pathname;
     const searchParams = new URLSearchParams(location.search);
 
-    // Hide entirely on active comparison page (has ids param)
+    // Hide entirely on active comparison pages (filament or printer)
     if (pathname === "/compare" && searchParams.has("ids")) {
+      return "hidden";
+    }
+    if (pathname === "/printers/compare") {
       return "hidden";
     }
 
