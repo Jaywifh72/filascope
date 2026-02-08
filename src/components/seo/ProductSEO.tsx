@@ -54,13 +54,12 @@ export function ProductSEO({
   let seoTitle: string;
   
   if (transmissionDistance) {
-    // HueForge targeting
-    seoTitle = `${title} - TD ${transmissionDistance} HueForge Filament | FilaScope`;
+    // HueForge targeting — avoid doubled brand name since title already has brand
+    seoTitle = `${title} — TD ${transmissionDistance} HueForge Filament | FilaScope`;
   } else if (productType === 'printer') {
-    // Printer with region
     seoTitle = `Buy ${title} in ${regionName} | FilaScope`;
   } else {
-    // Filament with region — use the full title which includes brand + product line name
+    // Filament with region — title already includes brand + product line name
     seoTitle = `Buy ${title.trim()} in ${regionName} | FilaScope`;
   }
 

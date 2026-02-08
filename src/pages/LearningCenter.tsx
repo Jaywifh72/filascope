@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -279,7 +280,18 @@ export default function LearningCenter() {
   const featuredGuides = GUIDES.filter(g => g.featured).slice(0, 2);
   const regularGuides = filteredGuides.filter(g => !g.featured || activeCategory !== 'all' || searchTerm !== '');
 
+  const guideCount = GUIDES.length;
+  const categoryCount = CATEGORIES.length - 1; // exclude "All"
+  const lcMetaDesc = `Explore ${guideCount}+ 3D printing guides across ${categoryCount} categories — material comparisons, print settings, troubleshooting, and buying recommendations.`;
+
   return (
+    <>
+    <Helmet>
+      <title>Learning Center — 3D Printing Guides & Tutorials | FilaScope</title>
+      <meta name="description" content={lcMetaDesc} />
+      <meta property="og:title" content="Learning Center — 3D Printing Guides & Tutorials | FilaScope" />
+      <meta property="og:description" content={lcMetaDesc} />
+    </Helmet>
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Hero Section */}
       <section className="relative py-16 lg:py-20 overflow-hidden">
@@ -412,5 +424,6 @@ export default function LearningCenter() {
         </section>
       </div>
     </div>
+    </>
   );
 }

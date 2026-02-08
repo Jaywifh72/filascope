@@ -1653,6 +1653,7 @@ const Finder = () => {
       <Helmet>
         <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
         <meta name="description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta property="og:title" content="FilaScope — Compare 3D Printer Filaments, Specs & Prices" />
         <meta property="og:description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
       </Helmet>
       {/* JSON-LD Structured Data for Homepage */}
