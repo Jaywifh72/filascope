@@ -231,6 +231,8 @@ export function ProductGallery({
                 alt=""
                 className="w-full h-full object-contain"
                 loading="lazy"
+                width={64}
+                height={64}
               />
             </button>
           ))}

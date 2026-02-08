@@ -26,24 +26,33 @@ interface OptimizedImageProps {
 }
 
 /**
- * Generate optimized image URL with size parameters
- * This works with common CDN patterns and Supabase Storage
+ * Check if a CDN source supports WebP transformation
  */
+function cdnSupportsWebP(src: string): boolean {
+  return (
+    src.includes("cloudinary.com") ||
+    src.includes("imgix.net") ||
+    src.includes("shopify.com") ||
+    src.includes("cdn.shopify.com") ||
+    (src.includes("supabase") && src.includes("/storage/v1/object/"))
+  );
+}
+
 /**
  * Generate optimized image URL with size and format parameters
  * Supports WebP format with automatic fallback
  */
-function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'): string {
+function getOptimizedSrc(src: string, width?: number, format?: "webp" | "auto"): string {
   if (!src || !width) return src;
 
-  const requestFormat = format || 'auto';
+  const requestFormat = format || "auto";
 
   // Supabase Storage transform
   if (src.includes("supabase") && src.includes("/storage/v1/object/")) {
     const url = new URL(src);
     url.searchParams.set("width", String(width));
     url.searchParams.set("quality", "80");
-    if (requestFormat === 'webp') {
+    if (requestFormat === "webp") {
       url.searchParams.set("format", "webp");
     }
     return url.toString();
@@ -52,8 +61,8 @@ function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'):
   // Shopify CDN - supports format=webp via query param
   if (src.includes("shopify.com") || src.includes("cdn.shopify.com")) {
     let optimized = src.replace(/(\.\w+)(\?.*)?$/, `_${width}x$1$2`);
-    if (requestFormat === 'webp') {
-      const separator = optimized.includes('?') ? '&' : '?';
+    if (requestFormat === "webp") {
+      const separator = optimized.includes("?") ? "&" : "?";
       optimized += `${separator}format=webp`;
     }
     return optimized;
@@ -61,7 +70,7 @@ function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'):
 
   // Cloudinary - f_webp or f_auto
   if (src.includes("cloudinary.com")) {
-    const formatParam = requestFormat === 'webp' ? 'f_webp' : 'f_auto';
+    const formatParam = requestFormat === "webp" ? "f_webp" : "f_auto";
     return src.replace("/upload/", `/upload/w_${width},q_auto,${formatParam}/`);
   }
 
@@ -70,7 +79,7 @@ function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'):
     const url = new URL(src);
     url.searchParams.set("w", String(width));
     url.searchParams.set("auto", "format,compress");
-    if (requestFormat === 'webp') {
+    if (requestFormat === "webp") {
       url.searchParams.set("fm", "webp");
     }
     return url.toString();
@@ -80,41 +89,12 @@ function getOptimizedSrc(src: string, width?: number, format?: 'webp' | 'auto'):
 }
 
 /**
- * Generate WebP source URL if CDN supports it
- */
-function getWebPSrc(src: string, width?: number): string | null {
-  if (!src) return null;
-  
-  // Only generate WebP for CDNs that support it
-  const supportsWebP = 
-    src.includes("cloudinary.com") ||
-    src.includes("imgix.net") ||
-    src.includes("shopify.com") ||
-    (src.includes("supabase") && src.includes("/storage/v1/object/"));
-    
-  if (!supportsWebP) return null;
-  
-  return getOptimizedSrc(src, width, 'webp');
-}
-
-/**
  * Generate srcset for responsive images
  */
-/**
- * Generate srcset for responsive images
- */
-function generateSrcSet(src: string, widths: number[], format?: 'webp' | 'auto'): string {
+function generateSrcSet(src: string, widths: number[], format?: "webp" | "auto"): string {
   return widths
     .map((w) => `${getOptimizedSrc(src, w, format)} ${w}w`)
     .join(", ");
-}
-
-/**
- * Generate WebP srcset if supported
- */
-function generateWebPSrcSet(src: string, widths: number[]): string | null {
-  if (!getWebPSrc(src, widths[0])) return null;
-  return generateSrcSet(src, widths, 'webp');
 }
 
 const aspectRatioClasses = {
@@ -125,7 +105,15 @@ const aspectRatioClasses = {
 };
 
 /**
- * Optimized image component with lazy loading, srcset, and blur-up
+ * Optimized image component with lazy loading, WebP <picture>, srcset, and blur-up.
+ *
+ * Performance features:
+ * - IntersectionObserver-based lazy loading (200px rootMargin)
+ * - <picture> with WebP <source> for CDNs that support format transformation
+ * - Responsive srcset at 200/400/600/800px breakpoints
+ * - Explicit width/height to prevent CLS
+ * - fetchpriority="high" for above-the-fold hero images
+ * - Color-aware fallback placeholder when image fails
  */
 export const OptimizedImage = memo(function OptimizedImage({
   src,
@@ -177,9 +165,24 @@ export const OptimizedImage = memo(function OptimizedImage({
     onError?.();
   };
 
-  // Generate srcset for responsive images
-  const srcSet = src ? generateSrcSet(src, [200, 400, 600, 800]) : undefined;
+  // Responsive widths for srcset
+  const srcSetWidths = [200, 400, 600, 800];
+
+  // Generate srcsets
+  const srcSet = src ? generateSrcSet(src, srcSetWidths) : undefined;
+  const webpSrcSet = src && cdnSupportsWebP(src) ? generateSrcSet(src, srcSetWidths, "webp") : null;
   const optimizedSrc = src ? getOptimizedSrc(src, width || 400) : undefined;
+
+  // Resolve explicit dimensions for CLS prevention
+  const imgWidth = width || 400;
+  const imgHeight = height || (aspectRatio === "square" ? imgWidth : aspectRatio === "video" ? Math.round(imgWidth * 9 / 16) : aspectRatio === "portrait" ? Math.round(imgWidth * 4 / 3) : imgWidth);
+
+  const objectFitClass =
+    objectFit === "contain" ? "object-contain" :
+    objectFit === "cover" ? "object-cover" :
+    objectFit === "fill" ? "object-fill" :
+    objectFit === "none" ? "object-none" :
+    "object-scale-down";
 
   if (!src || error) {
     return (
@@ -242,36 +245,43 @@ export const OptimizedImage = memo(function OptimizedImage({
         <Skeleton className="absolute inset-0 w-full h-full" />
       )}
 
-      {/* Actual image - only load when in view */}
+      {/* Actual image with <picture> for WebP support */}
       {isInView && (
-        <img
-          src={optimizedSrc}
-          srcSet={srcSet}
-          sizes={sizes}
-          alt={alt}
-          width={width}
-          height={height}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
-          onLoad={handleLoad}
-          onError={handleError}
-          className={cn(
-            "w-full h-full transition-opacity duration-300",
-            objectFit === "contain" && "object-contain",
-            objectFit === "cover" && "object-cover",
-            objectFit === "fill" && "object-fill",
-            objectFit === "none" && "object-none",
-            objectFit === "scale-down" && "object-scale-down",
-            isLoaded ? "opacity-100" : "opacity-0"
+        <picture>
+          {webpSrcSet && (
+            <source
+              type="image/webp"
+              srcSet={webpSrcSet}
+              sizes={sizes}
+            />
           )}
-        />
+          <img
+            src={optimizedSrc}
+            srcSet={srcSet}
+            sizes={sizes}
+            alt={alt}
+            width={imgWidth}
+            height={imgHeight}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            // @ts-ignore – fetchpriority is valid HTML but not in React types yet
+            fetchpriority={priority ? "high" : "auto"}
+            onLoad={handleLoad}
+            onError={handleError}
+            className={cn(
+              "w-full h-full transition-opacity duration-300",
+              objectFitClass,
+              isLoaded ? "opacity-100" : "opacity-0"
+            )}
+          />
+        </picture>
       )}
     </div>
   );
 });
 
 /**
- * Product card image with optimized loading
+ * Product card image — uses 200px thumbnail width for listing grids.
  */
 export const ProductCardImage = memo(function ProductCardImage({
   src,
@@ -290,9 +300,10 @@ export const ProductCardImage = memo(function ProductCardImage({
       alt={alt}
       className={cn("w-full", className)}
       aspectRatio="square"
-      width={400}
+      width={200}
+      height={200}
       priority={priority}
-      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
     />
   );
 });
@@ -316,6 +327,7 @@ export const ThumbnailImage = memo(function ThumbnailImage({
       className={cn("w-12 h-12 rounded", className)}
       aspectRatio="square"
       width={96}
+      height={96}
       priority // Thumbnails are usually visible immediately
     />
   );
