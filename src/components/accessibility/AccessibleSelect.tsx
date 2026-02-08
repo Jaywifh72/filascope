@@ -48,19 +48,19 @@ export const AccessibleSelect = forwardRef<HTMLButtonElement, AccessibleSelectPr
           <SelectTrigger
             ref={ref}
             className={cn(
-              "w-full h-11 bg-gray-800 border-gray-700 text-white text-sm",
+              "w-full h-11 bg-muted border-border text-foreground text-sm",
               triggerClassName
             )}
             aria-label={label}
           >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700 z-[100]">
+          <SelectContent className="bg-popover border-border z-[100]">
             {options.map((option) => (
               <SelectItem
                 key={option.value}
                 value={option.value}
-                className="text-sm text-white hover:bg-gray-700 min-h-[44px]"
+                className="text-sm text-popover-foreground hover:bg-accent min-h-[44px]"
               >
                 {option.label}
               </SelectItem>

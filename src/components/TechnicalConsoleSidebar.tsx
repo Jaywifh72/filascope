@@ -253,20 +253,20 @@ export function TechnicalConsoleSidebar({
   return (
     <aside 
       data-tour="printer-filter"
-      className="hidden lg:flex flex-col w-[345px] shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border border-gray-800 bg-gray-900/60"
+      className="hidden lg:flex flex-col w-[345px] shrink-0 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border border-border bg-card"
     >
       {/* Your Printer Header */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20">
               <Printer className="w-4 h-4 text-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-300">
+              <span className="text-sm font-semibold text-foreground">
                 Your Printer
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 Personalized Results
               </span>
             </div>
@@ -283,7 +283,7 @@ export function TechnicalConsoleSidebar({
       </div>
 
       {/* Printer Selection */}
-      <div className="p-4 border-b border-gray-800 space-y-3">
+      <div className="p-4 border-b border-border space-y-3">
         <div className="space-y-2">
           <Select
             value={selectedBrand || ""}
@@ -292,12 +292,12 @@ export function TechnicalConsoleSidebar({
               setSelectedPrinterId("");
             }}
           >
-            <SelectTrigger className="w-full h-9 bg-gray-800 border-gray-700 text-white text-sm hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+            <SelectTrigger className="w-full h-9 bg-muted border-border text-foreground text-sm hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
               <SelectValue placeholder="Select brand..." />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700 z-50">
+            <SelectContent className="bg-popover border-border z-50">
               {brands?.map((brand) => (
-                <SelectItem key={brand.id} value={brand.brand} className="text-sm text-white hover:bg-gray-700">
+                <SelectItem key={brand.id} value={brand.brand} className="text-sm text-popover-foreground hover:bg-accent">
                   {brand.brand}
                 </SelectItem>
               ))}
@@ -309,12 +309,12 @@ export function TechnicalConsoleSidebar({
               value={selectedPrinterId || ""}
               onValueChange={setSelectedPrinterId}
             >
-              <SelectTrigger className="w-full h-9 bg-gray-800 border-gray-700 text-white text-sm hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+              <SelectTrigger className="w-full h-9 bg-muted border-border text-foreground text-sm hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
                 <SelectValue placeholder="Select model..." />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700 z-50">
+              <SelectContent className="bg-popover border-border z-50">
                 {models?.map((model) => (
-                  <SelectItem key={model.printer_id} value={model.printer_id} className="text-sm text-white hover:bg-gray-700">
+                  <SelectItem key={model.printer_id} value={model.printer_id} className="text-sm text-popover-foreground hover:bg-accent">
                     {model.model_name}
                   </SelectItem>
                 ))}
@@ -326,16 +326,16 @@ export function TechnicalConsoleSidebar({
 
       {/* Print Specs - Collapsible */}
       <Collapsible open={specsOpen} onOpenChange={setSpecsOpen}>
-        <div className="border-b border-gray-800">
-          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+        <div className="border-b border-border">
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
             <div className="flex items-center gap-2">
               <Settings2 className="w-3.5 h-3.5 text-primary" />
-              <span className="text-sm font-semibold text-gray-300">
+              <span className="text-sm font-semibold text-foreground">
                 Print Specs
               </span>
             </div>
             <ChevronDown className={cn(
-              "w-4 h-4 text-gray-400 transition-transform duration-200",
+              "w-4 h-4 text-muted-foreground transition-transform duration-200",
               specsOpen && "rotate-180"
             )} />
           </CollapsibleTrigger>
@@ -344,8 +344,8 @@ export function TechnicalConsoleSidebar({
               {/* Nozzle Setup Row */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Droplets className="w-3 h-3 text-gray-400" />
-                  <span className="text-xs text-gray-400 uppercase tracking-wide">Nozzle Setup</span>
+                  <Droplets className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Nozzle Setup</span>
                   <FeatureHelpIcon feature="nozzle_material" side="right" />
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -354,12 +354,12 @@ export function TechnicalConsoleSidebar({
                     value={String(nozzleConfig.size)}
                     onValueChange={(val) => nozzleConfig.setSize(Number(val) as NozzleSize)}
                   >
-                    <SelectTrigger className="h-8 bg-gray-800 border-gray-700 text-white text-xs hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                    <SelectTrigger className="h-8 bg-muted border-border text-foreground text-xs hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700 z-50">
+                    <SelectContent className="bg-popover border-border z-50">
                       {NOZZLE_SIZES.map((size) => (
-                        <SelectItem key={size} value={String(size)} className="text-xs text-white hover:bg-gray-700">
+                        <SelectItem key={size} value={String(size)} className="text-xs text-popover-foreground hover:bg-accent">
                           {size}mm
                         </SelectItem>
                       ))}
@@ -371,12 +371,12 @@ export function TechnicalConsoleSidebar({
                     value={nozzleConfig.flowType}
                     onValueChange={(val) => nozzleConfig.setFlowType(val as FlowType)}
                   >
-                    <SelectTrigger className="h-8 bg-gray-800 border-gray-700 text-white text-xs hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                    <SelectTrigger className="h-8 bg-muted border-border text-foreground text-xs hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700 z-50">
+                    <SelectContent className="bg-popover border-border z-50">
                       {FLOW_TYPES.map((type) => (
-                        <SelectItem key={type} value={type} className="text-xs text-white hover:bg-gray-700">
+                        <SelectItem key={type} value={type} className="text-xs text-popover-foreground hover:bg-accent">
                           {FLOW_TYPE_LABELS[type]}
                         </SelectItem>
                       ))}
@@ -388,12 +388,12 @@ export function TechnicalConsoleSidebar({
                     value={nozzleConfig.material}
                     onValueChange={(val) => nozzleConfig.setMaterial(val as NozzleMaterial)}
                   >
-                    <SelectTrigger className="h-8 bg-gray-800 border-gray-700 text-white text-xs hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                    <SelectTrigger className="h-8 bg-muted border-border text-foreground text-xs hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700 z-50">
+                    <SelectContent className="bg-popover border-border z-50">
                       {NOZZLE_MATERIALS.map((mat) => (
-                        <SelectItem key={mat} value={mat} className="text-xs text-white hover:bg-gray-700">
+                        <SelectItem key={mat} value={mat} className="text-xs text-popover-foreground hover:bg-accent">
                           {NOZZLE_MATERIAL_LABELS[mat]}
                         </SelectItem>
                       ))}
@@ -443,8 +443,8 @@ export function TechnicalConsoleSidebar({
                   />
                 </div>
               ) : (
-                <div className="py-3 px-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
-                  <p className="text-xs text-gray-400 text-center">
+                <div className="py-3 px-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-xs text-muted-foreground text-center">
                     Select your printer above to see recommended settings
                   </p>
                 </div>
@@ -456,11 +456,11 @@ export function TechnicalConsoleSidebar({
 
       {/* Spool Size - Collapsible */}
       <Collapsible open={spoolOpen} onOpenChange={setSpoolOpen}>
-        <div className="border-b border-gray-800">
-          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+        <div className="border-b border-border">
+          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
             <div className="flex items-center gap-2">
               <Package className="w-3.5 h-3.5 text-primary" />
-              <span className="text-sm font-semibold text-gray-300">
+              <span className="text-sm font-semibold text-foreground">
                 Spool Size
               </span>
               {localSpoolSize !== "standard" && (
@@ -468,21 +468,21 @@ export function TechnicalConsoleSidebar({
               )}
             </div>
             <ChevronDown className={cn(
-              "w-4 h-4 text-gray-400 transition-transform duration-200",
+              "w-4 h-4 text-muted-foreground transition-transform duration-200",
               spoolOpen && "rotate-180"
             )} />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="px-4 pb-4">
               <Select value={localSpoolSize} onValueChange={handleSpoolSizeChange}>
-                <SelectTrigger className="w-full h-9 bg-gray-800 border-gray-700 text-white text-sm hover:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary/50">
+                <SelectTrigger className="w-full h-9 bg-muted border-border text-foreground text-sm hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700 z-50">
+                <SelectContent className="bg-popover border-border z-50">
                   {SPOOL_SIZES.map((size) => (
-                    <SelectItem key={size.id} value={size.id} className="text-sm text-white hover:bg-gray-700">
+                    <SelectItem key={size.id} value={size.id} className="text-sm text-popover-foreground hover:bg-accent">
                       <span>{size.label}</span>
-                      <span className="ml-2 text-gray-400">({size.description})</span>
+                      <span className="ml-2 text-muted-foreground">({size.description})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -510,7 +510,7 @@ export function TechnicalConsoleSidebar({
                 "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
                 localMaterials.includes(option.id)
                   ? "bg-primary/20 border-primary text-primary"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600"
+                  : "bg-muted border-border text-foreground hover:bg-accent hover:border-border-hover"
               )}
             >
               {option.label}
@@ -537,7 +537,7 @@ export function TechnicalConsoleSidebar({
                 "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
                 localBrands.includes(option.id)
                   ? "bg-primary/20 border-primary text-primary"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600"
+                  : "bg-muted border-border text-foreground hover:bg-accent hover:border-border-hover"
               )}
             >
               {option.label}
@@ -559,11 +559,11 @@ export function TechnicalConsoleSidebar({
               <button
                 key={family.name}
                 onClick={() => navigate(`/colors?hex=${family.hex.replace('#', '')}`)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-700 bg-gray-800 text-gray-300 text-xs hover:border-primary/50 hover:bg-primary/5 transition-all"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-border bg-muted text-foreground text-xs hover:border-primary/50 hover:bg-primary/5 transition-all"
                 title={family.name}
               >
                 <span
-                  className="w-3 h-3 rounded-full border border-gray-600 shrink-0"
+                  className="w-3 h-3 rounded-full border border-border shrink-0"
                   style={{ backgroundColor: family.hex }}
                 />
                 {family.name}
@@ -621,7 +621,7 @@ export function TechnicalConsoleSidebar({
                 "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
                 localReinforced.includes(option.id)
                   ? "bg-primary/20 border-primary text-primary"
-                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600"
+                  : "bg-muted border-border text-foreground hover:bg-accent hover:border-border-hover"
               )}
             >
               {option.label}
@@ -632,10 +632,10 @@ export function TechnicalConsoleSidebar({
 
       {/* Clear All Filters */}
       {activeFilterCount > 0 && (
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-border">
           <button
             onClick={handleClearAllFilters}
-            className="w-full text-sm text-gray-400 hover:text-primary transition-colors flex items-center justify-center gap-1.5"
+            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
           >
             <X className="w-3.5 h-3.5" />
             Clear All Filters
@@ -670,11 +670,11 @@ function CollapsibleFilterSection({
 }: CollapsibleFilterSectionProps) {
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className={cn(!isLast && "border-b border-gray-800")}>
-        <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-gray-800/30 transition-colors">
+      <div className={cn(!isLast && "border-b border-border")}>
+        <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
           <div className="flex items-center gap-2">
             <Icon className="w-3.5 h-3.5 text-primary" />
-            <span className="text-sm font-semibold text-gray-300">
+            <span className="text-sm font-semibold text-foreground">
               {title}
             </span>
             {hasActive && activeCount && activeCount > 0 && (
@@ -684,7 +684,7 @@ function CollapsibleFilterSection({
             )}
           </div>
           <ChevronDown className={cn(
-            "w-4 h-4 text-gray-400 transition-transform duration-200",
+            "w-4 h-4 text-muted-foreground transition-transform duration-200",
             isOpen && "rotate-180"
           )} />
         </CollapsibleTrigger>
@@ -707,14 +707,14 @@ interface LiveSpecCellProps {
 
 function LiveSpecCell({ label, value, isLoading }: LiveSpecCellProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-2 rounded-md bg-gray-800/50 border border-gray-700">
-      <span className="text-[10px] text-gray-500 uppercase text-center leading-tight">
+    <div className="flex flex-col items-center justify-center p-2 rounded-md bg-muted/50 border border-border">
+      <span className="text-[10px] text-muted-foreground uppercase text-center leading-tight">
         {label}
       </span>
       {isLoading ? (
-        <div className="h-4 w-10 bg-gray-700 rounded animate-pulse mt-0.5" />
+        <div className="h-4 w-10 bg-muted rounded animate-pulse mt-0.5" />
       ) : (
-        <span className="text-sm font-semibold text-white tabular-nums">
+        <span className="text-sm font-semibold text-foreground tabular-nums">
           {value}
         </span>
       )}
