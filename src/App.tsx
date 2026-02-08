@@ -11,22 +11,25 @@ import { SiteFooter } from "./components/SiteFooter";
 import { RegionProvider } from "./contexts/RegionContext";
 import { CurrencyProvider } from "./hooks/useCurrency";
 import { CompareProvider } from "./hooks/useCompare";
-import { CompareTray } from "./components/CompareTray";
 import { PrinterCompareProvider } from "./hooks/usePrinterCompare";
 import { BrandCompareProvider } from "./hooks/useBrandCompare";
-import { BrandCompareBar } from "./components/brands/BrandCompare";
-import { UnifiedCompareTray } from "./components/compare/UnifiedCompareTray";
-import { UnifiedMobileCompareTray } from "./components/compare/UnifiedMobileCompareTray";
 import { CompatibleCountProvider, useCompatibleCount } from "./hooks/useCompatibleCount";
 import { MaintenanceModeWrapper } from "./components/MaintenanceModeWrapper";
 import { SkipLink } from "./components/accessibility/SkipLink";
 import { ScreenReaderAnnouncerProvider } from "./components/accessibility/ScreenReaderAnnouncer";
 import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboardHandler";
 import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analytics/ErrorBoundary";
-import { PWAInstallBanner, OfflineBanner } from "./components/pwa";
+import { OfflineBanner } from "./components/pwa";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
+
+// Lazy-load heavy global overlays that aren't needed at initial render
+const CompareTray = lazy(() => import("./components/CompareTray").then(m => ({ default: m.CompareTray })));
+const UnifiedCompareTray = lazy(() => import("./components/compare/UnifiedCompareTray").then(m => ({ default: m.UnifiedCompareTray })));
+const UnifiedMobileCompareTray = lazy(() => import("./components/compare/UnifiedMobileCompareTray").then(m => ({ default: m.UnifiedMobileCompareTray })));
+const BrandCompareBar = lazy(() => import("./components/brands/BrandCompare").then(m => ({ default: m.BrandCompareBar })));
+const PWAInstallBanner = lazy(() => import("./components/pwa").then(m => ({ default: m.PWAInstallBanner })));
 
 // Initialize global error handlers for uncaught errors
 initializeGlobalErrorHandler();
@@ -265,12 +268,14 @@ const App = () => (
                 </Routes>
                   </main>
               </Suspense>
-              <CompareTray />
+              <Suspense fallback={null}>
+                <CompareTray />
                 <UnifiedCompareTray />
                 <UnifiedMobileCompareTray />
                 <BrandCompareBar />
                 {/* PWA: Install prompt banner */}
                 <PWAInstallBanner />
+              </Suspense>
                 <SiteFooter />
                 </MaintenanceModeWrapper>
                 </GlobalKeyboardHandler>

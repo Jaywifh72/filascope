@@ -6,13 +6,7 @@ import { useSimilarPrinters, SimilarPrinter } from "@/hooks/useSimilarPrinters";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { ScrollCarousel, ScrollCarouselItem } from "@/components/ui/scroll-carousel";
 
 interface CurrentPrinterData {
   id: string;
@@ -166,33 +160,18 @@ export const SimilarPrintersSection: React.FC<SimilarPrintersSectionProps> = ({
       )}
       
       {!isLoading && !showEmptyState && (
-        <Carousel
-          opts={{
-            align: "start",
-            loop: false,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-3 md:-ml-4">
-            {allPrinters.map((printer, index) => (
-              <CarouselItem 
-                key={printer.id} 
-                className="pl-3 md:pl-4 basis-auto"
-              >
-                <SimilarPrinterCard
-                  printer={printer}
-                  isCurrent={index === 0}
-                  currentPrinterPrice={currentPrinter.price}
-                  showCompareToggle={true}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          
-          {/* Navigation Arrows - Hidden on mobile */}
-          <CarouselPrevious className="hidden md:flex -left-4 lg:-left-6 h-10 w-10 bg-card/80 border-border hover:bg-card" />
-          <CarouselNext className="hidden md:flex -right-4 lg:-right-6 h-10 w-10 bg-card/80 border-border hover:bg-card" />
-        </Carousel>
+        <ScrollCarousel>
+          {allPrinters.map((printer, index) => (
+            <ScrollCarouselItem key={printer.id}>
+              <SimilarPrinterCard
+                printer={printer}
+                isCurrent={index === 0}
+                currentPrinterPrice={currentPrinter.price}
+                showCompareToggle={true}
+              />
+            </ScrollCarouselItem>
+          ))}
+        </ScrollCarousel>
       )}
 
       {/* Action Buttons */}

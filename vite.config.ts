@@ -185,4 +185,36 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Recharts — only loaded when charts are needed
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-") || id.includes("node_modules/victory-vendor")) {
+            return "recharts";
+          }
+          // Radix UI primitives
+          if (id.includes("node_modules/@radix-ui")) {
+            return "radix-ui";
+          }
+          // Supabase client
+          if (id.includes("node_modules/@supabase")) {
+            return "supabase";
+          }
+          // React core
+          if (id.includes("node_modules/react-dom")) {
+            return "react-dom";
+          }
+          // Router
+          if (id.includes("node_modules/react-router")) {
+            return "react-router";
+          }
+          // Tanstack Query
+          if (id.includes("node_modules/@tanstack")) {
+            return "tanstack";
+          }
+        },
+      },
+    },
+  },
 }));
