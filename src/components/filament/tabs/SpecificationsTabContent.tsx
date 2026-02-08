@@ -335,7 +335,7 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
         icon={<Palette className="w-5 h-5" />}
         specs={[
           { label: 'Color Family', value: filament.color_family },
-          { label: 'Finish Type', value: filament.finish_type },
+          { label: 'Finish Type', value: filament.finish_type && !/^\d+(\.\d+)?$/.test(filament.finish_type) ? filament.finish_type : null },
           { label: 'Transmission Distance', value: filament.transmission_distance, unit: 'mm' },
           { label: 'Light Transmission', value: filament.light_transmission_percent, unit: '%' },
           { label: 'Haze', value: filament.haze_percent, unit: '%' },
