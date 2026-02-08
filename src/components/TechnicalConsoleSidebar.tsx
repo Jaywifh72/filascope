@@ -500,8 +500,8 @@ export function TechnicalConsoleSidebar({
         icon={Layers}
         isOpen={materialsOpen}
         onOpenChange={setMaterialsOpen}
-        hasActive={localMaterials.length > 0}
-        activeCount={localMaterials.length}
+        hasActive={localMaterials.filter(m => m !== "All").length > 0}
+        activeCount={localMaterials.filter(m => m !== "All").length}
       >
         <div className="flex flex-wrap gap-2">
           {MATERIAL_BASE_OPTIONS.map((option) => (
