@@ -986,7 +986,9 @@ const FilamentDetail = () => {
             isOpen={isCalculatorOpen}
             onClose={() => setIsCalculatorOpen(false)}
             currencySymbol={({ USD: '$', CAD: 'C$', EUR: '€', GBP: '£', AUD: 'A$', JPY: '¥', CNY: '¥' } as Record<string, string>)[currency] || '$'}
+            currencyCode={currency}
             regionCode={currentRegionCode}
+            isConverted={detailPricing.isConverted}
           />
         </>
       )}
