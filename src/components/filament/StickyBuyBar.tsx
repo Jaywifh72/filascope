@@ -73,16 +73,20 @@ export function StickyBuyBar({
     ? formatPrice(pricePerKg, { showApproximate: isConverted })
     : null;
 
-  // Price freshness for display
-  const priceUpdatedText = (() => {
+  // Price freshness for display — color-coded by age
+  const priceFreshness = (() => {
     const lastScraped = filament.last_scraped_at;
     if (!lastScraped) return null;
     const date = new Date(lastScraped);
     if (isNaN(date.getTime())) return null;
     const days = differenceInDays(new Date(), date);
-    if (days < 1) return 'Updated today';
-    if (days === 1) return 'Updated 1d ago';
-    return `Updated ${days}d ago`;
+    const text = days < 1 ? 'Updated today' : days === 1 ? 'Updated 1d ago' : `Updated ${days}d ago`;
+    // Color coding: green <3d, amber 3-14d, orange 14-30d, red >30d
+    const colorClass = days < 3 ? 'text-emerald-400/80' 
+      : days < 14 ? 'text-amber-400/80' 
+      : days < 30 ? 'text-orange-400/80' 
+      : 'text-red-400/80';
+    return { text, colorClass };
   })();
 
   // Track impression when bar becomes visible
@@ -198,10 +202,10 @@ export function StickyBuyBar({
                   <span className="text-xs text-slate-400">
                     from {displayStoreName} {showRegionFlag && regionFlag}
                   </span>
-                  {priceUpdatedText && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-slate-500">
+                  {priceFreshness && (
+                    <span className={cn("flex items-center gap-0.5 text-[11px]", priceFreshness.colorClass)}>
                       <Clock className="w-2.5 h-2.5" />
-                      {priceUpdatedText}
+                      {priceFreshness.text}
                     </span>
                   )}
                 </div>
@@ -273,10 +277,10 @@ export function StickyBuyBar({
                   <span className="text-xs font-medium text-slate-400 ml-0.5">/kg</span>
                 </div>
               )}
-              {priceUpdatedText && (
-                <span className="flex items-center gap-0.5 text-[10px] text-slate-500 justify-end">
+              {priceFreshness && (
+                <span className={cn("flex items-center gap-0.5 text-[11px] justify-end", priceFreshness.colorClass)}>
                   <Clock className="w-2.5 h-2.5" />
-                  {priceUpdatedText}
+                  {priceFreshness.text}
                 </span>
               )}
               <PriceUrgencyBadge

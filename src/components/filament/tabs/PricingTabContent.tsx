@@ -12,8 +12,7 @@ import {
   ArrowDown,
   Globe,
   Truck,
-  ShoppingCart,
-  Clock
+  ShoppingCart
 } from 'lucide-react';
 import { formatDistanceToNow, differenceInDays } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
@@ -88,13 +87,22 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: Unified
   
   // Determine freshness for display
   const checkedAt = store.lastChecked || lastScrapedAt;
-  const freshnessText = checkedAt ? (() => {
+  const freshnessInfo = checkedAt ? (() => {
     const date = new Date(checkedAt);
     if (isNaN(date.getTime())) return null;
     const days = differenceInDays(new Date(), date);
-    if (days < 1) return 'Today';
-    if (days === 1) return '1 day ago';
-    return `${days} days ago`;
+    const text = days < 1 ? 'Today' : days === 1 ? '1 day ago' : `${days} days ago`;
+    // Color coding: green <3d, amber 3-14d, orange 14-30d, red >30d
+    const colorClass = days < 3 ? 'text-emerald-400' 
+      : days < 14 ? 'text-amber-400' 
+      : days < 30 ? 'text-orange-400' 
+      : 'text-red-400';
+    const dotClass = days < 3 ? 'bg-emerald-500'
+      : days < 14 ? 'bg-amber-400'
+      : days < 30 ? 'bg-orange-500'
+      : 'bg-red-500';
+    const fullDate = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return { text, colorClass, dotClass, fullDate };
   })() : null;
 
   const handleClick = () => {
@@ -144,11 +152,12 @@ function StoreRow({ store, userCurrencySymbol, lastScrapedAt }: { store: Unified
               </>
             )}
           </div>
-          {/* Last checked timestamp */}
-          {freshnessText && (
-            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-muted-foreground/70">
-              <Clock className="w-2.5 h-2.5" />
-              <span>Last checked: {freshnessText}</span>
+          {/* Last checked timestamp — color-coded by freshness */}
+          {freshnessInfo && (
+            <div className={cn("flex items-center gap-1.5 mt-0.5 text-xs", freshnessInfo.colorClass)}>
+              <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", freshnessInfo.dotClass)} />
+              <span>Last checked: {freshnessInfo.text}</span>
+              <span className="text-muted-foreground/50 text-[10px]">({freshnessInfo.fullDate})</span>
             </div>
           )}
         </div>
