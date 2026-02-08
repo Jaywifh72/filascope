@@ -36,22 +36,19 @@ export function useSettingsHistory(filamentId: string) {
   const sessionId = getSessionId();
 
   const { data: history, isLoading } = useQuery({
-    queryKey: ['settings-history', filamentId, user?.id || sessionId],
+    queryKey: ['settings-history', filamentId, user?.id],
     queryFn: async () => {
-      let query = supabase
+      // Only authenticated users can view settings history
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
         .from('user_settings_history')
         .select('*')
         .eq('filament_id', filamentId)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (user?.id) {
-        query = query.eq('user_id', user.id);
-      } else {
-        query = query.eq('session_id', sessionId);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       
       return (data || []).map(item => ({
