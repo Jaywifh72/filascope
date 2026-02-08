@@ -1,234 +1,167 @@
 
-
-# Projects Feature Rebuild: 3D Print Project Planner
+# Public User Profile Page
 
 ## Overview
 
-Transform the Projects feature from a simple name+description container into a full build planner where users can track materials, accessories, costs, progress logs, and optionally share projects publicly.
+Add a public-facing profile page at `/user/:userId` that showcases a user's reviews, public projects, and activity stats. This requires schema changes to the `profiles` table (new columns for bio, social links, public visibility, and username slug), new RLS policies for public profile access, a new page component, and updates to the Settings page for editing the new fields.
 
 ## Current State
 
-- `projects` table has only: `id`, `user_id`, `name`, `description`, `created_at`, `updated_at`
-- `project_filaments` is a simple join table: `id`, `project_id`, `filament_id`, `added_at`
-- No project types, statuses, cover images, budgets, accessories, or log entries
-- Zero existing project data in the database (safe to modify schema)
-- RLS is already in place for owner-only access on both tables
+- `profiles` table exists with: `id`, `email`, `display_name`, `avatar_url`, `created_at`, `updated_at`, plus various preference columns
+- RLS on `profiles`: users can only view/update their own profile; admins can view all
+- No public profile page or route exists
+- No `bio`, `social_links`, `is_public`, or `username_slug` columns
+- `product_reviews` already has a public read policy (is_public + published)
+- `projects` already has a public read policy (is_public)
+- `project_materials` and `project_log_entries` also have public read policies
 
 ## Database Changes
 
-### 1. Alter `projects` table (add new columns)
-
-Since there are zero rows, we can safely add columns:
+### 1. Add columns to `profiles` table
 
 | Column | Type | Default | Purpose |
 |--------|------|---------|---------|
-| `project_type` | text | `'single_print'` | `single_print`, `multi_part`, `collection`, `custom` |
-| `status` | text | `'planning'` | `planning`, `in_progress`, `completed`, `archived` |
-| `cover_image_url` | text | null | Optional cover photo |
-| `is_public` | boolean | false | Whether project is publicly discoverable |
-| `printer_id` | uuid | null | FK to `printers(id)` -- optional |
-| `budget` | numeric | null | Optional budget in user's currency |
-| `budget_currency` | text | null | Currency code for the budget |
-| `slug` | text | null | URL-friendly slug for public sharing |
+| `bio` | text | null | Short bio, max 280 chars |
+| `is_public` | boolean | false | Master toggle for profile visibility |
+| `username_slug` | text | null | Unique URL slug (e.g. "makerjohn") |
+| `social_links` | jsonb | '{}' | Links to Printables, Thingiverse, YouTube, Instagram |
+| `wishlist_public` | boolean | false | Whether wishlist is shown on public profile |
 
-### 2. Alter `project_filaments` table (rename + expand to `project_materials`)
+### 2. Add unique index on `username_slug`
 
-Since zero rows exist, drop and recreate as `project_materials`:
+Partial unique index where `username_slug IS NOT NULL` to allow multiple nulls.
 
-| Column | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `id` | uuid | gen_random_uuid() | PK |
-| `project_id` | uuid | -- | FK to projects |
-| `filament_id` | uuid | -- | FK to filaments |
-| `quantity_grams` | integer | null | Estimated grams needed |
-| `quantity_spools` | numeric | 1 | Number of spools |
-| `note` | text | '' | e.g. "for the body" |
-| `sort_order` | integer | 0 | Drag-to-reorder |
-| `purchase_status` | text | 'need_to_buy' | `need_to_buy`, `purchased`, `in_use`, `done` |
-| `created_at` | timestamptz | now() | -- |
+### 3. New RLS policy on `profiles`
 
-### 3. New `project_accessories` table
+Add a SELECT policy: "Anyone can view public profiles" with `qual: (is_public = true)`. This allows unauthenticated visitors to fetch basic profile data for public users.
 
-| Column | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `id` | uuid | gen_random_uuid() | PK |
-| `project_id` | uuid | -- | FK to projects |
-| `name` | text | -- | e.g. "0.4mm hardened nozzle" |
-| `url` | text | null | Optional purchase link |
-| `price` | numeric | null | Manual price entry |
-| `currency` | text | 'USD' | Currency for the price |
-| `purchase_status` | text | 'need_to_buy' | Same statuses as materials |
-| `sort_order` | integer | 0 | Ordering |
-| `created_at` | timestamptz | now() | -- |
+### 4. New RLS policy on `user_favorites`
 
-### 4. New `project_log_entries` table
+Add a SELECT policy: "Anyone can view public wishlist" with qual joining to profiles where both `profiles.is_public = true` AND `profiles.wishlist_public = true`.
 
-| Column | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `id` | uuid | gen_random_uuid() | PK |
-| `project_id` | uuid | -- | FK to projects |
-| `user_id` | uuid | -- | Author |
-| `entry_text` | text | -- | Log content |
-| `created_at` | timestamptz | now() | -- |
+## Route
 
-### 5. New `project_log_photos` table
-
-| Column | Type | Default | Purpose |
-|--------|------|---------|---------|
-| `id` | uuid | gen_random_uuid() | PK |
-| `log_entry_id` | uuid | -- | FK to project_log_entries |
-| `photo_url` | text | -- | Storage URL |
-| `created_at` | timestamptz | now() | -- |
-
-### 6. Storage bucket
-
-- Create `project-images` bucket for cover images and log photos
-
-### 7. RLS Policies
-
-- **projects**: Keep existing owner-only policies; add a new SELECT policy for public projects (`is_public = true`) accessible to everyone
-- **project_materials**: Owner-only via project ownership join (same pattern as current `project_filaments`)
-- **project_accessories**: Same pattern as materials
-- **project_log_entries**: Owner-only for private projects; public read for public projects
-- **project_log_photos**: Same access as their parent log entry's project
-
-### 8. updated_at trigger
-
-Add trigger for `projects.updated_at` column auto-update.
+- URL pattern: `/user/:userId`
+- When a `username_slug` is set, the page also supports `/user/:slug` -- the hook will try UUID first, then fall back to slug lookup
+- No authentication required (public page)
 
 ## Component Architecture
 
 ```text
-src/components/vault/VaultProjectsTab.tsx      (list view -- rewritten)
-src/components/projects/ProjectCreateDialog.tsx (multi-step creation form)
-src/components/projects/ProjectDetail.tsx       (full detail view)
-src/components/projects/ProjectHeader.tsx       (cover + name + status + actions)
-src/components/projects/ProjectMaterials.tsx    (filament list with costs)
-src/components/projects/ProjectAccessories.tsx  (accessory list)
-src/components/projects/ProjectLog.tsx          (build journal)
-src/components/projects/ProjectCostSummary.tsx  (total cost breakdown)
-src/components/projects/FilamentSearchDialog.tsx (search & add filaments)
-src/hooks/useProject.ts                         (single project CRUD + data)
-src/hooks/useProjectCost.ts                     (cost calculation with regional pricing)
+src/pages/UserProfile.tsx                          (page component)
+src/components/profile/ProfileHeader.tsx            (avatar, name, bio, badges, stats)
+src/components/profile/ProfileReviewsTab.tsx        (public reviews grid)
+src/components/profile/ProfileProjectsTab.tsx       (public projects grid)
+src/components/profile/ProfileCollectionTab.tsx     (public wishlist, if enabled)
+src/components/profile/ProfileActivityTab.tsx       (recent public actions)
+src/hooks/usePublicProfile.ts                       (fetch profile + public data)
 ```
 
 ## Detailed UI Design
 
-### A. Projects List (VaultProjectsTab -- rewritten)
+### A. Profile Header (`ProfileHeader`)
 
-- "New Project" button opens multi-step creation dialog
-- Project cards display: cover image (or gradient), name, type badge, status badge, material count, estimated cost
-- Cards are clickable to open the detail view (rendered inline within the Vault, not a separate route)
-- Filter bar: by status (Planning / In Progress / Completed / Archived)
-- Sort: by date or name
+- Large avatar (with initials fallback) centered or left-aligned
+- Display name as heading
+- "Member since [month year]" subtitle
+- Bio text (if set)
+- Badge row: dynamically computed from user's data
+  - "Top Reviewer" -- 20+ public reviews
+  - "Active Reviewer" -- 5-19 public reviews
+  - "Project Creator" -- 1+ public projects
+  - "Verified Buyer" -- has verified purchase reviews
+- Stats row: "X Reviews" | "X Projects" | "X Helpful Votes"
+- Social links row: icon buttons linking to external profiles (Printables, Thingiverse, YouTube, Instagram) -- only shown if configured
+- "Follow" button placeholder (disabled, styled, with tooltip "Coming soon")
 
-### B. Project Creation Dialog (3 Steps)
+### B. Tab Navigation
 
-**Step 1 -- Basics:**
-- Project name (required, text input)
-- Description (optional, textarea)
-- Project type: radio group -- "Single Print" | "Multi-Part Build" | "Collection/Series" | "Custom"
-- Cover image upload (optional, drag-and-drop or click)
-- Visibility: radio -- "Private" | "Public"
+Horizontal tabs using the existing Tabs component:
 
-**Step 2 -- Printer:**
-- "What printer will you use?" -- searchable dropdown from the `printers` table (model_name)
-- "Skip for now" button to proceed without selecting
-- Selection shows printer model name + brand as confirmation
+1. **Reviews** (default) -- all public published reviews
+2. **Projects** -- all public projects
+3. **Collection** -- public wishlist items (only visible if `wishlist_public = true`)
+4. **Activity** -- recent public actions timeline
 
-**Step 3 -- Materials (optional, can add later):**
-- Prompt: "Add filaments you'll need (you can always add more later)"
-- "Add Filament" button opens the FilamentSearchDialog
-- Each added filament shows: color swatch, name, quantity input (grams/spools toggle), note input
-- "Create Project" final submit button
+### C. Reviews Tab (`ProfileReviewsTab`)
 
-### C. Project Detail View
+- Grid of product cards the user has reviewed
+- Each card: product image, product name, star rating overlay, headline snippet
+- Click navigates to `/filament/:id` (community tab)
+- Sort by: Most Recent | Highest Rated | Most Helpful
+- Uses existing `product_reviews` public read policy (no new RLS needed)
 
-Rendered inline within the Vault tab (not a new page route). The `VaultProjectsTab` manages state: list view vs. detail view for a selected project ID.
+### D. Projects Tab (`ProfileProjectsTab`)
 
-**Header Section:**
-- Cover image (or generated gradient based on project type)
-- Project name (editable inline)
-- Type badge + Status selector dropdown (Planning -> In Progress -> Completed -> Archived)
-- Action buttons: "Share" (copy link) | "Duplicate" | "Delete"
-- Back arrow to return to project list
+- Grid of public project cards: cover gradient, name, type badge, status badge, material count
+- Click navigates to `/vault?tab=projects&project=:id` (existing public project view)
+- Uses existing `projects` public read policy
 
-**Materials Section:**
-- Card/table of all filaments in the project
-- Each row: color swatch (from `color_hex`), product name (linked to `/filament/[handle]`), brand, quantity, unit price (from `resolveFilamentPrice`), total line cost, purchase status dropdown, remove button
-- "Total Materials Cost" at bottom
-- "Add Filament" button
-- Drag handles for reordering (`sort_order`)
+### E. Collection Tab (`ProfileCollectionTab`)
 
-**Accessories Section:**
-- Similar layout to materials but with free-text entries
-- Each row: name, optional URL (shows as link), price input, currency, purchase status, remove
-- "Total Accessories Cost" at bottom
-- "Add Accessory" inline form
+- Only rendered if the profile has `wishlist_public = true`
+- Shows filament cards from `user_favorites` with product details
+- Read-only view -- no add/remove buttons
+- Requires new RLS policy on `user_favorites`
 
-**Build Journal (Log):**
-- Timestamped entries shown newest-first
-- "Add Entry" form: textarea + optional photo upload (up to 3 per entry)
-- Each entry shows: text, photos as thumbnail row, timestamp
-- Edit and delete buttons on own entries
+### F. Activity Tab (`ProfileActivityTab`)
 
-**Cost Summary Card:**
-- Materials subtotal + Accessories subtotal = Total estimated cost
-- All prices shown in user's regional currency via `useRegion()`
-- Optional "Budget" field -- if set, shows progress bar (spent vs budget)
-- Converted prices show approximate indicator
+- Recent public actions aggregated from:
+  - Reviews posted (from `product_reviews` where `is_public = true`)
+  - Projects created/completed (from `projects` where `is_public = true`)
+- Displayed as a simple timeline list: icon, action description, timestamp
+- Limited to last 20 items
 
-### D. Filament Search Dialog
+### G. Own-Profile Detection
 
-- Modal with search input that queries `filaments` table by `product_title` (ilike)
-- Results show: featured image thumbnail, product title, brand, material, color swatch, price
-- Click to add -- then prompted for quantity and note
-- Prevents duplicates (already-added filaments show "Added" badge)
+When the logged-in user views their own profile:
+- Show an "Edit Profile" button linking to `/settings`
+- Show a subtle banner: "This is how others see your profile"
+- If profile is private (`is_public = false`), show the page content with a warning: "Your profile is currently private. Only you can see this page."
 
-### E. Public Sharing (deferred -- minimal v1)
+## Settings Page Updates
 
-For v1, public projects will be viewable at `/vault?tab=projects&project=[id]` when `is_public = true`. A dedicated `/projects/:user/:slug` route can be added later. The "Share" button copies the project URL to clipboard.
+Add a new "Public Profile" card section to `/settings` with:
 
-## Data Flow and Hooks
+1. **Bio** -- textarea, max 280 chars, character counter
+2. **Username** -- text input with slug validation (lowercase, alphanumeric + hyphens, 3-30 chars). Shows preview: "filascope.lovable.app/user/[slug]". Validates uniqueness on blur
+3. **Social Links** -- four optional URL inputs: Printables, Thingiverse, YouTube, Instagram
+4. **Privacy Toggles**:
+   - "Make my profile public" -- master toggle
+   - "Show my wishlist on my profile" -- secondary toggle (only active if profile is public)
+5. **Profile Preview** button -- links to `/user/:userId` in a new tab
 
-### `useProject(projectId)`
+## Data Hook: `usePublicProfile`
 
-Fetches a single project with all related data:
-- Project record with printer join
-- Materials with filament joins (for pricing and display)
-- Accessories
-- Log entries with photos
-- Provides mutations: updateProject, addMaterial, removeMaterial, updateMaterial, reorderMaterials, addAccessory, removeAccessory, addLogEntry, deleteLogEntry
-
-### `useProjectCost(materials, accessories)`
-
-Pure calculation hook:
-- Takes materials (with filament pricing data) and accessories
-- Uses `useRegion()` and `resolveFilamentPrice()` for each material
-- Returns: materialsCost, accessoriesCost, totalCost, currency, itemizedCosts[]
+```text
+usePublicProfile(identifier: string)
+-- identifier can be a UUID or username slug
+-- Returns: { profile, reviews, projects, wishlistItems, activity, isLoading, isOwnProfile }
+-- Fetches profile from profiles table (public RLS)
+-- Fetches reviews from product_reviews (public RLS) with filament/printer enrichment
+-- Fetches projects from projects (public RLS)
+-- Conditionally fetches wishlist if wishlist_public is true
+-- Computes badges from data
+```
 
 ## Implementation Sequence
 
-1. **Database migration** -- Alter `projects`, drop/recreate `project_materials` (replacing `project_filaments`), create `project_accessories`, `project_log_entries`, `project_log_photos`, storage bucket, RLS policies
-2. **Hooks** -- `useProject.ts` and `useProjectCost.ts`
-3. **FilamentSearchDialog** -- Reusable filament picker component
-4. **ProjectCreateDialog** -- Multi-step creation form (Steps 1-3)
-5. **ProjectDetail** -- Header, Materials, Accessories, Log, Cost Summary sub-components
-6. **VaultProjectsTab** -- Rewrite with list/detail view toggle, filters, and improved cards
-7. **VaultDashboard** -- Update `ProjectsSummary` to show new fields (status badge, cost)
-8. **Update references** -- Any code referencing `project_filaments` must switch to `project_materials`
-
-## Migration Safety
-
-- `projects` table: 0 rows -- safe to alter freely
-- `project_filaments` table: 0 rows -- safe to drop and replace with `project_materials`
-- The `VaultDashboard.tsx` `ProjectsSummary` component queries `project_filaments(id)` -- will be updated to `project_materials(id)`
-- No other components reference `project_filaments` outside of `VaultProjectsTab` and `VaultDashboard`
+1. Database migration -- add columns to `profiles`, add RLS policies for public profiles and public wishlist
+2. Create `usePublicProfile` hook
+3. Create `ProfileHeader` component
+4. Create `ProfileReviewsTab` component
+5. Create `ProfileProjectsTab` component
+6. Create `ProfileCollectionTab` component
+7. Create `ProfileActivityTab` component
+8. Create `UserProfile` page (orchestrator with tabs)
+9. Add route `/user/:userId` to App.tsx
+10. Update Settings page with bio, username, social links, and privacy toggles
+11. Add "View Profile" link to VaultHeroBar
 
 ## Edge Cases
 
-- Filaments without pricing: show "Price unavailable" in cost column, exclude from total
-- Deleted filaments: materials reference `filament_id` as FK -- if a filament is removed from the DB, the material row shows "Filament unavailable" gracefully
-- Zero-quantity materials: treated as "1 spool" for cost calculation
-- Budget currency mismatch: budget is stored with its own currency; displayed in user's currency via conversion
-
+- **Profile not found**: Show a 404-style message: "This profile doesn't exist or is set to private"
+- **Private profile visited by non-owner**: Same 404 message (do not reveal that the user exists)
+- **Username slug conflicts**: Validated at save time with uniqueness check; show inline error
+- **No public content**: Profile page shows header but tabs show appropriate empty states ("No public reviews yet")
+- **Deleted reviews**: Already filtered by `deleted_at IS NULL` in existing policies
