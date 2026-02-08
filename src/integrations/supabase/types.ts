@@ -2520,6 +2520,7 @@ export type Database = {
           fan_max_percent: number | null
           fan_min_percent: number | null
           featured_image: string | null
+          filascope_score: number | null
           finish_type: string | null
           finish_type_id: string | null
           flexural_strength_mpa: number | null
@@ -2664,6 +2665,7 @@ export type Database = {
           fan_max_percent?: number | null
           fan_min_percent?: number | null
           featured_image?: string | null
+          filascope_score?: number | null
           finish_type?: string | null
           finish_type_id?: string | null
           flexural_strength_mpa?: number | null
@@ -2808,6 +2810,7 @@ export type Database = {
           fan_max_percent?: number | null
           fan_min_percent?: number | null
           featured_image?: string | null
+          filascope_score?: number | null
           finish_type?: string | null
           finish_type_id?: string | null
           flexural_strength_mpa?: number | null
@@ -9809,6 +9812,39 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_filascope_score: {
+        Args: {
+          p_amazon_link: string
+          p_bed_temp_max: number
+          p_bed_temp_min: number
+          p_color_hex: string
+          p_density: number
+          p_diameter: number
+          p_elongation: number
+          p_flexural: number
+          p_material: string
+          p_net_weight: number
+          p_nozzle_temp_max: number
+          p_nozzle_temp_min: number
+          p_price_aud: number
+          p_price_cad: number
+          p_price_eur: number
+          p_price_gbp: number
+          p_price_jpy: number
+          p_product_url: string
+          p_product_url_au: string
+          p_product_url_ca: string
+          p_product_url_eu: string
+          p_product_url_jp: string
+          p_product_url_uk: string
+          p_tds_url: string
+          p_tensile: number
+          p_variant_count?: number
+          p_variant_price: number
+          p_vendor: string
+        }
+        Returns: number
+      }
       create_brand_sync_log: {
         Args: {
           p_brand_slug: string
@@ -9931,6 +9967,17 @@ export type Database = {
           store_type: string
         }[]
       }
+      get_filter_counts: {
+        Args: {
+          p_brands?: string[]
+          p_materials?: string[]
+          p_price_max?: number
+          p_price_min?: number
+          p_region?: string
+          p_search?: string
+        }
+        Returns: Json
+      }
       get_missing_regional_urls: {
         Args: { limit_count?: number }
         Returns: {
@@ -9979,6 +10026,35 @@ export type Database = {
           p_success: boolean
         }
         Returns: undefined
+      }
+      search_filaments_paginated: {
+        Args: {
+          p_ams_only?: boolean
+          p_brands?: string[]
+          p_brass_only?: boolean
+          p_carbon_fiber?: boolean
+          p_color_families?: string[]
+          p_glass_fiber?: boolean
+          p_glow?: boolean
+          p_has_td?: boolean
+          p_high_speed?: boolean
+          p_large_spools?: boolean
+          p_materials?: string[]
+          p_matte?: boolean
+          p_metallic?: boolean
+          p_offset?: number
+          p_page_size?: number
+          p_price_max?: number
+          p_price_min?: number
+          p_region?: string
+          p_search?: string
+          p_silk?: boolean
+          p_sort?: string
+          p_sparkle?: boolean
+          p_translucent_filter?: boolean
+          p_wood_filled?: boolean
+        }
+        Returns: Json
       }
       should_refresh_exchange_rates: { Args: never; Returns: boolean }
       start_brand_scrape: { Args: { p_brand_slug: string }; Returns: boolean }
