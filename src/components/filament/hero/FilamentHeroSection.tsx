@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, Lightbulb, Star } from 'lucide-react';
+import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, Lightbulb, Star, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MaterialBadge } from '@/components/MaterialBadge';
@@ -9,11 +10,12 @@ import { FilamentHeroGallery } from './FilamentHeroGallery';
 import { LargeColorSwatchGrid } from './LargeColorSwatchGrid';
 import { FilamentKeySpecsBar } from './FilamentKeySpecsBar';
 import { FilamentQuickSpecsGrid } from './FilamentQuickSpecsGrid';
-import { normalizeColorHex } from '@/lib/utils';
+import { normalizeColorHex, cn } from '@/lib/utils';
 import { Database } from '@/integrations/supabase/types';
 import { getProductLineName } from '@/lib/productNameUtils';
 import { getBrandLogo } from '@/lib/brandLogos';
 import { toBrandSlug } from '@/utils/brandSlug';
+import { calculateUnifiedScore, getScoreNumberColor, SCORE_EXPLANATION, type FilamentForScoring } from '@/lib/unifiedFilamentScore';
 import type { CommunityReviewStats } from '@/hooks/useCommunityReviewStats';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -79,6 +81,12 @@ export function FilamentHeroSection({
   const productLineName = getProductLineName(pricingFilament.material, pricingFilament.product_title);
   // Keep baseName for color extraction compatibility
   const baseName = baseProductName;
+
+  // Calculate FilaScore
+  const { score: filaScore, factors: scoreFactors, dataPointCount, label: scoreLabel } = useMemo(() =>
+    calculateUnifiedScore(pricingFilament as FilamentForScoring),
+    [pricingFilament]
+  );
 
   return (
     <div className="space-y-6">
@@ -262,6 +270,50 @@ export function FilamentHeroSection({
                 <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-primary/20 text-primary border-primary/30">
                   📦 {packQuantity}-Pack
                 </Badge>
+              )}
+              {/* FilaScore Badge */}
+              {filaScore !== null && (
+                <HoverCard openDelay={200}>
+                  <HoverCardTrigger asChild>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-xs px-2.5 py-1 cursor-help gap-1.5",
+                        filaScore >= 8
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                          : filaScore >= 5
+                          ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                          : "bg-red-500/10 border-red-500/30 text-red-400"
+                      )}
+                    >
+                      <Star className="w-3 h-3 fill-current" />
+                      FilaScore {filaScore.toFixed(1)}
+                    </Badge>
+                  </HoverCardTrigger>
+                  <HoverCardContent side="bottom" className="w-64 p-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold">FilaScope Score</span>
+                        <span className={cn("text-lg font-bold", getScoreNumberColor(filaScore))}>
+                          {filaScore.toFixed(1)}/10
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {scoreFactors.map((f, i) => (
+                          <div key={i} className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">{f.label}</span>
+                            <span className="font-medium">{f.points.toFixed(1)}/{f.maxPoints.toFixed(1)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="pt-1 border-t border-border/50">
+                        <p className="text-[10px] text-muted-foreground">
+                          {SCORE_EXPLANATION}
+                        </p>
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
               )}
               {displayFilament.transmission_distance != null && (
                 <Tooltip>
