@@ -5186,6 +5186,142 @@ export type Database = {
         }
         Relationships: []
       }
+      product_review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_review_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_reviews: {
+        Row: {
+          bed_temp: number | null
+          body: string
+          cons: string[] | null
+          created_at: string
+          ease_rating: number | null
+          headline: string
+          helpful_count: number
+          id: string
+          is_public: boolean
+          is_verified_purchase: boolean
+          layer_height: number | null
+          nozzle_temp: number | null
+          overall_rating: number
+          print_speed: number | null
+          printer_used_id: string | null
+          product_id: string
+          product_type: string
+          pros: string[] | null
+          quality_rating: number | null
+          status: string
+          updated_at: string
+          user_id: string
+          value_rating: number | null
+        }
+        Insert: {
+          bed_temp?: number | null
+          body: string
+          cons?: string[] | null
+          created_at?: string
+          ease_rating?: number | null
+          headline: string
+          helpful_count?: number
+          id?: string
+          is_public?: boolean
+          is_verified_purchase?: boolean
+          layer_height?: number | null
+          nozzle_temp?: number | null
+          overall_rating: number
+          print_speed?: number | null
+          printer_used_id?: string | null
+          product_id: string
+          product_type?: string
+          pros?: string[] | null
+          quality_rating?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          value_rating?: number | null
+        }
+        Update: {
+          bed_temp?: number | null
+          body?: string
+          cons?: string[] | null
+          created_at?: string
+          ease_rating?: number | null
+          headline?: string
+          helpful_count?: number
+          id?: string
+          is_public?: boolean
+          is_verified_purchase?: boolean
+          layer_height?: number | null
+          nozzle_temp?: number | null
+          overall_rating?: number
+          print_speed?: number | null
+          printer_used_id?: string | null
+          product_id?: string
+          product_type?: string
+          pros?: string[] | null
+          quality_rating?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          value_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_printer_used_id_fkey"
+            columns: ["printer_used_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_printer_used_id_fkey"
+            columns: ["printer_used_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           amazon_prime_member: boolean | null
@@ -5573,6 +5709,38 @@ export type Database = {
             columns: ["review_id"]
             isOneToOne: false
             referencedRelation: "filament_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_photos: {
+        Row: {
+          created_at: string
+          id: string
+          photo_url: string
+          review_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_url: string
+          review_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_url?: string
+          review_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_photos_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
             referencedColumns: ["id"]
           },
         ]

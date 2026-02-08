@@ -65,14 +65,15 @@ export function useVaultProfile() {
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id),
           supabase
-            .from("filament_reviews")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id),
-          supabase
-            .from("filament_comments")
+            .from("product_reviews")
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id)
-            .eq("is_private", true),
+            .eq("is_public", true),
+          supabase
+            .from("product_reviews")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .eq("is_public", false),
           supabase
             .from("price_alerts")
             .select("id", { count: "exact", head: true })
