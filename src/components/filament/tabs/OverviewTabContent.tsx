@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BestPricesSection } from '../BestPricesSection';
 import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
+import { useCommunityPhotoCount } from '@/hooks/useCommunityPhotos';
 import { 
   Zap, 
   Package, 
@@ -16,7 +17,8 @@ import {
   Wrench,
   Palette,
   Box,
-  Gauge
+  Gauge,
+  Camera,
 } from 'lucide-react';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -24,6 +26,7 @@ type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 interface OverviewTabContentProps {
   filament: Filament;
   onNavigateToPricing?: () => void;
+  onNavigateToCommunity?: () => void;
   /** Pre-computed price candidates from the unified pricing hook */
   priceCandidates?: PriceCandidate[];
   /** Whether the pricing data is still loading */
@@ -152,7 +155,8 @@ function inferNotRecommendedWarnings(filament: Filament): Array<{ label: string;
   return warnings;
 }
 
-export function OverviewTabContent({ filament, onNavigateToPricing, priceCandidates, priceCandidatesLoading, totalRetailerCount }: OverviewTabContentProps) {
+export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateToCommunity, priceCandidates, priceCandidatesLoading, totalRetailerCount }: OverviewTabContentProps) {
+  const { data: photoCount } = useCommunityPhotoCount(filament.id, "filament");
   // Build key features list
   const features: Array<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = [];
 
@@ -204,6 +208,18 @@ export function OverviewTabContent({ filament, onNavigateToPricing, priceCandida
         candidatesLoading={priceCandidatesLoading}
         totalRetailerCount={totalRetailerCount}
       />
+
+      {/* Community Photos Link */}
+      {photoCount != null && photoCount > 0 && onNavigateToCommunity && (
+        <button
+          onClick={onNavigateToCommunity}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/40 hover:border-primary/30 transition-all text-sm text-muted-foreground hover:text-foreground group"
+        >
+          <Camera className="w-4 h-4 text-primary group-hover:text-primary" />
+          <span className="font-medium">{photoCount} community print{photoCount !== 1 ? "s" : ""}</span>
+          <span className="text-xs">→ View gallery</span>
+        </button>
+      )}
 
       {/* Product Summary */}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/[0.02] border-primary/20">

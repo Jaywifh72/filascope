@@ -16,7 +16,7 @@ const TABS: TabConfig[] = [
   { id: "specifications", label: "Specifications", hash: "#specifications" },
   { id: "compatibility", label: "Compatibility", hash: "#compatibility" },
   { id: "pricing", label: "Pricing", hash: "#pricing" },
-  { id: "community", label: "Community", hash: "#community", badge: "coming-soon" },
+  { id: "community", label: "Community", hash: "#community" },
 ];
 
 interface FilamentTabNavProps {

@@ -1070,6 +1070,143 @@ export type Database = {
         }
         Relationships: []
       }
+      community_photo_files: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          photo_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          id?: string
+          photo_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          photo_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_photo_files_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "community_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_photo_likes: {
+        Row: {
+          created_at: string
+          id: string
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "community_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_photos: {
+        Row: {
+          bed_temp: number | null
+          caption: string | null
+          created_at: string
+          id: string
+          infill_pct: number | null
+          is_reported: boolean
+          layer_height: number | null
+          like_count: number
+          model_source: string | null
+          nozzle_temp: number | null
+          printer_id: string | null
+          product_id: string
+          product_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bed_temp?: number | null
+          caption?: string | null
+          created_at?: string
+          id?: string
+          infill_pct?: number | null
+          is_reported?: boolean
+          layer_height?: number | null
+          like_count?: number
+          model_source?: string | null
+          nozzle_temp?: number | null
+          printer_id?: string | null
+          product_id: string
+          product_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bed_temp?: number | null
+          caption?: string | null
+          created_at?: string
+          id?: string
+          infill_pct?: number | null
+          is_reported?: boolean
+          layer_height?: number | null
+          like_count?: number
+          model_source?: string | null
+          nozzle_temp?: number | null
+          printer_id?: string | null
+          product_id?: string
+          product_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_photos_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_photos_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_photos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_report_upvotes: {
         Row: {
           created_at: string | null

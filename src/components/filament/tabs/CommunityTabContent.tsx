@@ -15,6 +15,7 @@ import {
 import { useProductReviews } from '@/hooks/useProductReviews';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReviewSummaryBar, ReviewList } from '@/components/reviews/ReviewDisplay';
+import { CommunityPhotoGallery } from '@/components/community-photos/CommunityPhotoGallery';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -125,7 +126,9 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
         </CardContent>
       </Card>
 
-      {/* Forum Discussions */}
+      {/* Community Photos Gallery */}
+      <CommunityPhotoGallery productId={filament.id} productType="filament" />
+
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">
