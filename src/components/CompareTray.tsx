@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GitCompare, ChevronUp, ChevronDown, ArrowRight, Loader2, AlertCircle, Sparkles, Minus, Share2, Bookmark } from "lucide-react";
+import { SharePopover } from "@/components/sharing/SharePopover";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
@@ -496,16 +497,27 @@ export function CompareTray() {
 
               <div className="flex items-center gap-2">
                 {/* Share Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleShare}
-                  disabled={!canCompare}
-                  aria-label="Share comparison link"
+                <SharePopover
+                  shareUrl={canCompare ? `${window.location.origin}/compare?ids=${items.map(i => i.id).join(',')}` : ''}
+                  shareText={
+                    canCompare
+                      ? `Comparing ${items.map(i => i.product_title || 'filament').slice(0, 3).join(' vs ')} on FilaScope`
+                      : ''
+                  }
+                  title="Share comparison"
+                  align="end"
+                  side="top"
                 >
-                  <Share2 className="w-4 h-4" aria-hidden="true" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={!canCompare}
+                    aria-label="Share comparison link"
+                  >
+                    <Share2 className="w-4 h-4" aria-hidden="true" />
+                  </Button>
+                </SharePopover>
 
                 {/* Save for Later (if logged in) */}
                 {user && (

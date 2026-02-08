@@ -197,6 +197,8 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
             filamentId={filament.id}
             tdsUrl={filament.tds_url}
             productTitle={filament.product_title}
+            priceDisplay={primaryRetailer?.price ? `${currencyInfo.symbol}${primaryRetailer.price.toFixed(2)}` : undefined}
+            storeName={primaryRetailer?.name}
           />
         </div>
       </div>
@@ -305,6 +307,8 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
           filamentId={filament.id}
           tdsUrl={filament.tds_url}
           productTitle={filament.product_title}
+          priceDisplay={primaryRetailer?.price ? `${currencyInfo.symbol}${primaryRetailer.price.toFixed(2)}` : undefined}
+          storeName={primaryRetailer?.name}
         />
       </div>
     </div>

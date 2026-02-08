@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Heart, FileText, Share2 } from "lucide-react";
+import { FileText, Share2 } from "lucide-react";
 import { LikeButton } from "@/components/LikeButton";
-import { ShareModal } from "./ShareModal";
+import { SharePopover } from "@/components/sharing/SharePopover";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -9,12 +9,22 @@ interface QuickActionsProps {
   filamentId: string;
   tdsUrl: string | null;
   productTitle: string;
+  /** Optional price string e.g. "$24.99" for share text */
+  priceDisplay?: string;
+  /** Optional store name e.g. "Amazon US" for share text */
+  storeName?: string;
 }
 
-export function QuickActions({ filamentId, tdsUrl, productTitle }: QuickActionsProps) {
-  const [shareOpen, setShareOpen] = useState(false);
-  
+export function QuickActions({ filamentId, tdsUrl, productTitle, priceDisplay, storeName }: QuickActionsProps) {
   const hasTds = tdsUrl && tdsUrl.trim() !== '' && !tdsUrl.includes('N/A');
+
+  // Build rich share text
+  let shareText = `Check out ${productTitle} on FilaScope`;
+  if (priceDisplay && storeName) {
+    shareText = `Check out ${productTitle} on FilaScope — ${priceDisplay} at ${storeName}`;
+  } else if (priceDisplay) {
+    shareText = `Check out ${productTitle} on FilaScope — ${priceDisplay}`;
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -64,25 +74,25 @@ export function QuickActions({ filamentId, tdsUrl, productTitle }: QuickActionsP
       </TooltipProvider>
       
       {/* Share */}
-      <button
-        onClick={() => setShareOpen(true)}
-        className={cn(
-          "inline-flex items-center gap-1.5",
-          "text-sm text-muted-foreground",
-          "hover:text-primary",
-          "transition-colors",
-          "focus:outline-none focus:text-primary"
-        )}
+      <SharePopover
+        shareText={shareText}
+        productId={filamentId}
+        title="Share this filament"
       >
-        <Share2 className="w-4 h-4" />
-        <span className="hidden sm:inline">Share</span>
-      </button>
-      
-      <ShareModal
-        open={shareOpen}
-        onOpenChange={setShareOpen}
-        productTitle={productTitle}
-      />
+        <button
+          className={cn(
+            "inline-flex items-center gap-1.5",
+            "text-sm text-muted-foreground",
+            "hover:text-primary",
+            "transition-colors",
+            "focus:outline-none focus:text-primary"
+          )}
+          aria-label="Share this filament"
+        >
+          <Share2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Share</span>
+        </button>
+      </SharePopover>
     </div>
   );
 }
