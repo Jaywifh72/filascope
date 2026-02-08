@@ -1240,6 +1240,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "community_photos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       community_report_upvotes: {
@@ -1844,6 +1851,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filament_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5416,6 +5430,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_review_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       product_reviews: {
@@ -5520,6 +5541,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5890,6 +5918,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -7567,6 +7602,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_material_interests: {
@@ -7853,6 +7895,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -9742,6 +9791,57 @@ export type Database = {
           product_count?: number | null
           product_line_count?: number | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      v_public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_public: boolean | null
+          printing_setup: Json | null
+          projects_public: boolean | null
+          purchases_public: boolean | null
+          reviews_public: boolean | null
+          skill_level: string | null
+          social_links: Json | null
+          username_slug: string | null
+          wishlist_public: boolean | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          printing_setup?: Json | null
+          projects_public?: boolean | null
+          purchases_public?: boolean | null
+          reviews_public?: boolean | null
+          skill_level?: string | null
+          social_links?: Json | null
+          username_slug?: string | null
+          wishlist_public?: boolean | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          printing_setup?: Json | null
+          projects_public?: boolean | null
+          purchases_public?: boolean | null
+          reviews_public?: boolean | null
+          skill_level?: string | null
+          social_links?: Json | null
+          username_slug?: string | null
+          wishlist_public?: boolean | null
         }
         Relationships: []
       }
