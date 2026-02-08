@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Folder, Star, Printer, DollarSign, Wrench } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Folder, Star, Printer, DollarSign, Wrench, Globe, Lock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { WishlistCollection } from "@/hooks/useWishlistCollections";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ interface CollectionDialogProps {
     description: string;
     icon: string;
     color: string;
+    is_public?: boolean;
   }) => void;
   onDelete?: () => void;
 }
@@ -57,10 +59,21 @@ export function CollectionDialog({
   const [description, setDescription] = useState(collection?.description || "");
   const [icon, setIcon] = useState(collection?.icon || "folder");
   const [color, setColor] = useState(collection?.color || "#00d9ff");
+  const [isPublic, setIsPublic] = useState(collection?.is_public || false);
+
+  useEffect(() => {
+    if (open) {
+      setName(collection?.name || "");
+      setDescription(collection?.description || "");
+      setIcon(collection?.icon || "folder");
+      setColor(collection?.color || "#00d9ff");
+      setIsPublic(collection?.is_public || false);
+    }
+  }, [open, collection]);
 
   const handleSave = () => {
     if (!name.trim()) return;
-    onSave({ name: name.trim(), description, icon, color });
+    onSave({ name: name.trim(), description, icon, color, is_public: isPublic });
     onOpenChange(false);
   };
 
@@ -133,10 +146,29 @@ export function CollectionDialog({
               ))}
             </div>
           </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2">
+              {isPublic ? (
+                <Globe className="h-4 w-4 text-primary" />
+              ) : (
+                <Lock className="h-4 w-4 text-muted-foreground" />
+              )}
+              <div>
+                <p className="text-sm font-medium">{isPublic ? "Public" : "Private"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isPublic
+                    ? "Anyone with the link can view"
+                    : "Only you can see this collection"}
+                </p>
+              </div>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          {collection && onDelete && (
+          {collection && onDelete && !collection.is_default && (
             <Button
               variant="destructive"
               onClick={onDelete}

@@ -7942,7 +7942,9 @@ export type Database = {
           icon: string | null
           id: string
           is_default: boolean | null
+          is_public: boolean
           name: string
+          slug: string | null
           sort_order: number | null
           updated_at: string | null
           user_id: string
@@ -7954,7 +7956,9 @@ export type Database = {
           icon?: string | null
           id?: string
           is_default?: boolean | null
+          is_public?: boolean
           name: string
+          slug?: string | null
           sort_order?: number | null
           updated_at?: string | null
           user_id: string
@@ -7966,7 +7970,9 @@ export type Database = {
           icon?: string | null
           id?: string
           is_default?: boolean | null
+          is_public?: boolean
           name?: string
+          slug?: string | null
           sort_order?: number | null
           updated_at?: string | null
           user_id?: string
@@ -9645,6 +9651,10 @@ export type Database = {
           p_triggered_by?: string
         }
         Returns: string
+      }
+      create_default_collections: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       find_duplicate_hexes: {
         Args: { p_vendor: string }

@@ -1,4 +1,4 @@
-import { Plus, Folder, Star, Printer, DollarSign, Wrench } from "lucide-react";
+import { Plus, Folder, Star, Printer, DollarSign, Wrench, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WishlistCollection } from "@/hooks/useWishlistCollections";
 import { cn } from "@/lib/utils";
@@ -61,7 +61,12 @@ export function CollectionTabs({
         >
           {ICON_MAP[collection.icon] || <Folder className="h-4 w-4" />}
           <span className="ml-2">{collection.name}</span>
-          <span className="ml-2 text-xs opacity-70">({collection.item_count || 0})</span>
+          <span className="ml-1.5 text-xs opacity-70">({collection.item_count || 0})</span>
+          {collection.is_public ? (
+            <Globe className="h-3 w-3 ml-1.5 opacity-50" />
+          ) : (
+            <Lock className="h-3 w-3 ml-1.5 opacity-50" />
+          )}
         </Button>
       ))}
 

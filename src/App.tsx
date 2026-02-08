@@ -83,6 +83,7 @@ const FilamentDetail = lazy(() => import("./pages/FilamentDetail"));
 const BrandDetail = lazy(() => import("./pages/BrandDetail"));
 const Vault = lazy(() => import("./pages/Vault"));
 const SharedWishlist = lazy(() => import("./pages/SharedWishlist"));
+const PublicCollection = lazy(() => import("./pages/PublicCollection"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Printers = lazy(() => import("./pages/Printers"));
 const PrinterCompare = lazy(() => import("./pages/PrinterCompare"));
@@ -185,6 +186,7 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/vault" element={<Vault />} />
                   <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
+                  <Route path="/collections/:username/:slug" element={<PublicCollection />} />
                   <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/import" element={<AdminImport />} />
