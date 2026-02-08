@@ -1,6 +1,6 @@
 import { History, ArrowRight, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useBrowseHistory } from "@/hooks/useBrowseHistory";
+import { useBrowseHistory, getPrinterImageFromHistory } from "@/hooks/useBrowseHistory";
 import { useCompare } from "@/hooks/useCompare";
 import { SidebarModule } from "./SidebarModule";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export function RecentlyViewedModule() {
             const href = item.product_type === "printer" 
               ? `/printers/${item.product_id}` 
               : `/filament/${item.product_id}`;
-            const image = item.filament?.featured_image || item.printer?.image_url;
+            const image = item.filament?.featured_image || getPrinterImageFromHistory(item.printer);
             const title = item.filament?.product_title || item.printer?.display_name || item.printer?.model_name || "View product";
             const colorHex = item.filament?.color_hex || "#ccc";
             return (

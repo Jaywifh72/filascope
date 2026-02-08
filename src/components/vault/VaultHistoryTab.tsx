@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Filter,
 } from "lucide-react";
-import { useBrowseHistory, type BrowseHistoryItem } from "@/hooks/useBrowseHistory";
+import { useBrowseHistory, getPrinterImageFromHistory, type BrowseHistoryItem } from "@/hooks/useBrowseHistory";
 import { useRegion } from "@/contexts/RegionContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +99,7 @@ function HistoryListItem({
     ? item.filament!.product_title
     : item.printer!.display_name || item.printer!.model_name;
 
-  const image = isFilament ? item.filament!.featured_image : item.printer!.image_url;
+  const image = isFilament ? item.filament!.featured_image : getPrinterImageFromHistory(item.printer);
   const colorHex = isFilament ? item.filament!.color_hex : null;
   const material = isFilament ? item.filament!.material : null;
   const brand = isFilament ? item.filament!.vendor : null;
