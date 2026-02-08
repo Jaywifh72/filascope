@@ -18,6 +18,8 @@ export interface GroupedDeal {
   regionFlag: string;
   isLocal: boolean;
   lastScrapedAt: string | null;
+  /** Earliest created_at across all variants in the group */
+  earliestCreatedAt: string | null;
   fallbackImages: string[];
 }
 
@@ -67,6 +69,14 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
       return ts > latest ? ts : latest;
     }, null);
 
+    // Find the earliest created_at across all variants
+    const earliestCreatedAt = variants.reduce<string | null>((earliest, v) => {
+      const ts = v.created_at || null;
+      if (!ts) return earliest;
+      if (!earliest) return ts;
+      return ts < earliest ? ts : earliest;
+    }, null);
+
     const bestDiscount = representative.discount;
     // Flag unusual discounts (> 60%) — likely data quality issues
     const isUnusualDiscount = bestDiscount > 60;
@@ -91,6 +101,7 @@ export function groupDealsByProduct(deals: DealWithMeta[]): GroupedDeal[] {
       regionFlag: representative.regionFlag,
       isLocal: representative.isLocal,
       lastScrapedAt,
+      earliestCreatedAt,
       fallbackImages,
     };
   });

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { DealShareModal } from "./DealShareModal";
+import { DealQualityBadge } from "./DealQualityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useRegionalStores } from "@/hooks/useRegionalStores";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
@@ -350,6 +351,26 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           {/* Price Freshness Badge with color coding */}
           {freshnessText && (
             <DealFreshnessBadge lastScrapedAt={group.lastScrapedAt} freshnessText={freshnessText} />
+          )}
+
+          {/* Deal Quality / Expiry Badge */}
+          <DealQualityBadge
+            discount={group.bestDiscount}
+            isUnusualDiscount={group.isUnusualDiscount}
+            createdAt={group.earliestCreatedAt}
+            lastScrapedAt={group.lastScrapedAt}
+            className="mb-2"
+          />
+
+          {/* Regional Shipping Badge */}
+          {(isStoreLocal || hasLocalAlternative) && (
+            <Badge
+              variant="outline"
+              className="gap-1 text-[10px] border-emerald-500/30 bg-emerald-500/10 text-emerald-400 mb-2"
+            >
+              <Ship className="h-3 w-3" />
+              Ships to {regionName}
+            </Badge>
           )}
 
           {/* Color Swatches */}
