@@ -63,12 +63,16 @@ export function useDatabasePriceAlerts() {
       filamentId, 
       targetPrice, 
       currentPrice,
-      emailNotifications = true 
+      emailNotifications = true,
+      currency: alertCurrency,
+      region: alertRegion,
     }: { 
       filamentId: string; 
       targetPrice: number; 
       currentPrice?: number;
       emailNotifications?: boolean;
+      currency?: string;
+      region?: string;
     }) => {
       if (!user?.id) throw new Error("Must be logged in");
 
@@ -83,6 +87,8 @@ export function useDatabasePriceAlerts() {
           is_active: true,
           triggered_at: null,
           triggered_price: null,
+          ...(alertCurrency ? { currency: alertCurrency } : {}),
+          ...(alertRegion ? { region: alertRegion } : {}),
         }, {
           onConflict: "user_id,filament_id",
         })
