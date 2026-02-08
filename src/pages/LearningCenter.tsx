@@ -15,7 +15,8 @@ import {
   Flame,
   Target,
   ArrowRight,
-  Calendar
+  Calendar,
+  ShoppingBag
 } from 'lucide-react';
 
 // Guide metadata type
@@ -23,16 +24,79 @@ export interface GuideMetadata {
   slug: string;
   title: string;
   description: string;
-  category: 'beginner' | 'materials' | 'troubleshooting' | 'advanced';
+  category: 'beginner' | 'materials' | 'troubleshooting' | 'advanced' | 'buying-guide';
   readTime: number; // in minutes
   publishedAt: string;
   updatedAt?: string;
   featured?: boolean;
   image?: string;
+  /** If set, link goes to /guides/:slug instead of /learn/:slug */
+  isBuyingGuide?: boolean;
 }
 
 // All guides data
 export const GUIDES: GuideMetadata[] = [
+  // New buying guides
+  {
+    slug: 'best-pla-filaments',
+    title: 'Best PLA Filaments in 2026',
+    description: 'Our data-driven ranking of the top 10 PLA filaments. Compare scores, prices, and specs with live regional pricing.',
+    category: 'buying-guide',
+    readTime: 12,
+    publishedAt: '2026-01-15',
+    updatedAt: '2026-02-01',
+    featured: true,
+    isBuyingGuide: true,
+  },
+  {
+    slug: 'pla-vs-petg',
+    title: 'PLA vs PETG: Which Should You Choose?',
+    description: 'Side-by-side comparison of the two most popular materials with data-backed recommendations for every scenario.',
+    category: 'buying-guide',
+    readTime: 10,
+    publishedAt: '2026-01-18',
+    updatedAt: '2026-02-01',
+    featured: true,
+    isBuyingGuide: true,
+  },
+  {
+    slug: 'best-petg-filaments',
+    title: 'Best PETG Filaments in 2026',
+    description: 'Data-driven ranking of the top 10 PETG filaments for functional parts that need strength and heat resistance.',
+    category: 'buying-guide',
+    readTime: 11,
+    publishedAt: '2026-01-20',
+    isBuyingGuide: true,
+  },
+  {
+    slug: 'best-abs-filaments',
+    title: 'Best ABS Filaments in 2026',
+    description: 'Top 10 ABS filaments for engineering applications, ranked by FilaScore with regional pricing.',
+    category: 'buying-guide',
+    readTime: 13,
+    publishedAt: '2026-01-25',
+    isBuyingGuide: true,
+  },
+  {
+    slug: 'beginners-guide',
+    title: "Complete Beginner's Guide to 3D Printing Filaments",
+    description: 'Everything a new 3D printer owner needs to know about filament materials, settings, and choosing the right product.',
+    category: 'buying-guide',
+    readTime: 15,
+    publishedAt: '2026-01-10',
+    updatedAt: '2026-02-01',
+    isBuyingGuide: true,
+  },
+  {
+    slug: 'hueforge-filaments',
+    title: 'Best Filaments for HueForge Printing',
+    description: 'TD-ranked filament recommendations for HueForge lithophane printing with explanations of transmissivity.',
+    category: 'buying-guide',
+    readTime: 14,
+    publishedAt: '2026-01-22',
+    isBuyingGuide: true,
+  },
+  // Existing editorial guides
   {
     slug: 'pla-vs-petg-vs-abs',
     title: 'PLA vs PETG vs ABS: Which Filament Should You Choose?',
@@ -40,7 +104,6 @@ export const GUIDES: GuideMetadata[] = [
     category: 'materials',
     readTime: 12,
     publishedAt: '2025-01-15',
-    featured: true,
   },
   {
     slug: 'best-filament-for-beginners-2025',
@@ -49,7 +112,6 @@ export const GUIDES: GuideMetadata[] = [
     category: 'beginner',
     readTime: 8,
     publishedAt: '2025-01-10',
-    featured: true,
   },
   {
     slug: 'how-to-choose-3d-printer-budget',
@@ -58,7 +120,6 @@ export const GUIDES: GuideMetadata[] = [
     category: 'beginner',
     readTime: 15,
     publishedAt: '2025-01-08',
-    featured: true,
   },
   {
     slug: 'understanding-filament-temperature-settings',
@@ -75,12 +136,12 @@ export const GUIDES: GuideMetadata[] = [
     category: 'advanced',
     readTime: 14,
     publishedAt: '2025-01-01',
-    featured: true,
   },
 ];
 
 const CATEGORIES = [
   { id: 'all', label: 'All Guides', icon: BookOpen },
+  { id: 'buying-guide', label: 'Buying Guides', icon: ShoppingBag },
   { id: 'beginner', label: 'Beginner Basics', icon: GraduationCap },
   { id: 'materials', label: 'Material Guides', icon: Flame },
   { id: 'troubleshooting', label: 'Troubleshooting', icon: Wrench },
@@ -97,6 +158,8 @@ const getCategoryConfig = (category: string) => {
       return { label: 'Troubleshooting', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
     case 'advanced':
       return { label: 'Advanced', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' };
+    case 'buying-guide':
+      return { label: 'Buying Guide', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
     default:
       return { label: category, color: 'bg-primary/10 text-primary border-primary/20' };
   }
@@ -105,8 +168,10 @@ const getCategoryConfig = (category: string) => {
 function GuideCard({ guide }: { guide: GuideMetadata }) {
   const categoryConfig = getCategoryConfig(guide.category);
   
+  const linkTo = guide.isBuyingGuide ? `/guides/${guide.slug}` : `/learn/${guide.slug}`;
+  
   return (
-    <Link to={`/learn/${guide.slug}`}>
+    <Link to={linkTo}>
       <Card className="bg-card/50 border-border hover:border-primary/50 hover:bg-card/80 transition-all group h-full">
         <CardContent className="p-6 flex flex-col h-full">
           <div className="flex items-center gap-2 mb-3">
@@ -148,8 +213,10 @@ function GuideCard({ guide }: { guide: GuideMetadata }) {
 function FeaturedGuideCard({ guide }: { guide: GuideMetadata }) {
   const categoryConfig = getCategoryConfig(guide.category);
   
+  const linkTo = guide.isBuyingGuide ? `/guides/${guide.slug}` : `/learn/${guide.slug}`;
+  
   return (
-    <Link to={`/learn/${guide.slug}`}>
+    <Link to={linkTo}>
       <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 hover:border-primary/50 transition-all group overflow-hidden">
         <CardContent className="p-8">
           <div className="flex items-center gap-2 mb-4">
