@@ -416,7 +416,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 ? (
             <HoverCard openDelay={200} closeDelay={100}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-1 cursor-pointer">
+                <div className="flex items-center gap-1 cursor-pointer" role="group" aria-label="Color variants">
                   {effectiveVariantIndicators.colors.slice(0, 6).map((hex, i) => {
                     const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
                     return (
@@ -427,6 +427,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                           isColorInStock ? "border-white/20" : "border-white/10 opacity-50"
                         )}
                         style={{ backgroundColor: hex }}
+                        role="img"
+                        aria-label={`Color swatch ${hex}${isColorInStock ? '' : ', out of stock'}`}
                       />
                     );
                   })}
@@ -481,6 +483,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <div 
               className="w-4 h-4 rounded-full border-2 border-white/20 shadow-sm"
               style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
+              role="img"
+              aria-label={`Color: ${filament.color_hex}`}
             />
           ) : null}
         </div>
@@ -522,11 +526,15 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         {overallScore !== null ? (
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5 cursor-help">
-                <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
-                <span className={cn("text-lg font-bold", getScoreNumberColor(overallScore))}>{overallScore.toFixed(1)}</span>
-                <span className="text-sm font-medium text-muted-foreground">/10</span>
-                <Info className="w-3.5 h-3.5 text-muted-foreground/60 ml-0.5" />
+              <div 
+                className="inline-flex items-center gap-1.5 bg-primary/[0.12] border border-primary/30 rounded-lg px-3 py-1.5 cursor-help"
+                role="img"
+                aria-label={`FilaScore rating: ${overallScore.toFixed(1)} out of 10`}
+              >
+                <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" aria-hidden="true" />
+                <span className={cn("text-lg font-bold", getScoreNumberColor(overallScore))} aria-hidden="true">{overallScore.toFixed(1)}</span>
+                <span className="text-sm font-medium text-muted-foreground" aria-hidden="true">/10</span>
+                <Info className="w-3.5 h-3.5 text-muted-foreground/60 ml-0.5" aria-hidden="true" />
               </div>
             </HoverCardTrigger>
             <HoverCardContent side="top" className="w-80 p-4 bg-popover border-border">

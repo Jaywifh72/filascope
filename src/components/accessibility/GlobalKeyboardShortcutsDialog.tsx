@@ -52,10 +52,10 @@ const SHORTCUT_SECTIONS: ShortcutSection[] = [
     ],
   },
   {
-    title: "Within Menus & Dropdowns",
+    title: "Within Pages & Menus",
     shortcuts: [
-      { key: "↑ ↓", description: "Navigate options" },
-      { key: "← →", description: "Navigate tabs / horizontal" },
+      { key: "← →", description: "Navigate tabs on detail pages" },
+      { key: "↑ ↓", description: "Navigate dropdown options" },
       { key: "Home", description: "Jump to first item" },
       { key: "End", description: "Jump to last item" },
       { key: "Enter / Space", description: "Select option" },

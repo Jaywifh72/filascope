@@ -54,6 +54,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
 import { groupFilamentsByProduct, type GroupedFilament } from "@/lib/productNameUtils";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
+import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
@@ -1587,6 +1588,11 @@ const Finder = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Skip Links for keyboard users */}
+      <SkipLinks links={[
+        { targetId: "filament-filters", label: "Skip to filters" },
+        { targetId: "filament-results", label: "Skip to results" },
+      ]} />
       <Helmet>
         <title>FilaScope — Compare 3D Printer Filaments, Specs & Prices</title>
         <meta name="description" content="Compare 960+ 3D printer filaments with specs, pricing from 15+ retailers, and transmissivity data. Find the perfect material for your project." />
@@ -1939,7 +1945,7 @@ const Finder = () => {
       />
 
       {/* Main Content Area with Technical Console Sidebar */}
-      <div id="system-config" className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-6 lg:py-10 items-start">
+      <div id="filament-filters" className="flex gap-8 max-w-[1600px] mx-auto px-4 lg:px-8 py-6 lg:py-10 items-start">
         {/* Technical Console Sidebar - Desktop only */}
         <TechnicalConsoleSidebar
           selectedMaterials={selectedMaterials}
@@ -1972,7 +1978,7 @@ const Finder = () => {
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          <section className="w-full" role="region" aria-label="Filament product listings">
+          <section className="w-full" role="region" aria-label="Filament product listings" id="filament-results">
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">

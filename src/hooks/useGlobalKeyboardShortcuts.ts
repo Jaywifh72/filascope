@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAnnouncer } from "@/components/accessibility/ScreenReaderAnnouncer";
 
@@ -26,9 +26,9 @@ export function useGlobalKeyboardShortcuts(options?: UseGlobalKeyboardShortcutsO
   const location = useLocation();
   const { announce } = useAnnouncer();
   
-  // Track 'g' key for vim-style navigation
-  let gKeyPressed = false;
-  let gKeyTimeout: NodeJS.Timeout | null = null;
+  // Track 'g' key for vim-style navigation using refs for stability
+  const gKeyPressedRef = useRef(false);
+  const gKeyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const focusSearchInput = useCallback(() => {
     // Try to find search input on the page
@@ -104,19 +104,19 @@ export function useGlobalKeyboardShortcuts(options?: UseGlobalKeyboardShortcutsO
 
       // Vim-style "g" navigation (g f = go filaments, g p = go printers, etc.)
       if (!isInputFocused) {
-        if (e.key === 'g' && !gKeyPressed) {
-          gKeyPressed = true;
-          if (gKeyTimeout) clearTimeout(gKeyTimeout);
-          gKeyTimeout = setTimeout(() => {
-            gKeyPressed = false;
+        if (e.key === 'g' && !gKeyPressedRef.current) {
+          gKeyPressedRef.current = true;
+          if (gKeyTimeoutRef.current) clearTimeout(gKeyTimeoutRef.current);
+          gKeyTimeoutRef.current = setTimeout(() => {
+            gKeyPressedRef.current = false;
           }, 500);
           return;
         }
 
-        if (gKeyPressed) {
+        if (gKeyPressedRef.current) {
           e.preventDefault();
-          gKeyPressed = false;
-          if (gKeyTimeout) clearTimeout(gKeyTimeout);
+          gKeyPressedRef.current = false;
+          if (gKeyTimeoutRef.current) clearTimeout(gKeyTimeoutRef.current);
 
           const navMap: Record<string, { path: string; label: string }> = {
             'f': { path: '/', label: 'Filaments' },
@@ -141,7 +141,7 @@ export function useGlobalKeyboardShortcuts(options?: UseGlobalKeyboardShortcutsO
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (gKeyTimeout) clearTimeout(gKeyTimeout);
+      if (gKeyTimeoutRef.current) clearTimeout(gKeyTimeoutRef.current);
     };
   }, [focusSearchInput, closeActiveOverlays, navigate, location.pathname, announce, options]);
 
