@@ -118,7 +118,7 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Methodology = lazy(() => import("./pages/Methodology"));
-const MaterialEncyclopedia = lazy(() => import("./pages/MaterialEncyclopedia"));
+// MaterialEncyclopedia route redirects to /compare
 const CompatibilityMatrix = lazy(() => import("./pages/CompatibilityMatrix"));
 const SlicerDirectory = lazy(() => import("./pages/SlicerDirectory"));
 const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
@@ -250,7 +250,7 @@ const App = () => (
                   <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/methodology" element={<Methodology />} />
-                  <Route path="/material-encyclopedia" element={<MaterialEncyclopedia />} />
+                  <Route path="/material-encyclopedia" element={<Navigate to="/compare" replace />} />
                   <Route path="/compatibility-matrix" element={<CompatibilityMatrix />} />
                   <Route path="/slicer-directory" element={<SlicerDirectory />} />
                   <Route path="/model-repositories" element={<ModelRepositories />} />
