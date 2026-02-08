@@ -145,13 +145,13 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            // Cache fonts
-            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+            // Cache self-hosted fonts
+            urlPattern: /\/fonts\/.*\.woff2$/,
             handler: "CacheFirst",
             options: {
-              cacheName: "google-fonts-cache",
+              cacheName: "fonts-cache",
               expiration: {
-                maxEntries: 10,
+                maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
             },
