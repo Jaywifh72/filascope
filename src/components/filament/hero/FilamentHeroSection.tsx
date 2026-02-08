@@ -300,6 +300,7 @@ export function FilamentHeroSection({
               bedTempMax={displayFilament.bed_temp_max_c}
               diameter={displayFilament.diameter_nominal_mm}
               netWeight={displayFilament.net_weight_g}
+              material={displayFilament.material}
               className="pt-1"
             />
           </div>
