@@ -11,6 +11,9 @@ import {
   MessagesSquare,
   MessageSquare,
   ImageIcon,
+  Search,
+  Globe,
+  Box,
 } from 'lucide-react';
 import { useProductReviews } from '@/hooks/useProductReviews';
 import { useReviewFlags } from '@/hooks/useReviewFlags';
@@ -34,6 +37,106 @@ function getSubredditSearchUrl(subreddit: string, filament: Filament): string {
   return `https://www.reddit.com/r/${subreddit}/search/?q=${encodeURIComponent(searchTerms)}&restrict_sr=1&sort=relevance`;
 }
 
+function getGoogleReviewUrl(filament: Filament): string {
+  const searchTerms = [filament.vendor, filament.material, 'filament', 'review'].filter(Boolean).join(' ');
+  return `https://www.google.com/search?q=${encodeURIComponent(searchTerms)}`;
+}
+
+function getPrintablesSearchUrl(filament: Filament): string {
+  const searchTerms = [filament.material].filter(Boolean).join(' ');
+  return `https://www.printables.com/search/models?q=${encodeURIComponent(searchTerms)}`;
+}
+
+function getThingiverseSearchUrl(filament: Filament): string {
+  const searchTerms = [filament.material].filter(Boolean).join(' ');
+  return `https://www.thingiverse.com/search?q=${encodeURIComponent(searchTerms)}&type=things`;
+}
+
+// Map known brands to their subreddit names
+const BRAND_SUBREDDITS: Record<string, string> = {
+  'Bambu Lab': 'BambuLab',
+  'Polymaker': 'Polymaker',
+  'Prusa': 'prusa3d',
+  'Hatchbox': 'hatchbox',
+  'eSUN': 'eSUN3D',
+  'Creality': 'Creality',
+  'Elegoo': 'ElegooMars',
+  'Anycubic': 'AnycubicPhoton',
+  'Sunlu': 'SUNLU',
+  'Overture': 'Overture3D',
+};
+
+function buildForumLinks(filament: Filament) {
+  const links: Array<{
+    name: string;
+    description: string;
+    url: string;
+    icon: React.ReactNode;
+  }> = [];
+
+  // Reddit: general 3D printing subreddit search
+  links.push({
+    name: 'r/3Dprinting',
+    description: `Search for ${filament.vendor} ${filament.material}`,
+    url: getSubredditSearchUrl('3Dprinting', filament),
+    icon: <MessagesSquare className="w-5 h-5" />,
+  });
+
+  // Reddit: troubleshooting subreddit search
+  links.push({
+    name: 'r/FixMyPrint',
+    description: `Troubleshooting ${filament.material} prints`,
+    url: getSubredditSearchUrl('FixMyPrint', filament),
+    icon: <MessageSquare className="w-5 h-5" />,
+  });
+
+  // Brand-specific subreddit (only if mapped)
+  const vendor = filament.vendor || '';
+  const brandSub = BRAND_SUBREDDITS[vendor];
+  if (brandSub) {
+    links.push({
+      name: `r/${brandSub}`,
+      description: `${vendor} community`,
+      url: getSubredditSearchUrl(brandSub, filament),
+      icon: <Users className="w-5 h-5" />,
+    });
+  }
+
+  // Reddit-wide search
+  links.push({
+    name: 'Reddit Search',
+    description: `Search all of Reddit for this filament`,
+    url: getRedditSearchUrl(filament),
+    icon: <Search className="w-5 h-5" />,
+  });
+
+  // Google reviews search
+  links.push({
+    name: 'Google Reviews',
+    description: `Search Google for reviews`,
+    url: getGoogleReviewUrl(filament),
+    icon: <Globe className="w-5 h-5" />,
+  });
+
+  // Printables model search
+  links.push({
+    name: 'Printables',
+    description: `Models printed with ${filament.material}`,
+    url: getPrintablesSearchUrl(filament),
+    icon: <Box className="w-5 h-5" />,
+  });
+
+  // Thingiverse model search
+  links.push({
+    name: 'Thingiverse',
+    description: `Models for ${filament.material} filament`,
+    url: getThingiverseSearchUrl(filament),
+    icon: <Box className="w-5 h-5" />,
+  });
+
+  return links;
+}
+
 export function CommunityTabContent({ filament }: CommunityTabContentProps) {
   const {
     reviews,
@@ -52,32 +155,7 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
     flagReview({ reviewId, reason, details });
   };
 
-  const forumLinks = [
-    {
-      name: 'r/3Dprinting',
-      description: 'General 3D printing discussions',
-      url: getSubredditSearchUrl('3Dprinting', filament),
-      icon: <MessagesSquare className="w-5 h-5" />,
-    },
-    {
-      name: 'r/FixMyPrint',
-      description: 'Troubleshooting and print issues',
-      url: getSubredditSearchUrl('FixMyPrint', filament),
-      icon: <MessageSquare className="w-5 h-5" />,
-    },
-    {
-      name: 'r/BambuLab',
-      description: 'Bambu Lab printer community',
-      url: getSubredditSearchUrl('BambuLab', filament),
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      name: 'Reddit Search',
-      description: 'Search all of Reddit',
-      url: getRedditSearchUrl(filament),
-      icon: <ExternalLink className="w-5 h-5" />,
-    },
-  ];
+  const forumLinks = buildForumLinks(filament);
 
   return (
     <div className="space-y-6">
@@ -145,14 +223,14 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
               <MessagesSquare className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Community Discussions</h3>
+              <h3 className="text-lg font-semibold">Community Discussions & Resources</h3>
               <p className="text-xs text-muted-foreground">
-                Find discussions about {filament.vendor} {filament.material}
+                Find discussions, reviews, and models for {filament.vendor} {filament.material}
               </p>
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {forumLinks.map((link, idx) => (
               <a
                 key={idx}
@@ -179,7 +257,7 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
 
           <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1">
             <ExternalLink className="w-3 h-3" />
-            Links open in a new tab and search for "{filament.vendor} {filament.material}"
+            All links open in a new tab with product-specific searches
           </p>
         </CardContent>
       </Card>
