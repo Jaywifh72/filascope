@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   Thermometer, 
   Circle, 
@@ -13,7 +14,8 @@ import {
   CheckCircle2,
   Settings2,
   Droplets,
-  X
+  X,
+  Palette
 } from "lucide-react";
 import { FeatureHelpIcon } from "@/components/onboarding";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
@@ -32,6 +34,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { COLOR_FAMILIES } from "@/lib/colorMatchUtils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { isValidHexColor } from "@/lib/utils";
 
 // Material Base options - using category IDs that match MATERIAL_CATEGORIES
 const MATERIAL_BASE_OPTIONS = [
@@ -133,6 +139,10 @@ export function TechnicalConsoleSidebar({
   const [materialsOpen, setMaterialsOpen] = useState(true);
   const [brandsOpen, setBrandsOpen] = useState(true);
   const [reinforcedOpen, setReinforcedOpen] = useState(true);
+  const [colorOpen, setColorOpen] = useState(false);
+  const [customHexInput, setCustomHexInput] = useState('');
+
+  const navigate = useNavigate();
 
   // Calculate active filter count
   const activeFilterCount = useMemo(() => {
@@ -533,6 +543,62 @@ export function TechnicalConsoleSidebar({
               {option.label}
             </button>
           ))}
+        </div>
+      </CollapsibleFilterSection>
+
+      {/* Color Search - Collapsible */}
+      <CollapsibleFilterSection
+        title="Find by Color"
+        icon={Palette}
+        isOpen={colorOpen}
+        onOpenChange={setColorOpen}
+      >
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-1.5">
+            {COLOR_FAMILIES.filter(f => !f.hex.includes('gradient')).slice(0, 12).map((family) => (
+              <button
+                key={family.name}
+                onClick={() => navigate(`/colors?hex=${family.hex.replace('#', '')}`)}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-gray-700 bg-gray-800 text-gray-300 text-xs hover:border-primary/50 hover:bg-primary/5 transition-all"
+                title={family.name}
+              >
+                <span
+                  className="w-3 h-3 rounded-full border border-gray-600 shrink-0"
+                  style={{ backgroundColor: family.hex }}
+                />
+                {family.name}
+              </button>
+            ))}
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="text-xs text-primary hover:text-primary/80 transition-colors">
+                Custom hex code...
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-52 p-3 space-y-2" side="right">
+              <label className="text-xs text-muted-foreground">Enter hex code</label>
+              <Input
+                value={customHexInput}
+                onChange={(e) => setCustomHexInput(e.target.value)}
+                placeholder="#FF5733"
+                className="h-8 text-xs font-mono"
+                maxLength={7}
+              />
+              <button
+                onClick={() => {
+                  const hex = customHexInput.startsWith('#') ? customHexInput : `#${customHexInput}`;
+                  if (isValidHexColor(hex)) {
+                    navigate(`/colors?hex=${hex.replace('#', '')}`);
+                  }
+                }}
+                disabled={!isValidHexColor(customHexInput.startsWith('#') ? customHexInput : `#${customHexInput}`)}
+                className="w-full text-xs bg-primary/20 text-primary hover:bg-primary/30 py-1.5 rounded-md transition-colors disabled:opacity-50"
+              >
+                Search Color
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </CollapsibleFilterSection>
 

@@ -98,6 +98,7 @@ const ReferenceInfluencers = lazy(() => import("./pages/ReferenceInfluencers"));
 const ReferenceSpecialty = lazy(() => import("./pages/ReferenceSpecialty"));
 const ReferenceMethodology = lazy(() => import("./pages/ReferenceMethodology"));
 const HueForgeFinder = lazy(() => import("./pages/HueForgeFinder"));
+const ColorFinder = lazy(() => import("./pages/ColorFinder"));
 const TDDatabase = lazy(() => import("./pages/TDDatabase"));
 const QuizScoringTest = lazy(() => import("./components/reference/repos/quiz/QuizScoringTest"));
 const LearningCenter = lazy(() => import("./pages/LearningCenter"));
@@ -229,6 +230,7 @@ const App = () => (
                   <Route path="/reference/methodology" element={<ReferenceMethodology />} />
                   <Route path="/reference/repos/quiz-test" element={<QuizScoringTest />} />
                   <Route path="/hueforge-filaments" element={<HueForgeFinder />} />
+                  <Route path="/colors" element={<ColorFinder />} />
                   <Route path="/td-database" element={<TDDatabase />} />
                   <Route path="/learn" element={<LearningCenter />} />
                   <Route path="/learn/:slug" element={<GuideDetail />} />
