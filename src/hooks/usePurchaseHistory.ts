@@ -3,8 +3,8 @@ import { useAuth } from "./useAuth";
 import { useBrowseHistory } from "./useBrowseHistory";
 import { getSuggestedUpgrades } from "@/lib/personalizationEngine";
 
-// Since user_purchases table may not exist, derive purchase-like data from browse history
-// This provides a graceful fallback while maintaining the interface
+// Derives purchase-like personalization signals from browse history
+// Used by the personalization engine; actual purchase tracking uses useUserPurchases
 
 export interface PurchaseAnalysis {
   purchasedMaterials: string[];
@@ -24,7 +24,6 @@ export function usePurchaseHistory(): PurchaseAnalysis & { isLoading: boolean } 
   const { history, isLoading } = useBrowseHistory(50);
 
   const analysis: PurchaseAnalysis = useMemo(() => {
-    // Derive materials from browse history as a proxy
     const materialsSet = new Set<string>();
     const brandCounts: Record<string, number> = {};
     let totalPricePerKg = 0;
@@ -58,7 +57,7 @@ export function usePurchaseHistory(): PurchaseAnalysis & { isLoading: boolean } 
       purchasedMaterials,
       preferredBrands,
       avgPricePerKg,
-      purchaseCount: 0, // No actual purchases tracked yet
+      purchaseCount: 0,
       daysSinceLastPurchase: null,
       suggestedUpgrades,
     };

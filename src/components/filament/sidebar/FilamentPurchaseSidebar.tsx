@@ -28,6 +28,8 @@ import { SidebarPriceHistory } from './SidebarPriceHistory';
 import { PriceAlertPopover } from './PriceAlertPopover';
 import { PrivateNotePopover } from '@/components/notes/PrivateNotePopover';
 import { PrivateNoteIndicator } from '@/components/notes/PrivateNoteIndicator';
+import { MarkPurchasedButton } from '@/components/purchases/MarkPurchasedDialog';
+import { PurchaseBuyToast } from '@/components/purchases/PurchaseBuyToast';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -119,6 +121,8 @@ export function FilamentPurchaseSidebar({
   
   // State to force re-fetch after admin refresh
   const [priceRefreshKey, setPriceRefreshKey] = useState(0);
+  // Track buy-click for purchase toast
+  const [buyClicked, setBuyClicked] = useState(false);
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
@@ -130,6 +134,7 @@ export function FilamentPurchaseSidebar({
     });
     
     window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+    setBuyClicked(true);
   };
   
   // Handler for admin price refresh - invalidates cache and triggers re-fetch
@@ -334,6 +339,15 @@ export function FilamentPurchaseSidebar({
             {isComparing ? 'Remove from Compare' : 'Add to Compare'}
           </Button>
 
+          {/* Mark as Purchased */}
+          <MarkPurchasedButton
+            productId={filamentId}
+            productType="filament"
+            productName={productTitle || 'Filament'}
+            currentPrice={displayPrice}
+            storeName={regionalPriceResult?.store?.name || finalRetailerName}
+          />
+
           {/* Private Note Button */}
           <PrivateNotePopover
             productId={filamentId}
@@ -419,6 +433,17 @@ export function FilamentPurchaseSidebar({
           </div>
         </div>
       </aside>
+
+      {/* Purchase toast after clicking buy */}
+      <PurchaseBuyToast
+        productId={filamentId}
+        productType="filament"
+        productName={productTitle || 'Filament'}
+        currentPrice={displayPrice}
+        storeName={regionalPriceResult?.store?.name || finalRetailerName}
+        triggered={buyClicked}
+        onDismiss={() => setBuyClicked(false)}
+      />
     </TooltipProvider>
   );
 }

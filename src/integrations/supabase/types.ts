@@ -5248,6 +5248,7 @@ export type Database = {
           updated_at: string
           user_id: string
           value_rating: number | null
+          verified_purchase: boolean | null
         }
         Insert: {
           bed_temp?: number | null
@@ -5274,6 +5275,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           value_rating?: number | null
+          verified_purchase?: boolean | null
         }
         Update: {
           bed_temp?: number | null
@@ -5300,6 +5302,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           value_rating?: number | null
+          verified_purchase?: boolean | null
         }
         Relationships: [
           {
@@ -7474,26 +7477,41 @@ export type Database = {
       user_purchases: {
         Row: {
           created_at: string | null
+          currency: string | null
           filament_id: string
           id: string
           notes: string | null
+          price_paid: number | null
+          product_type: string
           purchase_date: string | null
+          store_name: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          currency?: string | null
           filament_id: string
           id?: string
           notes?: string | null
+          price_paid?: number | null
+          product_type?: string
           purchase_date?: string | null
+          store_name?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          currency?: string | null
           filament_id?: string
           id?: string
           notes?: string | null
+          price_paid?: number | null
+          product_type?: string
           purchase_date?: string | null
+          store_name?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
