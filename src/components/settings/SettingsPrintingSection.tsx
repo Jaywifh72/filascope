@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Printer, Loader2, Plus } from "lucide-react";
 import { useMultiplePrinters } from "@/hooks/useMultiplePrinters";
 import type { ProfileData, PrintingSetup } from "@/hooks/useSettings";
-import { NOZZLE_SIZES, NOZZLE_MATERIALS, NOZZLE_MATERIAL_LABELS } from "@/hooks/useNozzleConfig";
+import { NOZZLE_SIZES, NOZZLE_MATERIALS, NOZZLE_MATERIAL_LABELS, NOZZLE_MATERIAL_DESCRIPTIONS, type NozzleMaterial } from "@/hooks/useNozzleConfig";
 import { Link } from "react-router-dom";
 
 const EXPERIENCE_LEVELS = [
@@ -126,11 +126,8 @@ export function SettingsPrintingSection({ profile, setProfile, saving, onSave }:
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            {profile.printing_setup.default_nozzle_material === "brass"
-              ? "Good for PLA, PETG — not recommended for abrasive filaments."
-              : profile.printing_setup.default_nozzle_material === "hardened-steel"
-              ? "Handles carbon fiber, glass fiber, and other abrasive materials."
-              : "Maximum durability for highly abrasive filaments."}
+            {NOZZLE_MATERIAL_DESCRIPTIONS[(profile.printing_setup.default_nozzle_material || "brass") as NozzleMaterial] 
+              || NOZZLE_MATERIAL_DESCRIPTIONS["brass"]}
           </p>
         </div>
 

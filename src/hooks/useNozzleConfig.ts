@@ -7,7 +7,7 @@ export type NozzleSize = typeof NOZZLE_SIZES[number];
 export const FLOW_TYPES = ["regular", "high-flow"] as const;
 export type FlowType = typeof FLOW_TYPES[number];
 
-export const NOZZLE_MATERIALS = ["brass", "hardened-steel", "tungsten-carbide"] as const;
+export const NOZZLE_MATERIALS = ["brass", "hardened-steel", "stainless-steel", "ruby-sapphire", "tungsten-carbide"] as const;
 export type NozzleMaterial = typeof NOZZLE_MATERIALS[number];
 
 export const FLOW_TYPE_LABELS: Record<FlowType, string> = {
@@ -18,7 +18,17 @@ export const FLOW_TYPE_LABELS: Record<FlowType, string> = {
 export const NOZZLE_MATERIAL_LABELS: Record<NozzleMaterial, string> = {
   "brass": "Brass",
   "hardened-steel": "Hardened Steel",
+  "stainless-steel": "Stainless Steel",
+  "ruby-sapphire": "Ruby / Sapphire",
   "tungsten-carbide": "Tungsten Carbide",
+};
+
+export const NOZZLE_MATERIAL_DESCRIPTIONS: Record<NozzleMaterial, string> = {
+  "brass": "Standard nozzle material. Great for PLA, PETG, ABS, and most common filaments. Not suitable for abrasive materials.",
+  "hardened-steel": "Maximum durability for abrasive filaments like carbon fiber, glass fiber, and metal-filled materials.",
+  "stainless-steel": "Good chemical resistance with moderate durability. Suitable for food-safe and medical applications.",
+  "ruby-sapphire": "Premium option with excellent wear resistance for highly abrasive materials. Minimal effect on thermal performance.",
+  "tungsten-carbide": "Extreme hardness and thermal conductivity. Top-tier choice for abrasive and high-temperature materials.",
 };
 
 interface NozzleConfig {
