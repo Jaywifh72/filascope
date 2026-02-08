@@ -11,7 +11,7 @@ export function ViewToggle({ viewMode, onViewModeChange, className }: ViewToggle
   return (
     <div 
       className={cn(
-        "relative flex items-center bg-gray-800 rounded-lg p-1",
+        "relative flex items-center bg-muted rounded-lg p-1",
         className
       )}
       role="tablist"
@@ -32,8 +32,8 @@ export function ViewToggle({ viewMode, onViewModeChange, className }: ViewToggle
         className={cn(
           "relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200",
           viewMode === "grid" 
-            ? "text-white" 
-            : "text-gray-400 hover:text-white"
+            ? "text-primary-foreground" 
+            : "text-muted-foreground hover:text-foreground"
         )}
         role="tab"
         aria-selected={viewMode === "grid"}
@@ -50,8 +50,8 @@ export function ViewToggle({ viewMode, onViewModeChange, className }: ViewToggle
         className={cn(
           "relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200",
           viewMode === "list" 
-            ? "text-white" 
-            : "text-gray-400 hover:text-white"
+            ? "text-primary-foreground" 
+            : "text-muted-foreground hover:text-foreground"
         )}
         role="tab"
         aria-selected={viewMode === "list"}
