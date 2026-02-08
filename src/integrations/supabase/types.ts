@@ -7268,22 +7268,31 @@ export type Database = {
       }
       user_browse_history: {
         Row: {
+          duration_seconds: number | null
           filament_id: string | null
           id: string
+          printer_id: string | null
+          product_type: string
           session_id: string | null
           user_id: string | null
           viewed_at: string | null
         }
         Insert: {
+          duration_seconds?: number | null
           filament_id?: string | null
           id?: string
+          printer_id?: string | null
+          product_type?: string
           session_id?: string | null
           user_id?: string | null
           viewed_at?: string | null
         }
         Update: {
+          duration_seconds?: number | null
           filament_id?: string | null
           id?: string
+          printer_id?: string | null
+          product_type?: string
           session_id?: string | null
           user_id?: string | null
           viewed_at?: string | null
@@ -7336,6 +7345,20 @@ export type Database = {
             columns: ["filament_id"]
             isOneToOne: false
             referencedRelation: "v_suspect_regional_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_browse_history_printer_id_fkey"
+            columns: ["printer_id"]
+            isOneToOne: false
+            referencedRelation: "printers_with_regional"
             referencedColumns: ["id"]
           },
         ]

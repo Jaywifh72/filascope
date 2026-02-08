@@ -264,6 +264,29 @@ export function useBrowseHistory(limit = 10) {
     },
   });
 
+  const removeFromHistoryMutation = useMutation({
+    mutationFn: async ({ productId, productType }: { productId: string; productType: string }) => {
+      // Remove from localStorage
+      const items = getLocalHistory().filter(
+        (i) => !(i.product_id === productId && i.product_type === productType)
+      );
+      saveLocalHistory(items);
+
+      // Remove from Supabase
+      if (user?.id) {
+        const col = productType === "printer" ? "printer_id" : "filament_id";
+        await supabase
+          .from("user_browse_history")
+          .delete()
+          .eq("user_id", user.id)
+          .eq(col, productId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["browse-history"] });
+    },
+  });
+
   const clearHistory = useMutation({
     mutationFn: async () => {
       clearLocalHistory();
@@ -284,11 +307,19 @@ export function useBrowseHistory(limit = 10) {
     [addToHistory]
   );
 
+  const removeFromHistoryFn = useCallback(
+    (productId: string, productType: string) => {
+      removeFromHistoryMutation.mutate({ productId, productType });
+    },
+    [removeFromHistoryMutation]
+  );
+
   return {
     history: query.data || [],
     isLoading: query.isLoading,
     addToHistory: addView,
     clearHistory: clearHistory.mutate,
+    removeFromHistory: removeFromHistoryFn,
     /** Raw localStorage items for instant display without waiting for Supabase */
     localItems: getLocalHistory(),
   };
