@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Settings, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { VaultProfile, VaultCounts } from "@/hooks/useVaultProfile";
 
 interface VaultHeroBarProps {
@@ -33,9 +34,19 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 export function VaultHeroBar({ profile, counts, onStatClick }: VaultHeroBarProps) {
+  const navigate = useNavigate();
   const memberSince = profile?.created_at
     ? format(new Date(profile.created_at), "MMMM yyyy")
     : null;
+
+  const handleViewProfile = () => {
+    if (!profile?.username_slug) {
+      toast.info("Set a username to enable your public profile");
+      navigate("/settings");
+      return;
+    }
+    navigate(`/user/${profile.username_slug}`);
+  };
 
   return (
     <div className="rounded-xl bg-card/50 border border-border/50 p-5 mb-6">
@@ -60,11 +71,9 @@ export function VaultHeroBar({ profile, counts, onStatClick }: VaultHeroBarProps
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="ghost" size="sm" asChild className="shrink-0">
-            <Link to={`/user/${profile?.id || ""}`}>
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View Profile
-            </Link>
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={handleViewProfile}>
+            <ExternalLink className="w-4 h-4 mr-2" />
+            View Profile
           </Button>
           <Button variant="outline" size="sm" asChild className="shrink-0">
             <Link to="/settings">

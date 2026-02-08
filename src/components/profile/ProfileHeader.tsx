@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { ExternalLink, Settings, UserPlus } from "lucide-react";
+import { ExternalLink, Settings, UserPlus, Share2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import type { PublicProfile, ProfileBadge } from "@/hooks/usePublicProfile";
 
 // Social platform configs
@@ -75,6 +76,27 @@ export function ProfileHeader({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {/* Share Profile */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const slug = profile.username_slug || profile.id;
+                      const url = `${window.location.origin}/user/${slug}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        toast.success("Profile link copied to clipboard!");
+                      });
+                    }}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy profile link</TooltipContent>
+              </Tooltip>
+
               {isOwnProfile ? (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/settings">
