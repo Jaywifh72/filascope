@@ -8,6 +8,8 @@ import { DealFilters } from "@/components/deals/DealFilters";
 import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterSheet";
 import { DealNotificationSignup } from "@/components/deals/DealNotificationSignup";
 import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
+import { BrandDistribution } from "@/components/deals/BrandDistribution";
+import { BrandQuickFilters } from "@/components/deals/BrandQuickFilters";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
 import { ItemListSchema } from "@/components/seo";
@@ -110,27 +112,30 @@ const Deals = () => {
             </p>
 
             {/* Stats Row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mb-8">
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mb-4">
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-green-400" />
                 <span>
-                  <span className="text-foreground font-medium">{groupedDeals.length}</span> deals
+                  <span className="text-foreground font-medium">{groupedDeals.length}</span> {groupedDeals.length === 1 ? "deal" : "deals"}
                   {deals.length !== groupedDeals.length && (
-                    <span className="text-muted-foreground"> ({deals.length} variants)</span>
+                    <span className="text-muted-foreground"> ({deals.length} {deals.length === 1 ? "variant" : "variants"})</span>
                   )}
                 </span>
               </div>
-              <span className="hidden md:inline text-gray-600">•</span>
+              <span className="hidden md:inline text-muted-foreground/50">•</span>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span>Prices may vary</span>
               </div>
-              <span className="hidden md:inline text-gray-600">•</span>
+              <span className="hidden md:inline text-muted-foreground/50">•</span>
               <DealNotificationSignup
                 availableMaterials={availableMaterials}
                 availableBrands={availableBrands}
               />
             </div>
+
+            {/* Brand Distribution */}
+            <BrandDistribution groupedDeals={groupedDeals} className="mb-6" />
           </div>
         </section>
 
@@ -185,6 +190,14 @@ const Deals = () => {
                 userRegionFlag={userRegionFlag}
               />
             </div>
+
+            {/* Brand Quick Filter Chips */}
+            <BrandQuickFilters
+              groupedDeals={groupedDeals}
+              selectedBrands={selectedBrands}
+              onBrandChange={setSelectedBrands}
+              className="mt-3"
+            />
           </div>
         </section>
 
@@ -193,9 +206,9 @@ const Deals = () => {
           <section className="px-6 md:px-10 pb-4">
             <div className="max-w-[1600px] mx-auto">
               <p className="text-sm text-muted-foreground">
-                Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> deals
+                Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> {groupedDeals.length === 1 ? "deal" : "deals"}
                 {deals.length !== groupedDeals.length && (
-                  <span> ({deals.length} variants)</span>
+                  <span> ({deals.length} {deals.length === 1 ? "variant" : "variants"})</span>
                 )}{" "}
                 of <span className="text-foreground font-medium">{totalDeals}</span> total
               </p>

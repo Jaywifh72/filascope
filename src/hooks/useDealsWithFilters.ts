@@ -195,7 +195,12 @@ export function useDealsWithFilters() {
         }
         return true;
       })
-      .sort((a, b) => b.discount - a.discount);
+      // Sort: local deals first, then by discount descending
+      .sort((a, b) => {
+        if (a.isLocal && !b.isLocal) return -1;
+        if (!a.isLocal && b.isLocal) return 1;
+        return b.discount - a.discount;
+      });
   }, [dealsWithStoreInfo, selectedMaterials, selectedBrands, minDiscount, priceRange, showLocalOnly]);
 
   // Group deals by product (color variants combined)
