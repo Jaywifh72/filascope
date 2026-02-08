@@ -69,6 +69,7 @@ export function useProductReviews(productId: string, productType: string = "fila
         .eq("product_type", productType)
         .eq("is_public", true)
         .eq("status", "published")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

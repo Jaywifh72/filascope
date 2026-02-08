@@ -5228,6 +5228,7 @@ export type Database = {
           body: string
           cons: string[] | null
           created_at: string
+          deleted_at: string | null
           ease_rating: number | null
           headline: string
           helpful_count: number
@@ -5253,6 +5254,7 @@ export type Database = {
           body: string
           cons?: string[] | null
           created_at?: string
+          deleted_at?: string | null
           ease_rating?: number | null
           headline: string
           helpful_count?: number
@@ -5278,6 +5280,7 @@ export type Database = {
           body?: string
           cons?: string[] | null
           created_at?: string
+          deleted_at?: string | null
           ease_rating?: number | null
           headline?: string
           helpful_count?: number
