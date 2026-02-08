@@ -5535,6 +5535,7 @@ export type Database = {
           notification_settings: Json
           preferences: Json
           preferred_currency: string | null
+          preferred_region: string | null
           preferred_slicer: string | null
           printing_setup: Json
           projects_public: boolean
@@ -5566,6 +5567,7 @@ export type Database = {
           notification_settings?: Json
           preferences?: Json
           preferred_currency?: string | null
+          preferred_region?: string | null
           preferred_slicer?: string | null
           printing_setup?: Json
           projects_public?: boolean
@@ -5597,6 +5599,7 @@ export type Database = {
           notification_settings?: Json
           preferences?: Json
           preferred_currency?: string | null
+          preferred_region?: string | null
           preferred_slicer?: string | null
           printing_setup?: Json
           projects_public?: boolean
