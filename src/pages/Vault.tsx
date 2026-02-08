@@ -33,6 +33,7 @@ import {
   ArrowUpDown,
   Filter,
   Bell,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -44,6 +45,8 @@ import { ShareWishlistDialog } from "@/components/wishlist/ShareWishlistDialog";
 import { VaultSkeleton } from "@/components/skeletons/VaultSkeleton";
 import { PriceAlertsSection } from "@/components/account/PriceAlertsSection";
 import { useDatabasePriceAlerts } from "@/hooks/useDatabasePriceAlerts";
+import { ViewHistorySection } from "@/components/account/ViewHistorySection";
+import { useBrowseHistory } from "@/hooks/useBrowseHistory";
 
 const Vault = () => {
   const { user, loading } = useAuth();
@@ -51,6 +54,7 @@ const Vault = () => {
   const { items, stats, updateItem, removeFromWishlist, refetch: refetchWishlist } = useWishlist();
   const { collections, createCollection, updateCollection, deleteCollection, refetch: refetchCollections } = useWishlistCollections();
   const { alerts: priceAlerts } = useDatabasePriceAlerts();
+  const { history: browseHistory } = useBrowseHistory(20);
   
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
@@ -323,7 +327,7 @@ const Vault = () => {
       </div>
 
       <Tabs defaultValue="liked" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="liked" className="flex items-center gap-2">
             <Heart className="w-4 h-4" />
             Wishlist ({stats.totalItems})
@@ -343,6 +347,10 @@ const Vault = () => {
           <TabsTrigger value="alerts" className="flex items-center gap-2">
             <Bell className="w-4 h-4" />
             Alerts ({priceAlerts.length})
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="w-4 h-4" />
+            History ({browseHistory.length})
           </TabsTrigger>
         </TabsList>
 
@@ -629,6 +637,10 @@ const Vault = () => {
 
         <TabsContent value="alerts" className="space-y-4">
           <PriceAlertsSection />
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          <ViewHistorySection />
         </TabsContent>
       </Tabs>
 

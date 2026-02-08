@@ -53,6 +53,8 @@ import {
   useTrackPrinterView, 
   usePrinterActivityStats
 } from "@/hooks/usePrinterAnalytics";
+import { useBrowseHistory } from "@/hooks/useBrowseHistory";
+import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { useNavigate } from "react-router-dom";
 import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import {
@@ -153,6 +155,14 @@ const PrinterDetail = () => {
   // Track page view and fetch real analytics
   useTrackPrinterView(printer?.id);
   const { data: activityStats } = usePrinterActivityStats(printer?.id);
+  
+  // Track browse history
+  const { addToHistory } = useBrowseHistory();
+  useEffect(() => {
+    if (printer?.id) {
+      addToHistory(printer.id, 'printer');
+    }
+  }, [printer?.id]);
 
 
   // Fetch live price from store
@@ -1053,6 +1063,17 @@ const PrinterDetail = () => {
             />
           );
         })()}
+
+        {/* Recently Viewed Section */}
+        <div className="max-w-7xl mx-auto px-4 mt-8">
+          <RecentlyViewedSection
+            limit={5}
+            excludeId={printer.id}
+            showClear={false}
+            compact
+            title="Recently Viewed"
+          />
+        </div>
 
         {/* Similar Printers Comparison Section */}
         <SimilarPrintersSection
