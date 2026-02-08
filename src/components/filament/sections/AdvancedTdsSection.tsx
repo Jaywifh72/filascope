@@ -62,7 +62,7 @@ export function DetailsSectionSimple({ filament, className }: AdvancedTdsSection
         { label: 'Transmission Distance', value: filament.transmission_distance ? `${filament.transmission_distance}` : null },
         { label: 'Color Family', value: filament.color_family },
         { label: 'Color Hex', value: filament.color_hex ? `#${filament.color_hex}` : null },
-        { label: 'Finish Type', value: filament.finish_type },
+        { label: 'Finish Type', value: filament.finish_type && !/^\d+(\.\d+)?$/.test(filament.finish_type) ? filament.finish_type : null },
         { label: 'Food Contact Rating', value: filament.food_contact_rating },
       ],
     },

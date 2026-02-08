@@ -252,7 +252,7 @@ export function FilamentHeroSection({
                   {displayFilament.net_weight_g}g
                 </Badge>
               )}
-              {displayFilament.finish_type && (
+              {displayFilament.finish_type && !/^\d+(\.\d+)?$/.test(displayFilament.finish_type) && (
                 <Badge variant="secondary" className="text-xs px-2.5 py-1">{displayFilament.finish_type}</Badge>
               )}
               {displayFilament.is_nozzle_abrasive && (
