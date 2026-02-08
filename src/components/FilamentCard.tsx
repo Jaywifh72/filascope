@@ -16,7 +16,9 @@ import {
   MapPin,
   Clock,
   ExternalLink,
-  Lightbulb
+  Lightbulb,
+  Printer,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -33,6 +35,7 @@ import { calculateUnifiedScore, type FilamentForScoring, getScoreNumberColor, SC
 import { Tooltip as ScoreTooltip, TooltipContent as ScoreTooltipContent, TooltipTrigger as ScoreTooltipTrigger } from "@/components/ui/tooltip";
 import { REGIONS } from "@/config/regions";
 import { usePriceFreshness } from "@/hooks/usePriceFreshness";
+import { useUserPrinterPreference } from "@/hooks/useUserPrinterPreference";
 
 // Material badge colors - using purple as specified
 const MATERIAL_COLORS: Record<string, string> = {
@@ -119,6 +122,8 @@ interface FilamentCardProps {
   variantIndicators?: VariantIndicators;  // Show color swatches and weight options
   // Community rating (from bulk hook)
   communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
+  // Cost per print toggle
+  showCostPerPrint?: boolean;
 }
 
 // Get the single most important standout feature
@@ -161,7 +166,7 @@ function getStandoutFeature(filament: Filament): { label: string; colorClass: st
   return null;
 }
 
-export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators, communityRating }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false }: FilamentCardProps) {
   // For grouped products (multiple variants), only show out of stock if ALL variants are out
   // For single products, use the individual filament's status
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
@@ -258,6 +263,35 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
 
   // Budget-friendly threshold
   const isBudgetFriendly = pricePerKg && pricePerKg < 20;
+
+  // Printer compatibility check
+  const { printerName: savedPrinterName, nozzleTempMax, bedTempMax, hasEnclosure, hasSavedPrinter } = useUserPrinterPreference();
+  
+  const printerCompatibility = useMemo(() => {
+    if (!hasSavedPrinter) return null;
+    
+    const nozzleMin = filament.nozzle_temp_min_c;
+    const needsEnclosure = ["ABS", "ASA", "NYLON", "PC", "PEEK"].some(
+      (m) => filament.material?.toUpperCase()?.includes(m)
+    );
+    const isAbrasive = filament.is_nozzle_abrasive;
+
+    let level: "compatible" | "warning" | "incompatible" = "compatible";
+    let message = "Compatible with your printer";
+
+    if (nozzleMin && nozzleTempMax && nozzleMin > nozzleTempMax) {
+      level = "incompatible";
+      message = "Not recommended for your printer";
+    } else if (needsEnclosure && !hasEnclosure) {
+      level = "warning";
+      message = "May need enclosure";
+    } else if (isAbrasive) {
+      level = "warning";
+      message = "Hardened nozzle needed";
+    }
+
+    return { level, message };
+  }, [hasSavedPrinter, filament.nozzle_temp_min_c, filament.material, filament.is_nozzle_abrasive, nozzleTempMax, hasEnclosure]);
 
   // Display title - use override for grouped products or strip vendor and size/weight from product title
   const getDisplayTitle = () => {
@@ -695,6 +729,15 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <ExternalLink className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Check price at store</span>
           </div>
+       )}
+
+        {/* Cost per print estimate */}
+        {showCostPerPrint && shouldShowPrice && pricePerKg && (
+          <div className="px-6 -mt-1 pb-1">
+            <span className="text-xs text-muted-foreground">
+              ~{formatPrice(pricePerKg * 0.1)} per 100g print
+            </span>
+          </div>
         )}
       </div>
 
@@ -733,6 +776,41 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             <Lightbulb className="w-3.5 h-3.5" />
             <span className="text-[13px] font-medium">TD {filament.transmission_distance}</span>
           </div>
+        )}
+        
+        {/* Printer Compatibility Badge */}
+        {printerCompatibility && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 border",
+                printerCompatibility.level === "compatible"
+                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                  : printerCompatibility.level === "warning"
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
+                  : "bg-red-500/15 border-red-500/30 text-red-400"
+              )}>
+                {printerCompatibility.level === "compatible" ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : printerCompatibility.level === "warning" ? (
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5" />
+                )}
+                <span className="text-[13px] font-medium">
+                  {printerCompatibility.level === "compatible" ? "Compatible" : 
+                   printerCompatibility.level === "warning" ? "Caution" : "Incompatible"}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-[220px]">
+              <div className="flex items-center gap-1.5">
+                <Printer className="w-3 h-3 text-muted-foreground" />
+                <span className="font-medium">{savedPrinterName || "Your Printer"}</span>
+              </div>
+              <p className="mt-1 text-muted-foreground">{printerCompatibility.message}</p>
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
 

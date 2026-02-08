@@ -30,6 +30,8 @@ import { PrivateNotePopover } from '@/components/notes/PrivateNotePopover';
 import { PrivateNoteIndicator } from '@/components/notes/PrivateNoteIndicator';
 import { MarkPurchasedButton } from '@/components/purchases/MarkPurchasedDialog';
 import { PurchaseBuyToast } from '@/components/purchases/PurchaseBuyToast';
+import { AddToProjectButton } from '@/components/projects/AddToProjectButton';
+import { CheaperAlternativeCallout } from '@/components/filament/CheaperAlternativeCallout';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -339,6 +341,12 @@ export function FilamentPurchaseSidebar({
             {isComparing ? 'Remove from Compare' : 'Add to Compare'}
           </Button>
 
+          {/* Add to Project */}
+          <AddToProjectButton
+            filamentId={filamentId}
+            productTitle={productTitle || 'Filament'}
+          />
+
           {/* Mark as Purchased */}
           <MarkPurchasedButton
             productId={filamentId}
@@ -423,6 +431,14 @@ export function FilamentPurchaseSidebar({
               Open Print Calculator
             </button>
           )}
+
+          {/* Similar But Cheaper callout */}
+          <CheaperAlternativeCallout
+            filamentId={filamentId}
+            material={material}
+            vendor={vendor}
+            currentPricePerKg={displayPricePerKg}
+          />
 
           {/* Disclaimer */}
           <div className="pt-4 border-t border-border/40">

@@ -271,6 +271,11 @@ const Finder = () => {
     return saved === "list" ? "list" : "grid";
   });
 
+  // Cost per print toggle
+  const [showCostPerPrint, setShowCostPerPrint] = useState(() => {
+    return localStorage.getItem("finderShowCostPerPrint") === "true";
+  });
+
   // Bulk community ratings for all filaments
   const { data: communityRatingsMap } = useBulkCommunityRatings();
   
@@ -310,10 +315,14 @@ const Finder = () => {
     };
   }, [setMultiSelectMode, commitPendingItems, clearPendingItems]);
   
-  // Persist viewMode to localStorage
+  // Persist viewMode and costPerPrint to localStorage
   useEffect(() => {
     localStorage.setItem("finderViewMode", viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem("finderShowCostPerPrint", showCostPerPrint ? "true" : "false");
+  }, [showCostPerPrint]);
   
   // Clear search term on fresh homepage visit (mount with no search params)
   // This ensures returning visitors see the full catalog, not filtered results
@@ -2022,6 +2031,16 @@ const Finder = () => {
             )}
           </p>
           <div className="flex items-center gap-3">
+            {/* Cost per print toggle */}
+            <label className="hidden sm:flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <input
+                type="checkbox"
+                checked={showCostPerPrint}
+                onChange={(e) => setShowCostPerPrint(e.target.checked)}
+                className="rounded border-border w-3.5 h-3.5 accent-primary"
+              />
+              Cost/print
+            </label>
             <span className="text-xs text-muted-foreground hidden sm:inline">
               {regionConfig.flag} {regionConfig.name}
               <RegionLoadingSpinner isLoading={isRegionTransitioning || (isFetching && isPlaceholderData)} />
@@ -2091,6 +2110,7 @@ const Finder = () => {
                       priceRange: group.priceRange,
                       anyInStock: group.anyInStock,
                     } : undefined}
+                    showCostPerPrint={showCostPerPrint}
                   />
                 );
               })}

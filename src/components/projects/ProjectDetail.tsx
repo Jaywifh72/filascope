@@ -4,6 +4,7 @@ import { ProjectMaterials } from "./ProjectMaterials";
 import { ProjectAccessories } from "./ProjectAccessories";
 import { ProjectLog } from "./ProjectLog";
 import { ProjectCostSummary } from "./ProjectCostSummary";
+import { ShoppingListGenerator } from "./ShoppingListGenerator";
 
 interface ProjectDetailProps {
   projectId: string;
@@ -34,6 +35,15 @@ export function ProjectDetail({ projectId, onBack }: ProjectDetailProps) {
   return (
     <div className="space-y-6">
       <ProjectHeader project={project} onBack={onBack} onDeleted={onBack} />
+
+      {/* Shopping List Generator */}
+      <div className="flex items-center gap-3">
+        <ShoppingListGenerator
+          project={project}
+          materials={project.materials || []}
+          accessories={project.accessories || []}
+        />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
         <div className="space-y-6">
