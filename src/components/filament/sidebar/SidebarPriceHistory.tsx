@@ -17,8 +17,40 @@ export function SidebarPriceHistory({
   currentPrice,
   onViewFullHistory,
 }: SidebarPriceHistoryProps) {
-  const { formatPrice } = useRegion();
+  const { formatPrice, convertPrice, currency } = useRegion();
   const priceData = usePriceHistory(filamentId, currentPrice, 90);
+
+  // Convert all USD price history values to the user's currency
+  const convertedData = useMemo(() => {
+    const convert = (val: number) => convertPrice(val, 'USD');
+
+    const convertedPrices = priceData.prices.map(p => ({
+      ...p,
+      price: convert(p.price),
+    }));
+
+    const convertedMin = convert(priceData.min);
+    const convertedMax = convert(priceData.max);
+    const convertedAvg = convert(priceData.avg);
+    const convertedCurrentPrice = convert(priceData.currentPrice);
+
+    const convertedMinPoint = priceData.minPoint
+      ? { ...priceData.minPoint, price: convert(priceData.minPoint.price), y: priceData.minPoint.y !== undefined ? convert(priceData.minPoint.y) : undefined }
+      : null;
+    const convertedMaxPoint = priceData.maxPoint
+      ? { ...priceData.maxPoint, price: convert(priceData.maxPoint.price), y: priceData.maxPoint.y !== undefined ? convert(priceData.maxPoint.y) : undefined }
+      : null;
+
+    return {
+      prices: convertedPrices,
+      min: convertedMin,
+      max: convertedMax,
+      avg: convertedAvg,
+      currentPrice: convertedCurrentPrice,
+      minPoint: convertedMinPoint,
+      maxPoint: convertedMaxPoint,
+    };
+  }, [priceData, convertPrice, currency]);
 
   // Determine which state to render
   const state = useMemo(() => {
@@ -89,36 +121,36 @@ export function SidebarPriceHistory({
             <TrendingDown className="w-3 h-3 text-muted-foreground/50 group-hover:text-primary transition-colors" />
           </div>
 
-          {/* Sparkline Chart */}
+          {/* Sparkline Chart — uses converted prices */}
           <PriceSparkline
-            prices={priceData.prices}
-            currentPrice={priceData.currentPrice}
-            min={priceData.min}
-            max={priceData.max}
-            minPoint={priceData.minPoint}
-            maxPoint={priceData.maxPoint}
+            prices={convertedData.prices}
+            currentPrice={convertedData.currentPrice}
+            min={convertedData.min}
+            max={convertedData.max}
+            minPoint={convertedData.minPoint}
+            maxPoint={convertedData.maxPoint}
             showMinMax={true}
             className="w-full h-[40px]"
           />
 
-          {/* Price Summary */}
+          {/* Price Summary — all values converted */}
           <div className="flex items-center justify-between text-[11px] text-muted-foreground">
             <span>
               Low:{" "}
               <span className="font-medium text-emerald-400">
-                {formatPrice(priceData.min)}
+                {formatPrice(convertedData.min)}
               </span>
             </span>
             <span>
               Avg:{" "}
               <span className="font-medium text-foreground/70">
-                {formatPrice(priceData.avg)}
+                {formatPrice(convertedData.avg)}
               </span>
             </span>
             <span>
               High:{" "}
               <span className="font-medium text-red-400">
-                {formatPrice(priceData.max)}
+                {formatPrice(convertedData.max)}
               </span>
             </span>
           </div>
