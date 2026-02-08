@@ -9523,6 +9523,18 @@ export type Database = {
         }
         Relationships: []
       }
+      v_product_community_ratings: {
+        Row: {
+          avg_ease: number | null
+          avg_quality: number | null
+          avg_rating: number | null
+          avg_value: number | null
+          product_id: string | null
+          product_type: string | null
+          review_count: number | null
+        }
+        Relationships: []
+      }
       v_public_brands: {
         Row: {
           active_product_count: number | null

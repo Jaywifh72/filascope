@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, Lightbulb } from 'lucide-react';
+import { ExternalLink, Package, Zap, ImageIcon, RefreshCw, Link2, Palette, Lightbulb, Star } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { Database } from '@/integrations/supabase/types';
 import { getProductLineName } from '@/lib/productNameUtils';
 import { getBrandLogo } from '@/lib/brandLogos';
 import { toBrandSlug } from '@/utils/brandSlug';
+import type { CommunityReviewStats } from '@/hooks/useCommunityReviewStats';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -47,6 +48,10 @@ interface FilamentHeroSectionProps {
   onEditUrl?: () => void;
   onScrapeData?: () => void;
   onScrapeColors?: () => void;
+  
+  // Community rating
+  communityRating?: CommunityReviewStats | null;
+  onNavigateToCommunity?: () => void;
 }
 
 export function FilamentHeroSection({
@@ -67,6 +72,8 @@ export function FilamentHeroSection({
   onEditUrl,
   onScrapeData,
   onScrapeColors,
+  communityRating,
+  onNavigateToCommunity,
 }: FilamentHeroSectionProps) {
   // Get the best product line name (e.g., "PLA High Speed" instead of just "PLA")
   const productLineName = getProductLineName(pricingFilament.material, pricingFilament.product_title);
@@ -193,6 +200,33 @@ export function FilamentHeroSection({
                     <Zap className="w-3 h-3 mr-1" />
                     High-Speed Ready
                   </Badge>
+                </>
+              )}
+              {communityRating && communityRating.reviewCount > 0 && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={onNavigateToCommunity}
+                        className="inline-flex items-center gap-1.5 text-sm hover:opacity-80 transition-opacity cursor-pointer"
+                      >
+                        <Star className="w-4 h-4 fill-primary text-primary" />
+                        <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
+                        <span className="text-muted-foreground text-xs">
+                          ({communityRating.reviewCount} review{communityRating.reviewCount !== 1 ? 's' : ''})
+                        </span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                      <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} average from {communityRating.reviewCount} reviews</p>
+                      <div className="space-y-0.5 text-muted-foreground">
+                        {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
+                        {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
+                        {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </>
               )}
             </div>

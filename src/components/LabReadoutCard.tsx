@@ -74,13 +74,15 @@ interface LabReadoutCardProps {
   index?: number;
   displayTitle?: string;
   variantIndicators?: VariantIndicators;
+  communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
 }
 
 export function LabReadoutCard({ 
   filament, 
   index = 0, 
   displayTitle, 
-  variantIndicators 
+  variantIndicators,
+  communityRating 
 }: LabReadoutCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -524,7 +526,7 @@ export function LabReadoutCard({
       <div className="px-4 py-3 border-t border-white/[0.05]">
         {/* Star Rating - Enhanced brightness and contrast */}
         <div 
-          className="flex items-center gap-1 mb-3"
+          className="flex items-center gap-1 mb-2"
           role="img"
           aria-label={overallScore ? `FilaScore rating: ${overallScore.toFixed(1)} out of 10` : 'Not yet rated'}
         >
@@ -544,6 +546,36 @@ export function LabReadoutCard({
             <span className="ml-1.5 text-sm font-medium text-amber-400/90" aria-hidden="true">
               {overallScore.toFixed(1)}
             </span>
+          )}
+        </div>
+
+        {/* Community Rating */}
+        <div className="mb-3">
+          {communityRating && communityRating.reviewCount > 0 ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to={`/filament/${filament.product_handle || filament.id}?tab=community`}
+                  className="inline-flex items-center gap-1.5 text-xs hover:opacity-80 transition-opacity"
+                >
+                  <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
+                  <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
+                  <span className="text-muted-foreground">
+                    ({communityRating.reviewCount} review{communityRating.reviewCount !== 1 ? 's' : ''})
+                  </span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs max-w-[220px]">
+                <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} average from {communityRating.reviewCount} reviews</p>
+                <div className="space-y-0.5 text-muted-foreground">
+                  {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
+                  {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
+                  {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className="text-[10px] text-muted-foreground/50">No reviews yet</span>
           )}
         </div>
 

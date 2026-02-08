@@ -65,6 +65,7 @@ import { RegionTransitionIndicator, RegionLoadingSpinner } from "@/components/Re
 import { createScoringContext, type FilamentForScoring } from "@/lib/filamentScoring";
 import { calculateUnifiedScore, type FilamentForScoring as UnifiedFilamentForScoring } from "@/lib/unifiedFilamentScore";
 import { isSilkFilament, isMetallicFilament, isSparkleFilament, isTranslucentFilament } from "@/lib/filamentHelpers";
+import { useBulkCommunityRatings } from "@/hooks/useCommunityReviewStats";
 import { 
   tokenizeSearchQuery, 
   matchesAllTerms, 
@@ -269,6 +270,9 @@ const Finder = () => {
     const saved = localStorage.getItem("finderViewMode");
     return saved === "list" ? "list" : "grid";
   });
+
+  // Bulk community ratings for all filaments
+  const { data: communityRatingsMap } = useBulkCommunityRatings();
   
   // Force card view on mobile
   const effectiveViewMode = isMobile ? "grid" : viewMode;
@@ -1518,13 +1522,20 @@ const Finder = () => {
         const tdB = b.transmission_distance ?? -1;
         return tdB - tdA;
       }
+      case "community-desc": {
+        const ratingA = communityRatingsMap?.get(a.id);
+        const ratingB = communityRatingsMap?.get(b.id);
+        const scoreA = ratingA ? ratingA.avgRating * 1000 + ratingA.reviewCount : -1;
+        const scoreB = ratingB ? ratingB.avgRating * 1000 + ratingB.reviewCount : -1;
+        return scoreB - scoreA;
+      }
       default: {
         const stockDiff = stockCompare(isInStock(a), isInStock(b));
         if (stockDiff !== 0) return stockDiff;
         return getScore(b) - getScore(a);
       }
     }
-  }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, hasTdData, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice]);
+  }), [regionalFilaments, scoringContext, priceRange, amsOnly, highSpeed, matte, carbonFiber, glassFiber, woodFilled, glow, silk, metallic, sparkle, translucent, largeSpools, hasTdData, selectedColorFamilies, hexSearch, colorTolerance, searchTerm, sortBy, currencyInfo.code, convertPrice, communityRatingsMap]);
 
   // Brand diversity interleaving for scoring sort — prevents one brand dominating the top
   const diversifiedFilaments = useMemo(() => {
@@ -2072,6 +2083,7 @@ const Finder = () => {
                     filament={filament}
                     index={index}
                     displayTitle={group.baseName}
+                    communityRating={communityRatingsMap?.get(filament.id) || null}
                     variantIndicators={group.variants.length > 1 ? {
                       colors: Array.from(group.colors),
                       weights: Array.from(group.weights).sort((a, b) => a - b),

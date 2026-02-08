@@ -53,6 +53,7 @@ import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
 import { useBrowseHistory } from "@/hooks/useBrowseHistory";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
+import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -88,6 +89,8 @@ const FilamentDetail = () => {
   const { trackStoreClick } = useConversionTracking();
   const { getRegionalUrl, regionShortName } = useRegionalStore();
   
+  // Community review stats for hero badge
+  const { data: communityReviewStats } = useCommunityReviewStats(filament?.id);
   // Get region from the correct source (URL parameter-based)
   const { region: currentRegionCode, currency, formatPrice, convertPrice: regionConvertPrice, hasRates } = useRegion();
   
@@ -768,6 +771,8 @@ const FilamentDetail = () => {
               }}
               onScrapeData={handleScrapeData}
               onScrapeColors={handleScrapeColors}
+              communityRating={communityReviewStats}
+              onNavigateToCommunity={() => setActiveTab("community")}
             />
 
             {/* Retailers Modal */}
