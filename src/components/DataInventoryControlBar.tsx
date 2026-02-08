@@ -49,38 +49,38 @@ export function DataInventoryControlBar({
   const selectedLabel = SORT_OPTIONS.find(opt => opt.value === sortBy)?.label || "Sort";
   
   return (
-    <div className="w-full bg-gray-800/30 border border-gray-700 rounded-lg px-4 py-3 mb-6">
+    <div className="w-full bg-muted/40 border border-border rounded-lg px-4 py-3 mb-6">
       <div className="flex items-center justify-between gap-4">
         {/* Left: Result count */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Results
           </span>
           <span className="text-sm font-semibold text-primary">
             {resultCount.toLocaleString()}
           </span>
-          <span className="text-sm text-gray-500">entries</span>
+          <span className="text-sm text-muted-foreground">entries</span>
         </div>
 
         {/* Right: Sort control */}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 hidden sm:inline">
+          <span className="text-sm text-muted-foreground hidden sm:inline">
             Sort By
           </span>
           <Select value={sortBy} onValueChange={(val) => onSortChange(val as SortOption)}>
             <SelectTrigger className={cn(
               "w-[200px] h-9 text-sm rounded-lg border transition-all duration-200",
-              "bg-gray-800/50 border-gray-700 text-gray-300",
-              "hover:bg-gray-800 hover:border-gray-600"
+              "bg-background border-border text-foreground",
+              "hover:bg-muted hover:border-border"
             )}>
               <SelectValue>{selectedLabel}</SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700 z-50">
+            <SelectContent className="bg-popover border-border z-50">
               {SORT_OPTIONS.map((option) => (
                 <SelectItem 
                   key={option.value} 
                   value={option.value}
-                  className="text-sm cursor-pointer text-gray-300 hover:bg-primary/10 focus:bg-primary/10 focus:text-primary"
+                  className="text-sm cursor-pointer text-foreground hover:bg-primary/10 focus:bg-primary/10 focus:text-primary"
                 >
                   <div className="flex items-center gap-2">
                     {sortBy === option.value && (
