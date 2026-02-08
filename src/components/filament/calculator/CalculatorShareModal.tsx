@@ -14,6 +14,10 @@ interface CalculatorShareModalProps {
     totalCost: number;
     printsPerSpool: number;
     costPerPrint: number;
+    currencySymbol?: string;
+    currencyCode?: string;
+    isConverted?: boolean;
+    spoolWeight?: number;
   };
 }
 
@@ -26,20 +30,33 @@ export const CalculatorShareModal: React.FC<CalculatorShareModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Generate shareable text
+  const sym = calculationData.currencySymbol || '$';
+  const code = calculationData.currencyCode || 'USD';
+  const prefix = calculationData.isConverted ? '~' : '';
+  const spoolKg = ((calculationData.spoolWeight || 1000) / 1000).toFixed(0);
+
+  // Generate shareable text with proper currency
   const shareText = `🖨️ Print Calculator Results
 ━━━━━━━━━━━━━━━━━━━━
 📦 Filament: ${calculationData.filamentName}
 🧪 Material: ${calculationData.filamentMaterial}
 ⚖️ Usage: ${calculationData.usageGrams}g per print
-💰 Cost: $${calculationData.totalCost.toFixed(2)} per print
-🎯 Prints/Spool: ~${calculationData.printsPerSpool}
+💰 Cost: ${prefix}${sym}${calculationData.totalCost.toFixed(2)} ${code} per print
+🎯 Prints/Spool: ~${calculationData.printsPerSpool} (${spoolKg}kg spool)
 
 Calculated with FilaScope`;
 
-  // Generate URL with params
+  // Generate URL with encoded calculator state
   const baseUrl = window.location.origin;
-  const shareUrl = `${baseUrl}/calculator?usage=${calculationData.usageGrams}&material=${encodeURIComponent(calculationData.filamentMaterial)}`;
+  const currentPath = window.location.pathname;
+  const params = new URLSearchParams({
+    calc: 'open',
+    usage: calculationData.usageGrams.toString(),
+    material: calculationData.filamentMaterial,
+    cost: calculationData.totalCost.toFixed(2),
+    currency: code,
+  });
+  const shareUrl = `${baseUrl}${currentPath}?${params.toString()}`;
 
   const handleCopyText = async () => {
     try {
