@@ -22,6 +22,7 @@ import { validateFilamentPrice } from "@/lib/priceValidation";
 import { StickyBuyBar } from "@/components/filament/StickyBuyBar";
 import { RetailersModal, type Retailer } from "@/components/filament/hero/RetailersModal";
 import { FilamentHeroSection } from "@/components/filament/hero/FilamentHeroSection";
+import { AdminToolbar } from "@/components/filament/AdminToolbar";
 import { FilamentPurchaseSidebar, FilamentMobileBottomBar } from "@/components/filament/sidebar";
 import { 
   FilamentTabNav, 
@@ -753,6 +754,27 @@ const FilamentDetail = () => {
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
+        {/* Admin Toolbar — collapsed by default, only for admins */}
+        {isAdmin && filament && (
+          <AdminToolbar
+            productUrl={filament.product_url}
+            rescrapingImage={rescrapingImage}
+            scrapingData={scrapingData}
+            scrapingColors={scrapingColors}
+            onEditImage={() => {
+              setNewImageUrl(filament.featured_image || "");
+              setEditImageOpen(true);
+            }}
+            onRescrapeImage={handleRescrapeImage}
+            onEditUrl={() => {
+              setNewProductUrl(filament.product_url || "");
+              setEditUrlOpen(true);
+            }}
+            onScrapeData={handleScrapeData}
+            onScrapeColors={handleScrapeColors}
+          />
+        )}
+
         <DetailBreadcrumb
           segments={[
             { label: "Filaments", href: "/" },
@@ -789,21 +811,6 @@ const FilamentDetail = () => {
               getColorFromTitle={(title) => getColorName(title, baseProductName)}
               isMultiPack={isMultiPack}
               packQuantity={packQuantity}
-              isAdmin={isAdmin}
-              rescrapingImage={rescrapingImage}
-              scrapingData={scrapingData}
-              scrapingColors={scrapingColors}
-              onEditImage={() => {
-                setNewImageUrl(filament.featured_image || "");
-                setEditImageOpen(true);
-              }}
-              onRescrapeImage={handleRescrapeImage}
-              onEditUrl={() => {
-                setNewProductUrl(filament.product_url || "");
-                setEditUrlOpen(true);
-              }}
-              onScrapeData={handleScrapeData}
-              onScrapeColors={handleScrapeColors}
               communityRating={communityReviewStats}
               onNavigateToCommunity={() => setActiveTab("community")}
             />
