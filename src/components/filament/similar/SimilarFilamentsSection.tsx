@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/carousel";
 import { SimilarFilamentCard, type SimilarFilamentData } from "./SimilarFilamentCard";
 import { useSimilarFilamentsEnhanced } from "@/hooks/useSimilarFilamentsEnhanced";
+import { SimilarSortControls } from "./SimilarSortControls";
+import { ConsiderInsteadBanner } from "./ConsiderInsteadBanner";
 import { toBrandSlug } from "@/utils/brandSlug";
+import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 
 interface CurrentFilament {
   id: string;
@@ -31,9 +34,14 @@ interface SimilarFilamentsSectionProps {
   currentFilament: CurrentFilament;
 }
 
-function FilamentCarousel({ filaments, showCurrent }: { filaments: SimilarFilamentData[]; showCurrent?: boolean }) {
-  const items = showCurrent ? filaments : filaments;
-  if (items.length === 0) return null;
+function FilamentCarousel({ 
+  filaments, 
+  currentPricePerKg 
+}: { 
+  filaments: SimilarFilamentData[]; 
+  currentPricePerKg?: number | null;
+}) {
+  if (filaments.length === 0) return null;
 
   return (
     <Carousel
@@ -41,7 +49,7 @@ function FilamentCarousel({ filaments, showCurrent }: { filaments: SimilarFilame
       className="w-full"
     >
       <CarouselContent className="-ml-3 md:-ml-4">
-        {items.map((filament) => (
+        {filaments.map((filament) => (
           <CarouselItem
             key={filament.id}
             className="pl-3 md:pl-4 basis-auto"
@@ -49,6 +57,7 @@ function FilamentCarousel({ filaments, showCurrent }: { filaments: SimilarFilame
             <SimilarFilamentCard
               filament={filament}
               showCompareToggle={!filament.isCurrent}
+              currentPricePerKg={currentPricePerKg}
             />
           </CarouselItem>
         ))}
@@ -60,10 +69,15 @@ function FilamentCarousel({ filaments, showCurrent }: { filaments: SimilarFilame
 }
 
 export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSectionProps) {
-  const { groupedFilaments, similarFilaments, isLoading } = useSimilarFilamentsEnhanced(currentFilament);
+  const { groupedFilaments, similarFilaments, isLoading, sortOption, setSortOption } = useSimilarFilamentsEnhanced(currentFilament);
 
   const materialBase = currentFilament.material?.split(/[\s\-+]/)[0] || currentFilament.material || "this material";
   const brandName = currentFilament.vendor || "this brand";
+
+  // Current product's price per kg for diff calculations
+  const currentPricePerKg = currentFilament.variant_price
+    ? computePricePerKg(currentFilament.variant_price, currentFilament.net_weight_g, null)
+    : null;
 
   // Loading state
   if (isLoading) {
@@ -88,7 +102,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
       <section className="py-12 md:py-16 px-4">
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">
-            Similar Filaments
+            You Might Also Like
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-12 text-center bg-card/30 rounded-xl border border-border/50">
@@ -113,32 +127,46 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
 
   return (
     <section className="py-12 md:py-16 px-4 space-y-10">
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground">
+          You Might Also Like
+        </h2>
+        <SimilarSortControls value={sortOption} onChange={setSortOption} />
+      </div>
+
+      {/* Consider Instead Banner */}
+      <ConsiderInsteadBanner currentMaterial={currentFilament.material} />
+
       {/* Other brands, same material */}
       {hasOtherBrands && (
         <div>
-          <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-foreground">
               Similar {materialBase} From Other Brands
-            </h2>
+            </h3>
             <Link
-              to={`/materials?material=${encodeURIComponent(currentFilament.material || "")}`}
+              to={`/?material=${encodeURIComponent(currentFilament.material || "")}`}
               className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 transition-colors"
             >
               View All
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <FilamentCarousel filaments={groupedFilaments.otherBrandsSameMaterial} />
+          <FilamentCarousel
+            filaments={groupedFilaments.otherBrandsSameMaterial}
+            currentPricePerKg={currentPricePerKg}
+          />
         </div>
       )}
 
       {/* Same brand, other materials */}
       {hasSameBrand && (
         <div>
-          <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">
-              Other {brandName} Materials
-            </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-foreground">
+              More From {brandName}
+            </h3>
             <Link
               to={`/brands/${toBrandSlug(currentFilament.vendor || '')}`}
               className="text-sm text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 transition-colors"
@@ -147,19 +175,25 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <FilamentCarousel filaments={groupedFilaments.sameBrandOtherMaterial} />
+          <FilamentCarousel
+            filaments={groupedFilaments.sameBrandOtherMaterial}
+            currentPricePerKg={currentPricePerKg}
+          />
         </div>
       )}
 
       {/* Fallback: if only one group exists, still show a combined header */}
       {!hasOtherBrands && !hasSameBrand && similarFilaments.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-foreground">
               Similar Filaments
-            </h2>
+            </h3>
           </div>
-          <FilamentCarousel filaments={similarFilaments} />
+          <FilamentCarousel
+            filaments={similarFilaments}
+            currentPricePerKg={currentPricePerKg}
+          />
         </div>
       )}
     </section>

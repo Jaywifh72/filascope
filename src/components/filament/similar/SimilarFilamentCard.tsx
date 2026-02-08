@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Star, ThermometerSun, Check, Plus } from "lucide-react";
+import { Star, ThermometerSun, Check, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { RegionalPrice } from "@/components/price/RegionalPrice";
+import { useRegion } from "@/contexts/RegionContext";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,8 @@ export interface SimilarFilamentData {
 interface SimilarFilamentCardProps {
   filament: SimilarFilamentData;
   showCompareToggle?: boolean;
+  /** Current product's price per kg in USD for diff calculation */
+  currentPricePerKg?: number | null;
 }
 
 const REASON_BADGES: Record<SimilarityReason, { label: string; className: string }> = {
@@ -69,8 +72,9 @@ function getMaterialColor(material: string | null): string {
   return MATERIAL_COLORS[base] || "bg-violet-500/20 text-violet-400 border-violet-500/30";
 }
 
-export function SimilarFilamentCard({ filament, showCompareToggle = true }: SimilarFilamentCardProps) {
+export function SimilarFilamentCard({ filament, showCompareToggle = true, currentPricePerKg }: SimilarFilamentCardProps) {
   const { items, addItem, removeItem } = useCompare();
+  const { currency, convertPrice, hasRates, formatPrice } = useRegion();
   
   const isInCompare = items.some((item) => item.id === filament.id);
   const brandLogo = getBrandLogo(filament.vendor);
@@ -79,6 +83,16 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
   const pricePerKg = filament.variant_price
     ? computePricePerKg(filament.variant_price, filament.net_weight_g, (filament as any).pack_quantity)
     : null;
+
+  // Calculate price difference in user's currency
+  const priceDiff = (() => {
+    if (!pricePerKg || !currentPricePerKg || !hasRates) return null;
+    const thisConverted = convertPrice(pricePerKg, "USD");
+    const currentConverted = convertPrice(currentPricePerKg, "USD");
+    const diff = thisConverted - currentConverted;
+    if (Math.abs(diff) < 0.5) return null; // Ignore trivial differences
+    return { amount: diff, formatted: formatPrice(Math.abs(diff), { compact: true }) };
+  })();
   
   // Format nozzle temp range
   const nozzleTempRange = filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
@@ -145,7 +159,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
                 </div>
               </TooltipTrigger>
               <TooltipContent side="left">
-                {isInCompare ? "Remove from compare" : "Add to compare"}
+                {isInCompare ? "Remove from compare" : "Quick Add to Compare"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -214,15 +228,35 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
         {filament.product_title}
       </h4>
 
-      {/* Price */}
+      {/* Price with regional conversion */}
       {pricePerKg && (
-        <div className="mb-2">
+        <div className="mb-1">
           <RegionalPrice
             amount={pricePerKg}
             sourceCurrency="USD"
             size="lg"
             suffix="/kg"
           />
+        </div>
+      )}
+
+      {/* Price difference indicator */}
+      {priceDiff && !filament.isCurrent && (
+        <div className={cn(
+          "flex items-center gap-1 text-xs font-medium mb-2",
+          priceDiff.amount < 0 ? "text-green-400" : "text-amber-400"
+        )}>
+          {priceDiff.amount < 0 ? (
+            <>
+              <TrendingDown className="w-3 h-3" />
+              <span>{priceDiff.formatted} cheaper</span>
+            </>
+          ) : (
+            <>
+              <TrendingUp className="w-3 h-3" />
+              <span>{priceDiff.formatted} more</span>
+            </>
+          )}
         </div>
       )}
 
@@ -244,14 +278,40 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true }: Simi
         </div>
       )}
 
-      {/* View Details Button */}
-      <Button
-        variant="default"
-        size="sm"
-        className="w-full bg-primary hover:bg-primary/80 text-primary-foreground transition-colors duration-200"
-      >
-        View Details
-      </Button>
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Button
+          variant="default"
+          size="sm"
+          className="flex-1 bg-primary hover:bg-primary/80 text-primary-foreground transition-colors duration-200"
+        >
+          View Details
+        </Button>
+        {showCompareToggle && !filament.isCurrent && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCompareToggle}
+                  className={cn(
+                    "px-2 transition-all",
+                    isInCompare 
+                      ? "border-primary text-primary hover:bg-primary/10" 
+                      : "border-border hover:border-primary/50"
+                  )}
+                >
+                  {isInCompare ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isInCompare ? "Remove from compare" : "Quick Add to Compare"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
     </div>
   );
 
