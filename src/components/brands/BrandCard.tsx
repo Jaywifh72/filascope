@@ -108,9 +108,9 @@ const BrandCard = ({
         {/* Key Stats Row */}
         <div className="flex items-center gap-3 text-sm text-gray-400">
           <span>
-            {productLineCount} products
+            {productLineCount} {productLineCount === 1 ? 'product' : 'products'}
             {variantCount > productLineCount && (
-              <span className="text-gray-500"> ({variantCount} variants)</span>
+              <span className="text-gray-500"> ({variantCount} {variantCount === 1 ? 'variant' : 'variants'})</span>
             )}
           </span>
           {averageRating && averageRating > 0 && (
