@@ -70,10 +70,9 @@ export function useVaultProfile() {
             .eq("user_id", user.id)
             .eq("is_public", true),
           supabase
-            .from("product_reviews")
+            .from("user_notes")
             .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .eq("is_public", false),
+            .eq("user_id", user.id),
           supabase
             .from("price_alerts")
             .select("id", { count: "exact", head: true })

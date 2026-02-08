@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, Share2 } from "lucide-react";
 import { LikeButton } from "@/components/LikeButton";
 import { SharePopover } from "@/components/sharing/SharePopover";
+import { PrivateNotePopover } from "@/components/notes/PrivateNotePopover";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -72,6 +73,14 @@ export function QuickActions({ filamentId, tdsUrl, productTitle, priceDisplay, s
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
+      {/* Private Note */}
+      <PrivateNotePopover
+        productId={filamentId}
+        productType="filament"
+        productTitle={productTitle}
+        compact
+      />
       
       {/* Share */}
       <SharePopover

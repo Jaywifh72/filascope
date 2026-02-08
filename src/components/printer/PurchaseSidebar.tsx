@@ -4,6 +4,8 @@ import { PriceSection } from "./PriceSection";
 import { CTAButtons } from "./CTAButtons";
 import { REGIONS } from "@/config/regions";
 import { RegionCode, CurrencyCode } from "@/types/regional";
+import { PrivateNotePopover } from "@/components/notes/PrivateNotePopover";
+import { PrivateNoteIndicator } from "@/components/notes/PrivateNoteIndicator";
 
 import { PriceConfidence } from "@/hooks/usePriceFreshness";
 
@@ -131,6 +133,20 @@ export function PurchaseSidebar({
             stackedButtons
           />
         </div>
+
+        {/* Private Note Button */}
+        <PrivateNotePopover
+          productId={printer.id}
+          productType="printer"
+          productTitle={printer.model_name}
+        />
+
+        {/* Private Note Indicator (shows existing note) */}
+        <PrivateNoteIndicator
+          productId={printer.id}
+          productType="printer"
+          productTitle={printer.model_name}
+        />
 
         {/* Warranty Summary */}
         {warrantyYears && (
