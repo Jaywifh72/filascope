@@ -25,9 +25,9 @@ export function BrandSEO({
   // Build meta description — template: "[Brand] filaments — [X] products across [Y] material types. Compare specs, pricing, and availability on FilaScope."
   const materialList = materials.slice(0, 3).join(', ');
   const defaultDesc = productCount && materials.length > 0
-    ? `${brandName} filaments — ${productCount}+ products across ${materials.length} material types. Compare specs, pricing, and availability on FilaScope.`
+    ? `${brandName} filaments — ${productCount} products across ${materials.length} material types. Live pricing, specs, and compatibility data on FilaScope.`
     : productCount 
-      ? `${brandName} filaments — ${productCount}+ products including ${materialList || 'PLA, PETG, ABS'}. Compare specs, pricing, and availability on FilaScope.`
+      ? `${brandName} filaments — ${productCount} products including ${materialList || 'PLA, PETG, ABS'}. Live pricing, specs, and compatibility data on FilaScope.`
       : `Browse ${brandName} 3D printing filaments. Compare prices, specifications, and availability on FilaScope.`;
   
   const seoDescription = (description || defaultDesc).length > 160 

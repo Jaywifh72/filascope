@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe } from "lucide-react";
@@ -39,6 +40,7 @@ const Deals = () => {
   } = useDealsWithFilters();
 
   const userRegionFlag = getRegionFlag(userRegion);
+  const { currencyConfig } = useRegion();
 
   const hasActiveFilters =
     selectedMaterials.length > 0 ||
@@ -58,9 +60,18 @@ const Deals = () => {
     return Math.round(max);
   }, [groupedDeals]);
 
+  // Unique brand count for meta
+  const uniqueBrandCount = availableBrands.length;
+
+  // Region display name
+  const regionDisplayNames: Record<string, string> = {
+    US: 'the US', CA: 'Canada', UK: 'the UK', EU: 'Europe', AU: 'Australia', JP: 'Japan', CN: 'China',
+  };
+  const regionDisplay = regionDisplayNames[userRegion] || userRegion;
+
   // Dynamic meta description
   const metaDescription = totalDeals > 0
-    ? `Today's best 3D printer filament deals — ${totalDeals} active discounts up to ${maxDiscount}% off. Compare sale prices from top brands on FilaScope.`
+    ? `${totalDeals} active filament deals with discounts up to ${maxDiscount}% off. Compare prices from ${uniqueBrandCount} brands in ${regionDisplay}.`
     : "Today's best 3D printer filament deals. Compare sale prices and discounts from top brands on FilaScope.";
 
   // Build deal items for ItemListSchema
@@ -78,6 +89,7 @@ const Deals = () => {
       <Helmet>
         <title>Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope</title>
         <meta name="description" content={metaDescription} />
+        <meta property="og:title" content="Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope" />
         <meta property="og:description" content={metaDescription} />
       </Helmet>
       {dealListItems.length > 0 && (

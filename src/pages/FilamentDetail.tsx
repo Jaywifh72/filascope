@@ -657,24 +657,35 @@ const FilamentDetail = () => {
   // Get the best product line name for SEO and display
   const productLineName = getProductLineName(displayFilament.material, displayFilament.product_title);
 
-  // Build SEO description with product line name — dynamic template:
-  // "Buy [Brand] [Product] [Material] filament — [Temps], [Weight], from [Price] in [Region]. Compare prices from [X] retailers on FilaScope."
+  // Build full SEO title, avoiding doubled brand name.
+  // If productLineName already starts with the vendor, don't prepend vendor again.
+  const vendorName = displayFilament.vendor || '';
+  const productLineStartsWithVendor = vendorName && productLineName.toLowerCase().startsWith(
+    vendorName.replace(/™|®|©/g, '').trim().toLowerCase()
+  );
+  const seoFullName = productLineStartsWithVendor
+    ? productLineName
+    : `${vendorName} ${productLineName}`.trim();
+
+  // Build SEO description — template:
+  // "[Brand] [Product Name] — [Material Type] filament. [Nozzle Temp Range]. From [Best Price] in [Region]. Compare specs, read reviews, and find the best deal."
   const regionName = getRegionDisplayName(currentRegionCode as any);
-  const weightDisplay = pricingFilament.net_weight_g 
-    ? `${pricingFilament.net_weight_g >= 1000 ? `${(pricingFilament.net_weight_g / 1000).toFixed(pricingFilament.net_weight_g % 1000 === 0 ? 0 : 1)}kg` : `${pricingFilament.net_weight_g}g`}`
-    : null;
   const tempDisplay = displayFilament.nozzle_temp_min_c && displayFilament.nozzle_temp_max_c
-    ? `${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C`
+    ? `Nozzle temp ${displayFilament.nozzle_temp_min_c}-${displayFilament.nozzle_temp_max_c}°C.`
     : null;
-  const retailerCount = detailPricing.retailerCount || retailers.length || 0;
+  const materialType = displayFilament.material || 'filament';
+  const priceSnippet = sidebarPricePerKg
+    ? `From ${formatPrice(sidebarPricePerKg)}/kg in ${regionName}.`
+    : sidebarPricePerSpool
+      ? `From ${formatPrice(sidebarPricePerSpool)} in ${regionName}.`
+      : null;
   const seoDescParts = [
-    `Buy ${displayFilament.vendor || ''} ${productLineName} ${displayFilament.material || ''} filament`,
-    tempDisplay || weightDisplay ? ' — ' : '',
-    [tempDisplay, weightDisplay].filter(Boolean).join(', '),
-    sidebarPricePerSpool ? `, from ${formatPrice(sidebarPricePerSpool)} in ${regionName}` : ` in ${regionName}`,
-    retailerCount > 0 ? `. Compare prices from ${retailerCount} retailer${retailerCount !== 1 ? 's' : ''} on FilaScope.` : '. Compare specs & prices on FilaScope.',
-  ];
-  const seoDescription = seoDescParts.join('').replace(/\s+/g, ' ').trim();
+    `${seoFullName} — ${materialType} filament.`,
+    tempDisplay,
+    priceSnippet,
+    'Compare specs, read reviews, and find the best deal.',
+  ].filter(Boolean);
+  const seoDescription = seoDescParts.join(' ').replace(/\s+/g, ' ').trim();
 
   // Build brand slug for breadcrumb link
   const brandSlug = displayFilament.vendor ? toBrandSlug(displayFilament.vendor) : '';
@@ -685,7 +696,7 @@ const FilamentDetail = () => {
 
       {/* SEO Meta Tags - Uses product line name for better SEO */}
       <ProductSEO
-        title={`${displayFilament.vendor || ''} ${productLineName}`}
+        title={seoFullName}
         description={seoDescription}
         canonicalUrl={`/filament/${id}`}
         image={displayFilament.featured_image}
@@ -699,7 +710,7 @@ const FilamentDetail = () => {
       
       {/* JSON-LD Structured Data */}
       <ProductJsonLd
-        name={`${displayFilament.vendor || ''} ${productLineName}`}
+        name={seoFullName}
         description={seoDescription}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
