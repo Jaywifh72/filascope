@@ -313,7 +313,7 @@ function ProjectsSummary({ userId, onViewAll }: { userId: string; onViewAll: () 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, name, created_at, project_filaments(id)")
+        .select("id, name, status, project_type, created_at, project_materials(id)")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(3);
@@ -324,6 +324,13 @@ function ProjectsSummary({ userId, onViewAll }: { userId: string; onViewAll: () 
   });
 
   if (!projects?.length) return null;
+
+  const statusLabel: Record<string, string> = {
+    planning: "Planning",
+    in_progress: "In Progress",
+    completed: "Completed",
+    archived: "Archived",
+  };
 
   return (
     <Card>
@@ -344,7 +351,7 @@ function ProjectsSummary({ userId, onViewAll }: { userId: string; onViewAll: () 
             >
               <p className="font-medium text-sm truncate">{project.name}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {project.project_filaments?.length || 0} filaments ·{" "}
+                {statusLabel[project.status] || project.status} · {project.project_materials?.length || 0} materials ·{" "}
                 {format(new Date(project.created_at), "MMM d")}
               </p>
             </div>
