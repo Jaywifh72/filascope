@@ -144,10 +144,12 @@ export function TechnicalConsoleSidebar({
 
   const navigate = useNavigate();
 
-  // Calculate active filter count
+  // Calculate active filter count — exclude default states (e.g. "All" materials)
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (localMaterials.length > 0) count += localMaterials.length;
+    // Only count materials that are actual user selections, not the default "All"
+    const userMaterials = localMaterials.filter(m => m !== "All");
+    if (userMaterials.length > 0) count += userMaterials.length;
     if (localBrands.length > 0) count += localBrands.length;
     if (localReinforced.length > 0) count += localReinforced.length;
     if (localSpoolSize !== "standard") count += 1;
