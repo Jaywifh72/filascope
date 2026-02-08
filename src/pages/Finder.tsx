@@ -790,7 +790,7 @@ const Finder = () => {
     return counts;
   }, [serverFilterCounts]);
 
-  const hasMore = false; // Server returns one page at a time; use page navigation
+  // Server-side pagination — no client-side "hasMore" needed
 
   // Track region transitions for smooth UI updates
   const [previousRegion, setPreviousRegion] = useState<string | null>(null);
@@ -1346,6 +1346,7 @@ const Finder = () => {
           <div className="space-y-6">
             {/* Show skeleton grid immediately for visual feedback */}
             <FilamentCardSkeletonGrid count={12} />
+          </div>
         ) : displayedGroups.length > 0 ? (
           <>
           {
@@ -1387,19 +1388,33 @@ const Finder = () => {
             </div>
           )}
           
-          {/* Load More Button */}
-          {hasMore && (
+          {/* Page Navigation */}
+          {totalCount > 48 && (
             <div className="flex flex-col items-center gap-3 mt-10 mb-8">
               <p className="text-sm text-muted-foreground">
                 Showing {displayedGroups.length} of {totalCount} products
               </p>
-              <Button 
-                onClick={() => setDisplayCount(prev => prev + ITEMS_PER_PAGE)}
-                variant="outline"
-                className="px-8 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:border-primary text-white transition-all duration-200"
-              >
-                Load More
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                  variant="outline"
+                  disabled={currentPage === 0}
+                  className="px-4"
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground px-3">
+                  Page {currentPage + 1}
+                </span>
+                <Button 
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  variant="outline"
+                  disabled={displayedGroups.length < 48}
+                  className="px-4"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
           </>
