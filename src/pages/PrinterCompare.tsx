@@ -413,6 +413,21 @@ const PrinterCompare = () => {
                     return discount ? `${discount}% off` : null;
                   })} 
                 />
+                <ComparisonRow 
+                  label="Price per cm³" 
+                  values={printers.map(p => {
+                    const price = getCurrentPrice(p);
+                    const x = p.build_volume_x_mm;
+                    const y = p.build_volume_y_mm;
+                    const z = p.build_volume_z_mm;
+                    if (price && x && y && z) {
+                      const volumeCm3 = (x * y * z) / 1000;
+                      return `$${(price / volumeCm3).toFixed(4)}/cm³`;
+                    }
+                    return null;
+                  })} 
+                  highlightType="min"
+                />
               </Card>
 
               {/* Build Volume */}
