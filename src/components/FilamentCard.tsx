@@ -686,15 +686,32 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                   <span className="text-[10px] font-medium text-emerald-400">Budget</span>
                 </div>
               )}
+
+              {/* Converted/International indicator when best price is not local */}
+              {isConvertedPrice && !resolved.bestIsLocal && (
+                <span className="text-[9px] font-medium text-muted-foreground bg-muted/50 border border-border/50 rounded px-1.5 py-0.5">
+                  intl
+                </span>
+              )}
             </div>
+            
+            {/* Secondary local price when best price is international */}
+            {resolved.localPricePerKg != null && resolved.formattedLocalPricePerKg && (
+              <div className="flex items-center gap-1 text-xs">
+                <MapPin className="w-3 h-3 text-emerald-400" />
+                <span className="text-muted-foreground">
+                  Local: {resolved.formattedLocalPricePerKg}/kg
+                </span>
+              </div>
+            )}
             
             {/* Price freshness indicator */}
             {timeAgo && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{timeAgo}</span>
-                {/* Local badge */}
-                {isLocalStore && (
+                {/* Local badge - only show when best IS local (no secondary line shown) */}
+                {isLocalStore && !resolved.localPricePerKg && (
                   <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded ml-1">
                     Local
                   </span>
@@ -702,7 +719,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               </div>
             )}
             {/* Show Local badge even without freshness indicator */}
-            {!timeAgo && isLocalStore && (
+            {!timeAgo && isLocalStore && !resolved.localPricePerKg && (
               <div className="flex items-center gap-1 text-xs">
                 <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded">
                   Local

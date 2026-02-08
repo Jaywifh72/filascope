@@ -20,6 +20,8 @@ export interface FormattedResolvedPrice extends ResolvedPrice {
   formattedPricePerSpool: string | null;
   /** Formatted per-kg price string (e.g., "~C$54.99/kg") */
   formattedPricePerKg: string | null;
+  /** Formatted local per-kg price string (e.g., "C$75.94/kg") */
+  formattedLocalPricePerKg: string | null;
   /** Whether exchange rates are still loading */
   isLoading: boolean;
 }
@@ -36,9 +38,12 @@ export function useResolvedPrice(filament: FilamentForPricing | null | undefined
         currency,
         isConverted: false,
         source: 'unavailable' as const,
+        localPricePerKg: null,
+        bestIsLocal: false,
         formattedSpoolPrice: null,
         formattedPricePerSpool: null,
         formattedPricePerKg: null,
+        formattedLocalPricePerKg: null,
         isLoading,
       };
     }
@@ -59,6 +64,9 @@ export function useResolvedPrice(filament: FilamentForPricing | null | undefined
         : null,
       formattedPricePerKg: resolved.pricePerKg != null
         ? formatPrice(resolved.pricePerKg, { showApproximate: resolved.isConverted })
+        : null,
+      formattedLocalPricePerKg: resolved.localPricePerKg != null
+        ? formatPrice(resolved.localPricePerKg)
         : null,
       isLoading,
     };
