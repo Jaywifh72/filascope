@@ -14,6 +14,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/contexts/RegionContext";
 import { RegionSelector } from "@/components/RegionSelector";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { formatDistanceToNow } from "date-fns";
+
+function formatRatesAge(date: Date): string {
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs < 60_000) return "just now";
+  return formatDistanceToNow(date, { addSuffix: true });
+}
 
 // Social icons as simple SVG components for consistency
 const TwitterIcon = ({ className }: { className?: string }) => (
@@ -45,7 +52,7 @@ export function SiteFooter() {
   const [isLoading, setIsLoading] = useState(false);
   const [latency, setLatency] = useState(14);
   const { toast } = useToast();
-  const { regionConfig, currencyConfig } = useRegion();
+  const { regionConfig, currencyConfig, ratesLastUpdated } = useRegion();
 
   // Simulate realistic latency fluctuation
   useEffect(() => {
@@ -275,12 +282,20 @@ export function SiteFooter() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* Left - Current region display */}
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm flex-wrap">
               <Globe className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="text-muted-foreground">Prices shown for:</span>
               <span className="text-foreground font-medium">
                 {regionConfig.flag} {regionConfig.name} ({currencyConfig.code})
               </span>
+              {ratesLastUpdated && (
+                <>
+                  <span className="text-muted-foreground/50 hidden sm:inline">·</span>
+                  <span className="text-xs text-muted-foreground/70 hidden sm:inline">
+                    Rates updated: {formatRatesAge(ratesLastUpdated)}
+                  </span>
+                </>
+              )}
             </div>
             
             {/* Right - Change selectors */}
