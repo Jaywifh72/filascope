@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,11 +24,12 @@ import {
   Camera,
   Printer,
   CheckCircle2,
-  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { ReportReviewDialog } from "./ReportReviewDialog";
 import type { ProductReview, ReviewSummary } from "@/hooks/useProductReviews";
 
 // ─── Summary Bar ───
@@ -99,11 +100,19 @@ interface ReviewListProps {
   reviews: ProductReview[];
   onVoteHelpful: (reviewId: string) => void;
   isVoting: boolean;
+  onFlagReview?: (reviewId: string, reason: string, details?: string) => void;
+  isFlagging?: boolean;
 }
 
-type SortOption = "recent" | "highest" | "helpful";
+type SortOption = "recent" | "highest" | "lowest" | "helpful";
 
-export function ReviewList({ reviews, onVoteHelpful, isVoting }: ReviewListProps) {
+export function ReviewList({
+  reviews,
+  onVoteHelpful,
+  isVoting,
+  onFlagReview,
+  isFlagging,
+}: ReviewListProps) {
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [filterPhotos, setFilterPhotos] = useState(false);
   const [filterVerified, setFilterVerified] = useState(false);
@@ -121,6 +130,8 @@ export function ReviewList({ reviews, onVoteHelpful, isVoting }: ReviewListProps
     switch (sortBy) {
       case "highest":
         return b.overall_rating - a.overall_rating;
+      case "lowest":
+        return a.overall_rating - b.overall_rating;
       case "helpful":
         return b.helpful_count - a.helpful_count;
       case "recent":
@@ -142,6 +153,7 @@ export function ReviewList({ reviews, onVoteHelpful, isVoting }: ReviewListProps
           <SelectContent>
             <SelectItem value="recent">Most Recent</SelectItem>
             <SelectItem value="highest">Highest Rated</SelectItem>
+            <SelectItem value="lowest">Lowest Rated</SelectItem>
             <SelectItem value="helpful">Most Helpful</SelectItem>
           </SelectContent>
         </Select>
@@ -179,6 +191,8 @@ export function ReviewList({ reviews, onVoteHelpful, isVoting }: ReviewListProps
             review={review}
             onVoteHelpful={onVoteHelpful}
             isVoting={isVoting}
+            onFlagReview={onFlagReview}
+            isFlagging={isFlagging}
           />
         ))
       )}
@@ -192,14 +206,19 @@ function ReviewCard({
   review,
   onVoteHelpful,
   isVoting,
+  onFlagReview,
+  isFlagging,
 }: {
   review: ProductReview;
   onVoteHelpful: (id: string) => void;
   isVoting: boolean;
+  onFlagReview?: (reviewId: string, reason: string, details?: string) => void;
+  isFlagging?: boolean;
 }) {
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
   const bodyTruncated = review.body.length > 250;
   const displayBody = expanded ? review.body : review.body.slice(0, 250);
@@ -210,6 +229,24 @@ function ReviewCard({
       .join("")
       .toUpperCase()
       .slice(0, 2) || "U";
+
+  const handleReportClick = () => {
+    if (!user) {
+      toast.info("Please sign in to report reviews");
+      return;
+    }
+    // Don't allow reporting your own reviews
+    if (user.id === review.user_id) {
+      toast.info("You can't report your own review");
+      return;
+    }
+    setReportDialogOpen(true);
+  };
+
+  const handleReportSubmit = (reason: string, details?: string) => {
+    onFlagReview?.(review.id, reason, details);
+    setReportDialogOpen(false);
+  };
 
   return (
     <>
@@ -361,7 +398,12 @@ function ReviewCard({
               Helpful {review.helpful_count > 0 && `(${review.helpful_count})`}
             </Button>
 
-            <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs text-muted-foreground"
+              onClick={handleReportClick}
+            >
               <Flag className="w-3.5 h-3.5" />
               Report
             </Button>
@@ -381,6 +423,14 @@ function ReviewCard({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Report Dialog */}
+      <ReportReviewDialog
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
+        onSubmit={handleReportSubmit}
+        isSubmitting={isFlagging ?? false}
+      />
     </>
   );
 }

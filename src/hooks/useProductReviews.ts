@@ -129,6 +129,7 @@ export function useProductReviews(productId: string, productType: string = "fila
       pros?: string[];
       cons?: string[];
       is_public?: boolean;
+      is_verified_purchase?: boolean;
       photos?: File[];
     }) => {
       if (!user?.id) throw new Error("Must be logged in");
@@ -145,6 +146,7 @@ export function useProductReviews(productId: string, productType: string = "fila
           pros: reviewData.pros || [],
           cons: reviewData.cons || [],
           is_public: reviewData.is_public ?? true,
+          is_verified_purchase: reviewData.is_verified_purchase ?? false,
         })
         .select()
         .single();
