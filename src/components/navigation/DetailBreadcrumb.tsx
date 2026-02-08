@@ -12,6 +12,8 @@ interface DetailBreadcrumbProps {
   segments: BreadcrumbSegment[];
   /** Override the mobile "← Back to X" parent label */
   mobileBackLabel?: string;
+  /** When true, don't prepend the automatic "Home" segment */
+  hideHome?: boolean;
 }
 
 /**
@@ -20,14 +22,13 @@ interface DetailBreadcrumbProps {
  * Mobile: ← Back to [parent]
  * Includes JSON-LD BreadcrumbList schema for SEO.
  */
-export function DetailBreadcrumb({ segments, mobileBackLabel }: DetailBreadcrumbProps) {
+export function DetailBreadcrumb({ segments, mobileBackLabel, hideHome }: DetailBreadcrumbProps) {
   const isMobile = useIsMobile();
 
-  // Build full chain: Home + segments
-  const fullChain: BreadcrumbSegment[] = [
-    { label: "Home", href: "/" },
-    ...segments,
-  ];
+  // Build full chain: optionally prepend Home + segments
+  const fullChain: BreadcrumbSegment[] = hideHome
+    ? [...segments]
+    : [{ label: "Home", href: "/" }, ...segments];
 
   // Parent is second-to-last in the full chain (for mobile back link)
   const parent = fullChain.length >= 2 ? fullChain[fullChain.length - 2] : null;
