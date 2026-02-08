@@ -833,6 +833,8 @@ const FilamentDetail = () => {
                   onRetailerClick={handleRetailerClick}
                   brandId={brandId}
                   productSku={pricingFilament.variant_sku || pricingFilament.product_handle}
+                  priceCandidates={detailPricing.allCandidates}
+                  candidatesLoading={detailPricing.isLoading}
                 />
               )}
 
