@@ -1,114 +1,50 @@
 
 
-# Fix FilaScope Production White Screen - Move Images to Cloud Storage
+# Fix: Service Worker Caching Stale JavaScript Chunks
 
 ## Problem
 
-The site deploys ~156 files to Cloudflare R2 per publish, triggering a `429 Too Many Requests` rate limit. The JS bundles never reach production, resulting in a white page. The previous cleanup removed 87 unused files, but the remaining ~126 static files + ~30 build chunks still exceed the limit.
+The Workbox service worker caches `.js` and `.css` files with `StaleWhileRevalidate`, which serves stale (broken) JavaScript chunks to returning users even after a new build is published. This is the reason the blank page persists after deploying the chunking fix.
 
-All remaining image files (111 total) are actively referenced in code -- they cannot simply be deleted.
+The core issue: the old `index.html` is precached and served from cache, referencing old chunk filenames that contain the circular dependency bug. Even though new chunks have different content hashes, the cached `index.html` still points to the old ones.
 
-## Solution: Move Images to Lovable Cloud Storage
+## Fix Plan
 
-Move all 111 images from `public/images/` to a public Lovable Cloud Storage bucket, then update all code references to use the storage URLs. This reduces the deployment payload from ~156 files to ~45 files (fonts, PWA icons, favicon, build output) -- well within R2 limits.
+### 1. Change JS/CSS caching strategy from `StaleWhileRevalidate` to `NetworkFirst`
 
-## File Count Impact
+In `vite.config.ts`, update the static assets runtime caching rule so that JS and CSS files are always fetched from the network first, falling back to cache only when offline. This ensures users always get the latest build artifacts.
 
-```text
-BEFORE                          AFTER
-public/images/brands/  63       0  (moved to storage)
-public/images/cad/     20       0  (moved to storage)
-public/images/slicers/ 19       0  (moved to storage)
-public/images/repos/    8       0  (moved to storage)
-public/images/retailers/1       0  (moved to storage)
-public/fonts/           8       8  (stays)
-public/pwa-icons/       2       2  (stays)
-public/ root files      5       5  (stays)
-Build output           ~30     ~30 (stays)
-                      ----    ----
-TOTAL                 ~156     ~45
+```
+Before:  handler: "StaleWhileRevalidate"  (for .js/.css)
+After:   handler: "NetworkFirst"          (for .js/.css)
 ```
 
-A 71% reduction in deployment files.
+### 2. Add a version-based cache-busting mechanism (optional but recommended)
 
-## Execution Plan
+Reduce the `maxAgeSeconds` for the `static-resources` cache from 7 days to 1 day, since Vite already uses content-hashed filenames and stale entries are the primary risk.
 
-### Phase 1: Create a Public Storage Bucket
+### Technical Details
 
-Create a `static-images` storage bucket in Lovable Cloud with public read access. No RLS complexity needed -- these are public brand logos and reference images.
+**File: `vite.config.ts`**
 
-### Phase 2: Upload All Images to Storage
+Change the static assets caching rule (around line 107-117):
 
-Write a one-time edge function that reads each image from the project's own public URL (preview environment) and uploads it to the storage bucket, preserving the folder structure:
-- `brands/bambulab-long.webp`
-- `cad/fusion360.png`
-- `slicers/cura.png`
-- `repos/makerworld.png`
-- `retailers/amazon.png`
-
-### Phase 3: Create a URL Helper
-
-Create a simple utility function like `getImageUrl(path)` that returns the full Lovable Cloud Storage public URL for a given image path. This centralizes the URL pattern so if the storage location ever changes, only one file needs updating.
-
-### Phase 4: Update All Code References
-
-Update every file that references `/images/...` paths to use the new `getImageUrl()` helper:
-
-- `src/lib/brandLogos.ts` -- brand logo mappings
-- `src/pages/ReferenceSlicers.tsx` -- slicer logos
-- `src/pages/ReferenceCAD.tsx` -- CAD software logos
-- `src/pages/ReferenceRepos.tsx` -- repository logos
-- `src/components/reference/CADCompareTray.tsx`
-- `src/components/reference/CADRecommendationsSidebar.tsx`
-- `src/components/reference/CADProfileAccordion.tsx`
-- `src/components/reference/CADThreeTierComparison.tsx`
-- Any other files referencing `/images/` paths
-
-### Phase 5: Delete All Images from `public/images/`
-
-Remove the entire `public/images/` directory (111 files) from the codebase.
-
-### Phase 6: Verify and Publish
-
-1. Confirm the preview loads correctly with all images pulling from storage
-2. Wait at least 20 minutes from the last failed publish
-3. Publish once -- do not retry rapidly
-4. Verify `filascope.lovable.app` and `filascope.com` in incognito windows
-
-## Technical Details
-
-**Storage bucket configuration:**
-- Bucket name: `static-images`
-- Access: Public (read-only via public URL)
-- No authentication required for reads
-
-**URL pattern:**
-Storage URLs follow this format:
-`https://cfqfavmhdbyjzejipiwa.supabase.co/storage/v1/object/public/static-images/brands/bambulab-long.webp`
-
-**Helper function (`src/lib/imageUrl.ts`):**
 ```typescript
-const STORAGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/static-images`;
-export const getImageUrl = (path: string) => `${STORAGE_BASE}/${path}`;
+{
+  // Cache static assets
+  urlPattern: /\.(?:js|css)$/,
+  handler: "NetworkFirst",  // was "StaleWhileRevalidate"
+  options: {
+    cacheName: "static-resources",
+    expiration: {
+      maxEntries: 50,
+      maxAgeSeconds: 60 * 60 * 24, // 1 day (was 7 days)
+    },
+  },
+},
 ```
 
-**Code change pattern:**
-```typescript
-// Before
-"/images/brands/bambulab-long.webp"
+### Post-Deploy
 
-// After
-getImageUrl("brands/bambulab-long.webp")
-```
-
-## Risk Assessment
-
-- **Low risk**: Images are public, read-only assets. Moving them to storage is a standard pattern.
-- **Rollback**: If storage fails, the images can be re-added to `public/` from git history.
-- **Performance**: Storage URLs are CDN-backed, so load times should be equivalent or better.
-- **No data loss**: All images are preserved in storage, just served from a different URL.
-
-## Why This Fixes the Problem
-
-The root cause is too many files in the R2 upload. By moving 111 images to cloud storage (which is already deployed and available), the publish payload drops from ~156 to ~45 files. This is well within Cloudflare R2's rate limits and should resolve the white screen permanently -- even as the project grows.
+After publishing, existing users with the old service worker will still need one page load for the new SW to activate (`skipWaiting` handles this). On that first load, the new `NetworkFirst` strategy will immediately fetch fresh JS from the server. Users who are currently stuck on the blank page will recover after a single refresh.
 
