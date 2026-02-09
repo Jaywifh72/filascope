@@ -32,18 +32,18 @@ function SpecCard({ icon, label, value, isDefault, defaultTooltip }: SpecCardPro
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-2 sm:p-3 xl:p-4 flex items-start gap-2 sm:gap-3 min-w-0">
-            <div className="text-primary flex-shrink-0 mt-0.5">
+          <div className="bg-muted/40 border border-border/60 rounded-lg px-4 py-2.5 flex items-center gap-3 min-w-0">
+            <div className="text-primary flex-shrink-0">
               {icon}
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1 truncate">
+            <div className="flex items-baseline gap-1.5 min-w-0">
+              <p className="text-xs text-muted-foreground shrink-0">
                 {label}
-                {isDefault && <Info className="inline w-2.5 h-2.5 ml-1 text-muted-foreground/70" />}
+                {isDefault && <Info className="inline w-2.5 h-2.5 ml-1 text-muted-foreground/70" />}:
               </p>
               <p className={cn(
-                "text-sm sm:text-base xl:text-lg font-semibold leading-tight whitespace-nowrap",
-                isDefault ? "text-gray-300" : "text-white"
+                "text-sm font-semibold leading-tight",
+                isDefault ? "text-muted-foreground" : "text-foreground"
               )}>{value}</p>
             </div>
           </div>
@@ -142,8 +142,7 @@ export function FilamentQuickSpecsGrid({
 
   return (
     <div className={cn(
-      "grid gap-2 sm:gap-3",
-      "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
+      "flex flex-col gap-2",
       className,
     )}>
       {specs.map((spec) => (
