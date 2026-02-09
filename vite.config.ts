@@ -134,34 +134,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          // Recharts — only loaded when charts are needed
-          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-") || id.includes("node_modules/victory-vendor")) {
-            return "recharts";
-          }
-          // Supabase client
-          if (id.includes("node_modules/@supabase")) {
-            return "supabase";
-          }
-          // React core + Radix UI + React Router + scheduler must share one chunk
-          // to avoid circular dependencies on React internals (createContext, forwardRef)
-          if (
-            id.includes("node_modules/react-dom") ||
-            id.includes("node_modules/react/") ||
-            id.includes("node_modules/@radix-ui") ||
-            id.includes("node_modules/react-router") ||
-            id.includes("node_modules/scheduler/")
-          ) {
-            return "react-vendor";
-          }
-          // Tanstack Query
-          if (id.includes("node_modules/@tanstack")) {
-            return "tanstack";
-          }
-        },
-      },
-    },
+    // Let Vite/Rollup handle code splitting automatically
+    // to avoid circular chunk dependencies
   },
 }));
