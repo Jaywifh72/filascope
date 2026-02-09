@@ -1,33 +1,7 @@
 import { GitCompare, X, ArrowRight, Trash2, Box } from 'lucide-react';
 import { useCADComparison } from '@/contexts/CADComparisonContext';
 import { cn } from '@/lib/utils';
-
-// Logo mapping
-const cadLogos: Record<string, string> = {
-  "Fusion 360": "/images/cad/fusion360.png",
-  "Blender": "/images/cad/blender.png",
-  "ZBrush": "/images/cad/zbrush.png",
-  "SolidWorks": "/images/cad/solidworks.png",
-  "Tinkercad": "/images/cad/tinkercad.png",
-  "FreeCAD": "/images/cad/freecad.svg",
-  "Rhino 3D": "/images/cad/rhino3d.png",
-  "OpenSCAD": "/images/cad/openscad.png",
-  "Onshape": "/images/cad/onshape.png",
-  "Shapr3D": "/images/cad/shapr3d.png",
-  "SketchUp": "/images/cad/sketchup.png",
-  "Plasticity": "/images/cad/plasticity.png",
-  "Maya": "/images/cad/maya.png",
-  "3ds Max": "/images/cad/3dsmax.svg",
-  "Cinema 4D": "/images/cad/cinema4d.png",
-  "Nomad Sculpt": "/images/cad/nomadsculpt.png",
-  "AutoCAD": "/images/cad/autocad.svg",
-  "SelfCAD": "/images/cad/selfcad.png",
-  "BlocksCAD": "/images/cad/blockscad.png",
-  "Meshmixer": "/images/cad/meshmixer.png",
-};
-
-const darkLogos = ["Fusion 360", "AutoCAD", "3ds Max", "Maya", "Meshmixer"];
-const needsBrightness = (name: string) => darkLogos.includes(name);
+import { cadLogos, needsBrightness } from '@/lib/cadLogos';
 
 export function CADRecommendationsSidebar() {
   const {

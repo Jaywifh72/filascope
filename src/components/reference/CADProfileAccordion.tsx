@@ -12,36 +12,7 @@ import {
   type PriceType,
   type SkillLevel
 } from '@/components/reference/CADBadges';
-
-// Logo mapping for CAD software
-const cadLogos: Record<string, string> = {
-  "Autodesk Fusion 360": "/images/cad/fusion360.png",
-  "Blender": "/images/cad/blender.png",
-  "SolidWorks": "/images/cad/solidworks.png",
-  "Tinkercad": "/images/cad/tinkercad.png",
-  "Maxon ZBrush": "/images/cad/zbrush.png",
-  "Autodesk Meshmixer": "/images/cad/meshmixer.png",
-  "FreeCAD": "/images/cad/freecad.svg",
-  "Rhino 3D (Rhinoceros)": "/images/cad/rhino3d.png",
-  "OpenSCAD": "/images/cad/openscad.png",
-  "Onshape": "/images/cad/onshape.png",
-  "Shapr3D": "/images/cad/shapr3d.png",
-  "Trimble SketchUp": "/images/cad/sketchup.png",
-  "Plasticity": "/images/cad/plasticity.png",
-  "Autodesk Maya": "/images/cad/maya.png",
-  "Autodesk 3ds Max": "/images/cad/3dsmax.svg",
-  "Maxon Cinema 4D": "/images/cad/cinema4d.png",
-  "Nomad Sculpt": "/images/cad/nomadsculpt.png",
-  "Autodesk AutoCAD": "/images/cad/autocad.svg",
-  "SelfCAD": "/images/cad/selfcad.png",
-  "BlocksCAD": "/images/cad/blockscad.png",
-};
-
-const darkLogos = [
-  "Autodesk Fusion 360", "Autodesk AutoCAD", "Autodesk 3ds Max", 
-  "Autodesk Maya", "Autodesk Meshmixer"
-];
-const needsBrightness = (name: string) => darkLogos.includes(name);
+import { cadLogos, needsBrightness } from '@/lib/cadLogos';
 
 // Taglines for each CAD software
 const softwareTaglines: Record<string, string> = {
