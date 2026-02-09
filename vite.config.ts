@@ -149,9 +149,9 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/@supabase")) {
             return "supabase";
           }
-          // React core
-          if (id.includes("node_modules/react-dom")) {
-            return "react-dom";
+          // React core (react + react-dom must stay together)
+          if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/")) {
+            return "react-vendor";
           }
           // Router
           if (id.includes("node_modules/react-router")) {
