@@ -107,12 +107,12 @@ export default defineConfig(({ mode }) => ({
           {
             // Cache static assets
             urlPattern: /\.(?:js|css)$/,
-            handler: "StaleWhileRevalidate",
+            handler: "NetworkFirst",
             options: {
               cacheName: "static-resources",
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                maxAgeSeconds: 60 * 60 * 24, // 1 day
               },
             },
           },
