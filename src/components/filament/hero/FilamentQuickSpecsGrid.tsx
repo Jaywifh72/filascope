@@ -143,7 +143,7 @@ export function FilamentQuickSpecsGrid({
   return (
     <div className={cn(
       "grid gap-2 sm:gap-3",
-      specs.length <= 2 ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4",
+      "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4",
       className,
     )}>
       {specs.map((spec) => (
