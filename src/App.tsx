@@ -19,7 +19,7 @@ import { SkipLink } from "./components/accessibility/SkipLink";
 import { ScreenReaderAnnouncerProvider } from "./components/accessibility/ScreenReaderAnnouncer";
 import { GlobalKeyboardHandler } from "./components/accessibility/GlobalKeyboardHandler";
 import { ErrorBoundary, initializeGlobalErrorHandler } from "./components/analytics/ErrorBoundary";
-import { OfflineBanner } from "./components/pwa";
+import { OfflineBanner, SWUpdateNotifier } from "./components/pwa";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
@@ -157,8 +157,9 @@ const App = () => (
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
-                {/* PWA: Offline indicator */}
+                {/* PWA: Offline indicator + update notifier */}
                 <OfflineBanner />
+                <SWUpdateNotifier />
                 <MaintenanceModeWrapper>
                 <RegionWelcomeBanner />
                 <Navbar />
