@@ -29,52 +29,7 @@ import { CADRecommendationsSidebar } from "@/components/reference/CADRecommendat
 import { CADProfileFilterPills, ProfileFilter } from "@/components/reference/CADProfileFilterPills";
 import { CADProfileAccordion } from "@/components/reference/CADProfileAccordion";
 import { CADCompareTray } from "@/components/reference/CADCompareTray";
-
-// Logo mapping for CAD software
-const cadLogos: Record<string, string> = {
-  // Table names
-  "Fusion 360": "/images/cad/fusion360.png",
-  "Blender": "/images/cad/blender.png",
-  "SolidWorks": "/images/cad/solidworks.png",
-  "Tinkercad": "/images/cad/tinkercad.png",
-  "ZBrush": "/images/cad/zbrush.png",
-  "Meshmixer": "/images/cad/meshmixer.png",
-  "FreeCAD": "/images/cad/freecad.svg",
-  "Rhino 3D": "/images/cad/rhino3d.png",
-  "OpenSCAD": "/images/cad/openscad.png",
-  "Onshape": "/images/cad/onshape.png",
-  "Shapr3D": "/images/cad/shapr3d.png",
-  "SketchUp": "/images/cad/sketchup.png",
-  "Plasticity": "/images/cad/plasticity.png",
-  "Maya": "/images/cad/maya.png",
-  "3ds Max": "/images/cad/3dsmax.svg",
-  "Cinema 4D": "/images/cad/cinema4d.png",
-  "Nomad Sculpt": "/images/cad/nomadsculpt.png",
-  "AutoCAD": "/images/cad/autocad.svg",
-  "SelfCAD": "/images/cad/selfcad.png",
-  "BlocksCAD": "/images/cad/blockscad.png",
-  // Accordion names (from cadData)
-  "Autodesk Fusion 360": "/images/cad/fusion360.png",
-  "Maxon ZBrush": "/images/cad/zbrush.png",
-  "Autodesk Meshmixer": "/images/cad/meshmixer.png",
-  "Trimble SketchUp": "/images/cad/sketchup.png",
-  "Maxon Cinema 4D": "/images/cad/cinema4d.png",
-  "Autodesk Maya": "/images/cad/maya.png",
-  "Autodesk 3ds Max": "/images/cad/3dsmax.svg",
-  "Autodesk AutoCAD": "/images/cad/autocad.svg",
-  "Rhino 3D (Rhinoceros)": "/images/cad/rhino3d.png",
-};
-
-// Dark logos that need brightness filter for dark backgrounds
-const darkLogos = [
-  "Fusion 360", "Autodesk Fusion 360",
-  "AutoCAD", "Autodesk AutoCAD",
-  "3ds Max", "Autodesk 3ds Max",
-  "Maya", "Autodesk Maya",
-  "Meshmixer", "Autodesk Meshmixer",
-];
-
-const needsBrightness = (name: string) => darkLogos.includes(name);
+import { cadLogos, needsBrightness } from '@/lib/cadLogos';
 
 type CADTab = "recommendations" | "comparison" | "profiles";
 

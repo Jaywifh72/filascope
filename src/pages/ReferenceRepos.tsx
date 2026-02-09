@@ -15,6 +15,7 @@ import MobileComparisonView from "@/components/reference/repos/mobile/MobileComp
 import ReposComparisonTable from "@/components/reference/repos/ReposComparisonTable";
 import ReposProfileAccordion from "@/components/reference/repos/ReposProfileAccordion";
 import { RatingLevel } from "@/lib/platformData";
+import { getImageUrl } from '@/lib/imageUrl';
 
 // Helper to convert numeric ratings (1-5) to semantic labels
 const mapNumberToSemantic = (num: number): RatingLevel => {
@@ -27,14 +28,14 @@ const mapNumberToSemantic = (num: number): RatingLevel => {
 
 // Logo mapping for repositories
 const repoLogos: Record<string, string> = {
-  "MakerWorld": "/images/repos/makerworld.png",
-  "Printables": "/images/repos/printables.png",
-  "Thingiverse": "/images/repos/thingiverse.png",
-  "Cults3D": "/images/repos/cults3d.png",
-  "MyMiniFactory": "/images/repos/myminifactory.png",
-  "Thangs": "/images/repos/thangs.png",
-  "Creality Cloud": "/images/repos/crealitycloud.png",
-  "GrabCAD": "/images/repos/grabcad.png",
+  "MakerWorld": getImageUrl("repos/makerworld.png"),
+  "Printables": getImageUrl("repos/printables.png"),
+  "Thingiverse": getImageUrl("repos/thingiverse.png"),
+  "Cults3D": getImageUrl("repos/cults3d.png"),
+  "MyMiniFactory": getImageUrl("repos/myminifactory.png"),
+  "Thangs": getImageUrl("repos/thangs.png"),
+  "Creality Cloud": getImageUrl("repos/crealitycloud.png"),
+  "GrabCAD": getImageUrl("repos/grabcad.png"),
 };
 
 const repoComparison = [

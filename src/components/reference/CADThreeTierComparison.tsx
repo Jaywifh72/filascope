@@ -22,6 +22,7 @@ import {
 import { useCADComparison, SelectedCADSoftware } from "@/contexts/CADComparisonContext";
 import { useCADFilters } from "@/contexts/CADFilterContext";
 import CADEmptyState from "@/components/reference/CADEmptyState";
+import { cadLogos, needsBrightness } from '@/lib/cadLogos';
 
 // Sort types
 type SortColumn = 'name' | 'price' | 'type' | 'platform' | 'score' | 'level' | null;
@@ -41,36 +42,6 @@ const COLUMN_TOOLTIPS: Record<string, string> = {
   score: "FilaScope rating (0-10): Weighted average of ease, precision, sculpting, print-readiness, and parametric capabilities.",
   level: "Recommended skill level: Beginner (easy to learn), Intermediate, or Advanced (professional expertise).",
 };
-
-// Logo mapping for CAD software
-const cadLogos: Record<string, string> = {
-  "Fusion 360": "/images/cad/fusion360.png",
-  "Blender": "/images/cad/blender.png",
-  "SolidWorks": "/images/cad/solidworks.png",
-  "Tinkercad": "/images/cad/tinkercad.png",
-  "ZBrush": "/images/cad/zbrush.png",
-  "Meshmixer": "/images/cad/meshmixer.png",
-  "FreeCAD": "/images/cad/freecad.svg",
-  "Rhino 3D": "/images/cad/rhino3d.png",
-  "OpenSCAD": "/images/cad/openscad.png",
-  "Onshape": "/images/cad/onshape.png",
-  "Shapr3D": "/images/cad/shapr3d.png",
-  "SketchUp": "/images/cad/sketchup.png",
-  "Plasticity": "/images/cad/plasticity.png",
-  "Maya": "/images/cad/maya.png",
-  "3ds Max": "/images/cad/3dsmax.svg",
-  "Cinema 4D": "/images/cad/cinema4d.png",
-  "Nomad Sculpt": "/images/cad/nomadsculpt.png",
-  "AutoCAD": "/images/cad/autocad.svg",
-  "SelfCAD": "/images/cad/selfcad.png",
-  "BlocksCAD": "/images/cad/blockscad.png",
-};
-
-const darkLogos = [
-  "Fusion 360", "AutoCAD", "3ds Max", "Maya", "Meshmixer",
-];
-
-const needsBrightness = (name: string) => darkLogos.includes(name);
 
 // CAD comparison data
 const cadComparisonRaw = [

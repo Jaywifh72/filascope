@@ -3,16 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SoftwareBadges, PriceType, SkillLevel } from "@/components/reference/CADBadges";
 import { useCADComparison, SelectedCADSoftware } from "@/contexts/CADComparisonContext";
-
-// Logo mapping
-const cadLogos: Record<string, string> = {
-  "Fusion 360": "/images/cad/fusion360.png",
-  "Blender": "/images/cad/blender.png",
-  "ZBrush": "/images/cad/zbrush.png",
-};
-
-const darkLogos = ["Fusion 360"];
-const needsBrightness = (name: string) => darkLogos.includes(name);
+import { cadLogos, needsBrightness } from '@/lib/cadLogos';
 
 // Badge configurations
 const badgeConfigs = {
