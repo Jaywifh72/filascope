@@ -145,13 +145,14 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/@supabase")) {
             return "supabase";
           }
-          // React core + Radix UI + React Router must share one chunk
+          // React core + Radix UI + React Router + scheduler must share one chunk
           // to avoid circular dependencies on React internals (createContext, forwardRef)
           if (
             id.includes("node_modules/react-dom") ||
             id.includes("node_modules/react/") ||
             id.includes("node_modules/@radix-ui") ||
-            id.includes("node_modules/react-router")
+            id.includes("node_modules/react-router") ||
+            id.includes("node_modules/scheduler/")
           ) {
             return "react-vendor";
           }
