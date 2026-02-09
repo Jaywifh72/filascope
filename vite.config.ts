@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "favicon.ico", "og-image.png"],
+      includeAssets: ["favicon.png", "og-image.png"],
       manifest: {
         name: "FilaScope - 3D Printer Filament Database",
         short_name: "FilaScope",
