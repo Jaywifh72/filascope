@@ -1,103 +1,114 @@
 
 
-# Deep-Dive Recovery Plan: FilaScope White Screen
+# Fix FilaScope Production White Screen - Move Images to Cloud Storage
 
-## Diagnosis
+## Problem
 
-The production site (filascope.com / filascope.lovable.app) is completely unresponsive -- returning nothing. The preview environment works perfectly, confirming this is purely a deployment pipeline failure.
+The site deploys ~156 files to Cloudflare R2 per publish, triggering a `429 Too Many Requests` rate limit. The JS bundles never reach production, resulting in a white page. The previous cleanup removed 87 unused files, but the remaining ~126 static files + ~30 build chunks still exceed the limit.
 
-**Root cause**: The Cloudflare R2 CDN rejects the asset upload with a `429 Too Many Requests` error, meaning the built JavaScript bundles never reach production. The HTML shell may load (dark background), but without JS, nothing renders.
+All remaining image files (111 total) are actively referenced in code -- they cannot simply be deleted.
 
-**Why previous fixes didn't work**: The first cleanup removed only 13 files. The project still has approximately **210 static files** in the `public/` directory, plus ~30 build output files. This is still high enough to trigger the R2 concurrent upload rate limit -- especially with rapid re-publish attempts that stack requests.
+## Solution: Move Images to Lovable Cloud Storage
 
-## Audit Results: 87 Unused Files Found
+Move all 111 images from `public/images/` to a public Lovable Cloud Storage bucket, then update all code references to use the storage URLs. This reduces the deployment payload from ~156 files to ~45 files (fonts, PWA icons, favicon, build output) -- well within R2 limits.
 
-A full cross-reference of every file in `public/` and `src/assets/` against all code references reveals **87 files that are never loaded by the application**:
+## File Count Impact
 
-### public/images/brands/ -- 65 unused duplicates
+```text
+BEFORE                          AFTER
+public/images/brands/  63       0  (moved to storage)
+public/images/cad/     20       0  (moved to storage)
+public/images/slicers/ 19       0  (moved to storage)
+public/images/repos/    8       0  (moved to storage)
+public/images/retailers/1       0  (moved to storage)
+public/fonts/           8       8  (stays)
+public/pwa-icons/       2       2  (stays)
+public/ root files      5       5  (stays)
+Build output           ~30     ~30 (stays)
+                      ----    ----
+TOTAL                 ~156     ~45
+```
 
-These are old/alternate format copies of brand logos. Only 65 of the 130 files are actually referenced in `src/lib/brandLogos.ts` or page components. The other 65 are dead weight:
-
-Examples of unused duplicates (the code uses the `-long`, `-white`, `-light`, or `-new` variants):
-- `3dxtech-new.png`, `3dxtech.jpg`, `3dxtech.webp` (code uses `3dxtech-long.png`)
-- `amolen.jpg`, `amolen.webp` (code uses `amolen-long.webp`)
-- `bambu-lab.png`, `bambu-lab.webp` (code uses `bambulab-long.webp`)
-- `colorfabb.jpg`, `colorfabb.webp` (code uses `colorfabb-long.webp`)
-- ...and 56 more similar pairs
-
-### public/images/filaments/ -- 8 unused files (entire directory)
-
-All 8 timberfill images are completely unreferenced in code. Zero imports, zero src attributes.
-
-### public/images/printers/ -- 6 unused files (entire directory)
-
-All 6 printer images (Kobra variants, Prusa Core One, Raise3D E2) are unreferenced.
-
-### public/images/cad/ -- 2 unused files
-
-`autodesk-light.svg` and `rhino3d.svg` are never referenced (code uses `autocad.svg` and `rhino3d.png`).
-
-### src/assets/ -- 3 unused logo variants
-
-- `filascope-logo-wide.png` -- unreferenced
-- `filascope-logo.png` -- unreferenced
-- `logo-filascope.jpg` -- unreferenced
-(Code uses only `filascope-logo-dark.jpg` and `logo-filascope.webp`)
-
-### Other potential cleanup
-
-- `public/favicon.ico` -- likely redundant with `public/favicon.png` (both exist, HTML only references `.png`)
+A 71% reduction in deployment files.
 
 ## Execution Plan
 
-### Phase 1: Delete all 87 unused files
+### Phase 1: Create a Public Storage Bucket
 
-Remove every file identified above. This reduces the public directory from ~210 files to ~123 files -- a 41% reduction in upload count.
+Create a `static-images` storage bucket in Lovable Cloud with public read access. No RLS complexity needed -- these are public brand logos and reference images.
 
-Files to delete (complete list):
+### Phase 2: Upload All Images to Storage
 
-**public/images/brands/** (65 files):
-`3dxtech-new.png`, `3dxtech.jpg`, `3dxtech.webp`, `amolen.jpg`, `amolen.webp`, `anycubic.png`, `atomic.png`, `atomic.webp`, `bambu-lab.png`, `bambu-lab.webp`, `colorfabb.jpg`, `colorfabb.webp`, `creality.png`, `duramic3d.png`, `elegoo.png`, `eryone-white.jpg`, `eryone.webp`, `esun.webp`, `extrudr.ico`, `fiberlogy-long.webp`, `fiberlogy.webp`, `filamentum.png`, `filamentum.webp`, `flashforge.png`, `flsun.png`, `formfutura.png`, `formfutura.webp`, `fusion-filaments.png`, `geeetech.png`, `gizmo-dorks.png`, `gizmo-dorks.webp`, `greengate3d.jpg`, `hatchbox-new.png`, `hatchbox.png`, `hatchbox.webp`, `ic3d.png`, `kingroon.png`, `matter3d.jpg`, `matter3d.webp`, `matterhackers.jpg`, `ninjatek.jpg`, `ninjatek.webp`, `numakers-long.png`, `overture.png`, `overture.webp`, `paramount-3d.webp`, `phaetus.jpg`, `polymaker.png`, `polymaker.webp`, `printed-solid.jpg`, `proto-pasta.webp`, `prusa-research.png`, `prusament.webp`, `push-plastic.png`, `raise3d.png`, `recreus.png`, `siraya-tech.jpg`, `siraya-tech.webp`, `snapmaker.png`, `sovol.png`, `spectrum-filaments.svg`, `sunlu.jpg`, `sunlu.webp`, `taulman3d.jpg`, `ultimaker.png`, `ultimaker.webp`, `voxelpla.webp`, `ziro.webp`
+Write a one-time edge function that reads each image from the project's own public URL (preview environment) and uploads it to the storage bucket, preserving the folder structure:
+- `brands/bambulab-long.webp`
+- `cad/fusion360.png`
+- `slicers/cura.png`
+- `repos/makerworld.png`
+- `retailers/amazon.png`
 
-**public/images/filaments/** (8 files -- entire directory):
-`timberfill-champagne.jpg`, `timberfill-charcoal.png`, `timberfill-cinnamon.jpg`, `timberfill-light-wood-tone.jpg`, `timberfill-redheart.png`, `timberfill-rosewood.jpg`, `timberfill-southern-pine.png`, `timberfill-terracotta.png`
+### Phase 3: Create a URL Helper
 
-**public/images/printers/** (6 files -- entire directory):
-`kobra-2-neo-trans.png`, `kobra-2-plus-trans.png`, `kobra-2-pro-trans.png`, `kobra-2-pro-white.webp`, `prusa-core-one-l.png`, `raise3d-e2.png`
+Create a simple utility function like `getImageUrl(path)` that returns the full Lovable Cloud Storage public URL for a given image path. This centralizes the URL pattern so if the storage location ever changes, only one file needs updating.
 
-**public/images/cad/** (2 files):
-`autodesk-light.svg`, `rhino3d.svg`
+### Phase 4: Update All Code References
 
-**src/assets/** (3 files):
-`filascope-logo-wide.png`, `filascope-logo.png`, `logo-filascope.jpg`
+Update every file that references `/images/...` paths to use the new `getImageUrl()` helper:
 
-**public/** (1 file):
-`favicon.ico`
+- `src/lib/brandLogos.ts` -- brand logo mappings
+- `src/pages/ReferenceSlicers.tsx` -- slicer logos
+- `src/pages/ReferenceCAD.tsx` -- CAD software logos
+- `src/pages/ReferenceRepos.tsx` -- repository logos
+- `src/components/reference/CADCompareTray.tsx`
+- `src/components/reference/CADRecommendationsSidebar.tsx`
+- `src/components/reference/CADProfileAccordion.tsx`
+- `src/components/reference/CADThreeTierComparison.tsx`
+- Any other files referencing `/images/` paths
 
-### Phase 2: Verify preview still works
+### Phase 5: Delete All Images from `public/images/`
 
-After deletions, confirm the preview loads correctly with no broken images.
+Remove the entire `public/images/` directory (111 files) from the codebase.
 
-### Phase 3: Wait and publish
+### Phase 6: Verify and Publish
 
-Wait at least 20 minutes from the most recent publish attempt, then perform a single clean publish. Do not retry rapidly if it fails -- each retry worsens the rate limit.
+1. Confirm the preview loads correctly with all images pulling from storage
+2. Wait at least 20 minutes from the last failed publish
+3. Publish once -- do not retry rapidly
+4. Verify `filascope.lovable.app` and `filascope.com` in incognito windows
 
-### Phase 4: Verify production
+## Technical Details
 
-1. Open `https://filascope.lovable.app` in an incognito/private window
-2. Open `https://filascope.com` in an incognito/private window
-3. Test on mobile
-4. If cached service worker causes issues, hard-refresh with Ctrl+Shift+R
+**Storage bucket configuration:**
+- Bucket name: `static-images`
+- Access: Public (read-only via public URL)
+- No authentication required for reads
 
-### If Phase 3 still fails
+**URL pattern:**
+Storage URLs follow this format:
+`https://cfqfavmhdbyjzejipiwa.supabase.co/storage/v1/object/public/static-images/brands/bambulab-long.webp`
 
-If the deployment continues to fail after this 41% file reduction, the issue may require platform-level intervention (adjusting Cloudflare R2 concurrency settings or implementing chunked uploads). At that point, this would need to be escalated to Lovable support.
+**Helper function (`src/lib/imageUrl.ts`):**
+```typescript
+const STORAGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/static-images`;
+export const getImageUrl = (path: string) => `${STORAGE_BASE}/${path}`;
+```
 
-## Impact Assessment
+**Code change pattern:**
+```typescript
+// Before
+"/images/brands/bambulab-long.webp"
 
-- **Before first cleanup**: ~300+ files in deployment payload
-- **After first cleanup** (13 files removed): ~210 files -- still too many
-- **After this cleanup** (87 more files removed): ~123 files -- 59% reduction from original
-- **Risk**: Zero. Every deleted file has been verified as unreferenced in any source code file.
-- **No code changes needed**: Only file deletions. The application logic is unaffected.
+// After
+getImageUrl("brands/bambulab-long.webp")
+```
+
+## Risk Assessment
+
+- **Low risk**: Images are public, read-only assets. Moving them to storage is a standard pattern.
+- **Rollback**: If storage fails, the images can be re-added to `public/` from git history.
+- **Performance**: Storage URLs are CDN-backed, so load times should be equivalent or better.
+- **No data loss**: All images are preserved in storage, just served from a different URL.
+
+## Why This Fixes the Problem
+
+The root cause is too many files in the R2 upload. By moving 111 images to cloud storage (which is already deployed and available), the publish payload drops from ~156 to ~45 files. This is well within Cloudflare R2's rate limits and should resolve the white screen permanently -- even as the project grows.
 
