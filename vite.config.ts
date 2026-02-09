@@ -141,16 +141,16 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-") || id.includes("node_modules/victory-vendor")) {
             return "recharts";
           }
-          // Radix UI primitives
-          if (id.includes("node_modules/@radix-ui")) {
-            return "radix-ui";
-          }
           // Supabase client
           if (id.includes("node_modules/@supabase")) {
             return "supabase";
           }
-          // React core (react + react-dom must stay together)
-          if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/")) {
+          // React core + Radix UI must share one chunk so Radix can access React internals
+          if (
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/@radix-ui")
+          ) {
             return "react-vendor";
           }
           // Router
