@@ -145,17 +145,15 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/@supabase")) {
             return "supabase";
           }
-          // React core + Radix UI must share one chunk so Radix can access React internals
+          // React core + Radix UI + React Router must share one chunk
+          // to avoid circular dependencies on React internals (createContext, forwardRef)
           if (
             id.includes("node_modules/react-dom") ||
             id.includes("node_modules/react/") ||
-            id.includes("node_modules/@radix-ui")
+            id.includes("node_modules/@radix-ui") ||
+            id.includes("node_modules/react-router")
           ) {
             return "react-vendor";
-          }
-          // Router
-          if (id.includes("node_modules/react-router")) {
-            return "react-router";
           }
           // Tanstack Query
           if (id.includes("node_modules/@tanstack")) {
