@@ -3,6 +3,7 @@ import { Heart, ExternalLink, Check, Printer as PrinterIcon, RefreshCw, ImageIco
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getPrinterImage, getPrinterFeatures, getPrinterBadges, type CardSizeResult } from "@/lib/printerCardUtils";
 import { generateRecommendation } from "@/lib/printerRecommendations";
@@ -273,18 +274,13 @@ export default function LargeFeaturedPrinterCard({
           </div>
 
           {/* Brand Logo - Bottom Right */}
-          {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-30 transition-opacity duration-300">
-              <img 
-                src={getBrandLogo(printer.brand?.brand || null)!} 
-                alt={`${printer.brand?.brand} logo`}
-                className="h-auto max-w-[40px] object-contain"
-                width={40}
-                height={40}
-                loading="lazy"
-              />
-            </div>
-          )}
+          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-30 transition-opacity duration-300">
+            <BrandLogo
+              src={getBrandLogo(printer.brand?.brand || null)}
+              brandName={printer.brand?.brand || "Brand"}
+              size="sm"
+            />
+          </div>
         </div>
       </Link>
     </article>
