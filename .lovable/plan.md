@@ -1,45 +1,75 @@
 
-
-# Fix Dark Logo Visibility on Brand Cards
+# Universal CDN Image Optimization
 
 ## Problem
+Image optimization currently only works for `cdn.shopify.com`, `caz3d.com/cdn/`, and `store.bbl*` domains. Many other Shopify-hosted stores (Fillamentum, Atomic Filament, Push Plastic, Recreus, etc.) and several components (ProductGallery, ZoomImage, ViewHistorySection, compare trays, HardwareRecommendationCard) serve full-size images without width parameters.
 
-After migrating logos to Supabase Storage, many brand logos with dark content on transparent backgrounds are nearly invisible against the dark card backgrounds. The current backdrop (`dark:bg-white/[0.07]`) provides almost no contrast.
+Database analysis shows **13+ domains** with Shopify CDN patterns (`/cdn/shop/` in URL) that are not being optimized.
 
-## Changes
+## Plan
 
-### 1. Increase logo backdrop opacity in BrandCard (`src/components/brands/BrandCard.tsx`, line 73)
+### Step 1: Expand CDN detection in `src/utils/imageOptimization.ts`
 
-Change the logo container background from `dark:bg-white/[0.07]` to `dark:bg-white/20`. This creates a visible semi-transparent light pill behind all logos in dark mode, making dark logos readable while not washing out bright/colorful ones.
+Replace the narrow `isShopifyCdn()` check with a universal pattern: any URL containing `/cdn/shop/` or `/cdn/` paired with Shopify query param support. This catches all Shopify-hosted stores automatically (atomicfilament.com, pushplastic.com, recreus.com, shop.fillamentum.com, etc.) without maintaining a domain allowlist.
 
+Updated detection:
+- `/cdn/shop/` in URL path (universal Shopify indicator) -- covers all stores
+- Keep explicit `cdn.shopify.com` and `caz3d.com/cdn/` checks for clarity
+- Keep `store.bbl*` regex
+- Add Supabase `/render/image/` URL support with dynamic width replacement
+
+Also update the Supabase branch to handle URLs that already contain `width=` (replace instead of skip), enabling context-appropriate sizing.
+
+### Step 2: Mirror changes in `src/components/ui/optimized-image.tsx`
+
+Update `cdnSupportsWebP()` and `getOptimizedSrc()` in the OptimizedImage component to use the same expanded `/cdn/shop/` pattern, ensuring the `<picture>` element with WebP `<source>` works for all Shopify stores.
+
+### Step 3: Add optimization to unoptimized components
+
+These components currently render raw `<img src={url}>` without any width params:
+
+| Component | Display size | Action |
+|---|---|---|
+| `ProductGallery` thumbnails (`product-gallery.tsx` line 229) | 64x64px | Add `getOptimizedImageUrl(url, 128)` |
+| `ZoomImage` (`zoom-image.tsx` line 79) | ~400px hero | Add `getOptimizedImageUrl(src, 800)` for main, keep full URL for zoom background |
+| `DigitalViewport` main image (line 84) | ~280px | Add `getOptimizedImageUrl(url, 560)` |
+| `DigitalViewport` thumbnails (line 118) | ~60px | Add `getOptimizedImageUrl(url, 120)` |
+| `ViewHistorySection` (line 62) | 56x56px | Add `getOptimizedImageUrl(image, 112)` |
+| `HardwareRecommendationCard` (line 101) | 48x48px | Add `getOptimizedImageUrl(url, 96)` |
+| Compare tray images (3 files) | 40-48px | Add `getOptimizedImageUrl(url, 96)` |
+| `ProfileReviewsTab` (line 71) | ~200px | Add `getOptimizedImageUrl(image, 400)` |
+
+### Step 4: Context-aware brand logo sizing
+
+Update `src/lib/brandLogos.ts` to export a function that accepts a target width, so callers in small contexts (e.g., compare cards at 60px) can request `width=120` instead of always `width=384`.
+
+Add a helper:
 ```
-Before: bg-white/10 dark:bg-white/[0.07]
-After:  bg-white/10 dark:bg-white/20
+export function getBrandLogoUrl(vendor: string | null, displayWidth?: number): string | null
 ```
 
-### 2. Apply a mild global brightness boost in BrandLogo (`src/components/ui/BrandLogo.tsx`, line 61)
+The default remains 384, but small-context callers can pass 120.
 
-Add `dark:brightness-150` to ALL logo images (not just Fiberlogy). A 1.5x brightness lift makes dark logos more visible while having negligible effect on already-bright logos. The Fiberlogy-specific `dark:brightness-[2.5]` override remains and takes precedence since it's more specific.
+### Step 5: No regressions
 
-```
-Before: needsBrightness && "dark:brightness-[2.5]"
-After:  "dark:brightness-150", needsBrightness && "dark:brightness-[2.5]"
-```
+- Homepage, deals page, recently viewed, continue browsing sections already use `getOptimizedImageUrl` -- these will automatically benefit from the expanded CDN detection
+- The `getOptimizedImageUrl` function already handles null/undefined/empty strings
+- URLs that already have `?width=` are skipped (no double-append)
 
-Since Tailwind's `brightness-150` outputs `filter: brightness(1.5)` and the Fiberlogy check adds `brightness-[2.5]`, the last matching class wins for Fiberlogy, preserving its stronger boost.
+## Technical Details
 
-## Files Changed
+**Files to modify:**
+1. `src/utils/imageOptimization.ts` -- expand `isShopifyCdn` to universal `/cdn/shop/` pattern
+2. `src/components/ui/optimized-image.tsx` -- mirror CDN detection expansion
+3. `src/components/ui/product-gallery.tsx` -- optimize thumbnail `<img>` tags
+4. `src/components/ui/zoom-image.tsx` -- optimize hero image src (not zoom background)
+5. `src/components/printer/DigitalViewport.tsx` -- optimize main + thumbnail images
+6. `src/components/account/ViewHistorySection.tsx` -- optimize list thumbnails
+7. `src/components/filament/print-settings/HardwareRecommendationCard.tsx` -- optimize card image
+8. `src/components/compare/UnifiedCompareTray.tsx` -- optimize tray thumbnails
+9. `src/components/compare/UnifiedMobileCompareTray.tsx` -- optimize tray thumbnails
+10. `src/components/compare/UnifiedComparePill.tsx` -- optimize pill thumbnails
+11. `src/components/profile/ProfileReviewsTab.tsx` -- optimize review card images
+12. `src/lib/brandLogos.ts` -- add context-aware width parameter
 
-| File | Line | Change |
-|------|------|--------|
-| `src/components/brands/BrandCard.tsx` | 73 | `dark:bg-white/[0.07]` to `dark:bg-white/20` |
-| `src/components/ui/BrandLogo.tsx` | 61 | Add `"dark:brightness-150"` to all logo images |
-
-## Impact
-
-- Anycubic, FormFutura, Proto-Pasta, Eryone -- dark logos become clearly visible
-- Polymaker, eSun, Amolen, Bambu Lab -- bright logos unaffected (1.5x on already-bright colors is imperceptible)
-- Fiberlogy -- retains its 2.5x boost
-- Light mode -- no change (filters are `dark:` prefixed)
-- Other pages using BrandLogo (filament cards, admin health grid) -- get the same mild brightness boost, improving consistency
-
+**Estimated impact:** Based on the database, ~1,800+ filament images from non-Shopify-CDN Shopify stores will now be served at appropriate sizes instead of full resolution. Per-page savings of 2-10MB on image-heavy pages (brand detail, filament grid).
