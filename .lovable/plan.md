@@ -1,99 +1,134 @@
 
 
-# Quality Improvement Pass — Image and Data Issues
+# Comprehensive Image Optimization Pass
 
-## Task 1: Footer "FFilaScope" Visual Fix
-**Priority: Immediate | Effort: 5 min**
+## Summary
 
-The footer renders a square icon containing "F" followed by the text "FilaScope", which visually reads as "FFilaScope". Fix by either:
-- Replacing the "F" text inside the icon with a small logo/icon graphic, OR
-- Changing the icon content to a non-letter symbol (e.g., a small activity/zap icon), OR
-- Removing the separate "F" box and just rendering "FilaScope" as styled text
-
-**File:** `src/components/SiteFooter.tsx` (lines 138-143)
+Several components bypass the existing `OptimizedImage` component and render raw `<img>` tags with full-resolution URLs and no srcset. This plan fixes each one.
 
 ---
 
-## Task 2: Product Count UX Clarification
-**Priority: High | Effort: 20 min**
+## Task 1: Navbar Logo Optimization
 
-Currently shows: `1,048 Products of 1,073` with no explanation of WHY the numbers differ.
+**File:** `src/components/Navbar.tsx` (lines 234-244)
 
-The `ResultsHeader` already has a `selectedPrinter` subtitle ("Compatible with Bambu Lab H2C") but it appears on a separate line below the count. The fix:
-- When a printer filter is active AND `totalCatalogCount > count`, change the "of X" text to include context: `"of {total} total — filtered by {printerBrand} {printerName} compatibility"`
-- Alternatively, integrate the printer context inline: `1,048 Compatible Products (1,073 total)`
+**Problem:** The logo is 1792x576px but displayed at ~112x36px (h-8/h-9). No srcset.
 
-**Files:** `src/components/ResultsHeader.tsx` (lines 53-58)
+**Fix:** Since the logo is a bundled Vite asset (imported from `@/assets/logo-filascope.webp`), we can't resize it at build time without adding a build plugin. The practical fix:
+- Add `width={224}` and `height={72}` attributes (2x retina target) to set explicit dimensions
+- The image is already WebP and loaded eagerly with `fetchpriority="high"`, which is correct
+- Add a CSS `max-height` constraint and let the browser handle downscaling
+- **Best approach:** Generate a smaller version of the logo (224x72px) and replace the asset file. You would need to upload a resized version. Alternatively, add `style={{ maxWidth: '224px' }}` to prevent the browser from decoding the full 1792px image into memory
 
----
-
-## Task 3: Brand Logo Optimization
-**Priority: Medium | Effort: 2-3 hours (manual/iterative)**
-
-Current state: 49 logo files — 20 are already `.webp`, 29 are `.png`/`.jpg`.
-
-Files needing conversion to WebP:
-```text
-.png: 3dsolutech, 3dxtech, ankermake, azurefilm, creality, eryone, esun, 
-      extrudr, filaments-ca, flashforge, formfutura, geeetech, hatchbox, 
-      ic3d, markforged, ninjatek, numakers, polymaker, protopasta, 
-      prusament, pushplastic, qidi, raise3d, recreus, sirayatech, 
-      snapmaker, spectrum, sunlu, treed, ultimaker
-.jpg: atomic
-```
-
-**Approach:**
-- This requires re-uploading optimized files through the chat (drag-and-drop). Lovable cannot run image conversion tools directly.
-- For each logo: resize to max 400px wide, convert to WebP, target under 20KB
-- After uploading new `.webp` versions, update `src/lib/brandLogos.ts` to reference `.webp` extensions
-- Remove old `.png`/`.jpg` files
-
-**Recommendation:** Handle this in a dedicated session — batch convert externally, upload all at once, then update the mapping file.
+**Recommendation:** Upload a pre-optimized 224x72px version of the logo to replace `src/assets/logo-filascope.webp`. This is the only way to actually reduce the download size. The current file is likely ~30-50KB when it could be ~3KB.
 
 ---
 
-## Task 4: "No Image" Data Enrichment
-**Priority: Medium | Effort: 2-4 hours**
+## Task 2: Continue Browsing Thumbnails
 
-Database audit results:
-| Brand | Missing Images |
-|-------|---------------|
-| Fiberlogy | 25 |
-| Prusament | 5 |
-| **Total** | **30** |
+**File:** `src/components/ContinueBrowsingSection.tsx` (lines 53-60)
 
-This is relatively small (30 products). Approach:
+**Problem:** Uses `getOptimizedImageUrl(image, 200)` which is good for Shopify CDN images, but:
+- No srcset for retina displays
+- Non-Shopify images still served at full resolution
+- Display size is 40x40px, so target width should be 80px (2x retina), not 200px
 
-1. **Query the specific products** to get their `product_url` values
-2. **Extend the existing `scrape-new-brand-images` edge function** — it already handles Shopify CDN scraping with Firecrawl. Add Fiberlogy and Prusament URL patterns to `extractProductImage()`
-3. **Run the scraper** from the admin panel targeting these two brands
-4. **Manual fallback** — for any products where scraping fails, manually find and insert image URLs via SQL
-
-The existing edge function (`supabase/functions/scrape-new-brand-images/index.ts`) already supports these brands in its query — just needs to be invoked with `brands: ["Fiberlogy", "Prusament"]`.
+**Fix:**
+- Change `getOptimizedImageUrl(image, 80)` (was 200)
+- Add `srcSet={getImageSrcSet(image, [80, 160]) || undefined}` for Shopify images
+- Add `sizes="40px"` attribute
 
 ---
 
-## Task 5: Image CDN Proxy (Deferred)
-**Priority: Low | Effort: 4+ hours**
+## Task 3: Recently Viewed Section
 
-This is an architectural change with significant scope. The approach would be:
-1. Create an edge function that fetches external images, stores them in Lovable Cloud storage, and returns the storage URL
-2. Run a batch job to cache all product images
-3. Update image URLs in the database to point to cached versions
+**File:** `src/components/RecentlyViewedSection.tsx` (lines 80-90)
 
-**Recommendation:** Defer this. The srcset and WebP optimizations already implemented provide most of the performance benefit. External CDNs (Shopify, etc.) are reliable and fast. Revisit only if load times become a measurable problem.
+**Problem:** Already uses `getOptimizedImageUrl(image, 400)` and `getImageSrcSet(image, [200, 400])` -- this was fixed in a previous pass. Display is 160px wide, so 400px target is fine (2x retina). This is already optimized.
+
+**Status:** No changes needed.
+
+---
+
+## Task 4: Deals Page — DealCard Images
+
+**File:** `src/components/deals/DealCard.tsx` (lines 110-121)
+
+**Problem:** DealCard already uses `OptimizedImage` with `width={320}`, which handles srcset and lazy loading internally. The user report says "ALL 103 eager-loaded" which suggests the `OptimizedImage` component's lazy loading logic may not be working correctly, or the deals page is rendering all cards without virtualization.
+
+**Investigation:** The `OptimizedImage` component uses IntersectionObserver for lazy loading (line 113-117 of optimized-image.tsx). It does NOT use the native `loading="lazy"` attribute -- it uses a custom observer. If all cards are within the 200px rootMargin on initial render, they'll all load eagerly.
+
+**Fix:**
+- In `OptimizedImage`, ensure the `priority` prop defaults to `false` (it does)
+- The DealCard doesn't pass `priority={true}`, so lazy loading should work
+- The real issue might be that all deal cards are rendered in the DOM at once. Consider adding `loading="lazy"` as a native fallback on the underlying `<img>` tag inside `OptimizedImage`
+- Check if `OptimizedImage` sets `loading="lazy"` on its `<img>` -- if not, add it as a belt-and-suspenders approach
+
+**File:** `src/components/ui/optimized-image.tsx`
+- Add `loading={priority ? "eager" : "lazy"}` to the `<img>` element as a native fallback alongside the IntersectionObserver approach
+
+---
+
+## Task 5: Sidebar DealsModule Thumbnails
+
+**File:** `src/components/sidebar/DealsModule.tsx` (lines 68-75)
+
+**Problem:** Raw `<img>` with `src={deal.featured_image}` -- no optimization at all. Display size is 48x48px.
+
+**Fix:**
+- Import `getOptimizedImageUrl` from `@/utils/imageOptimization`
+- Change `src={deal.featured_image}` to `src={getOptimizedImageUrl(deal.featured_image, 96)}`
+- Add `srcSet` and `sizes="48px"` for Shopify images
+
+---
+
+## Task 6: SimilarFilamentCard Images
+
+**File:** `src/components/filament/similar/SimilarFilamentCard.tsx` (lines 208-216)
+
+**Problem:** Raw `<img src={filament.featured_image}>` with no optimization. Display is ~240px square.
+
+**Fix:**
+- Import `getOptimizedImageUrl` and `getImageSrcSet`
+- Change to `src={getOptimizedImageUrl(filament.featured_image, 480)}`
+- Add `srcSet={getImageSrcSet(filament.featured_image, [240, 480]) || undefined}`
+- Add `sizes="240px"`
+
+---
+
+## Task 7: SimilarMaterialCard
+
+**File:** `src/components/filament/similar/SimilarMaterialCard.tsx`
+
+**Status:** This component does NOT render a product image -- it shows brand logo, title, scores, and price. No image optimization needed.
+
+---
+
+## Task 8: Printer Cards
+
+**File:** `src/components/printers/MediumStandardPrinterCard.tsx`
+
+**Status:** Already uses `OptimizedImage` component. No changes needed.
 
 ---
 
 ## Implementation Order
 
-| Step | Task | Files Changed |
-|------|------|--------------|
-| 1 | Fix footer "FFilaScope" | `SiteFooter.tsx` |
-| 2 | Clarify product count UX | `ResultsHeader.tsx` |
-| 3 | Run image scraper for Fiberlogy/Prusament | Admin panel action (no code change) |
-| 4 | Brand logo WebP conversion | `public/brands/*`, `brandLogos.ts` |
-| 5 | CDN proxy (deferred) | — |
+| Step | File | Change |
+|------|------|--------|
+| 1 | `ContinueBrowsingSection.tsx` | Reduce target width 200 to 80, add srcset |
+| 2 | `DealsModule.tsx` | Add `getOptimizedImageUrl` to sidebar thumbnails |
+| 3 | `SimilarFilamentCard.tsx` | Add `getOptimizedImageUrl` + srcset |
+| 4 | `optimized-image.tsx` | Add native `loading="lazy"` fallback |
+| 5 | `Navbar.tsx` | Add dimensional constraints to logo img |
 
-Steps 1-2 are quick code fixes. Step 3 uses existing infrastructure. Step 4 requires external image processing and a dedicated upload session.
+Step 1-4 are code changes. The logo (Task 1) ideally requires uploading a resized asset file -- the code change alone won't reduce download size.
+
+---
+
+## Out of Scope (Deferred)
+
+- **Logo asset replacement**: Requires you to upload a resized 224x72px WebP file
+- **Deals page virtualization**: Would require react-window or similar for 100+ cards
+- **Non-Shopify image optimization**: Images from caz3d.com and other non-CDN sources cannot be resized server-side without a proxy
 
