@@ -31,13 +31,13 @@ function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3 min-w-0">
+          <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3 min-w-[130px]">
             <div className="p-2 rounded-lg bg-primary/10 shrink-0">
               <Icon className="h-5 w-5 text-primary" />
             </div>
             <div className="flex flex-col gap-1 min-w-0">
-              <span className="text-xs text-gray-400">{label}</span>
-              <span className="text-base font-semibold text-white break-words leading-snug">{value}</span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">{label}</span>
+              <span className="text-sm font-semibold text-foreground whitespace-nowrap leading-snug">{value}</span>
             </div>
           </div>
         </TooltipTrigger>
@@ -126,7 +126,7 @@ export function PrinterHeroSection({
           />
 
           {/* Quick Specs Grid - 2x2 on mobile, 4 columns on larger screens */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4 overflow-x-auto">
             <QuickSpecCard
               icon={Box} 
               label="Build Volume" 
@@ -134,18 +134,18 @@ export function PrinterHeroSection({
             />
             <QuickSpecCard 
               icon={Gauge} 
-              label="Max Speed" 
+              label="Speed" 
               value={maxSpeed} 
             />
             <QuickSpecCard 
               icon={Thermometer} 
-              label="Max Nozzle Temp" 
+              label="Nozzle Temp" 
               value={maxNozzleTemp} 
             />
             <QuickSpecCard 
               icon={hasWifi ? Wifi : WifiOff} 
               label="Connectivity" 
-              value={hasWifi ? "Wi-Fi Enabled" : "No Wi-Fi"} 
+              value={hasWifi ? "Wi-Fi" : "No Wi-Fi"} 
             />
           </div>
 
