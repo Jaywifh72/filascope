@@ -1,75 +1,78 @@
 
-# Universal CDN Image Optimization
+
+# Filament Similarity Engine
 
 ## Problem
-Image optimization currently only works for `cdn.shopify.com`, `caz3d.com/cdn/`, and `store.bbl*` domains. Many other Shopify-hosted stores (Fillamentum, Atomic Filament, Push Plastic, Recreus, etc.) and several components (ProductGallery, ZoomImage, ViewHistorySection, compare trays, HardwareRecommendationCard) serve full-size images without width parameters.
+The "Similar filaments" and "Cheaper Alternative" features match purely by base material name (e.g., anything starting with "PLA"). This produces bad recommendations -- a Shiny Silk PLA gets recommended as "similar" to a Matte PLA, even though they are functionally opposite products.
 
-Database analysis shows **13+ domains** with Shopify CDN patterns (`/cdn/shop/` in URL) that are not being optimized.
+## Solution
+Create a shared similarity scoring utility that understands finish type, reinforcement, diameter, temperature compatibility, and high-speed capability -- using data already in the database.
 
-## Plan
+## Architecture
 
-### Step 1: Expand CDN detection in `src/utils/imageOptimization.ts`
+### Step 1: New file `src/lib/filamentSimilarity.ts`
 
-Replace the narrow `isShopifyCdn()` check with a universal pattern: any URL containing `/cdn/shop/` or `/cdn/` paired with Shopify query param support. This catches all Shopify-hosted stores automatically (atomicfilament.com, pushplastic.com, recreus.com, shop.fillamentum.com, etc.) without maintaining a domain allowlist.
+Exports these functions:
 
-Updated detection:
-- `/cdn/shop/` in URL path (universal Shopify indicator) -- covers all stores
-- Keep explicit `cdn.shopify.com` and `caz3d.com/cdn/` checks for clarity
-- Keep `store.bbl*` regex
-- Add Supabase `/render/image/` URL support with dynamic width replacement
+- **`getBaseMaterial(material)`** -- Normalizes "PLA-CF" to "PLA", "PA6-GF" to "PA", etc. Consolidates the 5+ scattered implementations already in the codebase.
 
-Also update the Supabase branch to handle URLs that already contain `width=` (replace instead of skip), enabling context-appropriate sizing.
+- **`getFinishType(filament)`** -- Returns normalized finish from the `finish_type` column, falling back to title parsing (reuses logic from existing `filamentHelpers.ts` functions like `isSilkFilament`, `isMatteFilament`, etc.). Returns one of: "standard", "matte", "silk", "gloss", "satin", "galaxy", "marble", "glow", "dual-color", "gradient", "metallic", "sparkle", "wood", "stone", "transparent", "translucent".
 
-### Step 2: Mirror changes in `src/components/ui/optimized-image.tsx`
+- **`isReinforced(filament)`** -- Checks `carbon_fiber_percentage`, `glass_fiber_percentage`, and title patterns for CF/GF.
 
-Update `cdnSupportsWebP()` and `getOptimizedSrc()` in the OptimizedImage component to use the same expanded `/cdn/shop/` pattern, ensuring the `<picture>` element with WebP `<source>` works for all Shopify stores.
+- **`isDisqualified(source, candidate)`** -- Hard disqualification rules:
+  1. Different base material
+  2. Different diameter (1.75mm vs 2.85mm)
+  3. Reinforcement mismatch (CF vs non-CF)
+  4. Nozzle abrasiveness mismatch
 
-### Step 3: Add optimization to unoptimized components
+- **`computeSimilarityScore(source, candidate)`** -- Scoring (max 100 points):
+  - Finish type match: 35 pts (exact match) / 20 pts (same family) / 0 pts (different family)
+  - Temperature compatibility: 20 pts
+  - High-speed match: 15 pts
+  - Price tier (neutral): 15 pts
+  - Spool size: 10 pts
+  - Has image: 5 pts
 
-These components currently render raw `<img src={url}>` without any width params:
+- **`buildSimilarityQuery(source, options)`** -- Builds a Supabase query with hard constraints as SQL filters (same base material, same diameter, matching reinforcement), selecting all fields needed for client-side scoring.
 
-| Component | Display size | Action |
-|---|---|---|
-| `ProductGallery` thumbnails (`product-gallery.tsx` line 229) | 64x64px | Add `getOptimizedImageUrl(url, 128)` |
-| `ZoomImage` (`zoom-image.tsx` line 79) | ~400px hero | Add `getOptimizedImageUrl(src, 800)` for main, keep full URL for zoom background |
-| `DigitalViewport` main image (line 84) | ~280px | Add `getOptimizedImageUrl(url, 560)` |
-| `DigitalViewport` thumbnails (line 118) | ~60px | Add `getOptimizedImageUrl(url, 120)` |
-| `ViewHistorySection` (line 62) | 56x56px | Add `getOptimizedImageUrl(image, 112)` |
-| `HardwareRecommendationCard` (line 101) | 48x48px | Add `getOptimizedImageUrl(url, 96)` |
-| Compare tray images (3 files) | 40-48px | Add `getOptimizedImageUrl(url, 96)` |
-| `ProfileReviewsTab` (line 71) | ~200px | Add `getOptimizedImageUrl(image, 400)` |
+### Step 2: Update `src/hooks/useSimilarFilamentsEnhanced.ts`
 
-### Step 4: Context-aware brand logo sizing
+- Replace the current `.eq("material", currentFilament.material)` query with `buildSimilarityQuery()` which uses `.ilike("material", baseMaterial + "%")` plus reinforcement filters
+- After fetching candidates, run `computeSimilarityScore()` on each and sort by score
+- Filter out any `disqualified` results
+- Keep existing deduplication, brand diversity (max 2 per brand), and sorting logic
 
-Update `src/lib/brandLogos.ts` to export a function that accepts a target width, so callers in small contexts (e.g., compare cards at 60px) can request `width=120` instead of always `width=384`.
+### Step 3: Update `src/components/filament/CheaperAlternativeCallout.tsx`
 
-Add a helper:
-```
-export function getBrandLogoUrl(vendor: string | null, displayWidth?: number): string | null
-```
-
-The default remains 384, but small-context callers can pass 120.
-
-### Step 5: No regressions
-
-- Homepage, deals page, recently viewed, continue browsing sections already use `getOptimizedImageUrl` -- these will automatically benefit from the expanded CDN detection
-- The `getOptimizedImageUrl` function already handles null/undefined/empty strings
-- URLs that already have `?width=` are skipped (no double-append)
+- Import `getBaseMaterial`, `getFinishType`, `isReinforced`, `computeSimilarityScore` from the new utility
+- Add `finish_type`, `carbon_fiber_percentage`, `glass_fiber_percentage`, `high_speed_capable`, `is_nozzle_abrasive`, `diameter_nominal_mm`, `nozzle_temp_min_c`, `nozzle_temp_max_c` to the Supabase select
+- After fetching candidates, filter out disqualified ones and only recommend alternatives with a similarity score above 50 ("close_match" or better)
+- This prevents recommending a Silk PLA as a "cheaper alternative" to a Matte PLA
 
 ## Technical Details
 
-**Files to modify:**
-1. `src/utils/imageOptimization.ts` -- expand `isShopifyCdn` to universal `/cdn/shop/` pattern
-2. `src/components/ui/optimized-image.tsx` -- mirror CDN detection expansion
-3. `src/components/ui/product-gallery.tsx` -- optimize thumbnail `<img>` tags
-4. `src/components/ui/zoom-image.tsx` -- optimize hero image src (not zoom background)
-5. `src/components/printer/DigitalViewport.tsx` -- optimize main + thumbnail images
-6. `src/components/account/ViewHistorySection.tsx` -- optimize list thumbnails
-7. `src/components/filament/print-settings/HardwareRecommendationCard.tsx` -- optimize card image
-8. `src/components/compare/UnifiedCompareTray.tsx` -- optimize tray thumbnails
-9. `src/components/compare/UnifiedMobileCompareTray.tsx` -- optimize tray thumbnails
-10. `src/components/compare/UnifiedComparePill.tsx` -- optimize pill thumbnails
-11. `src/components/profile/ProfileReviewsTab.tsx` -- optimize review card images
-12. `src/lib/brandLogos.ts` -- add context-aware width parameter
+**Finish families** (for partial-match scoring):
+- "smooth_standard": standard, matte, satin
+- "glossy_decorative": silk, gloss, metallic, galaxy, sparkle
+- "effect": marble, glow, dual-color, gradient, wood, stone
+- "transparent_family": transparent, translucent
 
-**Estimated impact:** Based on the database, ~1,800+ filament images from non-Shopify-CDN Shopify stores will now be served at appropriate sizes instead of full resolution. Per-page savings of 2-10MB on image-heavy pages (brand detail, filament grid).
+**FilamentProfile type** required by scoring functions:
+```text
+material, finish_type, carbon_fiber_percentage, glass_fiber_percentage,
+high_speed_capable, is_nozzle_abrasive, diameter_nominal_mm,
+nozzle_temp_min_c, nozzle_temp_max_c, product_title, net_weight_g,
+featured_image, variant_price
+```
+
+**No database changes needed** -- all required columns already exist in the `filaments` table.
+
+**Performance**: Scoring runs client-side on 60-120 candidate rows (simple arithmetic), adding negligible overhead.
+
+## Files Changed
+1. **Created**: `src/lib/filamentSimilarity.ts` -- shared similarity engine
+2. **Modified**: `src/hooks/useSimilarFilamentsEnhanced.ts` -- use new query builder and scoring
+3. **Modified**: `src/components/filament/CheaperAlternativeCallout.tsx` -- use similarity scoring to filter alternatives
+4. **Modified**: `src/hooks/useSimilarFilaments.ts` -- update to use shared utility (used by SuggestionChips in compare tray)
+
