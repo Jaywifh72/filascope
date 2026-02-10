@@ -1,71 +1,99 @@
 
-# Fix ALL Broken Brand Logos Site-Wide
 
-## Summary
+# Quality Improvement Pass — Image and Data Issues
 
-There are two root causes for broken logos: (1) seven components still use raw `<img>` tags instead of the `BrandLogo` fallback component, and (2) the `brandLogos.ts` mapping has gaps and case mismatches against the actual database brand names. This plan fixes both comprehensively.
+## Task 1: Footer "FFilaScope" Visual Fix
+**Priority: Immediate | Effort: 5 min**
 
----
+The footer renders a square icon containing "F" followed by the text "FilaScope", which visually reads as "FFilaScope". Fix by either:
+- Replacing the "F" text inside the icon with a small logo/icon graphic, OR
+- Changing the icon content to a non-letter symbol (e.g., a small activity/zap icon), OR
+- Removing the separate "F" box and just rendering "FilaScope" as styled text
 
-## Part 1: Close Mapping Gaps in `brandLogos.ts`
-
-**Brands in the database with no matching entry in the mapping:**
-
-| Database Brand | Issue | Fix |
-|---|---|---|
-| `3DHOJOR` | No mapping, no local file | Add mapping with fallback (no logo file available -- relies on BrandLogo initial fallback) |
-| `Paramount 3D` | No mapping, no local file | Same -- fallback to initial |
-| `VoxelPLA` | DB uses "VoxelPLA", map has "Voxel PLA" | Add `"VoxelPLA"` alias |
-| `Prusa` | automated_brands has "Prusa", map only has "Prusament" / "Prusa Research" | Add `"Prusa"` alias pointing to `prusament.png` |
-| `Amazon Basics` | In automated_brands, no mapping | Add entry (no local file -- fallback) |
-| `Artillery` | In automated_brands, no mapping | Add entry (fallback) |
-| `Flashforge` | DB uses "Flashforge", map has "FlashForge" | Already handled by case-insensitive lookup, but add explicit alias for speed |
-| `Jayo` | Mapped to `sunlu.png` | Already correct |
-| `Yousu` | In automated_brands, no mapping | Add entry (fallback) |
-
-**Clean up duplicate case entries** by removing redundant keys like `"ERYONE"`, `"SUNLU"`, `"HATCHBOX"`, `"FIBERLOGY"`, `"KINGROON"`, `"ZIRO"`, `"DURAMIC 3D"`, `"AZUREFILM"`, `"INLAND"`, `"NUMAKERS"`, `"JAYO"` -- the existing `getBrandLogo()` function already does case-insensitive matching, so these are unnecessary clutter.
+**File:** `src/components/SiteFooter.tsx` (lines 138-143)
 
 ---
 
-## Part 2: Replace All Raw `<img>` Tags With `BrandLogo` Component
+## Task 2: Product Count UX Clarification
+**Priority: High | Effort: 20 min**
 
-Seven files still render brand logos as raw `<img>` tags. Each will be updated to use the `BrandLogo` component with proper fallback.
+Currently shows: `1,048 Products of 1,073` with no explanation of WHY the numbers differ.
 
-| File | Current Pattern | Change |
-|---|---|---|
-| `src/components/AMSList.tsx` | `{brandLogo && <img src={brandLogo} .../>}` | Replace with `<BrandLogo src={brandLogo} brandName={brand} size="sm" />` |
-| `src/components/brands/tabs/BrandOverviewTab.tsx` | Multiple raw `<img src={brandLogo} .../>` as background watermarks | Replace with `<BrandLogo>` at appropriate size |
-| `src/components/brands/tabs/BrandProductsTab.tsx` | `{brandLogo && <img src={brandLogo} .../>}` as background | Replace with `<BrandLogo>` |
-| `src/components/admin/inventory/sync-status/BrandRegionMatrix.tsx` | `{brand.logo_url && <img src={brand.logo_url} .../>}` | Replace with `<BrandLogo src={brand.logo_url} brandName={brand.display_name} size="sm" />` |
-| `src/pages/AdminBrands.tsx` | `{brand.logo_url ? <img .../> : <div>icon</div>}` | Replace with `<BrandLogo src={brand.logo_url} brandName={brand.display_name} size="md" />` |
-| `src/components/admin/regional-stores/BrandRegionalStoresTable.tsx` | `{brand.logo_url ? <img .../> : <div>initial</div>}` | Replace with `<BrandLogo>` |
-| `src/components/admin/regional-stores/BrandCoverageOverview.tsx` | `{brand.logo_url ? <img .../> : <div>initial</div>}` | Replace with `<BrandLogo>` |
+The `ResultsHeader` already has a `selectedPrinter` subtitle ("Compatible with Bambu Lab H2C") but it appears on a separate line below the count. The fix:
+- When a printer filter is active AND `totalCatalogCount > count`, change the "of X" text to include context: `"of {total} total — filtered by {printerBrand} {printerName} compatibility"`
+- Alternatively, integrate the printer context inline: `1,048 Compatible Products (1,073 total)`
 
-For admin pages that use `brand.logo_url` (Supabase storage URL), the fix chains through `getBrandLogo()` as a fallback so the local file is preferred over the potentially-broken storage URL.
+**Files:** `src/components/ResultsHeader.tsx` (lines 53-58)
 
 ---
 
-## Part 3: Ensure `BrandLogo` Component Handles All Edge Cases
+## Task 3: Brand Logo Optimization
+**Priority: Medium | Effort: 2-3 hours (manual/iterative)**
 
-The existing `BrandLogo` component is already solid. No changes needed -- it already:
-- Accepts `src` as `string | null | undefined`
-- Has `onError` -> `setFailed(true)` -> renders colored initial circle
-- Supports `sm`, `md`, `lg` sizes
+Current state: 49 logo files — 20 are already `.webp`, 29 are `.png`/`.jpg`.
+
+Files needing conversion to WebP:
+```text
+.png: 3dsolutech, 3dxtech, ankermake, azurefilm, creality, eryone, esun, 
+      extrudr, filaments-ca, flashforge, formfutura, geeetech, hatchbox, 
+      ic3d, markforged, ninjatek, numakers, polymaker, protopasta, 
+      prusament, pushplastic, qidi, raise3d, recreus, sirayatech, 
+      snapmaker, spectrum, sunlu, treed, ultimaker
+.jpg: atomic
+```
+
+**Approach:**
+- This requires re-uploading optimized files through the chat (drag-and-drop). Lovable cannot run image conversion tools directly.
+- For each logo: resize to max 400px wide, convert to WebP, target under 20KB
+- After uploading new `.webp` versions, update `src/lib/brandLogos.ts` to reference `.webp` extensions
+- Remove old `.png`/`.jpg` files
+
+**Recommendation:** Handle this in a dedicated session — batch convert externally, upload all at once, then update the mapping file.
 
 ---
 
-## Files Modified (Total: 9)
+## Task 4: "No Image" Data Enrichment
+**Priority: Medium | Effort: 2-4 hours**
 
-1. **`src/lib/brandLogos.ts`** -- Add missing brand aliases, remove redundant case duplicates
-2. **`src/components/AMSList.tsx`** -- Use `BrandLogo` component
-3. **`src/components/brands/tabs/BrandOverviewTab.tsx`** -- Use `BrandLogo` component
-4. **`src/components/brands/tabs/BrandProductsTab.tsx`** -- Use `BrandLogo` component
-5. **`src/components/admin/inventory/sync-status/BrandRegionMatrix.tsx`** -- Use `BrandLogo` component
-6. **`src/pages/AdminBrands.tsx`** -- Use `BrandLogo` component
-7. **`src/components/admin/regional-stores/BrandRegionalStoresTable.tsx`** -- Use `BrandLogo` component
-8. **`src/components/admin/regional-stores/BrandCoverageOverview.tsx`** -- Use `BrandLogo` component
-9. **`src/components/printers/SmallDeemphasizedPrinterCard.tsx`** -- Already uses `getBrandLogo` with raw `<img>`, switch to `BrandLogo`
+Database audit results:
+| Brand | Missing Images |
+|-------|---------------|
+| Fiberlogy | 25 |
+| Prusament | 5 |
+| **Total** | **30** |
 
-## No Database Changes Required
+This is relatively small (30 products). Approach:
 
-The `automated_brands.logo_url` column stays as-is. The code-level fallback chain ensures local files are used when storage URLs fail.
+1. **Query the specific products** to get their `product_url` values
+2. **Extend the existing `scrape-new-brand-images` edge function** — it already handles Shopify CDN scraping with Firecrawl. Add Fiberlogy and Prusament URL patterns to `extractProductImage()`
+3. **Run the scraper** from the admin panel targeting these two brands
+4. **Manual fallback** — for any products where scraping fails, manually find and insert image URLs via SQL
+
+The existing edge function (`supabase/functions/scrape-new-brand-images/index.ts`) already supports these brands in its query — just needs to be invoked with `brands: ["Fiberlogy", "Prusament"]`.
+
+---
+
+## Task 5: Image CDN Proxy (Deferred)
+**Priority: Low | Effort: 4+ hours**
+
+This is an architectural change with significant scope. The approach would be:
+1. Create an edge function that fetches external images, stores them in Lovable Cloud storage, and returns the storage URL
+2. Run a batch job to cache all product images
+3. Update image URLs in the database to point to cached versions
+
+**Recommendation:** Defer this. The srcset and WebP optimizations already implemented provide most of the performance benefit. External CDNs (Shopify, etc.) are reliable and fast. Revisit only if load times become a measurable problem.
+
+---
+
+## Implementation Order
+
+| Step | Task | Files Changed |
+|------|------|--------------|
+| 1 | Fix footer "FFilaScope" | `SiteFooter.tsx` |
+| 2 | Clarify product count UX | `ResultsHeader.tsx` |
+| 3 | Run image scraper for Fiberlogy/Prusament | Admin panel action (no code change) |
+| 4 | Brand logo WebP conversion | `public/brands/*`, `brandLogos.ts` |
+| 5 | CDN proxy (deferred) | — |
+
+Steps 1-2 are quick code fixes. Step 3 uses existing infrastructure. Step 4 requires external image processing and a dedicated upload session.
+
