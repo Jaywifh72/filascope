@@ -71,6 +71,15 @@ interface FilamentPurchaseSidebarProps {
   bestSpoolPrice?: number | null;
   bestSpoolStoreName?: string | null;
   bestSpoolIsConverted?: boolean;
+  // Similarity profile data for CheaperAlternativeCallout
+  finishType?: string | null;
+  carbonFiberPercentage?: number | null;
+  glassFiberPercentage?: number | null;
+  highSpeedCapable?: boolean | null;
+  isNozzleAbrasive?: boolean | null;
+  diameterNominalMm?: number | null;
+  nozzleTempMinC?: number | null;
+  nozzleTempMaxC?: number | null;
 }
 
 export function FilamentPurchaseSidebar({
@@ -104,6 +113,14 @@ export function FilamentPurchaseSidebar({
   bestSpoolPrice,
   bestSpoolStoreName,
   bestSpoolIsConverted = false,
+  finishType,
+  carbonFiberPercentage,
+  glassFiberPercentage,
+  highSpeedCapable,
+  isNozzleAbrasive,
+  diameterNominalMm,
+  nozzleTempMinC,
+  nozzleTempMaxC,
 }: FilamentPurchaseSidebarProps) {
   const { formatPrice, currency } = useRegion();
   const { trackStoreClick } = useConversionTracking();
@@ -442,6 +459,15 @@ export function FilamentPurchaseSidebar({
             material={material}
             vendor={vendor}
             currentPricePerKg={displayPricePerKg}
+            finishType={finishType ?? null}
+            carbonFiberPercentage={carbonFiberPercentage ?? null}
+            glassFiberPercentage={glassFiberPercentage ?? null}
+            highSpeedCapable={highSpeedCapable ?? null}
+            isNozzleAbrasive={isNozzleAbrasive ?? null}
+            diameterNominalMm={diameterNominalMm ?? null}
+            nozzleTempMinC={nozzleTempMinC ?? null}
+            nozzleTempMaxC={nozzleTempMaxC ?? null}
+            productTitle={productTitle || ""}
           />
 
           {/* Disclaimer */}

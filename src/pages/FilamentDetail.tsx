@@ -951,6 +951,14 @@ const FilamentDetail = () => {
             bestSpoolPrice={detailPricing.bestPrice?.spoolPrice ?? null}
             bestSpoolStoreName={detailPricing.bestPrice?.name ?? null}
             bestSpoolIsConverted={detailPricing.bestPrice?.isConverted ?? false}
+            finishType={displayFilament.finish_type}
+            carbonFiberPercentage={displayFilament.carbon_fiber_percentage}
+            glassFiberPercentage={displayFilament.glass_fiber_percentage}
+            highSpeedCapable={displayFilament.high_speed_capable}
+            isNozzleAbrasive={displayFilament.is_nozzle_abrasive}
+            diameterNominalMm={displayFilament.diameter_nominal_mm}
+            nozzleTempMinC={displayFilament.nozzle_temp_min_c}
+            nozzleTempMaxC={displayFilament.nozzle_temp_max_c}
           />
         </div>
       </div>
