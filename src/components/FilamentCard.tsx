@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useCompare } from "@/hooks/useCompare";
 import { useRegion } from "@/contexts/RegionContext";
 import { useResolvedPrice } from "@/hooks/useResolvedPrice";
@@ -434,17 +435,12 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       <div className="px-6 pt-6 pb-3 border-b border-border/30" data-card-element="1">
         {/* Brand + Vendor Name - centered */}
         <div className="flex items-center justify-center gap-2 mb-2">
-          {brandLogo && !imageError ? (
-            <img 
-              src={brandLogo} 
-              alt={`${filament.vendor} logo`}
-              className="w-5 h-5 rounded object-contain"
-              width={20}
-              height={20}
-              loading="lazy"
-              onError={() => setImageError(true)}
-            />
-          ) : null}
+          <BrandLogo
+            src={brandLogo}
+            brandName={filament.vendor || "Unknown"}
+            size="sm"
+            className="w-5 h-5 rounded"
+          />
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {filament.vendor || "Unknown"}
           </span>

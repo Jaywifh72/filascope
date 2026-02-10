@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
 
 interface BrandCardProps {
@@ -69,17 +70,12 @@ const BrandCard = ({
     >
       {/* Top Section - Logo Area */}
       <div className="relative bg-gray-800 p-6 flex items-center justify-center h-28">
-        {resolvedLogoUrl ? (
-          <img
-            src={resolvedLogoUrl}
-            alt={name}
-            className="max-h-20 max-w-full object-contain"
-          />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Package className="w-8 h-8 text-primary" />
-          </div>
-        )}
+        <BrandLogo
+          src={resolvedLogoUrl}
+          brandName={name}
+          size="lg"
+          className="max-h-20 max-w-full"
+        />
         
         {/* Verified Badge - Top Right */}
         {isVerified && (

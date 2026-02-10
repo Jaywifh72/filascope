@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useRegion } from "@/contexts/RegionContext";
 import { usePrinterCurrentPrice } from "@/hooks/usePrinterCurrentPrice";
 import { getPrinterImage, getPrinterBadges } from "@/lib/printerCardUtils";
@@ -159,15 +160,14 @@ export default function MediumStandardPrinterCard({
           {/* Desktop: Full width stacked layout */}
           <div className="flex-shrink-0 w-[100px] sm:w-full">
             {/* Brand Logo - Hidden on mobile, shown on desktop */}
-            {getBrandLogo(printer.brand?.brand || null) && (
-              <div className="hidden sm:flex justify-center">
-                <img 
-                  src={getBrandLogo(printer.brand?.brand || null)!} 
-                  alt={`${printer.brand?.brand} logo`}
-                  className="h-12 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300"
-                />
-              </div>
-            )}
+            <div className="hidden sm:flex justify-center">
+              <BrandLogo
+                src={getBrandLogo(printer.brand?.brand || null)}
+                brandName={printer.brand?.brand || "Brand"}
+                size="lg"
+                className="h-12 opacity-60 group-hover:opacity-90 transition-opacity duration-300"
+              />
+            </div>
 
             {/* Feature Badges - Hidden on mobile */}
             {badges.length > 0 && (

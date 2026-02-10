@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
 import AccessoryCard from "@/components/AccessoryCard";
 
@@ -528,13 +529,12 @@ export default function HotendList() {
                   onClick={() => toggleBrandCollapse(brand)}
                   className="flex items-center gap-3 w-full text-left group hover:opacity-80 transition-opacity"
                 >
-                  {getBrandLogo(brand) && (
-                    <img
-                      src={getBrandLogo(brand)!}
-                      alt={`${brand} logo`}
-                      className="h-6 w-auto object-contain"
-                    />
-                  )}
+                  <BrandLogo
+                    src={getBrandLogo(brand)}
+                    brandName={brand}
+                    size="sm"
+                    className="h-6"
+                  />
                   <h3 className="text-lg font-bold text-white">{brand}</h3>
                   <span className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-sm">
                     {groupedByBrand[brand].length}

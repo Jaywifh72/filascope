@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 interface BrandHealth {
   brand_slug: string;
@@ -174,15 +175,11 @@ export function BrandHealthGrid({ onBrandClick }: BrandHealthGridProps) {
                 onClick={() => onBrandClick?.(brand.brand_slug)}
               >
                 <div className="flex items-center gap-2">
-                  {brand.logo_url ? (
-                    <img 
-                      src={brand.logo_url} 
-                      alt={brand.display_name}
-                      className="w-5 h-5 object-contain"
-                    />
-                  ) : (
-                    <RefreshCw className="w-4 h-4 text-muted-foreground" />
-                  )}
+                  <BrandLogo
+                    src={brand.logo_url}
+                    brandName={brand.display_name}
+                    size="sm"
+                  />
                   <span className="text-xs font-medium truncate max-w-[80px]">
                     {brand.display_name}
                   </span>

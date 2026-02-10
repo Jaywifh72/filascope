@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Star, TrendingDown, Sparkles, AlertTriangle } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { normalizeColorHex } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRegionalFiltering, type FilamentWithRegion } from "@/hooks/useRegionalFiltering";
@@ -151,11 +152,11 @@ const BentoGrid = () => {
               
               <div className="p-6 relative z-10">
                 <div className="flex items-center gap-3 mb-3">
-                  {featuredFilament.vendor && getBrandLogo(featuredFilament.vendor) && (
-                    <img 
-                      src={getBrandLogo(featuredFilament.vendor) || ''} 
-                      alt={featuredFilament.vendor}
-                      className="w-10 h-10 object-contain"
+                  {featuredFilament.vendor && (
+                    <BrandLogo
+                      src={getBrandLogo(featuredFilament.vendor)}
+                      brandName={featuredFilament.vendor}
+                      size="md"
                     />
                   )}
                   <div>

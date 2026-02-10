@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { RegionalPrice } from "@/components/price/RegionalPrice";
 import { useRegion } from "@/contexts/RegionContext";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
@@ -190,17 +191,12 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
 
       {/* Brand Logo */}
       <div className="flex items-center justify-between mb-3 mt-1">
-        {brandLogo ? (
-          <img
-            src={brandLogo}
-            alt={filament.vendor || "Brand"}
-            className="h-5 w-auto object-contain max-w-[80px] opacity-80"
-          />
-        ) : (
-          <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-            {filament.vendor?.charAt(0) || "?"}
-          </div>
-        )}
+        <BrandLogo
+          src={brandLogo}
+          brandName={filament.vendor || "Brand"}
+          size="sm"
+          className="opacity-80"
+        />
         
         {/* Material Badge */}
         <Badge variant="outline" className={cn("text-xs", getMaterialColor(filament.material))}>

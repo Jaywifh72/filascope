@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import type { EnhancedSimilarFilament } from "@/hooks/useEnhancedSimilarFilaments";
@@ -194,17 +195,12 @@ export function SideBySideComparisonDialog({
             {/* Current */}
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
               <div className="flex items-center gap-2 mb-2">
-                {currentBrandLogo ? (
-                  <img
-                    src={currentBrandLogo}
-                    alt=""
-                    className="h-6 w-6 rounded object-contain"
-                  />
-                ) : (
-                  <div className="h-6 w-6 rounded bg-muted flex items-center justify-center text-xs">
-                    {currentFilament.vendor?.charAt(0) || "?"}
-                  </div>
-                )}
+                <BrandLogo
+                  src={currentBrandLogo}
+                  brandName={currentFilament.vendor || "Brand"}
+                  size="sm"
+                  className="h-6 w-6 rounded"
+                />
                 <Badge variant="outline" className="text-[10px]">
                   Current
                 </Badge>
@@ -220,17 +216,12 @@ export function SideBySideComparisonDialog({
             {/* Compare */}
             <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
               <div className="flex items-center gap-2 mb-2">
-                {compareBrandLogo ? (
-                  <img
-                    src={compareBrandLogo}
-                    alt=""
-                    className="h-6 w-6 rounded object-contain"
-                  />
-                ) : (
-                  <div className="h-6 w-6 rounded bg-muted flex items-center justify-center text-xs">
-                    {compareFilament.vendor?.charAt(0) || "?"}
-                  </div>
-                )}
+                <BrandLogo
+                  src={compareBrandLogo}
+                  brandName={compareFilament.vendor || "Brand"}
+                  size="sm"
+                  className="h-6 w-6 rounded"
+                />
                 <Badge
                   variant="outline"
                   className="text-[10px] border-cyan-500/50 text-cyan-400"
