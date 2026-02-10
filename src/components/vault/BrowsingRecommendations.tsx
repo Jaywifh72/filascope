@@ -256,7 +256,7 @@ export function BrowsingRecommendations() {
                   {rec.filament.featured_image ? (
                     <img
                       src={rec.filament.featured_image}
-                      alt=""
+                      alt={`${rec.filament.product_title} filament`}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />

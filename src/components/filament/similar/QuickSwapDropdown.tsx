@@ -81,7 +81,7 @@ export function QuickSwapDropdown({
               {item.featured_image ? (
                 <img
                   src={item.featured_image}
-                  alt=""
+                  alt={`${cleanFilamentDisplayName(item.product_title)} filament`}
                   className="h-8 w-8 rounded object-cover flex-shrink-0"
                 />
               ) : (
