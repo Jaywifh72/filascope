@@ -204,15 +204,20 @@ export function computeSimilarityScore(
 
   const breakdown: Record<string, number> = {};
 
-  // — Finish type (35 pts) —
+  // — Finish type (40 pts) — THE MOST IMPORTANT DIMENSION
   const srcFinish = getFinishType(source);
   const candFinish = getFinishType(candidate);
   if (srcFinish === candFinish) {
-    breakdown.finish = 35;
+    breakdown.finish = 40;
   } else {
     const srcFamily = FINISH_TO_FAMILY[srcFinish];
     const candFamily = FINISH_TO_FAMILY[candFinish];
-    breakdown.finish = srcFamily && candFamily && srcFamily === candFamily ? 20 : 0;
+    if (srcFamily && candFamily && srcFamily === candFamily) {
+      breakdown.finish = 25;
+    } else {
+      // Cross-family mismatch: actively penalize to prevent Silk matching Matte
+      breakdown.finish = -10;
+    }
   }
 
   // — Temperature compatibility (20 pts) —
@@ -237,8 +242,8 @@ export function computeSimilarityScore(
     breakdown.highSpeed = 10; // neutral
   }
 
-  // — Price tier (15 pts — always neutral) —
-  breakdown.priceTier = 15;
+  // — Price tier (10 pts — neutral baseline, reduced from 15) —
+  breakdown.priceTier = 10;
 
   // — Spool size (10 pts) —
   if (source.net_weight_g != null && candidate.net_weight_g != null) {
