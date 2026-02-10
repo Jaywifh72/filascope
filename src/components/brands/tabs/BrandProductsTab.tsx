@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import {
   Select,
   SelectContent,
@@ -373,13 +374,7 @@ export function BrandProductsTab({
                         />
                       ) : (
                         <>
-                          {brandLogo && (
-                            <img
-                              src={brandLogo}
-                              alt={brandName}
-                              className="max-w-[60%] max-h-[60%] object-contain opacity-20"
-                            />
-                          )}
+                          <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[60%] max-h-[60%] opacity-20" />
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
                               <span className="text-2xl font-bold text-primary">

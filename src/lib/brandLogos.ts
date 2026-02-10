@@ -1,6 +1,7 @@
 // Brand logo mapping - maps vendor names to their official logo files
 // Logos are stored locally in public/brands/ for reliability
 // The BrandLogo component handles fallback if any image fails
+// Case-insensitive lookup is handled by getBrandLogo() — no need for duplicate case entries
 
 const logo = (filename: string) => `/brands/${filename}`;
 
@@ -25,16 +26,14 @@ export const brandLogos: Record<string, string> = {
   "Matter3D": logo("matter3d.webp"),
   "Prusament": logo("prusament.png"),
   "Prusa Research": logo("prusament.png"),
-  "SUNLU": logo("sunlu.png"),
+  "Prusa": logo("prusament.png"),
   "Sunlu": logo("sunlu.png"),
-  "HATCHBOX": logo("hatchbox.png"),
   "Hatchbox": logo("hatchbox.png"),
   "MatterHackers": logo("matter3d.webp"),
   "Printed Solid": logo("protopasta.png"),
   "Atomic Filament": logo("atomic.jpg"),
   "AzureFilm": logo("azurefilm.png"),
   "Azurefilm": logo("azurefilm.png"),
-  "AZUREFILM": logo("azurefilm.png"),
   "Phaetus": logo("3dfuel.webp"),
   "Gizmo Dorks": logo("gizmodorks.webp"),
   "GizmoDorks": logo("gizmodorks.webp"),
@@ -43,35 +42,27 @@ export const brandLogos: Record<string, string> = {
   "3D-Fuel": logo("3dfuel.webp"),
   "3D Fuel": logo("3dfuel.webp"),
   "Eryone": logo("eryone.png"),
-  "ERYONE": logo("eryone.png"),
   "Inland": logo("hatchbox.png"),
-  "INLAND": logo("hatchbox.png"),
   "Fiberlogy": logo("fiberlogy.webp"),
-  "FIBERLOGY": logo("fiberlogy.webp"),
   "Proto-Pasta": logo("protopasta.png"),
   "proto-pasta": logo("protopasta.png"),
-  "GEEETECH": logo("geeetech.png"),
   "Geeetech": logo("geeetech.png"),
   "Jayo": logo("sunlu.png"),
-  "JAYO": logo("sunlu.png"),
   "SainSmart": logo("3dfuel.webp"),
   "Push Plastic": logo("pushplastic.png"),
   "Fusion Filaments": logo("fusionfilaments.webp"),
   "Spectrum Filaments": logo("spectrum.png"),
   "Kingroon": logo("kingroon.webp"),
-  "KINGROON": logo("kingroon.webp"),
   "Recreus": logo("recreus.png"),
   "IC3D": logo("ic3d.png"),
   "IC3D Printers": logo("ic3d.png"),
   "Numakers": logo("numakers.png"),
-  "NUMAKERS": logo("numakers.png"),
   "Duramic 3D": logo("duramic3d.webp"),
-  "DURAMIC 3D": logo("duramic3d.webp"),
   "Extrudr": logo("extrudr.png"),
   "Filaments.ca": logo("filaments-ca.png"),
   "Ziro": logo("ziro.webp"),
-  "ZIRO": logo("ziro.webp"),
   "Voxel PLA": logo("voxelpla.webp"),
+  "VoxelPLA": logo("voxelpla.webp"),
 
   // Printer brands
   "AnkerMake": logo("ankermake.png"),
@@ -79,6 +70,7 @@ export const brandLogos: Record<string, string> = {
   "Creality": logo("creality.png"),
   "Elegoo": logo("elegoo.webp"),
   "FlashForge": logo("flashforge.png"),
+  "Flashforge": logo("flashforge.png"),
   "FLSUN": logo("flsun.webp"),
   "LDO Motors": logo("3dfuel.webp"),
   "Markforged": logo("markforged.png"),
@@ -90,6 +82,13 @@ export const brandLogos: Record<string, string> = {
   "Voron Design": logo("3dfuel.webp"),
   "TreeD Filaments": logo("treed.png"),
   "TreeD": logo("treed.png"),
+
+  // Brands without local logo files — will gracefully fallback to BrandLogo initial
+  "3DHOJOR": "",
+  "Paramount 3D": "",
+  "Amazon Basics": "",
+  "Artillery": "",
+  "Yousu": "",
 };
 
 // Helper function to get brand logo with fallback
@@ -97,8 +96,8 @@ export const getBrandLogo = (vendor: string | null): string | null => {
   if (!vendor) return null;
   
   // Try exact match first
-  if (brandLogos[vendor]) {
-    return brandLogos[vendor];
+  if (vendor in brandLogos) {
+    return brandLogos[vendor] || null;
   }
   
   // Try case-insensitive match
@@ -107,5 +106,9 @@ export const getBrandLogo = (vendor: string | null): string | null => {
     key => key.toLowerCase() === vendorLower
   );
   
-  return matchedKey ? brandLogos[matchedKey] : null;
+  if (matchedKey) {
+    return brandLogos[matchedKey] || null;
+  }
+  
+  return null;
 };

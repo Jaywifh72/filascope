@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layers, ChevronDown } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import AccessoryCard from "@/components/AccessoryCard";
 import { cn } from "@/lib/utils";
 
@@ -234,13 +235,7 @@ export default function AMSList() {
                   onClick={() => toggleBrandCollapse(brand)}
                   className="flex items-center gap-3 w-full text-left group hover:opacity-80 transition-opacity"
                 >
-                  {brandLogo && (
-                    <img
-                      src={brandLogo}
-                      alt={brand}
-                      className="h-6 w-auto object-contain"
-                    />
-                  )}
+                  <BrandLogo src={brandLogo} brandName={brand} size="sm" />
                   <h3 className="text-lg font-bold text-white">{brand}</h3>
                   <span className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-sm">
                     {systems.length}

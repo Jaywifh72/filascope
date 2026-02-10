@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useRef, useState, useCallback } from "react";
@@ -252,25 +253,11 @@ export function BrandOverviewTab({
                             }}
                           />
                           <div className="hidden w-full h-full items-center justify-center">
-                            {brandLogo ? (
-                              <img
-                                src={brandLogo}
-                                alt={brandName}
-                                className="max-w-[50%] max-h-[50%] object-contain opacity-30"
-                              />
-                            ) : (
-                              <Package className="w-10 h-10 text-muted-foreground/40" />
-                            )}
+                            <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-30" />
                           </div>
                         </>
-                      ) : brandLogo ? (
-                        <img
-                          src={brandLogo}
-                          alt={brandName}
-                          className="max-w-[50%] max-h-[50%] object-contain opacity-30"
-                        />
                       ) : (
-                        <Package className="w-10 h-10 text-muted-foreground/40" />
+                        <BrandLogo src={brandLogo} brandName={brandName} size="lg" className="max-w-[50%] max-h-[50%] opacity-30" />
                       )}
                     </div>
                     

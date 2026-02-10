@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { REGIONS } from '@/config/regions';
+import { BrandLogo } from '@/components/ui/BrandLogo';
+import { getBrandLogo } from '@/lib/brandLogos';
 import { RegionCode } from '@/types/regional';
 import { usePriceSync } from '@/hooks/usePriceSync';
 
@@ -163,13 +165,7 @@ export function BrandRegionMatrix({ onBrandClick }: BrandRegionMatrixProps) {
                         className="flex items-center gap-2 hover:underline text-left"
                         onClick={() => onBrandClick?.(brandSlug)}
                       >
-                        {brand.logo_url && (
-                          <img 
-                            src={brand.logo_url} 
-                            alt={brand.display_name}
-                            className="w-5 h-5 object-contain"
-                          />
-                        )}
+                        <BrandLogo src={brand.logo_url || getBrandLogo(brand.display_name)} brandName={brand.display_name} size="sm" />
                         <span className="font-medium truncate max-w-[120px]">
                           {brand.display_name}
                         </span>

@@ -3,6 +3,7 @@ import { Heart, ExternalLink, Printer as PrinterIcon, Bell, Ban } from "lucide-r
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useCurrency } from "@/hooks/useCurrency";
 import { getPrinterImage, getPrinterBadges, type CardSizeResult } from "@/lib/printerCardUtils";
 import PrinterBadge from "./PrinterBadge";
@@ -178,15 +179,9 @@ export default function SmallDeemphasizedPrinterCard({
           </div>
 
           {/* Brand Logo */}
-          {getBrandLogo(printer.brand?.brand || null) && (
-            <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-20 transition-opacity">
-              <img 
-                src={getBrandLogo(printer.brand?.brand || null)!} 
-                alt={`${printer.brand?.brand} logo`}
-                className="h-auto max-w-[24px] object-contain"
-              />
-            </div>
-          )}
+          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-20 transition-opacity">
+            <BrandLogo src={getBrandLogo(printer.brand?.brand || null)} brandName={printer.brand?.brand || ''} size="sm" />
+          </div>
         </div>
       </Link>
     </article>
