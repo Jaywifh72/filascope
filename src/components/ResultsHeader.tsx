@@ -51,9 +51,12 @@ const ResultsHeader = ({
                 </>
               )}
               <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
-                {hasActiveFilters ? "Matching" : "Products"}
+                {selectedPrinter ? "Compatible" : hasActiveFilters ? "Matching" : "Products"}
                 {totalCatalogCount && totalCatalogCount > count ? (
-                  <span className="text-muted-foreground/60"> of {totalCatalogCount.toLocaleString()}</span>
+                  <span className="text-muted-foreground/60">
+                    {" "}of {totalCatalogCount.toLocaleString()} total
+                    {selectedPrinter ? ` · ${printerBrand} ${printerName}` : ""}
+                  </span>
                 ) : null}
               </span>
             </h2>
