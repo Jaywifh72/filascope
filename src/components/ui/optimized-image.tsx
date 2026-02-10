@@ -124,7 +124,7 @@ export const OptimizedImage = memo(function OptimizedImage({
   width,
   height,
   priority = false,
-  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  sizes = "(max-width: 640px) 50vw, 200px",
   aspectRatio = "auto",
   fallback,
   onLoad,
@@ -168,7 +168,7 @@ export const OptimizedImage = memo(function OptimizedImage({
   };
 
   // Responsive widths for srcset
-  const srcSetWidths = [200, 400, 600, 800];
+  const srcSetWidths = [200, 400];
 
   // Generate srcsets
   const srcSet = src ? generateSrcSet(src, srcSetWidths) : undefined;
