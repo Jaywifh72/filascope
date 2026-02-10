@@ -838,11 +838,12 @@ const Finder = () => {
   const { data: filamentCount } = useQuery({
     queryKey: ["filamentCount"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from("filaments")
-        .select("id", { count: "exact", head: false });
+        .select("id", { count: "exact" })
+        .limit(1);
       if (error) throw error;
-      return data?.length || 0;
+      return count || 0;
     },
   });
 
@@ -851,14 +852,14 @@ const Finder = () => {
     queryFn: async () => {
       const [rpcResult, brandResult] = await Promise.all([
         supabase.rpc("get_catalog_counts"),
-        supabase.from("v_public_brands").select("id"),
+        supabase.from("v_public_brands").select("id", { count: "exact" }).limit(1),
       ]);
       if (rpcResult.error) throw rpcResult.error;
       const row = rpcResult.data?.[0] || { product_count: 0, variant_count: 0 };
       return {
         productCount: Number(row.product_count) || 0,
         variantCount: Number(row.variant_count) || 0,
-        brandCount: brandResult.data?.length || 0,
+        brandCount: brandResult.count || brandResult.data?.length || 0,
       };
     },
   });
