@@ -244,9 +244,9 @@ export const OptimizedImage = memo(function OptimizedImage({
         />
       )}
 
-      {/* Skeleton placeholder (when no blur data) */}
+      {/* Shimmer skeleton placeholder */}
       {!isLoaded && !blurDataUrl && (
-        <Skeleton className="absolute inset-0 w-full h-full" />
+        <div className="absolute inset-0 w-full h-full animate-pulse bg-gradient-to-r from-muted/60 via-muted/30 to-muted/60 bg-[length:200%_100%]" />
       )}
 
       {/* Actual image with <picture> for WebP support */}
