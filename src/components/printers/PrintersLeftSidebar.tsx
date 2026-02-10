@@ -90,7 +90,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
   hasActiveFilters,
   onClearFilters,
 }, ref) => {
-  const [expandedSection, setExpandedSection] = useState<ExpandedSection>('sort');
+  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
   const [brandSearch, setBrandSearch] = useState("");
 
   const toggleSection = (section: ExpandedSection) => {
