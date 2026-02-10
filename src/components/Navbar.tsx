@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import filascopeLogo from "@/assets/logo-filascope.webp";
+// Logo served from storage at 224px (retina for 112px display) instead of bundling the 885KB source
+const filascopeLogo = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/render/image/public/site-assets/logo-filascope.webp?width=224&resize=contain`;
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { RegionSelector } from "@/components/RegionSelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
