@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { useMemo, useRef, useState, useCallback } from "react";
 import { useRegion } from "@/contexts/RegionContext";
+import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 
 type Filament = Tables<"filaments">;
 
@@ -240,8 +241,10 @@ export function BrandOverviewTab({
                     <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center mb-3">
                       {product.representativeImage ? (
                         <>
-                          <img
-                            src={product.representativeImage}
+                      <img
+                            src={getOptimizedImageUrl(product.representativeImage, 400)}
+                            srcSet={getImageSrcSet(product.representativeImage, [200, 400, 600])}
+                            sizes="(max-width: 640px) 150px, (max-width: 1024px) 166px, 166px"
                             alt={product.baseName}
                             className="w-full h-full object-cover group-hover/card:scale-105 transition-transform"
                             loading="lazy"
