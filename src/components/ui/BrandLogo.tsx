@@ -58,7 +58,7 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
     <img
       src={src}
       alt={`${brandName} logo`}
-      className={cn("object-contain flex-shrink-0", sizes.img, needsBrightness && "dark:brightness-[2.5]", className)}
+      className={cn("object-contain flex-shrink-0", sizes.img, "dark:brightness-150", needsBrightness && "dark:brightness-[2.5]", className)}
       width={sizes.width}
       height={sizes.height}
       sizes={sizes.sizes}
