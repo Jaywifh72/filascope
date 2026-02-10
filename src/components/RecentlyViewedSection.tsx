@@ -6,7 +6,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { getOptimizedImageUrl } from "@/utils/imageOptimization";
+import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 
 interface RecentlyViewedSectionProps {
   /** Max items to show */
@@ -81,6 +81,8 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
         {image ? (
           <img
             src={getOptimizedImageUrl(image, 400)}
+            srcSet={getImageSrcSet(image, [200, 400]) || undefined}
+            sizes={getImageSrcSet(image, [200, 400]) ? "(max-width: 640px) 200px, 400px" : undefined}
             alt={isFilament ? `${title} filament spool` : `${title} 3D printer`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             loading="lazy"

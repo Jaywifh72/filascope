@@ -15,3 +15,15 @@ export function getOptimizedImageUrl(url: string | null | undefined, targetWidth
 
   return url;
 }
+
+/**
+ * Generate a srcset string for Shopify CDN images at multiple widths.
+ * Returns empty string for non-Shopify URLs (can't resize server-side).
+ */
+export function getImageSrcSet(url: string | null | undefined, sizes: number[]): string {
+  if (!url || !url.includes('cdn.shopify.com')) return '';
+
+  return sizes
+    .map(size => `${getOptimizedImageUrl(url, size)} ${size}w`)
+    .join(', ');
+}
