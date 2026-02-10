@@ -3,8 +3,8 @@
 // The BrandLogo component handles fallback if any image fails
 // Case-insensitive lookup is handled by getBrandLogo() — no need for duplicate case entries
 
-const STORAGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/brand-logos`;
-const logo = (filename: string) => `${STORAGE_BASE}/${filename}`;
+const STORAGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/render/image/public/brand-logos`;
+const logo = (filename: string) => `${STORAGE_BASE}/${filename}?width=384&resize=contain`;
 
 export const brandLogos: Record<string, string> = {
   // Filament brands
