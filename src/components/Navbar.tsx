@@ -239,6 +239,7 @@ const Navbar = () => {
               style={{ maxWidth: '224px' }}
               width={224}
               height={72}
+              sizes="112px"
               loading="eager"
               decoding="async"
               // @ts-ignore – fetchpriority valid HTML
