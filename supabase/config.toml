@@ -452,3 +452,6 @@ verify_jwt = true
 
 [functions.sitemap-xml]
 verify_jwt = false
+
+[functions.optimize-brand-logos]
+verify_jwt = true
