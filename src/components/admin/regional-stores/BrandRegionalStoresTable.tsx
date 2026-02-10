@@ -36,6 +36,8 @@ import { REGIONS } from '@/config/regions';
 import { CURRENCIES } from '@/config/currencies';
 import { BrandRegionalStore, RegionCode, CurrencyCode } from '@/types/regional';
 import { EditRegionalStoreDialog } from './EditRegionalStoreDialog';
+import { BrandLogo } from '@/components/ui/BrandLogo';
+import { getBrandLogo } from '@/lib/brandLogos';
 
 interface BrandWithCoverage {
   id: string;
@@ -266,17 +268,7 @@ function BrandRow({
           </TableCell>
           <TableCell>
             <div className="flex items-center gap-3">
-              {brand.logo_url ? (
-                <img 
-                  src={brand.logo_url} 
-                  alt={brand.brand_name}
-                  className="w-8 h-8 rounded object-contain bg-muted"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-xs font-medium">
-                  {brand.brand_name.charAt(0)}
-                </div>
-              )}
+              <BrandLogo src={brand.logo_url || getBrandLogo(brand.brand_name)} brandName={brand.brand_name} size="md" />
               <div>
                 <p className="font-medium">{brand.brand_name}</p>
                 <p className="text-xs text-muted-foreground">{brand.brand_slug}</p>

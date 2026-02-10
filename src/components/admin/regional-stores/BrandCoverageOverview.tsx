@@ -1,5 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/ui/BrandLogo';
+import { getBrandLogo } from '@/lib/brandLogos';
 import { REGIONS } from '@/config/regions';
 import { RegionCode } from '@/types/regional';
 
@@ -119,17 +121,7 @@ export function BrandCoverageOverview({ brands, onFilterRegion }: Props) {
                 key={brand.id} 
                 className="flex items-center gap-2 p-2 bg-muted/50 rounded-md"
               >
-                {brand.logo_url ? (
-                  <img 
-                    src={brand.logo_url} 
-                    alt={brand.brand_name}
-                    className="w-6 h-6 rounded object-contain"
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-xs">
-                    {brand.brand_name.charAt(0)}
-                  </div>
-                )}
+                <BrandLogo src={brand.logo_url || getBrandLogo(brand.brand_name)} brandName={brand.brand_name} size="sm" />
                 <span className="text-sm truncate">{brand.brand_name}</span>
                 <span className="text-xs text-muted-foreground ml-auto">
                   {brand.storeCount}

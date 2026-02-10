@@ -19,6 +19,8 @@ import {
   Link, DollarSign, Pencil, ExternalLink
 } from "lucide-react";
 import { BrandAffiliateSettings } from "@/components/admin/BrandAffiliateSettings";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { getBrandLogo } from "@/lib/brandLogos";
 import { toast } from "sonner";
 
 interface AutomatedBrand {
@@ -791,13 +793,7 @@ const AdminBrands = () => {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          {brand.logo_url ? (
-                            <img src={brand.logo_url} alt={brand.display_name} className="w-10 h-10 object-contain rounded" />
-                          ) : (
-                            <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                              <Building2 className="w-5 h-5 text-muted-foreground" />
-                            </div>
-                          )}
+                          <BrandLogo src={brand.logo_url || getBrandLogo(brand.display_name)} brandName={brand.display_name} size="md" />
                           <div>
                             <CardTitle className="text-lg flex items-center gap-2">
                               {brand.display_name}
