@@ -96,20 +96,21 @@ function getSessionId(): string {
 // Hook
 // ============================
 
+const FETCH_LIMIT = 50;
+
 export function useBrowseHistory(limit = 10) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const syncedRef = useRef(false);
 
-  // Fetch from Supabase (enriched with product data) for logged-in users
-  // For guests, return localStorage items enriched via a secondary query
+  // All consumers share the same cache key (no limit in key).
+  // We always fetch FETCH_LIMIT items and slice per-consumer below.
   const query = useQuery({
-    queryKey: ["browse-history", user?.id, limit],
+    queryKey: ["browse-history", user?.id],
     queryFn: async (): Promise<BrowseHistoryItem[]> => {
       const localItems = getLocalHistory();
 
       if (user?.id) {
-        // Logged-in: query Supabase directly (it has richer data)
         const { data, error } = await supabase
           .from("user_browse_history")
           .select(`
@@ -138,7 +139,7 @@ export function useBrowseHistory(limit = 10) {
           `)
           .eq("user_id", user.id)
           .order("viewed_at", { ascending: false })
-          .limit(limit);
+          .limit(FETCH_LIMIT);
 
         if (error) throw error;
 
@@ -167,11 +168,11 @@ export function useBrowseHistory(limit = 10) {
       const filamentIds = localItems
         .filter((i) => i.product_type === "filament")
         .map((i) => i.product_id)
-        .slice(0, limit);
+        .slice(0, FETCH_LIMIT);
       const printerIds = localItems
         .filter((i) => i.product_type === "printer")
         .map((i) => i.product_id)
-        .slice(0, limit);
+        .slice(0, FETCH_LIMIT);
 
       const [filRes, prRes] = await Promise.all([
         filamentIds.length > 0
@@ -191,7 +192,7 @@ export function useBrowseHistory(limit = 10) {
       const filMap = new Map((filRes.data || []).map((f: any) => [f.id, f]));
       const prMap = new Map((prRes.data || []).map((p: any) => [p.id, p]));
 
-      return localItems.slice(0, limit).map((item, idx) => ({
+      return localItems.slice(0, FETCH_LIMIT).map((item, idx) => ({
         id: `local-${idx}`,
         product_id: item.product_id,
         product_type: item.product_type,
@@ -213,17 +214,17 @@ export function useBrowseHistory(limit = 10) {
 
     // Background sync - don't block the UI
     const syncItems = async () => {
-      for (const item of localItems.slice(0, 10)) {
-        try {
-          await supabase.from("user_browse_history").insert({
+      try {
+        await supabase.from("user_browse_history").insert(
+          localItems.slice(0, 10).map((item) => ({
             user_id: user.id,
             filament_id: item.product_type === "filament" ? item.product_id : null,
             printer_id: item.product_type === "printer" ? item.product_id : null,
             product_type: item.product_type,
-          });
-        } catch {
-          // Ignore duplicates etc.
-        }
+          }))
+        );
+      } catch {
+        // Ignore duplicates etc.
       }
       queryClient.invalidateQueries({ queryKey: ["browse-history"] });
     };
@@ -323,8 +324,11 @@ export function useBrowseHistory(limit = 10) {
     [removeFromHistoryMutation]
   );
 
+  // Slice the shared cached data to the caller's requested limit
+  const allHistory = query.data || [];
+
   return {
-    history: query.data || [],
+    history: allHistory.slice(0, limit),
     isLoading: query.isLoading,
     addToHistory: addView,
     clearHistory: clearHistory.mutate,
