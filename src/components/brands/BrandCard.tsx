@@ -65,17 +65,19 @@ const BrandCard = ({
 
   return (
     <div
-      className="border border-gray-700 rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
+      className="border border-border rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
-      <div className="relative bg-gray-800 p-6 flex items-center justify-center h-28">
-        <BrandLogo
-          src={resolvedLogoUrl}
-          brandName={name}
-          size="lg"
-          className="max-h-20 max-w-full"
-        />
+      <div className="relative bg-muted/50 p-6 flex items-center justify-center h-28">
+        <div className="flex items-center justify-center rounded-lg bg-white/10 dark:bg-white/[0.07] px-4 py-2 max-h-20">
+          <BrandLogo
+            src={resolvedLogoUrl}
+            brandName={name}
+            size="lg"
+            className="max-h-16 max-w-full"
+          />
+        </div>
         
         {/* Verified Badge - Top Right */}
         {isVerified && (
@@ -87,7 +89,7 @@ const BrandCard = ({
         {/* Price Indicator - Top Left */}
         {priceIndicator && (
           <div className="absolute top-3 left-3">
-            <span className="text-xs font-medium text-gray-400 bg-gray-900/80 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-medium text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded">
               {priceIndicator}
             </span>
           </div>
@@ -95,18 +97,18 @@ const BrandCard = ({
       </div>
 
       {/* Bottom Section - Info Area */}
-      <div className="bg-gray-900 p-4 space-y-2.5">
+      <div className="bg-card p-4 space-y-2.5">
         {/* Brand Name */}
-        <h3 className="text-lg font-semibold text-white group-hover:text-primary transition-colors">
+        <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
           {name}
         </h3>
 
         {/* Key Stats Row */}
-        <div className="flex items-center gap-3 text-sm text-gray-400">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>
             {productLineCount} {productLineCount === 1 ? 'product' : 'products'}
             {variantCount > productLineCount && (
-              <span className="text-gray-500"> ({variantCount} {variantCount === 1 ? 'variant' : 'variants'})</span>
+              <span className="text-muted-foreground/60"> ({variantCount} {variantCount === 1 ? 'variant' : 'variants'})</span>
             )}
           </span>
           {averageRating && averageRating > 0 && (
@@ -126,13 +128,13 @@ const BrandCard = ({
             {topMaterials.slice(0, 4).map((material) => (
               <span
                 key={material}
-                className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-300"
+                className="px-2 py-0.5 text-xs rounded bg-muted text-muted-foreground"
               >
                 {material}
               </span>
             ))}
             {topMaterials.length > 4 && (
-              <span className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-500">
+              <span className="px-2 py-0.5 text-xs rounded bg-muted text-muted-foreground/60">
                 +{topMaterials.length - 4}
               </span>
             )}
