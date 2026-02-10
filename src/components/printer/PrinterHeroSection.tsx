@@ -31,7 +31,7 @@ function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3 min-w-[130px]">
+          <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3 min-w-[140px]">
             <div className="p-2 rounded-lg bg-primary/10 shrink-0">
               <Icon className="h-5 w-5 text-primary" />
             </div>
@@ -126,7 +126,7 @@ export function PrinterHeroSection({
           />
 
           {/* Quick Specs Grid - 2x2 on mobile, 4 columns on larger screens */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4 overflow-x-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             <QuickSpecCard
               icon={Box} 
               label="Build Volume" 
