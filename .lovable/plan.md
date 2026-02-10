@@ -1,86 +1,84 @@
 
 
-# Deduplicate Supabase API Calls on Homepage
+# Brand Logo Image Optimization
 
 ## Problem
 
-Two hooks cause redundant network requests because they lack centralized caching:
+49 brand logos in `/public/brands/` are served at full resolution (up to 1920x545px, 300KB each) but displayed at a maximum of 192x48px. The `/brands` page downloads ~2.14 MB of logo images when ~200 KB would suffice.
 
-1. **`useAuth`** (108 consumers) -- plain `useState`/`useEffect` with no shared state. Every component calling `useAuth()` creates its own instance, each independently calling `supabase.auth.getSession()` and querying `user_roles`. On the homepage, ~8 components mount it simultaneously = 8 identical `user_roles` queries.
+## Constraint
 
-2. **`useBrowseHistory`** (12 consumers) -- uses React Query but includes `limit` in the query key (`["browse-history", userId, limit]`). Components request different limits (5, 11, 20, 100), creating separate cached entries. The homepage mounts it with limit=5 (ContinueBrowsing), limit=6 (Sidebar), and limit=11 (RecentlyViewed) = 3 separate Supabase queries for the same data plus the sync POST loop.
+Lovable cannot run image processing scripts or resize files on disk. The actual `.png`/`.webp` files in `/public/brands/` must be replaced manually with optimized versions. However, code changes can reduce the impact and prepare the system for optimized assets.
 
-## Solution
+## Plan
 
-### Step 1: Convert `useAuth` to a React Context Provider
+### Step 1: Add explicit dimensions to BrandLogo component
 
-Create `src/contexts/AuthContext.tsx` with a single `AuthProvider` that:
-- Calls `supabase.auth.getSession()` once on mount
-- Subscribes to `onAuthStateChange` once
-- Queries `user_roles` once per login
-- Exposes `{ user, isAdmin, loading }` via context
+**File:** `src/components/ui/BrandLogo.tsx`
 
-Then update `src/hooks/useAuth.tsx` to simply consume the context (keeping the same return signature so no consumer changes are needed):
+Add `width` and `height` attributes to the `<img>` tag for each size tier, plus `sizes` and `decoding="async"`. This prevents the browser from allocating a full-resolution decode buffer and helps with layout stability.
 
 ```
-export const useAuth = () => useContext(AuthContext);
+sm: width={60} height={20} sizes="60px"
+md: width={100} height={32} sizes="100px"
+lg: width={180} height={48} sizes="180px"
 ```
 
-Wrap the app in `AuthProvider` in `src/App.tsx`, above all other providers.
+Also add `decoding="async"` to avoid blocking the main thread.
 
-**Result:** 8 `user_roles` queries reduced to 1. Zero changes needed in 108 consumer files.
+### Step 2: Upload optimized logos to Supabase Storage
 
-### Step 2: Normalize `useBrowseHistory` Query Key
+Create a `brand-logos` storage bucket and upload 384px-wide WebP versions of each logo. Then update the `logo()` helper in `brandLogos.ts` to point to the storage CDN URL instead of `/brands/`.
 
-Change the React Query key from `["browse-history", userId, limit]` to just `["browse-history", userId]` and always fetch with a generous limit (e.g., 50). Each consumer then slices the cached result to its own desired limit.
+The storage URL pattern:
+```
+{SUPABASE_URL}/storage/v1/object/public/brand-logos/{filename}
+```
 
-In `src/hooks/useBrowseHistory.ts`:
-- Remove `limit` from the query key so all consumers share one cache entry
-- Fetch with a fixed internal limit (50)
-- Slice the result to the caller's `limit` in the return value
-
-**Result:** 3+ browse history GETs reduced to 1. All consumers (limit=5, 6, 11, 20) read from the same cache.
-
-### Step 3: Batch the localStorage Sync POSTs
-
-The current sync loop (lines 216-228) does individual `INSERT` calls for each localStorage item:
-
+Update `brandLogos.ts`:
 ```ts
-for (const item of localItems.slice(0, 10)) {
-  await supabase.from("user_browse_history").insert({...});
-}
+const STORAGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/brand-logos`;
+const logo = (filename: string) => `${STORAGE_BASE}/${filename}`;
 ```
 
-Replace with a single batch insert:
+All filenames stay the same (e.g., `eryone.png`, `bambulab.webp`). The `getBrandLogo()` function and all 32 consumer files remain unchanged.
 
-```ts
-await supabase.from("user_browse_history").insert(
-  localItems.slice(0, 10).map(item => ({...}))
-);
-```
+### Step 3: Create a one-time edge function to process and upload logos
 
-**Result:** Up to 10 sequential POSTs reduced to 1.
+**New file:** `supabase/functions/optimize-brand-logos/index.ts`
+
+This edge function:
+1. Lists all files in `/public/brands/` (fetched from the live app URL)
+2. For each logo, fetches the original image
+3. Resizes to 384px wide using a WASM-based image library (`imagescript` for Deno)
+4. Converts to WebP format
+5. Uploads the result to the `brand-logos` storage bucket
+
+This is a one-time admin utility -- call it once, then delete it. It avoids manually resizing 49 images.
+
+If the WASM approach proves unreliable, the fallback is: upload pre-optimized files manually through Lovable Cloud storage UI, then just do Step 2 (point `brandLogos.ts` at the storage bucket).
+
+### Step 4: Navbar logo optimization
+
+**File:** `src/components/Navbar.tsx`
+
+The site logo (`logo-filascope.webp`, 1792x576px) is already constrained with `width={224}` and `height={72}` from the previous pass. To actually reduce its download size, upload a 224px-wide version to the `brand-logos` bucket and update the import.
+
+---
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/contexts/AuthContext.tsx` | **New file** -- AuthProvider with single auth + role query |
-| `src/hooks/useAuth.tsx` | Replace implementation with context consumer (same API) |
-| `src/App.tsx` | Wrap app in `<AuthProvider>` |
-| `src/hooks/useBrowseHistory.ts` | Remove `limit` from query key, fetch fixed limit, slice on return, batch sync inserts |
-
-## What Does NOT Change
-
-- No UI changes whatsoever
-- No changes to any of the 108 `useAuth()` consumers or 12 `useBrowseHistory()` consumers
-- The return signatures of both hooks remain identical
-- All existing functionality (admin checks, browse history tracking, clear/remove) works as before
+| `src/components/ui/BrandLogo.tsx` | Add `width`, `height`, `sizes`, `decoding="async"` to img tag |
+| `src/lib/brandLogos.ts` | Point `logo()` helper at Supabase Storage bucket URL |
+| `supabase/functions/optimize-brand-logos/index.ts` | New one-time edge function to resize and upload logos |
+| Database migration | Create `brand-logos` public storage bucket |
 
 ## Expected Impact
 
-- `user_roles` queries: 8 per page load reduced to 1
-- `user_browse_history` GETs: 3+ per page load reduced to 1
-- `user_browse_history` sync POSTs: up to 10 reduced to 1
-- Estimated total homepage Supabase requests: from ~39 down to ~15 or fewer
+- With optimized 384px WebP logos: ~3-8 KB each instead of 50-300 KB = total ~200 KB (down from 2.14 MB)
+- Proper `width`/`height` attributes eliminate layout shift
+- `decoding="async"` prevents main thread blocking
+- No visual changes -- same display sizes, same positioning, same fallback chain
 
