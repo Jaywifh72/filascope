@@ -2,6 +2,7 @@ import { X, ImageOff, GripVertical, AlertCircle, RefreshCw, ShoppingCart } from 
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { CompareItem } from "@/hooks/useCompare";
 import { Button } from "@/components/ui/button";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
@@ -196,18 +197,7 @@ export function MiniFilamentCard({
       <Link to={`/filament/${item.id}`} className="flex flex-col h-full" draggable={false}>
         {/* Header: Brand + Material */}
         <div className="flex items-center gap-2 mb-1.5">
-          {brandLogo ? (
-            <img 
-              src={brandLogo} 
-              alt={item.vendor || ''} 
-              className="w-5 h-5 object-contain rounded"
-              draggable={false}
-            />
-          ) : (
-            <div className="w-5 h-5 rounded bg-muted flex items-center justify-center">
-              <ImageOff className="w-3 h-3 text-muted-foreground" />
-            </div>
-          )}
+          <BrandLogo src={brandLogo} brandName={item.vendor || ''} size="sm" />
           {item.material && (
             <span className={cn(
               "text-[10px] font-medium px-1.5 py-0.5 rounded",

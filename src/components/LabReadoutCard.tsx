@@ -13,6 +13,7 @@ import {
 import { resolveNozzleTemp, type ResolvedSpec } from "@/lib/materialDefaults";
 import { cn } from "@/lib/utils";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useCompare } from "@/hooks/useCompare";
 import { useRegion } from "@/contexts/RegionContext";
 import { useRegionalPrice, type FilamentWithRegionalPrices } from "@/hooks/useRegionalPrice";
@@ -320,23 +321,12 @@ export function LabReadoutCard({
           {/* Center: Brand Logo - Using OptimizedImage */}
           <div className="h-full flex items-center justify-center">
             <div className="h-[90%] flex items-center justify-center">
-              {filament.vendor && getBrandLogo(filament.vendor) ? (
-                <OptimizedImage 
-                  src={getBrandLogo(filament.vendor)} 
-                  alt={filament.vendor}
-                  className="h-full w-auto max-w-[200px] opacity-70"
-                  objectFit="contain"
-                  width={200}
-                  height={48}
-                  priority
-                />
-              ) : null}
-              <span className={cn(
-                "text-[10px] text-muted-foreground uppercase tracking-wider",
-                filament.vendor && getBrandLogo(filament.vendor) ? "hidden" : ""
-              )}>
-                {filament.vendor || "Unknown"}
-              </span>
+              <BrandLogo
+                src={getBrandLogo(filament.vendor)}
+                brandName={filament.vendor || "Unknown"}
+                size="lg"
+                className="opacity-70"
+              />
             </div>
           </div>
         </div>

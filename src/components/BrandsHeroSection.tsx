@@ -3,6 +3,7 @@ import { Search, Sparkles, Building2, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { toBrandSlug } from "@/utils/brandSlug";
 
 interface BrandSuggestion {
@@ -199,13 +200,7 @@ const BrandsHeroSection = ({
                             onClick={() => handleBrandClick(brand.name)}
                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors text-left group"
                           >
-                            {logoUrl ? (
-                              <img src={logoUrl} alt="" className="w-8 h-8 object-contain" />
-                            ) : (
-                              <div className="w-8 h-8 rounded bg-gray-800 flex items-center justify-center">
-                                <Building2 className="w-4 h-4 text-gray-500" />
-                              </div>
-                            )}
+                            <BrandLogo src={logoUrl} brandName={brand.name} size="sm" />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-white truncate">
                                 {highlightMatch(brand.name, searchTerm)}

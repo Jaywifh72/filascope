@@ -1,4 +1,5 @@
 import { Package, Layers, Tag, Star, Globe, ExternalLink, MapPin, Calendar, BadgeCheck, Heart, ShieldCheck, TrendingUp, Database } from 'lucide-react';
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -109,17 +110,7 @@ export function BrandHeroSection({
         {/* Left: Brand Logo */}
         <div className="flex-shrink-0 flex justify-center lg:justify-start">
           <div className="relative w-[120px] h-[120px] lg:w-[150px] lg:h-[150px] flex items-center justify-center bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-            {brandLogo ? (
-              <img
-                src={brandLogo}
-                alt={brandName}
-                className="max-h-full max-w-full object-contain"
-              />
-            ) : (
-              <div className="text-4xl font-bold text-gray-500">
-                {brandName.charAt(0)}
-              </div>
-            )}
+            <BrandLogo src={brandLogo} brandName={brandName} size="lg" />
             {isVerified && (
               <div className="absolute -top-2 -right-2 bg-primary rounded-full p-1">
                 <BadgeCheck className="w-4 h-4 text-black" />
