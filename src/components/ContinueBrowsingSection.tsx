@@ -5,7 +5,7 @@ import { useBrowseHistory, getPrinterImageFromHistory, type BrowseHistoryItem } 
 import { useAuth } from "@/hooks/useAuth";
 import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
-import { getOptimizedImageUrl } from "@/utils/imageOptimization";
+import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 
 function ContinueCard({ item }: { item: BrowseHistoryItem }) {
   const { formatPrice, convertPrice, hasRates, currency } = useRegion();
@@ -51,7 +51,9 @@ function ContinueCard({ item }: { item: BrowseHistoryItem }) {
       <div className="shrink-0 w-10 h-10 rounded-md overflow-hidden border border-border bg-muted/30">
         {image ? (
           <img
-            src={getOptimizedImageUrl(image, 200)}
+            src={getOptimizedImageUrl(image, 80)}
+            srcSet={getImageSrcSet(image, [80, 160]) || undefined}
+            sizes="40px"
             alt={title}
             className="w-full h-full object-cover"
             loading="lazy"
