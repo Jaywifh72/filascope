@@ -127,6 +127,7 @@ const SlicerDirectory = lazy(() => import("./pages/SlicerDirectory"));
 const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -141,6 +142,7 @@ const App = () => (
   <ThemeProvider>
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <RegionProvider>
         <CurrencyProvider>
           <CompatibleCountProvider>
@@ -289,6 +291,7 @@ const App = () => (
           </CompatibleCountProvider>
         </CurrencyProvider>
       </RegionProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
   </ThemeProvider>
