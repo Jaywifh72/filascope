@@ -926,7 +926,7 @@ const Finder = () => {
       />
 
       {/* Welcome Banner for New Visitors */}
-      <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
+      <div className="max-w-7xl mx-auto px-4 pt-2 pb-2">
         <WelcomeBanner />
       </div>
 
