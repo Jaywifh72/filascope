@@ -56,7 +56,7 @@ export function WatchlistModule() {
                   {item.featured_image ? (
                     <img
                       src={item.featured_image}
-                      alt=""
+                      alt={`${cleanFilamentDisplayName(item.product_title)} filament`}
                       className="w-10 h-10 rounded object-cover shrink-0"
                     />
                   ) : (

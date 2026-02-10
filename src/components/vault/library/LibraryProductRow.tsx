@@ -44,7 +44,7 @@ export function LibraryProductRow({ product, onQuickRate, isRating }: LibraryPro
           {product.featured_image ? (
             <img
               src={product.featured_image}
-              alt=""
+              alt={`${product.product_title} filament`}
               className="w-full h-full object-cover"
               loading="lazy"
             />

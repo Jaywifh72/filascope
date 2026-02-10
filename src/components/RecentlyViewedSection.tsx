@@ -81,7 +81,7 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
         {image ? (
           <img
             src={getOptimizedImageUrl(image, 400)}
-            alt=""
+            alt={isFilament ? `${title} filament spool` : `${title} 3D printer`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
             width={160}
