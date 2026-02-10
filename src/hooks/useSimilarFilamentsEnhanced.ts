@@ -256,7 +256,8 @@ export function useSimilarFilamentsEnhanced(
         };
 
         const similarity = computeSimilarityScore(sourceProfile, candidateProfile);
-        if (similarity.disqualified) return null;
+        // Filter out disqualified and loose_match — only show exact_match and close_match
+        if (similarity.disqualified || similarity.tier === "loose_match") return null;
 
         let reason: SimilarityReason = "same_material";
         const pricePerKg =
