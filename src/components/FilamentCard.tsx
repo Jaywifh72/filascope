@@ -354,7 +354,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       role="article"
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
-        "group relative rounded-2xl transition-all duration-200 min-h-[340px]",
+        "group relative rounded-2xl transition-all duration-200 min-h-[420px] flex flex-col",
         "bg-card/80 border border-border",
         "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
@@ -371,12 +371,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         setShowTooltip(false);
       }}
     >
-      {/* Out of Stock Overlay */}
+      {/* Out of Stock Badge - top-left pill */}
       {isOutOfStock && (
-        <div className="absolute inset-0 bg-background/50 rounded-2xl flex items-center justify-center z-[5] pointer-events-none">
-          <span className="text-sm font-semibold text-muted-foreground bg-muted px-4 py-2 rounded-lg">
-            Out of Stock
-          </span>
+        <div className="absolute top-4 left-4 z-10 bg-red-900/80 text-red-200 text-xs font-mono uppercase px-2 py-0.5 rounded pointer-events-none">
+          Out of Stock
         </div>
       )}
 
@@ -458,7 +456,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                       <div 
                         key={i}
                         className={cn(
-                          "w-3.5 h-3.5 rounded-full border shadow-sm transition-opacity",
+                          "w-4 h-4 rounded-full border shadow-sm ring-1 ring-white/20 transition-opacity",
                           isColorInStock ? "border-border" : "border-border/50 opacity-50"
                         )}
                         style={{ backgroundColor: hex }}
@@ -516,7 +514,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             </HoverCard>
           ) : filament.color_hex ? (
             <div 
-              className="w-4 h-4 rounded-full border-2 border-border shadow-sm"
+              className="w-4 h-4 rounded-full border-2 border-border shadow-sm ring-1 ring-white/20"
               style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
               role="img"
               aria-label={`Color: ${filament.color_hex}`}
@@ -553,6 +551,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         )}
       </div>
 
+      {/* Flex-grow wrapper for Elements 2-4 to push CTA to bottom */}
+      <div className="flex-grow">
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 2: Rating
           ═══════════════════════════════════════════════════════════════ */}
@@ -827,6 +827,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           </Tooltip>
         )}
       </div>
+      </div>{/* End flex-grow wrapper */}
 
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 5: CTA Button
