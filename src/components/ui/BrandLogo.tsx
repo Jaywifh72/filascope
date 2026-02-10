@@ -52,11 +52,13 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
     );
   }
 
+  const needsBrightness = /^fiber[lo]/i.test(brandName);
+
   return (
     <img
       src={src}
       alt={`${brandName} logo`}
-      className={cn("object-contain flex-shrink-0", sizes.img, className)}
+      className={cn("object-contain flex-shrink-0", sizes.img, needsBrightness && "dark:brightness-[2.5]", className)}
       width={sizes.width}
       height={sizes.height}
       sizes={sizes.sizes}
