@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, ThumbsUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 import type { PublicReview } from "@/hooks/usePublicProfile";
 
 type SortKey = "recent" | "highest" | "helpful";
@@ -68,7 +69,7 @@ function ReviewCard({ review }: { review: PublicReview }) {
       {/* Image */}
       <div className="aspect-[3/2] bg-muted/30 relative overflow-hidden">
         {image ? (
-          <img src={image} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img src={getOptimizedImageUrl(image, 400)} alt={productName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
             No image

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 import { generateRecommendationReasons, getRelatedItems, type RecommendationReason } from "@/lib/hardwareRecommendations";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -98,7 +99,7 @@ export function HardwareRecommendationCard({
         {/* Image */}
         <div className="w-12 h-12 rounded bg-muted/50 overflow-hidden flex-shrink-0">
           {item.image_url ? (
-            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+            <img src={getOptimizedImageUrl(item.image_url, 96)} alt={item.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground/50">
               {icon}

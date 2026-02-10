@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box } from "lucide-react";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface DigitalViewportProps {
   images: string[];
@@ -82,7 +83,7 @@ export function DigitalViewport({ images, productName, onOpenLightbox }: Digital
         {/* Main Image */}
         <div className="absolute inset-8 flex items-center justify-center">
           <img 
-            src={images[selectedIndex]} 
+            src={getOptimizedImageUrl(images[selectedIndex], 560)} 
             alt={`${productName} product image`}
             className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
           />
@@ -116,7 +117,7 @@ export function DigitalViewport({ images, productName, onOpenLightbox }: Digital
                 </>
               )}
               <img 
-                src={img} 
+                src={getOptimizedImageUrl(img, 120)} 
                 alt={`${productName} view ${idx + 1}`}
                 className="max-w-full max-h-full object-contain"
                 loading="lazy"

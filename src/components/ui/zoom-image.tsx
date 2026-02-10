@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ZoomIn } from "lucide-react";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface ZoomImageProps {
   src: string;
@@ -77,7 +78,7 @@ export function ZoomImage({
 
       {/* Main Image — hero product image: eager + high priority */}
       <img
-        src={src}
+        src={getOptimizedImageUrl(src, 800)}
         alt={alt}
         width={800}
         height={800}

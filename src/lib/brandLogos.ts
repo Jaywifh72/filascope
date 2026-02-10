@@ -113,3 +113,19 @@ export const getBrandLogo = (vendor: string | null): string | null => {
   
   return null;
 };
+
+/**
+ * Get brand logo URL with context-aware sizing.
+ * Default width is 384 (for brand cards on /brands page).
+ * Pass a smaller displayWidth for compact contexts (e.g., 60 for compare cards → requests 120px).
+ */
+export const getBrandLogoUrl = (vendor: string | null, displayWidth: number = 192): string | null => {
+  if (!vendor) return null;
+
+  const baseUrl = getBrandLogo(vendor);
+  if (!baseUrl) return null;
+
+  // Replace the default width=384 with the context-appropriate width (2x for retina)
+  const targetWidth = Math.ceil(displayWidth * 2);
+  return baseUrl.replace(/width=\d+/, `width=${targetWidth}`);
+};

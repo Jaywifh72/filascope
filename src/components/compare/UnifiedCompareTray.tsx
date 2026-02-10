@@ -4,6 +4,7 @@ import { GitCompare, Printer as PrinterIcon, FlaskConical, ArrowRight, Trash2, X
 import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 import { useCompareTrayMode } from "@/hooks/useCompareTrayMode";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -197,7 +198,7 @@ export function UnifiedCompareTray() {
                       <div className="w-12 h-12 rounded-lg border-2 border-primary/30 bg-background/80 overflow-hidden flex items-center justify-center relative">
                         {item.featured_image ? (
                           <img
-                            src={item.featured_image}
+                            src={getOptimizedImageUrl(item.featured_image, 96)}
                             alt={item.product_title}
                             className="w-full h-full object-contain p-1"
                             onError={(e) => {
@@ -246,7 +247,7 @@ export function UnifiedCompareTray() {
                                 : "border-primary/30 bg-background/80"
                             )}>
                               {printer.imageUrl ? (
-                                <img src={printer.imageUrl} alt={printer.name} className="w-full h-full object-contain p-1" />
+                                <img src={getOptimizedImageUrl(printer.imageUrl, 96)} alt={printer.name} className="w-full h-full object-contain p-1" />
                               ) : (
                                 <PrinterIcon className="w-5 h-5 text-muted-foreground" />
                               )}

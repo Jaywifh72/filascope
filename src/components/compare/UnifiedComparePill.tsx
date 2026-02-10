@@ -4,6 +4,7 @@ import { GitCompare, ChevronRight, X, FlaskConical, Printer as PrinterIcon, Tras
 import { cn } from "@/lib/utils";
 import { useCompare } from "@/hooks/useCompare";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 import { Button } from "@/components/ui/button";
 import { MiniFilamentCard } from "./MiniFilamentCard";
 import {
@@ -130,7 +131,7 @@ export function UnifiedComparePill() {
                     <div key={printer.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
                       <div className="w-10 h-10 rounded bg-muted/30 flex items-center justify-center flex-shrink-0">
                         {printer.imageUrl ? (
-                          <img src={printer.imageUrl} alt={printer.name} className="w-full h-full object-contain p-0.5 rounded" />
+                          <img src={getOptimizedImageUrl(printer.imageUrl, 96)} alt={printer.name} className="w-full h-full object-contain p-0.5 rounded" />
                         ) : (
                           <PrinterIcon className="w-4 h-4 text-muted-foreground" />
                         )}
