@@ -34,6 +34,8 @@ function cdnSupportsWebP(src: string): boolean {
     src.includes("imgix.net") ||
     src.includes("shopify.com") ||
     src.includes("cdn.shopify.com") ||
+    src.includes("caz3d.com/cdn/") ||
+    /store\.bbl[a-z]*\.[a-z]+.*\/cdn\//i.test(src) ||
     (src.includes("supabase") && src.includes("/storage/v1/object/"))
   );
 }
@@ -59,7 +61,7 @@ function getOptimizedSrc(src: string, width?: number, format?: "webp" | "auto"):
   }
 
   // Shopify CDN - use width query param (avoids stacking _NNNx suffixes)
-  if (src.includes("shopify.com") || src.includes("cdn.shopify.com")) {
+  if (src.includes("shopify.com") || src.includes("cdn.shopify.com") || src.includes("caz3d.com/cdn/") || /store\.bbl[a-z]*\.[a-z]+.*\/cdn\//i.test(src)) {
     // Remove any existing _NNNx size suffix from filename
     let cleanSrc = src.replace(/_\d+x\./g, '.');
     const separator = cleanSrc.includes("?") ? "&" : "?";
