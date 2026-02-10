@@ -19,9 +19,9 @@ function brandColor(name: string): string {
 }
 
 const sizeMap = {
-  sm: { container: "h-5 w-5", text: "text-[10px]", img: "h-5 max-w-[60px]" },
-  md: { container: "h-8 w-8", text: "text-xs", img: "h-8 max-w-[100px]" },
-  lg: { container: "h-12 w-12", text: "text-base", img: "h-12 max-w-[180px]" },
+  sm: { container: "h-5 w-5", text: "text-[10px]", img: "h-5 max-w-[60px]", width: 60, height: 20, sizes: "60px" },
+  md: { container: "h-8 w-8", text: "text-xs", img: "h-8 max-w-[100px]", width: 100, height: 32, sizes: "100px" },
+  lg: { container: "h-12 w-12", text: "text-base", img: "h-12 max-w-[180px]", width: 180, height: 48, sizes: "180px" },
 };
 
 /**
@@ -57,6 +57,10 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
       src={src}
       alt={`${brandName} logo`}
       className={cn("object-contain flex-shrink-0", sizes.img, className)}
+      width={sizes.width}
+      height={sizes.height}
+      sizes={sizes.sizes}
+      decoding="async"
       onError={() => setFailed(true)}
       loading="lazy"
     />
