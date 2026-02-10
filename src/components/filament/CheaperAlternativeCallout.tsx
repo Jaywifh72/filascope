@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { Lightbulb, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useRegion } from "@/contexts/RegionContext";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import {
+  buildSimilarityQuery,
   computeSimilarityScore,
-  type FilamentProfile,
   getBaseMaterial,
+  getFinishType,
+  type FilamentProfile,
 } from "@/lib/filamentSimilarity";
 
 interface CheaperAlternativeCalloutProps {
@@ -15,8 +16,15 @@ interface CheaperAlternativeCalloutProps {
   material: string | null;
   vendor: string | null;
   currentPricePerKg: number | null;
-  /** Source filament profile for similarity scoring */
-  sourceProfile?: FilamentProfile | null;
+  finishType: string | null;
+  carbonFiberPercentage: number | null;
+  glassFiberPercentage: number | null;
+  highSpeedCapable: boolean | null;
+  isNozzleAbrasive: boolean | null;
+  diameterNominalMm: number | null;
+  nozzleTempMinC: number | null;
+  nozzleTempMaxC: number | null;
+  productTitle: string;
 }
 
 export function CheaperAlternativeCallout({
@@ -24,9 +32,31 @@ export function CheaperAlternativeCallout({
   material,
   vendor,
   currentPricePerKg,
-  sourceProfile,
+  finishType,
+  carbonFiberPercentage,
+  glassFiberPercentage,
+  highSpeedCapable,
+  isNozzleAbrasive,
+  diameterNominalMm,
+  nozzleTempMinC,
+  nozzleTempMaxC,
+  productTitle,
 }: CheaperAlternativeCalloutProps) {
   const { formatPrice, currency } = useRegion();
+
+  // Build source profile from props
+  const sourceProfile: FilamentProfile = {
+    material,
+    finish_type: finishType,
+    carbon_fiber_percentage: carbonFiberPercentage,
+    glass_fiber_percentage: glassFiberPercentage,
+    high_speed_capable: highSpeedCapable,
+    is_nozzle_abrasive: isNozzleAbrasive,
+    diameter_nominal_mm: diameterNominalMm,
+    nozzle_temp_min_c: nozzleTempMinC,
+    nozzle_temp_max_c: nozzleTempMaxC,
+    product_title: productTitle,
+  };
 
   const { data: alternative } = useQuery({
     queryKey: ["cheaper-alternative", material, filamentId, currency],
@@ -35,68 +65,77 @@ export function CheaperAlternativeCallout({
     queryFn: async () => {
       if (!material || !currentPricePerKg) return null;
 
-      const baseMaterial = getBaseMaterial(material);
+      // Use buildSimilarityQuery for hard constraints (base material, reinforcement, diameter)
+      const query = buildSimilarityQuery(sourceProfile, {
+        excludeId: filamentId,
+        excludeVendor: vendor || undefined,
+        limit: 60,
+      });
 
-      const { data, error } = await supabase
-        .from("filaments")
-        .select(`
-          id, product_title, vendor, variant_price, net_weight_g, pack_quantity,
-          product_handle, featured_image, material, finish_type,
-          carbon_fiber_percentage, glass_fiber_percentage, high_speed_capable,
-          is_nozzle_abrasive, diameter_nominal_mm, nozzle_temp_min_c, nozzle_temp_max_c
-        `)
-        .ilike("material", `${baseMaterial}%`)
-        .not("id", "eq", filamentId)
-        .not("variant_price", "is", null)
-        .eq("variant_available", true)
-        .order("variant_price", { ascending: true })
-        .limit(30);
+      const { data, error } = await query as { data: any[] | null; error: any };
 
       if (error || !data) return null;
 
+      // Score each candidate and find the cheapest qualifying one
+      let bestAlternative: {
+        id: string;
+        title: string;
+        vendor: string | null;
+        pricePerKg: number;
+        savings: number;
+        handle: string | null;
+      } | null = null;
+
       for (const f of data) {
-        if (f.vendor === vendor) continue;
         const ppkg = computePricePerKg(f.variant_price!, f.net_weight_g, f.pack_quantity);
         if (!ppkg || ppkg >= currentPricePerKg || (currentPricePerKg - ppkg) <= 1) continue;
 
-        // If we have a source profile, verify similarity score > 50
-        if (sourceProfile) {
-          const candidateProfile: FilamentProfile = {
-            material: f.material,
-            finish_type: f.finish_type ?? null,
-            carbon_fiber_percentage: f.carbon_fiber_percentage ?? null,
-            glass_fiber_percentage: f.glass_fiber_percentage ?? null,
-            high_speed_capable: f.high_speed_capable ?? null,
-            is_nozzle_abrasive: f.is_nozzle_abrasive ?? null,
-            diameter_nominal_mm: f.diameter_nominal_mm ?? null,
-            nozzle_temp_min_c: f.nozzle_temp_min_c ?? null,
-            nozzle_temp_max_c: f.nozzle_temp_max_c ?? null,
-            product_title: f.product_title ?? "",
-            net_weight_g: f.net_weight_g,
-            featured_image: f.featured_image,
-            variant_price: f.variant_price,
-          };
-          const score = computeSimilarityScore(sourceProfile, candidateProfile);
-          if (score.disqualified || score.total < 50) continue;
-        }
-
-        return {
-          id: f.id,
-          title: f.product_title,
-          vendor: f.vendor,
-          pricePerKg: ppkg,
-          savings: currentPricePerKg - ppkg,
-          handle: f.product_handle,
+        const candidateProfile: FilamentProfile = {
+          material: f.material,
+          finish_type: f.finish_type ?? null,
+          carbon_fiber_percentage: f.carbon_fiber_percentage ?? null,
+          glass_fiber_percentage: f.glass_fiber_percentage ?? null,
+          high_speed_capable: f.high_speed_capable ?? null,
+          is_nozzle_abrasive: f.is_nozzle_abrasive ?? null,
+          diameter_nominal_mm: f.diameter_nominal_mm ?? null,
+          nozzle_temp_min_c: f.nozzle_temp_min_c ?? null,
+          nozzle_temp_max_c: f.nozzle_temp_max_c ?? null,
+          product_title: f.product_title ?? "",
+          net_weight_g: f.net_weight_g,
+          featured_image: f.featured_image,
+          variant_price: f.variant_price,
         };
+
+        const score = computeSimilarityScore(sourceProfile, candidateProfile);
+        // Only allow "exact_match" or "close_match" (score >= 50)
+        if (score.disqualified || score.total < 50) continue;
+
+        // This is the cheapest qualifying candidate (query is ordered by price asc)
+        if (!bestAlternative || ppkg < bestAlternative.pricePerKg) {
+          bestAlternative = {
+            id: f.id,
+            title: f.product_title,
+            vendor: f.vendor,
+            pricePerKg: ppkg,
+            savings: currentPricePerKg - ppkg,
+            handle: f.product_handle,
+          };
+          break; // Already sorted by price, first qualifying match is cheapest
+        }
       }
 
-      return null;
+      return bestAlternative;
     },
   });
 
   if (!alternative) return null;
 
-  const materialBase = getBaseMaterial(material) || "filament";
+  // Build descriptive label: "Similar Matte PLA for less" or "Similar PLA for less"
+  const baseMaterial = getBaseMaterial(material) || "filament";
+  const finish = getFinishType(sourceProfile);
+  const finishLabel = finish !== "standard"
+    ? `${finish.charAt(0).toUpperCase() + finish.slice(1)} ${baseMaterial}`
+    : baseMaterial;
 
   return (
     <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
@@ -104,7 +143,7 @@ export function CheaperAlternativeCallout({
         <Lightbulb className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
-            Similar {materialBase} for less
+            Similar {finishLabel} for less
           </p>
           <p className="text-sm text-muted-foreground mt-1">
             <Link
