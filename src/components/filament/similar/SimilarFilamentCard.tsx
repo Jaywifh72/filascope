@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
-import { getBrandLogo } from "@/lib/brandLogos";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { RegionalPrice } from "@/components/price/RegionalPrice";
 import { useRegion } from "@/contexts/RegionContext";
@@ -82,7 +82,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
   const { currency, convertPrice, hasRates, formatPrice } = useRegion();
   
   const isInCompare = items.some((item) => item.id === filament.id);
-  const brandLogo = getBrandLogo(filament.vendor);
+  const brandLogo = getBrandLogoUrl(filament.vendor, 60);
   
   // Calculate price per kg using canonical utility
   const pricePerKg = filament.variant_price

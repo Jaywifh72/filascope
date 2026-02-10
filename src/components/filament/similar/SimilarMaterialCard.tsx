@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
-import { getBrandLogo } from "@/lib/brandLogos";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { MetricComparisonBar } from "./MetricComparisonBar";
 import { StandoutBadges } from "./StandoutBadges";
@@ -99,7 +99,7 @@ export function SimilarMaterialCard({
 }: SimilarMaterialCardProps) {
   const { addItem, isInCompare, isFull, triggerGlow } = useCompare();
   const isAdded = isInCompare(filament.id);
-  const brandLogo = filament.vendor ? getBrandLogo(filament.vendor) : null;
+  const brandLogo = getBrandLogoUrl(filament.vendor, 60);
   const materialBase = filament.material?.split(/[\s-]/)[0] || "Unknown";
   const [showCompareDialog, setShowCompareDialog] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);

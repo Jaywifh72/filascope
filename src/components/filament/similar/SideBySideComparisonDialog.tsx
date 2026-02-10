@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCompare } from "@/hooks/useCompare";
-import { getBrandLogo } from "@/lib/brandLogos";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { cleanFilamentDisplayName } from "@/lib/productNameUtils";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
@@ -172,12 +172,8 @@ export function SideBySideComparisonDialog({
     setTimeout(() => setAddingBoth(false), 1000);
   };
 
-  const currentBrandLogo = currentFilament.vendor
-    ? getBrandLogo(currentFilament.vendor)
-    : null;
-  const compareBrandLogo = compareFilament.vendor
-    ? getBrandLogo(compareFilament.vendor)
-    : null;
+  const currentBrandLogo = getBrandLogoUrl(currentFilament.vendor, 60);
+  const compareBrandLogo = getBrandLogoUrl(compareFilament.vendor, 60);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
