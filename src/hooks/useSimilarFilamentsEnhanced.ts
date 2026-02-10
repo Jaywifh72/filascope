@@ -2,6 +2,11 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SimilarFilamentData, SimilarityReason } from "@/components/filament/similar/SimilarFilamentCard";
 import { MATERIAL_PRICE_TIERS } from "@/lib/materialPriceTiers";
+import {
+  buildSimilarityQuery,
+  computeSimilarityScore,
+  type FilamentProfile,
+} from "@/lib/filamentSimilarity";
 
 export type SimilarityGroup = "other_brands_same_material" | "same_brand_other_material";
 
@@ -31,6 +36,15 @@ interface CurrentFilament {
   variant_price: number | null;
   net_weight_g: number | null;
   color_family: string | null;
+  finish_type?: string | null;
+  carbon_fiber_percentage?: number | null;
+  glass_fiber_percentage?: number | null;
+  high_speed_capable?: boolean | null;
+  is_nozzle_abrasive?: boolean | null;
+  diameter_nominal_mm?: number | null;
+  nozzle_temp_min_c?: number | null;
+  nozzle_temp_max_c?: number | null;
+  featured_image?: string | null;
 }
 
 /**
@@ -106,21 +120,30 @@ export function useSimilarFilamentsEnhanced(
     const fetchAll = async () => {
       setIsLoading(true);
       try {
-        // Query 1: Same material, different brands — fetch more to allow filtering to 6
-        const sameMaterialPromise = supabase
-          .from("filaments")
-          .select(`
-            id, product_title, vendor, material, variant_price, 
-            net_weight_g, color_hex, color_family, featured_image,
-            nozzle_temp_min_c, nozzle_temp_max_c, ease_of_printing_score
-          `)
-          .eq("material", currentFilament.material)
-          .neq("vendor", currentFilament.vendor || "")
-          .or("net_weight_g.is.null,net_weight_g.gte.300")
-          .not("variant_price", "is", null)
-          .limit(120);
+        // Query 1: Same base material, different brands — uses similarity engine filters
+        const sourceProfile: FilamentProfile = {
+          material: currentFilament.material,
+          finish_type: currentFilament.finish_type ?? null,
+          carbon_fiber_percentage: currentFilament.carbon_fiber_percentage ?? null,
+          glass_fiber_percentage: currentFilament.glass_fiber_percentage ?? null,
+          high_speed_capable: currentFilament.high_speed_capable ?? null,
+          is_nozzle_abrasive: currentFilament.is_nozzle_abrasive ?? null,
+          diameter_nominal_mm: currentFilament.diameter_nominal_mm ?? null,
+          nozzle_temp_min_c: currentFilament.nozzle_temp_min_c ?? null,
+          nozzle_temp_max_c: currentFilament.nozzle_temp_max_c ?? null,
+          product_title: currentFilament.product_title,
+          net_weight_g: currentFilament.net_weight_g,
+          featured_image: currentFilament.featured_image ?? null,
+          variant_price: currentFilament.variant_price,
+        };
 
-        // Query 2: Same brand, different material
+        const sameMaterialPromise = buildSimilarityQuery(sourceProfile, {
+          excludeId: currentFilament.id,
+          excludeVendor: currentFilament.vendor || undefined,
+          limit: 120,
+        });
+
+        // Query 2: Same brand, different material (unchanged — cross-material by design)
         const sameBrandPromise = currentFilament.vendor
           ? supabase
               .from("filaments")
@@ -195,76 +218,67 @@ export function useSimilarFilamentsEnhanced(
       return Array.from(seen.values());
     }
 
-    // --- Score other-brand same-material candidates ---
+    // --- Build source profile for similarity scoring ---
+    const sourceProfile: FilamentProfile = {
+      material: currentFilament.material,
+      finish_type: (currentFilament as any).finish_type ?? null,
+      carbon_fiber_percentage: (currentFilament as any).carbon_fiber_percentage ?? null,
+      glass_fiber_percentage: (currentFilament as any).glass_fiber_percentage ?? null,
+      high_speed_capable: (currentFilament as any).high_speed_capable ?? null,
+      is_nozzle_abrasive: (currentFilament as any).is_nozzle_abrasive ?? null,
+      diameter_nominal_mm: (currentFilament as any).diameter_nominal_mm ?? null,
+      nozzle_temp_min_c: currentFilament.nozzle_temp_min_c ?? null,
+      nozzle_temp_max_c: currentFilament.nozzle_temp_max_c ?? null,
+      product_title: currentFilament.product_title,
+      net_weight_g: currentFilament.net_weight_g,
+      featured_image: (currentFilament as any).featured_image ?? null,
+      variant_price: currentFilament.variant_price,
+    };
+
+    // --- Score other-brand same-material candidates using similarity engine ---
     const dedupedSameMaterial = deduplicateByProductLine(sameMaterialCandidates);
-    const scoredSameMaterial: GroupedSimilarFilament[] = dedupedSameMaterial.map((filament) => {
-      const pricePerKg =
-        filament.variant_price && filament.net_weight_g
-          ? filament.variant_price / (filament.net_weight_g / 1000)
-          : null;
+    const scoredSameMaterial: GroupedSimilarFilament[] = dedupedSameMaterial
+      .map((filament) => {
+        const candidateProfile: FilamentProfile = {
+          material: filament.material,
+          finish_type: filament.finish_type ?? null,
+          carbon_fiber_percentage: filament.carbon_fiber_percentage ?? null,
+          glass_fiber_percentage: filament.glass_fiber_percentage ?? null,
+          high_speed_capable: filament.high_speed_capable ?? null,
+          is_nozzle_abrasive: filament.is_nozzle_abrasive ?? null,
+          diameter_nominal_mm: filament.diameter_nominal_mm ?? null,
+          nozzle_temp_min_c: filament.nozzle_temp_min_c ?? null,
+          nozzle_temp_max_c: filament.nozzle_temp_max_c ?? null,
+          product_title: filament.product_title ?? "",
+          net_weight_g: filament.net_weight_g,
+          featured_image: filament.featured_image,
+          variant_price: filament.variant_price,
+        };
 
-      let score = 0;
-      let reason: SimilarityReason = "same_material";
+        const similarity = computeSimilarityScore(sourceProfile, candidateProfile);
+        if (similarity.disqualified) return null;
 
-      // Price similarity (within 30%) — highest priority
-      if (pricePerKg && currentPricePerKg) {
-        const priceDiff = Math.abs(pricePerKg - currentPricePerKg) / currentPricePerKg;
-        if (priceDiff <= 0.15) {
-          score += 20;
-          reason = "similar_price";
-        } else if (priceDiff <= 0.30) {
-          score += 12;
-          reason = "similar_price";
-        } else if (priceDiff <= 0.50) {
-          score += 5;
+        let reason: SimilarityReason = "same_material";
+        const pricePerKg =
+          filament.variant_price && filament.net_weight_g
+            ? filament.variant_price / (filament.net_weight_g / 1000)
+            : null;
+
+        if (pricePerKg && currentPricePerKg) {
+          const priceDiff = Math.abs(pricePerKg - currentPricePerKg) / currentPricePerKg;
+          if (priceDiff <= 0.30) reason = "similar_price";
+          if (pricePerKg <= priceTier.budget && pricePerKg < currentPricePerKg * 0.7) reason = "budget_pick";
+          if (pricePerKg >= priceTier.premium && pricePerKg > currentPricePerKg * 1.3) reason = "premium_pick";
         }
-      }
 
-      // Similar spool size
-      if (
-        filament.net_weight_g &&
-        currentFilament.net_weight_g &&
-        Math.abs(filament.net_weight_g - currentFilament.net_weight_g) <= 100
-      ) {
-        score += 6;
-      }
-
-      // Budget pick
-      if (
-        pricePerKg &&
-        pricePerKg <= priceTier.budget &&
-        currentPricePerKg &&
-        pricePerKg < currentPricePerKg * 0.7
-      ) {
-        reason = "budget_pick";
-        score += 4;
-      }
-
-      // Premium pick
-      if (
-        pricePerKg &&
-        pricePerKg >= priceTier.premium &&
-        currentPricePerKg &&
-        pricePerKg > currentPricePerKg * 1.3
-      ) {
-        reason = "premium_pick";
-      }
-
-      // Same color family bonus
-      if (filament.color_family && filament.color_family === currentFilament.color_family) {
-        score += 3;
-      }
-
-      // Prefer items with images
-      if (filament.featured_image) score += 2;
-
-      return {
-        ...filament,
-        similarityReason: reason,
-        group: "other_brands_same_material" as SimilarityGroup,
-        score,
-      };
-    });
+        return {
+          ...filament,
+          similarityReason: reason,
+          group: "other_brands_same_material" as SimilarityGroup,
+          score: similarity.total,
+        };
+      })
+      .filter((item): item is GroupedSimilarFilament => item !== null);
 
     // --- Score same-brand other-material candidates ---
     const dedupedSameBrand = deduplicateByProductLine(sameBrandCandidates);
