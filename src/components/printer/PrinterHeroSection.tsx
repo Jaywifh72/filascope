@@ -36,7 +36,7 @@ function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
               <Icon className="h-5 w-5 text-primary" />
             </div>
             <div className="flex flex-col gap-1 min-w-0">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">{label}</span>
+              <span className="text-xs text-muted-foreground">{label}</span>
               <span className="text-sm font-semibold text-foreground whitespace-nowrap leading-snug">{value}</span>
             </div>
           </div>
