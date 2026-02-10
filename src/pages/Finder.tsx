@@ -1374,6 +1374,7 @@ const Finder = () => {
                     index={index}
                     displayTitle={group.baseName}
                     communityRating={communityRatingsMap?.get(filament.id) || null}
+                    priority={index < 4}
                     variantIndicators={group.variants.length > 1 ? {
                       colors: Array.from(group.colors),
                       weights: Array.from(group.weights).sort((a, b) => a - b),

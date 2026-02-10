@@ -77,6 +77,8 @@ interface LabReadoutCardProps {
   variantIndicators?: VariantIndicators;
   communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
   showCostPerPrint?: boolean;
+  /** When true, image loads eagerly with high fetch priority (use for above-the-fold cards) */
+  priority?: boolean;
 }
 
 export function LabReadoutCard({ 
@@ -86,6 +88,7 @@ export function LabReadoutCard({
   variantIndicators,
   communityRating,
   showCostPerPrint = false,
+  priority = false,
 }: LabReadoutCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -347,6 +350,7 @@ export function LabReadoutCard({
             objectFit="contain"
             width={200}
             height={128}
+            priority={priority}
             onError={() => setImageError(true)}
             colorHex={filament.color_hex}
             material={filament.material}
