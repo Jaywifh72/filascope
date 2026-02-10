@@ -352,18 +352,31 @@ export function LabReadoutCard({
             material={filament.material}
           />
         ) : (
-          /* Fallback placeholder when no image or error */
-          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-            {/* Color swatch as main visual when no image */}
+          /* Styled fallback placeholder when no image or error */
+          <div 
+            className="flex flex-col items-center justify-center gap-2 w-full h-full relative overflow-hidden"
+            style={{ 
+              background: filament.color_hex 
+                ? `linear-gradient(135deg, ${filament.color_hex}20 0%, ${filament.color_hex}08 100%)`
+                : undefined
+            }}
+          >
+            {/* Subtle brand initial watermark */}
+            {filament.vendor && (
+              <span className="absolute text-[80px] font-black text-foreground/[0.03] leading-none select-none pointer-events-none">
+                {filament.vendor.charAt(0).toUpperCase()}
+              </span>
+            )}
+            {/* Color swatch as main visual */}
             {filament.color_hex ? (
               <div 
-                className="w-16 h-16 rounded-xl shadow-lg border border-border"
+                className="w-14 h-14 rounded-xl shadow-lg border border-border ring-1 ring-white/10"
                 style={{ backgroundColor: filament.color_hex }}
               />
             ) : (
-              <Package className="w-10 h-10 opacity-30" />
+              <Package className="w-10 h-10 text-muted-foreground/20" />
             )}
-            <span className="text-[10px] uppercase tracking-wider opacity-50">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               {filament.material || 'Filament'}
             </span>
           </div>
