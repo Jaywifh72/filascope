@@ -198,24 +198,26 @@ export const OptimizedImage = memo(function OptimizedImage({
       >
         {fallback || (
           colorHex ? (
-            <div className="flex flex-col items-center justify-center gap-2 w-full h-full" style={{ backgroundColor: `${colorHex}18` }}>
+            <div 
+              className="flex flex-col items-center justify-center gap-2 w-full h-full relative overflow-hidden"
+              style={{ background: `linear-gradient(135deg, ${colorHex}20 0%, ${colorHex}08 100%)` }}
+            >
               <div
-                className="w-12 h-12 rounded-full shadow-lg border border-white/15 ring-1 ring-black/10"
+                className="w-12 h-12 rounded-xl shadow-lg border border-border ring-1 ring-white/10"
                 style={{ backgroundColor: colorHex }}
                 role="img"
                 aria-label={`Color: ${colorHex}`}
               />
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Package className="w-4 h-4 opacity-40" />
-                <span className="text-[10px] uppercase tracking-wider opacity-50 font-medium">
-                  {material?.split(/[\s-]/)[0] || "Filament"}
-                </span>
-              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                {material?.split(/[\s-]/)[0] || "Filament"}
+              </span>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-1 text-muted-foreground">
-              <Package className="w-8 h-8 opacity-30" />
-              <span className="text-[10px] opacity-50">No image</span>
+            <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
+              <Package className="w-8 h-8 text-muted-foreground/20" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                {material?.split(/[\s-]/)[0] || "Filament"}
+              </span>
             </div>
           )
         )}
