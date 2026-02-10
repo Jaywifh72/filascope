@@ -201,7 +201,7 @@ const Navbar = () => {
       title: 'Community',
       icon: Globe,
       items: [
-        { to: '/reference/repos', label: 'Model Repositories', icon: FolderGit2 },
+        
       ],
       comingSoonNote: 'More resources coming soon...',
     }

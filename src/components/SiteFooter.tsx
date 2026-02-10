@@ -121,7 +121,7 @@ export function SiteFooter() {
     { name: "Material Knowledge Base", href: "/compare" },
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Slicer Directory", href: "/reference/slicers" },
-    { name: "Model Repositories", href: "/reference/repos" },
+    
     { name: "Quick Match", href: "/wizard" },
   ];
 
