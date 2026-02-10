@@ -19,21 +19,15 @@ export function useDealsCount() {
   return useQuery({
     queryKey: ["active-deals-count-global"],
     queryFn: async (): Promise<DealsCountResult> => {
-      // Single HEAD request — no row data transferred, just the count header
+      // Use GET with count header instead of HEAD (HEAD returns 503 on this project)
       const { count, error } = await supabase
         .from("filaments")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact" })
         .not("variant_compare_at_price", "is", null)
         .not("variant_price", "is", null)
         .gt("variant_compare_at_price", 0)
         .or("net_weight_g.is.null,net_weight_g.gte.300")
-        // Filter where compare_at > variant_price (actual discount)
-        // PostgREST doesn't support cross-column comparison in filters,
-        // so we use the fact that gt("variant_compare_at_price", 0) gets us
-        // candidates, and the count is close enough for a hero badge.
-        // For exact accuracy, we'd need an RPC, but this is ~95% accurate
-        // and eliminates 2-3 large paginated requests.
-        ;
+        .limit(1); // Only fetch 1 row, we just need the count header
 
       if (error) {
         console.error("Failed to fetch deals count:", error);
