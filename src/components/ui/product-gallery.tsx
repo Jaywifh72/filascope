@@ -5,6 +5,7 @@ import { ZoomImage } from "./zoom-image";
 import { ImageLightbox } from "./image-lightbox";
 import { Skeleton } from "./skeleton";
 import { Badge } from "./badge";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface GalleryImage {
   url: string;
@@ -227,7 +228,7 @@ export function ProductGallery({
               aria-label={`View image ${idx + 1}`}
             >
               <img
-                src={img.url}
+                src={getOptimizedImageUrl(img.url, 128)}
                 alt=""
                 className="w-full h-full object-contain"
                 loading="lazy"

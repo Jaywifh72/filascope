@@ -5,6 +5,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 function formatTimeAgo(dateStr: string): string {
   const now = Date.now();
@@ -59,7 +60,7 @@ function HistoryListItem({ item }: { item: BrowseHistoryItem }) {
       {/* Thumbnail */}
       <div className="shrink-0 w-14 h-14 rounded-lg overflow-hidden border border-border bg-muted/30">
         {image ? (
-          <img src={image} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src={getOptimizedImageUrl(image, 112)} alt="" className="w-full h-full object-cover" loading="lazy" />
         ) : colorHex ? (
           <div className="w-full h-full" style={{ backgroundColor: colorHex }} />
         ) : (
