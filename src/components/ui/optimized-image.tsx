@@ -58,12 +58,14 @@ function getOptimizedSrc(src: string, width?: number, format?: "webp" | "auto"):
     return url.toString();
   }
 
-  // Shopify CDN - supports format=webp via query param
+  // Shopify CDN - use width query param (avoids stacking _NNNx suffixes)
   if (src.includes("shopify.com") || src.includes("cdn.shopify.com")) {
-    let optimized = src.replace(/(\.\w+)(\?.*)?$/, `_${width}x$1$2`);
+    // Remove any existing _NNNx size suffix from filename
+    let cleanSrc = src.replace(/_\d+x\./g, '.');
+    const separator = cleanSrc.includes("?") ? "&" : "?";
+    let optimized = `${cleanSrc}${separator}width=${width}`;
     if (requestFormat === "webp") {
-      const separator = optimized.includes("?") ? "&" : "?";
-      optimized += `${separator}format=webp`;
+      optimized += `&format=webp`;
     }
     return optimized;
   }

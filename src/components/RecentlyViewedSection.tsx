@@ -6,6 +6,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface RecentlyViewedSectionProps {
   /** Max items to show */
@@ -79,10 +80,12 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
       <div className={`relative w-full bg-muted/30 ${compact ? "h-[90px]" : "h-[100px]"}`}>
         {image ? (
           <img
-            src={image}
+            src={getOptimizedImageUrl(image, 400)}
             alt=""
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
+            width={160}
+            height={compact ? 90 : 100}
           />
         ) : colorHex ? (
           <div className="w-full h-full" style={{ backgroundColor: colorHex }} />
