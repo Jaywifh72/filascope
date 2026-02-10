@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PricePoint {
@@ -22,114 +23,108 @@ export interface PriceHistoryData {
   maxPoint: PricePoint | null;
 }
 
-export function usePriceHistory(filamentId: string, currentPrice: number | null, days: number = 30): PriceHistoryData {
-  const [data, setData] = useState<PriceHistoryData>({
-    prices: [],
-    min: 0,
-    max: 0,
-    avg: 0,
-    currentPrice: currentPrice || 0,
-    isBestIn30Days: false,
-    isBestIn6Months: false,
-    trendPercent: null,
-    isLoading: true,
-    minPoint: null,
-    maxPoint: null,
-  });
+const EMPTY_DATA: Omit<PriceHistoryData, 'isLoading'> = {
+  prices: [],
+  min: 0,
+  max: 0,
+  avg: 0,
+  currentPrice: 0,
+  isBestIn30Days: false,
+  isBestIn6Months: false,
+  trendPercent: null,
+  minPoint: null,
+  maxPoint: null,
+};
 
-  useEffect(() => {
-    if (!filamentId || !currentPrice) {
-      setData(prev => ({ ...prev, isLoading: false }));
-      return;
+/**
+ * Fetches 6 months of raw price history for a filament.
+ * Uses React Query for automatic deduplication — multiple components
+ * calling this hook with the same filamentId share a single request.
+ */
+function useRawPriceHistory(filamentId: string) {
+  return useQuery({
+    queryKey: ["price-history", filamentId],
+    queryFn: async () => {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const { data, error } = await supabase
+        .from("price_history")
+        .select("price, recorded_at")
+        .eq("filament_id", filamentId)
+        .gte("recorded_at", sixMonthsAgo.toISOString())
+        .order("recorded_at", { ascending: true });
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!filamentId,
+    staleTime: 1000 * 60 * 5, // 5 min
+    gcTime: 1000 * 60 * 30,
+  });
+}
+
+export function usePriceHistory(filamentId: string, currentPrice: number | null, days: number = 30): PriceHistoryData {
+  const { data: history, isLoading } = useRawPriceHistory(filamentId);
+
+  return useMemo(() => {
+    if (!history || history.length === 0 || !currentPrice) {
+      return { ...EMPTY_DATA, currentPrice: currentPrice || 0, isLoading };
     }
 
-    const fetchPriceHistory = async () => {
-      try {
-        // Fetch last 6 months of price history
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const prices: PricePoint[] = history.map(h => ({
+      date: h.recorded_at || "",
+      price: Number(h.price),
+    }));
 
-        const { data: history, error } = await supabase
-          .from("price_history")
-          .select("price, recorded_at")
-          .eq("filament_id", filamentId)
-          .gte("recorded_at", sixMonthsAgo.toISOString())
-          .order("recorded_at", { ascending: true });
+    const priceValues = prices.map(p => p.price);
+    const min = Math.min(...priceValues, currentPrice);
+    const max = Math.max(...priceValues);
+    const avg = priceValues.reduce((a, b) => a + b, 0) / priceValues.length;
 
-        if (error || !history || history.length === 0) {
-          setData(prev => ({ ...prev, isLoading: false }));
-          return;
-        }
+    // Best in 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const last30Days = prices.filter(p => new Date(p.date) >= thirtyDaysAgo);
+    const min30 = last30Days.length > 0
+      ? Math.min(...last30Days.map(p => p.price))
+      : currentPrice;
+    const isBestIn30Days = currentPrice <= min30 * 1.02;
 
-        const prices = history.map(h => ({
-          date: h.recorded_at || "",
-          price: Number(h.price),
-        }));
+    // Best in 6 months
+    const isBestIn6Months = currentPrice <= min * 1.02;
 
-        const priceValues = prices.map(p => p.price);
-        const min = Math.min(...priceValues, currentPrice);
-        const max = Math.max(...priceValues);
-        const avg = priceValues.reduce((a, b) => a + b, 0) / priceValues.length;
-
-        // Check best price in 30 days
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const last30Days = prices.filter(p => new Date(p.date) >= thirtyDaysAgo);
-        const min30 = last30Days.length > 0 
-          ? Math.min(...last30Days.map(p => p.price))
-          : currentPrice;
-        const isBestIn30Days = currentPrice <= min30 * 1.02; // Within 2%
-
-        // Check best price in 6 months
-        const isBestIn6Months = currentPrice <= min * 1.02;
-
-        // Calculate trend (compare to 30 days ago)
-        let trendPercent: number | null = null;
-        if (last30Days.length > 0) {
-          const oldPrice = last30Days[0].price;
-          if (oldPrice > 0) {
-            trendPercent = Math.round(((currentPrice - oldPrice) / oldPrice) * 100);
-          }
-        }
-
-        // Find min and max points with positions
-        let minPoint: PricePoint | null = null;
-        let maxPoint: PricePoint | null = null;
-        let minPrice = Infinity;
-        let maxPrice = -Infinity;
-
-        prices.forEach((p, i) => {
-          if (p.price < minPrice) {
-            minPrice = p.price;
-            minPoint = { ...p, x: i, y: p.price };
-          }
-          if (p.price > maxPrice) {
-            maxPrice = p.price;
-            maxPoint = { ...p, x: i, y: p.price };
-          }
-        });
-
-        setData({
-          prices: prices.slice(-days), // Use configurable days
-          min,
-          max,
-          avg,
-          currentPrice,
-          isBestIn30Days,
-          isBestIn6Months,
-          trendPercent,
-          isLoading: false,
-          minPoint,
-          maxPoint,
-        });
-      } catch (err) {
-        console.error("Error fetching price history:", err);
-        setData(prev => ({ ...prev, isLoading: false }));
+    // Trend
+    let trendPercent: number | null = null;
+    if (last30Days.length > 0) {
+      const oldPrice = last30Days[0].price;
+      if (oldPrice > 0) {
+        trendPercent = Math.round(((currentPrice - oldPrice) / oldPrice) * 100);
       }
+    }
+
+    // Min/max points
+    let minPoint: PricePoint | null = null;
+    let maxPoint: PricePoint | null = null;
+    let minP = Infinity;
+    let maxP = -Infinity;
+    prices.forEach((p, i) => {
+      if (p.price < minP) { minP = p.price; minPoint = { ...p, x: i, y: p.price }; }
+      if (p.price > maxP) { maxP = p.price; maxPoint = { ...p, x: i, y: p.price }; }
+    });
+
+    return {
+      prices: prices.slice(-days),
+      min,
+      max,
+      avg,
+      currentPrice,
+      isBestIn30Days,
+      isBestIn6Months,
+      trendPercent,
+      isLoading,
+      minPoint,
+      maxPoint,
     };
-
-    fetchPriceHistory();
-  }, [filamentId, currentPrice, days]);
-
-  return data;
+  }, [history, currentPrice, days, isLoading]);
 }
