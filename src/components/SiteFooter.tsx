@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRegion } from "@/contexts/RegionContext";
+import { getLatencyColor } from "@/hooks/useApiLatency";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { RegionSelector } from "@/components/RegionSelector";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { formatDistanceToNow } from "date-fns";
@@ -54,12 +56,24 @@ export function SiteFooter() {
   const { toast } = useToast();
   const { regionConfig, currencyConfig, ratesLastUpdated } = useRegion();
 
-  // Simulate realistic latency fluctuation
+  // Measure real API latency from Performance API
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLatency(Math.floor(Math.random() * 8) + 10);
-    }, 3000);
-    return () => clearInterval(interval);
+    function measure() {
+      try {
+        const entries = performance.getEntriesByType("resource") as PerformanceResourceTiming[];
+        const supabaseEntries = entries.filter(
+          (e) => e.name.includes("supabase") && e.responseEnd > 0 && e.startTime > 0
+        );
+        if (supabaseEntries.length > 0) {
+          const recent = supabaseEntries.slice(-10);
+          const avg = recent.reduce((sum, e) => sum + (e.responseEnd - e.startTime), 0) / recent.length;
+          setLatency(Math.round(avg));
+        }
+      } catch { /* Performance API not available */ }
+    }
+    measure();
+    const id = setInterval(measure, 5000);
+    return () => clearInterval(id);
   }, []);
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
@@ -331,15 +345,24 @@ export function SiteFooter() {
               
               <div className="h-3 w-px bg-border hidden sm:block" aria-hidden="true" />
               
-              <div className="hidden sm:flex items-center gap-2">
-                <Zap className="h-3 w-3 text-primary" aria-hidden="true" />
-                <span className="font-mono uppercase tracking-wider text-muted-foreground">
-                  Latency:
-                </span>
-                <span className="font-mono uppercase tracking-wider text-primary">
-                  {latency}ms
-                </span>
-              </div>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="hidden sm:flex items-center gap-2 cursor-help">
+                      <Zap className={`h-3 w-3 ${getLatencyColor(latency)}`} aria-hidden="true" />
+                      <span className="font-mono uppercase tracking-wider text-muted-foreground">
+                        Latency:
+                      </span>
+                      <span className={`font-mono uppercase tracking-wider ${getLatencyColor(latency)}`}>
+                        {latency}ms
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-xs">Average API response time to backend</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             {/* Right - Made with love */}
