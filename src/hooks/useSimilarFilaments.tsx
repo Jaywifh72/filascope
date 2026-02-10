@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getBaseMaterial,
+  computeSimilarityScore,
+  type FilamentProfile,
+} from "@/lib/filamentSimilarity";
 
 export interface SimilarFilament {
   id: string;
@@ -38,21 +43,26 @@ export function useSimilarFilaments(
 
     const fetchSimilar = async () => {
       try {
+        const baseMaterial = getBaseMaterial(material);
+
         let query = supabase
           .from("filaments")
-          .select("id, product_title, vendor, variant_price, color_hex, material, net_weight_g")
-          .eq("material", material)
+          .select(`
+            id, product_title, vendor, variant_price, color_hex, material, net_weight_g,
+            finish_type, carbon_fiber_percentage, glass_fiber_percentage,
+            high_speed_capable, is_nozzle_abrasive, diameter_nominal_mm,
+            nozzle_temp_min_c, nozzle_temp_max_c, featured_image
+          `)
+          .ilike("material", `${baseMaterial}%`)
           .neq("id", filamentId)
           .not("vendor", "eq", vendor || "")
-          .or("net_weight_g.is.null,net_weight_g.gte.300") // Exclude small/sample spools
-          .limit(5);
+          .or("net_weight_g.is.null,net_weight_g.gte.300")
+          .limit(30);
 
-        // Filter by similar color family if available
         if (colorFamily) {
           query = query.eq("color_family", colorFamily);
         }
 
-        // Filter by price range if available (±30%)
         if (price && price > 0) {
           query = query
             .gte("variant_price", price * 0.7)
@@ -67,9 +77,47 @@ export function useSimilarFilaments(
           return;
         }
 
+        // Build source profile for scoring
+        const sourceProfile: FilamentProfile = {
+          material,
+          finish_type: null,
+          carbon_fiber_percentage: null,
+          glass_fiber_percentage: null,
+          high_speed_capable: null,
+          is_nozzle_abrasive: null,
+          diameter_nominal_mm: null,
+          nozzle_temp_min_c: null,
+          nozzle_temp_max_c: null,
+          product_title: "",
+        };
+
+        // Score and filter
+        const scored = (filaments || [])
+          .map((f) => {
+            const candidateProfile: FilamentProfile = {
+              material: f.material,
+              finish_type: (f as any).finish_type ?? null,
+              carbon_fiber_percentage: (f as any).carbon_fiber_percentage ?? null,
+              glass_fiber_percentage: (f as any).glass_fiber_percentage ?? null,
+              high_speed_capable: (f as any).high_speed_capable ?? null,
+              is_nozzle_abrasive: (f as any).is_nozzle_abrasive ?? null,
+              diameter_nominal_mm: (f as any).diameter_nominal_mm ?? null,
+              nozzle_temp_min_c: (f as any).nozzle_temp_min_c ?? null,
+              nozzle_temp_max_c: (f as any).nozzle_temp_max_c ?? null,
+              product_title: f.product_title ?? "",
+              featured_image: (f as any).featured_image ?? null,
+            };
+            const score = computeSimilarityScore(sourceProfile, candidateProfile);
+            return { filament: f, score };
+          })
+          .filter((s) => !s.score.disqualified)
+          .sort((a, b) => b.score.total - a.score.total)
+          .slice(0, 5)
+          .map((s) => s.filament);
+
         setData({
-          similars: filaments || [],
-          count: filaments?.length || 0,
+          similars: scored,
+          count: scored.length,
           isLoading: false,
         });
       } catch (err) {
@@ -83,3 +131,4 @@ export function useSimilarFilaments(
 
   return data;
 }
+

@@ -22,6 +22,12 @@ interface CurrentFilament {
   nozzle_temp_min_c: number | null;
   nozzle_temp_max_c: number | null;
   ease_of_printing_score: number | null;
+  finish_type?: string | null;
+  carbon_fiber_percentage?: number | null;
+  glass_fiber_percentage?: number | null;
+  high_speed_capable?: boolean | null;
+  is_nozzle_abrasive?: boolean | null;
+  diameter_nominal_mm?: number | null;
 }
 
 interface SimilarFilamentsSectionProps {

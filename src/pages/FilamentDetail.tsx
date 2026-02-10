@@ -909,6 +909,12 @@ const FilamentDetail = () => {
                 nozzle_temp_min_c: displayFilament.nozzle_temp_min_c,
                 nozzle_temp_max_c: displayFilament.nozzle_temp_max_c,
                 ease_of_printing_score: displayFilament.ease_of_printing_score,
+                finish_type: displayFilament.finish_type,
+                carbon_fiber_percentage: displayFilament.carbon_fiber_percentage,
+                glass_fiber_percentage: displayFilament.glass_fiber_percentage,
+                high_speed_capable: displayFilament.high_speed_capable,
+                is_nozzle_abrasive: displayFilament.is_nozzle_abrasive,
+                diameter_nominal_mm: displayFilament.diameter_nominal_mm,
               }}
             />
           </div>
