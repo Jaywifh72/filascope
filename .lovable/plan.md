@@ -1,98 +1,71 @@
 
+# Fix ALL Broken Brand Logos Site-Wide
 
-# Fix Broken Brand Logo Images
+## Summary
 
-## Root Cause
+There are two root causes for broken logos: (1) seven components still use raw `<img>` tags instead of the `BrandLogo` fallback component, and (2) the `brandLogos.ts` mapping has gaps and case mismatches against the actual database brand names. This plan fixes both comprehensively.
 
-The `static-images/brands/` storage bucket contains 63 files, but most appear to be **corrupt uploads**. Out of 63 files, 62 have suspiciously similar file sizes (~133KB each), regardless of format (.webp, .png, .jpg). This strongly suggests they were bulk-uploaded with an error -- likely each file contains an HTML error page or placeholder, not an actual image. The browser sees the response body doesn't match the declared image MIME type and triggers `ERR_BLOCKED_BY_ORB` (Opaque Resource Blocking).
+---
 
-Only `3dhojor.png` (335KB) appears to be a legitimate image.
+## Part 1: Close Mapping Gaps in `brandLogos.ts`
 
-Additionally, the `automated_brands` table has `logo_url = NULL` for all brands, so the database-level logo references are empty and the app falls back to the hardcoded `brandLogos` map in `src/lib/brandLogos.ts`, which points to the corrupt bucket files.
+**Brands in the database with no matching entry in the mapping:**
 
-## Fix Plan (Two Phases)
+| Database Brand | Issue | Fix |
+|---|---|---|
+| `3DHOJOR` | No mapping, no local file | Add mapping with fallback (no logo file available -- relies on BrandLogo initial fallback) |
+| `Paramount 3D` | No mapping, no local file | Same -- fallback to initial |
+| `VoxelPLA` | DB uses "VoxelPLA", map has "Voxel PLA" | Add `"VoxelPLA"` alias |
+| `Prusa` | automated_brands has "Prusa", map only has "Prusament" / "Prusa Research" | Add `"Prusa"` alias pointing to `prusament.png` |
+| `Amazon Basics` | In automated_brands, no mapping | Add entry (no local file -- fallback) |
+| `Artillery` | In automated_brands, no mapping | Add entry (fallback) |
+| `Flashforge` | DB uses "Flashforge", map has "FlashForge" | Already handled by case-insensitive lookup, but add explicit alias for speed |
+| `Jayo` | Mapped to `sunlu.png` | Already correct |
+| `Yousu` | In automated_brands, no mapping | Add entry (fallback) |
 
-### Phase 1: Add Image Fallback Handling (Code Fix)
+**Clean up duplicate case entries** by removing redundant keys like `"ERYONE"`, `"SUNLU"`, `"HATCHBOX"`, `"FIBERLOGY"`, `"KINGROON"`, `"ZIRO"`, `"DURAMIC 3D"`, `"AZUREFILM"`, `"INLAND"`, `"NUMAKERS"`, `"JAYO"` -- the existing `getBrandLogo()` function already does case-insensitive matching, so these are unnecessary clutter.
 
-Create a reusable `BrandLogo` component that gracefully handles broken images site-wide.
+---
 
-**New file: `src/components/ui/BrandLogo.tsx`**
+## Part 2: Replace All Raw `<img>` Tags With `BrandLogo` Component
 
-A component that:
-- Renders the `<img>` tag with an `onError` handler
-- On error, hides the image and shows the brand name as styled text (first letter in a circle, or full name)
-- Accepts `src`, `brandName`, `className`, and `size` props
+Seven files still render brand logos as raw `<img>` tags. Each will be updated to use the `BrandLogo` component with proper fallback.
 
-**Update 23 files** that use `getBrandLogo()` or display brand logos:
-- `BrandCard.tsx` -- replace raw `<img>` with `<BrandLogo>`
-- `FilamentCard.tsx`, `BentoGrid.tsx`, `FilamentHeroSection.tsx`, `SimilarFilamentCard.tsx`, `MobileCompareView.tsx`, `CompareFilamentColumn.tsx`, `WizardProductCard.tsx`, `AccessoryCard.tsx`, `BuildPlateList.tsx`, `BuildPlateDetail.tsx`, `BrandDetail.tsx`, `NozzleList.tsx`, `HotendList.tsx`, `PrinterDetailPage.tsx`, `PrinterCard.tsx`, and others
+| File | Current Pattern | Change |
+|---|---|---|
+| `src/components/AMSList.tsx` | `{brandLogo && <img src={brandLogo} .../>}` | Replace with `<BrandLogo src={brandLogo} brandName={brand} size="sm" />` |
+| `src/components/brands/tabs/BrandOverviewTab.tsx` | Multiple raw `<img src={brandLogo} .../>` as background watermarks | Replace with `<BrandLogo>` at appropriate size |
+| `src/components/brands/tabs/BrandProductsTab.tsx` | `{brandLogo && <img src={brandLogo} .../>}` as background | Replace with `<BrandLogo>` |
+| `src/components/admin/inventory/sync-status/BrandRegionMatrix.tsx` | `{brand.logo_url && <img src={brand.logo_url} .../>}` | Replace with `<BrandLogo src={brand.logo_url} brandName={brand.display_name} size="sm" />` |
+| `src/pages/AdminBrands.tsx` | `{brand.logo_url ? <img .../> : <div>icon</div>}` | Replace with `<BrandLogo src={brand.logo_url} brandName={brand.display_name} size="md" />` |
+| `src/components/admin/regional-stores/BrandRegionalStoresTable.tsx` | `{brand.logo_url ? <img .../> : <div>initial</div>}` | Replace with `<BrandLogo>` |
+| `src/components/admin/regional-stores/BrandCoverageOverview.tsx` | `{brand.logo_url ? <img .../> : <div>initial</div>}` | Replace with `<BrandLogo>` |
 
-Each replacement is a simple swap:
+For admin pages that use `brand.logo_url` (Supabase storage URL), the fix chains through `getBrandLogo()` as a fallback so the local file is preferred over the potentially-broken storage URL.
 
-```text
-Before:
-  {brandLogo && <img src={brandLogo} alt={name} ... />}
+---
 
-After:
-  <BrandLogo src={brandLogo} brandName={name} ... />
-```
+## Part 3: Ensure `BrandLogo` Component Handles All Edge Cases
 
-### Phase 2: Re-upload Correct Brand Logo Files
+The existing `BrandLogo` component is already solid. No changes needed -- it already:
+- Accepts `src` as `string | null | undefined`
+- Has `onError` -> `setFailed(true)` -> renders colored initial circle
+- Supports `sm`, `md`, `lg` sizes
 
-The storage bucket needs valid images. This requires:
+---
 
-1. **Delete the 62 corrupt files** from the `static-images/brands/` bucket
-2. **Re-upload actual brand logo images** in WebP format at 128x128px
+## Files Modified (Total: 9)
 
-This is a data/content task that needs to be done via an edge function or manual upload. The code fix in Phase 1 ensures the site looks clean even while logos are missing -- showing styled brand-name text instead of broken image icons.
+1. **`src/lib/brandLogos.ts`** -- Add missing brand aliases, remove redundant case duplicates
+2. **`src/components/AMSList.tsx`** -- Use `BrandLogo` component
+3. **`src/components/brands/tabs/BrandOverviewTab.tsx`** -- Use `BrandLogo` component
+4. **`src/components/brands/tabs/BrandProductsTab.tsx`** -- Use `BrandLogo` component
+5. **`src/components/admin/inventory/sync-status/BrandRegionMatrix.tsx`** -- Use `BrandLogo` component
+6. **`src/pages/AdminBrands.tsx`** -- Use `BrandLogo` component
+7. **`src/components/admin/regional-stores/BrandRegionalStoresTable.tsx`** -- Use `BrandLogo` component
+8. **`src/components/admin/regional-stores/BrandCoverageOverview.tsx`** -- Use `BrandLogo` component
+9. **`src/components/printers/SmallDeemphasizedPrinterCard.tsx`** -- Already uses `getBrandLogo` with raw `<img>`, switch to `BrandLogo`
 
-### Priority and Sequencing
+## No Database Changes Required
 
-1. **Phase 1 first** (immediate) -- deploy the fallback component so the site looks professional regardless of image availability
-2. **Phase 2 second** (follow-up) -- re-upload correct brand logos; once uploaded, the `BrandLogo` component will automatically start showing them
-
-## Technical Details
-
-### `BrandLogo` Component Specification
-
-```typescript
-interface BrandLogoProps {
-  src: string | null;
-  brandName: string;
-  className?: string;
-  size?: "sm" | "md" | "lg";
-}
-```
-
-- `sm`: 20x20px (inline in tables/lists)
-- `md`: 40x40px (cards)
-- `lg`: 80x160px (hero sections, brand detail page header)
-- On `onError`, sets an internal `failed` state and renders a text fallback
-- Text fallback: brand initial in a colored circle (color derived from brand name hash)
-
-### Files to Modify (Phase 1)
-
-| File | Change |
-|------|--------|
-| `src/components/ui/BrandLogo.tsx` | New reusable component |
-| `src/components/brands/BrandCard.tsx` | Use `BrandLogo` in logo area |
-| `src/components/FilamentCard.tsx` | Use `BrandLogo` for vendor logo |
-| `src/components/filament/hero/FilamentHeroSection.tsx` | Use `BrandLogo` |
-| `src/components/BentoGrid.tsx` | Use `BrandLogo` |
-| `src/components/compare/MobileCompareView.tsx` | Use `BrandLogo` |
-| `src/components/compare/CompareFilamentColumn.tsx` | Use `BrandLogo` |
-| `src/components/filament/similar/SimilarFilamentCard.tsx` | Use `BrandLogo` |
-| `src/components/wizard/WizardProductCard.tsx` | Use `BrandLogo` |
-| `src/components/AccessoryCard.tsx` | Use `BrandLogo` |
-| `src/components/BuildPlateList.tsx` | Use `BrandLogo` |
-| `src/pages/BuildPlateDetail.tsx` | Use `BrandLogo` |
-| `src/pages/BrandDetail.tsx` | Use `BrandLogo` |
-| `src/components/NozzleList.tsx` | Use `BrandLogo` |
-| `src/components/HotendList.tsx` | Use `BrandLogo` |
-| `src/components/admin/inventory/sync-status/BrandHealthGrid.tsx` | Use `BrandLogo` |
-| Additional files as found during implementation | Use `BrandLogo` |
-
-### No Database Changes Required
-
-The `automated_brands.logo_url` column already exists. Once valid images are re-uploaded to storage, the `logo_url` values can be populated to point directly to the correct URLs, bypassing the hardcoded `brandLogos` map entirely.
-
+The `automated_brands.logo_url` column stays as-is. The code-level fallback chain ensures local files are used when storage URLs fail.
