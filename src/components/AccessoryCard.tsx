@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { CircleDot, Square, Layers } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 
@@ -163,15 +164,13 @@ export default function AccessoryCard({
                   ))}
                 </div>
                 {/* Brand Logo - Bottom Right */}
-                {brandLogo && (
-                  <div className="shrink-0 px-2 py-1.5 bg-gray-900/50 rounded-lg border border-gray-700/50">
-                    <img 
-                      src={brandLogo} 
-                      alt={`${brand} logo`}
-                      className="h-8 w-auto object-contain max-w-[100px]"
-                    />
-                  </div>
-                )}
+                <div className="shrink-0 px-2 py-1.5 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                  <BrandLogo
+                    src={brandLogo}
+                    brandName={brand}
+                    size="md"
+                  />
+                </div>
               </div>
             </div>
           </div>

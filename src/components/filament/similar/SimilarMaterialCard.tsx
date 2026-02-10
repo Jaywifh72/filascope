@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { MetricComparisonBar } from "./MetricComparisonBar";
 import { StandoutBadges } from "./StandoutBadges";
 import { CostBenefitSection } from "./CostBenefitSection";
@@ -225,17 +226,12 @@ export function SimilarMaterialCard({
         </div>
       )}
       <div className="mb-3 mt-4 flex items-center justify-between">
-        {brandLogo ? (
-          <img
-            src={brandLogo}
-            alt={filament.vendor || "Brand"}
-            className="h-8 w-8 rounded object-contain"
-          />
-        ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-muted text-xs font-medium text-muted-foreground">
-            {filament.vendor?.charAt(0) || "?"}
-          </div>
-        )}
+        <BrandLogo
+          src={brandLogo}
+          brandName={filament.vendor || "Brand"}
+          size="md"
+          className="h-8 w-8 rounded"
+        />
         <Badge variant="outline" className={`text-xs ${getMaterialColor(filament.material)}`}>
           {materialBase}
         </Badge>

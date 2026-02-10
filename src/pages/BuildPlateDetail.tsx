@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowLeft, ExternalLink, Square, Check, X, ImageIcon, AlertTriangle, Link2, FileText, Ban } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/hooks/useAuth";
@@ -257,13 +258,12 @@ export default function BuildPlateDetail() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  {brandLogo && (
-                    <img
-                      src={brandLogo}
-                      alt={buildPlate.brand || "Brand"}
-                      className="h-6 w-auto object-contain mb-2"
-                    />
-                  )}
+                  <BrandLogo
+                    src={brandLogo}
+                    brandName={buildPlate.brand || "Brand"}
+                    size="sm"
+                    className="h-6 mb-2"
+                  />
                   <h1 className="text-2xl font-bold leading-tight">{buildPlate.name}</h1>
                   {buildPlate.brand && !brandLogo && (
                     <p className="text-muted-foreground text-sm mt-0.5">{buildPlate.brand}</p>

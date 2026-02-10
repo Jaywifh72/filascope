@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getBrandLogo } from "@/lib/brandLogos";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ResolvedComparePrice } from "@/hooks/useCompareRegionalPrices";
@@ -125,13 +126,11 @@ export function MobileCompareView({
                   style={{ backgroundColor: filament.color_hex }}
                 />
               )}
-              {brandLogo && (
-                <img
-                  src={brandLogo}
-                  alt={filament.vendor || ''}
-                  className="h-8 object-contain"
-                />
-              )}
+              <BrandLogo
+                src={brandLogo}
+                brandName={filament.vendor || ''}
+                size="md"
+              />
               {filament.material && (
                 <Badge variant="outline">{filament.material}</Badge>
               )}

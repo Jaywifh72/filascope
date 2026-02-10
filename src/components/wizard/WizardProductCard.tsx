@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 import { getBrandLogo } from '@/lib/brandLogos';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 import type { WizardProduct } from '@/hooks/useWizardRecommendations';
 
 interface WizardProductCardProps {
@@ -31,17 +32,12 @@ export function WizardProductCard({ product }: WizardProductCardProps) {
       <div className="p-3 flex flex-col flex-1 gap-2">
         {/* Brand */}
         <div className="flex items-center gap-1.5 min-h-[20px]">
-          {brandLogo ? (
-            <img
-              src={brandLogo}
-              alt={product.vendor}
-              className="h-4 max-w-[60px] object-contain opacity-70"
-            />
-          ) : (
-            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider truncate">
-              {product.vendor}
-            </span>
-          )}
+          <BrandLogo
+            src={brandLogo}
+            brandName={product.vendor}
+            size="sm"
+            className="opacity-70"
+          />
         </div>
 
         {/* Title */}
