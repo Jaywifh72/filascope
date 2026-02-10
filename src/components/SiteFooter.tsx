@@ -136,7 +136,7 @@ export function SiteFooter() {
           <div className="sm:col-span-2 lg:col-span-1">
             <Link to="/" className="inline-flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">F</span>
+                <Activity className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-bold text-lg text-foreground tracking-tight">
                 FilaScope
