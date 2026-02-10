@@ -1,16 +1,10 @@
 import { Activity, Zap } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useApiLatency, getLatencyColor } from "@/hooks/useApiLatency";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 export function TechFooter() {
-  const [latency, setLatency] = useState(14);
-
-  // Simulate realistic latency fluctuation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLatency(Math.floor(Math.random() * 8) + 10); // 10-17ms range
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const latency = useApiLatency();
+  const latencyColor = getLatencyColor(latency);
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-background/80 backdrop-blur-md">
@@ -29,15 +23,24 @@ export function TechFooter() {
           
           <div className="h-3 w-px bg-border" />
           
-          <div className="flex items-center gap-2">
-            <Zap className="h-3 w-3 text-primary" />
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Latency:
-            </span>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-primary">
-              {latency}ms
-            </span>
-          </div>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 cursor-help">
+                  <Zap className={`h-3 w-3 ${latencyColor}`} />
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Latency:
+                  </span>
+                  <span className={`font-mono text-[10px] uppercase tracking-wider ${latencyColor}`}>
+                    {latency}ms
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="text-xs">Average API response time to backend</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Right: Copyright/Branding */}
