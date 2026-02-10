@@ -5,6 +5,7 @@ import { useBrowseHistory, getPrinterImageFromHistory, type BrowseHistoryItem } 
 import { useAuth } from "@/hooks/useAuth";
 import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 function ContinueCard({ item }: { item: BrowseHistoryItem }) {
   const { formatPrice, convertPrice, hasRates, currency } = useRegion();
@@ -50,10 +51,12 @@ function ContinueCard({ item }: { item: BrowseHistoryItem }) {
       <div className="shrink-0 w-10 h-10 rounded-md overflow-hidden border border-border bg-muted/30">
         {image ? (
           <img
-            src={image}
+            src={getOptimizedImageUrl(image, 200)}
             alt={title}
             className="w-full h-full object-cover"
             loading="lazy"
+            width={40}
+            height={40}
           />
         ) : colorHex ? (
           <div className="w-full h-full" style={{ backgroundColor: colorHex }} />
