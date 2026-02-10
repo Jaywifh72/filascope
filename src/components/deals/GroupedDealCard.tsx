@@ -113,7 +113,10 @@ function DealCardImage({
 
   return (
     <div
-      className="relative h-40 bg-muted/30 flex items-center justify-center overflow-hidden"
+      className={cn(
+        "relative h-40 flex items-center justify-center overflow-hidden",
+        showFallbackPlaceholder ? "" : "bg-muted/30"
+      )}
       style={
         showFallbackPlaceholder
           ? {
@@ -136,8 +139,8 @@ function DealCardImage({
               style={{ backgroundColor: colorHex }}
             />
           ) : (
-            <div className="w-14 h-14 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
-              <Package className="w-7 h-7 text-muted-foreground/60" />
+            <div className="w-14 h-14 rounded-lg bg-gray-900/50 flex items-center justify-center">
+              <Package size={48} className="text-gray-700" />
             </div>
           )}
           {material && (
