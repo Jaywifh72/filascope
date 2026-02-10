@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { DealQualityBadge } from "./DealQualityBadge";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useRegionalStores } from "@/hooks/useRegionalStores";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
+import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 /** Color-coded freshness badge for deal cards */
@@ -65,43 +66,40 @@ function DealCardImage({
   material?: string | null;
 }) {
   const [loaded, setLoaded] = useState(false);
-  const [currentSrcIndex, setCurrentSrcIndex] = useState(-1); // -1 = primary src
-  const [showFallbackPlaceholder, setShowFallbackPlaceholder] = useState(false);
-
-  // Build the full image chain: primary + fallbacks
+  // Build fallback chain: primary first, then fallbacks (deduplicated)
   const allSrcs = [src, ...fallbackSrcs].filter((s): s is string => !!s);
-  const activeSrc = currentSrcIndex === -1 ? src : allSrcs[currentSrcIndex] || null;
+  const [srcIndex, setSrcIndex] = useState(0);
+  const [showFallbackPlaceholder, setShowFallbackPlaceholder] = useState(allSrcs.length === 0);
 
-  // If no sources at all, show placeholder immediately
-  const showPlaceholder = showFallbackPlaceholder || allSrcs.length === 0;
+  const activeSrc = allSrcs[srcIndex] || null;
+
+  const handleImageError = useCallback(() => {
+    const nextIndex = srcIndex + 1;
+    if (nextIndex < allSrcs.length) {
+      setSrcIndex(nextIndex);
+      setLoaded(false);
+    } else {
+      setShowFallbackPlaceholder(true);
+    }
+  }, [srcIndex, allSrcs.length]);
 
   // Timeout: if image doesn't load in time, try next or show fallback
   useEffect(() => {
-    if (showPlaceholder || loaded) return;
+    if (showFallbackPlaceholder || loaded || !activeSrc) return;
 
     const timer = setTimeout(() => {
       handleImageError();
     }, IMAGE_LOAD_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
-  }, [currentSrcIndex, loaded, showPlaceholder]);
+  }, [srcIndex, loaded, showFallbackPlaceholder, activeSrc, handleImageError]);
 
-  // Reset state when src changes
+  // Reset state when primary src changes
   useEffect(() => {
     setLoaded(false);
-    setCurrentSrcIndex(-1);
-    setShowFallbackPlaceholder(false);
+    setSrcIndex(0);
+    setShowFallbackPlaceholder(allSrcs.length === 0);
   }, [src]);
-
-  const handleImageError = () => {
-    const nextIndex = currentSrcIndex + 1;
-    if (nextIndex < allSrcs.length) {
-      setCurrentSrcIndex(nextIndex);
-      setLoaded(false);
-    } else {
-      setShowFallbackPlaceholder(true);
-    }
-  };
 
   // Generate accent color from vendor name
   const accentHue = vendor
@@ -109,11 +107,15 @@ function DealCardImage({
     : 200;
   const accentColor = colorHex || `hsl(${accentHue}, 40%, 50%)`;
 
+  // Optimized image URL and srcset for Shopify CDN
+  const optimizedSrc = activeSrc ? getOptimizedImageUrl(activeSrc, 400) : null;
+  const srcSet = activeSrc ? getImageSrcSet(activeSrc, [200, 400, 600]) || undefined : undefined;
+
   return (
     <div
       className="relative h-40 bg-muted/30 flex items-center justify-center overflow-hidden"
       style={
-        showPlaceholder
+        showFallbackPlaceholder
           ? {
               background: `linear-gradient(135deg, hsl(${accentHue}, 20%, 12%) 0%, hsl(${accentHue}, 15%, 8%) 100%)`,
             }
@@ -126,7 +128,7 @@ function DealCardImage({
         style={{ backgroundColor: accentColor }}
       />
 
-      {showPlaceholder ? (
+      {showFallbackPlaceholder ? (
         <div className="flex flex-col items-center gap-2 text-center p-4">
           {colorHex ? (
             <div
@@ -155,12 +157,16 @@ function DealCardImage({
           {!loaded && (
             <div className="absolute inset-0 bg-muted/30 animate-pulse" />
           )}
-          {activeSrc && (
+          {optimizedSrc && (
             <img
-              src={activeSrc}
+              src={optimizedSrc}
+              srcSet={srcSet}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               alt={alt}
-              loading="eager"
+              loading="lazy"
               decoding="async"
+              width={320}
+              height={160}
               onLoad={() => setLoaded(true)}
               onError={handleImageError}
               className={cn(
