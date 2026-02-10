@@ -77,7 +77,7 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
       }`}
     >
       {/* Image / Color Swatch */}
-      <div className={`relative w-full bg-muted/30 ${compact ? "h-[90px]" : "h-[100px]"}`}>
+      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted/30">
         {image ? (
           <img
             src={getOptimizedImageUrl(image, 400)}
@@ -87,7 +87,7 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
             width={160}
-            height={compact ? 90 : 100}
+            height={160}
           />
         ) : colorHex ? (
           <div className="w-full h-full" style={{ backgroundColor: colorHex }} />
