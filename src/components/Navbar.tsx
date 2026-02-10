@@ -236,9 +236,11 @@ const Navbar = () => {
               src={filascopeLogo}
               alt="FilaScope"
               className="h-8 md:h-9 w-auto object-contain"
-              width={144}
-              height={36}
+              style={{ maxWidth: '224px' }}
+              width={224}
+              height={72}
               loading="eager"
+              decoding="async"
               // @ts-ignore – fetchpriority valid HTML
               fetchpriority="high"
             />

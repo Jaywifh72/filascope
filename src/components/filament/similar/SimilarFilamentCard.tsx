@@ -17,6 +17,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
 import { FilamentImageFallback } from "@/components/ui/FilamentImageFallback";
+import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 
 export type SimilarityReason = 
   | "same_material" 
@@ -208,7 +209,9 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       <div className="aspect-square w-full mb-3 rounded-lg bg-muted/30 overflow-hidden">
         {filament.featured_image && !imageError ? (
           <img
-            src={filament.featured_image}
+            src={getOptimizedImageUrl(filament.featured_image, 480)}
+            srcSet={getImageSrcSet(filament.featured_image, [240, 480]) || undefined}
+            sizes="240px"
             alt={filament.product_title}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             onError={() => setImageError(true)}

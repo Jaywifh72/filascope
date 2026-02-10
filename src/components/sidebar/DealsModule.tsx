@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCompare } from "@/hooks/useCompare";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 
 export function DealsModule() {
   const { data: deals, isLoading, error } = useTopDeals();
@@ -67,7 +68,9 @@ export function DealsModule() {
               <div className="w-12 h-12 rounded-md bg-muted overflow-hidden shrink-0">
                 {deal.featured_image ? (
                   <img
-                    src={deal.featured_image}
+                    src={getOptimizedImageUrl(deal.featured_image, 96)}
+                    srcSet={getImageSrcSet(deal.featured_image, [96, 192]) || undefined}
+                    sizes="48px"
                     alt={deal.product_title}
                     className="w-full h-full object-cover"
                     width={48}
