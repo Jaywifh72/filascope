@@ -289,12 +289,12 @@ export default function MediumStandardPrinterCard({
             <div className="hidden sm:grid grid-cols-3 gap-2 min-h-[24px]">
               <div className="text-center py-1.5 min-w-0">
                 <Box size={12} className="text-gray-500 mx-auto mb-1" />
-                <span className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis block ${
+                <span className={`text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.build_volume_x_mm ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
                     ? (printer.build_volume_x_mm === printer.build_volume_y_mm && printer.build_volume_y_mm === printer.build_volume_z_mm
-                        ? `${printer.build_volume_x_mm}³mm`
+                        ? `${printer.build_volume_x_mm}³`
                         : `${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}`)
                     : '—'}
                 </span>
