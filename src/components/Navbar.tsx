@@ -121,7 +121,7 @@ const Navbar = () => {
         className={cn(
           "relative py-2 px-3 transition-all duration-200 rounded-md",
           "text-xs font-bold uppercase tracking-widest",
-          "hover:text-foreground hover:bg-foreground/5",
+          "hover:text-gray-300 hover:bg-foreground/5 transition-colors duration-150",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           active 
             ? "text-primary bg-foreground/5" 
