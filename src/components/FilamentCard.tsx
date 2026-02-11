@@ -600,9 +600,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         {filament.transmission_distance != null && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 border bg-amber-500/15 border-amber-500/30 text-amber-400">
+              <div className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 border bg-purple-500/15 border-purple-500/30 text-purple-400">
                 <Lightbulb className="w-3.5 h-3.5" />
-                <span className="text-[13px] font-medium">TD {filament.transmission_distance}</span>
+                <span className="text-xs font-semibold">TD {filament.transmission_distance}</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs max-w-[240px]">

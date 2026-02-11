@@ -233,7 +233,7 @@ export function FilamentTableView({
                 </td>
                 <td className="py-3 px-3 text-center">
                   {filament.transmission_distance != null ? (
-                    <span className="font-mono text-sm font-medium text-amber-400">
+                    <span className="font-mono text-sm font-semibold text-purple-400">
                       {filament.transmission_distance.toFixed(1)}
                     </span>
                   ) : (
