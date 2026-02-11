@@ -158,15 +158,15 @@ const BrandsSidebar = ({
                       key={material.id}
                       onClick={() => toggleMaterial(material.id)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors",
                         filters.materials.includes(material.id)
                           ? "bg-primary/15 text-primary"
-                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                          : "hover:bg-gray-800/50 hover:text-white"
                       )}
                     >
-                      <span>{material.label}</span>
+                      <span className={cn("text-sm", filters.materials.includes(material.id) ? "" : "text-gray-300")}>{material.label}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-600 font-mono">
                           ({materialCounts[material.id] || 0})
                         </span>
                         {filters.materials.includes(material.id) && (
