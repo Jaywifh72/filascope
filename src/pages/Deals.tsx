@@ -230,20 +230,6 @@ const Deals = () => {
           </div>
         </section>
 
-        {/* Results Count */}
-        {hasActiveFilters && (
-          <section className="px-6 md:px-10 pb-4">
-            <div className="max-w-[1600px] mx-auto">
-              <p className="text-sm text-muted-foreground">
-                Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> {groupedDeals.length === 1 ? "deal" : "deals"}
-                {deals.length !== groupedDeals.length && (
-                  <span> ({deals.length} {deals.length === 1 ? "variant" : "variants"})</span>
-                )}{" "}
-                of <span className="text-foreground font-medium">{totalDeals}</span> total
-              </p>
-            </div>
-          </section>
-        )}
 
         {/* Price Disclaimer — dismissible */}
         {!disclaimerDismissed && (
@@ -277,6 +263,27 @@ const Deals = () => {
             </div>
           </section>
         )}
+
+        {/* Results Count Bar */}
+        <section className="px-6 md:px-10 pb-2">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between py-2">
+            <p className="text-sm text-muted-foreground">
+              {hasActiveFilters ? (
+                <>Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> of <span className="text-foreground font-medium">{totalDeals}</span> deals</>
+              ) : (
+                <>Showing all <span className="text-foreground font-medium">{totalDeals}</span> deals</>
+              )}
+            </p>
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-primary hover:underline transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        </section>
 
         {/* Deals Grid */}
         <section className="px-6 md:px-10 pb-16">
