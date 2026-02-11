@@ -1,68 +1,59 @@
 
 
-## Empty State for 0-Product Brands
+## Normalize GroupedDealCard Heights
 
 ### Problem
-Brands with 0 products (e.g., Gst3d) show an almost empty page. The Overview tab's "Why Choose", "Popular Products", and "Materials Offered" sections are all conditionally hidden, leaving a blank space. The Products tab still renders the full filter sidebar and grid layout with just a "No products found" card.
+The `GroupedDealCard` component (used on `/deals`) renders at 5 different heights (432-461px) due to optional content sections that conditionally render or not. This creates a jagged grid.
 
-### Changes
+### Approach
+Convert the card's internal layout to a flex column structure where the content area grows to fill available space and the CTA buttons are always anchored at the bottom. Reserve minimum heights for optional sections so cards maintain consistent dimensions.
 
-#### 1. Overview Tab (`src/components/brands/tabs/BrandOverviewTab.tsx`)
-- Add a check at the top of the render: when `groupedProducts.length === 0`, render a centered empty state card instead of the normal sections.
-- The empty state will use:
-  - `Package` icon at 48px, `text-muted-foreground`
-  - Heading: "Products Coming Soon" (`text-xl font-semibold`)
-  - Subtext: "We're working on adding {brandName}'s product catalog. Check back soon!" (`text-muted-foreground`)
-  - "Browse Other Brands" outline button linking to `/brands`
-  - Container: centered, `max-w-md mx-auto`, `py-16`
+### Changes (single file: `src/components/deals/GroupedDealCard.tsx`)
 
-#### 2. Products Tab (`src/components/brands/tabs/BrandProductsTab.tsx`)
-- Add an early return when `groupedProducts.length === 0` (before the sidebar + grid layout).
-- Show a similar centered empty state with the `Package` icon, "No Products Yet" heading, descriptive subtext, and a "Browse Other Brands" button.
-- This avoids rendering the filter sidebar and sort controls for an empty catalog.
+#### 1. Make Card a flex column
+On the `Card` element (line 268), add `flex flex-col` so child elements participate in flex layout.
 
-#### 3. No changes to:
-- Hero section, stat boxes, or tab navigation
-- About tab (already handles empty state)
-- Brands with products (all conditional, no impact)
+#### 2. Make CardContent grow and flex
+On `CardContent` (line 320), add `flex-1 flex flex-col` so it stretches to fill the card height.
+
+#### 3. Reserve space for color swatches section
+Wrap the color swatches block (lines 386-444) in a container that always renders with `min-h-[28px]`. When `hasColors` is false, render an empty spacer `div` with that min-height.
+
+#### 4. Reserve space for variant count text
+Wrap the variant count text (lines 447-453) in a container with `min-h-[20px]`. When `showColorCount` is false, render an empty spacer.
+
+#### 5. Push CTA buttons to bottom
+Add `mt-auto` to the CTA button container (line 488) so it's always anchored at the card bottom regardless of how much content is above it.
+
+#### 6. Consistent product title height
+Add `min-h-[40px]` to the product title `h3` (line 328) to ensure consistent height for 1-line vs 2-line names.
 
 ### Technical Details
 
-**Overview Tab** -- insert before line 165:
-```tsx
-if (groupedProducts.length === 0) {
-  return (
-    <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
-      <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
-      <h3 className="text-xl font-semibold text-foreground mb-2">Products Coming Soon</h3>
-      <p className="text-sm text-muted-foreground mb-6">
-        We're working on adding {brandName}'s product catalog. Check back soon!
-      </p>
-      <Button variant="outline" onClick={() => navigate('/brands')}>
-        Browse Other Brands
-      </Button>
-    </div>
-  );
-}
+```text
+Card (flex flex-col, h-full)
+  +-- Image (fixed h-40)
+  +-- CardContent (flex-1, flex flex-col, p-4)
+        +-- Vendor text
+        +-- Product name (min-h-[40px], line-clamp-2)
+        +-- Price section
+        +-- Freshness badge (renders or not -- small impact)
+        +-- Quality badge
+        +-- Shipping badge
+        +-- Color swatches spacer (min-h-[28px])
+        +-- Color count spacer (min-h-[20px])
+        +-- Store region info
+        +-- CTA buttons (mt-auto) <-- always at bottom
 ```
 
-**Products Tab** -- insert early return at the beginning of the component body (after hooks, before the main JSX):
-```tsx
-if (groupedProducts.length === 0) {
-  return (
-    <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
-      <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
-      <h3 className="text-xl font-semibold text-foreground mb-2">No Products Yet</h3>
-      <p className="text-sm text-muted-foreground mb-6">
-        {brandName}'s product catalog is being prepared. Check back soon!
-      </p>
-      <Button variant="outline" onClick={() => navigate('/brands')}>
-        Browse Other Brands
-      </Button>
-    </div>
-  );
-}
-```
+### What does NOT change
+- Card visual design, borders, shadows, hover effects
+- Grid layout (grid-cols, gap)
+- Image size (h-40)
+- Discount badge, share button positioning
+- Price styling, badge styles
+- CTA button text and behavior
+- `DealCard.tsx` (not used on `/deals` page)
 
-Both are minimal, low-risk additions that short-circuit rendering before any complex logic when product count is zero.
-
+### Risk
+Low. The flex layout is additive and the spacer divs only add minimum height reservations. All 102 cards should align. Testing recommended across viewport sizes.
