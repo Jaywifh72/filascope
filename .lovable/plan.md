@@ -1,37 +1,30 @@
 
 
-# Fix Spec Summary Boxes in Hero Section
+## Fix Brand Card Height Inconsistency
 
-## File: `src/components/printer/PrinterHeroSection.tsx`
+### Problem
+Brand cards in the directory grid have inconsistent heights due to varying amounts of material badges and feature tags, causing misaligned rows and an uneven "View Filaments" button position.
 
-### Changes to `QuickSpecCard` component (lines 33-49)
+### Changes (single file: `src/components/brands/BrandCard.tsx`)
 
-Restructure from horizontal (icon + text side-by-side) to vertical (icon on top, label, value stacked below):
+**1. Flex column layout with minimum height**
+- Add `flex flex-col min-h-[280px]` to the outer card container (line 68)
+- Add `flex-1 flex flex-col` to the bottom info area (line 103) so it stretches to fill remaining space
 
-**Current layout:**
-```
-[icon] Label
-       Value
-```
+**2. Anchor "View Filaments" button to bottom**
+- Add `mt-auto` to the Button component (line 163) so it always sits at the card bottom regardless of content above
 
-**New layout:**
-```
-   icon
-  Label
-  Value
-```
+**3. Cap material badges to one row with "+X more" counter**
+- Wrap the visible badges in a container with `flex flex-wrap gap-1.5 max-h-[28px] overflow-hidden`
+- Show the first 4 badges inside this overflow-clipped container
+- Place the "+X more" pill **outside** the overflow container so it's always visible
+- Style the "+X more" pill with `text-[10px] text-gray-500 font-mono`
 
-Specific changes:
+**4. Consistent feature badge spacing**
+- Change the feature badges container margin to `mt-1.5` for consistent spacing below material badges
 
-1. **Container**: Replace `p-4 flex items-start gap-3 min-w-[140px]` with `px-3 py-3 flex flex-col items-center text-center gap-1 min-w-0`
-2. **Icon wrapper**: Keep `rounded-lg bg-primary/10` but reduce icon from `h-5 w-5` to `h-4 w-4` (equivalent to size 16)
-3. **Label**: Change from `text-xs text-muted-foreground` to `text-[10px] uppercase tracking-wider text-gray-500 whitespace-nowrap`
-4. **Value**: Change from `text-sm font-semibold text-foreground whitespace-nowrap leading-snug` to `text-xs font-semibold text-white truncate w-full` and add a `title` attribute with the full value for hover access
-5. Remove the wrapping `div` with `flex flex-col gap-1 min-w-0` since the outer container now handles the vertical stacking
+### Technical Detail
 
-### No changes to:
-- The grid container (`grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4`)
-- The four QuickSpecCard usages (icons, labels, values stay the same)
-- Data Quality indicator or hero header layout
-- Tooltip behavior (kept via TooltipProvider)
+The key structural change is making the card a flex column so the info section can grow (`flex-1`) and the button can anchor to the bottom (`mt-auto`). The material badge overflow is handled by splitting the "+X more" counter outside the `overflow-hidden` container so it remains visible even when badges are clipped.
 
+No changes to: logo area, brand name, product count, price indicator, verified badge, star rating, or card border/background colors.
