@@ -89,7 +89,10 @@ const BrandCard = ({
         {/* Price Indicator - Top Left */}
         {priceIndicator && (
           <div className="absolute top-3 left-3">
-            <span className="text-xs font-medium text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded">
+            <span
+              className="text-xs font-mono text-amber-500/70 bg-background/80 px-1.5 py-0.5 rounded"
+              title={priceIndicator === '$' ? 'Budget' : priceIndicator === '$$' ? 'Mid-range pricing' : 'Premium'}
+            >
               {priceIndicator}
             </span>
           </div>
