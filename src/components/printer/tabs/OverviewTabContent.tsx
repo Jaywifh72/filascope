@@ -11,7 +11,8 @@ import {
   AlertCircle,
   Ruler,
   Zap,
-  ExternalLink
+  ExternalLink,
+  HelpCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,7 @@ interface StatCardProps {
 }
 
 function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
+  const isNA = value === 'N/A';
   return (
     <div className="stat-card">
       <div className="section-header-icon">
@@ -59,7 +61,14 @@ function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
       </div>
       <div className="flex-1 min-w-0">
         <span className="text-sm text-gray-400">{label}</span>
-        <div className="text-base font-medium text-white leading-tight mt-1">{value}</div>
+        {isNA ? (
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-sm italic font-mono text-gray-500">N/A</span>
+            <span title="This specification hasn't been added yet"><HelpCircle size={12} className="text-gray-600" /></span>
+          </div>
+        ) : (
+          <div className="text-base font-medium text-white leading-tight mt-1">{value}</div>
+        )}
         {subValue && (
           <span className="text-xs text-gray-500 mt-0.5 block">{subValue}</span>
         )}
