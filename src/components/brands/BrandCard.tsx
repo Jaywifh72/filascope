@@ -68,7 +68,7 @@ const BrandCard = ({
   return (
 
     <div
-      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border hover:border-primary/50'}`}
+      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:shadow-lg hover:shadow-cyan-500/5 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border hover:border-gray-600/40'}`}
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
@@ -166,7 +166,7 @@ const BrandCard = ({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full mt-auto text-primary hover:text-primary hover:bg-primary/10 group/btn"
+          className="w-full mt-auto text-primary group-hover:text-cyan-300 hover:text-primary hover:bg-primary/10 group/btn transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             handleClick();
