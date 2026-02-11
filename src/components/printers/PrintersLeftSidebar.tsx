@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { cn } from "@/lib/utils";
 
 export interface AdvancedFilters {
@@ -135,7 +135,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
   return (
     <div
       ref={ref}
-      className={cn("w-72 shrink-0 sticky top-20 self-start", className)}
+      className={cn("w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent", className)}
     >
       <div className="bg-gray-900/60 border-r border-gray-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
         {/* Header */}
@@ -145,7 +145,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
           </h3>
         </div>
 
-        <ScrollArea className="max-h-[calc(100vh-180px)]">
+        <div>
           <div className="divide-y divide-gray-800/50">
             {/* Sort Section */}
             <div>
@@ -469,7 +469,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Clear All Filters Link */}
         {hasActiveFilters && (
