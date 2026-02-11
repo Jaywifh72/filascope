@@ -147,14 +147,12 @@ function getOverallScore(printer: Record<string, any>): {
 }
 
 function getQualityLevel(percentage: number): { label: string; color: string; ringColor: string; icon: typeof CheckCircle2 } {
-  if (percentage >= 80) {
-    return { label: 'Excellent', color: 'text-success', ringColor: 'stroke-success', icon: CheckCircle2 };
-  } else if (percentage >= 60) {
-    return { label: 'Good', color: 'text-amber-500', ringColor: 'stroke-amber-500', icon: AlertTriangle };
-  } else if (percentage >= 40) {
-    return { label: 'Partial', color: 'text-amber-500', ringColor: 'stroke-amber-500', icon: AlertTriangle };
+  if (percentage > 70) {
+    return { label: 'Detailed specs', color: 'text-cyan-500', ringColor: 'stroke-cyan-500', icon: CheckCircle2 };
+  } else if (percentage >= 30) {
+    return { label: 'Some specs available', color: 'text-gray-500', ringColor: 'stroke-amber-500', icon: AlertTriangle };
   } else {
-    return { label: 'Incomplete', color: 'text-error', ringColor: 'stroke-error', icon: XCircle };
+    return { label: 'Limited specs', color: 'text-gray-500', ringColor: 'stroke-gray-500', icon: XCircle };
   }
 }
 
