@@ -36,7 +36,7 @@ export default function SmallDeemphasizedPrinterCard({
 
   return (
     <article 
-      className="group relative opacity-60 hover:opacity-90 transition-opacity"
+      className="group relative opacity-60 hover:opacity-90 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 rounded-xl"
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name} - ${cardInfo.badge?.label || 'Discontinued'}`}
     >
@@ -68,7 +68,7 @@ export default function SmallDeemphasizedPrinterCard({
           )}
 
           {/* Comparison Checkbox */}
-          <div className="absolute top-3 right-3 z-10">
+          <div className="absolute top-3 right-3 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
             <ComparisonCheckbox
               checked={isSelected}
               disabled={isMaxReached}

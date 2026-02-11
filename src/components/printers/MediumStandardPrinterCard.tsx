@@ -133,12 +133,12 @@ export default function MediumStandardPrinterCard({
 
   return (
     <article 
-      className="group relative"
+      className="group relative transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 rounded-xl"
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name}`}
     >
       {/* Compare Checkbox - Top right corner */}
-      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
         <ComparisonCheckbox
           checked={isSelected}
           disabled={isMaxReached}
@@ -324,7 +324,7 @@ export default function MediumStandardPrinterCard({
 
             {/* CTA Button - Hidden on mobile, full width on desktop */}
             <button
-              className="hidden sm:flex w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] items-center justify-center gap-2 mt-auto"
+              className="hidden sm:flex w-full h-11 rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black font-medium text-sm transition-colors items-center justify-center gap-2 mt-auto"
               onClick={(e) => e.preventDefault()}
             >
               View Details
