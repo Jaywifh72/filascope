@@ -962,8 +962,10 @@ const FilamentDetail = () => {
             nozzleTempMaxC={displayFilament.nozzle_temp_max_c}
           />
         </div>
+      </div>
 
-        {/* Similar Filaments Section - Full width, below the two-column layout */}
+      {/* Similar Filaments Section - Full width, OUTSIDE the two-column container so sidebar stops sticking */}
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
         <SimilarFilamentsSection
           currentFilament={{
             id: displayFilament.id,
