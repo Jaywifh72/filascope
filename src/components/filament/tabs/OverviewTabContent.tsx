@@ -13,6 +13,7 @@ import {
   Shield, 
   CheckCircle2, 
   AlertTriangle,
+  XCircle,
   User,
   Wrench,
   Palette,
@@ -248,7 +249,7 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
                       variant="secondary" 
                       className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 gap-1.5"
                     >
-                      {tag.icon}
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                       {tag.label}
                     </Badge>
                   ))}
@@ -259,17 +260,20 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
 
           {/* Not Recommended For */}
           {notRecommendedWarnings.length > 0 && (
-            <Card className="bg-amber-500/5 border-amber-500/20">
+            <Card className="bg-red-500/5 border-red-500/20">
               <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
-                  <h4 className="font-semibold text-amber-400">Not Recommended For</h4>
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <h4 className="font-semibold text-red-400">Not Recommended For</h4>
                 </div>
                 <ul className="space-y-2">
                   {notRecommendedWarnings.map((warning, idx) => (
-                    <li key={idx} className="text-sm">
-                      <span className="text-amber-300">{warning.label}</span>
-                      <span className="text-muted-foreground ml-1">— {warning.reason}</span>
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <XCircle className="h-3.5 w-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                      <span>
+                        <span className="text-red-300">{warning.label}</span>
+                        <span className="text-muted-foreground ml-1">— {warning.reason}</span>
+                      </span>
                     </li>
                   ))}
                 </ul>

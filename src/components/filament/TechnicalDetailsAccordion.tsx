@@ -191,7 +191,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
 
   return (
     <div className={cn("space-y-0", className)}>
-      <Accordion type="single" collapsible className="w-full">
+      <Accordion type="multiple" defaultValue={["print-settings", "spool"]} className="w-full">
         {/* Print Settings */}
         {hasPrintSettings && (
           <PolishedAccordionItem
