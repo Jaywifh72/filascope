@@ -189,8 +189,8 @@ export function SearchInputWithHistory({
             // Enhanced focus ring for accessibility - WCAG 2.1 AA compliant
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             isFocused
-              ? "border-primary/60 shadow-[0_0_20px_rgba(0,207,232,0.3)]"
-              : "border-white/15 hover:border-white/25",
+              ? "border-primary/60 ring-2 ring-primary/20 shadow-[0_0_20px_rgba(0,207,232,0.3)]"
+              : "border-primary/40 hover:border-primary/50",
             inputClassName
           )}
           aria-label="Search filaments, brands, and materials. Press forward slash to focus."

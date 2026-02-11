@@ -185,7 +185,12 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
     return () => clearInterval(interval);
   }, [searchTerm]);
 
-  const getColorClasses = (color: string) => {
+  const getColorClasses = (color: string, title?: string) => {
+    // #4: "Quick Match" and "Browse Filaments" get primary tint as primary paths
+    const isPrimaryPath = title === "Quick Match" || title === "Browse Filaments";
+    if (isPrimaryPath) {
+      return 'border-primary/20 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary hover:shadow-primary/10';
+    }
     switch (color) {
       case 'primary':
         return 'border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary hover:shadow-primary/10';
@@ -205,7 +210,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-16 pb-6 sm:pt-20 sm:pb-8 md:pt-24 md:pb-12">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-10 pb-4 sm:pt-14 sm:pb-6 md:pt-16 md:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
@@ -236,10 +241,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
-              <AnimatedStat value={displayProductCount} />{" "}products with{" "}
-              <AnimatedStat value={displayVariantCount} /> variants indexed from{" "}
-              <AnimatedStat value={displayBrandCount} /> brands.{" "}
-              Compare properties, specs, and pricing in one unified data hub.
+              <AnimatedStat value={displayProductCount} /> filaments across{" "}
+              <AnimatedStat value={displayVariantCount} /> color variants from{" "}
+              <AnimatedStat value={displayBrandCount} /> brands — all specs, pricing, and compatibility in one place.
             </p>
 
             {/* Social proof - Responsive wrap for small screens */}
@@ -279,7 +283,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             >
               {quickStartPaths.map((path) => {
                 const Icon = path.icon;
-                const cardClasses = `group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-h-[100px] sm:min-h-[120px] touch-manipulation ${getColorClasses(path.color)}`;
+                const cardClasses = `group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-h-[100px] sm:min-h-[120px] touch-manipulation ${getColorClasses(path.color, path.title)}`;
                 
                 const cardContent = (
                   <>
@@ -335,7 +339,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
           
           {/* Right: Glass Container with 3D Filament Spool Visual - Show on tablet with scaling */}
           <div 
-            className="hidden md:flex justify-end items-center animate-fade-in order-2"
+            className="hidden xl:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
             {/* Glass Container with Spool Visualization - Responsive scaling */}
