@@ -149,6 +149,7 @@ export default function MediumStandardPrinterCard({
             cursor-pointer
             h-full
             flex flex-row sm:flex-col
+            sm:min-h-[480px]
             gap-3 sm:gap-3
             ${isSelected 
               ? 'border-primary/60 shadow-[0_0_15px_rgba(0,207,232,0.15)]' 
@@ -170,18 +171,16 @@ export default function MediumStandardPrinterCard({
             </div>
 
             {/* Feature Badges - Hidden on mobile */}
-            {badges.length > 0 && (
-              <div className="hidden sm:flex flex-wrap gap-1.5 justify-center mt-3">
-                {badges.map((badge, idx) => (
-                  <PrinterBadge 
-                    key={`${badge.type}-${idx}`}
-                    type={badge.type}
-                    size="sm"
-                    compact
-                  />
-                ))}
-              </div>
-            )}
+            <div className="hidden sm:flex flex-wrap gap-1.5 justify-center mt-3 min-h-[28px]">
+              {badges.map((badge, idx) => (
+                <PrinterBadge 
+                  key={`${badge.type}-${idx}`}
+                  type={badge.type}
+                  size="sm"
+                  compact
+                />
+              ))}
+            </div>
 
             {/* Printer Image - Using OptimizedImage with consistent aspect ratio */}
             <div className={`relative aspect-square w-full h-auto sm:h-[200px] sm:aspect-auto flex items-center justify-center ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
@@ -244,7 +243,7 @@ export default function MediumStandardPrinterCard({
                     )}
                   </>
                 ) : (
-                  <span className="text-xs sm:text-sm text-muted-foreground">Price TBD</span>
+                  <span className="text-gray-500 font-mono text-sm italic">Price TBD</span>
                 )}
               </div>
               
@@ -258,13 +257,13 @@ export default function MediumStandardPrinterCard({
             </div>
 
             {/* Simplified Specs Row - Hidden on mobile */}
-            <p className="hidden sm:block text-sm text-muted-foreground">
+            <p className="hidden sm:block text-sm text-muted-foreground min-h-[24px]">
               {formatSimplifiedSpecs() || "Specs unavailable"}
             </p>
 
             {/* CTA Button - Hidden on mobile, full width on desktop */}
             <button
-              className="hidden sm:flex w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] items-center justify-center gap-2 mt-1"
+              className="hidden sm:flex w-full h-11 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(0,207,232,0.3)] items-center justify-center gap-2 mt-auto"
               onClick={(e) => e.preventDefault()}
             >
               View Details
