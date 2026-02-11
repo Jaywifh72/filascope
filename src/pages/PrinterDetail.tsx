@@ -96,6 +96,7 @@ import {
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
+import { toBrandSlug } from "@/utils/brandSlug";
 
 const PrinterDetail = () => {
   const { id } = useParams();
@@ -654,7 +655,7 @@ const PrinterDetail = () => {
         <DetailBreadcrumb
           segments={[
             { label: "Printers", href: "/printers" },
-            ...(printerBrand ? [{ label: printerBrand, href: `/printers?brand=${encodeURIComponent(printerBrand)}` }] : []),
+            ...(printerBrand ? [{ label: printerBrand, href: `/printers?brand=${toBrandSlug(printerBrand)}` }] : []),
             { label: printerModel, href: `/printers/${printer.printer_id || printer.id}` },
           ]}
           mobileBackLabel="Printers"
