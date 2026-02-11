@@ -1,37 +1,34 @@
 
 
-## Filament Product Card Improvements
+## Material Wizard Visual Enhancements
 
-Three visual improvements to `src/components/FilamentCard.tsx`:
+Four visual-only changes to `src/pages/Wizard.tsx`. No logic, questions, or navigation changes.
 
-### 1. Card Height Consistency
-- Change `min-h-[340px]` to `min-h-[420px]` on the card container
-- Add `flex flex-col` to the card container
-- Add `flex-grow` to the middle content area (between the brand header and the CTA button) so the "View Details" button is pushed to the bottom consistently across all cards in a row
+### 1. Subtle Background Radial Gradient
+Add a radial gradient glow to the outer page wrapper div (line 216), not the card. Uses the brand cyan accent at very low opacity.
 
-### 2. OUT OF STOCK Badge Repositioning
-- Remove the current full-card overlay (lines 374-381) that centers "Out of Stock" text over the entire card and obscures the product name
-- Add a small pill badge in the top-left corner of the card (positioned opposite the compare checkbox in the top-right), using: `absolute top-4 left-4 z-10 bg-red-900/80 text-red-200 text-xs font-mono uppercase px-2 py-0.5 rounded`
-- Keep the `opacity-70` on the card container for out-of-stock items
+**Change:** Add an inline `style` with `background: radial-gradient(ellipse at center, rgba(0, 229, 204, 0.03) 0%, transparent 70%)` to the `min-h-screen` wrapper div.
 
-### 3. Color Swatch Size Increase
-- Increase variant color swatches from `w-3.5 h-3.5` to `w-4 h-4` (line 461)
-- Add `ring-1 ring-white/20` to make swatches visible against dark backgrounds
-- Apply the same sizing to the single-color swatch (line 519, already `w-4 h-4` but add the ring)
+### 2. Tighten the Card Layout
+The card currently uses `flex-1` which causes it to stretch to fill available vertical space. Remove `flex-1` from the Card (line 218) and replace with `min-h-0` so the card snugly wraps its content. Also remove `flex-1` from the inner container div (line 217) to stop the vertical stretching chain. Keep `max-w-2xl mx-auto` (already present).
+
+### 3. Step Indicator Label
+Below the progress bar (after line 236), add a monospaced step label like "STEP 1 OF 5 -- USE CASE". Uses `text-xs text-gray-500 font-mono uppercase tracking-wider mt-3`. The step name is derived from the current question's `id` field, formatted to uppercase with underscores replaced by spaces.
+
+### 4. Option Card Hover Enhancement
+Add `hover:border-cyan-500/30 hover:bg-cyan-950/10 transition-all duration-200` to both single-select option Labels (line 257) and multi-select option divs (line 284). Existing selected/checked state styling remains unchanged and takes priority via the peer-data selectors and conditional classes.
 
 ---
 
 ### Technical Details
 
-**File: `src/components/FilamentCard.tsx`**
+**File:** `src/pages/Wizard.tsx`
 
-| Line(s) | Current | Change |
-|---------|---------|--------|
-| 357 | `min-h-[340px]` | `min-h-[420px] flex flex-col` |
-| 374-381 | Full overlay div with centered "Out of Stock" | Small pill badge: `absolute top-4 left-4 z-10` |
-| 435 (brand section) | No flex-grow | Remains as-is (fixed header) |
-| 829-830 (badges section end) | No flex wrapper | Wrap elements 2-4 in a `flex-grow` div |
-| 461 | `w-3.5 h-3.5 rounded-full border shadow-sm` | `w-4 h-4 rounded-full border shadow-sm ring-1 ring-white/20` |
-| 519 | `w-4 h-4 rounded-full border-2 border-border shadow-sm` | Add `ring-1 ring-white/20` |
-
-No changes to: brand logo bar, product image area, "View Details" button styling, star rating, price formatting, material badge styling, or hover effects.
+| Line | Change |
+|------|--------|
+| 216 | Add `style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}` to the page wrapper div |
+| 217 | Remove `flex-1` from `max-w-2xl mx-auto w-full flex-1 flex flex-col` |
+| 218 | Remove `flex-1` from Card className, keep `flex flex-col` |
+| 236 (after progress bar closing div) | Insert: `<p className="text-xs text-gray-500 font-mono uppercase tracking-wider mt-3">Step {currentStep + 1} of {questions.length} -- {currentQuestion.id.replace(/_/g, ' ')}</p>` |
+| 257 | Add `hover:border-cyan-500/30 hover:bg-cyan-950/10` to the Label className (before `peer-data-[state=checked]` classes so checked state wins) |
+| 284 | Add `hover:border-cyan-500/30 hover:bg-cyan-950/10` to the multi-select div className |
