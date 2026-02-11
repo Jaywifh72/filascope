@@ -690,20 +690,18 @@ export default function Printers() {
                 Clear Filters
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={handleExportCSV}
               disabled={isExporting}
-              className="text-xs text-gray-400 hover:text-primary"
+              className="border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded transition-colors duration-200 inline-flex items-center disabled:opacity-50"
             >
               {isExporting ? (
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                <Loader2 className="mr-1.5 animate-spin" size={14} />
               ) : (
-                <Download className="w-3.5 h-3.5 mr-1.5" />
+                <Download className="mr-1.5" size={14} />
               )}
               Export CSV
-            </Button>
+            </button>
           </div>
         </div>
       </div>
