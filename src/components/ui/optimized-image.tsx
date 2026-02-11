@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, memo } from "react";
-import { Package } from "lucide-react";
+import { Package, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -246,9 +246,11 @@ export const OptimizedImage = memo(function OptimizedImage({
         />
       )}
 
-      {/* Shimmer skeleton placeholder */}
+      {/* Spinner loading placeholder */}
       {!isLoaded && !blurDataUrl && (
-        <div className="absolute inset-0 w-full h-full animate-pulse bg-gradient-to-r from-muted/60 via-muted/30 to-muted/60 bg-[length:200%_100%]" />
+        <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+          <Loader2 size={24} className="text-gray-700 animate-spin" />
+        </div>
       )}
 
       {/* Actual image with <picture> for WebP support */}
