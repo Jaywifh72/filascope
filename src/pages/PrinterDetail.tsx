@@ -670,23 +670,19 @@ const PrinterDetail = () => {
               
               {/* Admin: Update Image & Refresh Prices Buttons */}
               {isAdmin && (
-                <div className="absolute top-4 right-6 flex gap-2 z-10">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs"
+                <div className="absolute top-4 right-6 flex gap-3 z-10">
+                  <button
+                    className="text-[11px] text-gray-600 hover:text-gray-400 font-mono uppercase tracking-wider transition-colors inline-flex items-center"
                     onClick={(e) => {
                       e.stopPropagation();
                       setImageDialogOpen(true);
                     }}
                   >
-                    <ImagePlus className="h-3 w-3 mr-1.5" />
+                    <ImagePlus size={12} className="mr-1.5" />
                     Update Image
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs"
+                  </button>
+                  <button
+                    className="text-[11px] text-gray-600 hover:text-gray-400 font-mono uppercase tracking-wider transition-colors inline-flex items-center disabled:opacity-40"
                     disabled={isUpdatingPrices}
                     onClick={async (e) => {
                       e.stopPropagation();
@@ -730,9 +726,9 @@ const PrinterDetail = () => {
                       }
                     }}
                   >
-                    <RefreshCw className={`h-3 w-3 mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
+                    <RefreshCw size={12} className={`mr-1.5 ${isUpdatingPrices ? 'animate-spin' : ''}`} />
                     {isUpdatingPrices ? 'Syncing...' : 'Refresh Prices'}
-                  </Button>
+                  </button>
                 </div>
               )}
 
