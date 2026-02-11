@@ -52,12 +52,12 @@ interface SimilarFilamentCardProps {
 }
 
 const REASON_BADGES: Record<SimilarityReason, { label: string; className: string }> = {
-  same_material: { label: "Same Material", className: "bg-violet-500/20 text-violet-400 border-violet-500/30" },
-  same_brand: { label: "Same Brand", className: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  similar_price: { label: "Similar Price", className: "bg-green-500/20 text-green-400 border-green-500/30" },
-  budget_pick: { label: "Budget Pick", className: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-  premium_pick: { label: "Premium", className: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  same_color: { label: "Same Color", className: "bg-pink-500/20 text-pink-400 border-pink-500/30" },
+  same_material: { label: "Same Material", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
+  same_brand: { label: "Same Brand", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  similar_price: { label: "Similar Price", className: "bg-green-500/15 text-green-400 border-green-500/30" },
+  budget_pick: { label: "Budget Pick", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+  premium_pick: { label: "Premium", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  same_color: { label: "Same Color", className: "bg-pink-500/15 text-pink-400 border-pink-500/30" },
 };
 
 const MATERIAL_COLORS: Record<string, string> = {
@@ -131,9 +131,9 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
   const cardContent = (
     <div
       className={cn(
-        "group relative w-[240px] flex-shrink-0 rounded-xl border bg-card/80 backdrop-blur-sm p-4",
+        "group relative w-[240px] flex-shrink-0 flex flex-col min-h-[420px] rounded-xl border bg-card/80 backdrop-blur-sm p-4",
         "transition-all duration-200",
-        "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10",
+        "hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10",
         filament.isCurrent
           ? "border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/30"
           : "border-border/50 hover:border-primary/50"
@@ -183,7 +183,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
         <div className="absolute -top-2.5 left-3 z-10">
           <Badge
             variant="outline"
-            className={cn("text-xs font-medium", REASON_BADGES[filament.similarityReason].className)}
+            className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", REASON_BADGES[filament.similarityReason].className)}
           >
             {REASON_BADGES[filament.similarityReason].label}
           </Badge>
@@ -200,13 +200,13 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
         />
         
         {/* Material Badge */}
-        <Badge variant="outline" className={cn("text-xs", getMaterialColor(filament.material))}>
+        <Badge variant="outline" className={cn("text-xs rounded-full", getMaterialColor(filament.material))}>
           {materialBase || "Unknown"}
         </Badge>
       </div>
 
       {/* Product Image */}
-      <div className="aspect-square w-full mb-3 rounded-lg bg-muted/30 overflow-hidden">
+      <div className="aspect-square w-full mb-3 rounded-t-lg bg-muted/5 overflow-hidden">
         {filament.featured_image && !imageError ? (
           <img
             src={getOptimizedImageUrl(filament.featured_image, 480)}
@@ -227,7 +227,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       </div>
 
       {/* Product Title */}
-      <h4 className="text-sm font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+      <h4 className="text-sm font-medium text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
         {filament.product_title}
       </h4>
 
@@ -247,17 +247,17 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       {priceDiff && !filament.isCurrent && (
         <div className={cn(
           "flex items-center gap-1 text-xs font-medium mb-2",
-          priceDiff.amount < 0 ? "text-green-400" : "text-amber-400"
+          priceDiff.amount < 0 ? "text-emerald-500" : "text-red-400"
         )}>
           {priceDiff.amount < 0 ? (
             <>
               <TrendingDown className="w-3 h-3" />
-              <span>{priceDiff.formatted} cheaper</span>
+              <span>~{priceDiff.formatted} cheaper</span>
             </>
           ) : (
             <>
               <TrendingUp className="w-3 h-3" />
-              <span>{priceDiff.formatted} more</span>
+              <span>~{priceDiff.formatted} more</span>
             </>
           )}
         </div>
@@ -266,7 +266,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       {/* Nozzle Temp */}
       {nozzleTempRange && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-          <ThermometerSun className="w-3.5 h-3.5 text-primary" />
+          <ThermometerSun className="w-3 h-3" />
           <span>{nozzleTempRange}</span>
         </div>
       )}
@@ -282,11 +282,11 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       )}
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-auto">
         <Button
-          variant="default"
+          variant="outline"
           size="sm"
-          className="flex-1 bg-primary hover:bg-primary/80 text-primary-foreground transition-colors duration-200"
+          className="flex-1"
         >
           View Details
         </Button>

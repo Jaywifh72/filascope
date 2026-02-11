@@ -84,7 +84,7 @@ export function ScrollCarousel({
         <Button
           variant="outline"
           size="icon"
-          className="absolute -left-4 lg:-left-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 border-border hover:bg-card hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute -left-4 lg:-left-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 border-border hover:bg-muted/80 hidden md:flex opacity-0 group-hover:opacity-100 transition-all z-10"
           onClick={() => scroll("prev")}
           aria-label="Previous slide"
         >
@@ -95,7 +95,7 @@ export function ScrollCarousel({
         <Button
           variant="outline"
           size="icon"
-          className="absolute -right-4 lg:-right-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 border-border hover:bg-card hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute -right-4 lg:-right-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 border-border hover:bg-muted/80 hidden md:flex opacity-0 group-hover:opacity-100 transition-all z-10"
           onClick={() => scroll("next")}
           aria-label="Next slide"
         >
