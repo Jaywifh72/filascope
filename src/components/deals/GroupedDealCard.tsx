@@ -515,31 +515,39 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           {/* Store Region Info — local-first ordering */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
             {isStoreLocal ? (
-              // Deal is already from a local store
               <>
-                <span>{group.regionFlag}</span>
-                <span>{group.storeName}</span>
-                <span>•</span>
-                <span className="text-emerald-400 font-medium">Local</span>
+                <span className="text-sm">{group.regionFlag}</span>
+                {group.storeName && group.storeName !== group.representativeDeal.vendor ? (
+                  <>
+                    <span>{group.storeName}</span>
+                    <span>•</span>
+                  </>
+                ) : null}
+                <span className="text-emerald-400 font-medium">Local seller</span>
               </>
             ) : hasLocalAlternative && localStore ? (
-              // Local alternative exists — lead with local, US is secondary
               <>
                 <span className="text-emerald-400 font-medium">
                   {localStore.storeName}
                 </span>
                 <span>•</span>
                 <span className="text-muted-foreground/70">
-                  Also at {group.regionFlag} {group.storeName}
+                  Also at <span className="text-sm">{group.regionFlag}</span>
+                  {group.storeName && group.storeName !== group.representativeDeal.vendor
+                    ? ` ${group.storeName}`
+                    : null}
                 </span>
               </>
             ) : group.storeName && group.regionFlag ? (
-              // International deal, no local store
               <>
-                <span>{group.regionFlag}</span>
-                <span>{group.storeName}</span>
-                <span>•</span>
-                <span>International</span>
+                <span className="text-sm">{group.regionFlag}</span>
+                {group.storeName !== group.representativeDeal.vendor ? (
+                  <>
+                    <span>{group.storeName}</span>
+                    <span>•</span>
+                  </>
+                ) : null}
+                <span>International seller</span>
               </>
             ) : null}
           </div>
