@@ -163,7 +163,7 @@ const BrandsHeroSection = ({
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Search brands..."
+                    placeholder="Search by brand name or material type..."
                     value={searchTerm}
                     onChange={(e) => onSearchChange(e.target.value)}
                     onFocus={() => setIsFocused(true)}
