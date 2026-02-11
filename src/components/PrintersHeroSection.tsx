@@ -92,7 +92,7 @@ const PrintersHeroSection = ({
           
           {/* Right: Calibration Cube Visual */}
           <div 
-            className="hidden lg:flex justify-end items-center animate-fade-in order-2"
+            className="hidden lg:flex justify-end items-center animate-fade-in order-2 lg:w-64 lg:opacity-60 xl:w-auto xl:opacity-100"
             style={{ animationDelay: "0.4s" }}
           >
             {/* Glass Container with Wireframe Cube */}
@@ -115,7 +115,7 @@ const PrintersHeroSection = ({
               />
               
               {/* Wireframe Isometric Calibration Cube */}
-              <div className="relative w-[260px] h-[260px] flex items-center justify-center" style={{ perspective: "1000px" }}>
+              <div className="relative lg:w-[200px] lg:h-[200px] xl:w-[260px] xl:h-[260px] flex items-center justify-center" style={{ perspective: "1000px" }}>
                 <svg 
                   viewBox="0 0 200 200" 
                   className="w-full h-full"
