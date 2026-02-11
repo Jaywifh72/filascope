@@ -96,7 +96,7 @@ function CapabilityItem({ label, available }: CapabilityItemProps) {
       "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
       available 
         ? "bg-primary/10 border border-primary/20" 
-        : "bg-muted/30 border border-border/40"
+        : "bg-muted/30 border border-border/40 opacity-40"
     )}>
       <CheckCircle2 className={cn(
         "h-4 w-4 flex-shrink-0",
@@ -104,7 +104,7 @@ function CapabilityItem({ label, available }: CapabilityItemProps) {
       )} />
       <span className={cn(
         "text-sm",
-        available ? "text-white font-medium" : "text-gray-500"
+        available ? "text-white font-medium" : "text-gray-500 line-through"
       )}>
         {label}
       </span>
