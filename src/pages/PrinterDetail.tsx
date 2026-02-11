@@ -666,7 +666,7 @@ const PrinterDetail = () => {
           {/* Main Content Column */}
           <div className="flex-1 min-w-0 space-y-6 lg:space-y-8">
             {/* Hero Section */}
-            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl lg:rounded-2xl py-6 md:py-8 lg:py-10 px-4 md:px-6 lg:px-10">
+            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl lg:rounded-2xl py-6 md:py-8 lg:py-10 px-4 md:px-6 lg:px-10 !mb-0">
               
               {/* Admin: Update Image & Refresh Prices Buttons */}
               {isAdmin && (
