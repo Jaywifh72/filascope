@@ -323,7 +323,7 @@ export function SiteFooter() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-border/50 bg-background/50">
+      <div className="border-t border-gray-800/50 bg-background/50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             {/* Left - Data update info */}
