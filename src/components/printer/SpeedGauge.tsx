@@ -28,9 +28,10 @@ function getSpeedCategory(speed: number) {
 export function SpeedGauge({ speed, maxReference = 800, compact = false }: SpeedGaugeProps) {
   if (!speed) {
     return (
-      <div className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-lg border border-border/50">
-        <Gauge className="h-8 w-8 text-muted-foreground/40 mb-2" />
-        <span className="text-sm text-gray-500">Speed data not available</span>
+      <div className="flex flex-col items-center justify-center py-6 px-4 border border-dashed border-gray-800 rounded-lg min-h-[200px]">
+        <Gauge size={32} className="text-gray-600 mb-2" />
+        <span className="text-sm text-gray-500 font-mono">Speed data not available</span>
+        <span className="text-xs text-gray-600 mt-1">This spec hasn't been added yet</span>
       </div>
     );
   }
