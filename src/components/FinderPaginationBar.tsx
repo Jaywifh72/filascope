@@ -61,8 +61,8 @@ export function FinderPaginationBar({
   if (totalCount <= pageSize && totalPages <= 1) return null;
 
   return (
-    <div className="sticky bottom-0 z-20 bg-background/95 backdrop-blur-sm border-t border-border py-2 px-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <div className="border-t border-border py-4 mt-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 px-4">
         {/* Left: Showing count */}
         <p className="text-sm text-muted-foreground whitespace-nowrap hidden sm:block">
           Showing {showingStart}–{showingEnd} of {totalCount.toLocaleString()}
@@ -73,16 +73,16 @@ export function FinderPaginationBar({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className={cn("h-8 w-8", currentPage === 0 && "opacity-50 pointer-events-none")}
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
+            disabled={false}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
           {pages.map((p, i) =>
             p === "ellipsis" ? (
-              <span key={`e${i}`} className="h-9 w-9 flex items-center justify-center text-muted-foreground text-sm">
+              <span key={`e${i}`} className="h-8 w-8 flex items-center justify-center text-muted-foreground text-sm">
                 …
               </span>
             ) : (
@@ -90,7 +90,7 @@ export function FinderPaginationBar({
                 key={p}
                 onClick={() => onPageChange(p)}
                 className={cn(
-                  "h-9 w-9 flex items-center justify-center rounded-md text-sm transition-colors",
+                  "h-8 w-8 flex items-center justify-center rounded-md text-sm transition-colors",
                   p === currentPage
                     ? "bg-cyan-500 text-black font-semibold"
                     : "bg-muted/50 text-muted-foreground hover:bg-muted"
@@ -104,9 +104,9 @@ export function FinderPaginationBar({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className={cn("h-8 w-8", currentPage >= totalPages - 1 && "opacity-50 pointer-events-none")}
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
+            disabled={false}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
