@@ -241,9 +241,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
               style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
             >
-              <AnimatedStat value={displayProductCount} /> filaments across{" "}
-              <AnimatedStat value={displayVariantCount} /> color variants from{" "}
-              <AnimatedStat value={displayBrandCount} /> brands — all specs, pricing, and compatibility in one place.
+              <AnimatedStat value={displayProductCount} />+ filaments across{" "}
+              <AnimatedStat value={displayVariantCount} />+ color variants from{" "}
+              <AnimatedStat value={displayBrandCount} />+ brands — compare specs, pricing, and compatibility in one place.
             </p>
 
             {/* Social proof - Responsive wrap for small screens */}
