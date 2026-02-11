@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, HelpCircle } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, HelpCircle, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -191,7 +191,12 @@ export default function MediumStandardPrinterCard({
                 aspectRatio="auto"
                 objectFit="contain"
                 width={400}
-                fallback={<PrinterIcon size={48} className="text-gray-700 opacity-50" />}
+                fallback={
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <PrinterIcon size={48} className="text-gray-700" />
+                    <span className="text-[10px] text-gray-600 font-mono">Image unavailable</span>
+                  </div>
+                }
               />
             </div>
           </div>
