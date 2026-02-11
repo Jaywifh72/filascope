@@ -31,14 +31,12 @@ function QuickSpecCard({ icon: Icon, label, value }: QuickSpecCardProps) {
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-muted/40 border border-border rounded-lg p-4 flex items-start gap-3 min-w-[140px]">
-            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-              <Icon className="h-5 w-5 text-primary" />
+          <div className="bg-muted/40 border border-border rounded-lg px-3 py-3 flex flex-col items-center text-center gap-1 min-w-0">
+            <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+              <Icon className="h-4 w-4 text-primary" />
             </div>
-            <div className="flex flex-col gap-1 min-w-0">
-              <span className="text-xs text-muted-foreground">{label}</span>
-              <span className="text-sm font-semibold text-foreground whitespace-nowrap leading-snug">{value}</span>
-            </div>
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 whitespace-nowrap">{label}</span>
+            <span className="text-xs font-semibold text-white truncate w-full" title={value}>{value}</span>
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">
