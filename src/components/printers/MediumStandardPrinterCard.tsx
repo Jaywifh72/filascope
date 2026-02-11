@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, HelpCircle, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -41,6 +42,18 @@ export default function MediumStandardPrinterCard({
   const { formatPrice, currency: userCurrency, region, regionConfig } = useRegion();
   const productImage = getPrinterImage(printer);
   const badges = getPrinterBadges(printer, 2);
+
+  const [imageTimedOut, setImageTimedOut] = useState(false);
+  const imageLoadedRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!imageLoadedRef.current) {
+        setImageTimedOut(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Calculate fallback price from database (store > amazon > msrp)
   const databasePrice = printer.current_price_usd_store ?? printer.current_price_usd_amazon ?? printer.msrp_usd;
@@ -183,20 +196,29 @@ export default function MediumStandardPrinterCard({
 
             {/* Printer Image - Using OptimizedImage with consistent aspect ratio */}
             <div className={`relative aspect-auto w-full h-auto sm:h-[220px] flex items-center justify-center bg-[#0d1117] rounded-lg overflow-hidden ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
-              <OptimizedImage
-                src={productImage}
-                alt={`${printer.brand?.brand} ${printer.model_name}`}
-                className="w-auto h-full max-w-full max-h-[220px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
-                aspectRatio="auto"
-                objectFit="contain"
-                width={400}
-                fallback={
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <PrinterIcon size={48} className="text-gray-700" />
-                    <span className="text-[10px] text-gray-600 font-mono">Image unavailable</span>
-                  </div>
-                }
-              />
+              {imageTimedOut ? (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <PrinterIcon size={48} className="text-gray-700" />
+                  <span className="text-[10px] text-gray-600 font-mono">Image unavailable</span>
+                </div>
+              ) : (
+                <OptimizedImage
+                  src={productImage}
+                  alt={`${printer.brand?.brand} ${printer.model_name}`}
+                  className="w-auto h-full max-w-full max-h-[220px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                  aspectRatio="auto"
+                  objectFit="contain"
+                  width={400}
+                  onLoad={() => { imageLoadedRef.current = true; }}
+                  onError={() => { setImageTimedOut(true); }}
+                  fallback={
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <PrinterIcon size={48} className="text-gray-700" />
+                      <span className="text-[10px] text-gray-600 font-mono">Image unavailable</span>
+                    </div>
+                  }
+                />
+              )}
             </div>
           </div>
 
