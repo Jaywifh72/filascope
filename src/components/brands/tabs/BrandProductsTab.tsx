@@ -410,31 +410,33 @@ export function BrandProductsTab({
                         )}
                       </div>
 
-                      {/* Color Swatches - Max 6 */}
-                      {product.variants.length > 1 && (
-                        <div className="flex items-center gap-0.5">
-                          {product.variants.slice(0, 6).map((variant, idx) => {
-                            const colorHex = variant.color_hex
-                              ? normalizeColorHex(variant.color_hex)
-                              : null;
-                            return colorHex ? (
-                              <div
-                                key={idx}
-                                className="w-4 h-4 rounded-full border border-border flex-shrink-0"
-                                style={{ backgroundColor: colorHex }}
-                                title={
-                                  variant.color_family || variant.product_title
-                                }
-                              />
-                            ) : null;
-                          })}
-                          {product.variants.length > 6 && (
-                            <span className="text-xs text-muted-foreground ml-1.5">
-                              +{product.variants.length - 6} more
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      {/* Color Swatches - Max 6 (reserve space for consistent card height) */}
+                      <div className="min-h-[16px] flex items-center gap-0.5">
+                        {product.variants.length > 1 && (
+                          <>
+                            {product.variants.slice(0, 6).map((variant, idx) => {
+                              const colorHex = variant.color_hex
+                                ? normalizeColorHex(variant.color_hex)
+                                : null;
+                              return colorHex ? (
+                                <div
+                                  key={idx}
+                                  className="w-4 h-4 rounded-full border border-border flex-shrink-0"
+                                  style={{ backgroundColor: colorHex }}
+                                  title={
+                                    variant.color_family || variant.product_title
+                                  }
+                                />
+                              ) : null;
+                            })}
+                            {product.variants.length > 6 && (
+                              <span className="text-xs text-muted-foreground ml-1.5">
+                                +{product.variants.length - 6} more
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
 
                       {/* Price Range */}
                       {product.priceRange &&
