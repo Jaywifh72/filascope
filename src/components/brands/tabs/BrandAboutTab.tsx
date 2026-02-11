@@ -218,16 +218,16 @@ export function BrandAboutTab({
       {/* Catalog Stats */}
       <section>
         <h2 className="text-xl font-semibold text-white mb-4">Product Catalog</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Card className="bg-gray-800/30 border-gray-700">
+        <div className="grid grid-cols-2 gap-4 w-full">
+          <Card className="bg-card/50 border border-border/30 border-t-2 border-t-primary/40">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{productCount}</div>
+              <div className="text-3xl font-bold text-primary">{productCount}</div>
               <div className="text-sm text-gray-400">Products</div>
             </CardContent>
           </Card>
-          <Card className="bg-gray-800/30 border-gray-700">
+          <Card className="bg-card/50 border border-border/30 border-t-2 border-t-primary/40">
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{materialsCount}</div>
+              <div className="text-3xl font-bold text-primary">{materialsCount}</div>
               <div className="text-sm text-gray-400">Materials</div>
             </CardContent>
           </Card>
