@@ -216,7 +216,7 @@ function CircularProgress({
         />
       </svg>
       {/* Percentage text in center */}
-      <span className={`absolute text-xs font-bold ${qualityLevel.color}`}>
+      <span className={`absolute text-sm font-bold ${qualityLevel.color}`}>
         {percentage}%
       </span>
     </div>
@@ -269,28 +269,11 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div>
-                      <CircularProgress percentage={percentage} size={44} strokeWidth={4} />
+                      <CircularProgress percentage={percentage} size={40} strokeWidth={4} className="ring-2 ring-cyan-500/30 rounded-full" />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <div className="space-y-2">
-                      <p className="font-medium">{qualityLevel.label} Data Quality</p>
-                      <p className="text-xs text-muted-foreground">
-                        {totalFilled} of {totalFields} fields populated
-                      </p>
-                      {topMissingCategories.length > 0 && (
-                        <div className="text-xs">
-                          <p className="text-muted-foreground mb-1">Missing data in:</p>
-                          <ul className="space-y-0.5">
-                            {topMissingCategories.map(([key, score]) => (
-                              <li key={key} className="text-amber-500">
-                                • {FIELD_CATEGORIES[key as keyof typeof FIELD_CATEGORIES].label} ({score.missingFields.length} fields)
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+                  <TooltipContent side="bottom" className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-xs text-gray-300 shadow-lg max-w-[240px]">
+                    <p>{percentage}% of specification fields have data. Help improve this listing by submitting corrections.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
