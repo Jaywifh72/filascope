@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box } from "lucide-react";
+import { Printer as PrinterIcon } from "lucide-react";
 import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface DigitalViewportProps {
@@ -13,19 +13,9 @@ export function DigitalViewport({ images, productName, onOpenLightbox }: Digital
 
   if (images.length === 0) {
     return (
-      <div className="relative h-[280px] bg-[#0A0C10] border border-primary/20 rounded-none flex items-center justify-center">
-        {/* Corner brackets */}
-        <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary" />
-        <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary" />
-        <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary" />
-        <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary" />
-        
-        <Box className="h-20 w-20 text-muted-foreground/30" />
-        
-        {/* HUD overlay */}
-        <div className="absolute top-3 left-4 font-mono text-[10px] text-primary/60 uppercase tracking-wider">
-          IMG_SOURCE: NO_SIGNAL
-        </div>
+      <div className="relative h-[280px] bg-gray-900/50 rounded-lg flex flex-col items-center justify-center">
+        <PrinterIcon size={64} className="text-gray-700" />
+        <p className="text-xs text-gray-600 font-mono mt-2">Image not available</p>
       </div>
     );
   }
