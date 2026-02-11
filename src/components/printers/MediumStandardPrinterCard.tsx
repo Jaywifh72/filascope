@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -256,10 +256,37 @@ export default function MediumStandardPrinterCard({
               )}
             </div>
 
-            {/* Simplified Specs Row - Hidden on mobile */}
-            <p className="hidden sm:block text-sm text-muted-foreground min-h-[24px]">
-              {formatSimplifiedSpecs() || "Specs unavailable"}
-            </p>
+            {/* Spec Micro-Grid - Hidden on mobile */}
+            <div className="hidden sm:grid grid-cols-3 gap-2 min-h-[24px]">
+              <div className="text-center py-1.5">
+                <Box size={12} className="text-gray-500 mx-auto mb-1" />
+                <span className={`text-xs font-mono whitespace-nowrap ${
+                  printer.build_volume_x_mm ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
+                    ? (printer.build_volume_x_mm === printer.build_volume_y_mm && printer.build_volume_y_mm === printer.build_volume_z_mm
+                        ? `${printer.build_volume_x_mm}³mm`
+                        : `${printer.build_volume_x_mm}×${printer.build_volume_y_mm}×${printer.build_volume_z_mm}`)
+                    : '—'}
+                </span>
+              </div>
+              <div className="text-center py-1.5">
+                <Zap size={12} className="text-gray-500 mx-auto mb-1" />
+                <span className={`text-xs font-mono whitespace-nowrap ${
+                  printer.max_print_speed_mms ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {printer.max_print_speed_mms ? `${printer.max_print_speed_mms}mm/s` : '—'}
+                </span>
+              </div>
+              <div className="text-center py-1.5">
+                <Thermometer size={12} className="text-gray-500 mx-auto mb-1" />
+                <span className={`text-xs font-mono whitespace-nowrap ${
+                  printer.max_nozzle_temp_c ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  {printer.max_nozzle_temp_c ? `${printer.max_nozzle_temp_c}°C` : '—'}
+                </span>
+              </div>
+            </div>
 
             {/* CTA Button - Hidden on mobile, full width on desktop */}
             <button
