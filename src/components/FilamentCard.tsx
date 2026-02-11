@@ -382,13 +382,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       className={cn(
         "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
         "bg-card/80 border border-border",
-        // Plan #1: Non-scaling hover with border glow + lift
-        "hover:border-primary/30 hover:shadow-[0_8px_24px_rgba(0,207,232,0.12)] hover:-translate-y-0.5",
+        // Hover states differ for in-stock vs out-of-stock
+        isOutOfStock
+          ? "opacity-80 hover:-translate-y-[2px] hover:border-muted-foreground/20 hover:shadow-lg hover:shadow-muted/5"
+          : "hover:-translate-y-[2px] hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
-        // Plan #6: Enhanced out-of-stock treatment
-        isOutOfStock && "opacity-70 grayscale-[30%]"
       )}
       style={{
         animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.1}s both`
@@ -399,10 +399,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         setShowTooltip(false);
       }}
     >
-      {/* Out of Stock Badge - top-left pill */}
+      {/* Out of Stock Badge - positioned absolute top-left */}
       {isOutOfStock && (
-        <div className="absolute top-4 left-4 z-10 bg-red-900/80 text-red-200 text-xs font-mono uppercase px-2 py-0.5 rounded pointer-events-none">
-          Out of Stock
+        <div className="absolute top-3 left-3 z-10 bg-red-500/90 text-white text-xs font-semibold px-2 py-1 rounded-md pointer-events-none">
+          OUT OF STOCK
         </div>
       )}
 
@@ -427,8 +427,9 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             isSelected || isPendingSelection
               ? "w-6 h-6 bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
               : cn(
-                  // Default state - subtle but visible
-                  "w-5 h-5 bg-muted border border-border opacity-50",
+                  // Default state - hidden on desktop, visible on mobile (no hover)
+                  "w-5 h-5 bg-muted border border-border",
+                  "opacity-100 md:opacity-0",
                   // Hover state - prominent
                   "group-hover:w-6 group-hover:h-6 group-hover:opacity-100",
                   "group-hover:border-primary/60 group-hover:bg-primary/20",
@@ -676,8 +677,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
               <div className="flex items-baseline gap-1">
-                {/* Plan #9: text-primary (cyan) for price */}
-                <span className="text-lg font-bold text-primary leading-none">
+                <span className={cn(
+                  "text-lg font-bold leading-none",
+                  isOutOfStock ? "text-muted-foreground line-through" : "text-primary"
+                )}>
                   {formatPrice(pricePerKg, { showApproximate: isConvertedPrice })}
                 </span>
                 <span className="text-xs font-medium text-muted-foreground">/kg</span>
@@ -871,13 +874,16 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           className={cn(
             "w-full h-11 font-semibold transition-all duration-200",
             isOutOfStock
-              ? "bg-transparent border-border text-muted-foreground hover:bg-muted/50"
-              : "bg-primary hover:bg-primary/90 text-primary-foreground",
+              ? "bg-transparent border-muted-foreground/30 text-muted-foreground hover:bg-muted/50"
+              : cn(
+                  "bg-primary/10 border border-primary/30 text-primary",
+                  "group-hover:bg-primary group-hover:text-primary-foreground"
+                ),
             "active:scale-[0.98]"
           )}
         >
           <Link to={`/filament/${filament.id}`} aria-label={`View details for ${filament.product_title}`}>
-            {isOutOfStock ? 'View Details' : isHighConfidence ? 'View Details' : 'Check Price'}
+            {isOutOfStock ? 'View Details (Out of Stock)' : isHighConfidence ? 'View Details' : 'Check Price'}
             <ArrowRight className="w-[18px] h-[18px] ml-2" />
           </Link>
         </Button>
