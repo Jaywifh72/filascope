@@ -203,10 +203,17 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
           />
 
           {reviews.length === 0 && !isLoading && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Star className="w-8 h-8 text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">
-                No reviews yet. Be the first to share your experience!
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/50 rounded-xl p-8 text-center">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-8 w-8 text-muted-foreground/30" />
+                ))}
+              </div>
+              <p className="text-base text-muted-foreground mb-1">
+                No reviews yet for {filament.vendor} {filament.material}
+              </p>
+              <p className="text-sm text-muted-foreground mb-5">
+                Be the first to review — it takes less than 30 seconds
               </p>
             </div>
           )}
@@ -214,7 +221,7 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
       </Card>
 
       {/* Community Photos Gallery */}
-      <CommunityPhotoGallery productId={filament.id} productType="filament" />
+      <CommunityPhotoGallery productId={filament.id} productType="filament" productName={`${filament.vendor} ${filament.material}`} />
 
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
