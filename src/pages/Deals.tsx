@@ -117,10 +117,10 @@ const Deals = () => {
       <div className="min-h-screen flex flex-col">
       <section className="flex-1" role="region" aria-label="Deals listings">
         {/* Hero Section */}
-        <section className="relative py-12 md:py-16 px-6 md:px-10">
+        <section className="relative py-6 md:py-8 px-6 md:px-10">
           <div className="max-w-[1600px] mx-auto">
             {/* Badge */}
-            <div className="flex items-center justify-center mb-6">
+            <div className="flex items-center justify-center mb-2">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-500/30 bg-green-500/5">
                 <Tag className="h-4 w-4 text-green-400" />
                 <span className="font-mono text-xs uppercase tracking-wider text-green-400">
@@ -130,15 +130,15 @@ const Deals = () => {
             </div>
 
             {/* Headline */}
-            <h1 className="text-3xl md:text-5xl font-bold text-center mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold text-center mb-2">
               Best Prices <span className="text-green-400">We Found</span>
             </h1>
-            <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-6">
+            <p className="text-muted-foreground text-center max-w-2xl mx-auto mt-1">
               Discounted filaments from top brands. Prices captured periodically from retailers.
             </p>
 
             {/* Stats Row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mb-4">
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mt-3 mb-2">
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-green-400" />
                 <span>
@@ -161,7 +161,7 @@ const Deals = () => {
             </div>
 
             {/* Brand Distribution */}
-            <BrandDistribution groupedDeals={groupedDeals} className="mb-6" />
+            <BrandDistribution groupedDeals={groupedDeals} className="mt-2" />
           </div>
         </section>
 
