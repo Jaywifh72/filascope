@@ -19,8 +19,11 @@ export function BrandSEO({
   materials = [],
   rating,
 }: BrandSEOProps) {
-  // Build SEO-optimized title
-  const seoTitle = `${brandName} Filaments — Prices, Reviews & Specs | FilaScope`;
+  // Build SEO-optimized title — avoid "Filaments Filaments" for brands like "Spectrum Filaments"
+  const nameHasFilaments = /filaments?/i.test(brandName);
+  const seoTitle = nameHasFilaments
+    ? `${brandName} — Prices, Reviews & Specs | FilaScope`
+    : `${brandName} Filaments — Prices, Reviews & Specs | FilaScope`;
 
   // Build meta description — template: "[Brand] filaments — [X] products across [Y] material types. Compare specs, pricing, and availability on FilaScope."
   const materialList = materials.slice(0, 3).join(', ');
