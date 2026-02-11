@@ -40,41 +40,45 @@ export function BrandQuickFilters({
     }
   };
 
-  return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      {/* All Brands chip */}
-      <button
-        onClick={() => onBrandChange([])}
-        className={cn(
-          "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors",
-          isAllSelected
-            ? "bg-primary/15 text-primary border-primary/30"
-            : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground"
-        )}
-      >
-        All Brands
-      </button>
+  const activePill = "bg-primary text-primary-foreground font-semibold border-primary shadow-sm shadow-primary/20";
+  const inactivePill = "bg-transparent text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground transition-colors";
 
-      {/* Individual brand chips */}
-      {sorted.map(([brand, count]) => {
-        const isSelected = selectedBrands.includes(brand);
-        return (
-          <button
-            key={brand}
-            onClick={() => toggleBrand(brand)}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors",
-              isSelected
-                ? "bg-primary/15 text-primary border-primary/30"
-                : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50 hover:text-foreground"
-            )}
-          >
-            <span>{brand}</span>
-            <span className="text-muted-foreground">({count})</span>
-            {isSelected && <X className="h-3 w-3 ml-0.5" />}
-          </button>
-        );
-      })}
+  return (
+    <div className={cn("relative", className)}>
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pr-8">
+        {/* All Brands chip */}
+        <button
+          onClick={() => onBrandChange([])}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border whitespace-nowrap transition-all",
+            isAllSelected ? activePill : inactivePill
+          )}
+        >
+          All Brands
+        </button>
+
+        {/* Individual brand chips */}
+        {sorted.map(([brand, count]) => {
+          const isSelected = selectedBrands.includes(brand);
+          return (
+            <button
+              key={brand}
+              onClick={() => toggleBrand(brand)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border whitespace-nowrap transition-all",
+                isSelected ? activePill : inactivePill
+              )}
+            >
+              <span>{brand}</span>
+              <span className="text-xs opacity-70">({count})</span>
+              {isSelected && <X className="h-3 w-3 ml-0.5" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Right fade scroll indicator */}
+      <div className="absolute top-0 right-0 h-full w-8 pointer-events-none bg-gradient-to-l from-background to-transparent" />
     </div>
   );
 }
