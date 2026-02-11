@@ -51,6 +51,8 @@ export function BrandProductsTab({
   onMaterialFilterChange,
 }: BrandProductsTabProps) {
   const navigate = useNavigate();
+
+
   const { formatPrice } = useRegion();
   const { getRegionalUrl } = useRegionalStore();
 
@@ -268,6 +270,21 @@ export function BrandProductsTab({
   };
 
   const totalVariants = filaments.length;
+
+  if (groupedProducts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
+        <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+        <h3 className="text-xl font-semibold text-foreground mb-2">No Products Yet</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          {brandName}'s product catalog is being prepared. Check back soon!
+        </p>
+        <Button variant="outline" onClick={() => navigate('/brands')}>
+          Browse Other Brands
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-6">

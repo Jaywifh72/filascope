@@ -161,6 +161,21 @@ export function BrandOverviewTab({
     }
   };
 
+  if (groupedProducts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
+        <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+        <h3 className="text-xl font-semibold text-foreground mb-2">Products Coming Soon</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          We're working on adding {brandName}'s product catalog. Check back soon!
+        </p>
+        <Button variant="outline" onClick={() => navigate('/brands')}>
+          Browse Other Brands
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Why Choose Brand Section - only show when brand has products */}
