@@ -19,6 +19,8 @@ interface RecentlyViewedSectionProps {
   compact?: boolean;
   /** Section title override */
   title?: string;
+  /** Filter to only show a specific product type */
+  filterType?: "filament" | "printer";
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -73,11 +75,11 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
     <Link
       to={href}
       className={`group shrink-0 block rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200 overflow-hidden ${
-        compact ? "w-[140px]" : "w-[160px]"
+        compact ? "w-[120px]" : "w-[160px]"
       }`}
     >
       {/* Image / Color Swatch */}
-      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted/30">
+      <div className={`relative w-full overflow-hidden bg-muted/30 ${compact ? "h-[90px]" : "aspect-square"} rounded-lg`}>
         {image ? (
           <img
             src={getOptimizedImageUrl(image, 400)}
@@ -127,16 +129,20 @@ export function RecentlyViewedSection({
   showClear = true,
   compact = false,
   title = "Recently Viewed",
+  filterType,
 }: RecentlyViewedSectionProps) {
-  const { history, isLoading, clearHistory } = useBrowseHistory(limit + 1);
+  const { history, isLoading, clearHistory } = useBrowseHistory(limit + 20);
 
   const filtered = useMemo(() => {
     let items = history;
     if (excludeId) {
       items = items.filter((i) => i.product_id !== excludeId);
     }
+    if (filterType) {
+      items = items.filter((i) => i.product_type === filterType);
+    }
     return items.slice(0, limit);
-  }, [history, excludeId, limit]);
+  }, [history, excludeId, limit, filterType]);
 
   // Don't render if no history
   if (!isLoading && filtered.length === 0) return null;
@@ -144,7 +150,7 @@ export function RecentlyViewedSection({
   if (isLoading) return null;
 
   return (
-    <section className="w-full">
+    <section className="w-full py-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">

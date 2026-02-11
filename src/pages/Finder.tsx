@@ -56,7 +56,7 @@ import { extractColorFromText } from "@/lib/colorIntelligence";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
-import { ContinueBrowsingSection } from "@/components/ContinueBrowsingSection";
+
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
 import { MobilePrinterQuickSelect } from "@/components/filters/MobilePrinterQuickSelect";
@@ -930,14 +930,9 @@ const Finder = () => {
         <WelcomeBanner />
       </div>
 
-      {/* Continue Browsing (logged-in users, current session) */}
+      {/* Recently Viewed Section — filaments only on this route */}
       <div className="max-w-7xl mx-auto px-4 py-2">
-        <ContinueBrowsingSection />
-      </div>
-
-      {/* Recently Viewed Section */}
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        <RecentlyViewedSection limit={10} showClear title="Recently Viewed" />
+        <RecentlyViewedSection limit={6} showClear title="Recently Viewed" filterType="filament" compact />
       </div>
 
       {/* Visual Section Separator - tight spacing */}
