@@ -202,9 +202,9 @@ export default function MediumStandardPrinterCard({
             {/* Printer Image - Using OptimizedImage with consistent aspect ratio */}
             <div className={`relative aspect-auto w-full h-auto sm:h-[220px] flex items-center justify-center bg-[#0d1117] rounded-lg overflow-hidden ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
               {imageTimedOut ? (
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <PrinterIcon size={48} className="text-gray-700" />
-                  <span className="text-[10px] text-gray-600 font-mono">Image unavailable</span>
+              <div className="flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-muted/10 to-muted/5 w-full h-full relative">
+                  <PrinterIcon className="h-16 w-16 text-muted-foreground/20" />
+                  <span className="absolute bottom-2 right-2 text-xs text-muted-foreground/40 italic">Photo coming soon</span>
                 </div>
               ) : (
                 <OptimizedImage
@@ -217,9 +217,9 @@ export default function MediumStandardPrinterCard({
                   onLoad={() => { imageLoadedRef.current = true; }}
                   onError={() => { setImageTimedOut(true); }}
                   fallback={
-                    <div className="flex flex-col items-center justify-center gap-1">
-                      <PrinterIcon size={48} className="text-gray-700" />
-                      <span className="text-[10px] text-gray-600 font-mono">Image unavailable</span>
+                    <div className="flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-muted/10 to-muted/5 w-full h-full relative">
+                      <PrinterIcon className="h-16 w-16 text-muted-foreground/20" />
+                      <span className="absolute bottom-2 right-2 text-xs text-muted-foreground/40 italic">Photo coming soon</span>
                     </div>
                   }
                 />

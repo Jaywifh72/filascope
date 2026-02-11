@@ -117,8 +117,9 @@ export default function SmallDeemphasizedPrinterCard({
                 }}
               />
             ) : null}
-            <div className={`w-full h-full flex items-center justify-center ${productImage ? 'hidden' : ''}`}>
-              <PrinterIcon className="h-12 w-12 text-white/10" />
+            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-b from-muted/10 to-muted/5 relative ${productImage ? 'hidden' : ''}`}>
+              <PrinterIcon className="h-16 w-16 text-muted-foreground/20" />
+              <span className="absolute bottom-2 right-2 text-xs text-muted-foreground/40 italic">Photo coming soon</span>
             </div>
           </div>
 
