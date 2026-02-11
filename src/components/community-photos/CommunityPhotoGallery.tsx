@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Camera, Heart, SortAsc } from "lucide-react";
+import { Camera, Heart, SortAsc, ImageIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { SharePrintDialog } from "./SharePrintDialog";
@@ -24,11 +24,13 @@ import {
 interface CommunityPhotoGalleryProps {
   productId: string;
   productType?: string;
+  productName?: string;
 }
 
 export function CommunityPhotoGallery({
   productId,
   productType = "filament",
+  productName,
 }: CommunityPhotoGalleryProps) {
   const { user } = useAuth();
   const {
@@ -259,11 +261,11 @@ export function CommunityPhotoGallery({
 
         {/* Empty State */}
         {photos.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <Camera className="w-10 h-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm font-medium text-foreground mb-1">No community prints yet</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Be the first to share a print with this filament!
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/50 rounded-xl p-8 text-center">
+            <ImageIcon className="h-10 w-10 text-muted-foreground/30 mb-3" />
+            <p className="text-base text-muted-foreground mb-1">Share a print made with this filament</p>
+            <p className="text-sm text-muted-foreground mb-5">
+              {productName ? `Show the community what's possible with ${productName}` : 'Show the community what you\'ve made'}
             </p>
             <SharePrintDialog
               productId={productId}
@@ -271,6 +273,7 @@ export function CommunityPhotoGallery({
               onUpload={uploadPhoto}
               isUploading={isUploading}
             />
+            <p className="text-xs text-muted-foreground mt-4">Accepted formats: JPG, PNG, WebP · Max 5MB</p>
           </div>
         )}
       </CardContent>
