@@ -288,7 +288,7 @@ export function BrandOverviewTab({
                     </div>
                     
                     {/* Product Name */}
-                    <div className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]">
+                    <div className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]" title={product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}>
                       {product.baseName.replace(/\s+[\d.]+mm\s+[\d.]+kg\s+Filament$/i, "")}
                     </div>
                     
@@ -296,7 +296,8 @@ export function BrandOverviewTab({
                     {product.material && (
                       <Badge 
                         variant="secondary" 
-                        className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 mb-2"
+                        className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 mb-2 max-w-[140px] truncate"
+                        title={product.material}
                       >
                         {product.material}
                       </Badge>
