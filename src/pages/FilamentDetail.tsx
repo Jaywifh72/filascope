@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,6 +121,24 @@ const FilamentDetail = () => {
   
   // Community review stats for hero badge
   const { data: communityReviewStats } = useCommunityReviewStats(filament?.id);
+  
+  // Compatible printer count for tab badge
+  const { data: compatiblePrinterCount } = useQuery({
+    queryKey: ['compatible-printer-count', filament?.nozzle_temp_max_c],
+    queryFn: async () => {
+      const nozzleMax = filament?.nozzle_temp_max_c;
+      let query = supabase
+        .from('printers')
+        .select('id', { count: 'exact', head: true });
+      if (nozzleMax) {
+        query = query.gte('max_nozzle_temp_c', nozzleMax);
+      }
+      const { count, error } = await query;
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!filament,
+  });
   // Get region from the correct source (URL parameter-based)
   const { region: currentRegionCode, currency, formatPrice, convertPrice: regionConvertPrice, hasRates } = useRegion();
   
@@ -863,6 +882,7 @@ const FilamentDetail = () => {
               counts={{
                 pricing: detailPricing.retailerCount,
                 community: communityReviewStats?.reviewCount ?? 0,
+                compatibility: compatiblePrinterCount ?? undefined,
               }}
             />
 
