@@ -380,7 +380,7 @@ export function FilamentPurchaseSidebar({
           <div className="h-px bg-border my-2" />
 
           {/* Tertiary Row - Purchased & Note */}
-          <div className="flex gap-2 [&_button]:h-8 [&_button]:text-xs [&_button]:text-muted-foreground">
+          <div className="flex gap-2 [&_button]:h-8 [&_button]:text-xs [&_button]:whitespace-nowrap [&_button]:text-muted-foreground [&_button]:min-w-0">
             <div className="flex-1">
               <MarkPurchasedButton
                 productId={filamentId}
