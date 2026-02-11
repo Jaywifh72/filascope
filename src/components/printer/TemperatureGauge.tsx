@@ -138,12 +138,12 @@ export function TemperatureGauge({ maxNozzleTemp, maxBedTemp, compact = false }:
       {/* Material Compatibility */}
       {compatibleMaterials.length > 0 && (
         <div className="mt-4 pt-4 border-t border-border/30">
-          <div className="text-xs text-gray-400 mb-2 text-center">Compatible Materials</div>
+          <div className="text-[10px] text-gray-500 font-mono uppercase tracking-wider mb-2 text-center">Compatible with:</div>
           <div className="flex flex-wrap justify-center gap-2">
             {compatibleMaterials.map((mat, idx) => (
               <div 
                 key={idx}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
               >
                 <Check className="h-3 w-3" />
                 <span>{mat.materials}</span>
