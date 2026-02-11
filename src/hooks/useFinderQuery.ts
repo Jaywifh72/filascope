@@ -41,7 +41,7 @@ export interface FinderQueryResult {
   isPlaceholderData: boolean;
 }
 
-const PAGE_SIZE = 48;
+export const DEFAULT_PAGE_SIZE = 48;
 
 /**
  * Converts the RPC JSON response into GroupedFilament[] for the UI.
@@ -85,7 +85,8 @@ function mapRpcResultToGroups(items: any[]): GroupedFilament[] {
 export function useFinderQuery(
   filters: FinderFilters,
   page: number = 0,
-  brandNameMap: Record<string, string> = {}
+  brandNameMap: Record<string, string> = {},
+  pageSize: number = DEFAULT_PAGE_SIZE
 ): FinderQueryResult {
   const { currentRegion } = useRegionalFiltering();
 
@@ -127,6 +128,7 @@ export function useFinderQuery(
       filters.selectedColorFamilies,
       filters.hasTdData,
       page,
+      pageSize,
     ],
     placeholderData: keepPreviousData,
     queryFn: async () => {
@@ -137,8 +139,8 @@ export function useFinderQuery(
           p_materials: materialsParam as string[] | undefined,
           p_brands: vendorNames as string[] | undefined,
           p_sort: filters.sortBy,
-          p_page_size: PAGE_SIZE,
-          p_offset: page * PAGE_SIZE,
+          p_page_size: pageSize,
+          p_offset: page * pageSize,
           p_region: currentRegion,
           p_high_speed: filters.highSpeed,
           p_brass_only: filters.brassOnly,
