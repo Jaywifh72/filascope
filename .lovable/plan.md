@@ -1,30 +1,68 @@
 
 
-## Fix Brand Card Height Inconsistency
+## Empty State for 0-Product Brands
 
 ### Problem
-Brand cards in the directory grid have inconsistent heights due to varying amounts of material badges and feature tags, causing misaligned rows and an uneven "View Filaments" button position.
+Brands with 0 products (e.g., Gst3d) show an almost empty page. The Overview tab's "Why Choose", "Popular Products", and "Materials Offered" sections are all conditionally hidden, leaving a blank space. The Products tab still renders the full filter sidebar and grid layout with just a "No products found" card.
 
-### Changes (single file: `src/components/brands/BrandCard.tsx`)
+### Changes
 
-**1. Flex column layout with minimum height**
-- Add `flex flex-col min-h-[280px]` to the outer card container (line 68)
-- Add `flex-1 flex flex-col` to the bottom info area (line 103) so it stretches to fill remaining space
+#### 1. Overview Tab (`src/components/brands/tabs/BrandOverviewTab.tsx`)
+- Add a check at the top of the render: when `groupedProducts.length === 0`, render a centered empty state card instead of the normal sections.
+- The empty state will use:
+  - `Package` icon at 48px, `text-muted-foreground`
+  - Heading: "Products Coming Soon" (`text-xl font-semibold`)
+  - Subtext: "We're working on adding {brandName}'s product catalog. Check back soon!" (`text-muted-foreground`)
+  - "Browse Other Brands" outline button linking to `/brands`
+  - Container: centered, `max-w-md mx-auto`, `py-16`
 
-**2. Anchor "View Filaments" button to bottom**
-- Add `mt-auto` to the Button component (line 163) so it always sits at the card bottom regardless of content above
+#### 2. Products Tab (`src/components/brands/tabs/BrandProductsTab.tsx`)
+- Add an early return when `groupedProducts.length === 0` (before the sidebar + grid layout).
+- Show a similar centered empty state with the `Package` icon, "No Products Yet" heading, descriptive subtext, and a "Browse Other Brands" button.
+- This avoids rendering the filter sidebar and sort controls for an empty catalog.
 
-**3. Cap material badges to one row with "+X more" counter**
-- Wrap the visible badges in a container with `flex flex-wrap gap-1.5 max-h-[28px] overflow-hidden`
-- Show the first 4 badges inside this overflow-clipped container
-- Place the "+X more" pill **outside** the overflow container so it's always visible
-- Style the "+X more" pill with `text-[10px] text-gray-500 font-mono`
+#### 3. No changes to:
+- Hero section, stat boxes, or tab navigation
+- About tab (already handles empty state)
+- Brands with products (all conditional, no impact)
 
-**4. Consistent feature badge spacing**
-- Change the feature badges container margin to `mt-1.5` for consistent spacing below material badges
+### Technical Details
 
-### Technical Detail
+**Overview Tab** -- insert before line 165:
+```tsx
+if (groupedProducts.length === 0) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
+      <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+      <h3 className="text-xl font-semibold text-foreground mb-2">Products Coming Soon</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        We're working on adding {brandName}'s product catalog. Check back soon!
+      </p>
+      <Button variant="outline" onClick={() => navigate('/brands')}>
+        Browse Other Brands
+      </Button>
+    </div>
+  );
+}
+```
 
-The key structural change is making the card a flex column so the info section can grow (`flex-1`) and the button can anchor to the bottom (`mt-auto`). The material badge overflow is handled by splitting the "+X more" counter outside the `overflow-hidden` container so it remains visible even when badges are clipped.
+**Products Tab** -- insert early return at the beginning of the component body (after hooks, before the main JSX):
+```tsx
+if (groupedProducts.length === 0) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-16 max-w-md mx-auto">
+      <Package className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+      <h3 className="text-xl font-semibold text-foreground mb-2">No Products Yet</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        {brandName}'s product catalog is being prepared. Check back soon!
+      </p>
+      <Button variant="outline" onClick={() => navigate('/brands')}>
+        Browse Other Brands
+      </Button>
+    </div>
+  );
+}
+```
 
-No changes to: logo area, brand name, product count, price indicator, verified badge, star rating, or card border/background colors.
+Both are minimal, low-risk additions that short-circuit rendering before any complex logic when product count is zero.
+
