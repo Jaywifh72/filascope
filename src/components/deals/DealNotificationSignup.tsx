@@ -97,9 +97,9 @@ export function DealNotificationSignup({
       <Button
         variant="outline"
         onClick={() => setIsOpen(true)}
-        className="gap-2 border-primary/30 hover:border-primary hover:bg-primary/10"
+        className="gap-2 px-4 py-2 bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 hover:border-primary"
       >
-        <Bell className="h-4 w-4" />
+        <Bell className="h-4 w-4 animate-pulse" />
         Get Deal Alerts
       </Button>
 
