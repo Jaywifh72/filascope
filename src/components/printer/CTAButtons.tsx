@@ -57,26 +57,28 @@ export function CTAButtons({
     <div className={stackedButtons ? "flex flex-col gap-3" : "flex flex-wrap gap-4"}>
       {/* Primary: Buy Now */}
       {affiliateUrl && (
-        <a
-          href={affiliateUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={stackedButtons ? "block w-full" : "inline-flex flex-1 min-w-[160px]"}
-          onClick={handleBuyClick}
-        >
-          <button
-            className={`w-full ${buttonHeight} ${buttonPadding} bg-primary text-primary-foreground ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group`}
+        <div className={stackedButtons ? "w-full" : "inline-flex flex-col flex-1 min-w-[160px]"}>
+          <a
+            href={affiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full"
+            onClick={handleBuyClick}
           >
-            <ShoppingCart className={iconSize} />
-            Buy Now
-            {storePrice && !isDiscontinued && (
-              <span className="text-primary-foreground/80">
-                ({formatPrice(storePrice, false)})
-              </span>
-            )}
-            <ExternalLink className={`${iconSize} opacity-70`} />
-          </button>
-        </a>
+            <button
+              className={`w-full ${buttonHeight} ${buttonPadding} bg-primary text-primary-foreground ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group`}
+            >
+              <ShoppingCart className={iconSize} />
+              Buy Now
+              <ExternalLink className={`${iconSize} opacity-70`} />
+            </button>
+          </a>
+          {storePrice && !isDiscontinued && (
+            <p className="text-[10px] text-gray-500 font-mono text-center mt-1">
+              {formatPrice(storePrice, false)} in local currency
+            </p>
+          )}
+        </div>
       )}
 
       {/* Secondary: Compare */}
