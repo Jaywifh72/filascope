@@ -116,7 +116,7 @@ export function PriceSection({
         
         {/* Discount Badge - GREEN filled badge */}
         {hasDiscount && (
-          <span className="text-xs font-semibold bg-green-500 text-white px-2 py-0.5 rounded-full">
+          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-semibold px-1.5 py-0.5 rounded">
             -{discountPercent}%
           </span>
         )}
