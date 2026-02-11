@@ -19,12 +19,19 @@ const TABS: TabConfig[] = [
   { id: "community", label: "Community", hash: "#community" },
 ];
 
+export interface TabCounts {
+  pricing?: number;
+  community?: number;
+  compatibility?: number;
+}
+
 interface FilamentTabNavProps {
   activeTab: FilamentTab;
   onTabChange: (tab: FilamentTab) => void;
+  counts?: TabCounts;
 }
 
-export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) {
+export function FilamentTabNav({ activeTab, onTabChange, counts }: FilamentTabNavProps) {
   const tabsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
@@ -119,10 +126,16 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
                   "flex items-center gap-2",
                   activeTab === tab.id
                     ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground transition-colors duration-150"
                 )}
               >
                 {tab.label}
+                {/* Contextual count */}
+                {counts && tab.id in counts && counts[tab.id as keyof TabCounts] != null && (
+                  <span className="text-muted-foreground text-xs font-normal">
+                    ({counts[tab.id as keyof TabCounts]})
+                  </span>
+                )}
                 {tab.badge === "coming-soon" && (
                   <Badge 
                     variant="outline" 
@@ -139,9 +152,9 @@ export function FilamentTabNav({ activeTab, onTabChange }: FilamentTabNavProps) 
                     New
                   </Badge>
                 )}
-                {/* Active indicator - teal underline */}
+                {/* Active indicator - cyan underline */}
                 {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+                  <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-cyan-500 rounded-full" />
                 )}
               </button>
             ))}

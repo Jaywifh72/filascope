@@ -828,7 +828,14 @@ const FilamentDetail = () => {
             <div ref={heroSentinelRef} className="h-0" aria-hidden="true" />
 
             {/* Tab Navigation */}
-            <FilamentTabNav activeTab={activeTab} onTabChange={setActiveTab} />
+            <FilamentTabNav 
+              activeTab={activeTab} 
+              onTabChange={setActiveTab}
+              counts={{
+                pricing: detailPricing.retailerCount,
+                community: communityReviewStats?.reviewCount ?? 0,
+              }}
+            />
 
             {/* Tab Content */}
             <FilamentTabContent activeTab={activeTab}>
