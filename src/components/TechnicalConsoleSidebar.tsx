@@ -15,8 +15,12 @@ import {
   Settings2,
   Droplets,
   X,
-  Palette
+  Palette,
+  Info,
+  Eye
 } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
 import { FeatureHelpIcon } from "@/components/onboarding";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { useNozzleConfig, NOZZLE_SIZES, FLOW_TYPES, NOZZLE_MATERIALS, FLOW_TYPE_LABELS, NOZZLE_MATERIAL_LABELS, type NozzleSize, type FlowType, type NozzleMaterial } from "@/hooks/useNozzleConfig";
@@ -91,6 +95,8 @@ interface TechnicalConsoleSidebarProps {
   spoolSize?: string;
   onSpoolSizeChange?: (size: string) => void;
   onClearAll?: () => void;
+  showCostPerPrint?: boolean;
+  onShowCostPerPrintChange?: (checked: boolean) => void;
 }
 
 export function TechnicalConsoleSidebar({
@@ -107,6 +113,8 @@ export function TechnicalConsoleSidebar({
   spoolSize = "standard",
   onSpoolSizeChange,
   onClearAll,
+  showCostPerPrint = false,
+  onShowCostPerPrintChange,
 }: TechnicalConsoleSidebarProps) {
   const { 
     selectedPrinter, 
@@ -273,14 +281,24 @@ export function TechnicalConsoleSidebar({
               </span>
             </div>
           </div>
-          {/* Filter count badge */}
-          {activeFilterCount > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 border border-primary/20">
-              <span className="text-xs font-medium text-primary">
-                {activeFilterCount} {activeFilterCount === 1 ? 'filter' : 'filters'}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {activeFilterCount > 0 && (
+              <button
+                onClick={handleClearAllFilters}
+                className="text-xs text-muted-foreground hover:text-foreground underline cursor-pointer transition-colors"
+              >
+                Clear All
+              </button>
+            )}
+            {/* Filter count badge */}
+            {activeFilterCount > 0 && (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <span className="text-xs font-medium text-primary">
+                  {activeFilterCount}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -330,12 +348,22 @@ export function TechnicalConsoleSidebar({
       <Collapsible open={specsOpen} onOpenChange={setSpecsOpen}>
         <div className="border-b border-border">
           <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <Settings2 className="w-3.5 h-3.5 text-primary" />
-              <span className="text-sm font-semibold text-foreground">
-                Print Specs
-              </span>
-            </div>
+            <TooltipProvider>
+              <div className="flex items-center gap-2">
+                <Settings2 className="w-3.5 h-3.5 text-primary" />
+                <span className="text-sm font-semibold text-foreground">
+                  Your Printer Capabilities
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-xs max-w-[220px]">
+                    These are your printer's maximum capabilities. Filaments are filtered to those compatible with these specs.
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
             <ChevronDown className={cn(
               "w-4 h-4 text-muted-foreground transition-transform duration-200",
               specsOpen && "rotate-180"
@@ -466,7 +494,7 @@ export function TechnicalConsoleSidebar({
                 Spool Size
               </span>
               {localSpoolSize !== "standard" && (
-                <span className="text-xs text-primary ml-1">•</span>
+                <span className="h-2 w-2 rounded-full bg-primary" />
               )}
             </div>
             <ChevronDown className={cn(
@@ -504,20 +532,24 @@ export function TechnicalConsoleSidebar({
         activeCount={localMaterials.filter(m => m !== "All").length}
       >
         <div className="flex flex-wrap gap-2">
-          {MATERIAL_BASE_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => handleMaterialToggle(option.id)}
-              className={cn(
-                "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
-                localMaterials.includes(option.id)
-                  ? "bg-primary/20 border-primary text-primary"
-                  : "bg-muted border-border text-foreground hover:bg-accent hover:border-border-hover"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+          {MATERIAL_BASE_OPTIONS.map((option) => {
+            const isActive = localMaterials.includes(option.id);
+            return (
+              <button
+                key={option.id}
+                onClick={() => handleMaterialToggle(option.id)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
+                  isActive
+                    ? "bg-primary/20 border-primary text-primary font-semibold"
+                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {option.label}
+                {isActive && <X className="h-3 w-3" />}
+              </button>
+            );
+          })}
         </div>
       </CollapsibleFilterSection>
 
@@ -531,20 +563,24 @@ export function TechnicalConsoleSidebar({
         activeCount={localBrands.length}
       >
         <div className="flex flex-wrap gap-2">
-          {VERIFIED_BRANDS.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => handleBrandToggle(option.id)}
-              className={cn(
-                "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
-                localBrands.includes(option.id)
-                  ? "bg-primary/20 border-primary text-primary"
-                  : "bg-muted border-border text-foreground hover:bg-accent hover:border-border-hover"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+          {VERIFIED_BRANDS.map((option) => {
+            const isActive = localBrands.includes(option.id);
+            return (
+              <button
+                key={option.id}
+                onClick={() => handleBrandToggle(option.id)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
+                  isActive
+                    ? "bg-primary/20 border-primary text-primary font-semibold"
+                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {option.label}
+                {isActive && <X className="h-3 w-3" />}
+              </button>
+            );
+          })}
         </div>
       </CollapsibleFilterSection>
 
@@ -615,35 +651,56 @@ export function TechnicalConsoleSidebar({
         isLast
       >
         <div className="flex flex-wrap gap-2">
-          {REINFORCED_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => handleReinforcedToggle(option.id)}
-              className={cn(
-                "px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
-                localReinforced.includes(option.id)
-                  ? "bg-primary/20 border-primary text-primary"
-                  : "bg-muted border-border text-foreground hover:bg-accent hover:border-border-hover"
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+          {REINFORCED_OPTIONS.map((option) => {
+            const isActive = localReinforced.includes(option.id);
+            return (
+              <button
+                key={option.id}
+                onClick={() => handleReinforcedToggle(option.id)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
+                  isActive
+                    ? "bg-primary/20 border-primary text-primary font-semibold"
+                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {option.label}
+                {isActive && <X className="h-3 w-3" />}
+              </button>
+            );
+          })}
         </div>
       </CollapsibleFilterSection>
 
-      {/* Clear All Filters */}
-      {activeFilterCount > 0 && (
-        <div className="p-4 border-t border-border">
-          <button
-            onClick={handleClearAllFilters}
-            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
-          >
-            <X className="w-3.5 h-3.5" />
-            Clear All Filters
-          </button>
+      {/* Display Options */}
+      <div className="border-t border-border p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Eye className="w-3.5 h-3.5 text-primary" />
+          <span className="text-sm font-semibold text-foreground">Display Options</span>
         </div>
-      )}
+        <TooltipProvider>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="cost-per-print-toggle" className="text-sm text-muted-foreground cursor-pointer">
+                Show cost per print
+              </label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-3 h-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-xs max-w-[200px]">
+                  Estimates printing cost based on average material usage per print.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <Switch
+              id="cost-per-print-toggle"
+              checked={showCostPerPrint}
+              onCheckedChange={(checked) => onShowCostPerPrintChange?.(checked)}
+            />
+          </div>
+        </TooltipProvider>
+      </div>
     </aside>
   );
 }
