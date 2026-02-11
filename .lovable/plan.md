@@ -1,23 +1,16 @@
 
 
-## Make Filter Parameters Sidebar Sticky with Custom Scrollbar
+## Fix Printer Product Images Being Cut Off
 
-The sidebar is already partially sticky (`sticky top-20` on the outer container, and uses a `ScrollArea` component internally). The changes needed are minor adjustments to match the exact requested styling.
+The image clipping occurs because the container is fixed at `sm:h-[200px]` with `overflow-hidden`, while the `OptimizedImage` component renders its inner `img` as `w-full h-full` -- causing taller images to be cropped.
 
-### Changes
+### Changes (single file)
 
-**File: `src/components/printers/PrintersLeftSidebar.tsx`**
+**File: `src/components/printers/MediumStandardPrinterCard.tsx` (line 185-199)**
 
-1. **Update the outer container** (line 138): Confirm `sticky top-20` is present (already is), and add `max-h-[calc(100vh-5rem)] overflow-y-auto` directly to the outer div.
+1. **Outer container div (line 185)**: Change `sm:h-[200px] sm:aspect-auto` to `sm:h-[220px] aspect-auto`. Keep `overflow-hidden`, `bg-[#0d1117]`, `rounded-lg`.
 
-2. **Replace the ScrollArea component** (line 148): Remove the `<ScrollArea>` wrapper (which uses Radix's custom scrollbar) and replace it with a plain `<div>` that inherits the parent's overflow scrolling. The custom scrollbar classes `scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent` will be applied to the outer sticky container.
+2. **OptimizedImage className (line 189)**: Change from `max-h-full max-w-full object-contain` to `w-auto h-full max-w-full max-h-[220px] object-contain`. This constrains the image to fit within 220px height while maintaining aspect ratio. The `object-contain` on the OptimizedImage className will be combined with the component's internal classes.
 
-3. **No other changes**: Sidebar content, expand/collapse behavior, Sort By section, sidebar width (w-72), and main content grid remain untouched.
-
-### Technical Details
-
-- The outer `<div>` at line 136-139 becomes: `w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`
-- The `<ScrollArea className="max-h-[calc(100vh-180px)]">` on line 148 is replaced with a plain `<div>` (no className needed for height/overflow since the parent handles it)
-- Tailwind's `scrollbar-thin` utilities require the `tailwind-scrollbar` plugin; if not installed, we will add it as a dependency. Alternatively, we can use inline CSS or a utility class with custom CSS for the thin scrollbar styling.
-- The `ScrollArea` import from `@/components/ui/scroll-area` can be removed if no longer used in this file.
+No other files or elements are modified -- badges, brand logos, pricing, spec grid, and buttons remain untouched.
 
