@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, HelpCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -243,7 +243,10 @@ export default function MediumStandardPrinterCard({
                     )}
                   </>
                 ) : (
-                  <span className="text-gray-500 font-mono text-sm italic">Price TBD</span>
+                  <span className="bg-gray-800/50 border border-gray-700 border-dashed text-gray-500 text-xs font-mono italic px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                    <HelpCircle size={12} className="text-gray-600" />
+                    Price TBD
+                  </span>
                 )}
               </div>
               
