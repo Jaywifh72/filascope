@@ -151,8 +151,8 @@ const Deals = () => {
           </div>
         </section>
 
-        {/* Filters Section */}
-        <section className="px-4 sm:px-6 md:px-10 pb-6">
+        {/* Filters Section — sticky below navbar */}
+        <section className="sticky top-16 z-40 bg-background border-b border-border/50 shadow-sm px-4 sm:px-6 md:px-10 pb-4 pt-4">
           <div className="max-w-[1600px] mx-auto">
             {/* Mobile Filter Sheet */}
             <div className="md:hidden mb-4">
