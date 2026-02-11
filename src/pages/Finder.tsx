@@ -54,7 +54,7 @@ import { FilamentTableView } from "@/components/FilamentTableView";
 import { FinderPaginationBar } from "@/components/FinderPaginationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
-import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
+import { OnboardingTour } from "@/components/onboarding";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { MobileQuickMatchPrompt } from "@/components/MobileQuickMatchPrompt";
