@@ -1,34 +1,35 @@
 
 
-## Material Wizard Visual Enhancements
+## Printer Card Alignment Improvements
 
-Four visual-only changes to `src/pages/Wizard.tsx`. No logic, questions, or navigation changes.
+Visual-only changes to `src/components/printers/MediumStandardPrinterCard.tsx` to ensure consistent card alignment across rows.
 
-### 1. Subtle Background Radial Gradient
-Add a radial gradient glow to the outer page wrapper div (line 216), not the card. Uses the brand cyan accent at very low opacity.
+### 1. Card Container -- Min Height and Flex Column
+Add `min-h-[480px]` to the main card container div (line 139) and ensure `flex flex-col` is applied on desktop. The card already has `h-full flex flex-row sm:flex-col`, so we add `sm:min-h-[480px]` to enforce consistent height on desktop only.
 
-**Change:** Add an inline `style` with `background: radial-gradient(ellipse at center, rgba(0, 229, 204, 0.03) 0%, transparent 70%)` to the `min-h-screen` wrapper div.
+### 2. View Details Button -- Push to Bottom with mt-auto
+The content wrapper div (line 201) already has `flex flex-col`. Add `mt-auto` to the "View Details" button (line 266) so it always sits at the card bottom regardless of content height.
 
-### 2. Tighten the Card Layout
-The card currently uses `flex-1` which causes it to stretch to fill available vertical space. Remove `flex-1` from the Card (line 218) and replace with `min-h-0` so the card snugly wraps its content. Also remove `flex-1` from the inner container div (line 217) to stop the vertical stretching chain. Keep `max-w-2xl mx-auto` (already present).
+### 3. Spec Summary Row -- Fixed Min Height
+The simplified specs paragraph (line 261) currently collapses when specs are missing. Add `min-h-[24px]` to ensure consistent vertical space.
 
-### 3. Step Indicator Label
-Below the progress bar (after line 236), add a monospaced step label like "STEP 1 OF 5 -- USE CASE". Uses `text-xs text-gray-500 font-mono uppercase tracking-wider mt-3`. The step name is derived from the current question's `id` field, formatted to uppercase with underscores replaced by spaces.
+### 4. Feature Badge Row -- Fixed Min Height
+The badge container (line 173-184) is conditionally rendered only when `badges.length > 0`. Change this to always render the container with `min-h-[28px]`, showing badges when present and empty space when not, so images align across cards.
 
-### 4. Option Card Hover Enhancement
-Add `hover:border-cyan-500/30 hover:bg-cyan-950/10 transition-all duration-200` to both single-select option Labels (line 257) and multi-select option divs (line 284). Existing selected/checked state styling remains unchanged and takes priority via the peer-data selectors and conditional classes.
+### 5. "Price TBD" Styling
+The "Price TBD" fallback (line 247) currently uses generic muted styling. Change to `text-gray-500 font-mono text-sm italic` to visually distinguish it from real prices.
 
 ---
 
 ### Technical Details
 
-**File:** `src/pages/Wizard.tsx`
+**File:** `src/components/printers/MediumStandardPrinterCard.tsx`
 
-| Line | Change |
-|------|--------|
-| 216 | Add `style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}` to the page wrapper div |
-| 217 | Remove `flex-1` from `max-w-2xl mx-auto w-full flex-1 flex flex-col` |
-| 218 | Remove `flex-1` from Card className, keep `flex flex-col` |
-| 236 (after progress bar closing div) | Insert: `<p className="text-xs text-gray-500 font-mono uppercase tracking-wider mt-3">Step {currentStep + 1} of {questions.length} -- {currentQuestion.id.replace(/_/g, ' ')}</p>` |
-| 257 | Add `hover:border-cyan-500/30 hover:bg-cyan-950/10` to the Label className (before `peer-data-[state=checked]` classes so checked state wins) |
-| 284 | Add `hover:border-cyan-500/30 hover:bg-cyan-950/10` to the multi-select div className |
+| Area | Line(s) | Change |
+|------|---------|--------|
+| Card container | 139 | Add `sm:min-h-[480px]` to the className |
+| Badge container | 173-184 | Always render the wrapper div (remove `badges.length > 0` condition), add `min-h-[28px]` |
+| Specs row | 261 | Add `min-h-[24px]` to the paragraph |
+| Price TBD | 247 | Change className to `text-gray-500 font-mono text-sm italic` |
+| View Details button | 267 | Add `mt-auto` to push button to bottom of card |
+
