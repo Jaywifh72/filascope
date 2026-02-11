@@ -79,8 +79,8 @@ export function PrinterTabNav({ activeTab, onTabChange }: PrinterTabNavProps) {
     <div
       ref={tabsRef}
       className={cn(
-        "sticky top-16 z-30 -mx-4 lg:-mx-8 px-4 lg:px-8 transition-all duration-200",
-        isSticky && "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
+        "sticky top-[64px] z-10 -mx-4 lg:-mx-8 px-4 lg:px-8 bg-[#0a0e14] transition-all duration-200",
+        isSticky && "border-b border-gray-800/50 shadow-sm shadow-black/20"
       )}
     >
       {/* Horizontal scroll container for mobile with fade edges */}
