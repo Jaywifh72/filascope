@@ -258,9 +258,9 @@ export default function MediumStandardPrinterCard({
 
             {/* Spec Micro-Grid - Hidden on mobile */}
             <div className="hidden sm:grid grid-cols-3 gap-2 min-h-[24px]">
-              <div className="text-center py-1.5">
+              <div className="text-center py-1.5 min-w-0">
                 <Box size={12} className="text-gray-500 mx-auto mb-1" />
-                <span className={`text-xs font-mono whitespace-nowrap ${
+                <span className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.build_volume_x_mm ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
@@ -270,17 +270,17 @@ export default function MediumStandardPrinterCard({
                     : '—'}
                 </span>
               </div>
-              <div className="text-center py-1.5">
+              <div className="text-center py-1.5 min-w-0">
                 <Zap size={12} className="text-gray-500 mx-auto mb-1" />
-                <span className={`text-xs font-mono whitespace-nowrap ${
+                <span className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.max_print_speed_mms ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   {printer.max_print_speed_mms ? `${printer.max_print_speed_mms}mm/s` : '—'}
                 </span>
               </div>
-              <div className="text-center py-1.5">
+              <div className="text-center py-1.5 min-w-0">
                 <Thermometer size={12} className="text-gray-500 mx-auto mb-1" />
-                <span className={`text-xs font-mono whitespace-nowrap ${
+                <span className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.max_nozzle_temp_c ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   {printer.max_nozzle_temp_c ? `${printer.max_nozzle_temp_c}°C` : '—'}
