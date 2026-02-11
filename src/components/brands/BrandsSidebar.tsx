@@ -94,14 +94,9 @@ const BrandsSidebar = ({
             <div className="p-1.5 rounded-md bg-primary/10 border border-primary/20">
               <SlidersHorizontal className="w-4 h-4 text-primary" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-300">
-                Filter Brands
-              </span>
-              <span className="text-xs text-gray-500">
-                Refine Results
-              </span>
-            </div>
+            <span className="text-sm font-semibold text-white">
+              Filter Brands
+            </span>
           </div>
         </div>
 
