@@ -841,6 +841,12 @@ export default function Printers() {
                     <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
                       Displaying {displayedCount} of {filteredPrinters.length} units
                     </p>
+                    <div className="w-48 h-1 bg-gray-800 rounded-full mx-auto mt-3">
+                      <div
+                        className="h-1 bg-cyan-500/60 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((displayedCount / filteredPrinters.length) * 100, 100)}%` }}
+                      />
+                    </div>
                   </div>
                 ) : filteredPrinters.length > PRINTERS_PER_PAGE && (
                   <div className="flex flex-col items-center gap-4 py-12">
