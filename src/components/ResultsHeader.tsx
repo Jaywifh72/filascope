@@ -1,4 +1,4 @@
-import { X, Printer, Database, Download, Loader2, Settings } from "lucide-react";
+import { X, Printer, Database, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -37,7 +37,7 @@ const ResultsHeader = ({
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <Database className="w-5 h-5 text-primary hidden sm:block" />
-            <h2 className="text-xl font-bold text-foreground">
+            <h2 className="text-lg font-bold text-foreground">
               Material Registry
             </h2>
             <span className="text-muted-foreground">—</span>
@@ -45,7 +45,7 @@ const ResultsHeader = ({
               <span className="inline-block w-16 h-5 bg-primary/20 rounded animate-pulse align-middle" />
             ) : (
               <>
-                <span className="text-cyan-400 font-semibold">
+                <span className="text-cyan-400 font-bold">
                   {count.toLocaleString()}
                   {isUpdating && (
                     <Loader2 className="inline-block w-3 h-3 ml-1.5 text-primary animate-spin align-middle" />
@@ -71,17 +71,13 @@ const ResultsHeader = ({
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Printer className="w-3 h-3" />
               <span>Compatible with {printerBrand} {printerName}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="text-xs text-primary hover:text-primary/80 h-6 px-2"
+              <span className="mx-1">·</span>
+              <Link 
+                to="/materials" 
+                className="text-cyan-400 text-xs hover:text-cyan-300 underline underline-offset-2"
               >
-                <Link to="/materials">
-                  <Settings className="w-3 h-3 mr-1" />
-                  Change printer
-                </Link>
-              </Button>
+                Change printer
+              </Link>
             </div>
           )}
         </div>
