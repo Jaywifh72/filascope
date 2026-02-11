@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -315,15 +316,22 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         )}
 
         {/* Share Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
-          onClick={handleShareClick}
-          aria-label="Share this deal"
-        >
-          <Share2 className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-muted/50 rounded-full p-1.5 transition-colors"
+              onClick={handleShareClick}
+              aria-label="Share this deal"
+            >
+              <Share2 className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="text-xs">
+            Share deal
+          </TooltipContent>
+        </Tooltip>
 
         {/* Image with fallback chain */}
         <Link
