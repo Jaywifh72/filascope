@@ -1,6 +1,5 @@
 import { forwardRef, useState } from "react";
-import { ChevronDown, Check, X, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronDown, Check, Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -200,8 +199,8 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     Price Range
                   </span>
                   {priceRange !== 'all' && (
-                    <span className="text-xs text-primary truncate max-w-[80px]">
-                      {getPriceLabel()}
+                    <span className="bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2">
+                      1
                     </span>
                   )}
                 </div>
@@ -243,8 +242,8 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     Build Size
                   </span>
                   {buildVolume !== 'all' && (
-                    <span className="text-xs text-primary truncate max-w-[80px]">
-                      {getVolumeLabel()}
+                    <span className="bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2">
+                      1
                     </span>
                   )}
                 </div>
@@ -286,7 +285,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     Brand
                   </span>
                   {advancedFilters.brands.length > 0 && (
-                    <span className="min-w-5 h-5 px-1.5 bg-primary rounded-full text-[10px] font-bold text-background flex items-center justify-center">
+                    <span className="bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2">
                       {advancedFilters.brands.length}
                     </span>
                   )}
@@ -343,8 +342,8 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     Motion System
                   </span>
                   {advancedFilters.motionSystem !== 'any' && (
-                    <span className="text-xs text-primary">
-                      {motionOptions.find(o => o.value === advancedFilters.motionSystem)?.label}
+                    <span className="bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2">
+                      1
                     </span>
                   )}
                 </div>
@@ -391,8 +390,8 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     Print Speed
                   </span>
                   {(advancedFilters.minSpeed > 0 || advancedFilters.maxSpeed < 1000) && (
-                    <span className="text-xs text-primary">
-                      {advancedFilters.minSpeed}-{advancedFilters.maxSpeed}
+                    <span className="bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2">
+                      1
                     </span>
                   )}
                 </div>
@@ -435,7 +434,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     Features
                   </span>
                   {advancedFilters.features.length > 0 && (
-                    <span className="min-w-5 h-5 px-1.5 bg-primary rounded-full text-[10px] font-bold text-background flex items-center justify-center">
+                    <span className="bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2">
                       {advancedFilters.features.length}
                     </span>
                   )}
@@ -472,17 +471,15 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
           </div>
         </ScrollArea>
 
-        {/* Clear All Button */}
+        {/* Clear All Filters Link */}
         {hasActiveFilters && (
-          <div className="p-3 border-t border-gray-800">
-            <Button
-              variant="ghost"
+          <div className="p-3 border-t border-gray-800 text-center">
+            <button
               onClick={onClearFilters}
-              className="w-full h-9 text-sm text-gray-400 hover:text-destructive hover:bg-destructive/10 border border-gray-800 hover:border-destructive/20"
+              className="text-xs text-gray-500 hover:text-cyan-400 font-mono uppercase tracking-wide transition-colors"
             >
-              <X className="w-3.5 h-3.5 mr-2" />
-              Reset All Filters
-            </Button>
+              Clear All Filters
+            </button>
           </div>
         )}
       </div>
