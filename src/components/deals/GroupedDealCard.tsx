@@ -267,7 +267,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     <>
       <Card
         className={cn(
-          "relative h-full overflow-hidden transition-all duration-200",
+          "relative h-full overflow-hidden transition-all duration-200 flex flex-col",
           "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
         )}
       >
@@ -317,7 +317,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           />
         </Link>
 
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex-1 flex flex-col">
           {/* Vendor */}
           <div className="text-xs text-muted-foreground mb-1">
             {group.representativeDeal.vendor}
@@ -325,7 +325,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
 
           {/* Base Product Name (without color) */}
           <Link to={`/filament/${group.representativeDeal.id}`}>
-            <h3 className="font-medium text-sm mb-3 line-clamp-2 hover:text-primary transition-colors">
+            <h3 className="font-medium text-sm mb-3 line-clamp-2 min-h-[40px] hover:text-primary transition-colors">
               {group.baseName}
             </h3>
           </Link>
@@ -382,46 +382,12 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             </Badge>
           )}
 
-          {/* Color Swatches */}
-          {hasColors && (
-            <div className="mb-3">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {group.colorHexes.slice(0, 5).map((hex, i) => {
-                  const variant = getVariantByHex(hex);
-                  return (
-                    <Link
-                      key={i}
-                      to={
-                        variant
-                          ? `/filament/${variant.id}`
-                          : `/filament/${group.representativeDeal.id}`
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-5 h-5 rounded-full border border-border/50 hover:scale-125 hover:border-primary transition-all shadow-sm"
-                      style={{ backgroundColor: hex }}
-                      title={variant?.product_title}
-                    />
-                  );
-                })}
-                {group.colorHexes.length > 5 && (
-                  <button
-                    onClick={handleExpandClick}
-                    className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    +{group.colorHexes.length - 5} more
-                    {expanded ? (
-                      <ChevronUp className="h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {/* Expanded Color Grid */}
-              {expanded && (
-                <div className="grid grid-cols-8 gap-1.5 mt-2 p-2 bg-muted/30 rounded-lg">
-                  {group.colorHexes.map((hex, i) => {
+          {/* Color Swatches (reserved space) */}
+          <div className="min-h-[28px]">
+            {hasColors && (
+              <div className="mb-3">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {group.colorHexes.slice(0, 5).map((hex, i) => {
                     const variant = getVariantByHex(hex);
                     return (
                       <Link
@@ -438,19 +404,57 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                       />
                     );
                   })}
+                  {group.colorHexes.length > 5 && (
+                    <button
+                      onClick={handleExpandClick}
+                      className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      +{group.colorHexes.length - 5} more
+                      {expanded ? (
+                        <ChevronUp className="h-3 w-3" />
+                      ) : (
+                        <ChevronDown className="h-3 w-3" />
+                      )}
+                    </button>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Variant Count Badge */}
-          {showColorCount && (
-            <div className="text-xs text-muted-foreground mb-2">
-              {hasColors
-                ? `Available in ${group.colorCount} colors`
-                : `${group.colorCount} variants available`}
-            </div>
-          )}
+                {/* Expanded Color Grid */}
+                {expanded && (
+                  <div className="grid grid-cols-8 gap-1.5 mt-2 p-2 bg-muted/30 rounded-lg">
+                    {group.colorHexes.map((hex, i) => {
+                      const variant = getVariantByHex(hex);
+                      return (
+                        <Link
+                          key={i}
+                          to={
+                            variant
+                              ? `/filament/${variant.id}`
+                              : `/filament/${group.representativeDeal.id}`
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-5 h-5 rounded-full border border-border/50 hover:scale-125 hover:border-primary transition-all shadow-sm"
+                          style={{ backgroundColor: hex }}
+                          title={variant?.product_title}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Variant Count Badge (reserved space) */}
+          <div className="min-h-[20px]">
+            {showColorCount && (
+              <div className="text-xs text-muted-foreground mb-2">
+                {hasColors
+                  ? `Available in ${group.colorCount} colors`
+                  : `${group.colorCount} variants available`}
+              </div>
+            )}
+          </div>
 
           {/* Store Region Info — local-first ordering */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
@@ -485,7 +489,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-auto">
             {/* Primary CTA */}
             {(group.representativeDeal.product_url || hasLocalAlternative) && (
               <Button
