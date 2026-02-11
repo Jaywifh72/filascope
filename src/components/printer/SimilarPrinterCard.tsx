@@ -244,8 +244,8 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
             }}
           />
         ) : (
-          <div className="h-[80px] flex items-center justify-center">
-            <PrinterIcon size={36} className="text-gray-600" />
+          <div className="h-[70px] flex items-center justify-center bg-gray-900/30 rounded-lg w-full">
+            <PrinterIcon size={32} className="text-gray-600" />
           </div>
         )}
       </div>
