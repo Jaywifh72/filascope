@@ -234,10 +234,10 @@ export function MarkPurchasedButton({
       <Button
         variant="outline"
         onClick={() => setDialogOpen(true)}
-        className="w-full h-11 text-sm font-medium"
+        className="w-full h-8 text-xs font-medium whitespace-nowrap"
       >
-        <ShoppingBag className="w-4 h-4 mr-2" />
-        Mark as Purchased
+        <ShoppingBag className="w-4 h-4 mr-1" />
+        Purchased
       </Button>
       <MarkPurchasedDialog
         productId={productId}

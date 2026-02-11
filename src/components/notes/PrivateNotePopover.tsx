@@ -141,7 +141,7 @@ export function PrivateNotePopover({
         {compact ? (
           <button
             className={cn(
-              "inline-flex items-center gap-1.5 text-sm transition-colors",
+              "inline-flex items-center gap-1.5 text-xs whitespace-nowrap transition-colors",
               hasNote
                 ? "text-amber-400 hover:text-amber-300"
                 : "text-muted-foreground hover:text-primary"
