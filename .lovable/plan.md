@@ -1,40 +1,23 @@
 
 
-## Add Active Filter Count Badges and Clear All Link to Printer Sidebar
+## Make Filter Parameters Sidebar Sticky with Custom Scrollbar
 
-**File:** `src/components/printers/PrintersLeftSidebar.tsx`
-
-This sidebar already has count badges on Brand and Features sections, and a "Reset All Filters" button. The plan standardizes badges across all filter sections and replaces the button with the requested styled link.
+The sidebar is already partially sticky (`sticky top-20` on the outer container, and uses a `ScrollArea` component internally). The changes needed are minor adjustments to match the exact requested styling.
 
 ### Changes
 
-**1. Add count badges to sections that currently only show text indicators:**
+**File: `src/components/printers/PrintersLeftSidebar.tsx`**
 
-| Section | Current Indicator | New Badge |
-|---------|------------------|-----------|
-| Price Range (line 202-206) | Text label showing selected range | Cyan circle badge with "1" when a non-"all" range is selected |
-| Build Size (line 245-249) | Text label showing selected size | Cyan circle badge with "1" when a non-"all" size is selected |
-| Motion System (line 345-349) | Text label showing selected option | Cyan circle badge with "1" when not "any" |
-| Print Speed (line 393-397) | Text showing range values | Cyan circle badge with "1" when speed range is customized |
+1. **Update the outer container** (line 138): Confirm `sticky top-20` is present (already is), and add `max-h-[calc(100vh-5rem)] overflow-y-auto` directly to the outer div.
 
-**2. Update existing Brand and Features badges to match requested styling:**
+2. **Replace the ScrollArea component** (line 148): Remove the `<ScrollArea>` wrapper (which uses Radix's custom scrollbar) and replace it with a plain `<div>` that inherits the parent's overflow scrolling. The custom scrollbar classes `scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent` will be applied to the outer sticky container.
 
-Current (lines 289, 438): `min-w-5 h-5 px-1.5 bg-primary rounded-full text-[10px] font-bold text-background`
-
-New: `bg-cyan-500 text-black text-[10px] font-bold rounded-full w-4 h-4 inline-flex items-center justify-center ml-2`
-
-**3. Replace "Reset All Filters" button with "Clear All Filters" link:**
-
-Replace the current `Button` component (lines 476-486) with a simple text link styled as:
-`text-xs text-gray-500 hover:text-cyan-400 font-mono uppercase tracking-wide`
-
-Centered at the bottom of the sidebar, visible only when `hasActiveFilters` is true (existing logic preserved).
+3. **No other changes**: Sidebar content, expand/collapse behavior, Sort By section, sidebar width (w-72), and main content grid remain untouched.
 
 ### Technical Details
 
-- For Price Range, Build Size, and Motion System: these are single-select filters, so the badge always shows "1" when active
-- For Print Speed: badge shows "1" when the range deviates from default (0-1000)
-- For Brand and Features: badge shows the count of selected items (existing logic)
-- The existing text indicators (showing the active selection label) next to Price/Build/Motion/Speed headers will be replaced by the count badge for visual consistency
-- No changes to Sort By section, expand/collapse behavior, or sidebar width/positioning
+- The outer `<div>` at line 136-139 becomes: `w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent`
+- The `<ScrollArea className="max-h-[calc(100vh-180px)]">` on line 148 is replaced with a plain `<div>` (no className needed for height/overflow since the parent handles it)
+- Tailwind's `scrollbar-thin` utilities require the `tailwind-scrollbar` plugin; if not installed, we will add it as a dependency. Alternatively, we can use inline CSS or a utility class with custom CSS for the thin scrollbar styling.
+- The `ScrollArea` import from `@/components/ui/scroll-area` can be removed if no longer used in this file.
 
