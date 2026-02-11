@@ -1358,6 +1358,8 @@ const Finder = () => {
               getAffiliateUrl={getAffiliateUrl}
               hexSearch={hexSearch}
               getColorMatchPercent={getColorMatchPercent}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
             />
           ) : (
             /* Grid View - Laboratory Readout Cards */
