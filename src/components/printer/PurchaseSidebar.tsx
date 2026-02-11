@@ -105,18 +105,18 @@ export function PurchaseSidebar({
 
         {/* Fallback Region Warning */}
         {!isLocalStore && storeRegion && (
-          <div className="flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-2.5 py-2 rounded-md">
-            <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-400 bg-amber-900/10 border border-amber-700/20 px-2 py-1.5 rounded-md">
+            <Globe className="w-3 h-3 flex-shrink-0" />
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">
                 {REGIONS[storeRegion as RegionCode]?.flag} {REGIONS[storeRegion as RegionCode]?.name || storeRegion} store
               </span>
               {shipsFromCountry && (
-                <span className="text-amber-400/80">
+                <span className="text-gray-500">
                   Ships from {shipsFromCountry}
                 </span>
               )}
-              <span className="text-amber-400/60 text-[10px]">
+              <span className="text-gray-500">
                 International shipping • Duties may apply
               </span>
             </div>
