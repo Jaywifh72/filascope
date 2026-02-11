@@ -384,8 +384,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         "bg-card/80 border border-border",
         // Hover states differ for in-stock vs out-of-stock
         isOutOfStock
-          ? "opacity-80 hover:-translate-y-[2px] hover:border-muted-foreground/20 hover:shadow-lg hover:shadow-muted/5"
-          : "hover:-translate-y-[2px] hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
+          ? "opacity-80 hover:-translate-y-1 hover:border-muted-foreground/20 hover:shadow-lg hover:shadow-muted/5"
+          : "hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/40",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
@@ -877,7 +877,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               ? "bg-transparent border-muted-foreground/30 text-muted-foreground hover:bg-muted/50"
               : cn(
                   "bg-primary/10 border border-primary/30 text-primary",
-                  "group-hover:bg-primary group-hover:text-primary-foreground"
+                  "group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500"
                 ),
             "active:scale-[0.98]"
           )}
