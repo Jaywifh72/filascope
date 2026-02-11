@@ -125,10 +125,28 @@ function DealCardImage({
           : undefined
       }
     >
-      {/* Color accent bar at top */}
+      {/* Color accent bar at top — brighten very dark colors so they're visible on the dark card bg */}
       <div
         className="absolute top-0 left-0 right-0 h-1 opacity-70"
-        style={{ backgroundColor: accentColor }}
+        style={{
+          backgroundColor: (() => {
+            if (!accentColor) return undefined;
+            // Parse rgb/hex to get luminance
+            const match = accentColor.match(/(\d+)/g);
+            if (match && match.length >= 3) {
+              const [r, g, b] = match.map(Number);
+              const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+              if (luminance < 0.15) {
+                // Mix with 30% white to ensure visibility
+                const br = Math.round(r + (255 - r) * 0.3);
+                const bg = Math.round(g + (255 - g) * 0.3);
+                const bb = Math.round(b + (255 - b) * 0.3);
+                return `rgb(${br}, ${bg}, ${bb})`;
+              }
+            }
+            return accentColor;
+          })(),
+        }}
       />
 
       {showFallbackPlaceholder ? (
