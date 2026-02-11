@@ -1286,6 +1286,8 @@ const Finder = () => {
           spoolSize={largeSpools ? "large" : "standard"}
           onSpoolSizeChange={(size) => setLargeSpools(size === "large")}
           onClearAll={handleClearAllFilters}
+          showCostPerPrint={showCostPerPrint}
+          onShowCostPerPrintChange={setShowCostPerPrint}
         />
 
         {/* Main Content */}
