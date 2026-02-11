@@ -249,8 +249,8 @@ export default function MediumStandardPrinterCard({
               
               {/* Price disclaimer */}
               {!printer.discontinued && price && (
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <ExternalLinkIcon className="h-3 w-3" />
+                <div className="flex items-center text-[10px] text-gray-600 italic">
+                  <ExternalLinkIcon size={10} className="text-gray-600 mr-0.5" />
                   <span>Verify at store</span>
                 </div>
               )}
