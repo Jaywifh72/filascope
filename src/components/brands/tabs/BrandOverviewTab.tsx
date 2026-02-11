@@ -329,11 +329,12 @@ export function BrandOverviewTab({
               <button
                 key={material}
                 onClick={() => onFilterByMaterial(material)}
-                className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 text-left hover:border-primary/50 hover:bg-gray-800/50 transition-all group"
+                title={material}
+                className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 text-left hover:border-primary/50 hover:bg-gray-800/50 transition-all group min-h-[72px] flex flex-col justify-center"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <Layers className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors">
+                <div className="flex items-start gap-2 mb-1">
+                  <Layers className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors line-clamp-2">
                     {material}
                   </span>
                 </div>
