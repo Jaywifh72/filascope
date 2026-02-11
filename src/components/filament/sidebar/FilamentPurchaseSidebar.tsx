@@ -335,7 +335,7 @@ export function FilamentPurchaseSidebar({
             disabled={!affiliateUrl}
             variant="default"
             className={cn(
-              "w-full h-14 text-lg font-bold tracking-wide",
+              "w-full py-3 text-lg font-bold tracking-wide",
               "bg-gradient-to-r from-primary to-primary/80",
               "hover:from-primary/90 hover:to-primary/70",
               "shadow-[0_4px_16px_rgba(0,212,212,0.25)]",
@@ -349,40 +349,57 @@ export function FilamentPurchaseSidebar({
             <ExternalLink className="w-4 h-4 ml-2 opacity-70" />
           </Button>
 
-          {/* Compare Button */}
-          <Button
-            variant="outline"
-            onClick={handleCompareToggle}
-            className={cn(
-              "w-full h-11 text-sm font-medium",
-              isComparing && "border-primary text-primary bg-primary/5"
-            )}
-          >
-            <GitCompare className="w-4 h-4 mr-2" />
-            {isComparing ? 'Remove from Compare' : 'Add to Compare'}
-          </Button>
+          {/* Divider */}
+          <div className="h-px bg-border my-2" />
 
-          {/* Add to Project */}
-          <AddToProjectButton
-            filamentId={filamentId}
-            productTitle={productTitle || 'Filament'}
-          />
+          {/* Secondary Row - Compare & Project */}
+          <div className="flex gap-2 [&_button]:h-8 [&_button]:text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCompareToggle}
+              className={cn(
+                "flex-1 font-medium",
+                isComparing && "border-primary text-primary bg-primary/5"
+              )}
+            >
+              <GitCompare className="w-3.5 h-3.5 mr-1.5" />
+              {isComparing ? 'Remove' : 'Compare'}
+            </Button>
 
-          {/* Mark as Purchased */}
-          <MarkPurchasedButton
-            productId={filamentId}
-            productType="filament"
-            productName={productTitle || 'Filament'}
-            currentPrice={displayPrice}
-            storeName={cleanName(regionalPriceResult?.store?.name || finalRetailerName)}
-          />
+            <div className="flex-1">
+              <AddToProjectButton
+                filamentId={filamentId}
+                productTitle={productTitle || 'Filament'}
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
 
-          {/* Private Note Button */}
-          <PrivateNotePopover
-            productId={filamentId}
-            productType="filament"
-            productTitle={productTitle}
-          />
+          {/* Divider */}
+          <div className="h-px bg-border my-2" />
+
+          {/* Tertiary Row - Purchased & Note */}
+          <div className="flex gap-2 [&_button]:h-8 [&_button]:text-xs [&_button]:text-muted-foreground">
+            <div className="flex-1">
+              <MarkPurchasedButton
+                productId={filamentId}
+                productType="filament"
+                productName={productTitle || 'Filament'}
+                currentPrice={displayPrice}
+                storeName={cleanName(regionalPriceResult?.store?.name || finalRetailerName)}
+              />
+            </div>
+
+            <div className="flex-1">
+              <PrivateNotePopover
+                productId={filamentId}
+                productType="filament"
+                productTitle={productTitle}
+                compact
+              />
+            </div>
+          </div>
 
           {/* Private Note Indicator (shows existing note) */}
           <PrivateNoteIndicator
@@ -390,8 +407,6 @@ export function FilamentPurchaseSidebar({
             productType="filament"
             productTitle={productTitle || undefined}
           />
-
-          {/* Store Region Badge */}
           {storeRegionCode && (
             <div className="flex items-center justify-center">
               <div className={cn(
