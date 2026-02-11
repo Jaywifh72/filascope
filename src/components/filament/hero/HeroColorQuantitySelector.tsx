@@ -90,7 +90,11 @@ export function HeroColorQuantitySelector({
       {colorVariants.length > 1 && (
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Color ({filteredColors.length} available)
+            Color: {(() => {
+              const current = colorVariants.find(v => v.id === currentVariantId);
+              const name = current ? (getColorFromTitle(current.product_title, baseName) || current.color_family || 'Color') : 'Color';
+              return name;
+            })()} ({filteredColors.length} available)
           </label>
           <TooltipProvider delayDuration={200}>
             <div className="flex flex-wrap gap-1.5">
