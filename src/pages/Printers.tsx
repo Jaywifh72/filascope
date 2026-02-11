@@ -637,7 +637,7 @@ export default function Printers() {
       )}
 
       {/* Results Header - Industrial style */}
-      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 mb-4 sm:mb-6 mt-6 sm:mt-8 animate-fade-in">
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 mb-4 sm:mb-6 mt-3 sm:mt-4 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center gap-3">
             {/* Mobile Filter Button */}
