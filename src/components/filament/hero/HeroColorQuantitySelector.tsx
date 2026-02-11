@@ -3,6 +3,14 @@ import { cn } from '@/lib/utils';
 import { normalizeColorHex } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+/** Extract color name from product title as a last-resort fallback */
+function extractColorFallback(title: string): string | null {
+  if (!title) return null;
+  const dashMatch = title.match(/\s+-\s+(.+?)$/);
+  if (dashMatch) return dashMatch[1].trim();
+  return null;
+}
+
 interface ColorVariant {
   id: string;
   color_hex: string | null;
@@ -92,14 +100,14 @@ export function HeroColorQuantitySelector({
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Color: {(() => {
               const current = colorVariants.find(v => v.id === currentVariantId);
-              const name = current ? (getColorFromTitle(current.product_title, baseName) || current.color_family || 'Color') : 'Color';
+              const name = current ? (getColorFromTitle(current.product_title, baseName) || current.color_family || extractColorFallback(current.product_title) || 'Color') : 'Color';
               return name;
             })()} ({filteredColors.length} available)
           </label>
           <TooltipProvider delayDuration={200}>
             <div className="flex flex-wrap gap-1.5">
               {visibleColors.map((variant) => {
-                const colorName = getColorFromTitle(variant.product_title, baseName) || variant.color_family || 'Color';
+                const colorName = getColorFromTitle(variant.product_title, baseName) || variant.color_family || extractColorFallback(variant.product_title) || 'Color';
                 const isSelected = variant.id === currentVariantId;
                 const colorHex = variant.color_hex ? normalizeColorHex(variant.color_hex) : null;
                 const isWhite = colorHex?.toUpperCase() === '#FFFFFF';
