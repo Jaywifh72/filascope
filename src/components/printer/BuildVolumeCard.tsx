@@ -276,20 +276,20 @@ function IsometricCubeSimple({
 
       {/* Dimension Labels */}
       <div 
-        className="absolute text-[10px] font-medium text-primary"
-        style={{ bottom: compact ? 2 : 5, left: '50%', transform: 'translateX(-50%)' }}
+        className="absolute text-[10px] font-mono text-cyan-400 bg-gray-900/80 px-1 py-0.5 rounded"
+        style={{ bottom: compact ? 0 : 2, left: '50%', transform: 'translateX(-50%)' }}
       >
         {width}mm
       </div>
       <div 
-        className="absolute text-[10px] font-medium text-primary"
-        style={{ right: compact ? 0 : 2, top: '50%', transform: 'translateY(-50%) rotate(0deg)' }}
+        className="absolute text-[10px] font-mono text-cyan-400 bg-gray-900/80 px-1 py-0.5 rounded"
+        style={{ right: compact ? -2 : 0, top: '50%', transform: 'translateY(-50%)' }}
       >
         {depth}mm
       </div>
       <div 
-        className="absolute text-[10px] font-medium text-primary"
-        style={{ left: compact ? 0 : 2, top: '50%', transform: 'translateY(-50%)' }}
+        className="absolute text-[10px] font-mono text-cyan-400 bg-gray-900/80 px-1 py-0.5 rounded"
+        style={{ left: compact ? -2 : 0, top: '50%', transform: 'translateY(-50%)' }}
       >
         {height}mm
       </div>
