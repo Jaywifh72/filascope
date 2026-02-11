@@ -131,9 +131,9 @@ export function HeroColorQuantitySelector({
                 );
               })}
               {remainingCount > 0 && (
-                <div className="w-7 h-7 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-muted-foreground">+{remainingCount}</span>
-                </div>
+                <span className="bg-gray-800 text-cyan-400 text-xs font-mono px-2 py-0.5 rounded-full cursor-pointer hover:bg-gray-700 transition-colors inline-flex items-center">
+                  +{remainingCount} more
+                </span>
               )}
             </div>
           </TooltipProvider>

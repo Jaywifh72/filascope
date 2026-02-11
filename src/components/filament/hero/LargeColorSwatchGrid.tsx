@@ -55,7 +55,7 @@ export function LargeColorSwatchGrid({
         {hasMore && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+            className="bg-gray-800 text-cyan-400 text-xs font-mono px-2 py-0.5 rounded-full cursor-pointer hover:bg-gray-700 transition-colors inline-flex items-center gap-1"
           >
             {isExpanded ? (
               <>Show Less <ChevronUp className="w-3 h-3" /></>
