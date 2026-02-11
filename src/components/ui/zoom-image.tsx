@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ZoomIn } from "lucide-react";
+import { ZoomIn, Printer } from "lucide-react";
 import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface ZoomImageProps {
@@ -27,8 +26,16 @@ export function ZoomImage({
   const [isError, setIsError] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
-  const [lowResLoaded, setLowResLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 10-second timeout: if image hasn't loaded, show error state
+  useEffect(() => {
+    if (isLoaded || isError) return;
+    const timer = setTimeout(() => {
+      if (!isLoaded) setIsError(true);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [isLoaded, isError]);
 
   // Handle mouse move for zoom
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -40,9 +47,6 @@ export function ZoomImage({
     
     setZoomPosition({ x, y });
   }, []);
-
-  // Generate low-res URL for blur-up (if using an image service)
-  const lowResSrc = src;
 
   return (
     <div
@@ -56,24 +60,9 @@ export function ZoomImage({
       onMouseMove={handleMouseMove}
       onClick={onClick}
     >
-      {/* Skeleton Loader */}
+      {/* Pulsing Skeleton Placeholder */}
       {!isLoaded && !isError && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Skeleton className="w-full h-full rounded-none" />
-        </div>
-      )}
-
-      {/* Low-res Blur-up Image */}
-      {!isLoaded && lowResSrc && (
-        <img
-          src={lowResSrc}
-          alt=""
-          className={cn(
-            "absolute inset-0 w-full h-full object-contain blur-sm scale-105 transition-opacity duration-300",
-            lowResLoaded ? "opacity-30" : "opacity-0"
-          )}
-          onLoad={() => setLowResLoaded(true)}
-        />
+        <div className="absolute inset-0 bg-gray-800 animate-pulse rounded-lg" />
       )}
 
       {/* Main Image — hero product image: eager + high priority */}
@@ -124,8 +113,9 @@ export function ZoomImage({
 
       {/* Error State */}
       {isError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-          <span className="text-muted-foreground text-sm">Failed to load image</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/30">
+          <Printer size={64} className="text-gray-600" />
+          <span className="text-xs text-gray-500 font-mono mt-2">Image not available</span>
         </div>
       )}
     </div>

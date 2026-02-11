@@ -501,8 +501,10 @@ const PrinterDetail = () => {
     setLightboxOpen(true);
   };
 
-  // Use only validated images for lightbox navigation
-  const displayImages = productImages.filter(img => validImages.has(img));
+  // Show images immediately; filter only after validation completes
+  const displayImages = checkedImages.size === 0
+    ? productImages
+    : productImages.filter(img => validImages.has(img));
 
   const nextImage = () => {
     if (displayImages.length > 0) {
