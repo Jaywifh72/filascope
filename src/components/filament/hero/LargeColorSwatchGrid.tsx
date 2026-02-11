@@ -23,6 +23,14 @@ interface LargeColorSwatchGridProps {
   className?: string;
 }
 
+/** Extract color name from product title as a last-resort fallback */
+function extractColorFallback(title: string): string | null {
+  if (!title) return null;
+  const dashMatch = title.match(/\s+-\s+(.+?)$/);
+  if (dashMatch) return dashMatch[1].trim();
+  return null;
+}
+
 export function LargeColorSwatchGrid({
   colorVariants,
   currentVariantId,
@@ -36,7 +44,7 @@ export function LargeColorSwatchGrid({
 
   const currentVariant = colorVariants.find(v => v.id === currentVariantId);
   const currentColorName = currentVariant 
-    ? (getColorName(currentVariant.product_title) || currentVariant.color_family || 'Color')
+    ? (getColorName(currentVariant.product_title) || currentVariant.color_family || extractColorFallback(currentVariant.product_title) || 'Color')
     : 'Color';
 
   // Show first 10 colors, then expandable
@@ -72,7 +80,7 @@ export function LargeColorSwatchGrid({
           isExpanded && "max-h-[240px] overflow-y-auto pr-1 scrollbar-thin"
         )}>
           {visibleColors.map((variant) => {
-            const colorName = getColorName(variant.product_title) || variant.color_family || 'Color';
+            const colorName = getColorName(variant.product_title) || variant.color_family || extractColorFallback(variant.product_title) || 'Color';
             const isSelected = variant.id === currentVariantId;
             const colorHex = variant.color_hex ? normalizeColorHex(variant.color_hex) : null;
             const isWhite = colorHex?.toUpperCase() === '#FFFFFF';
