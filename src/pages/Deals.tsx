@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe } from "lucide-react";
+import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
@@ -41,6 +42,19 @@ const Deals = () => {
 
   const userRegionFlag = getRegionFlag(userRegion);
   const { currencyConfig } = useRegion();
+
+  const [disclaimerDismissed, setDisclaimerDismissed] = useState(
+    () => localStorage.getItem("filascope_deals_disclaimer_dismissed") === "true"
+  );
+  const [disclaimerHiding, setDisclaimerHiding] = useState(false);
+
+  const handleDismissDisclaimer = () => {
+    setDisclaimerHiding(true);
+    setTimeout(() => {
+      setDisclaimerDismissed(true);
+      localStorage.setItem("filascope_deals_disclaimer_dismissed", "true");
+    }, 300);
+  };
 
   const hasActiveFilters =
     selectedMaterials.length > 0 ||
@@ -228,26 +242,38 @@ const Deals = () => {
           </section>
         )}
 
-        {/* Price Disclaimer */}
-        <section className="px-6 md:px-10 pb-6">
-          <div className="max-w-[1600px] mx-auto">
-            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-amber-400">
-                    Price Disclaimer
-                  </h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Deal prices are captured periodically and may not reflect current store prices. 
-                    Sales and promotions change frequently. Always verify the price at the retailer 
-                    before purchasing.
-                  </p>
+        {/* Price Disclaimer — dismissible */}
+        {!disclaimerDismissed && (
+          <section className={cn(
+            "px-6 md:px-10 pb-6 transition-all duration-300",
+            disclaimerHiding ? "opacity-0 max-h-0 pb-0 overflow-hidden" : "opacity-100 max-h-40"
+          )}>
+            <div className="max-w-[1600px] mx-auto">
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg relative">
+                <div className="flex items-start gap-3 pr-8">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-amber-400">
+                      Price Disclaimer
+                    </h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Deal prices are captured periodically and may not reflect current store prices. 
+                      Sales and promotions change frequently. Always verify the price at the retailer 
+                      before purchasing.
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={handleDismissDisclaimer}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-amber-400/60 hover:text-amber-400 transition-colors"
+                  aria-label="Dismiss disclaimer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Deals Grid */}
         <section className="px-6 md:px-10 pb-16">
