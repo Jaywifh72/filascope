@@ -278,10 +278,10 @@ export function FAQSection(props: FAQSectionProps) {
       {filteredFAQs.length > 5 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="flex items-center gap-1.5 mx-auto mt-4 text-cyan-400 text-sm font-mono hover:text-cyan-300 cursor-pointer transition-colors"
+          className="flex items-center gap-1 mx-auto mt-4 text-sm text-cyan-400 hover:text-cyan-300 font-mono cursor-pointer py-2 transition-colors"
         >
-          {showAll ? 'Show fewer questions' : `Show all ${filteredFAQs.length} questions`}
-          {showAll ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {showAll ? 'Show fewer' : `Show all ${filteredFAQs.length} questions`}
+          {showAll ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
       )}
 
