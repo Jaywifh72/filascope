@@ -89,7 +89,7 @@ const BrandsHeroSection = ({
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-20 pb-8 sm:pt-24 sm:pb-10 md:pt-28 md:pb-12 lg:pt-32 lg:pb-16">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-20 pb-4 sm:pt-24 sm:pb-4 md:pt-28 md:pb-6 lg:pt-32 lg:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
