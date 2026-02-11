@@ -204,9 +204,6 @@ export function BrandHeroSection({
 
           {/* Trust Indicators */}
           <div className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2 pt-2">
-            {isVerified && (
-              <TrustIndicator icon={ShieldCheck} label="Verified Brand" />
-            )}
             <TrustIndicator icon={TrendingUp} label="Price Tracking" />
             <TrustIndicator icon={Database} label="Complete Catalog" />
           </div>
