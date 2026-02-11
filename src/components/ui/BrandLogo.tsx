@@ -36,19 +36,17 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
 
   if (!src || failed) {
     return (
-      <div
+      <span
         className={cn(
-          "rounded flex items-center justify-center font-semibold text-white flex-shrink-0",
-          sizes.container,
+          "text-sm font-semibold text-gray-300 text-center py-2 flex-shrink-0",
           className
         )}
-        style={{ backgroundColor: brandColor(brandName || "?") }}
         title={brandName}
         role="img"
         aria-label={`${brandName} logo`}
       >
-        {initial}
-      </div>
+        {brandName || "?"}
+      </span>
     );
   }
 
