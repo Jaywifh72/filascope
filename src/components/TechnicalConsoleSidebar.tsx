@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { 
   Thermometer, 
   Circle, 
@@ -701,6 +701,9 @@ export function TechnicalConsoleSidebar({
           </div>
         </TooltipProvider>
       </div>
+
+      {/* Quick Match CTA */}
+      <QuickMatchSidebarCTA />
     </aside>
   );
 }
@@ -782,3 +785,43 @@ function LiveSpecCell({ label, value, isLoading }: LiveSpecCellProps) {
 }
 
 export default TechnicalConsoleSidebar;
+
+/* Quick Match CTA for sidebar */
+const QUICK_MATCH_DISMISSED_KEY = "filascope_quickmatch_sidebar_dismissed";
+
+function QuickMatchSidebarCTA() {
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(QUICK_MATCH_DISMISSED_KEY);
+    if (!saved) setDismissed(false);
+  }, []);
+
+  const handleDismiss = () => {
+    localStorage.setItem(QUICK_MATCH_DISMISSED_KEY, "true");
+    setDismissed(true);
+  };
+
+  if (dismissed) return null;
+
+  return (
+    <div className="border-t border-border p-4">
+      <div className="relative bg-primary/5 border border-primary/20 rounded-lg p-3">
+        <button
+          onClick={handleDismiss}
+          className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Dismiss"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <p className="text-sm font-semibold text-foreground pr-5">Need help choosing?</p>
+        <p className="text-xs text-muted-foreground mt-1 mb-3">
+          Quick Match finds your perfect filament in 60 seconds
+        </p>
+        <Button variant="outline" size="sm" asChild className="w-full">
+          <Link to="/wizard">Start Quick Match →</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
