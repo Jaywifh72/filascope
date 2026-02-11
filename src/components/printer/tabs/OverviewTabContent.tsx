@@ -10,7 +10,8 @@ import {
   Package,
   AlertCircle,
   Ruler,
-  Zap
+  Zap,
+  ExternalLink
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -263,15 +264,14 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
             ))}
           </div>
         ) : (
-          <Card className="bg-muted/20 border-dashed">
-            <CardContent className="py-10 text-center">
-              <AlertCircle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">No accessories data available</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Check the manufacturer's website for included items
-              </p>
-            </CardContent>
-          </Card>
+          <div className="py-8 px-4 text-center border border-dashed border-gray-800 rounded-lg">
+            <Package className="mx-auto mb-2 text-gray-600" size={32} />
+            <p className="text-sm text-gray-500 font-mono">Accessory data coming soon</p>
+            <p className="text-xs text-gray-600 mt-1 inline-flex items-center gap-1">
+              Check the manufacturer's website for what's included
+              <ExternalLink size={10} className="text-gray-600" />
+            </p>
+          </div>
         )}
       </section>
     </div>
