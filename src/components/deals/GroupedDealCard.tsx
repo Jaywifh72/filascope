@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship, BadgeCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { toBrandSlug } from "@/utils/brandSlug";
+import { isVerifiedBrand } from "@/lib/verifiedBrands";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 /** Color-coded freshness badge for deal cards */
@@ -376,6 +377,16 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
               <span className="text-xs text-muted-foreground group-hover/brand:text-primary transition-colors">
                 {group.representativeDeal.vendor}
               </span>
+              {isVerifiedBrand(group.representativeDeal.vendor) && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <BadgeCheck className="h-3 w-3 text-primary/70 shrink-0" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    Verified brand
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </Link>
           )}
 
