@@ -57,6 +57,7 @@ import { extractColorFromText } from "@/lib/colorIntelligence";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
+import { MobileQuickMatchPrompt } from "@/components/MobileQuickMatchPrompt";
 
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
@@ -930,10 +931,7 @@ const Finder = () => {
         isLoading={isLoading || filamentCount === undefined}
       />
 
-      {/* Welcome Banner for New Visitors */}
-      <div className="max-w-7xl mx-auto px-4 pt-2 pb-2">
-        <WelcomeBanner />
-      </div>
+      {/* Quick Match banner moved to sidebar and mobile bottom sheet */}
 
       {/* Recently Viewed Section — filaments only on this route */}
       <div className="max-w-7xl mx-auto px-4 py-2">
@@ -1452,6 +1450,9 @@ const Finder = () => {
       )}
 
       {/* Old Floating Compare Bar - replaced by global CompareTray */}
+
+      {/* Mobile Quick Match Prompt */}
+      <MobileQuickMatchPrompt />
     </div>
   );
 };
