@@ -343,7 +343,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
 
           {/* Base Product Name (without color) */}
           <Link to={`/filament/${group.representativeDeal.id}`}>
-            <h3 className="font-medium text-sm mb-3 line-clamp-2 min-h-[40px] hover:text-primary transition-colors">
+            <h3 className="font-medium text-sm mb-3 line-clamp-2 h-[40px] overflow-hidden hover:text-primary transition-colors" title={group.baseName}>
               {group.baseName}
             </h3>
           </Link>
