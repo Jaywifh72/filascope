@@ -228,10 +228,10 @@ export function getBaseProductName(title: string): string {
   if (dashMatch) {
     const beforeDash = dashMatch[1].trim();
     const afterDash = dashMatch[2].trim();
-    const startsWithVariant = PRODUCT_VARIANT_TERMS.some(term => 
-      afterDash.toLowerCase().startsWith(term.toLowerCase())
+    const isExactVariant = PRODUCT_VARIANT_TERMS.some(term => 
+      afterDash.toLowerCase().trim() === term.toLowerCase()
     );
-    if (startsWithVariant) {
+    if (isExactVariant) {
       return normalizedTitle
         .replace(/\s+Bambu\s+AMS\s+Compatible\s*$/i, '')
         .replace(/\s+AMS\s+Compatible\s*$/i, '')
@@ -252,8 +252,8 @@ export function getBaseProductName(title: string): string {
 }
 
 function isProductVariant(term: string): boolean {
-  const termLower = term.toLowerCase();
-  return PRODUCT_VARIANT_TERMS.some(v => termLower.includes(v.toLowerCase()));
+  const termLower = term.toLowerCase().trim();
+  return PRODUCT_VARIANT_TERMS.some(v => termLower === v.toLowerCase());
 }
 
 export function getColorFromTitle(title: string, baseName: string): string | null {
