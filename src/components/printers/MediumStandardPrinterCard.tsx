@@ -174,12 +174,18 @@ export default function MediumStandardPrinterCard({
           <div className="flex-shrink-0 w-[100px] sm:w-full">
             {/* Brand Logo - Hidden on mobile, shown on desktop */}
             <div className="hidden sm:flex justify-center">
-              <BrandLogo
-                src={getBrandLogo(printer.brand?.brand || null)}
-                brandName={printer.brand?.brand || "Brand"}
-                size="lg"
-                className="h-12 opacity-60 group-hover:opacity-90 transition-opacity duration-300"
-              />
+              {getBrandLogo(printer.brand?.brand || null) ? (
+                <BrandLogo
+                  src={getBrandLogo(printer.brand?.brand || null)}
+                  brandName={printer.brand?.brand || "Brand"}
+                  size="lg"
+                  className="h-12 opacity-60 group-hover:opacity-90 transition-opacity duration-300"
+                />
+              ) : (
+                <span className="text-sm font-semibold text-gray-300 text-center py-2">
+                  {printer.brand?.brand || "Brand"}
+                </span>
+              )}
             </div>
 
             {/* Feature Badges - Hidden on mobile */}
