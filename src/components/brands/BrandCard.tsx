@@ -63,9 +63,12 @@ const BrandCard = ({
     });
   }
 
+  const isEmpty = productLineCount === 0 && variantCount === 0;
+
   return (
+
     <div
-      className="flex flex-col min-h-[280px] border border-border rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
+      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border hover:border-primary/50'}`}
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
@@ -108,12 +111,16 @@ const BrandCard = ({
 
         {/* Key Stats Row */}
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>
-            {productLineCount} {productLineCount === 1 ? 'product' : 'products'}
-            {variantCount > productLineCount && (
-              <span className="text-muted-foreground/60"> ({variantCount} {variantCount === 1 ? 'variant' : 'variants'})</span>
-            )}
-          </span>
+          {isEmpty ? (
+            <span className="text-xs text-gray-500 italic font-mono">Coming soon</span>
+          ) : (
+            <span>
+              {productLineCount} {productLineCount === 1 ? 'product' : 'products'}
+              {variantCount > productLineCount && (
+                <span className="text-muted-foreground/60"> ({variantCount} {variantCount === 1 ? 'variant' : 'variants'})</span>
+              )}
+            </span>
+          )}
           {averageRating && averageRating > 0 && (
             <span className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
@@ -171,7 +178,7 @@ const BrandCard = ({
             handleClick();
           }}
         >
-          View Filaments
+          {isEmpty ? 'Notify Me' : 'View Filaments'}
           <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
         </Button>
       </div>
