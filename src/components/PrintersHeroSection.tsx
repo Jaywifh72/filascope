@@ -75,14 +75,17 @@ const PrintersHeroSection = ({
               </Button>
               
               {/* Secondary - Search Input with History */}
-              <div className="w-full sm:w-[260px] md:w-[300px]">
+              <div className="w-full sm:w-[260px] md:w-[300px] relative">
                 <SearchInputWithHistory
                   value={searchTerm}
                   onChange={onSearchChange}
-                  placeholder="Search hardware..."
+                  placeholder="Search by printer name, brand, or build size..."
                   context="printers"
                   className="h-12 sm:h-14"
                 />
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs font-mono bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700 pointer-events-none">
+                  /
+                </kbd>
               </div>
             </div>
           </div>
