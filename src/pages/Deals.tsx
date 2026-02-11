@@ -340,15 +340,26 @@ const Deals = () => {
               </div>
             )}
 
-            {/* CTA */}
+            {/* End-of-results section */}
             {groupedDeals.length > 0 && (
-              <div className="text-center mt-12">
-                <Button variant="outline" size="lg" asChild>
-                  <Link to="/finder" className="gap-2">
-                    Browse All Filaments
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
+              <div className="max-w-2xl mx-auto my-8 bg-card/50 border border-border/30 rounded-xl p-8 text-center">
+                <Tag className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-foreground">That's all the deals for today!</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  New deals are added regularly. Set up alerts to never miss a great price.
+                </p>
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <DealNotificationSignup
+                    availableMaterials={availableMaterials}
+                    availableBrands={availableBrands}
+                  />
+                  <Button variant="outline" asChild>
+                    <Link to="/finder" className="gap-2">
+                      Browse All Filaments
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             )}
           </div>
