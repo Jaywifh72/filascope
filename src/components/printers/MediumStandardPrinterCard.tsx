@@ -156,7 +156,6 @@ export default function MediumStandardPrinterCard({
             rounded-xl 
             p-3 sm:p-6 
             transition-all duration-200 ease-out
-            hover:scale-[1.01]
             hover:shadow-lg hover:shadow-cyan-500/5
             cursor-pointer
             h-full
