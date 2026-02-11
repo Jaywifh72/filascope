@@ -105,7 +105,7 @@ export default function SmallDeemphasizedPrinterCard({
           </div>
 
           {/* Printer Image - Smaller, grayscale */}
-          <div className="relative aspect-[4/3] mb-3 flex items-center justify-center mt-6">
+          <div className="relative aspect-[4/3] mb-3 flex items-center justify-center mt-6 bg-[#0d1117] rounded-lg overflow-hidden">
             {productImage ? (
               <img 
                 src={productImage} 
