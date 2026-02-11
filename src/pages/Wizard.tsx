@@ -213,9 +213,9 @@ const Wizard = () => {
         <meta property="og:title" content="Quick Match — Find Your Perfect Filament in 60 Seconds | FilaScope" />
         <meta property="og:description" content="Find your perfect 3D printing filament in 60 seconds. Answer 5 questions about your project, printer, and budget for personalized recommendations." />
       </Helmet>
-      <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col">
-      <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
-        <Card ref={wizardCardRef} className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col">
+      <div className="min-h-screen py-4 sm:py-8 md:py-12 px-3 sm:px-6 lg:px-8 flex flex-col" style={{ background: 'radial-gradient(ellipse at center, rgba(0,229,204,0.03) 0%, transparent 70%)' }}>
+      <div className="max-w-2xl mx-auto w-full flex flex-col">
+        <Card ref={wizardCardRef} className="p-4 sm:p-6 md:p-8 min-h-0 flex flex-col">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -234,6 +234,7 @@ const Wizard = () => {
                 style={{ width: `${((currentStep + 1) / questions.length) * 100}%` }}
               />
             </div>
+            <p className="text-xs text-gray-500 font-mono uppercase tracking-wider mt-3">Step {currentStep + 1} of {questions.length} — {currentQuestion.id.replace(/_/g, ' ')}</p>
           </div>
 
           {/* Question */}
@@ -254,7 +255,7 @@ const Wizard = () => {
                     <RadioGroupItem value={option.value} id={option.value} className="sr-only peer" />
                     <Label
                       htmlFor={option.value}
-                      className="flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 border-border hover:border-primary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all min-h-[56px] touch-manipulation"
+                      className="flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 border-border hover:border-cyan-500/30 hover:bg-cyan-950/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all duration-200 min-h-[56px] touch-manipulation"
                     >
                       {option.icon && (
                         <span className="text-xl sm:text-2xl flex-shrink-0">{option.icon}</span>
@@ -281,10 +282,10 @@ const Wizard = () => {
                   return (
                     <div
                       key={option.value}
-                      className={`flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all min-h-[56px] touch-manipulation ${
+                      className={`flex items-start gap-3 sm:gap-4 cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 min-h-[56px] touch-manipulation ${
                         isChecked 
                           ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50'
+                          : 'border-border hover:border-cyan-500/30 hover:bg-cyan-950/10'
                       }`}
                       onClick={() => handleMultiAnswer(option.value, !isChecked)}
                     >
