@@ -152,7 +152,7 @@ function DealCardImage({
       />
 
       {showFallbackPlaceholder ? (
-        <div className="flex flex-col items-center gap-3 text-center p-4">
+        <div className="relative flex flex-col items-center justify-center text-center p-4 w-full h-full">
           {colorHex ? (
             <div
               className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center"
@@ -175,10 +175,16 @@ function DealCardImage({
               <Package size={32} className="text-muted-foreground/40" />
             </div>
           )}
-          {material && (
-            <span className="text-base font-bold tracking-wider text-muted-foreground/70 uppercase">
-              {material}
-            </span>
+          {/* Subtle brand logo watermark in top-right corner */}
+          {vendor && getBrandLogoUrl(vendor, 48) && (
+            <img
+              src={getBrandLogoUrl(vendor, 48)!}
+              alt=""
+              className="absolute top-2 right-2 h-5 w-auto max-w-[48px] object-contain opacity-40"
+              loading="lazy"
+              decoding="async"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
           )}
         </div>
       ) : (
