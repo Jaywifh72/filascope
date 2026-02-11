@@ -121,7 +121,7 @@ function DealCardImage({
       style={
         showFallbackPlaceholder
           ? {
-              background: `linear-gradient(135deg, hsl(${accentHue}, 20%, 12%) 0%, hsl(${accentHue}, 15%, 8%) 100%)`,
+              background: `radial-gradient(circle at center, ${colorHex ? colorHex + '15' : `hsl(${accentHue}, 30%, 15%)`}, transparent 70%), linear-gradient(135deg, hsl(${accentHue}, 20%, 10%) 0%, hsl(${accentHue}, 15%, 6%) 100%)`,
             }
           : undefined
       }
@@ -132,13 +132,11 @@ function DealCardImage({
         style={{
           backgroundColor: (() => {
             if (!accentColor) return undefined;
-            // Parse rgb/hex to get luminance
             const match = accentColor.match(/(\d+)/g);
             if (match && match.length >= 3) {
               const [r, g, b] = match.map(Number);
               const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
               if (luminance < 0.15) {
-                // Mix with 30% white to ensure visibility
                 const br = Math.round(r + (255 - r) * 0.3);
                 const bg = Math.round(g + (255 - g) * 0.3);
                 const bb = Math.round(b + (255 - b) * 0.3);
@@ -151,25 +149,32 @@ function DealCardImage({
       />
 
       {showFallbackPlaceholder ? (
-        <div className="flex flex-col items-center gap-2 text-center p-4">
+        <div className="flex flex-col items-center gap-3 text-center p-4">
           {colorHex ? (
             <div
-              className="w-14 h-14 rounded-full border-2 border-white/10 shadow-lg"
-              style={{ backgroundColor: colorHex }}
-            />
+              className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center"
+              style={{
+                background: `radial-gradient(circle at 35% 35%, ${colorHex}cc, ${colorHex})`,
+                boxShadow: `0 0 20px ${colorHex}30, inset 0 -2px 6px rgba(0,0,0,0.3)`,
+                border: `2px solid ${colorHex}60`,
+              }}
+            >
+              {material && (
+                <span className="text-[10px] font-bold tracking-wider uppercase drop-shadow-md"
+                  style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+                >
+                  {material.slice(0, 6)}
+                </span>
+              )}
+            </div>
           ) : (
-            <div className="w-14 h-14 rounded-lg bg-gray-900/50 flex items-center justify-center">
-              <Package size={48} className="text-gray-700" />
+            <div className="w-16 h-16 rounded-full bg-muted/20 border border-border/30 flex items-center justify-center">
+              <Package size={32} className="text-muted-foreground/40" />
             </div>
           )}
           {material && (
-            <span className="text-xs font-bold tracking-wider text-muted-foreground/80 uppercase">
+            <span className="text-base font-bold tracking-wider text-muted-foreground/70 uppercase">
               {material}
-            </span>
-          )}
-          {vendor && (
-            <span className="text-[10px] font-medium text-muted-foreground/50 truncate max-w-[80%]">
-              {vendor}
             </span>
           )}
         </div>
