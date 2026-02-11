@@ -63,8 +63,8 @@ function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
         <span className="text-sm text-gray-400">{label}</span>
         {isNA ? (
           <div className="flex items-center gap-1 mt-1">
-            <span className="text-sm italic font-mono text-gray-500">N/A</span>
-            <span title="This specification hasn't been added yet"><HelpCircle size={12} className="text-gray-600" /></span>
+            <span className="text-sm italic font-mono text-gray-600">N/A</span>
+            <span title="This specification hasn't been added yet"><HelpCircle size={10} className="text-gray-700" /></span>
           </div>
         ) : (
           <div className="text-base font-medium text-white leading-tight mt-1">{value}</div>
