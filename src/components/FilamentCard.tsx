@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Lightbulb,
   Printer,
+  Award,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -753,10 +754,11 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <div 
-                className="bg-primary/10 text-primary text-sm font-semibold px-2.5 py-0.5 rounded-full cursor-help"
+                className="bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-sm font-semibold px-2.5 py-0.5 rounded-full cursor-help inline-flex items-center gap-1"
                 role="img"
                 aria-label={`FilaScore rating: ${overallScore.toFixed(1)} out of 10`}
               >
+                <Award className="w-3.5 h-3.5" />
                 {overallScore.toFixed(1)}
               </div>
             </HoverCardTrigger>

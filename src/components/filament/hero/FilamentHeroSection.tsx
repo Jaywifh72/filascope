@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, Lightbulb, Star, Info } from 'lucide-react';
+import { ExternalLink, Package, Zap, Lightbulb, Star, Info, Award } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -199,16 +199,9 @@ export function FilamentHeroSection({
                   <HoverCardTrigger asChild>
                     <Badge
                       variant="outline"
-                      className={cn(
-                        "text-xs px-2.5 py-1 cursor-help gap-1.5",
-                        filaScore >= 8
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                          : filaScore >= 5
-                          ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                          : "bg-red-500/10 border-red-500/30 text-red-400"
-                      )}
+                      className="text-sm px-2.5 py-1 cursor-help gap-1.5 bg-cyan-500/15 border-cyan-500/30 text-cyan-400 font-semibold rounded-full"
                     >
-                      <Star className="w-3 h-3 fill-current" />
+                      <Award className="w-3.5 h-3.5" />
                       FilaScore {filaScore.toFixed(1)}
                     </Badge>
                   </HoverCardTrigger>
