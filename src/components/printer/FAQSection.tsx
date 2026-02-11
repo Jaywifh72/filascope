@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FAQ {
@@ -159,12 +159,20 @@ const CATEGORIES = ['Getting Started', 'Materials & Printing', 'Maintenance & Su
 export function FAQSection(props: FAQSectionProps) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
   
   const faqs = generateFAQs(props);
   
   const filteredFAQs = activeCategory === 'All'
     ? faqs
     : faqs.filter(faq => faq.category === activeCategory);
+
+  const visibleFAQs = showAll ? filteredFAQs : filteredFAQs.slice(0, 5);
+
+  const handleCategoryChange = (cat: string) => {
+    setActiveCategory(cat);
+    setShowAll(false);
+  };
 
   const toggleFAQ = (id: string) => {
     setExpandedItems(prev => {
@@ -188,11 +196,11 @@ export function FAQSection(props: FAQSectionProps) {
       </p>
 
       {/* Category Tabs */}
-      <div className="flex flex-wrap justify-center gap-3 mb-8">
+      <div className="flex overflow-x-auto whitespace-nowrap gap-2 pb-2 justify-start md:justify-center mb-8 scrollbar-none">
         <button
-          onClick={() => setActiveCategory('All')}
+          onClick={() => handleCategoryChange('All')}
           className={cn(
-            "px-4 py-2.5 rounded-lg text-sm font-semibold transition-all",
+            "flex-shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all",
             activeCategory === 'All'
               ? "bg-primary/15 border border-primary/50 text-primary"
               : "bg-card/50 border border-border text-muted-foreground hover:bg-card hover:border-primary/30"
@@ -203,9 +211,9 @@ export function FAQSection(props: FAQSectionProps) {
         {CATEGORIES.map(category => (
           <button
             key={category}
-            onClick={() => setActiveCategory(category)}
+            onClick={() => handleCategoryChange(category)}
             className={cn(
-              "px-4 py-2.5 rounded-lg text-sm font-semibold transition-all",
+              "flex-shrink-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all",
               activeCategory === category
                 ? "bg-primary/15 border border-primary/50 text-primary"
                 : "bg-card/50 border border-border text-muted-foreground hover:bg-card hover:border-primary/30"
@@ -218,7 +226,7 @@ export function FAQSection(props: FAQSectionProps) {
 
       {/* FAQ List */}
       <div className="flex flex-col gap-3">
-        {filteredFAQs.map(faq => {
+        {visibleFAQs.map(faq => {
           const isExpanded = expandedItems.has(faq.id);
           
           return (
@@ -228,7 +236,7 @@ export function FAQSection(props: FAQSectionProps) {
                 aria-expanded={isExpanded}
                 aria-controls={`faq-answer-${faq.id}`}
                 className={cn(
-                  "w-full min-h-[56px] md:min-h-[60px] px-4 md:px-5 py-4 flex items-center justify-between gap-4 text-left transition-all",
+                  "w-full min-h-[56px] md:min-h-[60px] px-4 md:px-5 py-3 flex items-center justify-between gap-4 text-left transition-all",
                   isExpanded
                     ? "bg-primary/8 border border-primary/30 rounded-t-[10px]"
                     : "bg-card/50 border border-border rounded-[10px] hover:bg-card hover:border-primary/30"
@@ -255,7 +263,7 @@ export function FAQSection(props: FAQSectionProps) {
                     : "max-h-0 opacity-0"
                 )}
               >
-                <div className="px-4 md:px-5 py-4 md:py-5 bg-primary/5 border border-t-0 border-primary/30 rounded-b-[10px]">
+                <div className="px-4 md:px-5 py-3 md:py-4 bg-primary/5 border border-t-0 border-primary/30 rounded-b-[10px]">
                   <div 
                     className="text-[15px] font-medium text-muted-foreground leading-relaxed [&_strong]:text-foreground [&_strong]:font-bold [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_li]:my-1.5 [&_a]:text-primary [&_a:hover]:underline"
                     dangerouslySetInnerHTML={{ __html: faq.answer }}
@@ -266,6 +274,16 @@ export function FAQSection(props: FAQSectionProps) {
           );
         })}
       </div>
+
+      {filteredFAQs.length > 5 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="flex items-center gap-1.5 mx-auto mt-4 text-cyan-400 text-sm font-mono hover:text-cyan-300 cursor-pointer transition-colors"
+        >
+          {showAll ? 'Show fewer questions' : `Show all ${filteredFAQs.length} questions`}
+          {showAll ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      )}
 
       {/* CTA Footer */}
       <div className="mt-12 pt-8 border-t border-border flex flex-col items-center gap-4">
