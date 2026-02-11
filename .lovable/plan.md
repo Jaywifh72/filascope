@@ -1,46 +1,63 @@
 
-# Fix: Printer Detail Page Image Loading
 
-## Problem
-The product image appears as an empty dark rectangle on initial load because the image display is gated behind an async validation step. The code flow is:
-1. Printer data loads, `productImages` is set from `scraped_data`
-2. An async `validateImages()` runs, loading each image in a hidden `Image()` element
-3. Only after validation completes does `validImages` get populated
-4. `displayImages = productImages.filter(img => validImages.has(img))` -- this is empty until step 3 finishes
+# Improve FAQ Section Vertical Footprint
 
-So the gallery receives zero images until validation finishes, showing nothing.
+## Changes to `src/components/printer/FAQSection.tsx`
 
-## Solution
+### 1. Add "Show all / Show fewer" toggle (limit to 5 visible)
+- Add a `showAll` state (default `false`)
+- Slice `filteredFAQs` to first 5 when `showAll` is false
+- Render a toggle button below the list: "Show all X questions" with ChevronDown / "Show fewer questions" with ChevronUp
+- Button styled as `text-cyan-400 text-sm font-mono hover:text-cyan-300 cursor-pointer` with inline icon
+- Only show the button when `filteredFAQs.length > 5`
+- Reset `showAll` to `false` when category changes
 
-### 1. Show images immediately, validate in background (`src/pages/PrinterDetail.tsx`)
-- Change `displayImages` logic: use `productImages` directly when `checkedImages` is empty (validation not yet complete), and only filter once validation has run
-- This ensures images appear immediately on mount
+### 2. Reduce vertical padding on FAQ items
+- Change `py-4` to `py-3` on the FAQ trigger button (line 231)
+- Change `py-4 md:py-5` to `py-3 md:py-4` on the answer container (line 258)
 
-```
-const displayImages = checkedImages.size === 0
-  ? productImages
-  : productImages.filter(img => validImages.has(img));
-```
+### 3. Make category pills horizontally scrollable
+- Change the category container (line 191) from `flex flex-wrap justify-center gap-3` to `flex overflow-x-auto whitespace-nowrap gap-2 pb-2 justify-start` (or `md:justify-center`)
+- Add `flex-shrink-0` on each pill button so they don't compress
+- Hide scrollbar with a utility class for cleanliness
 
-### 2. Improve ZoomImage loading/error states (`src/components/ui/zoom-image.tsx`)
-- Replace the generic Skeleton loader with a styled pulsing placeholder: `bg-gray-800 animate-pulse rounded-lg` matching the container dimensions
-- Add a 10-second timeout: if the image hasn't loaded after 10 seconds, trigger the error state
-- Replace the error state with a centered Printer icon (size 64, text-gray-600) and "Image not available" text (text-xs text-gray-500 font-mono mt-2)
+### What stays unchanged
+- FAQ question/answer text and HTML content
+- Individual accordion expand/collapse behavior
+- "Still have questions?" / "Contact Our Support Team" CTA footer
+- Category names and filtering logic
 
 ### Technical Details
 
-**File: `src/pages/PrinterDetail.tsx`** (line ~505)
-- Change the `displayImages` computation to show images before validation completes
+**New state:**
+```tsx
+const [showAll, setShowAll] = useState(false);
+```
 
-**File: `src/components/ui/zoom-image.tsx`**
-- Add a `useEffect` with a 10-second `setTimeout` that sets `isError = true` if `isLoaded` is still false
-- Replace Skeleton placeholder (lines 60-64) with `bg-gray-800 animate-pulse rounded-lg` div
-- Replace error state (lines 126-130) with Printer icon + "Image not available" text
+**Reset on category change:**
+```tsx
+const handleCategoryChange = (cat: string) => {
+  setActiveCategory(cat);
+  setShowAll(false);
+};
+```
 
-### What stays unchanged
-- Image container dimensions
-- Breadcrumb, brand name, title, subtitle
-- Spec badges row (Build Volume, Speed, Nozzle Temp, Connectivity)
-- Data Quality indicator
-- Right sidebar panel
-- `loading="eager"` and `fetchpriority="high"` already set on the img element
+**Display logic:**
+```tsx
+const visibleFAQs = showAll ? filteredFAQs : filteredFAQs.slice(0, 5);
+```
+
+**Toggle button (after FAQ list):**
+```tsx
+{filteredFAQs.length > 5 && (
+  <button
+    onClick={() => setShowAll(!showAll)}
+    className="flex items-center gap-1.5 mx-auto mt-4 text-cyan-400 text-sm font-mono hover:text-cyan-300 cursor-pointer transition-colors"
+  >
+    {showAll ? 'Show fewer questions' : `Show all ${filteredFAQs.length} questions`}
+    {showAll ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+  </button>
+)}
+```
+
+**Imports:** Add `ChevronUp` from `lucide-react`.
