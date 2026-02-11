@@ -20,8 +20,8 @@ function DealFreshnessBadge({ lastScrapedAt, freshnessText }: { lastScrapedAt: s
     if (!lastScrapedAt) return { text: 'text-muted-foreground', border: 'border-muted', bg: 'bg-muted/30' };
     const days = differenceInDays(new Date(), new Date(lastScrapedAt));
     if (days < 3) return { text: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' };
-    if (days < 14) return { text: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' };
-    if (days < 30) return { text: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' };
+    if (days < 21) return { text: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' };
+    if (days < 45) return { text: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' };
     return { text: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10' };
   };
 
@@ -227,6 +227,10 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const freshnessText = group.lastScrapedAt
     ? formatDistanceToNow(new Date(group.lastScrapedAt), { addSuffix: false })
     : null;
+  const staleDays = group.lastScrapedAt
+    ? differenceInDays(new Date(), new Date(group.lastScrapedAt))
+    : 0;
+  const isVeryStale = staleDays >= 45;
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -286,7 +290,8 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
       <Card
         className={cn(
           "relative h-full overflow-hidden transition-all duration-200 flex flex-col",
-          "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
+          "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50",
+          isVeryStale && "opacity-80"
         )}
       >
         {/* Discount Badge — capped at 60%, shows "Great Deal" for unusual values */}
