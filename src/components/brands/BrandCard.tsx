@@ -65,7 +65,7 @@ const BrandCard = ({
 
   return (
     <div
-      className="border border-border rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
+      className="flex flex-col min-h-[280px] border border-border rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50"
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
@@ -100,7 +100,7 @@ const BrandCard = ({
       </div>
 
       {/* Bottom Section - Info Area */}
-      <div className="bg-card p-4 space-y-2.5">
+      <div className="flex-1 flex flex-col bg-card p-4 space-y-2.5">
         {/* Brand Name */}
         <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
           {name}
@@ -127,18 +127,20 @@ const BrandCard = ({
 
         {/* Material Badges */}
         {topMaterials.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {topMaterials.slice(0, 4).map((material) => (
-              <span
-                key={material}
-                className="px-2 py-0.5 text-xs rounded bg-muted text-muted-foreground"
-              >
-                {material}
-              </span>
-            ))}
+          <div>
+            <div className="flex flex-wrap gap-1.5 max-h-[28px] overflow-hidden">
+              {topMaterials.slice(0, 4).map((material) => (
+                <span
+                  key={material}
+                  className="px-2 py-0.5 text-xs rounded bg-muted text-muted-foreground"
+                >
+                  {material}
+                </span>
+              ))}
+            </div>
             {topMaterials.length > 4 && (
-              <span className="px-2 py-0.5 text-xs rounded bg-muted text-muted-foreground/60">
-                +{topMaterials.length - 4}
+              <span className="text-[10px] text-gray-500 font-mono mt-1 inline-block">
+                +{topMaterials.length - 4} more
               </span>
             )}
           </div>
@@ -146,7 +148,7 @@ const BrandCard = ({
 
         {/* Feature Badges */}
         {featureBadges.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
             {featureBadges.slice(0, 2).map((badge) => (
               <span
                 key={badge.label}
@@ -163,7 +165,7 @@ const BrandCard = ({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full mt-2 text-primary hover:text-primary hover:bg-primary/10 group/btn"
+          className="w-full mt-auto text-primary hover:text-primary hover:bg-primary/10 group/btn"
           onClick={(e) => {
             e.stopPropagation();
             handleClick();
