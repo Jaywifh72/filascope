@@ -138,7 +138,7 @@ const Deals = () => {
             </p>
 
             {/* Stats Row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mt-3 mb-2">
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mt-3">
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-green-400" />
                 <span>
@@ -153,7 +153,10 @@ const Deals = () => {
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span>Prices may vary</span>
               </div>
-              <span className="hidden md:inline text-muted-foreground/50">•</span>
+            </div>
+
+            {/* Deal Alerts CTA */}
+            <div className="flex justify-center mt-3 mb-2">
               <DealNotificationSignup
                 availableMaterials={availableMaterials}
                 availableBrands={availableBrands}
