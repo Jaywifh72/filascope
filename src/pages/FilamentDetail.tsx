@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Printer } from "lucide-react";
+import { ExternalLink, Printer, ChevronLeft } from "lucide-react";
 import { DetailBreadcrumb } from "@/components/navigation/DetailBreadcrumb";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -53,11 +53,39 @@ import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
 import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
 import { useBrowseHistory } from "@/hooks/useBrowseHistory";
-import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
+/** Shows "← Back to results" only when user navigated from a listing/search page */
+function BackToResults() {
+  const navigate = useNavigate();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    // Check if referrer is an internal listing route
+    const referrer = document.referrer;
+    if (!referrer) return;
+    try {
+      const url = new URL(referrer);
+      const isInternal = url.origin === window.location.origin;
+      const isListingRoute = url.pathname === '/' || url.pathname.startsWith('/brands') || url.pathname.startsWith('/materials') || url.pathname.startsWith('/compare');
+      if (isInternal && isListingRoute) setShow(true);
+    } catch {}
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <button
+      onClick={() => navigate(-1)}
+      className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-1 transition-colors"
+    >
+      <ChevronLeft className="h-3.5 w-3.5" />
+      Back to results
+    </button>
+  );
+}
 const FilamentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -775,6 +803,7 @@ const FilamentDetail = () => {
           />
         )}
 
+        <BackToResults />
         <DetailBreadcrumb
           segments={[
             { label: "Filaments", href: "/" },
@@ -890,16 +919,6 @@ const FilamentDetail = () => {
               )}
             </FilamentTabContent>
 
-            {/* Recently Viewed Section */}
-            <div className="mt-8">
-              <RecentlyViewedSection
-                limit={5}
-                excludeId={displayFilament.id}
-                showClear={false}
-                compact
-                title="Recently Viewed"
-              />
-            </div>
 
             {/* Similar Filaments Section - Below tabs, visible on all tabs */}
             <SimilarFilamentsSection
