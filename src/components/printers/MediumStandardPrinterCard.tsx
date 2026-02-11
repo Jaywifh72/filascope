@@ -183,7 +183,7 @@ export default function MediumStandardPrinterCard({
             </div>
 
             {/* Printer Image - Using OptimizedImage with consistent aspect ratio */}
-            <div className={`relative aspect-square w-full h-auto sm:h-[200px] sm:aspect-auto flex items-center justify-center ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
+            <div className={`relative aspect-square w-full h-auto sm:h-[200px] sm:aspect-auto flex items-center justify-center bg-gray-900/30 rounded-lg ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
               <OptimizedImage
                 src={productImage}
                 alt={`${printer.brand?.brand} ${printer.model_name}`}
@@ -191,7 +191,7 @@ export default function MediumStandardPrinterCard({
                 aspectRatio="auto"
                 objectFit="contain"
                 width={400}
-                fallback={<PrinterIcon className="h-12 w-12 sm:h-20 sm:w-20 text-white/15" />}
+                fallback={<PrinterIcon size={48} className="text-gray-700 opacity-50" />}
               />
             </div>
           </div>
