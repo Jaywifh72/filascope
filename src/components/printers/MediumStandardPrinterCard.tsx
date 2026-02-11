@@ -257,10 +257,10 @@ export default function MediumStandardPrinterCard({
               
               {/* Price disclaimer */}
               {!printer.discontinued && price && (
-                <div className="flex items-center text-[10px] text-gray-600 italic">
-                  <ExternalLinkIcon size={10} className="text-gray-600 mr-0.5" />
+                <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex items-center text-[10px] text-gray-600 italic cursor-pointer hover:text-gray-400 transition-colors">
+                  <ExternalLinkIcon size={10} className="mr-0.5" />
                   <span>Verify at store</span>
-                </div>
+                </Link>
               )}
             </div>
 
