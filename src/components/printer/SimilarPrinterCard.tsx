@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Star, Check, ArrowRight, Eye, Zap, Box, Palette, Thermometer, DollarSign, TrendingUp, Award, Layers } from "lucide-react";
+import { Star, Check, ArrowRight, Eye, Zap, Box, Palette, Thermometer, DollarSign, TrendingUp, Award, Layers, Printer as PrinterIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SimilarityReason } from "@/hooks/useSimilarPrinters";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -228,18 +228,25 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
       )}
 
       {/* Printer Image */}
-      <div className="w-[100px] md:w-[120px] h-[100px] md:h-[120px] bg-white/5 rounded-lg p-2 md:p-3 mb-2 md:mb-3 flex items-center justify-center">
+      <div className={cn(
+        "w-[100px] md:w-[120px] h-[100px] md:h-[120px] rounded-lg p-2 md:p-3 mb-2 md:mb-3 flex items-center justify-center",
+        printer.imageUrl ? "bg-white/5" : "bg-gray-900/30"
+      )}>
         {printer.imageUrl ? (
           <img
             src={printer.imageUrl}
             alt={`${printer.brand} ${printer.model}`}
             className="max-w-full max-h-full object-contain"
+            loading={isCurrent ? "eager" : "lazy"}
+            fetchPriority={isCurrent ? "high" : undefined}
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder.svg";
             }}
           />
         ) : (
-          <Box className="h-10 md:h-12 w-10 md:w-12 text-muted-foreground/30" />
+          <div className="h-[80px] flex items-center justify-center">
+            <PrinterIcon size={36} className="text-gray-600" />
+          </div>
         )}
       </div>
 
