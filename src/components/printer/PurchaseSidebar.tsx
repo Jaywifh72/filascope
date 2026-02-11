@@ -74,26 +74,33 @@ export function PurchaseSidebar({
       >
         {/* Price Section */}
         <div>
-          <PriceSection
-            price={displayPrice}
-            msrp={displayMsrp}
-            trend={isLivePrice ? { 
-              direction: 'down' as const, 
-              percentage: liveCompareAtPrice && displayPrice 
-                ? Math.round((1 - displayPrice / liveCompareAtPrice) * 100) 
-                : undefined, 
-              period: 'sale' 
-            } : undefined}
-            isDiscontinued={printer.discontinued}
-            compact
-            pricesLastUpdatedAt={printer.prices_last_updated_at}
-            priceSource={printer.price_source}
-            priceConfidence={printer.price_confidence as PriceConfidence | null}
-            isRegionalPrice
-            isConverted={isConverted}
-            originalPrice={originalPrice}
-            originalCurrency={originalCurrency}
-          />
+          {displayPrice || displayMsrp ? (
+            <PriceSection
+              price={displayPrice}
+              msrp={displayMsrp}
+              trend={isLivePrice ? { 
+                direction: 'down' as const, 
+                percentage: liveCompareAtPrice && displayPrice 
+                  ? Math.round((1 - displayPrice / liveCompareAtPrice) * 100) 
+                  : undefined, 
+                period: 'sale' 
+              } : undefined}
+              isDiscontinued={printer.discontinued}
+              compact
+              pricesLastUpdatedAt={printer.prices_last_updated_at}
+              priceSource={printer.price_source}
+              priceConfidence={printer.price_confidence as PriceConfidence | null}
+              isRegionalPrice
+              isConverted={isConverted}
+              originalPrice={originalPrice}
+              originalCurrency={originalCurrency}
+            />
+          ) : !printer.discontinued ? (
+            <div className="space-y-1">
+              <span className="text-sm text-gray-400 font-mono italic">Price not listed</span>
+              <p className="text-xs text-gray-500">Check manufacturer's site for current pricing</p>
+            </div>
+          ) : null}
         </div>
 
         {/* Fallback Region Warning */}
@@ -109,7 +116,6 @@ export function PurchaseSidebar({
                   Ships from {shipsFromCountry}
                 </span>
               )}
-              {/* International shipping notice */}
               <span className="text-amber-400/60 text-[10px]">
                 International shipping • Duties may apply
               </span>
@@ -133,6 +139,9 @@ export function PurchaseSidebar({
             isDiscontinued={printer.discontinued}
             stackedButtons
           />
+          {!displayPrice && !displayMsrp && !printer.discontinued && (
+            <p className="text-[10px] text-gray-600 text-center mt-1">Opens manufacturer website</p>
+          )}
         </div>
 
         {/* Mark as Purchased */}
