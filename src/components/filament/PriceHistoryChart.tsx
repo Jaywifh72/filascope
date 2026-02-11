@@ -87,13 +87,10 @@ export function PriceHistoryChart({
   if (!prices || prices.length === 0) {
     return (
       <div className="space-y-4">
-        {/* Header */}
         <div>
           <h3 className="text-lg font-semibold text-foreground">Price History</h3>
           <p className="text-sm text-muted-foreground">Track price trends over time</p>
         </div>
-        
-        {/* Empty state */}
         <div className="py-10 text-center bg-muted/10 rounded-lg border border-dashed border-border">
           <Clock className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
           <p className="font-medium text-foreground">No Price History Yet</p>
@@ -104,6 +101,8 @@ export function PriceHistoryChart({
       </div>
     );
   }
+
+  const insufficientData = prices.length < 3;
 
   // Format price for display — use converted values
   const formatDisplayPrice = (value: number) => `${currencySymbol}${value.toFixed(2)}`;
@@ -192,10 +191,10 @@ export function PriceHistoryChart({
               size="sm"
               onClick={() => setTimeRange(range)}
               className={cn(
-                "h-7 px-3 text-xs transition-colors",
+                "h-7 px-3 text-xs rounded-md transition-colors duration-150",
                 timeRange === range 
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                  : "hover:bg-muted/50"
+                  ? "bg-cyan-500 text-black font-semibold hover:bg-cyan-500/90" 
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
             >
               {range === 180 ? '6M' : `${range}D`}
@@ -227,89 +226,99 @@ export function PriceHistoryChart({
       </div>
 
       {/* Chart */}
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={converted.prices}
-            margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
-          >
-            <XAxis 
-              dataKey="date" 
-              tickFormatter={formatAxisDate}
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickLine={{ stroke: 'hsl(var(--border))' }}
-              interval="preserveStartEnd"
-              minTickGap={50}
-            />
-            <YAxis 
-              domain={[yMin, yMax]}
-              tickFormatter={(v) => `${currencySymbol}${v.toFixed(0)}`}
-              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-              axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickLine={{ stroke: 'hsl(var(--border))' }}
-              width={50}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            
-            {/* Average line */}
-            <ReferenceLine 
-              y={converted.avg} 
-              stroke="hsl(var(--muted-foreground))" 
-              strokeDasharray="3 3"
-              strokeOpacity={0.5}
-            />
-            
-            {/* Current price line */}
-            {converted.currentPrice && (
-              <ReferenceLine 
-                y={converted.currentPrice} 
-                stroke="hsl(var(--primary))" 
-                strokeDasharray="5 5"
-                strokeOpacity={0.7}
-              />
-            )}
-            
-            {/* Price line */}
-            <Line 
-              type="monotone" 
-              dataKey="price" 
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ 
-                r: 6, 
-                fill: 'hsl(var(--primary))', 
-                stroke: 'hsl(var(--background))',
-                strokeWidth: 2 
-              }}
-            />
+      <div className="border border-border/50 rounded-xl p-4 bg-muted/5">
+        {insufficientData ? (
+          <div className="h-64 flex items-center justify-center text-center">
+            <p className="text-sm text-muted-foreground max-w-xs">
+              Price tracking started recently — not enough data for a trend chart yet. Check back soon!
+            </p>
+          </div>
+        ) : (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={converted.prices}
+                margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+              >
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatAxisDate}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  interval="preserveStartEnd"
+                  minTickGap={50}
+                />
+                <YAxis 
+                  domain={[yMin, yMax]}
+                  tickFormatter={(v) => `${currencySymbol}${v.toFixed(0)}`}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  width={50}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                
+                {/* Average line */}
+                <ReferenceLine 
+                  y={converted.avg} 
+                  stroke="hsl(var(--muted-foreground))" 
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.5}
+                />
+                
+                {/* Current price line */}
+                {converted.currentPrice && (
+                  <ReferenceLine 
+                    y={converted.currentPrice} 
+                    stroke="hsl(var(--primary))" 
+                    strokeDasharray="5 5"
+                    strokeOpacity={0.7}
+                  />
+                )}
+                
+                {/* Price line */}
+                <Line 
+                  type="monotone" 
+                  dataKey="price" 
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ 
+                    r: 6, 
+                    fill: 'hsl(var(--primary))', 
+                    stroke: 'hsl(var(--background))',
+                    strokeWidth: 2 
+                  }}
+                />
 
-            {/* Min point marker */}
-            {converted.minPoint && (
-              <ReferenceDot
-                x={converted.minPoint.date}
-                y={converted.minPoint.price}
-                r={5}
-                fill="hsl(142 76% 36%)"
-                stroke="hsl(var(--background))"
-                strokeWidth={2}
-              />
-            )}
-            
-            {/* Max point marker */}
-            {converted.maxPoint && (
-              <ReferenceDot
-                x={converted.maxPoint.date}
-                y={converted.maxPoint.price}
-                r={5}
-                fill="hsl(0 84% 60%)"
-                stroke="hsl(var(--background))"
-                strokeWidth={2}
-              />
-            )}
-          </LineChart>
-        </ResponsiveContainer>
+                {/* Min point marker */}
+                {converted.minPoint && (
+                  <ReferenceDot
+                    x={converted.minPoint.date}
+                    y={converted.minPoint.price}
+                    r={5}
+                    fill="hsl(142 76% 36%)"
+                    stroke="hsl(var(--background))"
+                    strokeWidth={2}
+                  />
+                )}
+                
+                {/* Max point marker */}
+                {converted.maxPoint && (
+                  <ReferenceDot
+                    x={converted.maxPoint.date}
+                    y={converted.maxPoint.price}
+                    r={5}
+                    fill="hsl(0 84% 60%)"
+                    stroke="hsl(var(--background))"
+                    strokeWidth={2}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       {/* Stats Summary */}
