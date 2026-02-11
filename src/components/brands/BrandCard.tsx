@@ -133,7 +133,7 @@ const BrandCard = ({
               {topMaterials.slice(0, 4).map((material) => (
                 <span
                   key={material}
-                  className="px-2 py-0.5 text-xs rounded bg-muted text-muted-foreground"
+                  className="bg-gray-800 text-gray-300 text-[10px] font-mono px-2 py-0.5 rounded border border-gray-700/50"
                 >
                   {material}
                 </span>
