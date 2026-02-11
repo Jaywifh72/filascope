@@ -163,8 +163,8 @@ export function BrandOverviewTab({
 
   return (
     <div className="space-y-8">
-      {/* Why Choose Brand Section */}
-      <div>
+      {/* Why Choose Brand Section - only show when brand has products */}
+      {groupedProducts.length > 0 && <div>
         <h3 className="text-lg font-semibold text-white mb-4">Why Choose {brandName}</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {highlights.map((highlight, idx) => (
@@ -184,7 +184,7 @@ export function BrandOverviewTab({
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Popular Products Section */}
       {popularProducts.length > 0 && (
