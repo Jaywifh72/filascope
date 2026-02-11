@@ -697,15 +697,15 @@ const BrandDetail = () => {
               productCount={groupedProducts.length}
               materialsCount={availableMaterials.length}
             />
-            {/* FAQ Section for SEO */}
-            <BrandFAQSection
+            {/* FAQ Section for SEO - only show when brand has products */}
+            {(filaments?.length ?? 0) > 0 && <BrandFAQSection
               brandName={displayName}
               productCount={filaments?.length ?? 0}
               materials={availableMaterials}
               isVerified={automatedBrand?.is_visible ?? false}
               isPremium={isPremium}
               isBudgetFriendly={isBudgetFriendly}
-            />
+            />}
             </>
           )}
         </BrandTabContent>
