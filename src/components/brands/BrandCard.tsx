@@ -73,7 +73,7 @@ const BrandCard = ({
     >
       {/* Top Section - Logo Area */}
       <div className="relative bg-muted/50 p-6 flex items-center justify-center h-28">
-        <div className="flex items-center justify-center rounded-lg bg-white/10 dark:bg-white/20 px-4 py-2 max-h-20">
+        <div className={`flex items-center justify-center rounded-lg px-4 py-2 max-h-20 ${resolvedLogoUrl ? 'bg-white/10 dark:bg-white/20' : 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/30'}`}>
           <BrandLogo
             src={resolvedLogoUrl}
             brandName={name}
