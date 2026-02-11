@@ -445,8 +445,8 @@ export function PricingTabContent({
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <Bell className="w-5 h-5" />
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <Bell className="w-5 h-5 text-amber-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Price Alerts</h3>
@@ -454,11 +454,13 @@ export function PricingTabContent({
               </div>
             </div>
             <Button
-              variant={alertExists ? "default" : "outline"}
+              variant="outline"
               onClick={() => setPriceAlertModalOpen(true)}
               className={cn(
-                "gap-2",
-                alertExists && "border-primary/50"
+                "gap-2 transition-colors duration-150",
+                alertExists 
+                  ? "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"
+                  : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
               )}
             >
               <Bell className="w-4 h-4" />
