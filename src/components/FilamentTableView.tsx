@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MaterialBadge } from "@/components/MaterialBadge";
 import { LikeButton } from "@/components/LikeButton";
-import { CheckCircle, XCircle, TreeDeciduous, Layers, Info, Lightbulb } from "lucide-react";
+import { ChevronUp, ChevronDown, TreeDeciduous, Layers, Info, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRegion } from "@/contexts/RegionContext";
 import { resolveFilamentPrice, type FilamentForPricing } from "@/lib/resolveFilamentPrice";
@@ -30,7 +30,6 @@ interface Filament {
   wood_powder_percentage?: number | null;
   glass_fiber_percentage?: number | null;
   carbon_fiber_percentage?: number | null;
-  // Additional fields for unified scoring
   tds_url?: string | null;
   nozzle_temp_min_c?: number | null;
   nozzle_temp_max_c?: number | null;
@@ -59,6 +58,8 @@ interface FilamentTableViewProps {
   getAffiliateUrl: (url: string, vendor: string | null) => string | null;
   hexSearch?: string;
   getColorMatchPercent?: (searchHex: string, filamentHex: string) => number;
+  sortBy?: string;
+  onSortChange?: (sort: string) => void;
 }
 
 // Helper functions for composite materials
@@ -75,6 +76,73 @@ const getWoodPercentage = (filament: Filament) => filament.wood_powder_percentag
 const getGlassFiberPercentage = (filament: Filament) => filament.glass_fiber_percentage;
 const getCarbonFiberPercentage = (filament: Filament) => filament.carbon_fiber_percentage;
 
+// Sortable column definitions
+const SORTABLE_COLUMNS: Record<string, string> = {
+  "Brand": "brand",
+  "Type": "material",
+  "TD": "td",
+  "True Cost": "true-cost",
+  "Price": "price",
+  "Stock": "stock",
+  "Rating": "scoring",
+};
+
+function SortableHeader({ 
+  label, 
+  sortKey, 
+  sortBy, 
+  onSortChange, 
+  className 
+}: { 
+  label: string; 
+  sortKey: string; 
+  sortBy?: string; 
+  onSortChange?: (sort: string) => void; 
+  className?: string;
+}) {
+  const currentField = sortBy?.replace(/-(?:asc|desc)$/, '');
+  const currentDir = sortBy?.endsWith('-asc') ? 'asc' : 'desc';
+  const isActive = currentField === sortKey;
+
+  const handleClick = () => {
+    if (!onSortChange) return;
+    if (isActive) {
+      // Toggle direction
+      onSortChange(`${sortKey}-${currentDir === 'desc' ? 'asc' : 'desc'}`);
+    } else {
+      // Default to desc for most, asc for price/true-cost
+      const defaultDir = ['price', 'true-cost'].includes(sortKey) ? 'asc' : 'desc';
+      onSortChange(`${sortKey}-${defaultDir}`);
+    }
+  };
+
+  return (
+    <th 
+      className={cn(
+        "py-3 px-3 text-xs font-semibold uppercase tracking-wide cursor-pointer select-none group sticky top-0 z-10 bg-muted/80 backdrop-blur-sm",
+        isActive ? "text-primary" : "text-muted-foreground",
+        className
+      )}
+      onClick={handleClick}
+    >
+      <div className={cn(
+        "flex items-center gap-1",
+        className?.includes("text-right") && "justify-end",
+        className?.includes("text-center") && "justify-center"
+      )}>
+        <span>{label}</span>
+        {isActive ? (
+          currentDir === 'asc' 
+            ? <ChevronUp className="h-3 w-3" /> 
+            : <ChevronDown className="h-3 w-3" />
+        ) : (
+          <ChevronDown className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+        )}
+      </div>
+    </th>
+  );
+}
+
 export function FilamentTableView({
   filaments,
   isInCompare,
@@ -83,40 +151,43 @@ export function FilamentTableView({
   getAffiliateUrl,
   hexSearch,
   getColorMatchPercent,
+  sortBy,
+  onSortChange,
 }: FilamentTableViewProps) {
   const navigate = useNavigate();
   const { formatPrice, convertPrice, currency, hasRates } = useRegion();
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border/50" role="region" aria-label="Filament comparison table">
+    <div 
+      className="relative overflow-x-auto rounded-lg border border-border/50 [mask-image:linear-gradient(to_right,black_calc(100%-40px),transparent)] hover:[mask-image:none] transition-all" 
+      role="region" 
+      aria-label="Filament comparison table"
+    >
       <table className="w-full" id="filament-table">
-        <thead className="bg-gray-800/50 sticky top-0 z-10">
+        <thead>
           <tr className="border-b border-border">
-            <th className="py-3 px-2 w-8" aria-label="Selection"></th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Color</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Brand</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Product</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
-            <th className="py-3 px-3 text-xs font-semibold text-amber-400 uppercase tracking-wide text-center">TD</th>
-            <th className="py-3 px-3 text-xs font-semibold text-orange-400 uppercase tracking-wide text-right">True Cost</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Price</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Stock</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Updated</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Rating</th>
-            <th className="py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Actions</th>
+            <th className="py-3 px-2 w-8 sticky top-0 z-10 bg-muted/80 backdrop-blur-sm" aria-label="Selection"></th>
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[60px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Color</th>
+            <SortableHeader label="Brand" sortKey="brand" sortBy={sortBy} onSortChange={onSortChange} className="min-w-[100px]" />
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide min-w-[180px] max-w-[300px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Product</th>
+            <SortableHeader label="Type" sortKey="material" sortBy={sortBy} onSortChange={onSortChange} className="min-w-[80px]" />
+            <SortableHeader label="TD" sortKey="td" sortBy={sortBy} onSortChange={onSortChange} className="text-center min-w-[50px]" />
+            <SortableHeader label="True Cost" sortKey="true-cost" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[90px]" />
+            <SortableHeader label="Price" sortKey="price" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[80px]" />
+            <SortableHeader label="Stock" sortKey="stock" sortBy={sortBy} onSortChange={onSortChange} className="text-center min-w-[50px]" />
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center min-w-[70px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Updated</th>
+            <SortableHeader label="Rating" sortKey="scoring" sortBy={sortBy} onSortChange={onSortChange} className="text-right min-w-[60px]" />
+            <th className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right min-w-[90px] sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">Actions</th>
           </tr>
         </thead>
         <tbody>
           {filaments.map((filament) => {
-            // === UNIFIED PRICE RESOLUTION ===
-            // Uses the shared resolveFilamentPrice utility (same as cards, sidebar, etc.)
             const resolved = resolveFilamentPrice(filament as FilamentForPricing, {
               userCurrency: currency,
               convertFromCurrency: convertPrice,
               hasRates,
             });
             const pricePerKg = resolved.pricePerKg;
-            // Scale the validity threshold for non-decimal currencies
             const maxValid = currency === 'JPY' || currency === 'KRW' ? 100000 : 500;
             const isValidPrice = pricePerKg && pricePerKg > 0 && pricePerKg < maxValid;
             const displayPricePerKg = isValidPrice ? pricePerKg : null;
@@ -124,10 +195,8 @@ export function FilamentTableView({
             const isConverted = resolved.isConverted;
             const prefix = isConverted ? '~' : '';
             
-            // Calculate unified score
             const { score: overallScore, factors: scoreFactors, confidence: scoreConfidence, dataPointCount } = calculateUnifiedScore(filament as FilamentForScoring);
             
-            // Color match calculation
             const normalizedHex = filament.color_hex 
               ? (filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}`)
               : null;
@@ -144,9 +213,9 @@ export function FilamentTableView({
                   "border-b border-border/50 transition-colors cursor-pointer",
                   isInCompare(filament.id) 
                     ? "bg-primary/5 hover:bg-primary/10" 
-                    : "hover:bg-gray-800/30 even:bg-gray-900/20"
+                    : "hover:bg-muted/50 even:bg-muted/10"
                 )}
-                onClick={() => navigate(`/filaments/${filament.id}`)}
+                onClick={() => navigate(`/filament/${filament.id}`)}
               >
                 <td className="py-3 px-2" onClick={(e) => e.stopPropagation()}>
                   <Checkbox 
@@ -175,7 +244,7 @@ export function FilamentTableView({
                     <div className="flex flex-col items-center gap-0.5">
                       <div className="relative">
                         <div 
-                          className="w-6 h-6 rounded border border-border"
+                          className="w-8 h-8 rounded-full ring-1 ring-border"
                           style={{ backgroundColor: normalizedHex }}
                           title={filament.color_family || 'Color'}
                         />
@@ -241,20 +310,20 @@ export function FilamentTableView({
                   )}
                 </td>
                 <td className="py-3 px-3 text-right">
-                  <span className="font-mono text-sm font-bold text-orange-400">
+                  <span className="font-mono text-sm font-semibold text-cyan-400">
                     {displayPricePerKg ? `${prefix}${formatPrice(displayPricePerKg)}/kg` : "—"}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-right">
-                  <span className="font-mono text-sm text-muted-foreground">
+                  <span className="font-mono text-sm text-foreground">
                     {pricePerSpool ? `${prefix}${formatPrice(pricePerSpool)}` : "—"}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-center">
                   {filament.variant_available !== false ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-400 mx-auto" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mx-auto" title="In Stock" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-red-400 mx-auto" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 mx-auto" title="Out of Stock" />
                   )}
                 </td>
                 <td className="py-3 px-3 text-center">
