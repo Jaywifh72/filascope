@@ -172,7 +172,7 @@ export default function MediumStandardPrinterCard({
           {/* Desktop: Full width stacked layout */}
           <div className="flex-shrink-0 w-[100px] sm:w-full">
             {/* Brand Logo - Hidden on mobile, shown on desktop */}
-            <div className="hidden sm:flex justify-center">
+            <div className="hidden sm:flex justify-center min-h-[48px] items-center">
               {getBrandLogo(printer.brand?.brand || null) ? (
                 <BrandLogo
                   src={getBrandLogo(printer.brand?.brand || null)}
@@ -181,7 +181,7 @@ export default function MediumStandardPrinterCard({
                   className="h-12 opacity-60 group-hover:opacity-90 transition-opacity duration-300"
                 />
               ) : (
-                <span className="text-sm font-semibold text-gray-300 text-center py-2">
+                <span className="text-sm font-semibold text-muted-foreground/60 text-center py-2 tracking-wide">
                   {printer.brand?.brand || "Brand"}
                 </span>
               )}
@@ -229,7 +229,7 @@ export default function MediumStandardPrinterCard({
 
           {/* Mobile: Right side (Content) / Desktop: Below image */}
           <div className="flex flex-col flex-1 min-w-0 justify-between gap-2 sm:gap-3">
-            {/* Brand name on mobile */}
+            {/* Brand name on mobile (since logo is hidden on mobile) */}
             <div className="sm:hidden text-[10px] font-bold text-primary uppercase tracking-wider">
               {printer.brand?.brand}
             </div>
