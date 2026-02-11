@@ -288,7 +288,7 @@ export function BrandOverviewTab({
                     )}
                     
                     {/* Price - converted to user's regional currency */}
-                    {product.priceRange && product.priceRange.min !== null && (
+                    {product.priceRange && product.priceRange.min !== null ? (
                       <div className="text-sm text-foreground font-semibold mb-3">
                         {product.priceRange.min === product.priceRange.max ? (
                           <span>{pricePrefix}{formatPrice(convertUsdPrice(product.priceRange.min))}/kg</span>
@@ -298,6 +298,8 @@ export function BrandOverviewTab({
                           </span>
                         )}
                       </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground/60 italic mb-3">Price unavailable</div>
                     )}
                     
                     {/* View Details Button */}
