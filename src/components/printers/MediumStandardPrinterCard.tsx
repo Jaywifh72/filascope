@@ -171,7 +171,7 @@ export default function MediumStandardPrinterCard({
             </div>
 
             {/* Feature Badges - Hidden on mobile */}
-            <div className="hidden sm:flex flex-wrap gap-1.5 justify-center mt-3 min-h-[28px]">
+            <div className="hidden sm:flex flex-wrap gap-1.5 justify-center mt-3 min-h-[32px]">
               {badges.map((badge, idx) => (
                 <PrinterBadge 
                   key={`${badge.type}-${idx}`}
