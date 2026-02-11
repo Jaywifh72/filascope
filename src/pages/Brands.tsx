@@ -412,7 +412,7 @@ const Brands = () => {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center flex-wrap gap-y-2 mb-4">
               <div className="flex items-center gap-3">
                 <Building2 className="w-5 h-5 text-primary hidden sm:block" />
                 <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-foreground">
@@ -425,14 +425,14 @@ const Brands = () => {
                 </h2>
               </div>
               
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground hidden sm:inline">Sort:</span>
+              {/* Sort Dropdown - inline after count */}
+              <div className="flex items-center gap-2 ml-4">
+                <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">Sort:</span>
                 <Select
                   value={filters.sortBy}
                   onValueChange={(value) => setFilters({ ...filters, sortBy: value as BrandFilters["sortBy"] })}
                 >
-                  <SelectTrigger className="w-[140px] h-8 text-xs bg-gray-800/50 border-gray-700">
+                  <SelectTrigger className="w-[140px] h-7 text-xs text-cyan-400 font-mono bg-transparent border-none shadow-none px-1">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
