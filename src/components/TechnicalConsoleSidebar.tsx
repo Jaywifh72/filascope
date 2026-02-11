@@ -539,9 +539,9 @@ export function TechnicalConsoleSidebar({
                 key={option.id}
                 onClick={() => handleMaterialToggle(option.id)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
+                  "inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full border transition-colors duration-150",
                   isActive
-                    ? "bg-primary/20 border-primary text-primary font-semibold"
+                    ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-semibold"
                     : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
@@ -570,9 +570,9 @@ export function TechnicalConsoleSidebar({
                 key={option.id}
                 onClick={() => handleBrandToggle(option.id)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
+                  "inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full border transition-colors duration-150",
                   isActive
-                    ? "bg-primary/20 border-primary text-primary font-semibold"
+                    ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-semibold"
                     : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
@@ -658,9 +658,9 @@ export function TechnicalConsoleSidebar({
                 key={option.id}
                 onClick={() => handleReinforcedToggle(option.id)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-all duration-150",
+                  "inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full border transition-colors duration-150",
                   isActive
-                    ? "bg-primary/20 border-primary text-primary font-semibold"
+                    ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-semibold"
                     : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
