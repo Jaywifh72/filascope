@@ -93,8 +93,8 @@ const BrandCard = ({
         {priceIndicator && (
           <div className="absolute top-3 left-3">
             <span
-              className="text-xs font-mono text-amber-500/70 bg-background/80 px-1.5 py-0.5 rounded"
-              title={priceIndicator === '$' ? 'Budget' : priceIndicator === '$$' ? 'Mid-range pricing' : 'Premium'}
+              className={`text-xs font-bold font-mono bg-background/80 px-1.5 py-0.5 rounded ${priceIndicator === '$' ? 'text-green-500/60' : priceIndicator === '$$' ? 'text-amber-500/60' : 'text-orange-500/60'}`}
+              title={priceIndicator === '$' ? 'Budget-friendly brand' : priceIndicator === '$$' ? 'Mid-range pricing' : 'Premium pricing'}
             >
               {priceIndicator}
             </span>
