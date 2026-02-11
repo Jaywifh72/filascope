@@ -234,22 +234,28 @@ export function DealFilters({
 
       {/* Local Only Filter */}
       {onShowLocalOnlyChange && userRegionFlag && (
-        <Button
-          variant={showLocalOnly ? "default" : "outline"}
-          size="sm"
+        <button
           onClick={() => onShowLocalOnlyChange(!showLocalOnly)}
           className={cn(
-            "gap-2 min-h-[44px]",
-            showLocalOnly && "bg-emerald-600 hover:bg-emerald-700 border-emerald-600"
+            "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm min-h-[44px] border transition-colors",
+            showLocalOnly
+              ? "bg-primary/10 border-primary/40 text-primary font-medium"
+              : "bg-transparent border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
           )}
         >
+          <span className={cn(
+            "inline-block h-2.5 w-2.5 rounded-full border transition-colors",
+            showLocalOnly
+              ? "bg-primary border-primary"
+              : "bg-transparent border-muted-foreground/50"
+          )} />
           {userRegionFlag} Local Only
           {showLocalOnly && localDealCount !== undefined && (
-            <Badge className="ml-1 h-5 px-1.5 text-xs bg-emerald-800/50 text-emerald-100 border-0">
+            <Badge className="ml-1 h-5 px-1.5 text-xs bg-primary/20 text-primary border-0">
               {localDealCount}
             </Badge>
           )}
-        </Button>
+        </button>
       )}
 
       {/* Clear All */}
