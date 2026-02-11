@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionFilters } from "@/hooks/useSessionFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { useFinderQuery, type FinderFilters } from "@/hooks/useFinderQuery";
+import { useFinderQuery, type FinderFilters, DEFAULT_PAGE_SIZE } from "@/hooks/useFinderQuery";
 import { useFilterCounts } from "@/hooks/useFilterCounts";
 import { useFilterAnalytics } from "@/hooks/useFilterAnalytics";
 import { useSearchContext } from "@/hooks/useSearchContext";
@@ -51,6 +51,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { MoreFiltersModal } from "@/components/filters/MoreFiltersModal";
 import { ViewToggle } from "@/components/ViewToggle";
 import { FilamentTableView } from "@/components/FilamentTableView";
+import { FinderPaginationBar } from "@/components/FinderPaginationBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractColorFromText } from "@/lib/colorIntelligence";
 import { OnboardingTour, WelcomeBanner } from "@/components/onboarding";
@@ -263,8 +264,12 @@ const Finder = () => {
 
   const MAX_PRICE_LIMIT = 100;
   
-  // Server-side pagination page number
+  // Server-side pagination
   const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = localStorage.getItem("finderPageSize");
+    return saved ? Number(saved) : DEFAULT_PAGE_SIZE;
+  });
   // Multi-select mode keyboard listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -760,7 +765,7 @@ const Finder = () => {
     selectedColorFamilies, hasTdData]);
 
   const { groups: displayedGroups, totalCount, isLoading, isFetching, isPlaceholderData } = 
-    useFinderQuery(finderFilters, currentPage, brandNameMap);
+    useFinderQuery(finderFilters, currentPage, brandNameMap, pageSize);
 
   // === SERVER-SIDE FILTER COUNTS ===
   const { data: serverFilterCounts } = useFilterCounts(
@@ -1389,35 +1394,19 @@ const Finder = () => {
             </div>
           )}
           
-          {/* Page Navigation */}
-          {totalCount > 48 && (
-            <div className="flex flex-col items-center gap-3 mt-10 mb-8">
-              <p className="text-sm text-muted-foreground">
-                Showing {displayedGroups.length} of {totalCount} products
-              </p>
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                  variant="outline"
-                  disabled={currentPage === 0}
-                  className="px-4"
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground px-3">
-                  Page {currentPage + 1}
-                </span>
-                <Button 
-                  onClick={() => setCurrentPage(prev => prev + 1)}
-                  variant="outline"
-                  disabled={displayedGroups.length < 48}
-                  className="px-4"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Pagination Bar */}
+          <FinderPaginationBar
+            currentPage={currentPage}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            displayedCount={displayedGroups.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              localStorage.setItem("finderPageSize", String(size));
+              setCurrentPage(0);
+            }}
+          />
           </>
         ) : (
           (() => {
