@@ -82,12 +82,6 @@ const BrandCard = ({
           />
         </div>
         
-        {/* Verified Badge - Top Right */}
-        {isVerified && (
-          <div className="absolute top-3 right-3" title="Verified Brand">
-            <BadgeCheck className="w-5 h-5 text-primary" />
-          </div>
-        )}
 
         {/* Price Indicator - Top Left */}
         {priceIndicator && (
@@ -128,7 +122,7 @@ const BrandCard = ({
             </span>
           )}
           {isVerified && (
-            <span className="text-primary text-xs">Verified ✓</span>
+            <span className="bg-cyan-500/10 text-cyan-400 text-[10px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/20">Verified ✓</span>
           )}
         </div>
 
