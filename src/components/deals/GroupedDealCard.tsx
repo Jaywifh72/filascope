@@ -13,6 +13,8 @@ import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useRegionalStores } from "@/hooks/useRegionalStores";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
+import { toBrandSlug } from "@/utils/brandSlug";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
 /** Color-coded freshness badge for deal cards */
@@ -354,10 +356,28 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         </Link>
 
         <CardContent className="p-4 flex-1 flex flex-col">
-          {/* Vendor */}
-          <div className="text-xs text-muted-foreground mb-1">
-            {group.representativeDeal.vendor}
-          </div>
+          {/* Vendor with logo */}
+          {group.representativeDeal.vendor && (
+            <Link
+              to={`/brands/${toBrandSlug(group.representativeDeal.vendor)}`}
+              className="flex items-center gap-1.5 mb-1.5 group/brand"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {getBrandLogoUrl(group.representativeDeal.vendor, 60) && (
+                <img
+                  src={getBrandLogoUrl(group.representativeDeal.vendor, 60)!}
+                  alt={`${group.representativeDeal.vendor} logo`}
+                  className="h-4 w-auto max-w-[60px] object-contain opacity-70 group-hover/brand:opacity-100 transition-opacity"
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              )}
+              <span className="text-xs text-muted-foreground group-hover/brand:text-primary transition-colors">
+                {group.representativeDeal.vendor}
+              </span>
+            </Link>
+          )}
 
           {/* Base Product Name (without color) */}
           <Link to={`/filament/${group.representativeDeal.id}`}>
