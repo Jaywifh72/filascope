@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
 import { AdvancedTdsSection } from '../sections/AdvancedTdsSection';
 import { isValidFinishType } from '@/lib/finishTypeValidation';
@@ -330,18 +331,101 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
         ]}
       />
 
-      {/* Appearance & HueForge */}
-      <SpecTable
-        title="Appearance & HueForge"
-        icon={<Palette className="w-5 h-5" />}
-        specs={[
-          { label: 'Color Family', value: filament.color_family },
-          { label: 'Finish Type', value: filament.finish_type && isValidFinishType(filament.finish_type) ? filament.finish_type : null },
-          { label: 'Transmission Distance', value: filament.transmission_distance, unit: 'mm' },
-          { label: 'Light Transmission', value: filament.light_transmission_percent, unit: '%' },
-          { label: 'Haze', value: filament.haze_percent, unit: '%' },
-        ]}
-      />
+      {/* Appearance & HueForge — Custom Section */}
+      <Card className="bg-card/50 border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+              <Palette className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-semibold">Appearance & HueForge</h3>
+          </div>
+          <div className="space-y-2">
+            {/* Color Family */}
+            {filament.color_family && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/20">
+                <span className="text-sm text-muted-foreground">Color Family</span>
+                <span className="text-sm font-medium">{filament.color_family}</span>
+              </div>
+            )}
+
+            {/* Finish Type */}
+            {filament.finish_type && isValidFinishType(filament.finish_type) && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg">
+                <span className="text-sm text-muted-foreground">Finish Type</span>
+                <span className="text-sm font-medium">{filament.finish_type}</span>
+              </div>
+            )}
+
+            {/* Color Hex Code */}
+            {filament.color_hex && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/20">
+                <span className="text-sm text-muted-foreground">Color Hex Code</span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-5 w-5 rounded-full inline-block border border-border/50"
+                    style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
+                  />
+                  <span className="font-mono text-sm">
+                    {filament.color_hex.startsWith('#') ? filament.color_hex.toUpperCase() : `#${filament.color_hex.toUpperCase()}`}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Opacity */}
+            {filament.light_transmission_percent != null && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg">
+                <span className="text-sm text-muted-foreground">Opacity</span>
+                <span className="text-sm font-medium">
+                  {filament.light_transmission_percent <= 5 ? 'Opaque' : filament.light_transmission_percent <= 50 ? 'Translucent' : 'Transparent'}
+                </span>
+              </div>
+            )}
+
+            {/* Transmission Distance (TD) — Prominent */}
+            {filament.transmission_distance != null ? (
+              <div className="flex items-center justify-between py-3 px-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                <span className="text-sm text-muted-foreground">Transmission Distance (TD)</span>
+                <div className="text-right">
+                  <span className="text-purple-400 font-bold text-lg">{filament.transmission_distance} mm</span>
+                  <p className="text-xs text-muted-foreground">Used in HueForge for filament painting</p>
+                </div>
+              </div>
+            ) : (
+              <div className="py-2 px-3 rounded-lg">
+                <p className="text-xs text-muted-foreground italic">TD value not yet measured for this filament</p>
+              </div>
+            )}
+
+            {/* Light Transmission */}
+            {filament.light_transmission_percent != null && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/20">
+                <span className="text-sm text-muted-foreground">Light Transmission</span>
+                <span className="text-sm font-medium">{filament.light_transmission_percent} %</span>
+              </div>
+            )}
+
+            {/* Haze */}
+            {filament.haze_percent != null && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg">
+                <span className="text-sm text-muted-foreground">Haze</span>
+                <span className="text-sm font-medium">{filament.haze_percent} %</span>
+              </div>
+            )}
+          </div>
+
+          {/* HueForge callout */}
+          <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 mt-3">
+            <p className="text-xs text-muted-foreground">
+              This data is essential for HueForge filament painting.{' '}
+              <Link to="/compare?tab=reference" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+                Learn more about TD values →
+              </Link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Product Identifiers */}
       <SpecTable
