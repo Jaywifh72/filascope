@@ -1,13 +1,11 @@
 const SectionSeparator = () => {
   return (
     <div 
-      className="py-6 sm:py-8 w-full flex justify-center"
+      className="py-2 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       role="separator"
       aria-hidden="true"
     >
-      <div 
-        className="h-[2px] w-[80%] max-w-[600px] bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_20px_rgba(0,217,217,0.4)] animate-line-draw-in"
-      />
+      <div className="border-b border-border" />
     </div>
   );
 };

@@ -1,5 +1,6 @@
-import { X, Printer, Database, Download, Loader2 } from "lucide-react";
+import { X, Printer, Database, Download, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
 interface ResultsHeaderProps {
@@ -10,7 +11,7 @@ interface ResultsHeaderProps {
   onClearFilters: () => void;
   onExportCSV?: () => void;
   isExporting?: boolean;
-  isUpdating?: boolean; // True during region transitions when we're showing stale count
+  isUpdating?: boolean;
 }
 
 const ResultsHeader = ({ 
@@ -25,41 +26,44 @@ const ResultsHeader = ({
 }: ResultsHeaderProps) => {
   const printerBrand = selectedPrinter?.printer_brands?.brand || "";
   const printerName = selectedPrinter?.model_name || "";
+  const printerShortName = printerName ? `${printerBrand} ${printerName}`.trim() : "";
 
-  // Only show loading skeleton on initial load (count is 0 and no filters)
-  // Keep the count visible during region transitions
   const showLoadingSkeleton = count === 0 && !hasActiveFilters && !isUpdating;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 animate-fade-in">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 py-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         {/* Left Side: Registry Title + Count */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <Database className="w-5 h-5 text-primary hidden sm:block" />
-            <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.06em] sm:tracking-[0.08em] text-foreground">
-              <span className="hidden sm:inline text-muted-foreground">Material Registry </span>
-              <span className="text-muted-foreground sm:hidden">// </span>
-              {showLoadingSkeleton ? (
-                <span className="inline-block w-12 h-4 bg-primary/20 rounded animate-pulse align-middle" />
-              ) : (
-                <>
-                  <span className="text-primary font-bold">{count.toLocaleString()}</span>
+            <h2 className="text-xl font-bold text-foreground">
+              Material Registry
+            </h2>
+            <span className="text-muted-foreground">—</span>
+            {showLoadingSkeleton ? (
+              <span className="inline-block w-16 h-5 bg-primary/20 rounded animate-pulse align-middle" />
+            ) : (
+              <>
+                <span className="text-cyan-400 font-semibold">
+                  {count.toLocaleString()}
                   {isUpdating && (
                     <Loader2 className="inline-block w-3 h-3 ml-1.5 text-primary animate-spin align-middle" />
                   )}
-                </>
-              )}
-              <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
-                {selectedPrinter ? "Compatible" : hasActiveFilters ? "Matching" : "Products"}
-                {totalCatalogCount && totalCatalogCount > count ? (
-                  <span className="text-muted-foreground/60">
-                    {" "}of {totalCatalogCount.toLocaleString()} total
-                    {selectedPrinter ? ` · ${printerBrand} ${printerName}` : ""}
-                  </span>
-                ) : null}
-              </span>
-            </h2>
+                </span>
+                <span className="text-muted-foreground text-sm font-normal">
+                  {selectedPrinter ? "compatible" : hasActiveFilters ? "matching" : "products"}
+                  {totalCatalogCount && totalCatalogCount > count ? (
+                    <> of {totalCatalogCount.toLocaleString()} total</>
+                  ) : null}
+                </span>
+              </>
+            )}
+            {printerShortName && (
+              <Badge variant="outline" className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full border-border">
+                {printerShortName}
+              </Badge>
+            )}
           </div>
           
           {/* Printer Context Subtitle */}
@@ -67,19 +71,23 @@ const ResultsHeader = ({
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Printer className="w-3 h-3" />
               <span>Compatible with {printerBrand} {printerName}</span>
-              <Link 
-                to="/materials" 
-                className="text-primary hover:text-primary/80 transition-colors ml-1"
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="text-xs text-primary hover:text-primary/80 h-6 px-2"
               >
-                Change printer
-              </Link>
+                <Link to="/materials">
+                  <Settings className="w-3 h-3 mr-1" />
+                  Change printer
+                </Link>
+              </Button>
             </div>
           )}
         </div>
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* Clear Filters */}
           {hasActiveFilters && (
             <Button
               variant="ghost"
@@ -92,7 +100,6 @@ const ResultsHeader = ({
             </Button>
           )}
 
-          {/* Export CSV */}
           {onExportCSV && (
             <Button
               variant="ghost"
