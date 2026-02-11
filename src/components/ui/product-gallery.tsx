@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Eye, Palette } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Palette } from "lucide-react";
 import { ZoomImage } from "./zoom-image";
 import { ImageLightbox } from "./image-lightbox";
 import { Skeleton } from "./skeleton";
@@ -138,7 +138,7 @@ export function ProductGallery({
       {/* Main Image Container */}
       <div
         ref={containerRef}
-        className="relative aspect-square bg-white/[0.03] border border-white/[0.08] rounded-2xl overflow-hidden group"
+        className="relative aspect-square bg-gradient-to-b from-muted/5 to-muted/10 border border-border/50 rounded-xl overflow-hidden group"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -154,7 +154,7 @@ export function ProductGallery({
           }}
         >
           {validImages.map((image, index) => (
-            <div key={index} className="flex-shrink-0 w-full h-full p-6">
+            <div key={index} className="flex-shrink-0 w-full h-full p-6 transition-transform duration-300 ease-out group-hover:scale-105">
               <ZoomImage
                 src={image.url}
                 alt={image.alt || productTitle}
@@ -203,11 +203,14 @@ export function ProductGallery({
           </>
         )}
 
-        {/* Click to expand hint */}
-        <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
-          <Eye className="w-3.5 h-3.5 text-white" />
-          <span className="text-xs text-white">Click to expand</span>
-        </div>
+        {/* Expand indicator */}
+        <button
+          onClick={() => setLightboxOpen(true)}
+          className="absolute bottom-3 right-3 bg-black/60 text-white p-1.5 rounded-md backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          aria-label="Expand image"
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Thumbnail Strip */}
