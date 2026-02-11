@@ -506,23 +506,23 @@ const Brands = () => {
             )}
 
         {/* Stats Footer */}
-        <div className="mt-12 p-6 bg-card border border-border rounded-lg">
+        <div className="mt-12 border border-gray-800 rounded-lg bg-gray-900/30 p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <p className="text-3xl font-bold text-primary">{brandCount}</p>
-              <p className="text-sm text-muted-foreground">Total Brands</p>
+              <p className="text-2xl font-bold text-cyan-400 font-mono">{brandCount}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Brands</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{totalProducts.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Product Lines</p>
+              <p className="text-2xl font-bold text-cyan-400 font-mono">{totalProducts.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Product Lines</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{totalVariants.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Total Variants</p>
+              <p className="text-2xl font-bold text-cyan-400 font-mono">{totalVariants.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Variants</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-primary">{featuredBrands.length}</p>
-              <p className="text-sm text-muted-foreground">Featured Brands</p>
+              <p className="text-2xl font-bold text-cyan-400 font-mono">{featuredBrands.length}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Featured Brands</p>
             </div>
           </div>
         </div>
