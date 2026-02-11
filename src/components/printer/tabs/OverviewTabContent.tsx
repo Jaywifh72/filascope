@@ -99,12 +99,12 @@ function CapabilityItem({ label, available }: CapabilityItemProps) {
         : "bg-muted/30 border border-border/40 opacity-40"
     )}>
       <CheckCircle2 className={cn(
-        "h-4 w-4 flex-shrink-0",
-        available ? "text-primary" : "text-muted-foreground/40"
+        "flex-shrink-0",
+        available ? "h-4 w-4 text-primary" : "h-3.5 w-3.5 text-muted-foreground/40"
       )} />
       <span className={cn(
         "text-sm",
-        available ? "text-white font-medium" : "text-gray-500 line-through"
+        available ? "text-white font-medium" : "text-gray-600 line-through"
       )}>
         {label}
       </span>
