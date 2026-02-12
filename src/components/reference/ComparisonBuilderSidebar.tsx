@@ -1,4 +1,5 @@
 import { GitCompare, X, ArrowRight, Trash2, Layers } from 'lucide-react';
+import { SlicerLogo } from './SlicerLogoFallback';
 import { useSlicerComparison } from '@/contexts/SlicerComparisonContext';
 import { cn } from '@/lib/utils';
 
@@ -62,15 +63,7 @@ export function ComparisonBuilderSidebar() {
                 key={slicer.id}
                 className="h-[50px] px-3 bg-gray-800 border border-gray-600 rounded-lg flex items-center gap-2.5 transition-all hover:border-primary/50 hover:bg-gray-800/80"
               >
-                {slicer.logo ? (
-                  <img
-                    src={slicer.logo}
-                    alt={`${slicer.name} logo`}
-                    className="w-8 h-8 object-contain rounded bg-gray-900/50 p-1 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-primary/20 rounded flex-shrink-0" />
-                )}
+                <SlicerLogo src={slicer.logo} name={slicer.name} className="w-8 h-8 rounded" />
                 <span className="flex-1 text-sm font-semibold text-white truncate">
                   {slicer.name}
                 </span>
