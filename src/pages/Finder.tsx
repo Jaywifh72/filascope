@@ -60,6 +60,7 @@ import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { TrendingSection } from "@/components/TrendingSection";
 import { MobileQuickMatchPrompt } from "@/components/MobileQuickMatchPrompt";
+import WhyFilaScope from "@/components/WhyFilaScope";
 
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
@@ -938,6 +939,9 @@ const Finder = () => {
 
       {/* Trending Section — between hero and registry */}
       <TrendingSection />
+
+      {/* Why FilaScope value proposition */}
+      <WhyFilaScope />
 
       {/* Visual Section Separator - tight spacing */}
       <SectionSeparator />

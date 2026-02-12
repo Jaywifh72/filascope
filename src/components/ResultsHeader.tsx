@@ -31,7 +31,7 @@ const ResultsHeader = ({
   const showLoadingSkeleton = count === 0 && !hasActiveFilters && !isUpdating;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 py-4 animate-fade-in">
+    <div id="filament-catalog" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 py-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         {/* Left Side: Registry Title + Count */}
         <div className="flex flex-col gap-2">
