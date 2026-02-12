@@ -115,13 +115,14 @@ export function SiteFooter() {
     { name: "Brands", href: "/brands" },
     { name: "Deals", href: "/deals" },
     { name: "Knowledge Base", href: "/compare" },
+    { name: "Printer Compatibility", href: "/matrix" },
   ];
 
   const resourceLinks = [
     { name: "Material Knowledge Base", href: "/compare" },
     { name: "Compatibility Matrix", href: "/matrix" },
     { name: "Slicer Directory", href: "/reference/slicers" },
-    
+    { name: "HueForge TD Database", href: "/?material=PLA&sort=td" },
     { name: "Quick Match", href: "/wizard" },
   ];
 
@@ -142,7 +143,33 @@ export function SiteFooter() {
   ];
 
   return (
-    <footer className="bg-card border-t border-border mt-auto">
+    <footer className="bg-card mt-auto">
+      {/* Pre-Footer CTA Section */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-800/80 border-t border-slate-700/30 py-10 px-8">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Can't decide?</h2>
+            <p className="text-sm text-slate-400 mt-1">
+              Our Quick Match wizard helps you find the right filament in 60 seconds.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              to="/wizard"
+              className="bg-cyan-500 hover:bg-cyan-400 text-white font-medium px-5 py-2.5 rounded-lg transition-colors"
+            >
+              Start Quick Match
+            </Link>
+            <Link
+              to="/?sort=value_score&limit=10"
+              className="border border-slate-600 hover:border-cyan-500 text-slate-300 hover:text-white px-5 py-2.5 rounded-lg transition-colors"
+            >
+              Compare Top Picks
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
@@ -326,16 +353,19 @@ export function SiteFooter() {
       <div className="border-t border-gray-800/50 bg-background/50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            {/* Left - Data update info */}
-            <span className="text-muted-foreground">
-              Data updated daily from 15+ retailers
-            </span>
+            {/* Left - Data freshness */}
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0" aria-hidden="true" />
+              <span className="text-muted-foreground">
+                Data updated daily from 15+ retailers
+              </span>
+            </div>
 
-            {/* Center - System Status */}
-            <div className="flex items-center gap-4">
+            {/* Center - System Status (de-emphasized) */}
+            <div className="flex items-center gap-4 text-slate-600">
               <div className="flex items-center gap-2">
                 <Activity className="h-3 w-3 text-emerald-500" aria-hidden="true" />
-                <span className="font-mono uppercase tracking-wider text-muted-foreground">
+                <span className="font-mono uppercase tracking-wider">
                   System Status:
                 </span>
                 <span className="font-mono uppercase tracking-wider text-emerald-500">
@@ -350,7 +380,7 @@ export function SiteFooter() {
                   <TooltipTrigger asChild>
                     <div className="hidden sm:flex items-center gap-2 cursor-help">
                       <Zap className={`h-3 w-3 ${getLatencyColor(latency)}`} aria-hidden="true" />
-                      <span className="font-mono uppercase tracking-wider text-muted-foreground">
+                      <span className="font-mono uppercase tracking-wider">
                         Latency:
                       </span>
                       <span className={`font-mono uppercase tracking-wider ${getLatencyColor(latency)}`}>
