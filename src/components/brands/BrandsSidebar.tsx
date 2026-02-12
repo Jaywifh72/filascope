@@ -156,12 +156,14 @@ const BrandsSidebar = ({
                   {MATERIAL_OPTIONS.map(material => (
                     <button
                       key={material.id}
-                      onClick={() => toggleMaterial(material.id)}
+                      onClick={() => (materialCounts[material.id] || 0) > 0 ? toggleMaterial(material.id) : undefined}
                       className={cn(
                         "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors",
                         filters.materials.includes(material.id)
                           ? "bg-primary/15 text-primary"
-                          : "hover:bg-gray-800/50 hover:text-white"
+                          : "hover:bg-gray-800/50 hover:text-white",
+                        (materialCounts[material.id] || 0) === 0 && !filters.materials.includes(material.id)
+                          && "opacity-40 pointer-events-none"
                       )}
                     >
                       <span className={cn("text-sm", filters.materials.includes(material.id) ? "" : "text-gray-300")}>{material.label}</span>
