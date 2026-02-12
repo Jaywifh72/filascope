@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw, Palette } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
 
 const CACHE_KEY = "hero_stats_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -210,7 +212,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-10 pb-4 sm:pt-14 sm:pb-6 md:pt-16 md:pb-8">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-6 pb-2 sm:pt-10 sm:pb-4 md:pt-12 md:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
@@ -227,35 +229,34 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
             {/* Headline */}
             <h1 
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-light tracking-[0.12em] leading-[1.1] mb-4 animate-fade-in uppercase"
+              className="animate-fade-in mb-4"
             >
-              <span className="text-foreground">Measure</span>
-              <br />
-              <span className="text-muted-foreground font-light">Material.</span>
-              <br />
-              <span className="font-black italic text-primary">Print.</span>
+              <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold tracking-[0.08em] leading-[1.1] uppercase text-slate-100">
+                Find Your Perfect Filament.
+              </span>
+              <span className="block text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-medium tracking-[0.06em] leading-[1.2] uppercase text-slate-400 mt-2">
+                Compare prices from 15+ stores.
+              </span>
             </h1>
             
-            {/* Sub-text with stats */}
+            {/* Subtitle stats line */}
             <p 
-              className="text-sm md:text-base text-muted-foreground font-light mb-3 max-w-[460px] animate-fade-in font-mono"
-              style={{ animationDelay: "0.15s", lineHeight: "1.7" }}
+              className="text-sm text-slate-500 mb-3 animate-fade-in"
+              style={{ animationDelay: "0.15s" }}
             >
-              <AnimatedStat value={displayProductCount} />+ filaments across{" "}
-              <AnimatedStat value={displayVariantCount} />+ color variants from{" "}
-              <AnimatedStat value={displayBrandCount} />+ brands — compare specs, pricing, and compatibility in one place.
+              <AnimatedStat value={displayProductCount} /> materials · <AnimatedStat value={displayBrandCount} /> brands · Real-time pricing in your currency
             </p>
 
-            {/* Social proof - Responsive wrap for small screens */}
+            {/* Trust badges */}
             <div 
-              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-6 animate-fade-in"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400 mb-6 animate-fade-in border-t border-slate-700/50 pt-4 mt-4"
               style={{ animationDelay: "0.2s" }}
             >
               <div className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-primary/70" />
                 <span>Trusted by <span className="text-foreground font-medium">10,000+</span> makers</span>
               </div>
-              <span className="text-gray-600 hidden sm:inline">•</span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
               <div className="flex items-center gap-1.5">
                 <RefreshCw className="h-3 w-3 text-primary/70" />
                 <span>Updated daily from <span className="text-foreground font-medium">15+</span> retailers</span>
@@ -337,101 +338,32 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             </div>
           </div>
           
-          {/* Right: Glass Container with 3D Filament Spool Visual - Show on tablet with scaling */}
+          {/* Right: Brand Logo Grid */}
           <div 
             className="hidden xl:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* Glass Container with Spool Visualization - Responsive scaling */}
-            <div 
-              className="relative p-6 lg:p-8 rounded-2xl border border-white/10 overflow-hidden md:scale-[0.6] lg:scale-[0.82] origin-center"
-              style={{
-                transform: "rotate(6deg)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                background: "rgba(255, 255, 255, 0.02)",
-              }}
-            >
-              {/* Horizontal Cyan Scan Line */}
-              <div 
-                className="absolute left-0 right-0 h-[2px] z-30 pointer-events-none animate-hero-scan-line"
-                style={{
-                  background: "linear-gradient(90deg, transparent, #00CFE8, transparent)",
-                  boxShadow: "0 0 20px 4px rgba(0, 207, 232, 0.6), 0 0 40px 8px rgba(0, 207, 232, 0.3)",
-                }}
-              />
-              
-              {/* 3D Stacked Boxes */}
-              <div className="relative w-[260px] h-[260px] flex items-center justify-center" style={{ perspective: "1000px" }}>
-                {/* Bottom Box - Magenta */}
-                <div 
-                  className="absolute w-28 h-28 rounded-xl"
-                  style={{
-                    transform: "translateX(-35px) translateY(40px) translateZ(-25px) rotateX(-15deg) rotateY(15deg)",
-                    transformStyle: "preserve-3d",
-                    border: "2px solid rgba(255, 0, 85, 0.5)",
-                    background: "linear-gradient(135deg, rgba(255, 0, 85, 0.25) 0%, rgba(255, 0, 85, 0.08) 100%)",
-                    boxShadow: "0 20px 40px -12px rgba(255, 0, 85, 0.35)",
-                  }}
-                />
-                
-                {/* Middle Box - Clear/Glass */}
-                <div 
-                  className="absolute w-28 h-28 rounded-xl backdrop-blur-sm"
-                  style={{
-                    transform: "translateX(0px) translateY(8px) translateZ(0px) rotateX(-15deg) rotateY(15deg)",
-                    transformStyle: "preserve-3d",
-                    border: "2px solid rgba(255, 255, 255, 0.35)",
-                    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%)",
-                    boxShadow: "0 20px 40px -12px rgba(255, 255, 255, 0.15)",
-                  }}
-                />
-                
-                {/* Top Box - Cyan */}
-                <div 
-                  className="absolute w-28 h-28 rounded-xl"
-                  style={{
-                    transform: "translateX(35px) translateY(-28px) translateZ(25px) rotateX(-15deg) rotateY(15deg)",
-                    transformStyle: "preserve-3d",
-                    border: "2px solid rgba(0, 207, 232, 0.6)",
-                    background: "linear-gradient(135deg, rgba(0, 207, 232, 0.3) 0%, rgba(0, 207, 232, 0.08) 100%)",
-                    boxShadow: "0 20px 40px -12px rgba(0, 207, 232, 0.45), inset 0 0 20px rgba(0, 207, 232, 0.1)",
-                  }}
+            <div className="grid grid-cols-3 gap-3 w-[320px]">
+              {[
+                { name: "Bambu Lab" },
+                { name: "Polymaker" },
+                { name: "eSun" },
+                { name: "Prusament" },
+                { name: "Hatchbox" },
+                { name: "Overture" },
+              ].map((brand) => (
+                <Link
+                  key={brand.name}
+                  to={`/brands/${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 flex items-center justify-center h-20 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
                 >
-                  {/* Inner glow effect */}
-                  <div 
-                    className="absolute inset-0 rounded-xl blur-lg"
-                    style={{ background: "rgba(0, 207, 232, 0.15)" }}
+                  <BrandLogo
+                    src={getBrandLogoUrl(brand.name, 80)}
+                    brandName={brand.name}
+                    size="md"
                   />
-                </div>
-                
-                {/* Floating Telemetry Tags */}
-                <div className="absolute top-4 right-0 font-mono text-[9px] uppercase tracking-wider text-primary/70 bg-primary/5 border border-primary/20 px-2 py-1 rounded">
-                  MATERIAL_DB: ACTIVE
-                </div>
-                <div className="absolute bottom-8 left-0 font-mono text-[9px] uppercase tracking-wider text-muted-foreground bg-foreground/5 border border-foreground/10 px-2 py-1 rounded">
-                  T_NOZZLE: 215°C
-                </div>
-                <div className="absolute top-1/2 right-0 font-mono text-[9px] uppercase tracking-wider text-[#FF0055]/70 bg-[#FF0055]/5 border border-[#FF0055]/20 px-2 py-1 rounded">
-                  DENSITY: 1.24g/cm³
-                </div>
-              </div>
-              
-              {/* Corner accents */}
-              <div 
-                className="absolute top-4 left-4 w-8 h-8 rounded-tl-lg"
-                style={{ 
-                  borderLeft: "2px solid rgba(0, 207, 232, 0.5)",
-                  borderTop: "2px solid rgba(0, 207, 232, 0.5)",
-                }}
-              />
-              <div 
-                className="absolute bottom-4 right-4 w-8 h-8 rounded-br-lg"
-                style={{ 
-                  borderRight: "2px solid rgba(255, 0, 85, 0.5)",
-                  borderBottom: "2px solid rgba(255, 0, 85, 0.5)",
-                }}
-              />
+                </Link>
+              ))}
             </div>
           </div>
         </div>
