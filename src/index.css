@@ -1796,3 +1796,43 @@ body.embed-mode .pwa-install-banner,
 body.embed-mode .offline-banner {
   display: none !important;
 }
+
+/* ═══════════════════════════════════════════
+   Filament Card Hover — pointer devices only
+   ═══════════════════════════════════════════ */
+@media (hover: hover) {
+  .filament-card-hover:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 30px rgba(0, 210, 200, 0.08), 0 4px 16px rgba(0, 0, 0, 0.25);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+  .filament-card-hover.is-oos:hover {
+    border-color: hsl(var(--muted-foreground) / 0.2);
+  }
+  .filament-card-hover:hover .cta-view-prices {
+    background-color: hsl(185 100% 45%);
+    color: black;
+    border-color: hsl(185 100% 45%);
+  }
+  .filament-card-hover:hover .compare-btn-corner {
+    opacity: 1;
+  }
+  .filament-card-hover:hover .compare-checkbox-desktop {
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 1;
+    border-color: hsl(var(--primary) / 0.6);
+    background-color: hsl(var(--primary) / 0.2);
+  }
+  .filament-card-hover:hover .compare-expand-btn {
+    width: auto;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    opacity: 1;
+  }
+  .filament-card-hover:hover .compare-expand-btn span {
+    max-width: 80px;
+    opacity: 1;
+    margin-left: 0.375rem;
+  }
+}

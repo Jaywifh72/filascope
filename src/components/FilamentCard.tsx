@@ -418,10 +418,9 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
       className={cn(
         "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
         "bg-slate-800/80 border border-slate-700/50",
-        // Hover: scale lift + deeper shadow + cyan border
-        isOutOfStock
-          ? "opacity-75 hover:scale-[1.02] hover:shadow-xl hover:shadow-black/30 hover:border-muted-foreground/20"
-          : "hover:scale-[1.02] hover:shadow-xl hover:shadow-black/30 hover:border-cyan-500/30",
+        // Hover effects scoped to pointer devices via CSS class
+        "filament-card-hover",
+        isOutOfStock && "opacity-75 is-oos",
         // Active: tactile press
         "active:scale-[0.99] active:duration-[50ms]",
         // Focus: accessible cyan ring
@@ -466,12 +465,10 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             isSelected || isPendingSelection
               ? "w-6 h-6 bg-primary border-2 border-primary shadow-[0_0_12px_rgba(0,207,232,0.4)]"
               : cn(
-                  // Default state - hidden on desktop, visible on mobile (no hover)
-                  "w-5 h-5 bg-muted border border-border",
+                  // Default state - visible on mobile (no hover), hidden on desktop
+                  "w-5 h-5 bg-muted border border-border compare-checkbox-desktop",
                   "opacity-100 md:opacity-0",
-                  // Hover state - prominent
-                  "group-hover:w-6 group-hover:h-6 group-hover:opacity-100",
-                  "group-hover:border-primary/60 group-hover:bg-primary/20",
+                  // Direct button hover
                   "hover:!opacity-100 hover:!scale-110 hover:!border-primary hover:!bg-primary/30"
                 ),
             isCompareDisabled && "opacity-30 cursor-not-allowed"
@@ -975,8 +972,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                 : isDeal
                 ? "bg-amber-500 border-amber-500 text-black hover:bg-amber-400 hover:border-amber-400"
                 : cn(
-                    "bg-primary/10 border border-primary/30 text-primary",
-                    "group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500",
+                    "bg-primary/10 border border-primary/30 text-primary cta-view-prices",
                     "hover:shadow-[0_0_12px_rgba(6,182,212,0.3)]"
                   ),
               "active:scale-[0.98]"
@@ -993,20 +989,20 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             disabled={isCompareDisabled}
             aria-label={isSelected ? "Remove from comparison" : "Add to comparison"}
             className={cn(
-              "h-11 flex items-center justify-center rounded-md border transition-all duration-200 overflow-hidden",
-              "w-10 group-hover:w-auto group-hover:px-3",
+              "h-11 flex items-center justify-center rounded-md border transition-all duration-200 overflow-hidden compare-expand-btn",
+              "w-10",
               isSelected || isPendingSelection
                 ? "bg-primary/20 border-primary text-primary"
                 : cn(
                     "border-border text-muted-foreground",
                     "hover:border-primary hover:text-primary",
-                    "opacity-60 group-hover:opacity-100"
+                    "opacity-60"
                   ),
               isCompareDisabled && "opacity-30 cursor-not-allowed"
             )}
           >
             <Columns className="w-4 h-4 flex-shrink-0" />
-            <span className="max-w-0 group-hover:max-w-[80px] overflow-hidden transition-all duration-200 opacity-0 group-hover:opacity-100 text-xs font-medium whitespace-nowrap ml-0 group-hover:ml-1.5">
+            <span className="max-w-0 overflow-hidden transition-all duration-200 opacity-0 text-xs font-medium whitespace-nowrap ml-0">
               Compare
             </span>
           </button>
@@ -1043,8 +1039,8 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
         disabled={isCompareDisabled}
         aria-label="Quick compare"
         className={cn(
-          "absolute bottom-4 right-4 w-8 h-8 rounded-full flex items-center justify-center",
-          "opacity-0 group-hover:opacity-100 transition-opacity duration-150",
+          "absolute bottom-4 right-4 w-8 h-8 rounded-full flex items-center justify-center compare-btn-corner",
+          "opacity-0 transition-opacity duration-150 ease-out",
           "hidden md:flex",
           isSelected || isPendingSelection
             ? "bg-primary/30 text-primary"
