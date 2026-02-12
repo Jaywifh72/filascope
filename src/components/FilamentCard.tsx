@@ -384,12 +384,15 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       aria-label={`${filament.vendor || 'Unknown'} ${filament.product_title} filament card`}
       className={cn(
         "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
-        "bg-card/80 border border-border",
-        // Hover states — scale instead of translate for smoother feel
+        "bg-slate-800/80 border border-slate-700/50",
+        // Hover: subtle lift + shadow + border brighten
         isOutOfStock
-          ? "opacity-75 hover:scale-[1.02] hover:border-muted-foreground/20 hover:shadow-lg hover:shadow-muted/5"
-          : "hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/5 hover:border-cyan-500/40",
-        "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
+          ? "opacity-75 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 hover:border-muted-foreground/20"
+          : "hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 hover:border-slate-600/80",
+        // Active: tactile press
+        "active:scale-[0.99] active:duration-[50ms]",
+        // Focus: accessible cyan ring
+        "focus-within:ring-2 focus-within:ring-cyan-500/50 focus-within:ring-offset-2 focus-within:ring-offset-slate-900",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
       )}
@@ -914,7 +917,8 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               ? "bg-transparent border-muted-foreground/40 text-muted-foreground hover:bg-muted/50"
               : cn(
                   "bg-primary/10 border border-primary/30 text-primary",
-                  "group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500"
+                  "group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500",
+                  "hover:shadow-[0_0_12px_rgba(6,182,212,0.3)]"
                 ),
             "active:scale-[0.98]"
           )}
