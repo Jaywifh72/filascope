@@ -131,7 +131,7 @@ const SortHeader = ({
   const isActive = currentSort === sortKey;
   return (
     <th 
-      className={`py-2 px-3 font-semibold text-foreground cursor-pointer hover:bg-muted/50 transition-colors select-none ${center ? "text-center" : "text-left"}`}
+      className={`py-2 px-3 text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-muted/50 transition-colors select-none ${center ? "text-center" : "text-left"} ${isActive ? "text-primary" : "text-slate-400"}`}
       onClick={() => onSort(sortKey)}
     >
       <div className={`flex items-center gap-1 ${center ? "justify-center" : ""}`}>
@@ -562,27 +562,30 @@ const ReferenceSlicers = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse text-sm">
                         <thead>
-                          <tr className="border-b border-border bg-muted/30">
+                          <tr className="bg-slate-800/50 border-b border-slate-700">
                             <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                             <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                             <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                            <th className="text-left py-2 px-3 font-semibold text-foreground">OS</th>
+                            <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">OS</th>
                             <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                             <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                             <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                             <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                             <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <th className="text-left py-2 px-3 font-semibold text-foreground">Connect</th>
+                            <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Connect</th>
                             <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
                             <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <th className="text-left py-2 px-3 font-semibold text-foreground">Standout Feature</th>
+                            <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Standout Feature</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredAndSortedSlicers.map((slicer, index) => (
                             <tr 
                               key={index} 
-                              className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+                              className={cn(
+                                'border-b border-border/50 hover:bg-cyan-500/5 transition-colors duration-200 cursor-pointer',
+                                index % 2 === 0 ? 'bg-slate-900/30' : 'bg-transparent'
+                              )}
                             >
                               <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
