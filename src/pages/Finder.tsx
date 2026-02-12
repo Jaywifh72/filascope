@@ -1534,6 +1534,8 @@ const Finder = () => {
                 onSearchChange={setSearchTerm}
                 detectedBrands={searchAnalysis?.detectedBrands}
                 detectedMaterials={searchAnalysis?.detectedMaterials}
+                selectedMaterials={selectedMaterials}
+                selectedBrands={selectedBrands}
                 onBrandFilter={(brand) => {
                   setSearchTerm("");
                   setSelectedBrands([brand]);
