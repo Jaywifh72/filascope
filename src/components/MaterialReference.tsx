@@ -295,7 +295,9 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
               </h5>
               <div className="flex flex-wrap gap-1.5">
                 {reference.origin.majorManufacturers.map((mfr, i) => (
-                  <Badge key={i} variant="outline" className="text-xs border-primary/30 text-primary">{mfr}</Badge>
+                  <a key={i} href="/brands" title="View brand on FilaScope">
+                    <Badge variant="outline" className="text-xs border-primary/30 text-primary cursor-pointer hover:bg-primary/20 hover:scale-105 transition-all duration-150">{mfr}</Badge>
+                  </a>
                 ))}
               </div>
             </div>
