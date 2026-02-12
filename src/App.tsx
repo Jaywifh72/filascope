@@ -43,6 +43,7 @@ const Deals = lazy(() => import("./pages/Deals"));
 const Wizard = lazy(() => import("./pages/Wizard"));
 const Diagnose = lazy(() => import("./pages/Diagnose"));
 const Auth = lazy(() => import("./pages/Auth"));
+const NewAdminPanel = lazy(() => import("./pages/NewAdminPanel"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminImport = lazy(() => import("./pages/AdminImport"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
@@ -193,46 +194,47 @@ const App = () => (
                   <Route path="/vault" element={<Vault />} />
                   <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
                   <Route path="/collections/:username/:slug" element={<PublicCollection />} />
-                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/import" element={<AdminImport />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/enrichment" element={<AdminEnrichment />} />
-                  <Route path="/admin/affiliates" element={<AdminAffiliates />} />
-                  <Route path="/admin/maintenance" element={<AdminMaintenance />} />
-                  <Route path="/admin/maintenance/archive" element={<AdminMaintenanceArchive />} />
-                  <Route path="/admin/printers" element={<AdminPrinters />} />
-                  <Route path="/admin/data-quality" element={<AdminDataQuality />} />
-                  <Route path="/admin/filaments" element={<AdminFilaments />} />
-                  <Route path="/admin/amazon-links" element={<AdminAmazonLinks />} />
-                  <Route path="/admin/filament-audit" element={<AdminFilamentAudit />} />
-                  <Route path="/admin/brands" element={<AdminBrands />} />
-                  <Route path="/admin/brand-pipeline" element={<AdminBrandPipeline />} />
-                  <Route path="/admin/data-health" element={<AdminDataHealth />} />
-                  <Route path="/admin/broken-links" element={<AdminBrokenLinks />} />
-                  <Route path="/admin/duplicates" element={<AdminDuplicates />} />
-                  <Route path="/admin/scheduler" element={<AdminScheduler />} />
-                  <Route path="/admin/price-anomalies" element={<AdminPriceAnomalies />} />
-                  <Route path="/admin/module-analytics" element={<AdminModuleAnalytics />} />
-                  <Route path="/admin/featured-content" element={<AdminFeaturedContent />} />
-                  <Route path="/admin/ab-tests" element={<AdminABTests />} />
-                  <Route path="/admin/docs" element={<AdminDocs />} />
-                  <Route path="/admin/field-coverage" element={<AdminFieldCoverage />} />
-                  <Route path="/admin/filament-scraper" element={<AdminFilamentScraper />} />
-                  <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
-                  <Route path="/admin/regional-stores" element={<AdminRegionalStores />} />
-                  <Route path="/admin/exchange-rates" element={<AdminExchangeRates />} />
-                  <Route path="/admin/store-urls" element={<AdminStoreUrls />} />
-                  <Route path="/admin/price-verification" element={<AdminPriceVerification />} />
-                  <Route path="/admin/brand-extraction" element={<AdminBrandExtraction />} />
-                  <Route path="/admin/broken-urls" element={<AdminBrokenUrls />} />
-                  <Route path="/admin/inventory" element={<AdminInventory />} />
-                  <Route path="/admin/export" element={<AdminExportData />} />
-                  <Route path="/admin/region-test" element={<AdminRegionTest />} />
-                  <Route path="/admin/regional-expansion" element={<AdminRegionalExpansion />} />
-                  <Route path="/admin/price-freshness" element={<AdminPriceFreshness />} />
-                  <Route path="/admin/price-import" element={<AdminPriceImport />} />
-                  <Route path="/admin/stores" element={<AdminStores />} />
+                  <Route path="/admin" element={<NewAdminPanel />} />
+                  <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
+                  <Route path="/old-admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/old-admin/import" element={<AdminImport />} />
+                  <Route path="/old-admin/users" element={<AdminUsers />} />
+                  <Route path="/old-admin/enrichment" element={<AdminEnrichment />} />
+                  <Route path="/old-admin/affiliates" element={<AdminAffiliates />} />
+                  <Route path="/old-admin/maintenance" element={<AdminMaintenance />} />
+                  <Route path="/old-admin/maintenance/archive" element={<AdminMaintenanceArchive />} />
+                  <Route path="/old-admin/printers" element={<AdminPrinters />} />
+                  <Route path="/old-admin/data-quality" element={<AdminDataQuality />} />
+                  <Route path="/old-admin/filaments" element={<AdminFilaments />} />
+                  <Route path="/old-admin/amazon-links" element={<AdminAmazonLinks />} />
+                  <Route path="/old-admin/filament-audit" element={<AdminFilamentAudit />} />
+                  <Route path="/old-admin/brands" element={<AdminBrands />} />
+                  <Route path="/old-admin/brand-pipeline" element={<AdminBrandPipeline />} />
+                  <Route path="/old-admin/data-health" element={<AdminDataHealth />} />
+                  <Route path="/old-admin/broken-links" element={<AdminBrokenLinks />} />
+                  <Route path="/old-admin/duplicates" element={<AdminDuplicates />} />
+                  <Route path="/old-admin/scheduler" element={<AdminScheduler />} />
+                  <Route path="/old-admin/price-anomalies" element={<AdminPriceAnomalies />} />
+                  <Route path="/old-admin/module-analytics" element={<AdminModuleAnalytics />} />
+                  <Route path="/old-admin/featured-content" element={<AdminFeaturedContent />} />
+                  <Route path="/old-admin/ab-tests" element={<AdminABTests />} />
+                  <Route path="/old-admin/docs" element={<AdminDocs />} />
+                  <Route path="/old-admin/field-coverage" element={<AdminFieldCoverage />} />
+                  <Route path="/old-admin/filament-scraper" element={<AdminFilamentScraper />} />
+                  <Route path="/old-admin/site-settings" element={<AdminSiteSettings />} />
+                  <Route path="/old-admin/regional-stores" element={<AdminRegionalStores />} />
+                  <Route path="/old-admin/exchange-rates" element={<AdminExchangeRates />} />
+                  <Route path="/old-admin/store-urls" element={<AdminStoreUrls />} />
+                  <Route path="/old-admin/price-verification" element={<AdminPriceVerification />} />
+                  <Route path="/old-admin/brand-extraction" element={<AdminBrandExtraction />} />
+                  <Route path="/old-admin/broken-urls" element={<AdminBrokenUrls />} />
+                  <Route path="/old-admin/inventory" element={<AdminInventory />} />
+                  <Route path="/old-admin/export" element={<AdminExportData />} />
+                  <Route path="/old-admin/region-test" element={<AdminRegionTest />} />
+                  <Route path="/old-admin/regional-expansion" element={<AdminRegionalExpansion />} />
+                  <Route path="/old-admin/price-freshness" element={<AdminPriceFreshness />} />
+                  <Route path="/old-admin/price-import" element={<AdminPriceImport />} />
+                  <Route path="/old-admin/stores" element={<AdminStores />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
                   <Route path="/reference/cad" element={<ReferenceCAD />} />

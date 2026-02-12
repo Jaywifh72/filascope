@@ -6,6 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { SlidersHorizontal, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRegion } from "@/contexts/RegionContext";
+import { useFeatureSwitch } from "@/hooks/useFeatureSwitch";
+import { useAuth } from "@/hooks/useAuth";
 import { REGIONS } from "@/config/regions";
 import { CURRENCIES } from "@/config/currencies";
 import type { ProfileData, Preferences } from "@/hooks/useSettings";
@@ -34,6 +36,15 @@ interface Props {
 export function SettingsPreferencesSection({ profile, setProfile, saving, onSave }: Props) {
   const { theme, setTheme } = useTheme();
   const { region, setRegion, currency, setCurrency } = useRegion();
+  const { enabled: lightModePublic } = useFeatureSwitch("light_mode_public");
+  const { isAdmin } = useAuth();
+
+  const canUseLightMode = lightModePublic || isAdmin;
+
+  // Auto-switch to dark if light mode becomes unavailable
+  if (!canUseLightMode && (theme === "light" || theme === "system")) {
+    setTheme("dark");
+  }
 
   const updatePreference = (key: keyof Preferences, value: any) => {
     setProfile(prev => ({
@@ -129,8 +140,8 @@ export function SettingsPreferencesSection({ profile, setProfile, saving, onSave
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="dark">Dark</SelectItem>
-              <SelectItem value="light">Light</SelectItem>
-              <SelectItem value="system">System</SelectItem>
+              {canUseLightMode && <SelectItem value="light">Light</SelectItem>}
+              {canUseLightMode && <SelectItem value="system">System</SelectItem>}
             </SelectContent>
           </Select>
         </div>
