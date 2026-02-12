@@ -1,6 +1,7 @@
 import { Award, Star, Gem, Check, ArrowRight, Plus } from 'lucide-react';
 import { SlicerLogo } from './SlicerLogoFallback';
 import { SlicerTierInfo, BadgeType, PriceType } from '@/lib/slicerTierData';
+import { useSlicerComparison, slicerTierInfoToSelectedSlicer } from '@/contexts/SlicerComparisonContext';
 import { cn } from '@/lib/utils';
 
 interface SlicerTopPickCardProps {
@@ -8,7 +9,6 @@ interface SlicerTopPickCardProps {
   logo?: string;
   bestFor?: string;
   onLearnMore: () => void;
-  onAddToCompare: () => void;
 }
 
 const badgeConfig: Record<NonNullable<BadgeType>, { icon: typeof Award; label: string; className: string }> = {
@@ -35,7 +35,19 @@ const priceTypeConfig: Record<PriceType, string> = {
   paid: 'bg-pink-500/15 border-pink-500/30 text-pink-400',
 };
 
-export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore, onAddToCompare }: SlicerTopPickCardProps) {
+export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore }: SlicerTopPickCardProps) {
+  const { addSlicer, removeSlicer, isInComparison } = useSlicerComparison();
+  const slicerId = slicer.name.toLowerCase().replace(/\s+/g, '-');
+  const inComparison = isInComparison(slicerId);
+
+  const handleCompareToggle = () => {
+    const selected = slicerTierInfoToSelectedSlicer(slicer, logo);
+    if (inComparison) {
+      removeSlicer(selected.id);
+    } else {
+      addSlicer(selected);
+    }
+  };
   const isStaffPick = slicer.badge === 'staff-pick';
   const BadgeIcon = slicer.badge ? badgeConfig[slicer.badge].icon : null;
 
@@ -133,11 +145,16 @@ export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore, onAddToC
         </button>
         
         <button
-          onClick={onAddToCompare}
-          className="w-full h-11 bg-transparent border-[1.5px] border-primary/30 hover:border-primary/50 hover:bg-primary/10 rounded-lg text-sm font-semibold text-primary hover:text-primary/80 inline-flex items-center justify-center gap-2 transition-all"
+          onClick={handleCompareToggle}
+          className={cn(
+            "w-full h-11 rounded-lg text-sm font-semibold inline-flex items-center justify-center gap-2 transition-all border-[1.5px]",
+            inComparison
+              ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/50"
+              : "bg-transparent border-primary/30 hover:border-primary/50 hover:bg-primary/10 text-primary hover:text-primary/80"
+          )}
         >
-          <Plus size={16} />
-          <span>Add to Compare</span>
+          {inComparison ? <Check size={16} /> : <Plus size={16} />}
+          <span>{inComparison ? '✓ Added' : 'Add to Compare'}</span>
         </button>
       </div>
     </div>
