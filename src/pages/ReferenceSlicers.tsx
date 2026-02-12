@@ -655,20 +655,37 @@ const ReferenceSlicers = () => {
                       key={slicer.id} 
                       value={slicer.id}
                       id={`slicer-${slicer.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                      className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 transition-all duration-200 hover:bg-gray-800 hover:border-gray-600 data-[state=open]:border-primary/50 data-[state=open]:bg-gray-800"
+                      className="bg-gray-800/50 border border-gray-700 border-b-slate-800 rounded-lg px-4 transition-all duration-200 hover:bg-slate-800/50 hover:border-gray-600 data-[state=open]:border-primary/50 data-[state=open]:bg-gray-800"
                     >
                       <AccordionTrigger className="hover:no-underline py-4 [&>svg]:text-gray-400 [&>svg]:transition-transform [&>svg]:duration-300 [&[data-state=open]>svg]:rotate-180">
-                        <div className="flex items-center gap-4 text-left">
+                        <div className="flex items-center gap-4 text-left flex-1 min-w-0">
                           <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                             {String(index + 1).padStart(2, '0')}
                           </span>
                           <SlicerLogo src={slicerLogos[slicer.name]} name={slicer.name} className="w-10 h-10 rounded-lg p-1" />
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <h3 className="text-base font-bold text-white">{slicer.name}</h3>
                             <p className="text-sm text-gray-400 line-clamp-1 max-w-2xl">
                               {slicer.summary.substring(0, 80)}...
                             </p>
                           </div>
+                          {(() => {
+                            const tierInfo = getSlicerTierInfo(slicer.name);
+                            if (!tierInfo) return null;
+                            const priceClass = tierInfo.priceType === 'free'
+                              ? 'bg-emerald-500/20 text-emerald-400'
+                              : tierInfo.priceType === 'freemium'
+                              ? 'bg-amber-500/20 text-amber-400'
+                              : 'bg-red-500/20 text-red-400';
+                            return (
+                              <div className="flex items-center gap-3 shrink-0 mr-2">
+                                <span className="text-sm text-cyan-400 font-medium whitespace-nowrap">{tierInfo.overallScore}/10</span>
+                                <span className={cn('px-2 py-0.5 rounded text-xs font-semibold whitespace-nowrap', priceClass)}>
+                                  {tierInfo.priceType === 'paid' && tierInfo.priceValue ? tierInfo.priceValue : tierInfo.priceType.charAt(0).toUpperCase() + tierInfo.priceType.slice(1)}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </AccordionTrigger>
                       
