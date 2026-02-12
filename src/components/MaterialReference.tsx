@@ -984,15 +984,26 @@ const MaterialReference = () => {
                   {/* Collapsible Category Header */}
                   <button
                     onClick={() => toggleCategory(category)}
-                    className="w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md hover:bg-gray-800/50 transition-colors duration-150 group"
+                    className={cn(
+                      "w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md transition-all duration-200 group border-l-2",
+                      isCollapsed
+                        ? "border-transparent hover:bg-gray-800/50"
+                        : "bg-gray-800/50 border-primary"
+                    )}
                   >
                     <div className="flex items-center gap-2">
-                      {isCollapsed ? (
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors duration-150" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5 text-primary transition-colors duration-150" />
-                      )}
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide group-hover:text-foreground transition-colors duration-150">
+                      <ChevronDown className={cn(
+                        "w-3.5 h-3.5 transition-transform duration-200",
+                        isCollapsed
+                          ? "text-muted-foreground group-hover:text-primary -rotate-90"
+                          : "text-primary rotate-0"
+                      )} />
+                      <span className={cn(
+                        "text-xs uppercase tracking-wide transition-colors duration-200",
+                        isCollapsed
+                          ? "font-normal text-gray-500 group-hover:text-foreground"
+                          : "font-semibold text-foreground"
+                      )}>
                         {category}
                       </span>
                     </div>
