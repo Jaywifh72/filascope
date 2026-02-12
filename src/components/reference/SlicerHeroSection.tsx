@@ -55,7 +55,7 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
 
           {/* Trust Signals */}
           <div className="inline-flex items-center gap-4 flex-wrap justify-center text-sm font-medium text-muted-foreground mb-8">
-            <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-yellow-400" /> Expert ratings</span>
+            <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-yellow-400 fill-yellow-400" /> Expert ratings</span>
             <span className="text-muted-foreground/50">•</span>
             <span className="inline-flex items-center gap-1.5"><MessageCircle className="h-4 w-4 text-cyan-400" /> Real user reviews</span>
             <span className="text-muted-foreground/50">•</span>
