@@ -188,8 +188,8 @@ export function FAQSection(props: FAQSectionProps) {
 
   return (
     <section className="max-w-[1000px] mx-auto px-5 md:px-10 py-16 md:py-20">
-      <h2 className="text-2xl md:text-[28px] font-bold text-foreground text-center mb-4">
-        FREQUENTLY ASKED QUESTIONS
+      <h2 className="text-xl md:text-2xl font-bold text-foreground text-center mb-4">
+        Frequently Asked Questions
       </h2>
       <p className="text-[15px] font-medium text-muted-foreground text-center max-w-[600px] mx-auto mb-10">
         Find answers to common questions about the {props.printerModel}
