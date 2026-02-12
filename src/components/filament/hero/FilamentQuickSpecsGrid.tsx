@@ -25,14 +25,31 @@ interface SpecCardProps {
   value: string;
   isDefault?: boolean;
   defaultTooltip?: string;
+  /** Educational tooltip title */
+  infoTitle?: string;
+  /** Educational tooltip body text */
+  infoBody?: string;
 }
 
-function SpecCard({ icon, label, value, isDefault, defaultTooltip }: SpecCardProps) {
+function SpecCard({ icon, label, value, isDefault, defaultTooltip, infoTitle, infoBody }: SpecCardProps) {
+  const tooltipText = isDefault
+    ? defaultTooltip
+    : infoBody
+      ? undefined // handled by rich content below
+      : `${label}: ${value}`;
+
+  const richContent = infoBody ? (
+    <div className="max-w-xs">
+      <p className="text-sm font-semibold text-foreground mb-1">{infoTitle || label}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">{isDefault ? `${defaultTooltip}\n\n` : ''}{infoBody}</p>
+    </div>
+  ) : null;
+
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="bg-muted/40 border border-border/60 rounded-lg px-4 py-2.5 flex items-center gap-3 min-w-0">
+          <div className="group bg-muted/40 border border-border/60 rounded-lg px-4 py-2.5 flex items-center gap-3 min-w-0 relative cursor-default">
             <div className="text-primary flex-shrink-0">
               {icon}
             </div>
@@ -46,10 +63,14 @@ function SpecCard({ icon, label, value, isDefault, defaultTooltip }: SpecCardPro
                 isDefault ? "text-muted-foreground" : "text-foreground"
               )}>{value}</p>
             </div>
+            {/* Info icon — hidden on touch devices */}
+            {infoBody && (
+              <Info className="w-3 h-3 absolute top-1.5 right-1.5 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors duration-150 hidden sm:block" />
+            )}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top">
-          <p>{isDefault ? defaultTooltip : `${label}: ${value}`}</p>
+        <TooltipContent side="bottom" className="pointer-events-none">
+          {richContent || <p>{tooltipText}</p>}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -111,6 +132,8 @@ export function FilamentQuickSpecsGrid({
       value: nozzle.value,
       isDefault: nozzle.isDefault,
       defaultTooltip: `Typical for ${nozzle.materialLabel} — verify with manufacturer TDS`,
+      infoTitle: "Nozzle Temperature",
+      infoBody: "The temperature your printer's hotend should be set to. Start at the middle of the range and adjust: lower for better detail, higher for better layer adhesion and strength.",
     });
   }
   if (bed) {
@@ -121,6 +144,8 @@ export function FilamentQuickSpecsGrid({
       value: bed.value,
       isDefault: bed.isDefault,
       defaultTooltip: `Typical for ${bed.materialLabel} — verify with manufacturer TDS`,
+      infoTitle: "Bed Temperature",
+      infoBody: "The heated bed temperature for first-layer adhesion. Higher temps help prevent warping. Some PLA prints fine with no heated bed (room temp).",
     });
   }
   if (diameterValue) {
@@ -129,6 +154,8 @@ export function FilamentQuickSpecsGrid({
       icon: <Circle className="w-5 h-5" />,
       label: "Diameter",
       value: diameterValue,
+      infoTitle: "Filament Diameter",
+      infoBody: "The cross-section width of the filament strand. 1.75mm is the most common standard. Make sure your printer uses this diameter — some older or industrial printers use 2.85mm.",
     });
   }
   if (weightValue) {
@@ -137,6 +164,8 @@ export function FilamentQuickSpecsGrid({
       icon: <Weight className="w-5 h-5" />,
       label: "Net Weight",
       value: weightValue,
+      infoTitle: "Spool Net Weight",
+      infoBody: "The weight of filament on the spool (not including the spool itself). A standard 1kg spool gives roughly 330m of 1.75mm PLA filament.",
     });
   }
 
