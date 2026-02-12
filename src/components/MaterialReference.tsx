@@ -37,7 +37,8 @@ import {
   Printer,
   BookOpen,
   FileQuestion,
-  Filter
+  Filter,
+  ChevronsUpDown
 } from "lucide-react";
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
 import { getMaterialReference, MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
@@ -143,6 +144,27 @@ const SectionDivider = ({ label }: { label: string }) => (
 );
 
 const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialReferenceInfo; basicInfo: any }) => {
+  const BASICS_SECTIONS = ["origin", "composition", "family"];
+  const PERFORMANCE_SECTIONS = ["strengths", "weaknesses", "practical"];
+  const TECHNICAL_SECTIONS = ["tds", "printSettings", "adhesion"];
+  const OTHER_SECTIONS = ["postProcessing", "safety", "trivia"];
+  const ALL_SECTION_VALUES = [...BASICS_SECTIONS, ...PERFORMANCE_SECTIONS, ...TECHNICAL_SECTIONS, ...OTHER_SECTIONS];
+
+  const [openSections, setOpenSections] = useState<string[]>(["origin"]);
+
+  const allExpanded = openSections.length >= ALL_SECTION_VALUES.length / 2;
+
+  const toggleAll = () => {
+    setOpenSections(allExpanded ? [] : [...ALL_SECTION_VALUES]);
+  };
+
+  const makeGroupHandler = (groupSections: string[]) => (newGroupValues: string[]) => {
+    setOpenSections(prev => {
+      const otherValues = prev.filter(v => !groupSections.includes(v));
+      return [...otherValues, ...newGroupValues];
+    });
+  };
+
   const handlePrint = () => {
     printMaterialReference(reference);
   };
@@ -198,15 +220,24 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
             <p className="text-muted-foreground">{basicInfo.description}</p>
           )}
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handlePrint}
-          className="gap-2 border-gray-600 text-muted-foreground hover:text-foreground shrink-0"
-        >
-          <Printer className="w-4 h-4" />
-          Print Reference Sheet
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={toggleAll}
+            className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          >
+            <ChevronsUpDown className="w-3.5 h-3.5" />
+            {allExpanded ? "Collapse All" : "Expand All"}
+          </button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrint}
+            className="gap-2 border-gray-600 text-muted-foreground hover:text-foreground shrink-0"
+          >
+            <Printer className="w-4 h-4" />
+            Print Reference Sheet
+          </Button>
+        </div>
       </div>
 
       {/* Quick Info Cards */}
@@ -223,7 +254,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
       {/* BASICS Section */}
       <SectionDivider label="Basics" />
       
-      <Accordion type="single" collapsible defaultValue="origin" className="space-y-3">
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(BASICS_SECTIONS)} className="space-y-3">
         <AccordionSection icon={History} title="Origin & History" value="origin" iconColor="text-amber-500">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
@@ -352,7 +383,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
       {/* PERFORMANCE Section */}
       <SectionDivider label="Performance" />
 
-      <Accordion type="single" collapsible className="space-y-3">
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(PERFORMANCE_SECTIONS)} className="space-y-3">
         {/* Strengths */}
         <AccordionSection icon={ThumbsUp} title="Strengths" value="strengths" iconColor="text-green-500">
           {reference.strengths.uniqueProperties && (
@@ -459,7 +490,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
       {/* TECHNICAL Section */}
       <SectionDivider label="Technical" />
 
-      <Accordion type="single" collapsible className="space-y-3">
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(TECHNICAL_SECTIONS)} className="space-y-3">
         {/* Technical Data Sheet Profile */}
         {reference.tdsProfile && (
           <AccordionSection icon={FileSpreadsheet} title="Technical Data Sheet Profile" value="tds" iconColor="text-cyan-500">
@@ -655,7 +686,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
       {/* OTHER Section */}
       <SectionDivider label="Other" />
 
-      <Accordion type="single" collapsible className="space-y-3">
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(OTHER_SECTIONS)} className="space-y-3">
         {/* Post-Processing */}
         {reference.postProcessing && (
           <AccordionSection icon={Paintbrush} title="Post-Processing" value="postProcessing" iconColor="text-pink-500">
