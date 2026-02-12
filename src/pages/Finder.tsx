@@ -58,6 +58,7 @@ import { extractColorFromText } from "@/lib/colorIntelligence";
 import { OnboardingTour } from "@/components/onboarding";
 import { SkipLinks } from "@/components/accessibility/SkipLink";
 import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
+import { TrendingSection } from "@/components/TrendingSection";
 import { MobileQuickMatchPrompt } from "@/components/MobileQuickMatchPrompt";
 
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
@@ -935,10 +936,8 @@ const Finder = () => {
 
       {/* Quick Match banner moved to sidebar and mobile bottom sheet */}
 
-      {/* Recently Viewed Section — filaments only on this route */}
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        <RecentlyViewedSection limit={6} showClear title="Recently Viewed" filterType="filament" compact />
-      </div>
+      {/* Trending Section — between hero and registry */}
+      <TrendingSection />
 
       {/* Visual Section Separator - tight spacing */}
       <SectionSeparator />
@@ -1445,6 +1444,11 @@ const Finder = () => {
               setCurrentPage(0);
             }}
           />
+
+          {/* Recently Viewed — return-visit hook at bottom of grid */}
+          <div className="mt-6">
+            <RecentlyViewedSection limit={6} showClear title="Recently Viewed" filterType="filament" compact />
+          </div>
           </>
         ) : (
           (() => {
