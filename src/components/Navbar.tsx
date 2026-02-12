@@ -495,7 +495,7 @@ const Navbar = () => {
                   <DropdownMenuSeparator className="bg-border" />
                   {isAdmin && <>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/dashboard" className="flex items-center text-sm">
+                        <Link to="/admin" className="flex items-center text-sm">
                           <Shield className="w-4 h-4 mr-2" />
                           Admin
                         </Link>
