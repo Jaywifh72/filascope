@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2 } from "lucide-react";
+import { Building2, Clock } from "lucide-react";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
@@ -486,22 +486,56 @@ const Brands = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredBrands.map((brand) => (
-                  <BrandCard
-                    key={brand.name}
-                    name={brand.name}
-                    productLineCount={brand.productLineCount}
-                    variantCount={brand.variantCount}
-                    isVerified={VERIFIED_BRANDS.includes(brand.name)}
-                    hasHighSpeed={brand.hasHighSpeed}
-                    hasEcoSpools={brand.hasEcoSpools}
-                    hasRfid={brand.hasRfid}
-                    topMaterials={brand.topMaterials}
-                    logoUrl={brand.automated?.logo_url}
-                    averageRating={brand.averageRating}
-                    priceIndicator={brand.priceIndicator}
-                  />
-                ))}
+                {(() => {
+                  const activeBrands = filteredBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0);
+                  const comingSoonBrands = filteredBrands.filter(b => b.productLineCount === 0 && b.variantCount === 0);
+                  return (
+                    <>
+                      {activeBrands.map((brand) => (
+                        <BrandCard
+                          key={brand.name}
+                          name={brand.name}
+                          productLineCount={brand.productLineCount}
+                          variantCount={brand.variantCount}
+                          isVerified={VERIFIED_BRANDS.includes(brand.name)}
+                          hasHighSpeed={brand.hasHighSpeed}
+                          hasEcoSpools={brand.hasEcoSpools}
+                          hasRfid={brand.hasRfid}
+                          topMaterials={brand.topMaterials}
+                          logoUrl={brand.automated?.logo_url}
+                          averageRating={brand.averageRating}
+                          priceIndicator={brand.priceIndicator}
+                        />
+                      ))}
+                      {comingSoonBrands.length > 0 && (
+                        <div className="col-span-full flex items-center gap-3 py-6 mt-4">
+                          <div className="h-px flex-1 bg-border/40" />
+                          <span className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5" />
+                            Coming Soon
+                          </span>
+                          <div className="h-px flex-1 bg-border/40" />
+                        </div>
+                      )}
+                      {comingSoonBrands.map((brand) => (
+                        <BrandCard
+                          key={brand.name}
+                          name={brand.name}
+                          productLineCount={brand.productLineCount}
+                          variantCount={brand.variantCount}
+                          isVerified={VERIFIED_BRANDS.includes(brand.name)}
+                          hasHighSpeed={brand.hasHighSpeed}
+                          hasEcoSpools={brand.hasEcoSpools}
+                          hasRfid={brand.hasRfid}
+                          topMaterials={brand.topMaterials}
+                          logoUrl={brand.automated?.logo_url}
+                          averageRating={brand.averageRating}
+                          priceIndicator={brand.priceIndicator}
+                        />
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
