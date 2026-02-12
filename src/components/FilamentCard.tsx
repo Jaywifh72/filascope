@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Columns,
   Thermometer,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -129,6 +130,11 @@ interface FilamentCardProps {
   communityRating?: { avgRating: number; reviewCount: number; avgQuality?: number | null; avgEase?: number | null; avgValue?: number | null } | null;
   // Cost per print toggle
   showCostPerPrint?: boolean;
+  // Number of retailers/price entries for this product in the user's region
+  // TODO: This data needs a data-layer change — currently only available on the detail page
+  // via useFilamentDetailPricing. To populate on cards, consider adding a lightweight
+  // bulk RPC or denormalizing the count onto the filament row/view.
+  retailerCount?: number;
 }
 
 // Price freshness reframe helper (Change 4)
@@ -211,7 +217,7 @@ function getCompactTimeAgo(timeAgo: string | null): string | null {
   return `${num}${unit.charAt(0)}`;
 }
 
-export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false, retailerCount }: FilamentCardProps) {
   // For grouped products (multiple variants), only show out of stock if ALL variants are out
   // For single products, use the individual filament's status
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
@@ -1041,8 +1047,16 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             Watch Price
           </Link>
         )}
-        {/* "View on Store" direct affiliate link */}
-        {!isOutOfStock && regionalUrl && (() => {
+        {/* Multi-store indicator or direct store link */}
+        {!isOutOfStock && retailerCount != null && retailerCount > 1 ? (
+          <Link
+            to={`/filament/${filament.id}?tab=pricing`}
+            className="inline-flex items-center justify-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            <Store className="w-3 h-3" />
+            {retailerCount} prices →
+          </Link>
+        ) : !isOutOfStock && regionalUrl ? (() => {
           const domain = extractStoreDomain(regionalUrl);
           return domain ? (
             <a
@@ -1055,7 +1069,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               View on {domain} →
             </a>
           ) : null;
-        })()}
+        })() : null}
       </div>
 
       {/* Quick Compare hover button — desktop only */}
