@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Database } from '@/integrations/supabase/types';
 import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,6 +20,17 @@ import {
   Box,
   Gauge,
   Camera,
+  Sun,
+  Thermometer,
+  Utensils,
+  Layers,
+  ChevronDown,
+  Car,
+  Wind,
+  Eye,
+  Shapes,
+  Hammer,
+  Flower2,
 } from 'lucide-react';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -51,13 +62,11 @@ function generateProductSummary(filament: Filament): string {
   const vendor = filament.vendor || 'manufacturer';
   const easeLabel = getEaseLabel(filament.ease_of_printing_score);
   
-  // Build highlights
   const highlights: string[] = [];
   if (filament.high_speed_capable) highlights.push('high-speed printing');
   if (filament.spool_ams_fit) highlights.push('AMS compatibility');
   if (filament.print_speed_max_mms && filament.print_speed_max_mms > 300) highlights.push(`speeds up to ${filament.print_speed_max_mms}mm/s`);
   
-  // Build use case description
   const useCases = filament.use_case_tags?.slice(0, 2).join(' and ') || 'general purpose printing';
   
   let summary = `A high-quality ${material} from ${vendor}`;
@@ -71,25 +80,93 @@ function generateProductSummary(filament: Filament): string {
   return summary;
 }
 
-// Infer "Ideal For" tags from filament properties
-function inferIdealForTags(filament: Filament): Array<{ label: string; icon: React.ReactNode }> {
-  const tags: Array<{ label: string; icon: React.ReactNode }> = [];
+// ─── Use-case entry types ───
+
+interface UseCaseEntry {
+  label: string;
+  reason: string;
+  icon: React.ReactNode;
+  isDefault: boolean;
+}
+
+// ─── Material-type defaults ───
+// Add additional materials here following the same pattern.
+
+interface MaterialDefaults {
+  idealFor: Array<{ label: string; reason: string; icon: React.ReactNode; condition?: (f: Filament) => boolean }>;
+  notRecommendedFor: Array<{ label: string; reason: string; icon: React.ReactNode }>;
+}
+
+const MATERIAL_DEFAULTS: Record<string, MaterialDefaults> = {
+  PLA: {
+    idealFor: [
+      { label: 'High Detail Prints', reason: 'Excellent layer adhesion and minimal warping', icon: <Palette className="w-4 h-4" /> },
+      { label: 'Cosplay & Props', reason: 'Holds fine detail well for costume pieces', icon: <Shapes className="w-4 h-4" /> },
+      { label: 'Prototyping', reason: 'Easy to print, low cost per part', icon: <Box className="w-4 h-4" /> },
+      { label: 'Decorative Items', reason: 'Good surface finish, wide color range', icon: <Flower2 className="w-4 h-4" /> },
+      { label: 'Lithophanes / HueForge', reason: 'Predictable light transmission for art prints', icon: <Sun className="w-4 h-4" />, condition: (f) => f.transmission_distance != null },
+    ],
+    notRecommendedFor: [
+      { label: 'Outdoor / UV Exposure', reason: 'PLA degrades in sunlight and heat', icon: <Sun className="w-4 h-4" /> },
+      { label: 'Mechanical Parts Under Load', reason: 'PLA is brittle under sustained stress', icon: <Hammer className="w-4 h-4" /> },
+      { label: 'High-Temperature Environments', reason: 'Softens above 55–60°C', icon: <Thermometer className="w-4 h-4" /> },
+      { label: 'Food Contact', reason: 'Not food-safe unless specifically certified', icon: <Utensils className="w-4 h-4" /> },
+    ],
+  },
+  PETG: {
+    idealFor: [
+      { label: 'Functional Parts', reason: 'Good impact resistance and durability', icon: <Wrench className="w-4 h-4" /> },
+      { label: 'Outdoor Use', reason: 'Better UV and weather resistance than PLA', icon: <Sun className="w-4 h-4" /> },
+      { label: 'Food Containers', reason: 'Food-safe when certified; chemical resistant', icon: <Utensils className="w-4 h-4" /> },
+      { label: 'Protective Cases', reason: 'Excellent layer adhesion and flexibility', icon: <Shield className="w-4 h-4" /> },
+    ],
+    notRecommendedFor: [
+      { label: 'High-Detail Miniatures', reason: 'Prone to stringing on fine features', icon: <Eye className="w-4 h-4" /> },
+      { label: 'High-Temperature Applications', reason: 'Softens around 75–80°C', icon: <Thermometer className="w-4 h-4" /> },
+    ],
+  },
+  ABS: {
+    idealFor: [
+      { label: 'Mechanical Parts', reason: 'Strong and impact resistant', icon: <Wrench className="w-4 h-4" /> },
+      { label: 'Automotive Components', reason: 'Heat-resistant up to ~100°C', icon: <Car className="w-4 h-4" /> },
+      { label: 'Heat-Resistant Applications', reason: 'High Tg and dimensional stability', icon: <Thermometer className="w-4 h-4" /> },
+    ],
+    notRecommendedFor: [
+      { label: 'Open-Frame Printers', reason: 'Requires enclosed printer to prevent warping', icon: <Box className="w-4 h-4" /> },
+      { label: 'Unventilated Spaces', reason: 'Produces fumes; ventilation needed', icon: <Wind className="w-4 h-4" /> },
+    ],
+  },
+  // TODO: Add defaults for TPU, ASA, PA/Nylon, PC, etc.
+};
+
+function getMaterialFamily(material: string | null): string | null {
+  if (!material) return null;
+  const upper = material.toUpperCase().replace(/[- ]/g, '');
+  // Match PLA variants (PLA+, PLA-HT, etc.) to PLA unless it's PLA-HT
+  if (upper.startsWith('PLA') && !upper.includes('HT')) return 'PLA';
+  if (upper.startsWith('PETG') || upper === 'PCTG') return 'PETG';
+  if (upper.startsWith('ABS') || upper === 'ASA') return 'ABS';
+  // Direct match
+  if (MATERIAL_DEFAULTS[upper]) return upper;
+  return null;
+}
+
+// Infer filament-specific "Ideal For" entries
+function inferIdealForEntries(filament: Filament): UseCaseEntry[] {
+  const entries: UseCaseEntry[] = [];
   
-  // Beginners - easy to print
   if (filament.ease_of_printing_score && filament.ease_of_printing_score >= 7) {
-    tags.push({ label: 'Beginners', icon: <User className="w-3.5 h-3.5" /> });
+    entries.push({ label: 'Beginners', reason: 'Easy to print with minimal tuning', icon: <User className="w-4 h-4" />, isDefault: false });
   }
   
-  // Functional parts - from use case tags or material type
   const functionalMaterials = ['PETG', 'ABS', 'ASA', 'PA', 'PC', 'PAHT'];
   if (
     filament.use_case_tags?.some(t => t.toLowerCase().includes('functional')) ||
     functionalMaterials.includes(filament.material?.toUpperCase() || '')
   ) {
-    tags.push({ label: 'Functional Parts', icon: <Wrench className="w-3.5 h-3.5" /> });
+    entries.push({ label: 'Functional Parts', reason: 'Strong enough for real-world use', icon: <Wrench className="w-4 h-4" />, isDefault: false });
   }
   
-  // High detail prints
   if (
     filament.use_case_tags?.some(t => 
       t.toLowerCase().includes('art') || 
@@ -99,61 +176,127 @@ function inferIdealForTags(filament: Filament): Array<{ label: string; icon: Rea
     filament.finish_type?.toLowerCase().includes('silk') ||
     filament.finish_type?.toLowerCase().includes('matte')
   ) {
-    tags.push({ label: 'High Detail Prints', icon: <Palette className="w-3.5 h-3.5" /> });
+    entries.push({ label: 'High Detail Prints', reason: 'Surface finish suited for display pieces', icon: <Palette className="w-4 h-4" />, isDefault: false });
   }
   
-  // High-volume printing
   if (filament.high_speed_capable) {
-    tags.push({ label: 'High-Volume Printing', icon: <Gauge className="w-3.5 h-3.5" /> });
+    entries.push({ label: 'High-Volume Printing', reason: 'Optimized for fast print speeds', icon: <Gauge className="w-4 h-4" />, isDefault: false });
   }
   
-  // Prototyping
   if (filament.use_case_tags?.some(t => t.toLowerCase().includes('prototype'))) {
-    tags.push({ label: 'Rapid Prototyping', icon: <Box className="w-3.5 h-3.5" /> });
+    entries.push({ label: 'Rapid Prototyping', reason: 'Fast iteration with good accuracy', icon: <Box className="w-4 h-4" />, isDefault: false });
   }
   
-  return tags;
+  return entries;
 }
 
-// Infer "Not Recommended For" warnings
-function inferNotRecommendedWarnings(filament: Filament): Array<{ label: string; reason: string }> {
-  const warnings: Array<{ label: string; reason: string }> = [];
+// Infer filament-specific "Not Recommended" entries
+function inferNotRecommendedEntries(filament: Filament): UseCaseEntry[] {
+  const entries: UseCaseEntry[] = [];
   
-  // High heat applications - check Tg and HDT
   const tg = filament.tg_c;
   const hdt = filament.hdt_045_mpa_c || filament.hdt_18_mpa_c;
   if ((tg && tg < 60) || (hdt && hdt < 70)) {
-    warnings.push({
-      label: 'High-heat applications',
-      reason: `Low heat resistance (${tg ? `Tg: ${tg}°C` : hdt ? `HDT: ${hdt}°C` : ''})`
+    entries.push({
+      label: 'High-Heat Applications',
+      reason: `Low heat resistance (${tg ? `Tg: ${tg}°C` : hdt ? `HDT: ${hdt}°C` : ''})`,
+      icon: <Thermometer className="w-4 h-4" />,
+      isDefault: false,
     });
   }
   
-  // Abrasive materials need special nozzles
   if (filament.is_nozzle_abrasive) {
-    warnings.push({
-      label: 'Standard brass nozzles',
-      reason: 'Requires hardened steel nozzle'
+    entries.push({
+      label: 'Standard Brass Nozzles',
+      reason: 'Requires hardened steel nozzle',
+      icon: <Shield className="w-4 h-4" />,
+      isDefault: false,
     });
   }
   
-  // High moisture sensitivity
   if (filament.moisture_sensitivity_level?.toLowerCase() === 'high') {
-    warnings.push({
-      label: 'Humid environments without dry storage',
-      reason: 'Requires dry storage and drying before use'
+    entries.push({
+      label: 'Humid Environments',
+      reason: 'Requires dry storage and drying before use',
+      icon: <Droplets className="w-4 h-4" />,
+      isDefault: false,
     });
   }
   
-  // Outdoor use for PLA
-  if (filament.material?.toUpperCase() === 'PLA' && !filament.material?.includes('HT')) {
-    warnings.push({
-      label: 'Outdoor/UV exposure',
-      reason: 'PLA degrades in sunlight and heat'
-    });
-  }
+  return entries;
+}
+
+// Merge filament-specific entries with material defaults, deduplicating by label
+function mergeWithDefaults(
+  specific: UseCaseEntry[],
+  defaults: Array<{ label: string; reason: string; icon: React.ReactNode; condition?: (f: Filament) => boolean }>,
+  filament: Filament,
+): UseCaseEntry[] {
+  const specificLabels = new Set(specific.map(e => e.label.toLowerCase()));
+  const defaultEntries: UseCaseEntry[] = defaults
+    .filter(d => {
+      if (d.condition && !d.condition(filament)) return false;
+      return !specificLabels.has(d.label.toLowerCase());
+    })
+    .map(d => ({ label: d.label, reason: d.reason, icon: d.icon, isDefault: true }));
   
-  return warnings;
+  return [...specific, ...defaultEntries];
+}
+
+// ─── Collapsible list sub-component ───
+
+const VISIBLE_COUNT = 3;
+
+function UseCaseList({ entries, materialFamily, variant }: {
+  entries: UseCaseEntry[];
+  materialFamily: string | null;
+  variant: 'ideal' | 'notRecommended';
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const needsCollapse = entries.length > 4;
+  const visibleEntries = needsCollapse && !expanded ? entries.slice(0, VISIBLE_COUNT) : entries;
+  const hiddenCount = entries.length - VISIBLE_COUNT;
+
+  // Find the split point between specific and default entries
+  const firstDefaultIdx = visibleEntries.findIndex(e => e.isDefault);
+  const hasSpecificAndDefault = firstDefaultIdx > 0;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {visibleEntries.map((entry, idx) => (
+        <React.Fragment key={idx}>
+          {/* Divider between specific and default entries */}
+          {hasSpecificAndDefault && idx === firstDefaultIdx && materialFamily && (
+            <div className="flex items-center gap-2 pt-1 pb-0.5">
+              <div className="flex-1 border-t border-border/30" />
+              <span className="text-[11px] text-muted-foreground italic whitespace-nowrap">
+                Typical for {materialFamily}
+              </span>
+              <div className="flex-1 border-t border-border/30" />
+            </div>
+          )}
+          <div className="flex items-start gap-2.5">
+            <span className={variant === 'ideal' ? 'text-emerald-500/60 mt-0.5 flex-shrink-0' : 'text-amber-500/60 mt-0.5 flex-shrink-0'}>
+              {entry.icon}
+            </span>
+            <div className="min-w-0">
+              <span className="text-sm font-medium text-foreground/90">{entry.label}</span>
+              <span className="text-xs text-muted-foreground ml-1.5">— {entry.reason}</span>
+            </div>
+          </div>
+        </React.Fragment>
+      ))}
+      {needsCollapse && !expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
+        >
+          <ChevronDown className="w-3.5 h-3.5" />
+          Show {hiddenCount} more
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateToCommunity, priceCandidates, priceCandidatesLoading, totalRetailerCount }: OverviewTabContentProps) {
@@ -194,9 +337,21 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
     });
   }
 
-  // Get inferred tags and warnings
-  const idealForTags = inferIdealForTags(filament);
-  const notRecommendedWarnings = inferNotRecommendedWarnings(filament);
+  // ─── Build enriched use-case entries ───
+  const materialFamily = getMaterialFamily(filament.material);
+  const defaults = materialFamily ? MATERIAL_DEFAULTS[materialFamily] : null;
+
+  const specificIdeal = inferIdealForEntries(filament);
+  const specificNotRec = inferNotRecommendedEntries(filament);
+
+  const idealEntries = defaults
+    ? mergeWithDefaults(specificIdeal, defaults.idealFor, filament)
+    : specificIdeal;
+  
+  const notRecEntries = defaults
+    ? mergeWithDefaults(specificNotRec, defaults.notRecommendedFor.map(d => ({ ...d })), filament)
+    : specificNotRec;
+
   const productSummary = generateProductSummary(filament);
 
   return (
@@ -232,51 +387,30 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
       </Card>
 
       {/* Ideal For / Not Recommended Section */}
-      {(idealForTags.length > 0 || notRecommendedWarnings.length > 0) && (
+      {(idealEntries.length > 0 || notRecEntries.length > 0) && (
         <div className="grid sm:grid-cols-2 gap-4">
           {/* Ideal For */}
-          {idealForTags.length > 0 && (
+          {idealEntries.length > 0 && (
             <Card className="bg-emerald-500/5 border-emerald-500/20">
               <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   <h4 className="font-semibold text-emerald-400">Ideal For</h4>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {idealForTags.map((tag, idx) => (
-                    <Badge 
-                      key={idx} 
-                      variant="secondary" 
-                      className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 gap-1.5"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                      {tag.label}
-                    </Badge>
-                  ))}
-                </div>
+                <UseCaseList entries={idealEntries} materialFamily={materialFamily} variant="ideal" />
               </CardContent>
             </Card>
           )}
 
           {/* Not Recommended For */}
-          {notRecommendedWarnings.length > 0 && (
-            <Card className="bg-red-500/5 border-red-500/20">
+          {notRecEntries.length > 0 && (
+            <Card className="bg-amber-500/5 border-amber-500/20">
               <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
-                  <h4 className="font-semibold text-red-400">Not Recommended For</h4>
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  <h4 className="font-semibold text-amber-400">Not Recommended For</h4>
                 </div>
-                <ul className="space-y-2">
-                  {notRecommendedWarnings.map((warning, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <XCircle className="h-3.5 w-3.5 text-red-500 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <span className="text-red-300">{warning.label}</span>
-                        <span className="text-muted-foreground ml-1">— {warning.reason}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <UseCaseList entries={notRecEntries} materialFamily={materialFamily} variant="notRecommended" />
               </CardContent>
             </Card>
           )}
