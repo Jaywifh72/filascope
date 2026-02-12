@@ -1453,6 +1453,9 @@ const Finder = () => {
           />
         )}
 
+        {/* Recently Viewed — above the product grid */}
+        <RecentlyViewedSection limit={12} showClear title="Recently Viewed" filterType="filament" />
+
         {/* Filaments Display - only show skeleton on initial load, keep products visible during region transition */}
         {isLoading && !isPlaceholderData ? (
           <div className="space-y-6">
@@ -1517,10 +1520,7 @@ const Finder = () => {
             }}
           />
 
-          {/* Recently Viewed — return-visit hook at bottom of grid */}
-          <div className="mt-6">
-            <RecentlyViewedSection limit={6} showClear title="Recently Viewed" filterType="filament" compact />
-          </div>
+
           </>
         ) : (
           (() => {

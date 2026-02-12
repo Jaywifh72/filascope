@@ -1,12 +1,21 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { History, X, ChevronRight } from "lucide-react";
+import { Clock, X, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useBrowseHistory, getPrinterImageFromHistory, type BrowseHistoryItem } from "@/hooks/useBrowseHistory";
 import { useRegion } from "@/contexts/RegionContext";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn, normalizeColorHex } from "@/lib/utils";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+
+const COLLAPSED_KEY = "filascope_recently_viewed_collapsed";
+
+function getCollapsedState(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
 
 interface RecentlyViewedSectionProps {
   /** Max items to show */
@@ -23,23 +32,7 @@ interface RecentlyViewedSectionProps {
   filterType?: "filament" | "printer";
 }
 
-function formatTimeAgo(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diffMs = now - then;
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHr = Math.floor(diffMs / 3600000);
-  const diffDay = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
-  if (diffDay === 1) return "Yesterday";
-  if (diffDay < 7) return `${diffDay}d ago`;
-  return new Date(dateStr).toLocaleDateString();
-}
-
-function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boolean }) {
+function CompactFilamentCard({ item }: { item: BrowseHistoryItem }) {
   const { formatPrice, convertPrice, hasRates, currency } = useRegion();
 
   const isFilament = item.product_type === "filament" && item.filament;
@@ -56,10 +49,9 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
     : item.printer!.display_name || item.printer!.model_name;
 
   const image = isFilament ? item.filament!.featured_image : getPrinterImageFromHistory(item.printer);
-  const colorHex = isFilament ? item.filament!.color_hex : null;
-  const subtitle = isFilament
-    ? `${item.filament!.material || ""}${item.filament!.vendor ? ` • ${item.filament!.vendor}` : ""}`
-    : "Printer";
+  const colorHex = isFilament ? normalizeColorHex(item.filament!.color_hex) : null;
+  const brand = isFilament ? item.filament!.vendor : null;
+  const material = isFilament ? item.filament!.material : null;
 
   const rawPrice = isFilament
     ? item.filament!.variant_price
@@ -74,50 +66,53 @@ function ProductCard({ item, compact }: { item: BrowseHistoryItem; compact?: boo
   return (
     <Link
       to={href}
-      className={`group shrink-0 block rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md transition-all duration-200 overflow-hidden ${
-        compact ? "w-[120px]" : "w-[160px]"
-      }`}
+      className="group/rv shrink-0 flex items-center gap-3 rounded-xl border border-border bg-card/60 hover:border-primary/40 hover:bg-card transition-all duration-150 ease-out overflow-hidden p-2.5 w-[220px] snap-start"
     >
-      {/* Image / Color Swatch */}
-      <div className={`relative w-full overflow-hidden bg-muted/30 ${compact ? "h-[90px]" : "aspect-square"} rounded-lg`}>
+      {/* Image or color swatch */}
+      <div className="relative flex-shrink-0 w-12 h-12 rounded-lg bg-muted/30 overflow-hidden">
         {image ? (
           <img
-            src={getOptimizedImageUrl(image, 400)}
-            srcSet={getImageSrcSet(image, [200, 400]) || undefined}
-            sizes={getImageSrcSet(image, [200, 400]) ? "(max-width: 640px) 200px, 400px" : undefined}
-            alt={isFilament ? `${title} filament spool` : `${title} 3D printer`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            src={getOptimizedImageUrl(image, 112)}
+            alt={`${title} thumbnail`}
+            className="w-full h-full object-contain"
             loading="lazy"
-            width={160}
-            height={160}
+            width={48}
+            height={48}
           />
         ) : colorHex ? (
-          <div className="w-full h-full" style={{ backgroundColor: colorHex }} />
+          <div className="w-full h-full rounded-lg" style={{ backgroundColor: colorHex }} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <History className="w-6 h-6" />
+            <Clock className="w-5 h-5" />
           </div>
         )}
-        {/* Product type badge */}
-        {isPrinter && (
-          <Badge
-            variant="secondary"
-            className="absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0"
-          >
-            Printer
-          </Badge>
+        {/* Color swatch badge overlay */}
+        {colorHex && image && (
+          <div
+            className="absolute -top-0.5 -left-0.5 w-5 h-5 rounded-full ring-2 ring-background"
+            style={{ backgroundColor: colorHex }}
+          />
         )}
       </div>
 
-      {/* Info */}
-      <div className={`p-2.5 space-y-1 ${compact ? "p-2" : ""}`}>
-        <p className="text-xs font-medium truncate text-foreground leading-tight">
+      {/* Text content */}
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-xs font-medium text-foreground truncate leading-tight group-hover/rv:text-primary transition-colors">
           {title}
         </p>
-        <p className="text-[10px] text-muted-foreground truncate">{subtitle}</p>
-        {displayPrice && (
-          <p className="text-xs font-semibold text-primary">{displayPrice}</p>
+        {brand && (
+          <p className="text-[10px] text-muted-foreground truncate">{brand}</p>
         )}
+        <div className="flex items-center gap-1.5">
+          {material && (
+            <span className="text-[10px] font-medium text-violet-400 bg-violet-500/15 border border-violet-500/30 px-1.5 py-0 rounded-full leading-relaxed">
+              {material.split(/[\s\-+]/)[0]}
+            </span>
+          )}
+          {displayPrice && (
+            <span className="text-[11px] font-semibold text-primary">{displayPrice}</span>
+          )}
+        </div>
       </div>
     </Link>
   );
@@ -132,6 +127,17 @@ export function RecentlyViewedSection({
   filterType,
 }: RecentlyViewedSectionProps) {
   const { history, isLoading, clearHistory } = useBrowseHistory(limit + 20);
+  const [isCollapsed, setIsCollapsed] = useState(getCollapsedState);
+
+  const toggleCollapsed = useCallback(() => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(COLLAPSED_KEY, String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
 
   const filtered = useMemo(() => {
     let items = history;
@@ -144,22 +150,29 @@ export function RecentlyViewedSection({
     return items.slice(0, limit);
   }, [history, excludeId, limit, filterType]);
 
-  // Don't render if no history
+  // Don't render if no history — avoid layout shift
   if (!isLoading && filtered.length === 0) return null;
-  // Show loading skeleton briefly
   if (isLoading) return null;
 
   return (
-    <section className="w-full py-3">
+    <section className="w-full mb-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-muted-foreground" />
+      <div className="flex items-center justify-between mb-2">
+        <button
+          onClick={toggleCollapsed}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <Clock className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
           <span className="text-xs text-muted-foreground">({filtered.length})</span>
-        </div>
+          {isCollapsed ? (
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+          )}
+        </button>
         <div className="flex items-center gap-2">
-          {showClear && (
+          {showClear && !isCollapsed && (
             <button
               onClick={() => clearHistory()}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
@@ -168,25 +181,21 @@ export function RecentlyViewedSection({
               Clear
             </button>
           )}
-          <Link
-            to="/vault?tab=history"
-            className="text-xs text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-          >
-            View All
-            <ChevronRight className="w-3 h-3" />
-          </Link>
         </div>
       </div>
 
-      {/* Horizontal scroll */}
-      <ScrollArea className="w-full">
-        <div className="flex gap-3 pb-2">
-          {filtered.map((item) => (
-            <ProductCard key={item.id} item={item} compact={compact} />
-          ))}
+      {/* Horizontal scroll with gradient fade */}
+      {!isCollapsed && (
+        <div className="relative">
+          <div className="flex gap-3 pb-2 overflow-x-auto scrollbar-none snap-x snap-mandatory">
+            {filtered.map((item) => (
+              <CompactFilamentCard key={item.id} item={item} />
+            ))}
+          </div>
+          {/* Right-edge gradient fade */}
+          <div className="absolute top-0 right-0 bottom-2 w-10 pointer-events-none bg-gradient-to-l from-background to-transparent" />
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      )}
     </section>
   );
 }
