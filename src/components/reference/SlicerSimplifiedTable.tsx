@@ -103,11 +103,11 @@ const SortableHeader = ({ label, column, tooltip, sortState, onSort, center = fa
       aria-sort={getAriaSort()}
       aria-label={getAriaLabel()}
       className={cn(
-        'px-4 py-3 bg-background border-b-2 border-primary/20',
-        'text-[13px] font-semibold uppercase tracking-wide',
+        'px-4 py-3 bg-slate-800/50 border-b border-slate-700',
+        'text-xs font-semibold uppercase tracking-wider',
         'cursor-pointer hover:bg-muted/50 transition-colors select-none',
         center ? 'text-center' : 'text-left',
-        isActive ? 'text-primary' : 'text-muted-foreground'
+        isActive ? 'text-primary' : 'text-slate-400'
       )}
       onClick={() => onSort(column)}
       onKeyDown={(e) => {
@@ -222,7 +222,7 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
     <div className="w-full overflow-x-auto rounded-xl border border-border">
       <table className="w-full border-collapse" role="table">
         <thead className="sticky top-0 z-10">
-          <tr role="row" className="bg-background shadow-sm">
+          <tr role="row" className="bg-slate-800/50 border-b border-slate-700 shadow-sm">
             <SortableHeader
               label="Name"
               column="name"
@@ -263,7 +263,7 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
             {/* Details column - not sortable */}
             <th 
               role="columnheader" 
-              className="px-4 py-3 bg-background border-b-2 border-primary/20 text-center text-[13px] font-semibold text-muted-foreground uppercase tracking-wide"
+              className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider"
             >
               <div className="flex items-center justify-center gap-1.5">
                 <span>Details</span>
@@ -287,7 +287,7 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
           </tr>
         </thead>
         <tbody>
-          {sortedSlicers.map((slicer) => {
+          {sortedSlicers.map((slicer, index) => {
             const isExpanded = expandedRows.has(slicer.name);
 
             return (
@@ -295,7 +295,10 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
                 <tr 
                   key={slicer.name}
                   role="row"
-                  className="hover:bg-muted/30 transition-colors"
+                  className={cn(
+                    'hover:bg-cyan-500/5 transition-colors duration-200 cursor-pointer',
+                    index % 2 === 0 ? 'bg-slate-900/30' : 'bg-transparent'
+                  )}
                 >
                   <td role="cell" className="px-4 py-3 border-b border-border/50">
                     <div className="flex items-center gap-3">
