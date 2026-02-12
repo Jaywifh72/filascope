@@ -1018,11 +1018,16 @@ const MaterialReference = () => {
                       {materials.map(({ name, hasReference }) => (
                         <button
                           key={name}
+                          ref={(el) => {
+                            if (selectedMaterial === name && el) {
+                              el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                            }
+                          }}
                           onClick={() => setSelectedMaterial(name)}
                           className={cn(
                             "w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-md cursor-pointer transition-all duration-150 text-left",
                             selectedMaterial === name
-                              ? "bg-primary/10 border-l-2 border-primary"
+                              ? "bg-primary/5 border-l-2 border-primary"
                               : "hover:bg-gray-800/50 border-l-2 border-transparent"
                           )}
                         >
