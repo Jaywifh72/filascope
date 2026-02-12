@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -19,7 +19,10 @@ import {
   Shield,
   ChevronDown,
   AlertTriangle,
+  Copy,
+  Check,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Database as SupabaseDB } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
 import { validateSpec, validateDiameter } from '@/lib/specValidation';
@@ -133,6 +136,107 @@ function SpecCard({ label, value, icon, colorClass = "text-foreground", warningM
   );
 }
 
+function PrintSettingsContent({ filament }: { filament: Filament }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const lines: string[] = [];
+    lines.push(`${filament.product_title || 'Filament'} — Print Settings`);
+    lines.push('');
+    if (filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) {
+      lines.push(`Nozzle Temp: ${filament.nozzle_temp_min_c || '?'}°C – ${filament.nozzle_temp_max_c || '?'}°C${filament.nozzle_temp_sweetspot_c ? ` (sweet spot: ${filament.nozzle_temp_sweetspot_c}°C)` : ''}`);
+    }
+    if (filament.bed_temp_min_c || filament.bed_temp_max_c) {
+      lines.push(`Bed Temp: ${filament.bed_temp_min_c || '?'}°C – ${filament.bed_temp_max_c || '?'}°C`);
+    }
+    if (filament.print_speed_max_mms) {
+      lines.push(`Max Speed: ${filament.print_speed_max_mms} mm/s`);
+    }
+    if (filament.fan_min_percent != null || filament.fan_max_percent != null) {
+      lines.push(`Part Cooling: ${filament.fan_min_percent ?? 0}% – ${filament.fan_max_percent ?? 100}%`);
+    }
+    if (filament.retraction_length_mm) {
+      lines.push(`Retraction: ${filament.retraction_length_mm}mm @ ${filament.retraction_speed_mms ?? '?'}mm/s`);
+    }
+
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      setCopied(true);
+      toast.success('Settings copied!', { duration: 2000 });
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [filament]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button
+          onClick={handleCopy}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors duration-150"
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {(filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) && (
+          <SpecCard
+            label="Nozzle Temp"
+            icon={<Flame className="w-3 h-3" />}
+            value={
+              <div>
+                <span className="text-orange-400">
+                  {filament.nozzle_temp_min_c || '?'}°C - {filament.nozzle_temp_max_c || '?'}°C
+                </span>
+                {filament.nozzle_temp_sweetspot_c && (
+                  <div className="text-xs text-muted-foreground font-normal mt-0.5">
+                    Sweet spot: {filament.nozzle_temp_sweetspot_c}°C
+                  </div>
+                )}
+              </div>
+            }
+          />
+        )}
+        {(filament.bed_temp_min_c || filament.bed_temp_max_c) && (
+          <SpecCard
+            label="Bed Temp"
+            icon={<ThermometerSun className="w-3 h-3" />}
+            value={`${filament.bed_temp_min_c || '?'}°C - ${filament.bed_temp_max_c || '?'}°C`}
+            colorClass="text-blue-400"
+          />
+        )}
+        {filament.print_speed_max_mms && (
+          <SpecCard
+            label="Max Speed"
+            icon={<Gauge className="w-3 h-3" />}
+            value={`${filament.print_speed_max_mms} mm/s`}
+            colorClass="text-primary"
+          />
+        )}
+        {(filament.fan_min_percent !== null || filament.fan_max_percent !== null) && (
+          <SpecCard
+            label="Part Cooling"
+            icon={<Wind className="w-3 h-3" />}
+            value={`${filament.fan_min_percent ?? 0}% - ${filament.fan_max_percent ?? 100}%`}
+            colorClass="text-sky-400"
+          />
+        )}
+        {filament.retraction_length_mm && (
+          <SpecCard
+            label="Retraction Length"
+            value={`${filament.retraction_length_mm} mm`}
+          />
+        )}
+        {filament.retraction_speed_mms && (
+          <SpecCard
+            label="Retraction Speed"
+            value={`${filament.retraction_speed_mms} mm/s`}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function TechnicalDetailsAccordion({ filament, className }: TechnicalDetailsAccordionProps) {
   // Check what data is available
   const hasPrintSettings = !!(
@@ -202,67 +306,7 @@ export function TechnicalDetailsAccordion({ filament, className }: TechnicalDeta
             subtitle="Temperature, speed & fan settings"
             isLast={isLast(hasPrintSettings)}
           >
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {(filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) && (
-                <SpecCard
-                  label="Nozzle Temp"
-                  icon={<Flame className="w-3 h-3" />}
-                  value={
-                    <div>
-                      <span className="text-orange-400">
-                        {filament.nozzle_temp_min_c || '?'}°C - {filament.nozzle_temp_max_c || '?'}°C
-                      </span>
-                      {filament.nozzle_temp_sweetspot_c && (
-                        <div className="text-xs text-gray-400 font-normal mt-0.5">
-                          Sweet spot: {filament.nozzle_temp_sweetspot_c}°C
-                        </div>
-                      )}
-                    </div>
-                  }
-                />
-              )}
-
-              {(filament.bed_temp_min_c || filament.bed_temp_max_c) && (
-                <SpecCard
-                  label="Bed Temp"
-                  icon={<ThermometerSun className="w-3 h-3" />}
-                  value={`${filament.bed_temp_min_c || '?'}°C - ${filament.bed_temp_max_c || '?'}°C`}
-                  colorClass="text-blue-400"
-                />
-              )}
-
-              {filament.print_speed_max_mms && (
-                <SpecCard
-                  label="Max Speed"
-                  icon={<Gauge className="w-3 h-3" />}
-                  value={`${filament.print_speed_max_mms} mm/s`}
-                  colorClass="text-primary"
-                />
-              )}
-
-              {(filament.fan_min_percent !== null || filament.fan_max_percent !== null) && (
-                <SpecCard
-                  label="Part Cooling"
-                  icon={<Wind className="w-3 h-3" />}
-                  value={`${filament.fan_min_percent ?? 0}% - ${filament.fan_max_percent ?? 100}%`}
-                  colorClass="text-sky-400"
-                />
-              )}
-
-              {filament.retraction_length_mm && (
-                <SpecCard
-                  label="Retraction Length"
-                  value={`${filament.retraction_length_mm} mm`}
-                />
-              )}
-
-              {filament.retraction_speed_mms && (
-                <SpecCard
-                  label="Retraction Speed"
-                  value={`${filament.retraction_speed_mms} mm/s`}
-                />
-              )}
-            </div>
+            <PrintSettingsContent filament={filament} />
           </PolishedAccordionItem>
         )}
 
