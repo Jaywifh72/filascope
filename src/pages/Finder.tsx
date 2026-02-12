@@ -44,6 +44,7 @@ import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
 import { TechnicalConsoleSidebar } from "@/components/TechnicalConsoleSidebar";
 import { HorizontalFilterBar } from "@/components/filters/HorizontalFilterBar";
+import { QuickFilterPills } from "@/components/QuickFilterPills";
 import { FilamentsEmptyState } from "@/components/filament/FilamentsEmptyState";
 import { ActiveFilterTags, type ActiveFilter } from "@/components/filters/ActiveFilterTags";
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
@@ -235,6 +236,7 @@ const Finder = () => {
   const [spectrumHue, setSpectrumHue] = useState(0);
   const [spectrumSaturation, setSpectrumSaturation] = useState(100);
   const [spectrumLightness, setSpectrumLightness] = useState(50);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   
   const { 
     isInCompare, 
@@ -955,6 +957,44 @@ const Finder = () => {
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearAllFilters}
         isUpdating={isRegionTransitioning || (isFetching && isPlaceholderData)}
+      />
+
+      {/* Quick Filter Pills */}
+      <QuickFilterPills
+        activeFilter={activeQuickFilter}
+        onFilterChange={(filterId) => {
+          setActiveQuickFilter(filterId);
+          // Apply filter presets
+          if (!filterId) {
+            // Cleared — reset to defaults
+            handleClearAllFilters();
+            return;
+          }
+          handleClearAllFilters();
+          switch (filterId) {
+            case "popular":
+              setSortBy("popular");
+              break;
+            case "deals":
+              setSortBy("price_asc");
+              setPriceRange([0, 25]);
+              break;
+            case "new":
+              setSortBy("newest");
+              break;
+            case "hueforge":
+              setHasTdData(true);
+              setSortBy("popular");
+              break;
+            case "highspeed":
+              setSelectedMaterials(["PLA"]);
+              setHighSpeed(true);
+              break;
+            case "silk":
+              setSilk(true);
+              break;
+          }
+        }}
       />
 
       {/* Horizontal Filter Bar */}

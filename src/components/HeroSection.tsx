@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw, Palette } from "lucide-react";
+import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw, Palette, ArrowRight, X } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { getBrandLogoUrl } from "@/lib/brandLogos";
+
+const QUICK_MATCH_DISMISSED_KEY = "filascope_hero_quickmatch_dismissed";
 
 const CACHE_KEY = "hero_stats_cache";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -110,6 +112,9 @@ const searchSuggestions = [
 
 const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, brandCount, compatibleCount, isLoading = false }: HeroSectionProps) => {
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  const [quickMatchDismissed, setQuickMatchDismissed] = useState(() => {
+    try { return localStorage.getItem(QUICK_MATCH_DISMISSED_KEY) === "true"; } catch { return false; }
+  });
 
   // Use shared deals count hook for consistency with Deals page
   const { data: dealsData, isLoading: isDealsLoading } = useDealsCount();
@@ -212,7 +217,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
   return (
     <section className="relative overflow-hidden">
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-6 pb-2 sm:pt-10 sm:pb-4 md:pt-12 md:pb-6">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 pt-4 pb-1 sm:pt-6 sm:pb-2 md:pt-8 md:pb-3">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Text Content */}
@@ -277,9 +282,42 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               />
             </div>
 
-            {/* Quick Start Paths - 4 cards */}
+            {/* Quick Match Inline Banner — dismissable */}
+            {!quickMatchDismissed && (
+              <div
+                className="w-full max-w-full sm:max-w-[600px] mb-4 animate-fade-in bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3"
+                style={{ animationDelay: "0.3s" }}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Target className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm text-slate-300 truncate">
+                    <span className="hidden sm:inline">New to filaments? </span>Try Quick Match — 3 questions, perfect recommendation
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    to="/wizard"
+                    className="bg-primary/80 hover:bg-primary text-sm text-primary-foreground px-3 py-1 rounded-md font-medium transition-colors"
+                  >
+                    Start <ArrowRight className="w-3 h-3 inline ml-0.5" />
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setQuickMatchDismissed(true);
+                      try { localStorage.setItem(QUICK_MATCH_DISMISSED_KEY, "true"); } catch {}
+                    }}
+                    className="text-slate-500 hover:text-foreground transition-colors"
+                    aria-label="Dismiss Quick Match banner"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Start Paths - 5 cards */}
             <div 
-              className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 w-full max-w-[720px] animate-fade-in mb-12 sm:mb-16 md:mb-20"
+              className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 w-full max-w-[720px] animate-fade-in mb-8 sm:mb-10 md:mb-12"
               style={{ animationDelay: "0.35s" }}
             >
               {quickStartPaths.map((path) => {
