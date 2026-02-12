@@ -699,11 +699,11 @@ export default function Printers() {
               onClearFilters={handleClearAllFilters}
             />
             <DatabaseIcon className="w-5 h-5 text-primary hidden sm:block" />
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-1.5 flex-wrap">
-              <span className="hidden sm:inline">Hardware Registry</span>
+            <h2 className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground hidden sm:inline">Hardware Registry</span>
               <span className="text-muted-foreground hidden sm:inline">—</span>
-              <span className="text-cyan-400 font-bold">{filteredPrinters?.length.toLocaleString() || 0}</span>
-              <span className="text-sm text-muted-foreground font-normal">
+              <span className="text-xs font-medium text-cyan-400">{filteredPrinters?.length.toLocaleString() || 0}</span>
+              <span className="text-xs text-muted-foreground">
                 {hasActiveFilters ? "matching" : "units"}
               </span>
             </h2>
