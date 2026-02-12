@@ -45,9 +45,9 @@ const SpecRow: React.FC<{
   value: any;
   unit?: string;
   showEmpty?: boolean;
-}> = ({ label, value, unit, showEmpty = false }) => {
+}> = ({ label, value, unit, showEmpty = true }) => {
   const isEmpty = isValueEmpty(value);
-  
+
   if (isEmpty && !showEmpty) return null;
 
   const isBoolean = typeof value === 'boolean';
@@ -56,7 +56,7 @@ const SpecRow: React.FC<{
 
   let displayValue: React.ReactNode;
   if (isEmpty) {
-    displayValue = <span className="text-muted-foreground/50 italic">Not specified</span>;
+    displayValue = <span className="text-muted-foreground/50 italic">—</span>;
   } else if (isYes) {
     displayValue = (
       <span className="inline-flex items-center gap-1.5 text-green-400">

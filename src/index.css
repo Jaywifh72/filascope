@@ -335,9 +335,15 @@ All colors MUST be HSL.
     @apply p-2.5 bg-primary/10 rounded-lg;
   }
 
-  /* Spec Row - py-3 table row padding */
+  /* Spec Row - py-3 table row padding with alternating backgrounds */
   .spec-row {
-    @apply flex items-center justify-between py-3 px-4 -mx-4 border-b border-border/20 last:border-b-0 hover:bg-muted/20 rounded-lg transition-colors;
+    @apply flex items-center justify-between py-3 px-4 -mx-4 border-b border-border/20 last:border-b-0 rounded-lg transition-colors;
+  }
+  .spec-row:nth-child(odd) {
+    @apply bg-muted/20;
+  }
+  .spec-row:nth-child(even) {
+    @apply bg-transparent;
   }
 
   /* Subsection Divider - mb-6 between subsections */
