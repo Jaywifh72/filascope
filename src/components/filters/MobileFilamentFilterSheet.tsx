@@ -45,13 +45,13 @@ const MATERIAL_BASE_OPTIONS = [
   { id: "bio-materials", label: "Bio-Based" },
 ];
 
-// Verified Brands
+// Verified Brands — id must match display_name used in brandNameMap
 const VERIFIED_BRANDS = [
-  { id: "bambu", label: "Bambu Lab" },
-  { id: "prusa", label: "Prusament" },
-  { id: "polymaker", label: "Polymaker" },
-  { id: "overture", label: "Overture" },
-  { id: "esun", label: "eSUN" },
+  { id: "Bambu Lab", label: "Bambu Lab" },
+  { id: "Prusament", label: "Prusament" },
+  { id: "Polymaker", label: "Polymaker" },
+  { id: "Overture", label: "Overture" },
+  { id: "eSun", label: "eSUN" },
 ];
 
 // Reinforced Material options
