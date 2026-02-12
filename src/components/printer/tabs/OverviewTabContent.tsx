@@ -35,7 +35,7 @@ interface OverviewTabContentProps {
 // Section header with icon and border
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="section-header">
+    <div className="section-header mb-4 sm:mb-6">
       <div className="section-header-icon">
         <Icon className="h-5 w-5 text-primary" />
       </div>
@@ -190,7 +190,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
   return (
     <div className="tab-content">
       {/* Build Volume Visualization - Featured at top */}
-      <section>
+      <section className="mb-8 sm:mb-10">
         <SectionHeader icon={Ruler} title="Build Volume & Dimensions" />
         <BuildVolumeCard
           width={printer.build_volume_x_mm}
@@ -200,7 +200,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
       </section>
 
       {/* Speed and Temperature side by side on larger screens */}
-      <section>
+      <section className="mb-8 sm:mb-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Print Speed Visualization */}
           <div>
@@ -220,7 +220,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
       </section>
 
       {/* Key Specifications - Responsive grid: 1 col mobile, 2 col sm, 3 col lg */}
-      <section>
+      <section className="mb-8 sm:mb-10">
         <SectionHeader icon={Box} title="Key Specifications" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <StatCard
@@ -243,7 +243,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
       </section>
 
       {/* System Capabilities - Responsive grid */}
-      <section>
+      <section className="mb-8 sm:mb-10">
         <SectionHeader icon={CheckCircle2} title="System Capabilities" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
           {sortedCapabilities.map((cap) => (
@@ -254,7 +254,7 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
 
       {/* What's in the Box / Accessories - Only show when data exists */}
       {includedAccessories.length > 0 && (
-        <section>
+        <section className="mb-8 sm:mb-10">
           <SectionHeader icon={Package} title="What's in the Box" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             {includedAccessories.map((acc, idx) => (
