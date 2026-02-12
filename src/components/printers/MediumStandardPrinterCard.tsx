@@ -164,7 +164,8 @@ export default function MediumStandardPrinterCard({
             rounded-xl 
             p-3 sm:p-6 
             transition-all duration-200 ease-out
-            hover:shadow-lg hover:shadow-cyan-500/5
+            hover:shadow-[0_0_15px_rgba(6,182,212,0.08)]
+            hover:-translate-y-0.5
             cursor-pointer
             h-full
             flex flex-row sm:flex-col
@@ -172,7 +173,7 @@ export default function MediumStandardPrinterCard({
             gap-3 sm:gap-3
             ${isSelected 
               ? 'border-primary/60 shadow-[0_0_15px_rgba(0,207,232,0.15)]' 
-              : 'border-gray-700 hover:border-gray-600/50'
+              : 'border-gray-700 hover:border-cyan-500/30'
             }
           `}
         >
