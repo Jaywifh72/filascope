@@ -875,7 +875,38 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           Plan #8, #9 (freshness), #10
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-2 flex items-center gap-2 flex-wrap" data-card-element="4">
-        {/* FilaScore — show "Verified specs" for low confidence, numeric for medium/high */}
+        {/* Community Rating — star + count */}
+        {communityRating && communityRating.reviewCount > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to={`/filament/${filament.id}?tab=community`}
+                className="inline-flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
+              >
+                <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
+                <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
+                <span className="text-muted-foreground text-[10px]">
+                  ({communityRating.reviewCount})
+                </span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+              <p className="font-medium mb-1">Community rating: {communityRating.avgRating.toFixed(1)} from {communityRating.reviewCount} reviews</p>
+              <div className="space-y-0.5 text-muted-foreground">
+                {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
+                {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
+                {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Vertical divider when both community rating and FilaScore are shown */}
+        {communityRating && communityRating.reviewCount > 0 && overallScore !== null && !(scoreConfidence === 'low' && hasLimitedData) && (
+          <div className="h-4 border-r border-border/50" />
+        )}
+
+        {/* FilaScore — labeled badge with info icon */}
         {overallScore !== null && scoreConfidence === 'low' ? (
           <div className="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-2.5 py-0.5 rounded-full">
             <Check className="w-3.5 h-3.5" />
@@ -886,18 +917,20 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <div 
-                className="bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-sm font-semibold px-2.5 py-0.5 rounded-full cursor-help inline-flex items-center gap-1"
+                className="bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-sm font-semibold px-2.5 py-0.5 rounded-full cursor-help inline-flex items-center gap-1.5"
                 role="img"
                 aria-label={`FilaScore rating: ${overallScore.toFixed(1)} out of 10`}
               >
                 <Award className="w-3.5 h-3.5" />
-                {overallScore.toFixed(1)}/10
+                <span className="text-[10px] font-normal text-cyan-400/70">FilaScore</span>
+                <span>{overallScore.toFixed(1)}</span>
+                <Info className="w-3 h-3 text-cyan-400/50" />
               </div>
             </HoverCardTrigger>
             <HoverCardContent side="top" className="w-80 p-4 bg-popover border-border">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">FilaScope Score based on value, specs, and compatibility</span>
+                  <span className="font-semibold text-foreground">FilaScore — algorithmic quality rating</span>
                   <span className={cn("text-xs px-2 py-0.5 rounded-full flex-shrink-0", 
                     scoreConfidence === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
                     scoreConfidence === 'medium' ? 'bg-cyan-500/20 text-cyan-400' :
@@ -906,6 +939,9 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                     {scoreConfidence === 'high' ? 'High' : scoreConfidence === 'medium' ? 'Good' : 'Limited'} confidence
                   </span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  FilaScore rates filaments on data completeness, price value, and community feedback. Scale: 1–10.
+                </p>
                 <div className="space-y-1.5">
                   {scoreFactors.map((factor, idx) => (
                     <div key={idx} className="flex items-center justify-between text-sm">
@@ -924,7 +960,6 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               </div>
             </HoverCardContent>
           </HoverCard>
-          {/* Change 5: Top Rated micro-badge */}
           {overallScore >= 8.5 && (
             <span className="inline-flex items-center bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
               Top Rated
@@ -948,34 +983,8 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             </TooltipContent>
           </Tooltip>
         )}
-
-        {/* Community Rating (compact) */}
-        {communityRating && communityRating.reviewCount > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                to={`/filament/${filament.id}?tab=community`}
-                className="inline-flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
-              >
-                <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
-                <span className="font-semibold text-primary">{communityRating.avgRating.toFixed(1)}</span>
-                <span className="text-muted-foreground text-[10px]">
-                  ({communityRating.reviewCount})
-                </span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs max-w-[220px]">
-              <p className="font-medium mb-1">{communityRating.avgRating.toFixed(1)} average from {communityRating.reviewCount} reviews</p>
-              <div className="space-y-0.5 text-muted-foreground">
-                {communityRating.avgQuality != null && <p>Print Quality: {communityRating.avgQuality.toFixed(1)}</p>}
-                {communityRating.avgEase != null && <p>Ease: {communityRating.avgEase.toFixed(1)}</p>}
-                {communityRating.avgValue != null && <p>Value: {communityRating.avgValue.toFixed(1)}</p>}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        )}
         
-        {/* Change 4: Reframed freshness indicator */}
+        {/* Reframed freshness indicator */}
         {reframedFreshness.text && shouldShowPrice && (
           <div className="inline-flex items-center gap-1 text-[10px] text-slate-500">
             {reframedFreshness.dot && (
