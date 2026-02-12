@@ -79,8 +79,12 @@ export function PriceFreshnessIndicator({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className={cn('inline-flex items-center gap-1', config.colorClass, className)}>
+            <span
+              className={cn('inline-flex items-center gap-1', config.colorClass, className)}
+              title="Price sourced from store listing and may change"
+            >
               <Icon className="h-3 w-3" />
+              <span className="text-[10px] text-muted-foreground">Price may vary by retailer</span>
             </span>
           </TooltipTrigger>
           <TooltipContent side="top" className="text-xs">
