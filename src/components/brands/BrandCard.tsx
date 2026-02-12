@@ -163,7 +163,7 @@ const BrandCard = ({
 
         {/* View Filaments Button */}
         <button
-          className="w-full h-10 rounded-lg border border-cyan-500/30 text-cyan-400 text-sm font-medium transition-all duration-200 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] flex items-center justify-center gap-2 mt-auto group/btn"
+          className="w-full rounded-lg border border-border py-2 text-sm font-medium text-foreground/70 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:text-primary flex items-center justify-center gap-2 mt-auto group/btn"
           onClick={(e) => {
             e.stopPropagation();
             handleClick();
