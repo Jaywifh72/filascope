@@ -49,6 +49,7 @@ import { useFilamentColorVariants } from "@/hooks/useFilamentColorVariants";
 import { ProductSEO, ProductJsonLd } from "@/components/seo";
 import { cleanFilamentDisplayName, getProductLineName } from "@/lib/productNameUtils";
 import { SimilarFilamentsSection } from "@/components/filament/similar/SimilarFilamentsSection";
+import { QuickSummaryBar } from "@/components/filament/QuickSummaryBar";
 import { useFilamentStorePricing } from "@/hooks/useFilamentStorePricing";
 import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
 import { useFilamentListings } from "@/hooks/useFilamentListings";
@@ -113,6 +114,7 @@ const FilamentDetail = () => {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FilamentTab>("overview");
   const heroSentinelRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLDivElement>(null);
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
   const { formatPrice: legacyFormatPrice, formatRegionalPrice } = useCurrency();
   const { incrementStat } = useAchievements();
@@ -839,29 +841,31 @@ const FilamentDetail = () => {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
             {/* Hero Section */}
-            <FilamentHeroSection
-              displayFilament={displayFilament}
-              pricingFilament={pricingFilament}
-              baseProductName={baseProductName}
-              colorVariants={colorVariants.map(v => ({
-                id: v.id,
-                color_hex: v.color_hex,
-                color_family: v.color_family,
-                product_title: v.product_title,
-                net_weight_g: v.net_weight_g,
-                product_url: v.product_url,
-                variant_available: v.variant_available,
-              }))}
-              onSelectColor={(variant) => {
-                const fullVariant = colorVariants.find(v => v.id === variant.id);
-                if (fullVariant) handleColorVariantSelect(fullVariant);
-              }}
-              getColorFromTitle={(title) => getColorName(title, baseProductName)}
-              isMultiPack={isMultiPack}
-              packQuantity={packQuantity}
-              communityRating={communityReviewStats}
-              onNavigateToCommunity={() => setActiveTab("community")}
-            />
+            <div ref={heroSectionRef}>
+              <FilamentHeroSection
+                displayFilament={displayFilament}
+                pricingFilament={pricingFilament}
+                baseProductName={baseProductName}
+                colorVariants={colorVariants.map(v => ({
+                  id: v.id,
+                  color_hex: v.color_hex,
+                  color_family: v.color_family,
+                  product_title: v.product_title,
+                  net_weight_g: v.net_weight_g,
+                  product_url: v.product_url,
+                  variant_available: v.variant_available,
+                }))}
+                onSelectColor={(variant) => {
+                  const fullVariant = colorVariants.find(v => v.id === variant.id);
+                  if (fullVariant) handleColorVariantSelect(fullVariant);
+                }}
+                getColorFromTitle={(title) => getColorName(title, baseProductName)}
+                isMultiPack={isMultiPack}
+                packQuantity={packQuantity}
+                communityRating={communityReviewStats}
+                onNavigateToCommunity={() => setActiveTab("community")}
+              />
+            </div>
 
             {/* Retailers Modal */}
             <RetailersModal
@@ -884,6 +888,18 @@ const FilamentDetail = () => {
                 community: communityReviewStats?.reviewCount ?? 0,
                 compatibility: compatiblePrinterCount ?? undefined,
               }}
+            />
+
+
+            {/* Quick Summary Bar - appears when hero scrolls out of view */}
+            <QuickSummaryBar
+              colorHex={displayFilament.color_hex}
+              productName={productLineName}
+              material={displayFilament.material}
+              formattedPrice={sidebarPricePerKg ? `${formatPrice(sidebarPricePerKg)}/kg` : null}
+              buyUrl={sidebarAffiliateUrl}
+              storeName={sidebarRetailerName || null}
+              heroRef={heroSectionRef}
             />
 
             {/* Tab Content */}
