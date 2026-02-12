@@ -73,7 +73,7 @@ const Navbar = () => {
   const trendingPanel = useTrendingPanel();
 
   // Deals count for badge
-  const { data: dealsData } = useDealsCount();
+  const { data: dealsData, isLoading: dealsLoading } = useDealsCount();
 
   // Check if Learn dropdown should be active
   const isLearnActive = ['/accessories', '/reference', '/learn', '/compare', '/guides', '/resources/profiles'].some(path => location.pathname.startsWith(path));
@@ -277,11 +277,13 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">
               Deals
-              {dealsData && dealsData.totalVariants > 0 && (
-                <span className="inline-flex items-center justify-center bg-amber-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" aria-label={`${dealsData.totalVariants} active deals`}>
-                  {dealsData.totalVariants}
+              {dealsData && dealsData.totalVariants > 0 ? (
+                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
+                  {dealsData.totalVariants.toLocaleString()}
                 </span>
-              )}
+              ) : dealsLoading ? (
+                <span className="w-8 h-4 rounded-full bg-white/10 animate-pulse ml-1.5 inline-block" />
+              ) : null}
             </LabNavLink>
             
             {/* Learn Dropdown - Mega Menu with hover support on desktop */}
@@ -441,11 +443,13 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">
               Deals
-              {dealsData && dealsData.totalVariants > 0 && (
-                <span className="inline-flex items-center justify-center bg-amber-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" aria-label={`${dealsData.totalVariants} active deals`}>
-                  {dealsData.totalVariants}
+              {dealsData && dealsData.totalVariants > 0 ? (
+                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
+                  {dealsData.totalVariants.toLocaleString()}
                 </span>
-              )}
+              ) : dealsLoading ? (
+                <span className="w-8 h-4 rounded-full bg-white/10 animate-pulse ml-1.5 inline-block" />
+              ) : null}
             </LabNavLink>
             
             {/* More Dropdown (Learn collapsed) */}
@@ -629,11 +633,13 @@ const Navbar = () => {
             <MobileNavLink to="/brands">Brands</MobileNavLink>
             <MobileNavLink to="/deals">
               Deals
-              {dealsData && dealsData.totalVariants > 0 && (
-                <span className="inline-flex items-center justify-center bg-amber-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" aria-label={`${dealsData.totalVariants} active deals`}>
-                  {dealsData.totalVariants}
+              {dealsData && dealsData.totalVariants > 0 ? (
+                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
+                  {dealsData.totalVariants.toLocaleString()}
                 </span>
-              )}
+              ) : dealsLoading ? (
+                <span className="w-8 h-4 rounded-full bg-white/10 animate-pulse ml-1.5 inline-block" />
+              ) : null}
             </MobileNavLink>
 
             <div className="border-t border-border/30 my-2" />
