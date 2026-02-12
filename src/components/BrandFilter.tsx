@@ -36,23 +36,37 @@ export function BrandFilter({
   const { data: brands, isLoading } = useQuery({
     queryKey: ["automated-brands-filter-synced"],
     queryFn: async () => {
-      // Use v_brand_directory for live-computed counts
-      const { data, error } = await supabase
+      // Get brand metadata from v_brand_directory
+      const { data: brandData, error: brandError } = await supabase
         .from("v_brand_directory")
-        .select("brand_slug, display_name, variant_count");
+        .select("brand_slug, display_name");
 
-      if (error) throw error;
-      // Filter to only include brands in the sync manager, then sort with numbers first, then alphabetically
-      const filtered = data?.filter(brand => SYNC_MANAGER_BRANDS.has(brand.brand_slug)) || [];
+      if (brandError) throw brandError;
+
+      // Get live counts from the RPC (cast to bypass type generation lag)
+      const { data: countData, error: countError } = await (supabase as any)
+        .rpc("get_catalog_counts_by_brand");
+
+      const countsMap: Record<string, number> = {};
+      if (!countError && countData) {
+        (countData as any[]).forEach((row: any) => {
+          countsMap[row.vendor_lower] = Number(row.variant_count);
+        });
+      }
+
+      // Filter to only include brands in the sync manager, then sort
+      const filtered = (brandData || [])
+        .filter(brand => SYNC_MANAGER_BRANDS.has(brand.brand_slug))
+        .map(brand => ({
+          ...brand,
+          variant_count: countsMap[brand.brand_slug] ?? 0,
+        }));
+
       return filtered.sort((a, b) => {
         const aStartsWithNumber = /^\d/.test(a.display_name);
         const bStartsWithNumber = /^\d/.test(b.display_name);
-        
-        // Numbers first
         if (aStartsWithNumber && !bStartsWithNumber) return -1;
         if (!aStartsWithNumber && bStartsWithNumber) return 1;
-        
-        // Then alphabetically
         return a.display_name.localeCompare(b.display_name);
       });
     },

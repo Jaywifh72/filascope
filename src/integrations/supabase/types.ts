@@ -10009,6 +10009,13 @@ export type Database = {
           variant_count: number
         }[]
       }
+      get_catalog_counts_by_brand: {
+        Args: never
+        Returns: {
+          variant_count: number
+          vendor_lower: string
+        }[]
+      }
       get_deal_alerts: {
         Args: { min_discount_percent?: number }
         Returns: {
