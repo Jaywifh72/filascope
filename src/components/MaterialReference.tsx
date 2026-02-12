@@ -123,7 +123,7 @@ const AccordionSection = ({
 }) => (
   <AccordionItem 
     value={value} 
-    className="border border-gray-700 rounded-lg px-4 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800/70 data-[state=open]:border-primary/30 transition-all duration-200"
+    className="border border-gray-700 rounded-lg px-4 bg-gray-800/50 hover:border-gray-600 hover:bg-gray-800/80 data-[state=open]:border-primary/30 transition-all duration-200"
   >
     <AccordionTrigger className="hover:no-underline hover:bg-gray-800/30 -mx-4 px-4 rounded-lg transition-colors duration-150 group py-4">
       <div className="flex items-center gap-3">
