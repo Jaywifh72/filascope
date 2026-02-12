@@ -1224,10 +1224,17 @@ const Finder = () => {
             selectedMaterials={selectedMaterials}
             onMaterialChange={(material, checked) => {
               if (checked) {
-                const newMaterials = selectedMaterials.includes("All") ? [material] : [...selectedMaterials, material];
-                setSelectedMaterials(newMaterials);
+                // Expand category ID to actual material names
+                const category = MATERIAL_CATEGORIES.find(cat => cat.id === material);
+                const materialsToAdd = category ? category.materials : [material];
+                const base = selectedMaterials.includes("All") ? [] : selectedMaterials;
+                setSelectedMaterials([...base, ...materialsToAdd]);
               } else {
-                setSelectedMaterials(selectedMaterials.filter(m => m !== material));
+                // Remove all materials belonging to this category
+                const category = MATERIAL_CATEGORIES.find(cat => cat.id === material);
+                const materialsToRemove = category ? category.materials : [material];
+                const remaining = selectedMaterials.filter(m => !materialsToRemove.includes(m));
+                setSelectedMaterials(remaining.length === 0 ? ["All"] : remaining);
               }
             }}
             selectedBrands={selectedBrands}
@@ -1317,10 +1324,17 @@ const Finder = () => {
           selectedMaterials={selectedMaterials}
           onMaterialChange={(material, checked) => {
             if (checked) {
-              const newMaterials = selectedMaterials.includes("All") ? [material] : [...selectedMaterials, material];
-              setSelectedMaterials(newMaterials);
+              // Expand category ID to actual material names
+              const category = MATERIAL_CATEGORIES.find(cat => cat.id === material);
+              const materialsToAdd = category ? category.materials : [material];
+              const base = selectedMaterials.includes("All") ? [] : selectedMaterials;
+              setSelectedMaterials([...base, ...materialsToAdd]);
             } else {
-              setSelectedMaterials(selectedMaterials.filter(m => m !== material));
+              // Remove all materials belonging to this category
+              const category = MATERIAL_CATEGORIES.find(cat => cat.id === material);
+              const materialsToRemove = category ? category.materials : [material];
+              const remaining = selectedMaterials.filter(m => !materialsToRemove.includes(m));
+              setSelectedMaterials(remaining.length === 0 ? ["All"] : remaining);
             }
           }}
           selectedBrands={selectedBrands}
