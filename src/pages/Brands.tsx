@@ -87,6 +87,7 @@ const Brands = () => {
     verifiedOnly: false,
     hasLivePricing: false,
     filamentCountRange: null,
+    priceTier: null,
     sortBy: "count-desc",
   });
 
@@ -308,8 +309,11 @@ const Brands = () => {
         matchesCount = brand.variantCount > 200;
       }
       
+      // Price tier filter
+      const matchesPriceTier = !filters.priceTier || brand.priceIndicator === filters.priceTier;
+      
       return matchesSearch && matchesVerified && matchesLivePricing && 
-             matchesHighSpeed && matchesRfid && matchesCardboard && matchesCount;
+             matchesHighSpeed && matchesRfid && matchesCardboard && matchesCount && matchesPriceTier;
     });
 
     // Sort
@@ -336,8 +340,9 @@ const Brands = () => {
   const hasActiveFilters = filters.materials.length > 0 || 
                           filters.features.length > 0 || 
                           filters.verifiedOnly || 
-                          filters.hasLivePricing || 
-                          filters.filamentCountRange !== null;
+                           filters.hasLivePricing || 
+                           filters.filamentCountRange !== null ||
+                           filters.priceTier !== null;
 
   // Stats - use catalogCounts for consistent product/variant terminology
   const totalProducts = catalogCounts?.productCount || 0;
@@ -503,6 +508,7 @@ const Brands = () => {
                       verifiedOnly: false,
                       hasLivePricing: false,
                       filamentCountRange: null,
+                      priceTier: null,
                       sortBy: "count-desc",
                     });
                   }}

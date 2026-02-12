@@ -64,6 +64,13 @@ const BrandsActiveFilters = ({
     });
   }
 
+  if (filters.priceTier) {
+    activeChips.push({
+      label: `Price: ${filters.priceTier}`,
+      onRemove: () => onFiltersChange({ ...filters, priceTier: null })
+    });
+  }
+
   if (activeChips.length === 0) return null;
 
   const clearAll = () => {
@@ -73,6 +80,7 @@ const BrandsActiveFilters = ({
       verifiedOnly: false,
       hasLivePricing: false,
       filamentCountRange: null,
+      priceTier: null,
       sortBy: filters.sortBy // Keep sort
     });
   };
