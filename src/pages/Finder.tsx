@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
@@ -261,6 +263,12 @@ const Finder = () => {
     return localStorage.getItem("finderShowCostPerPrint") === "true";
   });
 
+  // In Stock Only toggle (default: ON)
+  const [inStockOnly, setInStockOnly] = useState(() => {
+    const saved = localStorage.getItem("finderInStockOnly");
+    return saved === null ? true : saved === "true";
+  });
+
   // Bulk community ratings for all filaments
   const { data: communityRatingsMap } = useBulkCommunityRatings();
   
@@ -309,6 +317,10 @@ const Finder = () => {
   useEffect(() => {
     localStorage.setItem("finderShowCostPerPrint", showCostPerPrint ? "true" : "false");
   }, [showCostPerPrint]);
+
+  useEffect(() => {
+    localStorage.setItem("finderInStockOnly", inStockOnly ? "true" : "false");
+  }, [inStockOnly]);
   
   // Clear search term on fresh homepage visit (mount with no search params)
   // This ensures returning visitors see the full catalog, not filtered results
@@ -767,8 +779,18 @@ const Finder = () => {
     carbonFiber, glassFiber, woodFilled, highSpeed, largeSpools, amsOnly, brassOnly,
     selectedColorFamilies, hasTdData]);
 
-  const { groups: displayedGroups, totalCount, isLoading, isFetching, isPlaceholderData } = 
+  const { groups: rawGroups, totalCount: rawTotalCount, isLoading, isFetching, isPlaceholderData } = 
     useFinderQuery(finderFilters, currentPage, brandNameMap, pageSize);
+
+  // Client-side "In Stock Only" filtering
+  const displayedGroups = useMemo(() => {
+    if (!inStockOnly) return rawGroups;
+    return rawGroups.filter(g => g.anyInStock !== false);
+  }, [rawGroups, inStockOnly]);
+
+  const totalCount = inStockOnly
+    ? displayedGroups.length + (rawTotalCount > rawGroups.length ? rawTotalCount - rawGroups.length : 0)
+    : rawTotalCount;
 
   // === SERVER-SIDE FILTER COUNTS ===
   const { data: serverFilterCounts } = useFilterCounts(
@@ -1375,16 +1397,29 @@ const Finder = () => {
 
         {/* Results count and View Mode Toggle */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm text-muted-foreground">
-            {/* Only show skeleton on initial load, not during region transitions */}
-            {isLoading && !isPlaceholderData ? (
-              <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
-            ) : (
-              <>
-                {totalCount.toLocaleString()} products{unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}
-              </>
-            )}
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              {isLoading && !isPlaceholderData ? (
+                <span className="inline-block w-20 h-4 bg-muted/30 rounded animate-pulse align-middle" />
+              ) : (
+                <>
+                  {inStockOnly ? `${displayedGroups.length.toLocaleString()} in-stock` : totalCount.toLocaleString()} products{unfilteredProductCount > 0 && totalCount < unfilteredProductCount ? ` of ${unfilteredProductCount.toLocaleString()} total` : ''}
+                </>
+              )}
+            </p>
+            {/* In Stock Only toggle */}
+            <div className="hidden sm:flex items-center gap-1.5">
+              <Switch
+                id="in-stock-toggle"
+                checked={inStockOnly}
+                onCheckedChange={setInStockOnly}
+                className="data-[state=checked]:bg-primary"
+              />
+              <Label htmlFor="in-stock-toggle" className="text-xs text-muted-foreground cursor-pointer">
+                In Stock
+              </Label>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             {/* Cost per print toggle */}
             <label className="hidden sm:flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
