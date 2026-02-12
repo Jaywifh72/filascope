@@ -1,4 +1,5 @@
-import { Filter, Check, X } from 'lucide-react';
+import { Filter, Check, X, DollarSign, Monitor, Sparkles, Printer, LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { 
   SlicerFilterState, 
   SLICER_FILTER_CATEGORIES,
@@ -19,10 +20,10 @@ const FilterCheckbox = ({ id, label, count, checked, onChange }: FilterCheckboxP
   return (
     <label
       htmlFor={id}
-      className={`
-        flex items-center gap-2.5 py-1.5 cursor-pointer transition-all
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:text-foreground'}
-      `}
+      className={cn(
+        'flex items-center gap-2.5 px-2 py-1.5 rounded cursor-pointer transition-colors',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800/50 hover:text-foreground'
+      )}
     >
       <input
         type="checkbox"
@@ -33,16 +34,14 @@ const FilterCheckbox = ({ id, label, count, checked, onChange }: FilterCheckboxP
         className="sr-only"
       />
       <div
-        className={`
-          w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center
-          border-2 transition-all
-          ${checked 
-            ? 'bg-primary border-primary' 
-            : 'bg-transparent border-muted-foreground/30 hover:border-primary/50'
-          }
-        `}
+        className={cn(
+          'w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center border-2 transition-all',
+          checked
+            ? 'bg-cyan-500 border-cyan-500'
+            : 'bg-transparent border-slate-600 hover:border-cyan-500/50'
+        )}
       >
-        {checked && <Check className="w-3 h-3 text-primary-foreground" />}
+        {checked && <Check className="w-3 h-3 text-white" />}
       </div>
       <span className="flex-1 text-sm font-medium text-muted-foreground transition-colors">
         {label}
@@ -61,11 +60,21 @@ interface FilterSectionProps {
   onToggle: (categoryId: string, value: string, checked: boolean) => void;
 }
 
+const CATEGORY_ICONS: Record<string, { icon: LucideIcon; color: string }> = {
+  price: { icon: DollarSign, color: 'text-amber-400' },
+  platform: { icon: Monitor, color: 'text-cyan-400' },
+  features: { icon: Sparkles, color: 'text-cyan-400' },
+  focus: { icon: Printer, color: 'text-cyan-400' },
+};
+
 const FilterSection = ({ category, activeValues, counts, onToggle }: FilterSectionProps) => {
+  const iconConfig = CATEGORY_ICONS[category.id];
+  const IconComp = iconConfig?.icon;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1.5 text-sm font-medium text-white">
-        <span>{category.icon}</span>
+        {IconComp && <IconComp className={cn('h-4 w-4', iconConfig.color)} />}
         <span>{category.title}</span>
       </div>
       <div className="flex flex-col">
@@ -109,7 +118,7 @@ export function SlicerFilterPanel({
       role="complementary"
       aria-label="Filter slicers by criteria"
     >
-      <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-5 flex flex-col gap-6">
+      <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col gap-6">
         {/* Header */}
         <div className="flex flex-col gap-2 pb-4 border-b border-gray-700">
           <div className="flex items-center gap-2 text-base font-semibold text-white">
