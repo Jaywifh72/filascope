@@ -1,4 +1,4 @@
-import { ArrowRight, Scale, Sparkles, Target, Search } from "lucide-react";
+import { ArrowRight, Scale, Sparkles, Target, Search, GitCompare, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -150,6 +150,27 @@ export function FilamentComparisonEmptyState({
         <p className="text-xs text-muted-foreground">
           Compare up to <span className="text-primary font-medium">4 filaments</span> at once
         </p>
+      </div>
+
+      {/* How It Works */}
+      <div className="mt-12 w-full max-w-2xl">
+        <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          How It Works
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          {[
+            { step: "01", icon: Search, title: "Browse Materials", subtitle: "Select materials from the reference library" },
+            { step: "02", icon: GitCompare, title: "Add to Tray", subtitle: "Click the compare icon to add up to 4" },
+            { step: "03", icon: BarChart3, title: "Compare Side-by-Side", subtitle: "View properties, temps & specs together" },
+          ].map((item) => (
+            <div key={item.step} className="text-center p-4 rounded-lg border border-border/30 bg-muted/30">
+              <p className="text-[10px] font-mono text-primary/40 mb-1">{item.step}</p>
+              <item.icon className="w-8 h-8 mx-auto text-primary/60 mb-2" />
+              <p className="text-sm font-semibold text-foreground">{item.title}</p>
+              <p className="text-xs text-muted-foreground mt-1">{item.subtitle}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
