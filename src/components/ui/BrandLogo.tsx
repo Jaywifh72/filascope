@@ -38,7 +38,7 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
     return (
       <span
         className={cn(
-          "text-sm font-semibold tracking-wide text-gray-300 text-center py-2 flex-shrink-0",
+          "text-lg font-semibold text-muted-foreground font-mono text-center py-2 flex-shrink-0",
           className
         )}
         title={brandName}

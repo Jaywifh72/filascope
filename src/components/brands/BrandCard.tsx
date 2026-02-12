@@ -72,16 +72,13 @@ const BrandCard = ({
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
-      <div className="relative bg-muted/50 p-6 flex items-center justify-center h-28">
-        <div className={`flex items-center justify-center rounded-lg px-4 py-2 max-h-20 ${resolvedLogoUrl ? 'bg-white/10 dark:bg-white/20' : 'bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/30'}`}>
-          <BrandLogo
-            src={resolvedLogoUrl}
-            brandName={name}
-            size="lg"
-            className="max-h-16 max-w-full"
-          />
-        </div>
-        
+      <div className="relative aspect-[2/1] bg-gray-800/60 flex items-center justify-center p-4">
+        <BrandLogo
+          src={resolvedLogoUrl}
+          brandName={name}
+          size="lg"
+          className="max-h-12 max-w-full object-contain"
+        />
 
         {/* Price Indicator - Top Left */}
         {priceIndicator && (
