@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, HelpCircle, Loader2 } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -131,6 +131,14 @@ export default function MediumStandardPrinterCard({
     ? Math.round((1 - price / printer.msrp_usd) * 100)
     : null;
 
+  // Price freshness check (>7 days = stale)
+  const priceIsStale = (() => {
+    const updated = printer.prices_last_updated_at;
+    if (!updated) return true;
+    const diff = Date.now() - new Date(updated).getTime();
+    return diff > 7 * 24 * 60 * 60 * 1000;
+  })();
+
   return (
     <article 
       className="group relative transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 rounded-xl"
@@ -253,39 +261,45 @@ export default function MediumStandardPrinterCard({
                   <span className="h-5 w-20 rounded bg-muted animate-pulse" />
                 ) : price ? (
                   <>
-                    {/* Current Price - WHITE for consistency */}
-                    <span className="text-base sm:text-xl font-bold text-white inline-flex items-center gap-1">
-                      <Tag className="h-3 w-3 sm:h-4 sm:w-4 text-primary opacity-70" />
+                    {/* Current Price */}
+                    <span className="text-lg font-bold text-foreground inline-flex items-center gap-1">
+                      <Tag className="h-3.5 w-3.5 text-muted-foreground/50" />
                       {formatDisplayPrice(price)}
                     </span>
                     
-                    {/* Discount Badge - prominent green pill */}
+                    {/* Discount Badge */}
                     {printer.msrp_usd && price < printer.msrp_usd && discountPercent && discountPercent >= 5 && (
-                      <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-semibold px-1.5 py-0.5 rounded">
-                        -{discountPercent}% OFF
+                      <span className="bg-emerald-500/15 text-emerald-400 text-xs font-semibold px-1.5 py-0.5 rounded">
+                        -{discountPercent}%
                       </span>
                     )}
                     
                     {/* Original Price strikethrough */}
                     {printer.msrp_usd && price < printer.msrp_usd && (
-                      <span className="text-xs text-gray-500 line-through hidden sm:inline">
+                      <span className="text-sm text-muted-foreground line-through hidden sm:inline">
                         {formatDisplayPrice(printer.msrp_usd)}
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="bg-gray-800/50 border border-gray-700 border-dashed text-gray-500 text-xs font-mono italic px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                    <HelpCircle size={12} className="text-gray-600" />
+                  <span className="text-sm text-muted-foreground italic">
                     Price TBD
                   </span>
                 )}
               </div>
               
-              {/* Price disclaimer */}
-              {!printer.discontinued && price && (
-                <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex items-center text-[10px] text-gray-600 italic cursor-pointer hover:text-gray-400 transition-colors">
+              {/* Verify at store - only when stale */}
+              {!printer.discontinued && price && priceIsStale && (
+                <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex items-center text-xs text-amber-400/70 cursor-pointer hover:text-amber-300 transition-colors">
                   <ExternalLinkIcon size={10} className="mr-0.5" />
                   <span>Verify at store</span>
+                </Link>
+              )}
+
+              {/* Check store link for TBD prices */}
+              {!printer.discontinued && !price && !priceLoading && (
+                <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex items-center text-xs text-cyan-400/70 cursor-pointer hover:text-cyan-300 transition-colors">
+                  <span>Check store for pricing</span>
                 </Link>
               )}
             </div>
