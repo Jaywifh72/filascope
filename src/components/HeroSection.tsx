@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, FlaskConical, Target, Columns3, Tag, Users, RefreshCw, Palette, ArrowRight, X } from "lucide-react";
+import { Search, Target, Columns3, Tag, Users, RefreshCw, Palette, ArrowRight, X } from "lucide-react";
 import SearchInputWithHistory from "@/components/search/SearchInputWithHistory";
 import { useDealsCount } from "@/hooks/useDealsCount";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -224,54 +224,41 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left order-1">
-            {/* Badge */}
-            <div 
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-5 animate-fade-in"
-            >
-              <FlaskConical className="h-3.5 w-3.5 text-primary" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-primary">
-                Filament Search Engine
-              </span>
-            </div>
-
             {/* Headline */}
             <h1 
               className="animate-fade-in mb-4"
             >
-              <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold tracking-[0.08em] leading-[1.1] uppercase text-slate-100">
-                Find Your Perfect Filament.
+              <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-white">
+                FIND YOUR PERFECT
               </span>
-              <span className="block text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-medium tracking-[0.06em] leading-[1.2] uppercase text-slate-400 mt-2">
-                Compare prices from 15+ stores.
+              <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-primary">
+                FILAMENT.
               </span>
             </h1>
             
-            {/* Subtitle stats line */}
-            <p 
-              className="text-sm text-slate-500 mb-3 animate-fade-in"
-              style={{ animationDelay: "0.15s" }}
-            >
-              <AnimatedStat value={displayProductCount} /> materials · <AnimatedStat value={displayBrandCount} /> brands · Real-time pricing in your currency
-            </p>
+            {/* Subheadline */}
+            <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+              <p className="text-lg md:text-xl text-gray-300 font-medium">
+                <AnimatedStat value={displayProductCount} /> materials indexed from <AnimatedStat value={displayBrandCount} />+ manufacturers.
+              </p>
+              <p className="text-base text-gray-400 mt-1">
+                Compare properties, specs, and pricing in one unified data hub.
+              </p>
+            </div>
 
-            {/* Trust badges */}
+            {/* Social proof / Trust badges */}
             <div 
-              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400 mb-6 animate-fade-in border-t border-slate-700/50 pt-4 mt-4"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400 mb-6 animate-fade-in border-t border-white/10 pt-4 mt-4"
               style={{ animationDelay: "0.2s" }}
             >
               <div className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-primary/70" />
                 <span>Trusted by <span className="text-primary font-semibold">10,000+</span> makers</span>
               </div>
-              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span className="text-gray-600 hidden sm:inline">•</span>
               <div className="flex items-center gap-1.5">
                 <RefreshCw className="h-3 w-3 text-primary/70" />
                 <span>Updated daily from <span className="text-foreground font-medium">15+</span> retailers</span>
-              </div>
-              <span className="text-slate-600 hidden sm:inline">•</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-base leading-none">🌍</span>
-                <span>Users in <span className="text-foreground font-medium">40+</span> countries</span>
               </div>
             </div>
             
