@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrinterCompare } from "@/hooks/usePrinterCompare";
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, ChevronDown, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows, Sparkles, Tag } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersLeftSidebar, { type AdvancedFilters } from "@/components/printers/PrintersLeftSidebar";
@@ -637,6 +637,47 @@ export default function Printers() {
           onAddToCompare={handleAddToCompareFromQuiz}
         />
       )}
+
+      {/* Quick Action Cards */}
+      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 mt-3 sm:mt-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Hardware Quiz */}
+          <button
+            onClick={() => setIsQuizOpen(true)}
+            className="flex-1 bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3 flex items-start gap-3 hover:border-cyan-500/40 transition-colors text-left"
+          >
+            <Sparkles className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-semibold text-foreground">Hardware Quiz</div>
+              <div className="text-xs text-muted-foreground">Find your ideal printer in 60 seconds</div>
+            </div>
+          </button>
+
+          {/* Compare Printers */}
+          <Link
+            to="/printers/compare"
+            className="flex-1 bg-muted/5 border border-border rounded-lg p-3 flex items-start gap-3 hover:border-border/80 transition-colors"
+          >
+            <GitCompareArrows className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-semibold text-foreground">Compare Printers</div>
+              <div className="text-xs text-muted-foreground">Side-by-side specs & pricing</div>
+            </div>
+          </Link>
+
+          {/* Printer Deals */}
+          <Link
+            to="/deals?type=printer"
+            className="flex-1 bg-muted/5 border border-border rounded-lg p-3 flex items-start gap-3 hover:border-border/80 transition-colors"
+          >
+            <Tag className="h-5 w-5 text-cyan-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-semibold text-foreground">Printer Deals</div>
+              <div className="text-xs text-muted-foreground">Current discounts & offers</div>
+            </div>
+          </Link>
+        </div>
+      </div>
 
       {/* Results Header - Industrial style */}
       <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 mb-4 sm:mb-6 mt-3 sm:mt-4 animate-fade-in">
