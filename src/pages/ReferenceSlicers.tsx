@@ -561,8 +561,8 @@ const ReferenceSlicers = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse text-sm">
+                    <div className="overflow-x-auto max-w-full">
+                      <table className="w-full border-collapse text-sm min-w-[900px]">
                         <thead>
                           <tr className="bg-slate-800/50 border-b border-slate-700">
                             <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -610,7 +610,19 @@ const ReferenceSlicers = () => {
                                 </Badge>
                               </td>
                               <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
-                              <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.os}</td>
+                              <td className="py-2 px-3">
+                                <div className="flex items-center gap-1">
+                                  {slicer.os === "Browser" || slicer.os === "Web" ? (
+                                    <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title={slicer.os}>{slicer.os}</span>
+                                  ) : (
+                                    <>
+                                      {slicer.os.includes("Win") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="Windows">W</span>}
+                                      {slicer.os.includes("Mac") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="macOS">M</span>}
+                                      {slicer.os.includes("Lin") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="Linux">L</span>}
+                                    </>
+                                  )}
+                                </div>
+                              </td>
                               <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
                               <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
                               <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
