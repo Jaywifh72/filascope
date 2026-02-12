@@ -43,8 +43,8 @@ export function BrandFilter({
 
       if (brandError) throw brandError;
 
-      // Get live counts from the RPC (cast to bypass type generation lag)
-      const { data: countData, error: countError } = await (supabase as any)
+      // Get live counts from the RPC
+      const { data: countData, error: countError } = await supabase
         .rpc("get_catalog_counts_by_brand");
 
       const countsMap: Record<string, number> = {};
