@@ -229,8 +229,8 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
 
       {/* Printer Image */}
       <div className={cn(
-        "w-[100px] md:w-[120px] h-[100px] md:h-[120px] rounded-lg p-2 md:p-3 mb-2 md:mb-3 flex items-center justify-center",
-        printer.imageUrl ? "bg-white/5" : "bg-gray-900/30"
+        "w-[100px] md:w-[120px] h-[100px] md:h-[120px] rounded-lg mb-2 md:mb-3 flex items-center justify-center overflow-hidden",
+        printer.imageUrl ? "bg-white/5 p-2 md:p-3" : "bg-gradient-to-b from-muted/10 to-muted/5"
       )}>
         {printer.imageUrl ? (
           <img
@@ -244,8 +244,9 @@ export const SimilarPrinterCard: React.FC<SimilarPrinterCardProps> = ({
             }}
           />
         ) : (
-          <div className="h-[70px] flex items-center justify-center bg-gray-900/30 rounded-lg w-full">
-            <PrinterIcon size={32} className="text-gray-600" />
+          <div className="flex flex-col items-center justify-center gap-1 w-full h-full">
+            <PrinterIcon className="h-12 w-12 text-muted-foreground/30" />
+            <span className="text-[10px] text-muted-foreground/40 italic">Photo coming soon</span>
           </div>
         )}
       </div>
