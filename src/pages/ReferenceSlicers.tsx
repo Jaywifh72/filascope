@@ -396,15 +396,23 @@ const ReferenceSlicers = () => {
                   {/* Top 3 Featured Cards */}
                   {topPickSlicers.length > 0 ? (
                     <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
-                      {topPickSlicers.slice(0, 3).map((slicer) => (
-                        <SlicerTopPickCard
-                          key={slicer.name}
-                          slicer={slicer}
-                          logo={slicerLogos[slicer.name]}
-                          onLearnMore={() => handleLearnMore(slicer.name)}
-                          onAddToCompare={() => handleAddToCompare(slicer.name)}
-                        />
-                      ))}
+                      {topPickSlicers.slice(0, 3).map((slicer) => {
+                        const bestForMap: Record<string, string> = {
+                          'Bambu Studio': 'Beginners & Multi-Color',
+                          'PrusaSlicer': 'Advanced FDM Users',
+                          'OrcaSlicer': 'Power Users & Calibration',
+                        };
+                        return (
+                          <SlicerTopPickCard
+                            key={slicer.name}
+                            slicer={slicer}
+                            logo={slicerLogos[slicer.name]}
+                            bestFor={bestForMap[slicer.name]}
+                            onLearnMore={() => handleLearnMore(slicer.name)}
+                            onAddToCompare={() => handleAddToCompare(slicer.name)}
+                          />
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">

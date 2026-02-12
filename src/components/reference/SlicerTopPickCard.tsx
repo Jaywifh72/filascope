@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface SlicerTopPickCardProps {
   slicer: SlicerTierInfo;
   logo?: string;
+  bestFor?: string;
   onLearnMore: () => void;
   onAddToCompare: () => void;
 }
@@ -34,7 +35,7 @@ const priceTypeConfig: Record<PriceType, string> = {
   paid: 'bg-pink-500/15 border-pink-500/30 text-pink-400',
 };
 
-export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }: SlicerTopPickCardProps) {
+export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore, onAddToCompare }: SlicerTopPickCardProps) {
   const isStaffPick = slicer.badge === 'staff-pick';
   const BadgeIcon = slicer.badge ? badgeConfig[slicer.badge].icon : null;
 
@@ -92,10 +93,18 @@ export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }:
       </div>
 
       {/* Overall Score */}
-      <div className={cn('inline-flex items-center gap-1.5 text-base font-bold mb-4', scoreColor)}>
+      <div className={cn('inline-flex items-center gap-1.5 text-base font-bold', scoreColor)}>
         <span>{slicer.overallScore}/10</span>
         <Star size={14} fill="currentColor" />
       </div>
+
+      {/* Best For pill */}
+      {bestFor && (
+        <div className="text-xs bg-slate-800/80 rounded-full px-3 py-1 inline-block mt-2 mb-3">
+          <span className="text-cyan-400 font-medium">Best For: </span>
+          <span className="text-slate-300">{bestFor}</span>
+        </div>
+      )}
 
       {/* Top Features */}
       <ul className="flex flex-col gap-2 flex-1 w-full mb-4">
