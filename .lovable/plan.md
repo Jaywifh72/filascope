@@ -1,109 +1,108 @@
 
 
-# Filament Card Redesign for Better Conversion
+# Engagement and Social Proof Additions
 
-## Overview
-A targeted redesign of `FilamentCard.tsx` to improve conversion, engagement, and trust. The card currently has 5 visual sections (brand row, badges, price, meta/score, CTA). We'll restructure these while keeping card dimensions and the dark theme intact.
+## Current State
 
-## Data Availability Analysis
+- **Recently Viewed** already exists (`RecentlyViewedSection`) and is placed between hero and Material Registry (line 939-941 in Finder.tsx). It uses `useBrowseHistory` with localStorage + database persistence.
+- **No trending/popularity data** exists at the card level. The filaments table has no `view_count` or `popularity_score` column. The `user_activity` table tracks views but aggregating per-filament would require a new query or materialized view.
+- **No price history** is available at the card level. Price drops cannot be detected without historical price data per filament.
+- The filaments table likely has a `created_at` or similar timestamp for detecting "New" products.
 
-Before designing, here's what data the card already has access to:
+## Implementation Plan
 
-| Data Point | Available? | Source |
+### Part 1: Trending Section
+
+**New file**: `src/components/TrendingSection.tsx`
+
+A horizontal carousel section placed between the hero action cards and the RecentlyViewedSection in Finder.tsx.
+
+- **Header**: Uses `regionConfig.name` from `useRegion()` to show "Trending in [Region]" with a "See All" link pointing to `/?sort=popular`
+- **Data source**: Query filaments sorted by a popularity proxy. Two options:
+  - Option A (simple): Use the existing `useFinderQuery` or a standalone query sorted by `value_score DESC` or a composite of scores, limited to 8 items. This is a proxy for "popular" since we lack actual view counts.
+  - Option B (better, requires DB): Create a lightweight database function `get_trending_filaments(region text, limit int)` that aggregates recent `user_activity` views (last 7 days) grouped by `entity_id` where `entity_type = 'filament'`, joined with filament data. This gives real trending data.
+- **Recommended approach**: Option A for now (no DB change), with a TODO for Option B. Query 8 filaments with `variant_price IS NOT NULL` sorted by value_score descending, filtered to the user's region where possible.
+- **Mini card component**: Inline within the file. ~200px wide, showing color swatch (12px circle), truncated product name, price in cyan, and vendor name. Styled with `bg-slate-800/60 border border-slate-700/40 rounded-lg p-3`. Hover: `border-cyan-500/30 scale-[1.02]`.
+- **Scrolling**: Use the existing `ScrollCarousel` component for horizontal scroll with arrow buttons. No auto-scroll animation (adds complexity and can be annoying).
+
+### Part 2: Social Proof Badges on Cards
+
+**Modified file**: `src/components/FilamentCard.tsx`
+
+Add conditional badges in the existing card structure:
+
+1. **"New" badge**: Check if filament has a `created_at` field. If the product was added within the last 30 days, show an emerald "New" badge (`bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded-full`). Position: inside the badges row (Element 2), before material badge.
+
+2. **"Popular" badge**: Without real view count data, this will be based on a heuristic: filaments with `value_score >= 8` AND community reviews > 0. Badge styled amber (`bg-amber-500/20 text-amber-400`). Position: absolute top-right area, below the compare checkbox.
+
+3. **"Price Drop" badge**: Deferred -- requires price history data that doesn't exist at the card level. Instead, we can show the existing "Budget" badge more prominently near price when `isBudgetFriendly` is true. No fake "Price Drop" labels.
+
+The Filament interface will need `created_at` added. We'll check if the column exists in the query.
+
+### Part 3: Recently Viewed Repositioning
+
+**Modified file**: `src/pages/Finder.tsx`
+
+- **Move** the existing `<RecentlyViewedSection>` from its current position (line 939, between hero and SectionSeparator) to **after the pagination bar** (after `FinderPaginationBar`, before the closing `</section>` tag around line 1473).
+- Keep the same props: `limit={6} showClear title="Recently Viewed" filterType="filament" compact`
+- This creates the return-visit hook at the bottom of the product grid as specified.
+
+## File Changes Summary
+
+| File | Action | Description |
 |---|---|---|
-| Color hex swatch | Yes | `filament.color_hex` |
-| Brand logo | Yes | `getBrandLogo()` |
-| Product name | Yes | `filament.product_title` |
-| Price per kg | Yes | `useResolvedPrice()` |
-| Nozzle temp range | Yes | `filament.nozzle_temp_min_c / max_c` |
-| TD (HueForge) | Yes | `filament.transmission_distance` |
-| Material type | Yes | `filament.material` |
-| FilaScore | Yes | `calculateUnifiedScore()` |
-| Store/retailer name | **No** | Only `product_url` exists on card data; retailer names are in the listings system |
-| Community rating | Yes (optional) | `communityRating` prop |
-| Compare state | Yes | `useCompare()` hook |
-
-**Key finding**: The "store name" (e.g., "at Eryone") is NOT available at the card level. The filament `vendor` is the brand (e.g., "Bambu Lab"), not the retailer. Retailer data lives in `filament_listings` table, queried per-filament on the detail page. Adding per-card retailer queries for hundreds of cards would be expensive. Instead, the "store" link will show a domain extracted from `product_url` (e.g., "eryone.com") or omit it if unavailable.
-
-## Changes by Section
-
-### 1. Brand Logo (Smaller) + Color Swatch Next to Name
-- Shrink brand logo from current size to `h-6` max
-- Keep existing color swatch system (already w-5 h-5 circles) but ensure a single swatch appears next to product name when `color_hex` exists and there are no multi-variant swatches
-- Add tooltip on single color swatch showing hex value
-
-### 2. Product Name
-- Already has `line-clamp-3`; add `title` attribute for full name on hover (tooltip for truncated names)
-
-### 3. Price Row (Visual Anchor)
-- Make price `text-lg font-bold text-white` (currently `text-primary` which is cyan -- keep cyan as it's the brand color but make it more prominent)
-- Add "From" prefix text when price varies (grouped products)
-- Add `/kg` unit in `text-xs text-slate-500`
-- Below price, show store domain extracted from `product_url` as a small cyan link: "at eryone.com" in `text-cyan-400 text-xs hover:underline`. This opens the product URL. Falls back to nothing if no URL.
-
-### 4. Specs Row (Compact)
-- Add nozzle temp display as a compact icon+value pair: thermometer icon + "190-220C" in `text-xs text-slate-400`
-- TD badge is already present and well-styled (purple); keep it
-
-### 5. Rating Fix
-- The "10.0" scores showing are FilaScore values, not user ratings. The scoring algorithm (`calculateUnifiedScore`) produces these. Rather than hiding them entirely, we'll add logic: if more than 80% of visible cards have the same score (within 0.5), dim the score display and add a "preliminary" label. This maintains data transparency without undermining trust.
-- Community ratings (star icon) already only show when `reviewCount > 0`, which is correct.
-
-### 6. Bottom CTA: Two-Button Layout
-- Replace single "View Details" button with a split layout:
-  - **Primary** (left, flex-1): "View Prices" with arrow icon, linking to `/filament/{id}?tab=pricing`. Uses `bg-cyan-500 hover:bg-cyan-400 text-black` styling.
-  - **Secondary** (right, w-10): Compare toggle icon button with `Columns` icon. Border style: `border border-slate-600 hover:border-cyan-500`. When active: `bg-cyan-500/20` with cyan icon.
-- This replaces BOTH the current bottom CTA and the "Compare" pill in the meta row (removes duplication).
-- The top-right checkbox compare toggle remains for discoverability.
-
-### 7. Hover State
-- Add `hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/5` (partially exists already as `hover:-translate-y-1 hover:shadow-cyan-500/10`)
-- Replace translate with scale for smoother feel
-- Primary button brightens on card hover (already implemented with `group-hover:bg-cyan-500`)
-- Compare icon opacity: 60% default, 100% on hover (via `group-hover:opacity-100`)
-
-## Files to Modify
-
-1. **`src/components/FilamentCard.tsx`** -- Main changes:
-   - Restructure sections 1-5 as described
-   - Add store domain extraction utility
-   - Modify CTA section to two-button layout
-   - Adjust hover classes
-   - Remove redundant "Compare" pill from meta row
-   - Add nozzle temp compact display
-
-2. **`src/components/LabReadoutCard.tsx`** -- Table/list view parity:
-   - Verify CTA text matches ("View Prices" vs "View Details")
-   - Ensure compare toggle is accessible in list view
-
-3. **`src/components/FilamentCardSkeleton.tsx`** -- Update skeleton to match new layout proportions (two-button CTA area)
+| `src/components/TrendingSection.tsx` | **Create** | New trending carousel with mini-cards, region-aware header |
+| `src/components/FilamentCard.tsx` | **Edit** | Add "New" and "Popular" social proof badges |
+| `src/pages/Finder.tsx` | **Edit** | Add TrendingSection between hero and registry; move RecentlyViewed to bottom of grid |
+| `src/hooks/useFinderQuery.ts` | **Check** | Verify `created_at` is included in filament select queries |
 
 ## Technical Details
 
-### Store Domain Extraction
+### Trending Query (standalone)
 ```text
-function extractStoreDomain(url: string | null): string | null {
-  if (!url) return null;
-  try {
-    const hostname = new URL(url).hostname;
-    return hostname.replace(/^www\./, '');
-  } catch { return null; }
-}
+const { data: trendingFilaments } = useQuery({
+  queryKey: ['trending-filaments', regionConfig.code],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from('filaments')
+      .select('id, product_title, vendor, material, color_hex, variant_price, featured_image, product_url, net_weight_g')
+      .not('variant_price', 'is', null)
+      .not('color_hex', 'is', null)
+      .order('value_score', { ascending: false })
+      .limit(8);
+    if (error) throw error;
+    return data;
+  },
+  staleTime: 5 * 60 * 1000,
+});
 ```
 
-### Score Uniformity Detection
-Rather than checking all visible cards (which requires cross-card state), simply hide the numeric score when `scoreConfidence` is `'low'` AND `hasLimitedData` is true. This is a simpler proxy that achieves the same trust goal.
-
-### Two-Button CTA Layout
+### "New" Badge Logic
 ```text
-<div className="px-6 py-4 flex gap-2">
-  <Button asChild className="flex-1 ...primary styles...">
-    <Link to={`/filament/${id}?tab=pricing`}>
-      View Prices <ArrowRight />
-    </Link>
-  </Button>
-  <Button onClick={handleCompareToggle} className="w-10 ...secondary styles...">
-    <Columns className="w-4 h-4" />
-  </Button>
+// In FilamentCard, after existing badges
+const isNew = filament.created_at && 
+  (Date.now() - new Date(filament.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000;
+```
+
+### Mini Card Component (inline in TrendingSection)
+```text
+<div className="shrink-0 w-[200px] bg-slate-800/60 border border-slate-700/40 rounded-lg p-3
+  hover:border-cyan-500/30 hover:scale-[1.02] transition-all duration-200 cursor-pointer">
+  <div className="flex items-center gap-2 mb-2">
+    {colorHex && <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colorHex }} />}
+    <span className="text-sm font-medium text-foreground truncate">{name}</span>
+  </div>
+  <div className="flex items-center justify-between">
+    <span className="text-sm font-bold text-cyan-400">{price}</span>
+    <span className="text-xs text-slate-500">{vendor}</span>
+  </div>
 </div>
 ```
+
+## Scope Decisions
+
+- **No auto-scroll animation** on trending carousel -- manual scroll + arrow buttons via existing ScrollCarousel component
+- **No "Price Drop" badge** -- requires price history infrastructure that doesn't exist
+- **"Popular" uses heuristic** (high value_score) until real analytics aggregation is built
+- **Recently Viewed stays as-is functionally** -- just repositioned to bottom of grid
+
