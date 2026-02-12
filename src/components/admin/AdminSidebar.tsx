@@ -49,84 +49,84 @@ const navGroups: NavGroup[] = [
   {
     label: 'Overview',
     items: [
-      { title: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+      { title: 'Dashboard', href: '/old-admin/dashboard', icon: LayoutDashboard },
     ],
   },
   {
     label: 'Content',
     items: [
-      { title: 'Filaments', href: '/admin/filaments', icon: Beaker },
-      { title: 'Printers', href: '/admin/printers', icon: Printer },
-      { title: 'Brands', href: '/admin/brands', icon: Store },
-      { title: 'Brand Pipeline', href: '/admin/brand-pipeline', icon: FlaskConical },
-      { title: 'Deals', href: '/admin/featured-content', icon: Star },
-      { title: 'Inventory', href: '/admin/inventory', icon: Package },
+      { title: 'Filaments', href: '/old-admin/filaments', icon: Beaker },
+      { title: 'Printers', href: '/old-admin/printers', icon: Printer },
+      { title: 'Brands', href: '/old-admin/brands', icon: Store },
+      { title: 'Brand Pipeline', href: '/old-admin/brand-pipeline', icon: FlaskConical },
+      { title: 'Deals', href: '/old-admin/featured-content', icon: Star },
+      { title: 'Inventory', href: '/old-admin/inventory', icon: Package },
     ],
   },
   {
     label: 'Regional',
     items: [
-      { title: 'Regional Stores', href: '/admin/regional-stores', icon: Globe },
-      { title: 'Store URLs', href: '/admin/store-urls', icon: Link2 },
-      { title: 'Exchange Rates', href: '/admin/exchange-rates', icon: DollarSign },
+      { title: 'Regional Stores', href: '/old-admin/regional-stores', icon: Globe },
+      { title: 'Store URLs', href: '/old-admin/store-urls', icon: Link2 },
+      { title: 'Exchange Rates', href: '/old-admin/exchange-rates', icon: DollarSign },
     ],
   },
   {
     label: 'Data Quality',
     items: [
-      { title: 'Data Health', href: '/admin/data-health', icon: Database },
-      { title: 'Data Quality', href: '/admin/data-quality', icon: FileSearch },
-      { title: 'Price Extraction', href: '/admin/brand-extraction', icon: Wrench },
-      { title: 'Price Verification', href: '/admin/price-verification', icon: DollarSign },
-      { title: 'Field Coverage', href: '/admin/field-coverage', icon: BarChart3 },
-      { title: 'Broken Links', href: '/admin/broken-links', icon: Link2 },
-      { title: 'Duplicates', href: '/admin/duplicates', icon: Copy },
-      { title: 'Price Anomalies', href: '/admin/price-anomalies', icon: TrendingDown },
-      { title: 'Product 404s', href: '/admin/broken-urls', icon: Link2Off },
-      { title: 'Filament Audit', href: '/admin/filament-audit', icon: FileText },
+      { title: 'Data Health', href: '/old-admin/data-health', icon: Database },
+      { title: 'Data Quality', href: '/old-admin/data-quality', icon: FileSearch },
+      { title: 'Price Extraction', href: '/old-admin/brand-extraction', icon: Wrench },
+      { title: 'Price Verification', href: '/old-admin/price-verification', icon: DollarSign },
+      { title: 'Field Coverage', href: '/old-admin/field-coverage', icon: BarChart3 },
+      { title: 'Broken Links', href: '/old-admin/broken-links', icon: Link2 },
+      { title: 'Duplicates', href: '/old-admin/duplicates', icon: Copy },
+      { title: 'Price Anomalies', href: '/old-admin/price-anomalies', icon: TrendingDown },
+      { title: 'Product 404s', href: '/old-admin/broken-urls', icon: Link2Off },
+      { title: 'Filament Audit', href: '/old-admin/filament-audit', icon: FileText },
     ],
   },
   {
     label: 'Audit Tools',
     items: [
-      { title: 'Region Testing', href: '/admin/region-test', icon: Globe },
-      { title: 'Regional Expansion', href: '/admin/regional-expansion', icon: MapPin },
-      { title: 'Price Freshness', href: '/admin/price-freshness', icon: Clock },
+      { title: 'Region Testing', href: '/old-admin/region-test', icon: Globe },
+      { title: 'Regional Expansion', href: '/old-admin/regional-expansion', icon: MapPin },
+      { title: 'Price Freshness', href: '/old-admin/price-freshness', icon: Clock },
     ],
   },
   {
     label: 'Regional Pricing',
     items: [
-      { title: 'Price Import', href: '/admin/price-import', icon: Package },
-      { title: 'Store Registry', href: '/admin/stores', icon: Store },
-      { title: 'Exchange Rates', href: '/admin/exchange-rates', icon: DollarSign },
+      { title: 'Price Import', href: '/old-admin/price-import', icon: Package },
+      { title: 'Store Registry', href: '/old-admin/stores', icon: Store },
+      { title: 'Exchange Rates', href: '/old-admin/exchange-rates', icon: DollarSign },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { title: 'Import', href: '/admin/import', icon: Package },
-      { title: 'Enrichment', href: '/admin/enrichment', icon: Sparkles },
-      { title: 'Filament Scraper', href: '/admin/filament-scraper', icon: Wrench },
-      { title: 'Amazon Links', href: '/admin/amazon-links', icon: Link2 },
-      { title: 'Scheduler', href: '/admin/scheduler', icon: Calendar },
+      { title: 'Import', href: '/old-admin/import', icon: Package },
+      { title: 'Enrichment', href: '/old-admin/enrichment', icon: Sparkles },
+      { title: 'Filament Scraper', href: '/old-admin/filament-scraper', icon: Wrench },
+      { title: 'Amazon Links', href: '/old-admin/amazon-links', icon: Link2 },
+      { title: 'Scheduler', href: '/old-admin/scheduler', icon: Calendar },
     ],
   },
   {
     label: 'Analytics',
     items: [
-      { title: 'Module Analytics', href: '/admin/module-analytics', icon: BarChart3 },
-      { title: 'A/B Tests', href: '/admin/ab-tests', icon: FlaskConical },
+      { title: 'Module Analytics', href: '/old-admin/module-analytics', icon: BarChart3 },
+      { title: 'A/B Tests', href: '/old-admin/ab-tests', icon: FlaskConical },
     ],
   },
   {
     label: 'System',
     items: [
-      { title: 'Users', href: '/admin/users', icon: Users },
-      { title: 'Affiliates', href: '/admin/affiliates', icon: DollarSign },
-      { title: 'Maintenance', href: '/admin/maintenance', icon: AlertTriangle },
-      { title: 'Site Settings', href: '/admin/site-settings', icon: Settings },
-      { title: 'Docs', href: '/admin/docs', icon: BookOpen },
+      { title: 'Users', href: '/old-admin/users', icon: Users },
+      { title: 'Affiliates', href: '/old-admin/affiliates', icon: DollarSign },
+      { title: 'Maintenance', href: '/old-admin/maintenance', icon: AlertTriangle },
+      { title: 'Site Settings', href: '/old-admin/site-settings', icon: Settings },
+      { title: 'Docs', href: '/old-admin/docs', icon: BookOpen },
     ],
   },
 ];
@@ -150,11 +150,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between h-14 px-3 border-b border-border">
         {!collapsed && (
-          <Link to="/admin/dashboard" className="flex items-center gap-2">
+          <Link to="/old-admin/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Settings className="w-4 h-4 text-primary" />
             </div>
-            <span className="font-semibold text-foreground">Admin</span>
+            <span className="font-semibold text-foreground">OldAdmin</span>
           </Link>
         )}
         <Button

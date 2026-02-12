@@ -1,0 +1,86 @@
+import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useFeatureSwitch } from "@/hooks/useFeatureSwitch";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { PageLoadingSkeleton } from "@/components/skeletons/PageLoadingSkeleton";
+import { Settings, ToggleLeft, ExternalLink } from "lucide-react";
+
+export default function NewAdminPanel() {
+  const { user, isAdmin, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { enabled: lightModePublic, loading: switchLoading, setEnabled: setLightModePublic } = useFeatureSwitch("light_mode_public");
+
+  useEffect(() => {
+    if (!authLoading && (!user || !isAdmin)) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, isAdmin, authLoading, navigate]);
+
+  if (authLoading || switchLoading) {
+    return <PageLoadingSkeleton />;
+  }
+
+  if (!user || !isAdmin) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto p-6 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Settings className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Admin Panel</h1>
+              <p className="text-sm text-muted-foreground">Manage feature flags and site-wide settings</p>
+            </div>
+          </div>
+          <Button variant="outline" asChild>
+            <Link to="/old-admin/dashboard" className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4" />
+              OldAdmin Dashboard
+            </Link>
+          </Button>
+        </div>
+
+        {/* Feature Switches */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <ToggleLeft className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Feature Switches</CardTitle>
+                <CardDescription>Toggle site-wide features on or off</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/30">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium">Light mode option</Label>
+                <p className="text-xs text-muted-foreground">
+                  {lightModePublic
+                    ? "Light mode is available to all users."
+                    : "Light mode is restricted to admins only."}
+                </p>
+              </div>
+              <Switch
+                checked={lightModePublic}
+                onCheckedChange={(checked) => setLightModePublic(checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
