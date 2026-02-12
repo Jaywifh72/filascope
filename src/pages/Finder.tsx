@@ -943,8 +943,16 @@ const Finder = () => {
       {/* Why FilaScope value proposition */}
       <WhyFilaScope />
 
-      {/* Visual Section Separator - tight spacing */}
-      <SectionSeparator />
+      {/* Bridge: Discovery → Catalog transition */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-px my-8 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-semibold text-foreground">Browse All Filaments</h2>
+          <p className="text-sm text-muted-foreground mt-1.5">
+            Explore {unfilteredProductCount ? `${unfilteredProductCount.toLocaleString()}+` : "1,000+"} filaments from 48+ brands. Filter by material, printer compatibility, price, and more.
+          </p>
+        </div>
+      </div>
 
       {/* Region Transition Indicator - fixed at top of viewport during region changes */}
       <RegionTransitionIndicator 
