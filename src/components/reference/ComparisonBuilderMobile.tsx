@@ -1,5 +1,6 @@
 import { GitCompare, ArrowRight } from 'lucide-react';
 import { useSlicerComparison } from '@/contexts/SlicerComparisonContext';
+import { SlicerLogo } from './SlicerLogoFallback';
 
 export function ComparisonBuilderMobile() {
   const { selectedSlicers, openComparison } = useSlicerComparison();
@@ -23,19 +24,12 @@ export function ComparisonBuilderMobile() {
         
         <div className="flex -space-x-2 ml-1">
           {selectedSlicers.slice(0, 3).map(slicer => (
-            slicer.logo ? (
-              <img
-                key={slicer.id}
-                src={slicer.logo}
-                alt={slicer.name}
-                className="w-7 h-7 rounded-full border-2 border-background bg-muted/30 object-contain p-0.5"
-              />
-            ) : (
-              <div
-                key={slicer.id}
-                className="w-7 h-7 rounded-full border-2 border-background bg-primary/20"
-              />
-            )
+            <SlicerLogo
+              key={slicer.id}
+              src={slicer.logo}
+              name={slicer.name}
+              className="w-7 h-7 rounded-full border-2 border-background"
+            />
           ))}
           {selectedSlicers.length > 3 && (
             <div className="w-7 h-7 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[11px] font-bold text-primary">
