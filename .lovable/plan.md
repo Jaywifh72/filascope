@@ -1,44 +1,64 @@
 
-## Add "How It Works" Section to Filament Comparison Empty State
 
-### What Changes
-A 3-step instructional section will be added below the "Compare up to 4 filaments at once" text, filling the empty space and guiding users through the comparison workflow.
+## Rename Admin to "OldAdmin" and Create New "Admin" with Feature Switches
 
-### Visual Result
-- A centered "HOW IT WORKS" label in mono text
-- Three numbered step cards in a responsive grid (stacked on mobile, 3 columns on md+)
-- Each card shows a step number, icon, title, and subtitle
-- Subtle dark styling consistent with the existing empty state
+### Overview
+The existing admin panel at `/admin/*` will be moved to `/old-admin/*`, and a new `/admin` section will be created with a "Feature Switches" page. The first switch controls whether Light Mode is available to all users or only admins.
+
+### How It Works
+
+1. **Routes**: `/admin` will point to the new Admin panel. All old admin routes move to `/old-admin/*`.
+2. **Feature Switch storage**: Uses the existing `site_settings` table with a new key `light_mode_public` (`{enabled: true/false}`).
+3. **Theme gating**: The theme selector in Settings will hide the "Light" and "System" options when `light_mode_public` is off and the user is not an admin.
 
 ### Technical Details
 
-**File: `src/components/compare/FilamentComparisonEmptyState.tsx`**
-
-1. Add imports for `Search`, `GitCompare`, and `BarChart3` from lucide-react (line 1)
-
-2. After the closing `</div>` of the "Compare up to 4 filaments" paragraph (around line 152-155), insert:
-
-```tsx
-{/* How It Works */}
-<div className="mt-12 w-full max-w-2xl">
-  <p className="text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-    How It Works
-  </p>
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-    {[
-      { step: "01", icon: Search, title: "Browse Materials", subtitle: "Select materials from the reference library" },
-      { step: "02", icon: GitCompare, title: "Add to Tray", subtitle: "Click the compare icon to add up to 4" },
-      { step: "03", icon: BarChart3, title: "Compare Side-by-Side", subtitle: "View properties, temps & specs together" },
-    ].map((item) => (
-      <div key={item.step} className="text-center p-4 rounded-lg border border-gray-800 bg-gray-900/30">
-        <p className="text-[10px] font-mono text-primary/40 mb-1">{item.step}</p>
-        <item.icon className="w-8 h-8 mx-auto text-primary/60 mb-2" />
-        <p className="text-sm font-semibold text-foreground">{item.title}</p>
-        <p className="text-xs text-muted-foreground mt-1">{item.subtitle}</p>
-      </div>
-    ))}
-  </div>
-</div>
+#### 1. Database: Insert feature flag row
+Insert a new row into `site_settings` for the light mode toggle:
+```sql
+INSERT INTO site_settings (key, value, description)
+VALUES ('light_mode_public', '{"enabled": true}', 'Whether light mode is available to non-admin users')
+ON CONFLICT (key) DO NOTHING;
 ```
 
-3. Remove the existing "Compare up to 4 filaments" wrapper `<div className="mt-12 text-center">` and fold its text into the new section or keep it above as-is -- the new "How It Works" block replaces the dead space below it.
+#### 2. New hook: `src/hooks/useFeatureSwitch.ts`
+A reusable hook following the same pattern as `useMaintenanceMode`:
+- Fetches `site_settings` row by key
+- Subscribes to realtime changes
+- Returns `{ enabled, loading, setEnabled }`
+
+#### 3. New page: `src/pages/NewAdminPanel.tsx`
+A new admin page at `/admin` with:
+- Admin auth gating (same pattern as existing admin pages)
+- A "Feature Switches" card
+- A "Light mode option" toggle using the `Switch` component
+- Description text explaining the toggle behavior
+- Link to "OldAdmin" panel at `/old-admin/dashboard`
+
+#### 4. Route changes in `src/App.tsx`
+- Change `/admin` redirect to point to the new `NewAdminPanel`
+- Move all existing `/admin/*` routes to `/old-admin/*`
+- Add `/old-admin` redirect to `/old-admin/dashboard`
+
+#### 5. Sidebar update: `src/components/admin/AdminSidebar.tsx`
+- Update all `href` values from `/admin/...` to `/old-admin/...`
+- Rename header from "Admin" to "OldAdmin"
+
+#### 6. AdminLayout update: `src/components/admin/AdminLayout.tsx`
+- No structural changes needed; it wraps children generically
+
+#### 7. Theme gating: `src/components/settings/SettingsPreferencesSection.tsx`
+- Import `useFeatureSwitch` and `useAuth`
+- When `light_mode_public` is disabled and user is not admin:
+  - Hide "Light" and "System" options from the theme selector
+  - If user's current theme is "light" or "system", auto-switch to "dark"
+
+#### Files to create:
+- `src/hooks/useFeatureSwitch.ts`
+- `src/pages/NewAdminPanel.tsx`
+
+#### Files to modify:
+- `src/App.tsx` (route changes)
+- `src/components/admin/AdminSidebar.tsx` (rename + re-path)
+- `src/components/settings/SettingsPreferencesSection.tsx` (gate light mode)
+
