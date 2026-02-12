@@ -36,6 +36,7 @@ import { SlicerFilterPanel } from "@/components/reference/SlicerFilterPanel";
 import { MobileFilterPanel } from "@/components/reference/MobileFilterPanel";
 import { ActiveFilterBadges } from "@/components/reference/ActiveFilterBadges";
 import { getImageUrl } from '@/lib/imageUrl';
+import { SlicerLogo } from '@/components/reference/SlicerLogoFallback';
 
 // Logo mapping for slicers
 const slicerLogos: Record<string, string> = {
@@ -589,13 +590,7 @@ const ReferenceSlicers = () => {
                             >
                               <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                  {slicerLogos[slicer.name] && (
-                                    <img 
-                                      src={slicerLogos[slicer.name]} 
-                                      alt={`${slicer.name} logo`}
-                                      className="w-5 h-5 rounded object-contain"
-                                    />
-                                  )}
+                                  <SlicerLogo src={slicerLogos[slicer.name]} name={slicer.name} className="w-5 h-5 rounded" />
                                   {slicer.name}
                                 </div>
                               </td>
@@ -667,15 +662,7 @@ const ReferenceSlicers = () => {
                           <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                             {String(index + 1).padStart(2, '0')}
                           </span>
-                          {slicerLogos[slicer.name] ? (
-                            <img 
-                              src={slicerLogos[slicer.name]} 
-                              alt={`${slicer.name} logo`}
-                              className="w-10 h-10 rounded-lg object-contain bg-gray-900/50 p-1 flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-lg bg-primary/20 flex-shrink-0" />
-                          )}
+                          <SlicerLogo src={slicerLogos[slicer.name]} name={slicer.name} className="w-10 h-10 rounded-lg p-1" />
                           <div className="min-w-0">
                             <h3 className="text-base font-bold text-white">{slicer.name}</h3>
                             <p className="text-sm text-gray-400 line-clamp-1 max-w-2xl">

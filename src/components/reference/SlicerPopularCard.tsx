@@ -2,6 +2,7 @@ import { Check, ArrowRight, Plus, Star } from 'lucide-react';
 import { SlicerTierInfo, PriceType } from '@/lib/slicerTierData';
 import { useSlicerComparison, slicerTierInfoToSelectedSlicer } from '@/contexts/SlicerComparisonContext';
 import { cn } from '@/lib/utils';
+import { SlicerLogo } from './SlicerLogoFallback';
 
 interface SlicerPopularCardProps {
   slicer: SlicerTierInfo;
@@ -38,12 +39,8 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
     <div className="w-full h-full bg-gray-800 border border-gray-700 rounded-xl p-4 grid grid-cols-[80px_1fr] gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 max-md:grid-cols-1 max-md:text-center">
       {/* Logo Column */}
       <div className="flex flex-col items-center max-md:items-center">
-        <div className="w-[60px] h-[60px] bg-gray-900/50 rounded-lg p-2.5 flex items-center justify-center">
-          {logo ? (
-            <img src={logo} alt={`${slicer.name} logo`} className="max-w-full max-h-full object-contain" />
-          ) : (
-            <div className="w-10 h-10 bg-primary/20 rounded-lg" />
-          )}
+        <div className="w-[60px] h-[60px] rounded-lg flex items-center justify-center">
+          <SlicerLogo src={logo} name={slicer.name} className="w-[52px] h-[52px] rounded-lg" />
         </div>
       </div>
 

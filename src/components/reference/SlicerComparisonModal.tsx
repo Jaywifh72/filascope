@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { X, Star, Check, ExternalLink } from 'lucide-react';
+import { SlicerLogo } from './SlicerLogoFallback';
 import { useSlicerComparison, SelectedSlicer } from '@/contexts/SlicerComparisonContext';
 import { cn } from '@/lib/utils';
 import {
@@ -98,15 +99,7 @@ export function SlicerComparisonModal() {
                 key={slicer.id}
                 className="flex flex-col items-center gap-3 p-5 bg-primary/5 border border-primary/20 rounded-xl text-center"
               >
-                {slicer.logo ? (
-                  <img
-                    src={slicer.logo}
-                    alt={`${slicer.name} logo`}
-                    className="w-16 h-16 object-contain rounded-lg bg-muted/30 p-2"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-primary/20 rounded-lg" />
-                )}
+                <SlicerLogo src={slicer.logo} name={slicer.name} className="w-16 h-16 rounded-lg p-2" />
                 <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                   {slicer.brand}
                 </div>
