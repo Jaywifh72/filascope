@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, ShoppingBag, Check } from "lucide-react";
+import { CalendarIcon, ShoppingBag, Check, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -201,21 +201,20 @@ export function MarkPurchasedButton({
 
   if (existingPurchase) {
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <div className="flex items-center gap-1.5 text-emerald-400">
-          <Check className="w-4 h-4" />
-          <span className="font-medium">
-            Purchased {existingPurchase.purchase_date
-              ? format(new Date(existingPurchase.purchase_date), "MMM d, yyyy")
-              : ""}
-          </span>
-        </div>
-        <button
+      <div className="space-y-1.5">
+        <Button
+          variant="outline"
           onClick={() => setDialogOpen(true)}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+          className="w-full h-8 text-xs font-medium whitespace-nowrap bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300"
         >
-          Edit
-        </button>
+          <CheckCircle2 className="w-4 h-4 mr-1" />
+          ✓ Owned
+        </Button>
+        {existingPurchase.purchase_date && (
+          <p className="text-[10px] text-muted-foreground text-center">
+            Purchased {format(new Date(existingPurchase.purchase_date), "MMM d, yyyy")}
+          </p>
+        )}
         <MarkPurchasedDialog
           productId={productId}
           productType={productType}
