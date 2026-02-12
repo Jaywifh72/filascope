@@ -194,26 +194,37 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
     return () => clearInterval(interval);
   }, [searchTerm]);
 
-  const getColorClasses = (color: string, title?: string) => {
-    // #4: "Quick Match" and "Browse Filaments" get primary tint as primary paths
-    const isPrimaryPath = title === "Quick Match" || title === "Browse Filaments";
-    if (isPrimaryPath) {
-      return 'border-primary/20 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary hover:shadow-primary/10';
+  const getCardClasses = (path: typeof quickStartPaths[number]) => {
+    const isBrowse = path.title === "Browse Filaments";
+    const isDeals = path.title === "Today's Deals";
+    const isPrimary = isBrowse || isDeals;
+
+    const base = "group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 ease-out min-h-[100px] sm:min-h-[120px] touch-manipulation";
+    const hover = "hover:scale-[1.03] hover:shadow-lg hover:shadow-cyan-500/10 hover:border-white/20 hover:bg-white/[0.06]";
+    const active = "active:scale-[0.98] active:duration-100";
+
+    let accent = "";
+    let iconColor = "";
+    let bg = "";
+
+    if (isBrowse) {
+      accent = "border-l-2 border-l-cyan-400 border-white/10 bg-primary/5";
+      iconColor = "text-cyan-400";
+    } else if (isDeals) {
+      accent = "border-l-2 border-l-emerald-400 border-white/10 bg-emerald-500/5";
+      iconColor = "text-emerald-400";
+    } else {
+      // Secondary cards
+      accent = "border-white/10 bg-white/[0.03]";
+      switch (path.color) {
+        case 'purple': iconColor = "text-purple-400"; break;
+        case 'blue': iconColor = "text-blue-400"; break;
+        case 'pink': iconColor = "text-pink-400"; break;
+        default: iconColor = "text-gray-400"; break;
+      }
     }
-    switch (color) {
-      case 'primary':
-        return 'border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 text-primary hover:shadow-primary/10';
-      case 'blue':
-        return 'border-blue-500/30 hover:border-blue-500/60 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400 hover:shadow-blue-500/10';
-      case 'purple':
-        return 'border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 hover:bg-purple-500/10 text-purple-400 hover:shadow-purple-500/10';
-      case 'green':
-        return 'border-green-500/30 hover:border-green-500/60 bg-green-500/5 hover:bg-green-500/10 text-green-400 hover:shadow-green-500/10';
-      case 'pink':
-        return 'border-pink-500/30 hover:border-pink-500/60 bg-pink-500/5 hover:bg-pink-500/10 text-pink-400 hover:shadow-pink-500/10';
-      default:
-        return 'border-gray-500/30 hover:border-gray-500/60 bg-gray-500/5 hover:bg-gray-500/10 text-gray-400';
-    }
+
+    return { className: `${base} ${hover} ${active} ${accent}`, iconColor, isPrimary };
   };
 
   return (
@@ -325,10 +336,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             >
               {quickStartPaths.map((path) => {
                 const Icon = path.icon;
-                const isBrowse = path.title === "Browse Filaments";
-                const isDeals = path.title === "Today's Deals";
-                const topBorder = isBrowse ? "border-t-2 border-t-cyan-500/40" : isDeals ? "border-t-2 border-t-amber-500/40" : "";
-                const cardClasses = `group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:border-slate-600 hover:bg-slate-800/80 min-h-[100px] sm:min-h-[120px] touch-manipulation ${topBorder} ${getColorClasses(path.color, path.title)}`;
+                const { className: cardClasses, iconColor } = getCardClasses(path);
                 
                 const cardContent = (
                   <>
@@ -339,7 +347,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
                         Live
                       </div>
                     )}
-                    <Icon className="h-7 w-7 mb-2 transition-transform group-hover:scale-110" />
+                    <Icon className={`h-7 w-7 mb-2 transition-transform group-hover:scale-110 ${iconColor}`} />
                     <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
                     <span className="text-[10px] text-slate-400 leading-tight">{path.description}</span>
                   </>
