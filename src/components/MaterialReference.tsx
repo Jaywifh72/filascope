@@ -1032,11 +1032,13 @@ const MaterialReference = () => {
                           )}>
                             {name}
                           </span>
-                          {hasReference ? (
-                            <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
-                          ) : (
-                            <FileQuestion className="w-3.5 h-3.5 text-amber-500/60 shrink-0" />
-                          )}
+                          <span title="Add to comparison" aria-label="Add to comparison" role="img" className="shrink-0 hover:scale-110 transition-transform inline-flex">
+                            {hasReference ? (
+                              <BookOpen className="w-3.5 h-3.5 text-primary" />
+                            ) : (
+                              <FileQuestion className="w-3.5 h-3.5 text-amber-500/60" />
+                            )}
+                          </span>
                         </button>
                       ))}
                     </div>
