@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, Sun, Star, Info, Award } from 'lucide-react';
+import { ExternalLink, Package, Zap, Sun, Star, Award } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
 import { MaterialBadge } from '@/components/MaterialBadge';
 import { FilamentHeroGallery } from './FilamentHeroGallery';
 import { LargeColorSwatchGrid } from './LargeColorSwatchGrid';
+import { ShareButton } from './ShareButton';
 import { FilamentKeySpecsBar } from './FilamentKeySpecsBar';
 import { FilamentQuickSpecsGrid } from './FilamentQuickSpecsGrid';
 import { normalizeColorHex, cn } from '@/lib/utils';
@@ -108,10 +109,13 @@ export function FilamentHeroSection({
               </Link>
             </div>
             
-            {/* Product Line Name - Primary Heading */}
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
-              {productLineName}
-            </h1>
+            {/* Product Line Name + Share */}
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
+                {productLineName}
+              </h1>
+              <ShareButton title={productLineName} />
+            </div>
 
             {/* Material & Feature Badges */}
             <div className="flex items-center gap-3 flex-wrap">
