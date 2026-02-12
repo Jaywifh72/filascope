@@ -29,6 +29,16 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [learnDropdownOpen, setLearnDropdownOpen] = useState(false);
   const learnHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // Detect scroll for sticky nav border
+  useEffect(() => {
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 80);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Compare tray state
   const { items: compareItems } = useCompare();
@@ -210,7 +220,10 @@ const Navbar = () => {
   // Flattened items for tablet/mobile "More" dropdown
   const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
-      <nav className="sticky top-0 z-50 bg-background shadow-sm dark:shadow-lg border-b border-border/50" aria-label="Main navigation">
+      <nav className={cn(
+        "sticky top-0 z-50 bg-background/95 backdrop-blur-md shadow-sm dark:shadow-lg transition-all duration-300",
+        hasScrolled ? "border-b border-border/50" : "border-b border-transparent"
+      )} aria-label="Main navigation">
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         
@@ -253,7 +266,10 @@ const Navbar = () => {
             <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
-            <LabNavLink to="/deals">Deals</LabNavLink>
+            <LabNavLink to="/deals">
+              Deals
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse" aria-hidden="true" />
+            </LabNavLink>
             
             {/* Learn Dropdown - Mega Menu with hover support on desktop */}
             <DropdownMenu 
@@ -381,7 +397,10 @@ const Navbar = () => {
             <LabNavLink to="/" end>Filaments</LabNavLink>
             <LabNavLink to="/printers">Printers</LabNavLink>
             <LabNavLink to="/brands">Brands</LabNavLink>
-            <LabNavLink to="/deals">Deals</LabNavLink>
+            <LabNavLink to="/deals">
+              Deals
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse" aria-hidden="true" />
+            </LabNavLink>
             
             {/* More Dropdown (Learn collapsed) */}
             <DropdownMenu>
@@ -562,7 +581,10 @@ const Navbar = () => {
             <MobileNavLink to="/" end>Filaments</MobileNavLink>
             <MobileNavLink to="/printers">Printers</MobileNavLink>
             <MobileNavLink to="/brands">Brands</MobileNavLink>
-            <MobileNavLink to="/deals">Deals</MobileNavLink>
+            <MobileNavLink to="/deals">
+              Deals
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse" aria-hidden="true" />
+            </MobileNavLink>
 
             <div className="border-t border-border/30 my-2" />
 
