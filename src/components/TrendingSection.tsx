@@ -5,6 +5,7 @@ import { useRegion } from "@/contexts/RegionContext";
 import { ScrollCarousel, ScrollCarouselItem } from "@/components/ui/scroll-carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { normalizeColorHex } from "@/lib/utils";
+import { getOptimizedImageUrl } from "@/utils/imageOptimization";
 
 interface TrendingFilament {
   id: string;
@@ -81,10 +82,11 @@ function useTrendingFilaments(regionCode: string) {
   });
 }
 
-function MiniFilamentCard({ filament }: { filament: TrendingFilament }) {
+function TrendingCard({ filament }: { filament: TrendingFilament }) {
   const { formatPrice } = useRegion();
   const colorHex = normalizeColorHex(filament.color_hex);
   const price = filament.variant_price ? formatPrice(filament.variant_price) : null;
+  const hasImage = !!filament.featured_image;
 
   let name = filament.product_title || "";
   if (filament.vendor && name.toLowerCase().startsWith(filament.vendor.toLowerCase())) {
@@ -94,20 +96,55 @@ function MiniFilamentCard({ filament }: { filament: TrendingFilament }) {
   return (
     <Link
       to={`/filament/${filament.id}`}
-      className="group/card block shrink-0 w-[200px] bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-150 cursor-pointer"
+      className="group/card block shrink-0 w-[220px] bg-card/60 border border-border/40 rounded-xl p-3 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-black/20 transition-all duration-150 ease-out cursor-pointer"
     >
-      <div className="flex items-center gap-2 mb-1">
-        <div
-          className="w-4 h-4 rounded-full ring-1 ring-white/20 flex-shrink-0"
-          style={{ backgroundColor: colorHex }}
-        />
-        <span className="text-sm font-medium text-slate-200 group-hover/card:text-white transition-colors duration-150 truncate">{name}</span>
+      <div className="flex gap-3">
+        {/* Thumbnail area with color swatch badge */}
+        <div className="relative flex-shrink-0">
+          {hasImage ? (
+            <div className="w-14 h-14 rounded-lg bg-muted/30 overflow-hidden flex items-center justify-center">
+              <img
+                src={getOptimizedImageUrl(filament.featured_image!, 112)}
+                alt=""
+                className="w-full h-full object-contain"
+                loading="lazy"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            </div>
+          ) : (
+            <div
+              className="w-14 h-14 rounded-lg border border-border/50"
+              style={{ backgroundColor: colorHex }}
+            />
+          )}
+          {/* Color swatch badge overlapping top-left */}
+          {hasImage && (
+            <div
+              className="absolute -top-1 -left-1 w-5 h-5 rounded-full ring-2 ring-background"
+              style={{ backgroundColor: colorHex }}
+            />
+          )}
+        </div>
+
+        {/* Text content */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <span className="text-sm font-medium text-foreground/90 group-hover/card:text-foreground transition-colors duration-150 line-clamp-2 leading-tight">
+            {name}
+          </span>
+          <span className="text-xs text-muted-foreground truncate mt-0.5">
+            {filament.vendor}
+          </span>
+        </div>
       </div>
-      <div className="text-xs text-gray-400 truncate mb-2">{filament.vendor}</div>
-      <div className="flex items-center justify-between">
+
+      {/* Bottom row: trending badge + price */}
+      <div className="flex items-center justify-between mt-2.5 gap-2">
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 whitespace-nowrap">
+          🔥 Popular
+        </span>
         {price && (
-          <span className="text-sm font-bold text-cyan-400 group-hover/card:text-cyan-300 transition-colors duration-150">
-            <span className="text-slate-500 text-xs font-normal">From </span>{price}
+          <span className="text-sm font-bold text-primary group-hover/card:text-primary/90 transition-colors duration-150 whitespace-nowrap">
+            <span className="text-muted-foreground text-[10px] font-normal">From </span>{price}
           </span>
         )}
       </div>
@@ -125,12 +162,12 @@ export function TrendingSection() {
     <section className="max-w-7xl mx-auto px-4 py-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-foreground">
           🔥 Trending in {regionConfig.name}
         </h2>
         <Link
           to="/?sort=popular"
-          className="text-cyan-400 text-sm hover:underline"
+          className="text-primary text-sm font-semibold hover:underline"
         >
           See All →
         </Link>
@@ -140,14 +177,14 @@ export function TrendingSection() {
       {isLoading ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="shrink-0 w-[200px] h-[72px] rounded-lg" />
+            <Skeleton key={i} className="shrink-0 w-[220px] h-[100px] rounded-xl" />
           ))}
         </div>
       ) : (
         <ScrollCarousel gap={12}>
           {filaments!.map((f) => (
             <ScrollCarouselItem key={f.id}>
-              <MiniFilamentCard filament={f} />
+              <TrendingCard filament={f} />
             </ScrollCarouselItem>
           ))}
         </ScrollCarousel>
