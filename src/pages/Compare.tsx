@@ -461,7 +461,7 @@ const Compare = () => {
           {/* Custom underline-style tabs */}
           <div className="sticky top-16 z-30 -mx-4 lg:-mx-0 px-4 lg:px-0 bg-background/95 backdrop-blur-md border-b border-border/50 mb-6">
             <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
-              <nav className="flex gap-1 min-w-max py-3 border-b border-border/50 mb-4" role="tablist" aria-label="Compare page tabs">
+              <nav className="flex gap-1 min-w-max py-3" role="tablist" aria-label="Compare page tabs">
                 <button
                   role="tab"
                   aria-selected={activeTab === "reference"}
