@@ -59,9 +59,10 @@ export function FilamentCardSkeleton({ index = 0 }: FilamentCardSkeletonProps) {
         <Skeleton className="h-5 w-16 rounded-full" />
       </div>
 
-      {/* Element 5: CTA Button */}
-      <div className="px-6 py-4">
-        <Skeleton className="h-11 w-full rounded-lg" />
+      {/* Element 5: Two-Button CTA */}
+      <div className="px-6 py-4 flex gap-2">
+        <Skeleton className="h-11 flex-1 rounded-lg" />
+        <Skeleton className="h-11 w-10 rounded-md" />
       </div>
     </div>
   );

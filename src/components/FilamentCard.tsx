@@ -20,6 +20,8 @@ import {
   Printer,
   Award,
   AlertTriangle,
+  Columns,
+  Thermometer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -383,10 +385,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       className={cn(
         "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
         "bg-card/80 border border-border",
-        // Hover states differ for in-stock vs out-of-stock
+        // Hover states — scale instead of translate for smoother feel
         isOutOfStock
-          ? "opacity-75 hover:-translate-y-1 hover:border-muted-foreground/20 hover:shadow-lg hover:shadow-muted/5"
-          : "hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/40",
+          ? "opacity-75 hover:scale-[1.02] hover:border-muted-foreground/20 hover:shadow-lg hover:shadow-muted/5"
+          : "hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/5 hover:border-cyan-500/40",
         "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
         isSelected && "border-2 border-primary bg-primary/5",
         isPendingSelection && "border-2 border-primary/60 bg-primary/5",
@@ -550,9 +552,12 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           ) : null}
         </div>
         
-        {/* Plan #5: Product Name — line-clamp-3 */}
+        {/* Product Name — line-clamp-3 with title tooltip */}
         <div className="text-left">
-          <h3 className="text-lg font-semibold text-foreground leading-tight line-clamp-3">
+          <h3 
+            className="text-lg font-semibold text-foreground leading-tight line-clamp-3"
+            title={filament.product_title || ''}
+          >
             {getDisplayTitle()}
           </h3>
         </div>
@@ -664,7 +669,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          ELEMENT 3: Price Block — Plan #9: Simplified display
+          ELEMENT 3: Price Block — Visual anchor with store domain
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3" data-card-element="3">
         {(resolved.isLoading || isRatesLoading) ? (
@@ -678,13 +683,16 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
               <div className="flex items-baseline gap-1">
+                {hasPriceRange && (
+                  <span className="text-xs text-muted-foreground mr-0.5">From</span>
+                )}
                 <span className={cn(
                   "text-lg font-bold leading-none",
-                  isOutOfStock ? "text-muted-foreground line-through" : "text-primary"
+                  isOutOfStock ? "text-muted-foreground line-through" : "text-foreground"
                 )}>
                   {formatPrice(pricePerKg, { showApproximate: isConvertedPrice })}
                 </span>
-                <span className="text-xs font-medium text-muted-foreground">/kg</span>
+                <span className="text-xs font-medium text-muted-foreground/60">/kg</span>
               </div>
               
               {/* Budget-Friendly Badge (inline with price) */}
@@ -703,6 +711,22 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               )}
             </div>
             
+            {/* Store domain link */}
+            {(() => {
+              const storeDomain = extractStoreDomain(filament.product_url);
+              return storeDomain ? (
+                <a 
+                  href={filament.product_url!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  at {storeDomain}
+                </a>
+              ) : null;
+            })()}
+            
             {/* Secondary local price when best price is international */}
             {resolved.localPricePerKg != null && resolved.formattedLocalPricePerKg && (
               <div className="flex items-center gap-1 text-xs">
@@ -714,7 +738,6 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             )}
           </div>
         ) : isValidPrice && pricePerKg && isStale ? (
-          // Stale price - show muted with warning
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span className="text-lg text-muted-foreground line-through opacity-60">
@@ -727,7 +750,6 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             </div>
           </div>
         ) : (
-          // No price available
           <div className="flex items-center gap-2">
             <ExternalLink className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Check price at store</span>
@@ -745,12 +767,29 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
+          ELEMENT 3b: Nozzle Temp Compact Row
+          ═══════════════════════════════════════════════════════════════ */}
+      {(filament.nozzle_temp_min_c || filament.nozzle_temp_max_c) && (
+        <div className="px-6 pb-2 flex items-center gap-1.5">
+          <Thermometer className="w-3 h-3 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">
+            {filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
+              ? `${filament.nozzle_temp_min_c}–${filament.nozzle_temp_max_c}°C`
+              : filament.nozzle_temp_max_c
+              ? `≤${filament.nozzle_temp_max_c}°C`
+              : `≥${filament.nozzle_temp_min_c}°C`
+            }
+          </span>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 4: Meta Row — FilaScore + Freshness + Compare
           Plan #8, #9 (freshness), #10
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-2 flex items-center gap-2 flex-wrap" data-card-element="4">
-        {/* Plan #8: FilaScore as compact pill */}
-        {overallScore !== null ? (
+        {/* FilaScore — hidden when low confidence + limited data */}
+        {overallScore !== null && !(scoreConfidence === 'low' && hasLimitedData) ? (
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <div 
@@ -792,11 +831,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               </div>
             </HoverCardContent>
           </HoverCard>
-        ) : (
-          <div className="bg-muted/60 text-muted-foreground text-xs px-2 py-0.5 rounded-full">
-            —
-          </div>
-        )}
+        ) : null}
 
         {/* Limited Data Badge */}
         {hasLimitedData && (
@@ -840,41 +875,26 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           </Tooltip>
         )}
         
-        {/* Plan #9/10: Freshness dot + compact label */}
+        {/* Freshness dot + compact label */}
         {compactTimeAgo && shouldShowPrice && (
           <div className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
             <div className={cn("w-1.5 h-1.5 rounded-full", getFreshnessDotColor(priceConfidence))} />
             <span>{compactTimeAgo}</span>
           </div>
         )}
-
-        {/* Plan #10: Compare pill */}
-        <button
-          onClick={handleCompareToggle}
-          disabled={isCompareDisabled}
-          className={cn(
-            "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
-            isSelected || isPendingSelection
-              ? "border-primary/50 bg-primary/10 text-primary"
-              : "border-border/50 text-muted-foreground hover:border-primary/50 hover:text-primary",
-            isCompareDisabled && "opacity-30 cursor-not-allowed"
-          )}
-        >
-          {isSelected ? "Comparing" : "Compare"}
-        </button>
       </div>
 
       </div>{/* End flex-grow wrapper */}
 
       {/* ═══════════════════════════════════════════════════════════════
-          ELEMENT 5: CTA Button — Plan #6/#7: Differentiated states
+          ELEMENT 5: Two-Button CTA — View Prices + Compare Toggle
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 py-4 flex justify-center" data-card-element="5">
+      <div className="px-6 py-4 flex gap-2" data-card-element="5">
         <Button
           asChild
           variant={isOutOfStock ? "outline" : "default"}
           className={cn(
-            "w-full h-11 font-semibold transition-all duration-200",
+            "flex-1 h-11 font-semibold transition-all duration-200",
             isOutOfStock
               ? "bg-transparent border-muted-foreground/40 text-muted-foreground hover:bg-muted/50"
               : cn(
@@ -884,14 +904,41 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
             "active:scale-[0.98]"
           )}
         >
-          <Link to={`/filament/${filament.id}`} aria-label={`View details for ${filament.product_title}`}>
-            {isOutOfStock ? 'View Details (Out of Stock)' : isHighConfidence ? 'View Details' : 'Check Price'}
+          <Link to={`/filament/${filament.id}?tab=pricing`} aria-label={`View prices for ${filament.product_title}`}>
+            {isOutOfStock ? 'View Details' : 'View Prices'}
             <ArrowRight className="w-[18px] h-[18px] ml-2" />
           </Link>
         </Button>
+        <button
+          onClick={handleCompareToggle}
+          disabled={isCompareDisabled}
+          aria-label={isSelected ? "Remove from comparison" : "Add to comparison"}
+          className={cn(
+            "w-10 h-11 flex items-center justify-center rounded-md border transition-all duration-200",
+            isSelected || isPendingSelection
+              ? "bg-primary/20 border-primary text-primary"
+              : cn(
+                  "border-border text-muted-foreground",
+                  "hover:border-primary hover:text-primary",
+                  "opacity-60 group-hover:opacity-100"
+                ),
+            isCompareDisabled && "opacity-30 cursor-not-allowed"
+          )}
+        >
+          <Columns className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
+}
+
+// Utility: extract store domain from product URL
+function extractStoreDomain(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.replace(/^www\./, '');
+  } catch { return null; }
 }
 
 export default FilamentCard;
