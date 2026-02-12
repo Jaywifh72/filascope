@@ -999,6 +999,7 @@ const Finder = () => {
       <ResultsHeader
         count={totalCount}
         totalCatalogCount={unfilteredProductCount}
+        totalVariantCount={catalogCounts?.variantCount || 0}
         selectedPrinter={selectedPrinter}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearAllFilters}

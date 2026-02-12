@@ -1,4 +1,4 @@
-import { X, Printer, Database, Download, Loader2 } from "lucide-react";
+import { X, Printer, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 interface ResultsHeaderProps {
   count: number;
   totalCatalogCount?: number;
+  totalVariantCount?: number;
   selectedPrinter?: { model_name: string; printer_brands?: { brand: string } | null } | null;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
@@ -17,6 +18,7 @@ interface ResultsHeaderProps {
 const ResultsHeader = ({ 
   count, 
   totalCatalogCount,
+  totalVariantCount,
   selectedPrinter, 
   hasActiveFilters, 
   onClearFilters,
@@ -33,34 +35,12 @@ const ResultsHeader = ({
   return (
     <div id="filament-catalog" className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 py-4 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Left Side: Registry Title + Count */}
-        <div className="flex flex-col gap-2">
+        {/* Left Side: Title + Count */}
+        <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Database className="w-5 h-5 text-primary hidden sm:block" />
-            <h2 className="text-lg font-bold text-foreground">
-              Filament Catalog
+            <h2 className="text-2xl font-bold text-foreground">
+              Browse All Filaments
             </h2>
-            <span className="text-muted-foreground">—</span>
-            {showLoadingSkeleton ? (
-              <span className="inline-block w-16 h-5 bg-primary/20 rounded animate-pulse align-middle" />
-            ) : (
-              <>
-                <span className="text-cyan-400 font-bold">
-                  {count.toLocaleString()}
-                  {isUpdating && (
-                    <Loader2 className="inline-block w-3 h-3 ml-1.5 text-primary animate-spin align-middle" />
-                  )}
-                </span>
-                <span className="text-muted-foreground text-sm font-normal">
-                  {selectedPrinter 
-                    ? `filaments compatible with your ${printerShortName}` 
-                    : hasActiveFilters ? "matching" : "products"}
-                  {totalCatalogCount && totalCatalogCount > count ? (
-                    <span className="text-slate-500"> of {totalCatalogCount.toLocaleString()} total</span>
-                  ) : null}
-                </span>
-              </>
-            )}
             {printerShortName && (
               <Badge variant="outline" className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full border-border">
                 {printerShortName}
@@ -68,15 +48,38 @@ const ResultsHeader = ({
             )}
           </div>
           
-          {/* Printer Context Subtitle */}
+          {/* Subtitle with counts */}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-normal flex-wrap">
+            {showLoadingSkeleton ? (
+              <span className="inline-block w-40 h-4 bg-muted rounded animate-pulse align-middle" />
+            ) : (
+              <>
+                <span>
+                  {count.toLocaleString()} products
+                  {isUpdating && (
+                    <Loader2 className="inline-block w-3 h-3 ml-1.5 text-primary animate-spin align-middle" />
+                  )}
+                  {totalVariantCount ? ` (${totalVariantCount.toLocaleString()} variants)` : ""}
+                </span>
+                {selectedPrinter && (
+                  <span>
+                    · compatible with {printerBrand} {printerName}
+                  </span>
+                )}
+                {totalCatalogCount && totalCatalogCount > count && !selectedPrinter ? (
+                  <span className="text-muted-foreground/60">of {totalCatalogCount.toLocaleString()} total</span>
+                ) : null}
+              </>
+            )}
+          </div>
+          
+          {/* Printer change link */}
           {selectedPrinter && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
               <Printer className="w-3 h-3" />
-              <span>Compatible with {printerBrand} {printerName}</span>
-              <span className="mx-1">·</span>
               <Link 
                 to="/materials" 
-                className="text-cyan-400 text-xs hover:text-cyan-300 underline underline-offset-2"
+                className="text-primary text-xs hover:text-primary/80 underline underline-offset-2"
               >
                 Change printer
               </Link>
