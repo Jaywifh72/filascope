@@ -1047,7 +1047,12 @@ const MaterialReference = () => {
                         {category}
                       </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground bg-gray-800 px-1.5 py-0.5 rounded">
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded-md transition-colors duration-200",
+                      isCollapsed
+                        ? "bg-primary/10 text-primary font-semibold"
+                        : "bg-gray-700/50 text-gray-400"
+                    )}>
                       {categoryCount}
                     </span>
                   </button>
