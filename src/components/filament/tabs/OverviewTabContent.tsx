@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { BestPricesSection } from '../BestPricesSection';
 import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
 import { useCommunityPhotoCount } from '@/hooks/useCommunityPhotos';
+import { MaterialQuickGuide } from '../MaterialQuickGuide';
+import { useBrowseHistory } from '@/hooks/useBrowseHistory';
 import { 
   Zap, 
   Package, 
@@ -301,6 +303,8 @@ function UseCaseList({ entries, materialFamily, variant }: {
 
 export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateToCommunity, priceCandidates, priceCandidatesLoading, totalRetailerCount }: OverviewTabContentProps) {
   const { data: photoCount } = useCommunityPhotoCount(filament.id, "filament");
+  const { localItems } = useBrowseHistory(1);
+  const sessionViewCount = localItems.filter(i => i.product_type === 'filament').length;
   // Build key features list
   const features: Array<{ icon: React.ReactNode; label: string; value: string; highlight?: boolean }> = [];
 
@@ -385,6 +389,9 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
           </p>
         </CardContent>
       </Card>
+
+      {/* Material Quick Guide — educational, collapsed by default */}
+      <MaterialQuickGuide material={filament.material} sessionViewCount={sessionViewCount} />
 
       {/* Ideal For / Not Recommended Section */}
       {(idealEntries.length > 0 || notRecEntries.length > 0) && (
