@@ -160,21 +160,19 @@ const BrandsSidebar = ({
                       className={cn(
                         "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors",
                         filters.materials.includes(material.id)
-                          ? "bg-primary/15 text-primary"
+                          ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
                           : "hover:bg-gray-800/50 hover:text-white",
                         (materialCounts[material.id] || 0) === 0 && !filters.materials.includes(material.id)
                           && "opacity-40 pointer-events-none"
                       )}
                     >
-                      <span className={cn("text-sm", filters.materials.includes(material.id) ? "" : "text-gray-300")}>{material.label}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600 font-mono">
-                          ({materialCounts[material.id] || 0})
-                        </span>
-                        {filters.materials.includes(material.id) && (
-                          <Check className="h-3.5 w-3.5" />
-                        )}
-                      </div>
+                      <span className={cn("text-sm flex items-center", filters.materials.includes(material.id) ? "" : "text-gray-300")}>
+                        {filters.materials.includes(material.id) && <Check className="h-3 w-3 mr-1" />}
+                        {material.label}
+                      </span>
+                      <span className="text-xs text-gray-600 font-mono">
+                        ({materialCounts[material.id] || 0})
+                      </span>
                     </button>
                   ))}
                 </div>
