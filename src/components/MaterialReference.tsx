@@ -252,7 +252,7 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
         </div>
       )}
 
-      <Separator className="bg-gray-800" />
+      <div className="my-6 border-t border-border/30" />
 
       {/* BASICS Section */}
       <SectionDivider label="Basics" />
