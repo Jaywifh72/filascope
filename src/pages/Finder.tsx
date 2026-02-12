@@ -705,8 +705,11 @@ const Finder = () => {
       
       // Create map from display_name to brand_name (for filtering)
       const brandNameMap: Record<string, string> = {};
+      // Create map from brand_slug to brand_name (for count lookup)
+      const slugToNameMap: Record<string, string> = {};
       syncedBrands.forEach(b => {
         brandNameMap[b.display_name] = b.brand_name;
+        slugToNameMap[b.brand_slug] = b.brand_name;
       });
       
       // Get all synced brand display names
@@ -714,7 +717,8 @@ const Finder = () => {
       
       return {
         displayNames: allBrands.sort(),
-        brandNameMap
+        brandNameMap,
+        slugToNameMap
       };
     },
   });
@@ -722,34 +726,28 @@ const Finder = () => {
   // Extract for convenience
   const brands = brandsData?.displayNames;
   const brandNameMap = brandsData?.brandNameMap || {};
+  const slugToNameMap = brandsData?.slugToNameMap || {};
 
-  // Fetch true filament counts per brand in a SINGLE query (replaces N+1 loop)
+  // Fetch true filament counts per brand via server-side RPC (avoids 1000-row limit)
   const { data: brandFilamentCounts } = useQuery({
-    queryKey: ["brand-filament-counts", brandNameMap],
+    queryKey: ["brand-filament-counts-rpc", slugToNameMap],
     queryFn: async () => {
-      const brandNames = Object.values(brandNameMap);
-      if (brandNames.length === 0) return {};
-      
-      // Single query: fetch vendor column for all brands, then count client-side
-      const { data, error } = await supabase
-        .from("filaments")
-        .select("vendor")
-        .in("vendor", brandNames);
-      
+      const { data, error } = await supabase.rpc("get_catalog_counts_by_brand");
       if (error) throw error;
       
-      // Group and count client-side
+      // Map vendor_lower (slugs) to brand_name using slugToNameMap
       const counts: Record<string, number> = {};
-      for (const row of data || []) {
-        if (row.vendor) {
-          counts[row.vendor] = (counts[row.vendor] || 0) + 1;
+      for (const row of (data as any[]) || []) {
+        const brandName = slugToNameMap[row.vendor_lower];
+        if (brandName) {
+          counts[brandName] = Number(row.variant_count);
         }
       }
       
       return counts;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: Object.keys(brandNameMap).length > 0,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    enabled: Object.keys(slugToNameMap).length > 0,
   });
 
   // === SERVER-SIDE PAGINATED QUERY (replaces fetch-all + client-side processing) ===
