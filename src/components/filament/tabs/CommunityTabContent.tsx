@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Database } from '@/integrations/supabase/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,9 @@ import {
   Search,
   Globe,
   Box,
+  ChevronDown,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useProductReviews } from '@/hooks/useProductReviews';
 import { useReviewFlags } from '@/hooks/useReviewFlags';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
@@ -137,6 +139,72 @@ function buildForumLinks(filament: Filament) {
   return links;
 }
 
+// ─── Reviews Empty State ───
+function ReviewsEmptyState({ vendor, material, productTitle }: { vendor: string | null; material: string | null; productTitle: string | null }) {
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const displayName = productTitle || `${vendor} ${material}`;
+
+  return (
+    <div className="flex flex-col items-center rounded-xl border border-border/40 bg-muted/10 p-6 text-center space-y-4">
+      {/* Placeholder review cards */}
+      <div className="w-full max-w-sm space-y-2">
+        {[1, 0.4, 0.2].map((opacity, idx) => (
+          <div key={idx} className="flex items-start gap-3 rounded-lg bg-muted/20 p-3 border border-border/20" style={{ opacity }}>
+            <div className="w-8 h-8 rounded-full bg-muted-foreground/20 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="w-24 h-3 rounded bg-muted-foreground/20" />
+              <div className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 text-muted-foreground/30" strokeWidth={1.5} />
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                <div className="w-full h-2 rounded bg-muted-foreground/10" />
+                <div className="w-3/4 h-2 rounded bg-muted-foreground/10" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <p className="text-lg font-semibold text-foreground/90">
+          Be the first to review {displayName}
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Your experience helps thousands of makers make informed decisions
+        </p>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        📝 Reviews are verified — only users who have used this filament can review
+      </p>
+
+      {/* Collapsible tips */}
+      <div className="w-full max-w-sm">
+        <button
+          onClick={() => setTipsOpen(!tipsOpen)}
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
+        >
+          💡 Tips for a great review
+          <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", tipsOpen && "rotate-180")} />
+        </button>
+        <div className={cn(
+          "overflow-hidden transition-all duration-200 ease-out",
+          tipsOpen ? "max-h-40 opacity-100 mt-2" : "max-h-0 opacity-0"
+        )}>
+          <ul className="text-xs text-muted-foreground text-left bg-muted/20 rounded-lg p-3 space-y-1.5 list-disc list-inside">
+            <li>What did you print?</li>
+            <li>What printer and settings did you use?</li>
+            <li>How was the surface finish and color accuracy?</li>
+            <li>Would you buy it again?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CommunityTabContent({ filament }: CommunityTabContentProps) {
   const {
     reviews,
@@ -203,19 +271,11 @@ export function CommunityTabContent({ filament }: CommunityTabContentProps) {
           />
 
           {reviews.length === 0 && !isLoading && (
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/50 rounded-xl p-8 text-center">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-8 w-8 text-muted-foreground/30" />
-                ))}
-              </div>
-              <p className="text-base text-muted-foreground mb-1">
-                No reviews yet for {filament.vendor} {filament.material}
-              </p>
-              <p className="text-sm text-muted-foreground mb-5">
-                Be the first to review — it takes less than 30 seconds
-              </p>
-            </div>
+            <ReviewsEmptyState
+              vendor={filament.vendor}
+              material={filament.material}
+              productTitle={filament.display_name || filament.product_title}
+            />
           )}
         </CardContent>
       </Card>
