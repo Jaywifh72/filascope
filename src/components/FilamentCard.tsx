@@ -130,6 +130,23 @@ interface FilamentCardProps {
   showCostPerPrint?: boolean;
 }
 
+// Price freshness reframe helper (Change 4)
+function getReframedFreshness(confidence: string | null, timeAgo: string | null): { dot: string | null; text: string | null } {
+  if (confidence === 'high') return { dot: 'bg-emerald-400', text: 'Updated recently' };
+  if (confidence === 'medium' || confidence === 'low') {
+    const match = timeAgo?.match(/(\d+)\s*(d|day|h|hour|w|week|mo|month)/i);
+    if (match) {
+      const num = match[1];
+      const unit = match[2].toLowerCase();
+      const label = unit.startsWith('mo') ? `${num}mo` : unit.startsWith('w') ? `${num}w` : unit.startsWith('d') ? `${num}d` : `${num}h`;
+      return { dot: null, text: `Checked ${label} ago` };
+    }
+    return { dot: null, text: null };
+  }
+  if (confidence === 'stale') return { dot: 'bg-amber-400', text: 'Price may have changed' };
+  return { dot: null, text: null };
+}
+
 // Get the single most important standout feature
 function getStandoutFeature(filament: Filament): { label: string; colorClass: string; icon: typeof Shield } | null {
   if (filament.is_nozzle_abrasive === false) {
@@ -193,7 +210,7 @@ function getCompactTimeAgo(timeAgo: string | null): string | null {
   return `${num}${unit.charAt(0)}`;
 }
 
-export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false }: FilamentCardProps) {
+export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 0, displayTitle, variantIndicators, communityRating, showCostPerPrint = false }: FilamentCardProps) {
   // For grouped products (multiple variants), only show out of stock if ALL variants are out
   // For single products, use the individual filament's status
   const isOutOfStock = variantIndicators && variantIndicators.variantCount > 1
@@ -378,6 +395,14 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
   // Compact freshness text
   const compactTimeAgo = getCompactTimeAgo(timeAgo);
 
+  // Change 4: Reframed freshness
+  const reframedFreshness = getReframedFreshness(priceConfidence, timeAgo);
+
+  // Change 3: Determine CTA state
+  const isDeal = priceTrend != null && priceTrend < 0;
+  const ctaText = isOutOfStock ? 'Check Availability' : isDeal ? 'View Deal' : 'View Prices';
+  const ctaTab = isOutOfStock ? '' : '?tab=pricing';
+
   return (
     <div
       role="article"
@@ -405,10 +430,10 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
         setShowTooltip(false);
       }}
     >
-      {/* Out of Stock Badge - positioned absolute top-left */}
+      {/* Change 2: Out of Stock overlay on card image area */}
       {isOutOfStock && (
-        <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-md pointer-events-none">
-          OUT OF STOCK
+        <div className="absolute inset-x-0 top-0 h-24 z-[1] bg-slate-900/60 flex items-center justify-center pointer-events-none rounded-t-2xl">
+          <span className="text-sm font-semibold text-slate-400 tracking-wide">Out of Stock</span>
         </div>
       )}
 
@@ -465,7 +490,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 1: Brand Row (logo + name + swatches)
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 pt-6 pb-3 border-b border-border/30" data-card-element="1">
+      <div className="px-6 pt-4 pb-2 border-b border-border/30" data-card-element="1">
         {/* Brand + Vendor Name + Swatches - single row */}
         <div className="flex items-center gap-2 mb-3">
           <BrandLogo
@@ -808,6 +833,7 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       <div className="px-6 py-2 flex items-center gap-2 flex-wrap" data-card-element="4">
         {/* FilaScore — hidden when low confidence + limited data */}
         {overallScore !== null && !(scoreConfidence === 'low' && hasLimitedData) ? (
+          <>
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <div 
@@ -816,14 +842,14 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
                 aria-label={`FilaScore rating: ${overallScore.toFixed(1)} out of 10`}
               >
                 <Award className="w-3.5 h-3.5" />
-                {overallScore.toFixed(1)}
+                {overallScore.toFixed(1)}/10
               </div>
             </HoverCardTrigger>
             <HoverCardContent side="top" className="w-80 p-4 bg-popover border-border">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">Score Breakdown</span>
-                  <span className={cn("text-xs px-2 py-0.5 rounded-full", 
+                  <span className="font-semibold text-foreground">FilaScope Score based on value, specs, and compatibility</span>
+                  <span className={cn("text-xs px-2 py-0.5 rounded-full flex-shrink-0", 
                     scoreConfidence === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
                     scoreConfidence === 'medium' ? 'bg-cyan-500/20 text-cyan-400' :
                     'bg-orange-500/20 text-orange-400'
@@ -849,6 +875,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
               </div>
             </HoverCardContent>
           </HoverCard>
+          {/* Change 5: Top Rated micro-badge */}
+          {overallScore >= 8.5 && (
+            <span className="inline-flex items-center bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+              Top Rated
+            </span>
+          )}
+          </>
         ) : null}
 
         {/* Limited Data Badge */}
@@ -893,11 +926,13 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           </Tooltip>
         )}
         
-        {/* Freshness dot + compact label */}
-        {compactTimeAgo && shouldShowPrice && (
-          <div className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-            <div className={cn("w-1.5 h-1.5 rounded-full", getFreshnessDotColor(priceConfidence))} />
-            <span>{compactTimeAgo}</span>
+        {/* Change 4: Reframed freshness indicator */}
+        {reframedFreshness.text && shouldShowPrice && (
+          <div className="inline-flex items-center gap-1 text-[10px] text-slate-500">
+            {reframedFreshness.dot && (
+              <div className={cn("w-1.5 h-1.5 rounded-full", reframedFreshness.dot)} />
+            )}
+            <span>{reframedFreshness.text}</span>
           </div>
         )}
       </div>
@@ -907,45 +942,63 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
       {/* ═══════════════════════════════════════════════════════════════
           ELEMENT 5: Two-Button CTA — View Prices + Compare Toggle
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="px-6 py-4 flex gap-2" data-card-element="5">
-        <Button
-          asChild
-          variant={isOutOfStock ? "outline" : "default"}
-          className={cn(
-            "flex-1 h-11 font-semibold transition-all duration-200",
-            isOutOfStock
-              ? "bg-transparent border-muted-foreground/40 text-muted-foreground hover:bg-muted/50"
-              : cn(
-                  "bg-primary/10 border border-primary/30 text-primary",
-                  "group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500",
-                  "hover:shadow-[0_0_12px_rgba(6,182,212,0.3)]"
-                ),
-            "active:scale-[0.98]"
-          )}
-        >
-          <Link to={`/filament/${filament.id}?tab=pricing`} aria-label={`View prices for ${filament.product_title}`}>
-            {isOutOfStock ? 'View Details' : 'View Prices'}
-            <ArrowRight className="w-[18px] h-[18px] ml-2" />
+      <div className="px-6 py-4 flex flex-col gap-2" data-card-element="5">
+        <div className="flex gap-2">
+          <Button
+            asChild
+            variant={isOutOfStock ? "outline" : "default"}
+            className={cn(
+              "flex-1 h-11 font-semibold transition-all duration-200",
+              isOutOfStock
+                ? "bg-slate-700 border-slate-600 text-slate-400 hover:bg-slate-600 hover:text-slate-300"
+                : isDeal
+                ? "bg-amber-500 border-amber-500 text-black hover:bg-amber-400 hover:border-amber-400"
+                : cn(
+                    "bg-primary/10 border border-primary/30 text-primary",
+                    "group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500",
+                    "hover:shadow-[0_0_12px_rgba(6,182,212,0.3)]"
+                  ),
+              "active:scale-[0.98]"
+            )}
+          >
+            <Link to={`/filament/${filament.id}${ctaTab}`} aria-label={`${ctaText} for ${filament.product_title}`}>
+              {ctaText}
+              <ArrowRight className="w-[18px] h-[18px] ml-2" />
+            </Link>
+          </Button>
+          {/* Change 6: Compare button expands on hover */}
+          <button
+            onClick={handleCompareToggle}
+            disabled={isCompareDisabled}
+            aria-label={isSelected ? "Remove from comparison" : "Add to comparison"}
+            className={cn(
+              "h-11 flex items-center justify-center rounded-md border transition-all duration-200 overflow-hidden",
+              "w-10 group-hover:w-auto group-hover:px-3",
+              isSelected || isPendingSelection
+                ? "bg-primary/20 border-primary text-primary"
+                : cn(
+                    "border-border text-muted-foreground",
+                    "hover:border-primary hover:text-primary",
+                    "opacity-60 group-hover:opacity-100"
+                  ),
+              isCompareDisabled && "opacity-30 cursor-not-allowed"
+            )}
+          >
+            <Columns className="w-4 h-4 flex-shrink-0" />
+            <span className="max-w-0 group-hover:max-w-[80px] overflow-hidden transition-all duration-200 opacity-0 group-hover:opacity-100 text-xs font-medium whitespace-nowrap ml-0 group-hover:ml-1.5">
+              Compare
+            </span>
+          </button>
+        </div>
+        {/* Change 2: Watch Price link for out-of-stock */}
+        {isOutOfStock && (
+          <Link 
+            to={`/filament/${filament.id}`} 
+            className="text-xs text-slate-500 underline hover:text-slate-400 transition-colors text-center"
+          >
+            Watch Price
           </Link>
-        </Button>
-        <button
-          onClick={handleCompareToggle}
-          disabled={isCompareDisabled}
-          aria-label={isSelected ? "Remove from comparison" : "Add to comparison"}
-          className={cn(
-            "w-10 h-11 flex items-center justify-center rounded-md border transition-all duration-200",
-            isSelected || isPendingSelection
-              ? "bg-primary/20 border-primary text-primary"
-              : cn(
-                  "border-border text-muted-foreground",
-                  "hover:border-primary hover:text-primary",
-                  "opacity-60 group-hover:opacity-100"
-                ),
-            isCompareDisabled && "opacity-30 cursor-not-allowed"
-          )}
-        >
-          <Columns className="w-4 h-4" />
-        </button>
+        )}
       </div>
     </div>
   );
