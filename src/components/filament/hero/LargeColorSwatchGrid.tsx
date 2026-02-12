@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { normalizeColorHex } from '@/lib/utils';
@@ -31,6 +31,19 @@ function extractColorFallback(title: string): string | null {
   return null;
 }
 
+/** Simple luminance check to determine if a hex color is dark */
+function isDark(hex: string): boolean {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+}
+
+function getVariantColorName(variant: ColorVariant, getColorName: (title: string) => string | null): string {
+  return getColorName(variant.product_title) || variant.color_family || extractColorFallback(variant.product_title) || 'Color';
+}
+
 export function LargeColorSwatchGrid({
   colorVariants,
   currentVariantId,
@@ -39,13 +52,24 @@ export function LargeColorSwatchGrid({
   className,
 }: LargeColorSwatchGridProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+  const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null);
+  const [justSelectedId, setJustSelectedId] = useState<string | null>(null);
+
+  const handleSelect = useCallback((variant: ColorVariant) => {
+    onSelectColor(variant);
+    setJustSelectedId(variant.id);
+    setTimeout(() => setJustSelectedId(null), 300);
+  }, [onSelectColor]);
+
   if (colorVariants.length <= 1) return null;
 
   const currentVariant = colorVariants.find(v => v.id === currentVariantId);
   const currentColorName = currentVariant 
-    ? (getColorName(currentVariant.product_title) || currentVariant.color_family || extractColorFallback(currentVariant.product_title) || 'Color')
+    ? getVariantColorName(currentVariant, getColorName)
     : 'Color';
+
+  const hoveredVariant = hoveredVariantId ? colorVariants.find(v => v.id === hoveredVariantId) : null;
+  const hoveredColorName = hoveredVariant ? getVariantColorName(hoveredVariant, getColorName) : null;
 
   // Show first 10 colors, then expandable
   const visibleCount = isExpanded ? colorVariants.length : 10;
@@ -53,17 +77,31 @@ export function LargeColorSwatchGrid({
   const remainingCount = colorVariants.length - 10;
   const hasMore = remainingCount > 0;
 
+  // handleSelect is defined above early return
+
   return (
     <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between">
         <label className="text-sm text-muted-foreground">
-          Color: <span className="font-semibold text-foreground">{currentColorName}</span>
+          Color:{' '}
+          {hoveredColorName && hoveredVariantId !== currentVariantId ? (
+            <span className="italic text-muted-foreground transition-opacity duration-150">
+              {hoveredColorName}
+            </span>
+          ) : (
+            <span
+              key={currentVariantId}
+              className="font-semibold text-foreground animate-[fadeLabel_150ms_ease-out]"
+            >
+              {currentColorName}
+            </span>
+          )}
           <span className="ml-2 text-xs text-muted-foreground/70">({colorVariants.length} available)</span>
         </label>
         {hasMore && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="bg-gray-800 text-cyan-400 text-xs font-mono px-2 py-0.5 rounded-full cursor-pointer hover:bg-gray-700 transition-colors inline-flex items-center gap-1"
+            className="bg-card text-primary text-xs font-mono px-2 py-0.5 rounded-full cursor-pointer hover:bg-accent transition-colors inline-flex items-center gap-1"
           >
             {isExpanded ? (
               <>Show Less <ChevronUp className="w-3 h-3" /></>
@@ -80,7 +118,7 @@ export function LargeColorSwatchGrid({
           isExpanded && "max-h-[240px] overflow-y-auto pr-1 scrollbar-thin"
         )}>
           {visibleColors.map((variant) => {
-            const colorName = getColorName(variant.product_title) || variant.color_family || extractColorFallback(variant.product_title) || 'Color';
+            const colorName = getVariantColorName(variant, getColorName);
             const isSelected = variant.id === currentVariantId;
             const colorHex = variant.color_hex ? normalizeColorHex(variant.color_hex) : null;
             const isWhite = colorHex?.toUpperCase() === '#FFFFFF';
@@ -88,14 +126,19 @@ export function LargeColorSwatchGrid({
                                    colorName.toLowerCase().includes('transparent') ||
                                    colorName.toLowerCase().includes('natural');
             const isOutOfStock = variant.variant_available === false;
-            // Determine if the color is dark for checkmark contrast
             const isDarkColor = colorHex ? isDark(colorHex) : true;
+            const isLightColor = colorHex ? !isDark(colorHex) : false;
+            const wasJustSelected = justSelectedId === variant.id;
             
             return (
               <Tooltip key={variant.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => !isOutOfStock && onSelectColor(variant)}
+                    onClick={() => !isOutOfStock && handleSelect(variant)}
+                    onMouseEnter={() => setHoveredVariantId(variant.id)}
+                    onMouseLeave={() => setHoveredVariantId(null)}
+                    onFocus={() => setHoveredVariantId(variant.id)}
+                    onBlur={() => setHoveredVariantId(null)}
                     disabled={isOutOfStock}
                     className={cn(
                       "relative flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200",
@@ -105,7 +148,8 @@ export function LargeColorSwatchGrid({
                         : isWhite || isTransparent
                           ? "border-border hover:border-primary/50"
                           : "border-transparent hover:border-white/30",
-                      isOutOfStock && "opacity-50 cursor-not-allowed hover:scale-100"
+                      isOutOfStock && "opacity-50 cursor-not-allowed hover:scale-100",
+                      wasJustSelected && "animate-[swatchPop_200ms_ease-out]"
                     )}
                     style={{ 
                       backgroundColor: colorHex || '#888',
@@ -115,7 +159,7 @@ export function LargeColorSwatchGrid({
                       backgroundSize: isTransparent ? '8px 8px' : undefined,
                       backgroundPosition: isTransparent ? '0 0, 0 4px, 4px -4px, -4px 0px' : undefined,
                     }}
-                    aria-label={`${colorName}${isSelected ? ', selected' : ''}${isOutOfStock ? ', out of stock' : ''}`}
+                    aria-label={`${colorName}${colorHex ? `, ${colorHex.toUpperCase()}` : ''}${isSelected ? ', selected' : ''}${isOutOfStock ? ', out of stock' : ''}`}
                     aria-pressed={isSelected}
                   >
                     {/* Checkmark overlay for selected */}
@@ -123,7 +167,7 @@ export function LargeColorSwatchGrid({
                       <Check 
                         className={cn(
                           "w-4 h-4 drop-shadow-md",
-                          isDarkColor ? "text-primary-foreground" : "text-foreground"
+                          isLightColor ? "text-gray-900" : "text-white"
                         )} 
                         strokeWidth={3} 
                       />
@@ -136,13 +180,16 @@ export function LargeColorSwatchGrid({
                     )}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
+                <TooltipContent
+                  side="top"
+                  className="bg-card border-border text-sm px-3 py-2"
+                >
                   <div className="font-medium">{colorName}</div>
                   {isOutOfStock && (
-                    <div className="text-destructive font-medium">Out of Stock</div>
+                    <div className="text-destructive font-medium text-xs">Out of Stock</div>
                   )}
                   {variant.color_hex && (
-                    <div className="text-muted-foreground font-mono text-[10px]">
+                    <div className="text-muted-foreground font-mono text-xs">
                       {variant.color_hex.toUpperCase()}
                     </div>
                   )}
@@ -165,14 +212,4 @@ export function LargeColorSwatchGrid({
       )}
     </div>
   );
-}
-
-/** Simple luminance check to determine if a hex color is dark */
-function isDark(hex: string): boolean {
-  const clean = hex.replace('#', '');
-  const r = parseInt(clean.substring(0, 2), 16);
-  const g = parseInt(clean.substring(2, 4), 16);
-  const b = parseInt(clean.substring(4, 6), 16);
-  // Relative luminance
-  return (0.299 * r + 0.587 * g + 0.114 * b) < 128;
 }
