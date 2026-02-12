@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { 
+import { useState, useMemo, useCallback } from "react";
+import {
   X, 
   SlidersHorizontal, 
   Check, 
@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { usePrinterSelection } from "@/hooks/usePrinterSelection";
 import { useNozzleConfig, NOZZLE_SIZES, NOZZLE_MATERIALS, NOZZLE_MATERIAL_LABELS, type NozzleSize, type NozzleMaterial } from "@/hooks/useNozzleConfig";
+import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 
 // Material Base options
 const MATERIAL_BASE_OPTIONS = [
@@ -115,21 +116,29 @@ export function MobileFilamentFilterSheet({
 
   const nozzleConfig = useNozzleConfig(selectedPrinter?.stock_nozzle_diameter_mm);
 
+  // Check if a material category is active by seeing if any of its materials are selected
+  const isCategoryActive = useCallback((categoryId: string) => {
+    const category = MATERIAL_CATEGORIES.find(c => c.id === categoryId);
+    if (!category) return selectedMaterials.includes(categoryId);
+    return category.materials.some(m => selectedMaterials.includes(m));
+  }, [selectedMaterials]);
+
+  // Count active categories for the badge
+  const activeCategoryCount = useMemo(() => {
+    return MATERIAL_BASE_OPTIONS.filter(opt => isCategoryActive(opt.id)).length;
+  }, [isCategoryActive]);
   // Calculate active filter count — exclude default "All" material and printer (not user-applied filters)
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    // Only count materials if user explicitly selected something other than "All"
-    const hasRealMaterialFilter = selectedMaterials.length > 0 && 
-      !(selectedMaterials.length === 1 && selectedMaterials[0] === "All");
-    if (hasRealMaterialFilter) count += selectedMaterials.length;
+    // Count active material categories (not individual material names)
+    count += activeCategoryCount;
     if (selectedBrands.length > 0) count += selectedBrands.length;
     if (carbonFiber) count++;
     if (glassFiber) count++;
     if (woodFilled) count++;
     if (spoolSize !== "standard") count++;
-    // Don't count printer selection as a filter — it's a personalization, not a filter
     return count;
-  }, [selectedMaterials, selectedBrands, carbonFiber, glassFiber, woodFilled, spoolSize]);
+  }, [activeCategoryCount, selectedBrands, carbonFiber, glassFiber, woodFilled, spoolSize]);
 
   const localReinforced = [
     ...(carbonFiber ? ["carbon"] : []),
@@ -301,9 +310,9 @@ export function MobileFilamentFilterSheet({
                 <div className="flex items-center gap-2">
                   <Atom className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-white">Material Types</span>
-                  {selectedMaterials.length > 0 && !(selectedMaterials.length === 1 && selectedMaterials[0] === "All") && (
+                  {activeCategoryCount > 0 && (
                     <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
-                      {selectedMaterials.length}
+                      {activeCategoryCount}
                     </span>
                   )}
                 </div>
@@ -319,19 +328,19 @@ export function MobileFilamentFilterSheet({
                       key={material.id}
                       className={cn(
                         "flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-colors min-h-[44px]",
-                        selectedMaterials.includes(material.id)
+                        isCategoryActive(material.id)
                           ? "bg-primary/10 border border-primary/30"
                           : "bg-gray-800/50 border border-transparent hover:bg-gray-800"
                       )}
                     >
                       <Checkbox
-                        checked={selectedMaterials.includes(material.id)}
+                        checked={isCategoryActive(material.id)}
                         onCheckedChange={(checked) => onMaterialChange(material.id, !!checked)}
                         className="data-[state=checked]:bg-primary data-[state=checked]:border-primary h-5 w-5"
                       />
                       <span className={cn(
                         "text-sm",
-                        selectedMaterials.includes(material.id) ? "text-primary font-medium" : "text-gray-300"
+                        isCategoryActive(material.id) ? "text-primary font-medium" : "text-gray-300"
                       )}>{material.label}</span>
                     </label>
                   ))}
