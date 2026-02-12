@@ -75,6 +75,8 @@ export function PriceFreshnessIndicator({
   const sourceLabel = getSourceLabel(source);
 
   if (compact) {
+    // Hide stale/unknown indicators in compact sidebar mode (red circle-alert with no useful context)
+    if (confidence === 'stale' || confidence === 'unknown') return null;
     return (
       <TooltipProvider>
         <Tooltip>
