@@ -119,8 +119,9 @@ export function FilamentComparisonEmptyState({
               onClick={() => handleComparisonClick(comparison)}
               className={cn(
                 "group flex items-center justify-between",
-                "bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-primary/50",
-                "rounded-lg p-4 transition-all duration-150",
+                "bg-gray-800/50 hover:bg-gray-800 border border-gray-700",
+                "hover:border-cyan-500/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/[0.08]",
+                "rounded-lg p-4 transition-all duration-200",
                 "text-left"
               )}
             >
