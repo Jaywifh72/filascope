@@ -1096,9 +1096,9 @@ const MaterialReference = () => {
       </div>
 
       {/* Material Detail Panel */}
-      <div className="min-h-[600px]">
+      <div className="min-h-[400px] flex flex-col">
         {!selectedMaterial ? (
-          <Card className="bg-gray-800/50 border-gray-700">
+          <Card className="bg-gray-800/50 border-gray-700 flex-1 flex items-center justify-center">
             <MaterialReferenceEmptyState 
               onSelectMaterial={(material) => setSelectedMaterial(material)}
             />
