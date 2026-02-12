@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Package, Zap, Lightbulb, Star, Info, Award } from 'lucide-react';
+import { ExternalLink, Package, Zap, Sun, Star, Info, Award } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -188,11 +188,39 @@ export function FilamentHeroSection({
               {displayFilament.is_nozzle_abrasive && (
                 <Badge variant="destructive" className="text-xs px-2.5 py-1">⚠️ Abrasive</Badge>
               )}
-              {isMultiPack && (
+               {isMultiPack && (
                 <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-primary/20 text-primary border-primary/30">
                   📦 {packQuantity}-Pack
                 </Badge>
               )}
+              {/* TD (Transmission Distance) — always visible */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {displayFilament.transmission_distance != null ? (
+                    <Badge variant="outline" className="text-xs px-2.5 py-1 bg-purple-500/15 border-purple-500/30 text-purple-300 cursor-help gap-1">
+                      <Sun className="w-3.5 h-3.5" />
+                      TD {displayFilament.transmission_distance}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs px-2.5 py-1 bg-muted/50 border-border text-muted-foreground cursor-help gap-1">
+                      <Sun className="w-3.5 h-3.5" />
+                      TD —
+                    </Badge>
+                  )}
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs max-w-[260px]">
+                  {displayFilament.transmission_distance != null ? (
+                    <>
+                      <p className="font-medium">Transmission Distance (TD)</p>
+                      <p className="text-muted-foreground">
+                        Measures how far light travels through the filament. Used in HueForge for lithophanes and filament painting. Lower = more opaque, higher = more translucent.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground">TD value not yet measured for this filament.</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
               {/* FilaScore Badge */}
               {filaScore !== null && (
                 <HoverCard openDelay={200}>
@@ -229,22 +257,6 @@ export function FilamentHeroSection({
                     </div>
                   </HoverCardContent>
                 </HoverCard>
-              )}
-              {displayFilament.transmission_distance != null && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-xs px-2.5 py-1 bg-amber-500/10 border-amber-500/30 text-amber-400 cursor-help">
-                      <Lightbulb className="w-3 h-3 mr-1" />
-                      TD {displayFilament.transmission_distance}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs max-w-[220px]">
-                    <p className="font-medium">Transmission Distance</p>
-                    <p className="text-muted-foreground">
-                      Transmissivity value for HueForge multi-color prints. Lower = more opaque, higher = more translucent.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
               )}
             </div>
 
