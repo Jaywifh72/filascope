@@ -259,21 +259,37 @@ export function CommunityPhotoGallery({
           </>
         )}
 
-        {/* Empty State */}
         {photos.length === 0 && (
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-border/50 rounded-xl p-8 text-center">
-            <ImageIcon className="h-10 w-10 text-muted-foreground/30 mb-3" />
-            <p className="text-base text-muted-foreground mb-1">Share a print made with this filament</p>
-            <p className="text-sm text-muted-foreground mb-5">
-              {productName ? `Show the community what's possible with ${productName}` : 'Show the community what you\'ve made'}
-            </p>
+          <div className="flex flex-col items-center rounded-xl border border-border/40 bg-muted/10 p-6 text-center space-y-4">
+            {/* Placeholder image grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-md">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-lg bg-muted/20 border-2 border-dashed border-border/40 flex items-center justify-center"
+                  style={{ opacity: 1 - i * 0.2 }}
+                >
+                  <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <p className="text-base font-medium text-foreground/90">
+                Show what's possible with {productName || 'this filament'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload photos of your prints to help others see real-world results
+              </p>
+            </div>
+
             <SharePrintDialog
               productId={productId}
               productType={productType}
               onUpload={uploadPhoto}
               isUploading={isUploading}
             />
-            <p className="text-xs text-muted-foreground mt-4">Accepted formats: JPG, PNG, WebP · Max 5MB</p>
+            <p className="text-xs text-muted-foreground">Accepted formats: JPG, PNG, WebP · Max 5MB</p>
           </div>
         )}
       </CardContent>
