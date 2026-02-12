@@ -142,7 +142,7 @@ export function TechnicalConsoleSidebar({
   ]);
 
   // Collapsible section states - all expanded by default
-  const [specsOpen, setSpecsOpen] = useState(true);
+  const [specsOpen, setSpecsOpen] = useState(false);
   const [spoolOpen, setSpoolOpen] = useState(true);
   const [materialsOpen, setMaterialsOpen] = useState(true);
   const [brandsOpen, setBrandsOpen] = useState(true);
@@ -278,6 +278,9 @@ export function TechnicalConsoleSidebar({
               </span>
               <span className="text-xs text-muted-foreground">
                 Personalized Results
+              </span>
+              <span className="text-xs text-slate-500">
+                Only showing filaments your printer can handle
               </span>
             </div>
           </div>
