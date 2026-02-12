@@ -51,11 +51,14 @@ export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore }: Slicer
   const isStaffPick = slicer.badge === 'staff-pick';
   const BadgeIcon = slicer.badge ? badgeConfig[slicer.badge].icon : null;
 
-  const scoreColor = slicer.overallScore >= 9.0 
-    ? 'text-green-500' 
+  const scoreStroke = slicer.overallScore >= 8.5 
+    ? 'stroke-emerald-400' 
     : slicer.overallScore >= 7.0 
-      ? 'text-primary' 
-      : 'text-yellow-500';
+      ? 'stroke-cyan-400' 
+      : 'stroke-amber-400';
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
+  const scoreOffset = circumference - (slicer.overallScore / 10) * circumference;
 
   return (
     <div
@@ -104,10 +107,14 @@ export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore }: Slicer
           : slicer.priceType.charAt(0).toUpperCase() + slicer.priceType.slice(1)}
       </div>
 
-      {/* Overall Score */}
-      <div className={cn('inline-flex items-center gap-1.5 text-base font-bold', scoreColor)}>
-        <span>{slicer.overallScore}/10</span>
-        <Star size={14} fill="currentColor" />
+      {/* Overall Score Ring */}
+      <div className="flex flex-col items-center">
+        <svg width="48" height="48" className="-rotate-90">
+          <circle cx="24" cy="24" r={radius} strokeWidth="4" fill="none" className="stroke-slate-700" />
+          <circle cx="24" cy="24" r={radius} strokeWidth="4" fill="none" className={scoreStroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={scoreOffset} />
+        </svg>
+        <span className="text-lg font-bold text-white -mt-[34px] mb-[14px]">{slicer.overallScore}</span>
+        <span className="text-xs text-slate-500">/10</span>
       </div>
 
       {/* Best For pill */}
