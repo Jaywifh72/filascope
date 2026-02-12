@@ -65,7 +65,7 @@ export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore }: Slicer
       className={cn(
         'w-[320px] min-h-[480px] flex-shrink-0 rounded-xl p-6',
         'flex flex-col items-center text-center gap-3',
-        'transition-all duration-300',
+        'transition-all duration-300 cursor-pointer',
         'hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/50',
         isStaffPick
           ? 'bg-gray-800 border-2 border-primary'
