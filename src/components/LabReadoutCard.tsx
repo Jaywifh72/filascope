@@ -605,12 +605,12 @@ export function LabReadoutCard({
           ) : null}
         </div>
 
-        {/* View Details Button - Full width, solid bg-primary */}
+        {/* View Prices Button - Full width, solid bg-primary */}
         <Link
-          to={`/filament/${filament.product_handle || generateFilamentSlug(filament.vendor, filament.material, filament.product_title, filament.color_family) || filament.id}`}
+          to={`/filament/${filament.product_handle || generateFilamentSlug(filament.vendor, filament.material, filament.product_title, filament.color_family) || filament.id}?tab=pricing`}
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all duration-150"
         >
-          <span>View Details</span>
+          <span>View Prices</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
