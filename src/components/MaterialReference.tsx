@@ -973,7 +973,7 @@ const MaterialReference = () => {
         </div>
 
         {/* Material List with independent scroll */}
-        <ScrollArea className="h-[500px]">
+        <ScrollArea className="max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
           <div className="p-2">
             {Object.entries(groupedMaterials).map(([category, materials], categoryIndex) => {
               const isCollapsed = collapsedCategories.has(category);
