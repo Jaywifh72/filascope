@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layers, Compass, ChevronDown, Star } from "lucide-react";
+import { Layers, Compass, ChevronDown, Star, MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SlicerQuizModal } from "@/components/reference/SlicerQuizModal";
 
@@ -32,7 +32,7 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
         <div 
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
-            background: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.08) 0%, transparent 70%)"
+            background: "radial-gradient(circle at 50% 50%, rgba(0,210,211,0.06) 0%, transparent 70%)"
           }}
         />
         
@@ -55,11 +55,11 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
 
           {/* Trust Signals */}
           <div className="inline-flex items-center gap-4 flex-wrap justify-center text-sm font-medium text-muted-foreground mb-8">
-            <span className="inline-flex items-center gap-1.5">⭐ Expert ratings</span>
+            <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 text-yellow-400" /> Expert ratings</span>
             <span className="text-muted-foreground/50">•</span>
-            <span className="inline-flex items-center gap-1.5">💬 Real user reviews</span>
+            <span className="inline-flex items-center gap-1.5"><MessageCircle className="h-4 w-4 text-cyan-400" /> Real user reviews</span>
             <span className="text-muted-foreground/50">•</span>
-            <span className="inline-flex items-center gap-1.5">🔄 Updated {new Date().getFullYear()}</span>
+            <span className="inline-flex items-center gap-1.5"><RefreshCw className="h-4 w-4 text-cyan-400" /> Updated {new Date().getFullYear()}</span>
           </div>
 
           {/* CTA Buttons */}
@@ -88,9 +88,9 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
             <span>Most Popular:</span>
             {topSlicers.map((slicer, index) => (
               <span key={slicer} className="inline-flex items-center">
-                <span className="text-foreground/80">{slicer}</span>
+                <span className="text-foreground/80 hover:text-cyan-400 transition-colors cursor-pointer underline-offset-4 hover:underline">{slicer}</span>
                 {index < topSlicers.length - 1 && (
-                  <span className="text-muted-foreground/50 mx-1">•</span>
+                  <span className="text-slate-600 mx-1">•</span>
                 )}
               </span>
             ))}
