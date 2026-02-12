@@ -89,7 +89,9 @@ export function FilamentTabNav({ activeTab, onTabChange, counts }: FilamentTabNa
       ref={tabsRef}
       className={cn(
         "sticky top-16 z-30 -mx-4 lg:-mx-0 px-4 lg:px-0 transition-all duration-200",
-        isSticky && "bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm"
+        isSticky
+          ? "bg-[hsl(220,30%,5%)]/90 backdrop-blur-md border-b border-border/40 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+          : "bg-transparent"
       )}
     >
       {/* Horizontal scroll container for mobile with fade edges */}
