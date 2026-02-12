@@ -54,17 +54,21 @@ function MiniFilamentCard({ filament }: { filament: TrendingFilament }) {
   return (
     <Link
       to={`/filament/${filament.id}`}
-      className="block shrink-0 w-[200px] bg-slate-800/60 border border-slate-700/40 rounded-lg p-3 hover:border-cyan-500/30 hover:scale-[1.02] transition-all duration-200 cursor-pointer"
+      className="group/card block shrink-0 w-[200px] bg-slate-800/60 border border-slate-700/40 rounded-lg p-3 hover:bg-slate-700/50 hover:border-cyan-500/30 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
     >
       <div className="flex items-center gap-2 mb-2">
         <div
-          className="w-3 h-3 rounded-full border border-border/50 flex-shrink-0"
+          className="w-4 h-4 rounded-full ring-1 ring-white/20 flex-shrink-0"
           style={{ backgroundColor: colorHex }}
         />
-        <span className="text-sm font-medium text-foreground truncate">{name}</span>
+        <span className="text-sm font-medium text-slate-300 group-hover/card:text-white transition-colors duration-150 truncate">{name}</span>
       </div>
       <div className="flex items-center justify-between">
-        {price && <span className="text-sm font-bold text-cyan-400">{price}</span>}
+        {price && (
+          <span className="text-sm font-bold text-cyan-400 group-hover/card:text-cyan-300 transition-colors duration-150">
+            <span className="text-slate-500 text-xs font-normal">From </span>{price}
+          </span>
+        )}
         <span className="text-xs text-slate-500 truncate ml-auto">{filament.vendor}</span>
       </div>
     </Link>
