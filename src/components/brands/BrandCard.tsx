@@ -162,16 +162,18 @@ const BrandCard = ({
         )}
 
         {/* View Filaments Button */}
-        <button
-          className="w-full rounded-lg border border-border py-2 text-sm font-medium text-foreground/70 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:text-primary flex items-center justify-center gap-2 mt-auto group/btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-        >
-          {isEmpty ? 'Notify Me' : 'View Filaments'}
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
-        </button>
+        <div className="border-t border-border mt-auto pt-3">
+          <button
+            className="w-full rounded-lg border border-border py-2 text-sm font-medium text-foreground/70 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:text-primary flex items-center justify-center gap-2 group/btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
+          >
+            {isEmpty ? 'Notify Me' : 'View Filaments'}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+          </button>
+        </div>
       </div>
     </div>
   );
