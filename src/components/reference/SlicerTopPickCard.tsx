@@ -13,12 +13,12 @@ const badgeConfig: Record<NonNullable<BadgeType>, { icon: typeof Award; label: s
   'staff-pick': {
     icon: Award,
     label: '#1 STAFF PICK',
-    className: 'bg-primary/20 border-primary/30 text-primary',
+    className: 'bg-amber-500/20 border-amber-500/30 text-amber-400',
   },
   'popular': {
     icon: Star,
     label: 'MOST POPULAR',
-    className: 'bg-orange-500/20 border-orange-500/30 text-orange-400',
+    className: 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400',
   },
   'pro-choice': {
     icon: Gem,
@@ -49,7 +49,7 @@ export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }:
         'w-[320px] min-h-[480px] flex-shrink-0 rounded-xl p-6',
         'flex flex-col items-center text-center gap-3',
         'transition-all duration-300',
-        'hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50',
+        'hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/50',
         isStaffPick
           ? 'bg-gray-800 border-2 border-primary'
           : 'bg-gray-800 border border-gray-700',
