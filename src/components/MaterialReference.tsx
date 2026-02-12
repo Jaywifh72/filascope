@@ -89,12 +89,23 @@ const QuickInfoCard = ({
   icon: React.ElementType; 
   label: string; 
   iconColor?: string;
-}) => (
-  <div className="flex items-center gap-2 bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2">
-    <Icon className={cn("w-4 h-4 shrink-0", iconColor)} />
-    <span className="text-sm text-foreground">{label}</span>
-  </div>
-);
+}) => {
+  // Split label into prefix and value for temperature chips (e.g., "Print: 190-220°C")
+  const colonIndex = label.indexOf(':');
+  const hasValue = colonIndex !== -1;
+  const labelPrefix = hasValue ? label.slice(0, colonIndex + 1) : label;
+  const labelValue = hasValue ? label.slice(colonIndex + 1) : '';
+
+  return (
+    <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2">
+      <Icon className={cn("w-4 h-4 shrink-0", iconColor)} />
+      <span className="text-sm">
+        <span className="text-muted-foreground">{labelPrefix}</span>
+        {labelValue && <span className="text-primary font-semibold">{labelValue}</span>}
+      </span>
+    </div>
+  );
+};
 
 const AccordionSection = ({ 
   icon: Icon, 
