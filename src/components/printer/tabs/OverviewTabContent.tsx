@@ -252,12 +252,12 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
         </div>
       </section>
 
-      {/* What's in the Box / Accessories - Responsive grid */}
-      <section>
-        <SectionHeader icon={Package} title="What's in the Box" />
-        {includedAccessories.length > 0 ? (
+      {/* What's in the Box / Accessories - Only show when data exists */}
+      {includedAccessories.length > 0 && (
+        <section>
+          <SectionHeader icon={Package} title="What's in the Box" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-              {includedAccessories.map((acc, idx) => (
+            {includedAccessories.map((acc, idx) => (
               <div 
                 key={acc.id || idx}
                 className="flex items-center gap-3 p-6 bg-muted/30 border border-border/50 rounded-lg"
@@ -272,17 +272,8 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
               </div>
             ))}
           </div>
-        ) : (
-          <div className="py-8 px-4 text-center border border-dashed border-gray-800 rounded-lg">
-            <Package className="mx-auto mb-2 text-gray-600" size={32} />
-            <p className="text-sm text-gray-500 font-mono">Accessory data coming soon</p>
-            <p className="text-xs text-gray-600 mt-1 inline-flex items-center gap-1">
-              Check the manufacturer's website for what's included
-              <ExternalLink size={10} className="text-gray-600" />
-            </p>
-          </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }
