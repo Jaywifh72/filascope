@@ -800,6 +800,15 @@ const Finder = () => {
     return counts;
   }, [serverFilterCounts]);
 
+  // Aggregate material counts by category for sidebar chips
+  const materialCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    MATERIAL_CATEGORIES.forEach(cat => {
+      counts[cat.id] = cat.materials.reduce((sum, mat) => sum + (filterCounts[`material_${mat}`] || 0), 0);
+    });
+    return counts;
+  }, [filterCounts]);
+
   // Server-side pagination — no client-side "hasMore" needed
 
   // Track region transitions for smooth UI updates
@@ -1356,6 +1365,7 @@ const Finder = () => {
           onClearAll={handleClearAllFilters}
           showCostPerPrint={showCostPerPrint}
           onShowCostPerPrintChange={setShowCostPerPrint}
+          materialCategoryCounts={materialCategoryCounts}
         />
 
         {/* Main Content */}

@@ -17,7 +17,8 @@ import {
   X,
   Palette,
   Info,
-  Eye
+  Eye,
+  Plus,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
@@ -97,6 +98,8 @@ interface TechnicalConsoleSidebarProps {
   onClearAll?: () => void;
   showCostPerPrint?: boolean;
   onShowCostPerPrintChange?: (checked: boolean) => void;
+  /** Material category counts from server, keyed by category id (e.g. "pla-family" -> 547) */
+  materialCategoryCounts?: Record<string, number>;
 }
 
 export function TechnicalConsoleSidebar({
@@ -115,6 +118,7 @@ export function TechnicalConsoleSidebar({
   onClearAll,
   showCostPerPrint = false,
   onShowCostPerPrintChange,
+  materialCategoryCounts,
 }: TechnicalConsoleSidebarProps) {
   const { 
     selectedPrinter, 
@@ -152,15 +156,15 @@ export function TechnicalConsoleSidebar({
 
   const navigate = useNavigate();
 
-  // Calculate active filter count — exclude default states (e.g. "All" materials)
+  // Calculate active filter count — exclude default states and auto-detected printer
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    // Only count materials that are actual user selections, not the default "All"
     const userMaterials = localMaterials.filter(m => m !== "All");
     if (userMaterials.length > 0) count += userMaterials.length;
     if (localBrands.length > 0) count += localBrands.length;
     if (localReinforced.length > 0) count += localReinforced.length;
     if (localSpoolSize !== "standard") count += 1;
+    // Don't count auto-detected printer — only count if user explicitly selected
     return count;
   }, [localMaterials, localBrands, localReinforced, localSpoolSize]);
 
@@ -506,7 +510,7 @@ export function TechnicalConsoleSidebar({
             )} />
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 space-y-2">
               <Select value={localSpoolSize} onValueChange={handleSpoolSizeChange}>
                 <SelectTrigger className="w-full h-9 bg-muted border-border text-foreground text-sm hover:border-muted-foreground/30 focus:border-primary focus:ring-1 focus:ring-primary/50">
                   <SelectValue />
@@ -520,6 +524,11 @@ export function TechnicalConsoleSidebar({
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500">
+                {localSpoolSize === "standard" ? "Showing standard spool sizes (500g–1kg)" :
+                 localSpoolSize === "large" ? "Showing large spools (>1kg–2kg)" :
+                 "Showing refill packs (no spool)"}
+              </p>
             </div>
           </CollapsibleContent>
         </div>
@@ -537,6 +546,7 @@ export function TechnicalConsoleSidebar({
         <div className="flex flex-wrap gap-2">
           {MATERIAL_BASE_OPTIONS.map((option) => {
             const isActive = localMaterials.includes(option.id);
+            const count = materialCategoryCounts?.[option.id];
             return (
               <button
                 key={option.id}
@@ -549,6 +559,9 @@ export function TechnicalConsoleSidebar({
                 )}
               >
                 {option.label}
+                {count != null && count > 0 && (
+                  <span className="text-xs text-gray-500">({count})</span>
+                )}
                 {isActive && <X className="h-3 w-3" />}
               </button>
             );
@@ -584,6 +597,13 @@ export function TechnicalConsoleSidebar({
               </button>
             );
           })}
+          <Link
+            to="/brands"
+            className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full border border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors duration-150"
+          >
+            <Plus className="h-3 w-3" />
+            More brands
+          </Link>
         </div>
       </CollapsibleFilterSection>
 
