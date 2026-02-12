@@ -1,4 +1,5 @@
 import { Award, Star, Gem, Check, ArrowRight, Plus } from 'lucide-react';
+import { SlicerLogo } from './SlicerLogoFallback';
 import { SlicerTierInfo, BadgeType, PriceType } from '@/lib/slicerTierData';
 import { cn } from '@/lib/utils';
 
@@ -68,12 +69,8 @@ export function SlicerTopPickCard({ slicer, logo, onLearnMore, onAddToCompare }:
       )}
 
       {/* Logo */}
-      <div className="w-20 h-20 bg-muted/30 rounded-lg p-3 flex items-center justify-center mb-3">
-        {logo ? (
-          <img src={logo} alt={`${slicer.name} logo`} className="max-w-full max-h-full object-contain" />
-        ) : (
-          <div className="w-12 h-12 bg-primary/20 rounded-lg" />
-        )}
+      <div className="w-20 h-20 rounded-lg p-3 flex items-center justify-center mb-3">
+        <SlicerLogo src={logo} name={slicer.name} className="w-14 h-14 rounded-lg" />
       </div>
 
       {/* Brand Name */}

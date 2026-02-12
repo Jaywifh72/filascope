@@ -4,6 +4,7 @@ import { SlicerTierInfo, PriceType } from '@/lib/slicerTierData';
 import { cn } from '@/lib/utils';
 import { ExpandableScoreCell } from './ExpandableScoreCell';
 import { ScoreBreakdownRow } from './ScoreBreakdownRow';
+import { SlicerLogo } from './SlicerLogoFallback';
 import { getSlicerSubscores, calculateOverallScore } from '@/lib/slicerScoreUtils';
 import {
   Tooltip,
@@ -302,17 +303,7 @@ export function SlicerSimplifiedTable({ slicers, logos, onViewDetails }: SlicerS
                 >
                   <td role="cell" className="px-4 py-3 border-b border-border/50">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-muted/30 rounded p-1 flex items-center justify-center flex-shrink-0">
-                        {logos[slicer.name] ? (
-                          <img 
-                            src={logos[slicer.name]} 
-                            alt={`${slicer.name} logo`} 
-                            className="max-w-full max-h-full object-contain" 
-                          />
-                        ) : (
-                          <div className="w-5 h-5 bg-primary/20 rounded" />
-                        )}
-                      </div>
+                      <SlicerLogo src={logos[slicer.name]} name={slicer.name} className="w-8 h-8 rounded p-0.5" />
                       <span className="text-sm font-medium text-foreground">{slicer.name}</span>
                     </div>
                   </td>
