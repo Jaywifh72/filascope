@@ -29,8 +29,7 @@ import { SlicerPopularCard } from "@/components/reference/SlicerPopularCard";
 
 import { SlicerSimplifiedTable } from "@/components/reference/SlicerSimplifiedTable";
 import { SlicerComparisonProvider } from "@/contexts/SlicerComparisonContext";
-import { ComparisonBuilderSidebar } from "@/components/reference/ComparisonBuilderSidebar";
-import { ComparisonBuilderMobile } from "@/components/reference/ComparisonBuilderMobile";
+import { SlicerComparisonTray } from "@/components/reference/SlicerComparisonTray";
 import { SlicerComparisonModal } from "@/components/reference/SlicerComparisonModal";
 import { SlicerFilterPanel } from "@/components/reference/SlicerFilterPanel";
 import { MobileFilterPanel } from "@/components/reference/MobileFilterPanel";
@@ -350,7 +349,7 @@ const ReferenceSlicers = () => {
         </div>
 
         {/* Main Content with 3-Column Layout */}
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-8 lg:gap-10 items-start">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 lg:gap-10 items-start">
           
           {/* Left Sidebar: Filter Panel (Desktop) */}
           <aside className="hidden lg:block">
@@ -409,7 +408,6 @@ const ReferenceSlicers = () => {
                             logo={slicerLogos[slicer.name]}
                             bestFor={bestForMap[slicer.name]}
                             onLearnMore={() => handleLearnMore(slicer.name)}
-                            onAddToCompare={() => handleAddToCompare(slicer.name)}
                           />
                         );
                       })}
@@ -803,22 +801,13 @@ const ReferenceSlicers = () => {
             )}
           </section>
 
-          {/* Right Sidebar: Comparison Builder (Desktop) */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-[72px]">
-              <ComparisonBuilderSidebar />
-            </div>
-          </aside>
         </div>
 
-        {/* Mobile Footer */}
-        <ComparisonBuilderMobile />
+        {/* Floating Comparison Tray */}
+        <SlicerComparisonTray />
 
         {/* Comparison Modal */}
         <SlicerComparisonModal />
-        
-        {/* Spacer for mobile footer */}
-        <div className="h-[60px] lg:hidden" />
       </div>
     </SlicerComparisonProvider>
   );
