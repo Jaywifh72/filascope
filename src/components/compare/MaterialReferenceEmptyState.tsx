@@ -75,7 +75,7 @@ export function MaterialReferenceEmptyState({
               key={tip.title}
               className="flex items-start gap-3 p-3 rounded-lg bg-gray-800/40 border border-gray-700/50"
             >
-              <div className="p-1.5 rounded-md bg-primary/10 shrink-0">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 shrink-0">
                 <tip.icon className="w-4 h-4 text-primary" />
               </div>
               <div>
