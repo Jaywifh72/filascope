@@ -496,39 +496,74 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           ELEMENT 1: Brand Row (logo + name + prominent color swatch)
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 pt-4 pb-2 border-b border-border/30" data-card-element="1">
-        {/* Prominent color swatch block */}
-        <div className="flex items-start gap-3 mb-3">
-          <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
-            <div 
-              className="w-12 h-12 rounded-lg border border-border shadow-sm"
-              style={{ backgroundColor: normalizeColorHex(filament.color_hex) }}
-              role="img"
-              aria-label={`Color: ${filament.color_hex || 'N/A'}`}
-            />
-            <span className="text-[10px] text-gray-500 font-mono">
-              {filament.color_hex ? normalizeColorHex(filament.color_hex) : 'Color N/A'}
-            </span>
-          </div>
+        {/* Brand row */}
+        <div className="flex items-center gap-2 mb-2">
+          <BrandLogo
+            src={brandLogo}
+            brandName={filament.vendor || "Unknown"}
+            size="sm"
+            className="w-5 h-5 rounded"
+          />
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+            {filament.vendor || "Unknown"}
+          </span>
+        </div>
+
+        {/* Product Name with inline color swatch */}
+        <div className="flex items-start gap-2.5">
+          {/* Color swatch with tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
+                {filament.color_hex ? (
+                  <div 
+                    className="w-7 h-7 rounded-lg ring-2 ring-white/20 shadow-sm cursor-help"
+                    style={{ backgroundColor: normalizeColorHex(filament.color_hex) }}
+                    role="img"
+                    aria-label={`Color: ${filament.color_hex}`}
+                  />
+                ) : (
+                  <div 
+                    className="w-7 h-7 rounded-lg ring-2 ring-white/20 shadow-sm bg-muted/50 flex items-center justify-center cursor-help"
+                    style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 3px, hsl(var(--muted-foreground) / 0.15) 3px, hsl(var(--muted-foreground) / 0.15) 4px)' }}
+                    role="img"
+                    aria-label="Color unknown"
+                  >
+                    <span className="text-[10px] text-muted-foreground font-mono">?</span>
+                  </div>
+                )}
+                {/* Variant count indicator */}
+                {hasMultipleVariants && effectiveVariantIndicators.colors.length > 1 && (
+                  <span className="text-[10px] text-muted-foreground font-medium">
+                    +{effectiveVariantIndicators.colors.length - 1}
+                  </span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              <p className="font-medium">{getDisplayTitle()}</p>
+              <p className="text-muted-foreground font-mono">
+                {filament.color_hex ? normalizeColorHex(filament.color_hex) : 'Unknown color'}
+              </p>
+              {hasMultipleVariants && effectiveVariantIndicators.colors.length > 1 && (
+                <p className="text-muted-foreground mt-1">{effectiveVariantIndicators.colors.length} colors available</p>
+              )}
+            </TooltipContent>
+          </Tooltip>
           
           <div className="flex-1 min-w-0">
-            {/* Brand row */}
-            <div className="flex items-center gap-2 mb-1">
-              <BrandLogo
-                src={brandLogo}
-                brandName={filament.vendor || "Unknown"}
-                size="sm"
-                className="w-5 h-5 rounded"
-              />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
-                {filament.vendor || "Unknown"}
-              </span>
-            </div>
+            <h3 
+              className="text-lg font-semibold text-foreground leading-tight line-clamp-3"
+              title={filament.product_title || ''}
+            >
+              {getDisplayTitle()}
+            </h3>
             
             {/* Variant color swatches row (for grouped products) */}
             {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 && (
               <HoverCard openDelay={200} closeDelay={100}>
                 <HoverCardTrigger asChild>
-                  <div className="flex items-center gap-1 cursor-pointer mt-1" role="group" aria-label="Color variants">
+                  <div className="flex items-center gap-1 cursor-pointer mt-1.5" role="group" aria-label="Color variants">
                     {effectiveVariantIndicators.colors.slice(0, 5).map((hex, i) => {
                       const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
                       return (
@@ -593,16 +628,6 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               </HoverCard>
             )}
           </div>
-        </div>
-        
-        {/* Product Name — line-clamp-3 with title tooltip */}
-        <div className="text-left">
-          <h3 
-            className="text-lg font-semibold text-foreground leading-tight line-clamp-3"
-            title={filament.product_title || ''}
-          >
-            {getDisplayTitle()}
-          </h3>
         </div>
         
         {/* Weight options indicator for grouped products */}
