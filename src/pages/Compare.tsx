@@ -421,39 +421,57 @@ const Compare = () => {
           </Button>
         </div>
 
-        <div className="mb-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium mb-4">
-            <BookOpen className="w-4 h-4" />
-            <span>KNOWLEDGE BASE</span>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 mb-8">
+          <div className="flex-1 min-w-0">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium mb-4">
+              <BookOpen className="w-4 h-4" />
+              <span>KNOWLEDGE BASE</span>
+            </div>
+            
+            {/* Title */}
+            <h1 className="text-4xl font-bold text-foreground mb-3">
+              Material <span className="text-primary">Knowledge Base</span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="text-muted-foreground text-lg mb-4">
+              Explore material reference information or compare filaments side-by-side.
+            </p>
+            
+            {/* Quick Stats */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                45+ Material Types
+              </span>
+              <span className="text-border">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                12 Property Categories
+              </span>
+              <span className="text-border">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Detailed Print Settings
+              </span>
+            </div>
           </div>
-          
-          {/* Title */}
-          <h1 className="text-4xl font-bold text-foreground mb-3">
-            Material <span className="text-primary">Knowledge Base</span>
-          </h1>
-          
-          {/* Subtitle */}
-          <p className="text-muted-foreground text-lg mb-4">
-            Explore material reference information or compare filaments side-by-side.
-          </p>
-          
-          {/* Quick Stats */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              45+ Material Types
-            </span>
-            <span className="text-border">•</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              12 Property Categories
-            </span>
-            <span className="text-border">•</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              Detailed Print Settings
-            </span>
+
+          {/* Decorative Hero Visual */}
+          <div className="hidden lg:flex w-[260px] h-[260px] relative rounded-2xl border border-white/10 overflow-hidden bg-gray-900/50 items-center justify-center flex-shrink-0">
+            {/* Radial gradient overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,235,0.08)_0%,_transparent_70%)]" />
+            {/* Centered rotated square */}
+            <div className="border-2 border-primary/20 w-24 h-24 rotate-45 rounded-lg" />
+            {/* Floating dots */}
+            <div className="absolute top-8 left-8 w-2 h-2 rounded-full bg-primary/40" />
+            <div className="absolute top-8 right-8 w-2 h-2 rounded-full bg-primary/40" />
+            <div className="absolute bottom-8 left-8 w-2 h-2 rounded-full bg-primary/40" />
+            <div className="absolute bottom-8 right-8 w-2 h-2 rounded-full bg-primary/40" />
+            {/* Corner labels */}
+            <span className="absolute top-3 right-3 font-mono text-[9px] uppercase tracking-wider text-primary/50">MATERIALS: 45+</span>
+            <span className="absolute bottom-3 left-3 font-mono text-[9px] uppercase tracking-wider text-primary/50">CATEGORIES: 12</span>
           </div>
         </div>
 
