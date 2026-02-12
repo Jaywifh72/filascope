@@ -180,6 +180,14 @@ export function useFinderQuery(
   });
 
   const groups = data ? mapRpcResultToGroups(data.items) : [];
+
+  // Push out-of-stock filaments to the bottom while preserving sort order within each group
+  groups.sort((a, b) => {
+    const aInStock = a.anyInStock ? 0 : 1;
+    const bInStock = b.anyInStock ? 0 : 1;
+    return aInStock - bInStock;
+  });
+
   const totalCount = data?.total || 0;
 
   return {
