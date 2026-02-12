@@ -134,7 +134,7 @@ export function ProductGallery({
   const imageUrls = validImages.map((img) => img.url);
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-4 border border-border/30 rounded-xl overflow-hidden", className)}>
       {/* Main Image Container */}
       <div
         ref={containerRef}
