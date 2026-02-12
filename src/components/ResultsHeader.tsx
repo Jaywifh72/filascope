@@ -38,7 +38,7 @@ const ResultsHeader = ({
           <div className="flex items-center gap-2 flex-wrap">
             <Database className="w-5 h-5 text-primary hidden sm:block" />
             <h2 className="text-lg font-bold text-foreground">
-              Material Registry
+              Filament Catalog
             </h2>
             <span className="text-muted-foreground">—</span>
             {showLoadingSkeleton ? (
@@ -52,9 +52,11 @@ const ResultsHeader = ({
                   )}
                 </span>
                 <span className="text-muted-foreground text-sm font-normal">
-                  {selectedPrinter ? "compatible" : hasActiveFilters ? "matching" : "products"}
+                  {selectedPrinter 
+                    ? `filaments compatible with your ${printerShortName}` 
+                    : hasActiveFilters ? "matching" : "products"}
                   {totalCatalogCount && totalCatalogCount > count ? (
-                    <> of {totalCatalogCount.toLocaleString()} total</>
+                    <span className="text-slate-500"> of {totalCatalogCount.toLocaleString()} total</span>
                   ) : null}
                 </span>
               </>
