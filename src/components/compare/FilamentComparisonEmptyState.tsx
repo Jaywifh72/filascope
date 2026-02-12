@@ -1,4 +1,4 @@
-import { ArrowRight, Scale, Sparkles, Target, Search, GitCompare, BarChart3 } from "lucide-react";
+import { ArrowRight, Scale, Sparkles, Target, Search, GitCompare, BarChart3, Beaker, Shield, Zap, Waves, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,7 @@ interface PopularComparison {
   id: string;
   materials: [string, string];
   description: string;
+  icon: LucideIcon;
 }
 
 const popularComparisons: PopularComparison[] = [
@@ -14,21 +15,25 @@ const popularComparisons: PopularComparison[] = [
     id: "pla-vs-petg",
     materials: ["PLA", "PETG"],
     description: "Beginner choice vs. stronger alternative",
+    icon: Beaker,
   },
   {
     id: "abs-vs-asa",
     materials: ["ABS", "ASA"],
     description: "Indoor vs. UV-resistant outdoor prints",
+    icon: Shield,
   },
   {
     id: "pla-vs-pla-plus",
     materials: ["PLA", "PLA+"],
     description: "Standard vs. enhanced properties",
+    icon: Zap,
   },
   {
     id: "tpu-vs-tpe",
     materials: ["TPU", "TPE"],
     description: "Common flexible vs. super soft",
+    icon: Waves,
   },
 ];
 
@@ -125,6 +130,7 @@ export function FilamentComparisonEmptyState({
                 "text-left"
               )}
             >
+              <comparison.icon className="w-5 h-5 text-primary/50 shrink-0 mr-3" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold text-foreground">
