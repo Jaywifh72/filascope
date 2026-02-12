@@ -752,9 +752,9 @@ const ReferenceSlicers = () => {
                             <h4 className="text-sm font-semibold text-amber-400 mb-3">Key Strengths</h4>
                             <div className="grid gap-3 md:grid-cols-3">
                               {slicer.keyStrengths.map((strength, idx) => (
-                                <div key={idx} className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                                  <h5 className="font-medium text-white mb-1">{strength.title}</h5>
-                                  <p className="text-sm text-gray-400">{strength.description}</p>
+                                <div key={idx} className="bg-slate-800/80 border border-slate-700 rounded-lg p-4 hover:border-cyan-500/30 transition-colors">
+                                  <h5 className="text-sm font-semibold text-cyan-400 mb-2">{strength.title}</h5>
+                                  <p className="text-xs text-slate-300 leading-relaxed">{strength.description}</p>
                                 </div>
                               ))}
                             </div>
@@ -764,33 +764,33 @@ const ReferenceSlicers = () => {
                           <div>
                             <h4 className="text-sm font-semibold text-primary mb-3">Technical Specifications</h4>
                             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                              <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
                                   <DollarSign className="w-3 h-3" />
                                   Price
                                 </div>
-                                <p className="text-sm text-white">{slicer.technicalSpecs.price}</p>
+                                <p className="text-sm text-slate-200">{slicer.technicalSpecs.price}</p>
                               </div>
-                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                              <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
                                   <Monitor className="w-3 h-3" />
                                   Supported OS
                                 </div>
-                                <p className="text-sm text-white">{slicer.technicalSpecs.supportedOS}</p>
+                                <p className="text-sm text-slate-200">{slicer.technicalSpecs.supportedOS}</p>
                               </div>
-                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                              <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
                                   <FileCode className="w-3 h-3" />
                                   File Support
                                 </div>
-                                <p className="text-sm text-white">{slicer.technicalSpecs.fileSupport}</p>
+                                <p className="text-sm text-slate-200">{slicer.technicalSpecs.fileSupport}</p>
                               </div>
-                              <div className="p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                              <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
                                   <Wifi className="w-3 h-3" />
                                   Connectivity
                                 </div>
-                                <p className="text-sm text-white">{slicer.technicalSpecs.connectivity}</p>
+                                <p className="text-sm text-slate-200">{slicer.technicalSpecs.connectivity}</p>
                               </div>
                             </div>
                             {slicer.technicalSpecs.status && (
