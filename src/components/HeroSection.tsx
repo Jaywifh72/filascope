@@ -222,13 +222,13 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
           
           {/* Left: Text Content */}
           <div className="flex flex-col items-start text-left order-1">
-            {/* Material Registry Badge */}
+            {/* Badge */}
             <div 
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 mb-5 animate-fade-in"
             >
               <FlaskConical className="h-3.5 w-3.5 text-primary" />
               <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-primary">
-                Material Registry
+                Filament Search Engine
               </span>
             </div>
 
@@ -254,25 +254,39 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
 
             {/* Trust badges */}
             <div 
-              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400 mb-6 animate-fade-in border-t border-slate-700/50 pt-4 mt-4"
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400 mb-6 animate-fade-in border-t border-slate-700/50 pt-4 mt-4"
               style={{ animationDelay: "0.2s" }}
             >
               <div className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-primary/70" />
-                <span>Trusted by <span className="text-foreground font-medium">10,000+</span> makers</span>
+                <span>Trusted by <span className="text-primary font-semibold">10,000+</span> makers</span>
               </div>
               <span className="text-slate-600 hidden sm:inline">•</span>
               <div className="flex items-center gap-1.5">
                 <RefreshCw className="h-3 w-3 text-primary/70" />
                 <span>Updated daily from <span className="text-foreground font-medium">15+</span> retailers</span>
               </div>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base leading-none">🌍</span>
+                <span>Users in <span className="text-foreground font-medium">40+</span> countries</span>
+              </div>
             </div>
             
             {/* Search Input with History & Suggestions */}
             <div 
-              className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in"
+              className="w-full max-w-full sm:max-w-[500px] mb-6 animate-fade-in search-icon-pulse"
               style={{ animationDelay: "0.25s" }}
             >
+              <style>{`
+                .search-icon-pulse svg:first-child {
+                  animation: searchPulse 5s ease-in-out infinite;
+                }
+                @keyframes searchPulse {
+                  0%, 90%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); }
+                  95% { opacity: 1; transform: translateY(-50%) scale(1.15); }
+                }
+              `}</style>
               <SearchInputWithHistory
                 value={searchTerm}
                 onChange={onSearchChange}
@@ -376,32 +390,34 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             </div>
           </div>
           
-          {/* Right: Brand Logo Grid */}
+          {/* Right: Brand Logo Marquee */}
           <div 
             className="hidden xl:flex justify-end items-center animate-fade-in order-2"
             style={{ animationDelay: "0.4s" }}
           >
-            <div className="grid grid-cols-3 gap-3 w-[320px]">
-              {[
-                { name: "Bambu Lab" },
-                { name: "Polymaker" },
-                { name: "eSun" },
-                { name: "Prusament" },
-                { name: "Hatchbox" },
-                { name: "Overture" },
-              ].map((brand) => (
-                <Link
-                  key={brand.name}
-                  to={`/brands/${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 flex items-center justify-center h-20 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-                >
-                  <BrandLogo
-                    src={getBrandLogoUrl(brand.name, 80)}
-                    brandName={brand.name}
-                    size="md"
-                  />
-                </Link>
-              ))}
+            <div className="w-[320px] overflow-hidden">
+              <div className="grid grid-cols-3 gap-3 group/marquee">
+                {[
+                  { name: "Bambu Lab" },
+                  { name: "Polymaker" },
+                  { name: "eSun" },
+                  { name: "Prusament" },
+                  { name: "Hatchbox" },
+                  { name: "Overture" },
+                ].map((brand) => (
+                  <Link
+                    key={brand.name}
+                    to={`/brands/${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 flex items-center justify-center h-20 opacity-70 brightness-75 hover:brightness-100 hover:opacity-100 hover:scale-105 transition-all duration-200"
+                  >
+                    <BrandLogo
+                      src={getBrandLogoUrl(brand.name, 80)}
+                      brandName={brand.name}
+                      size="md"
+                    />
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
