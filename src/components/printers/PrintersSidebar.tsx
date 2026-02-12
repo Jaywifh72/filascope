@@ -274,6 +274,46 @@ export default function PrintersSidebar({
 
         {/* Content */}
         <div className="px-4 pb-4">
+          {/* Quick Filters */}
+          <div className="py-3 border-b border-gray-800/50">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Quick Filters</span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: "Under $300", isActive: priceRange === "0-300", onClick: () => onPriceRangeChange(priceRange === "0-300" ? "all" : "0-300") },
+                { label: "Enclosed", isActive: selectedEnclosure.includes("passive") || selectedEnclosure.includes("heated"), onClick: () => {
+                  const hasEnclosed = selectedEnclosure.includes("passive") || selectedEnclosure.includes("heated");
+                  if (hasEnclosed) {
+                    onEnclosureChange(selectedEnclosure.filter(e => e !== "passive" && e !== "heated"));
+                  } else {
+                    onEnclosureChange([...selectedEnclosure, "passive", "heated"]);
+                  }
+                }},
+                { label: "Multi-Material", isActive: selectedKinematics.includes("toolchanger") || selectedKinematics.includes("idex"), onClick: () => {
+                  const hasMulti = selectedKinematics.includes("toolchanger") || selectedKinematics.includes("idex");
+                  if (hasMulti) {
+                    onKinematicsChange(selectedKinematics.filter(k => k !== "toolchanger" && k !== "idex"));
+                  } else {
+                    onKinematicsChange([...selectedKinematics, "toolchanger", "idex"]);
+                  }
+                }},
+                { label: "Large Format", isActive: selectedBuildVolume === "large", onClick: () => onBuildVolumeChange(selectedBuildVolume === "large" ? "all" : "large") },
+              ].map((filter) => (
+                <button
+                  key={filter.label}
+                  onClick={filter.onClick}
+                  className={cn(
+                    "text-xs rounded-full px-3 py-1 transition-colors duration-150 border",
+                    filter.isActive
+                      ? "bg-cyan-500/15 border-cyan-500 text-cyan-400"
+                      : "border-border/50 text-muted-foreground hover:border-cyan-500/50 hover:text-cyan-400"
+                  )}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Quick Toggle: Hide Discontinued */}
           <div className="py-3 border-b border-gray-800/50">
             <IndustrialToggle
@@ -336,9 +376,29 @@ export default function PrintersSidebar({
           </SidebarSection>
 
           {/* Brand */}
-          <SidebarSection title="Brand" icon={Tag} defaultOpen={false}>
+          <SidebarSection title="Brand" icon={Tag} defaultOpen={true}>
+            {/* Top brand pills */}
+            <div className="flex flex-wrap gap-1.5 mb-2 px-1">
+              {["Bambu Lab", "Creality", "Prusa Research", "FlashForge", "Elegoo", "Snapmaker", "Anycubic", "Raise3D", "UltiMaker"].map((brand) => (
+                <button
+                  key={brand}
+                  onClick={() => toggleBrand(brand)}
+                  className={cn(
+                    "text-xs rounded-full px-3 py-1 transition-colors duration-150 border",
+                    selectedBrands.includes(brand)
+                      ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-semibold"
+                      : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  {brand}
+                </button>
+              ))}
+            </div>
+            {/* All brands list */}
             <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 space-y-0.5 pr-1">
-              {sortedBrands.map((brand) => (
+              {sortedBrands
+                .filter(b => !["Bambu Lab", "Creality", "Prusa Research", "FlashForge", "Elegoo", "Snapmaker", "Anycubic", "Raise3D", "UltiMaker"].includes(b))
+                .map((brand) => (
                 <button
                   key={brand}
                   onClick={() => toggleBrand(brand)}

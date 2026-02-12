@@ -349,6 +349,9 @@ export default function Printers() {
       // Price range filter
       if (priceRangeFilter !== 'all') {
         switch (priceRangeFilter) {
+          case '0-300':
+            if (price > 300) return false;
+            break;
           case '0-500':
             if (price > 500) return false;
             break;
