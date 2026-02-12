@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 // Logo served from storage at 224px (retina for 112px display) instead of bundling the 885KB source
@@ -31,15 +31,27 @@ const Navbar = () => {
   const [learnDropdownOpen, setLearnDropdownOpen] = useState(false);
   const learnHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [showNavSearch, setShowNavSearch] = useState(false);
+  const [navSearchValue, setNavSearchValue] = useState("");
+  const navSearchRef = useRef<HTMLInputElement>(null);
 
-  // Detect scroll for sticky nav border
+  // Detect scroll for sticky nav border + nav search visibility
   useEffect(() => {
     const handleScroll = () => {
       setHasScrolled(window.scrollY > 80);
+      setShowNavSearch(window.scrollY > 300);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleNavSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && navSearchValue.trim()) {
+      navigate(`/?q=${encodeURIComponent(navSearchValue.trim())}`);
+      setNavSearchValue("");
+      navSearchRef.current?.blur();
+    }
+  }, [navSearchValue, navigate]);
 
   // Compare tray state
   const { items: compareItems } = useCompare();
@@ -365,6 +377,35 @@ const Navbar = () => {
 
             {/* Visual separator */}
             <div className="h-5 w-px bg-border/50 mx-2" />
+
+            {/* Compact Nav Search — appears on scroll */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-200 ease-out",
+                showNavSearch ? "max-w-[280px] opacity-100" : "max-w-0 opacity-0"
+              )}
+            >
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  ref={navSearchRef}
+                  type="text"
+                  placeholder="Search..."
+                  value={navSearchValue}
+                  onChange={(e) => setNavSearchValue(e.target.value)}
+                  onKeyDown={handleNavSearch}
+                  className={cn(
+                    "h-9 w-[240px] pl-8 pr-3 text-sm rounded-lg",
+                    "bg-white/[0.07] border border-white/20 text-foreground",
+                    "placeholder:text-muted-foreground/60",
+                    "shadow-inner shadow-black/20",
+                    "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
+                    "transition-all duration-200"
+                  )}
+                  aria-label="Quick search"
+                />
+              </div>
+            </div>
 
             {/* Compare Button - Ghost with teal border */}
             <Tooltip delayDuration={300}>

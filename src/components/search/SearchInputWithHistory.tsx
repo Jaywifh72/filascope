@@ -168,7 +168,10 @@ export function SearchInputWithHistory({
     <div className={cn("relative w-full", className)} role="search">
       {/* Input - Full width on mobile */}
       <div className="relative w-full">
-        <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+        <Search className={cn(
+          "absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 z-10 transition-colors duration-200",
+          isFocused ? "text-primary" : "text-muted-foreground"
+        )} />
         <input
           ref={inputRef}
           type="text"
@@ -177,20 +180,19 @@ export function SearchInputWithHistory({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
-            // Delay to allow click events on dropdown items
             setTimeout(() => setIsFocused(false), 150);
           }}
           onKeyDown={handleKeyDown}
           data-search-input="true"
           className={cn(
-            "w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-4 text-base bg-white/5 backdrop-blur-md text-foreground",
-            "placeholder:text-muted-foreground/70 rounded-xl border transition-all duration-300 outline-none",
+            "w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-4 text-base bg-white/[0.07] backdrop-blur-md text-foreground",
+            "placeholder:text-muted-foreground/60 rounded-xl border transition-all duration-300 outline-none",
             "min-h-[44px] touch-manipulation",
-            // Enhanced focus ring for accessibility - WCAG 2.1 AA compliant
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "shadow-inner shadow-black/20",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
             isFocused
-              ? "border-primary/60 ring-2 ring-primary/20 shadow-[0_0_20px_rgba(0,207,232,0.3)]"
-              : "border-primary/40 hover:border-primary/50",
+              ? "border-primary ring-2 ring-primary/20"
+              : "border-white/20 hover:border-white/30",
             inputClassName
           )}
           aria-label="Search filaments, brands, and materials. Press forward slash to focus."
