@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Check, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Download, Loader2, X, Database as DatabaseIcon, GitCompareArrows } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import PrintersHeroSection from "@/components/PrintersHeroSection";
 import PrintersLeftSidebar, { type AdvancedFilters } from "@/components/printers/PrintersLeftSidebar";
@@ -826,22 +826,22 @@ export default function Printers() {
                       onClick={loadMore}
                       disabled={isLoadingMore}
                       variant="outline"
-                      className="h-14 px-10 bg-primary/5 border-2 border-primary/30 hover:bg-primary/10 hover:border-primary text-primary font-mono text-[11px] uppercase tracking-[0.15em]"
+                      className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 rounded-full px-8 py-2 text-sm font-medium transition-colors"
                     >
                       {isLoadingMore ? (
                         <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Loading...
                         </>
                       ) : (
                         <>
-                          Load {Math.min(remaining, PRINTERS_PER_PAGE)} More Units
-                          <ArrowDown className="ml-2 h-5 w-5" />
+                          Load {Math.min(remaining, PRINTERS_PER_PAGE)} more printers
+                          <ChevronDown className="ml-2 h-4 w-4" />
                         </>
                       )}
                     </Button>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-                      Displaying {displayedCount} of {filteredPrinters.length} units
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Showing {displayedCount} of {filteredPrinters.length} printers
                     </p>
                     <div className="w-48 h-1 bg-gray-800 rounded-full mx-auto mt-3">
                       <div
