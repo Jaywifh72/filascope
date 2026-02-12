@@ -453,6 +453,36 @@ const ReferenceSlicers = () => {
                       </AccordionItem>
                     </Accordion>
                   )}
+
+                  {/* Quick Picks Section */}
+                  <div className="mt-8">
+                    <h3 className="text-xl font-bold text-white">Quick Picks</h3>
+                    <p className="text-sm text-slate-400 mt-1 mb-4">Not sure where to start? Here are our top picks by category</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[
+                        { emoji: '🏆', title: 'Best Free Slicer', slicer: 'PrusaSlicer', border: 'border-emerald-500' },
+                        { emoji: '🚀', title: 'Easiest to Learn', slicer: 'Bambu Studio', border: 'border-cyan-500' },
+                        { emoji: '⚙️', title: 'Most Customizable', slicer: 'OrcaSlicer', border: 'border-purple-500' },
+                        { emoji: '🎨', title: 'Best for Resin', slicer: 'Lychee Slicer', border: 'border-amber-500' },
+                      ].map((pick) => (
+                        <div
+                          key={pick.title}
+                          className={`bg-slate-800/50 rounded-lg p-4 flex items-center justify-between border-l-4 ${pick.border}`}
+                        >
+                          <div>
+                            <div className="text-sm font-semibold text-white">{pick.emoji} {pick.title}</div>
+                            <div className="text-xs text-slate-400 mt-0.5">{pick.slicer}</div>
+                          </div>
+                          <button
+                            onClick={() => handleLearnMore(pick.slicer)}
+                            className="text-cyan-400 text-sm hover:underline whitespace-nowrap"
+                          >
+                            View →
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </section>
             )}
