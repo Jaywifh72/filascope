@@ -126,10 +126,8 @@ const AccordionSection = ({
 );
 
 const SectionDivider = ({ label }: { label: string }) => (
-  <div className="flex items-center gap-3 pt-4 pb-2">
-    <div className="h-px flex-1 bg-gray-800" />
-    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
-    <div className="h-px flex-1 bg-gray-800" />
+  <div className="mt-8 mb-3 border-l-2 border-primary/40 pl-3">
+    <span className="text-xs font-bold text-muted-foreground uppercase tracking-[0.15em]">{label}</span>
   </div>
 );
 
