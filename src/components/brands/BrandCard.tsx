@@ -3,7 +3,7 @@ import { toBrandSlug } from "@/utils/brandSlug";
 import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { Button } from "@/components/ui/button";
+
 
 interface BrandCardProps {
   name: string;
@@ -163,18 +163,16 @@ const BrandCard = ({
         )}
 
         {/* View Filaments Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full mt-auto text-primary group-hover:text-cyan-300 hover:text-primary hover:bg-primary/10 group/btn transition-colors"
+        <button
+          className="w-full h-10 rounded-lg border border-cyan-500/30 text-cyan-400 text-sm font-medium transition-all duration-200 hover:bg-cyan-500/10 hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] flex items-center justify-center gap-2 mt-auto group/btn"
           onClick={(e) => {
             e.stopPropagation();
             handleClick();
           }}
         >
           {isEmpty ? 'Notify Me' : 'View Filaments'}
-          <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
-        </Button>
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+        </button>
       </div>
     </div>
   );
