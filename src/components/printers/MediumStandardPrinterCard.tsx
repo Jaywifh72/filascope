@@ -263,7 +263,7 @@ export default function MediumStandardPrinterCard({
                 ) : price ? (
                   <>
                     {/* Current Price */}
-                    <span className="text-lg font-bold text-foreground inline-flex items-center gap-1">
+                    <span className="text-lg font-bold text-cyan-400 inline-flex items-center gap-1">
                       <Tag className="h-3.5 w-3.5 text-muted-foreground/50" />
                       {formatDisplayPrice(price)}
                     </span>
