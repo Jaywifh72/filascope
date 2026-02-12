@@ -25,7 +25,6 @@ import PrinterQuiz from "@/components/printers/PrinterQuiz";
 import PrinterQuizResults from "@/components/printers/PrinterQuizResults";
 import { calculateRecommendations, QuizResults } from "@/lib/printerQuizService";
 import { QuizAnswers } from "@/lib/printerQuizData";
-import { TechFooter } from "@/components/TechFooter";
 import { exportPrinterDatabaseCSV } from "@/lib/printerExportUtils";
 import ActiveFilterChips from "@/components/printers/ActiveFilterChips";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
@@ -920,8 +919,7 @@ export default function Printers() {
 
       </div>
 
-      {/* Tech Footer */}
-      <TechFooter />
+
     </div>
     </>
   );
