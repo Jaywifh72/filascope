@@ -20,9 +20,10 @@ const TABS: TabConfig[] = [
 interface PrinterTabNavProps {
   activeTab: PrinterTab;
   onTabChange: (tab: PrinterTab) => void;
+  tabCounts?: Partial<Record<PrinterTab, number>>;
 }
 
-export function PrinterTabNav({ activeTab, onTabChange }: PrinterTabNavProps) {
+export function PrinterTabNav({ activeTab, onTabChange, tabCounts }: PrinterTabNavProps) {
   const tabsRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
@@ -120,6 +121,9 @@ export function PrinterTabNav({ activeTab, onTabChange }: PrinterTabNavProps) {
                 )}
               >
                 {tab.label}
+                {tabCounts?.[tab.id] != null && tabCounts[tab.id]! > 0 && (
+                  <span className="ml-1 text-[10px] text-muted-foreground font-normal">({tabCounts[tab.id]})</span>
+                )}
                 {/* Active indicator - teal underline */}
                 {activeTab === tab.id && (
                   <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />

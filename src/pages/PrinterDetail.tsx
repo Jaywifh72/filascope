@@ -767,7 +767,39 @@ const PrinterDetail = () => {
             </div>
 
             {/* Tab Navigation - Sticky below hero */}
-            <PrinterTabNav activeTab={activeTab} onTabChange={handleTabChange} />
+            {(() => {
+              // Count non-null spec fields
+              const specFields = [
+                'build_volume_x_mm', 'build_volume_y_mm', 'build_volume_z_mm', 'build_volume_shape',
+                'machine_width_mm', 'machine_depth_mm', 'machine_height_mm', 'machine_weight_kg',
+                'frame_material', 'machine_style', 'max_print_speed_mms', 'max_travel_speed_mms',
+                'max_acceleration_mms2', 'layer_resolution_min_um', 'layer_resolution_max_um',
+                'xy_positioning_accuracy_um', 'z_positioning_accuracy_um', 'filament_diameter_mm',
+                'nozzle_diameter_default_mm', 'max_nozzle_temp_c', 'bed_max_temp_c', 'hotend_type',
+                'extruder_type', 'direct_drive', 'motion_system', 'has_enclosure', 'enclosure_type',
+                'auto_bed_leveling', 'bed_leveling_type', 'bed_surface_type', 'rated_power_w',
+                'power_input_voltage', 'power_loss_recovery', 'has_wifi', 'has_ethernet', 'has_usb',
+                'has_sd_card', 'has_camera', 'screen_type', 'screen_size_inch',
+                'multi_material_supported', 'multi_material_max_spools', 'noise_level_db',
+              ];
+              const specsCount = specFields.filter(f => printer[f] != null && printer[f] !== '').length;
+
+              // Count materials
+              const materialsCount = printer.official_supported_materials
+                ? printer.official_supported_materials.split(',').map((m: string) => m.trim()).filter(Boolean).length
+                : 0;
+
+              return (
+                <PrinterTabNav
+                  activeTab={activeTab}
+                  onTabChange={handleTabChange}
+                  tabCounts={{
+                    specifications: specsCount > 0 ? specsCount : undefined,
+                    materials: materialsCount > 0 ? materialsCount : undefined,
+                  }}
+                />
+              );
+            })()}
 
             {/* Tab Content Area */}
             <PrinterTabContent activeTab={activeTab}>
