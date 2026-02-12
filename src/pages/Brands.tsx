@@ -444,7 +444,7 @@ const Brands = () => {
                 <Building2 className="w-5 h-5 text-primary hidden sm:block" />
                 <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-foreground">
                   <span className="hidden sm:inline text-muted-foreground">Brand Directory </span>
-                  <span className="text-muted-foreground sm:hidden">// </span>
+                  <span className="text-muted-foreground sm:hidden">— </span>
                   <span className="text-primary font-bold">{filteredBrands.length.toLocaleString()}</span>
                   <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
                     {searchQuery ? `results for "${searchQuery}"` : (hasActiveFilters ? "Matching" : "Brands")}
