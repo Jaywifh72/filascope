@@ -2,8 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
+
+// Redirect /admin/* to /old-admin/*
+function AdminRedirect() {
+  const location = useLocation();
+  const newPath = location.pathname.replace(/^\/admin/, '/old-admin');
+  return <Navigate to={newPath + location.search + location.hash} replace />;
+}
 import { HelmetProvider } from "react-helmet-async";
 import Navbar from "./components/Navbar";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -195,6 +202,7 @@ const App = () => (
                   <Route path="/wishlist/:shareCode" element={<SharedWishlist />} />
                   <Route path="/collections/:username/:slug" element={<PublicCollection />} />
                   <Route path="/admin" element={<NewAdminPanel />} />
+                  <Route path="/admin/*" element={<AdminRedirect />} />
                   <Route path="/old-admin" element={<Navigate to="/old-admin/dashboard" replace />} />
                   <Route path="/old-admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/old-admin/import" element={<AdminImport />} />
