@@ -40,13 +40,13 @@ const badgeConfigs: Record<BadgeType, BadgeConfig> = {
     label: 'Multi-Color',
     shortLabel: 'Multi-Color',
     icon: Palette,
-    className: 'bg-blue-500/15 border-blue-500/30 text-blue-400'
+    className: 'bg-purple-500/15 border-purple-500/30 text-purple-400'
   },
   largeFormat: {
     label: 'Large Format',
     shortLabel: 'Large',
     icon: Maximize2,
-    className: 'bg-orange-500/15 border-orange-500/30 text-orange-400'
+    className: 'bg-amber-500/15 border-amber-500/30 text-amber-400'
   },
   resin: {
     label: 'Resin/SLA',
@@ -64,7 +64,7 @@ const badgeConfigs: Record<BadgeType, BadgeConfig> = {
     label: 'Enclosed',
     shortLabel: 'Enclosed',
     icon: Home,
-    className: 'bg-teal-500/15 border-teal-500/30 text-teal-400'
+    className: 'bg-blue-500/15 border-blue-500/30 text-blue-400'
   },
   corexy: {
     label: 'CoreXY',
@@ -122,10 +122,10 @@ export default function PrinterBadge({
       role="status"
       aria-label={config.label}
       className={cn(
-        "inline-flex items-center gap-1.5 border rounded-md font-bold uppercase tracking-wide transition-all",
+        "inline-flex items-center gap-1.5 border rounded-full font-semibold uppercase tracking-wide transition-all",
         size === 'sm' 
           ? "px-2 py-0.5 text-[10px]" 
-          : "px-2.5 py-1 text-[11px]",
+          : "px-2 py-0.5 text-xs",
         config.className,
         pulse && "animate-pulse",
         className
