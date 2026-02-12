@@ -169,7 +169,9 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
     },
     {
       title: "Today's Deals",
-      description: isDealsLoading ? "Loading deals..." : `${dealsCount} active deals`,
+      description: isDealsLoading ? "Loading deals..." : (
+        <>{dealsCount > 0 && <span className="text-amber-400 font-semibold">{dealsCount}</span>}{dealsCount > 0 ? " active deals" : "Active deals"}</>
+      ),
       icon: Tag,
       href: "/deals",
       color: "green",
@@ -304,8 +306,8 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Target className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-sm text-slate-300 truncate">
-                    <span className="hidden sm:inline">New to filaments? </span>Try Quick Match — 3 questions, perfect recommendation
+                  <span className="text-sm text-slate-300">
+                    New to filaments? Quick Match finds your perfect filament in 60 seconds.
                   </span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -336,7 +338,10 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
             >
               {quickStartPaths.map((path) => {
                 const Icon = path.icon;
-                const cardClasses = `group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-h-[100px] sm:min-h-[120px] touch-manipulation ${getColorClasses(path.color, path.title)}`;
+                const isBrowse = path.title === "Browse Filaments";
+                const isDeals = path.title === "Today's Deals";
+                const topBorder = isBrowse ? "border-t-2 border-t-cyan-500/40" : isDeals ? "border-t-2 border-t-amber-500/40" : "";
+                const cardClasses = `group relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:border-slate-600 hover:bg-slate-800/80 min-h-[100px] sm:min-h-[120px] touch-manipulation ${topBorder} ${getColorClasses(path.color, path.title)}`;
                 
                 const cardContent = (
                   <>
@@ -349,7 +354,7 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
                     )}
                     <Icon className="h-7 w-7 mb-2 transition-transform group-hover:scale-110" />
                     <span className="text-sm font-medium text-foreground mb-0.5">{path.title}</span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">{path.description}</span>
+                    <span className="text-[10px] text-slate-400 leading-tight">{path.description}</span>
                   </>
                 );
                 
