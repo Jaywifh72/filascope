@@ -592,6 +592,21 @@ export function FilamentCard({ filament, colorMatchPercent, index = 0, displayTi
           Plan #3: TD badge moved to priority position after material
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-3 flex flex-wrap gap-2" data-card-element="2">
+        {/* "New" Badge — products added in last 30 days */}
+        {(filament as any).created_at && 
+          (Date.now() - new Date((filament as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 && (
+          <div className="inline-flex items-center rounded-full px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+            New
+          </div>
+        )}
+        
+        {/* "Popular" Badge — high value_score heuristic */}
+        {filament.value_score != null && filament.value_score >= 8 && communityRating && communityRating.reviewCount > 0 && (
+          <div className="inline-flex items-center rounded-full px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs font-semibold">
+            Popular
+          </div>
+        )}
+        
         {/* Material Badge (always show) */}
         {filament.material && (
           <div className={cn(
