@@ -116,6 +116,32 @@ export function PrinterHeroSection({
             })}
           </p>
 
+          {/* Feature Pills */}
+          {(() => {
+            const pills: string[] = [];
+            if (printer.printer_type) pills.push(printer.printer_type.toUpperCase());
+            else pills.push('FDM');
+            if (printer.multi_material_supported) pills.push('Multi-Material');
+            if (printer.has_wifi) pills.push('Wi-Fi');
+            if (printer.auto_bed_leveling) pills.push('Auto Bed Leveling');
+            if (printer.has_enclosure) pills.push('Enclosed');
+            if (printer.input_shaping_supported) pills.push('Input Shaping');
+            if (printer.direct_drive) pills.push('Direct Drive');
+            if (printer.has_camera || printer.ai_spaghetti_detection) pills.push('AI Monitoring');
+            return pills.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {pills.slice(0, 5).map((pill) => (
+                  <span
+                    key={pill}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/40"
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            ) : null;
+          })()}
+
           {/* Social Proof Badges */}
           <SocialProofBadges
             isStaffPick={false}
