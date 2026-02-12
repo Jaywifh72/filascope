@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Clock, Sparkles, GitCompare, BadgeCheck } from "lucide-react";
+import { Building2, Clock, Sparkles, GitCompare, ShieldCheck } from "lucide-react";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
@@ -80,6 +81,7 @@ interface PublicBrand {
 
 
 const Brands = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<BrandFilters>({
     materials: [],
@@ -406,27 +408,42 @@ const Brands = () => {
       />
 
       {/* Quick Action Cards */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 my-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button onClick={handleOpenQuiz} className="flex items-center gap-3 px-4 py-3 bg-card/60 border border-border/40 rounded-lg hover:bg-card/80 hover:border-border/60 transition-all text-left">
-            <Sparkles className="h-5 w-5 text-cyan-400 shrink-0" />
+          <button
+            onClick={() => navigate('/wizard')}
+            className="rounded-xl border border-border bg-card/50 p-4 flex items-center gap-3 hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer text-left"
+          >
+            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+              <Sparkles className="h-8 w-8 text-primary/70" />
+            </div>
             <div>
-              <div className="text-sm font-medium">Brand Quiz</div>
-              <div className="text-xs text-muted-foreground">Find your perfect manufacturer</div>
+              <div className="text-sm font-semibold text-foreground">Brand Quiz</div>
+              <div className="text-xs text-muted-foreground">Find your ideal brand</div>
             </div>
           </button>
-          <div className="flex items-center gap-3 px-4 py-3 bg-card/60 border border-border/40 rounded-lg hover:bg-card/80 hover:border-border/60 transition-all cursor-default">
-            <GitCompare className="h-5 w-5 text-cyan-400 shrink-0" />
-            <div>
-              <div className="text-sm font-medium">Compare Brands</div>
-              <div className="text-xs text-muted-foreground">Side-by-side material offerings</div>
+          <button
+            onClick={() => navigate('/compare')}
+            className="rounded-xl border border-border bg-card/50 p-4 flex items-center gap-3 hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer text-left"
+          >
+            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+              <GitCompare className="h-8 w-8 text-primary/70" />
             </div>
-          </div>
-          <button onClick={() => setFilters({ ...filters, verifiedOnly: true })} className="flex items-center gap-3 px-4 py-3 bg-card/60 border border-border/40 rounded-lg hover:bg-card/80 hover:border-border/60 transition-all text-left">
-            <BadgeCheck className="h-5 w-5 text-cyan-400 shrink-0" />
             <div>
-              <div className="text-sm font-medium">Verified Brands</div>
-              <div className="text-xs text-muted-foreground">Quality-assured data & pricing</div>
+              <div className="text-sm font-semibold text-foreground">Compare Brands</div>
+              <div className="text-xs text-muted-foreground">Side-by-side comparison</div>
+            </div>
+          </button>
+          <button
+            onClick={() => setFilters({ ...filters, verifiedOnly: true })}
+            className="rounded-xl border border-border bg-card/50 p-4 flex items-center gap-3 hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer text-left"
+          >
+            <div className="rounded-lg bg-primary/10 p-2 shrink-0">
+              <ShieldCheck className="h-8 w-8 text-primary/70" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-foreground">Verified Brands</div>
+              <div className="text-xs text-muted-foreground">4 verified brands</div>
             </div>
           </button>
         </div>
