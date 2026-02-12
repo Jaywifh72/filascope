@@ -1,6 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ScrollCarouselProps {
@@ -79,28 +78,33 @@ export function ScrollCarousel({
         {children}
       </div>
 
-      {/* Navigation Arrows — desktop only */}
+      {/* Right gradient fade */}
+      {canScrollNext && (
+        <div className="absolute right-0 top-0 bottom-2 w-[60px] bg-gradient-to-l from-background to-transparent pointer-events-none z-[5]" />
+      )}
+      {/* Left gradient fade */}
+      {canScrollPrev && (
+        <div className="absolute left-0 top-0 bottom-2 w-[60px] bg-gradient-to-r from-background to-transparent pointer-events-none z-[5]" />
+      )}
+
+      {/* Navigation Arrows */}
       {showArrows && canScrollPrev && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute -left-4 lg:-left-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 border-border hover:bg-muted/80 hidden md:flex opacity-0 group-hover:opacity-100 transition-all z-10"
+        <button
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800/90 backdrop-blur flex items-center justify-center border border-slate-700/50 hover:border-slate-600 transition-colors z-10"
           onClick={() => scroll("prev")}
           aria-label="Previous slide"
         >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+          <ArrowLeft className="h-4 w-4 text-slate-300" />
+        </button>
       )}
       {showArrows && canScrollNext && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute -right-4 lg:-right-6 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 border-border hover:bg-muted/80 hidden md:flex opacity-0 group-hover:opacity-100 transition-all z-10"
+        <button
+          className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800/90 backdrop-blur flex items-center justify-center border border-slate-700/50 hover:border-slate-600 transition-colors z-10"
           onClick={() => scroll("next")}
           aria-label="Next slide"
         >
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+          <ArrowRight className="h-4 w-4 text-slate-300" />
+        </button>
       )}
     </div>
   );
