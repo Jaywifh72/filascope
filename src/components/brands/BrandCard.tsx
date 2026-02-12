@@ -68,7 +68,7 @@ const BrandCard = ({
   return (
 
     <div
-      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:shadow-lg hover:shadow-cyan-500/8 hover:-translate-y-0.5 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border hover:border-cyan-500/20'}`}
+      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border hover:border-primary/40'}`}
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
