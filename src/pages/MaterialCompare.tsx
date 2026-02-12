@@ -1424,7 +1424,7 @@ const MaterialCompare = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-4 border-b border-border/50">
             <TabsTrigger value="reference" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               Reference
