@@ -242,7 +242,7 @@ export function LabReadoutCard({
       style={{
         // Animation respects prefers-reduced-motion via CSS media query
         // Cap animation delay to first 12 cards to avoid long waits
-        animation: `card-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${Math.min(index, 12) * 0.05}s both`,
+        animation: `card-enter 0.3s ease-out ${Math.min(index * 50, 400)}ms both`,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
