@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { MaterialBadge } from "@/components/MaterialBadge";
-import { ExternalLink, ChevronDown, GitCompare, X, CheckCircle, XCircle, TreeDeciduous, Layers, Palette } from "lucide-react";
+import { ExternalLink, ChevronDown, GitCompare, X, CheckCircle, XCircle, TreeDeciduous, Layers, Palette, DollarSign, SlidersHorizontal } from "lucide-react";
 import { FilamentCard } from "@/components/FilamentCard";
 import { LabReadoutCard } from "@/components/LabReadoutCard";
 import { DataInventoryControlBar, type SortOption } from "@/components/DataInventoryControlBar";
@@ -952,9 +952,35 @@ const Finder = () => {
       {/* Why FilaScope value proposition */}
       <WhyFilaScope />
 
+      {/* Value Proposition Row */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col md:flex-row items-center md:items-start justify-center gap-8 md:gap-12">
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-cyan-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Real Prices, Real Stores</h3>
+            <p className="text-xs text-muted-foreground">Live pricing from 15+ retailers in your currency</p>
+          </div>
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+              <SlidersHorizontal className="w-6 h-6 text-cyan-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Filtered For Your Printer</h3>
+            <p className="text-xs text-muted-foreground">See only compatible filaments instantly</p>
+          </div>
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+              <Palette className="w-6 h-6 text-cyan-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Find by Color & TD</h3>
+            <p className="text-xs text-muted-foreground">The world's largest HueForge TD database</p>
+          </div>
+        </div>
+      </div>
+
       {/* Bridge: Discovery → Catalog transition */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-px my-4 bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
         <div className="text-center mb-6">
           <h2 className="text-xl font-semibold text-foreground">Browse All Filaments</h2>
           <p className="text-sm text-muted-foreground mt-1.5">
