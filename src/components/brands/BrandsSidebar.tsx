@@ -10,6 +10,7 @@ export interface BrandFilters {
   verifiedOnly: boolean;
   hasLivePricing: boolean;
   filamentCountRange: string | null;
+  priceTier: string | null;
   sortBy: string;
 }
 
@@ -60,6 +61,7 @@ const BrandsSidebar = ({
     materials: true,
     features: true,
     verification: true,
+    priceTier: false,
     filamentCount: false,
     sort: false,
   });
@@ -131,6 +133,51 @@ const BrandsSidebar = ({
                     >
                       <span>{option.label}</span>
                       {filters.sortBy === option.value && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Price Tier Section */}
+            <div>
+              <button
+                onClick={() => toggleSection('priceTier')}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <span className="text-sm font-medium text-white">Price Tier</span>
+                <ChevronDown 
+                  className={cn(
+                    "h-4 w-4 text-gray-500 transition-transform duration-200",
+                    expandedSections.priceTier && "rotate-180"
+                  )} 
+                />
+              </button>
+              {expandedSections.priceTier && (
+                <div className="px-3 pb-3 space-y-1">
+                  {[
+                    { id: "$", label: "Budget", dollarSign: "$", desc: "Under $20/kg" },
+                    { id: "$$", label: "Mid-Range", dollarSign: "$$", desc: "$20–35/kg" },
+                    { id: "$$$", label: "Premium", dollarSign: "$$$", desc: "Over $35/kg" },
+                  ].map(tier => (
+                    <button
+                      key={tier.id}
+                      onClick={() => onFiltersChange({ 
+                        ...filters, 
+                        priceTier: filters.priceTier === tier.id ? null : tier.id 
+                      })}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        filters.priceTier === tier.id
+                          ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
+                          : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-amber-500/60 font-mono font-bold">{tier.dollarSign}</span>
+                        <span>{tier.label}</span>
+                      </span>
+                      <span className="text-[10px] text-gray-600 font-mono">{tier.desc}</span>
                     </button>
                   ))}
                 </div>
