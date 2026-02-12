@@ -73,6 +73,8 @@ const featureOptions = [
   { id: "dual_extruder", label: "Dual Extruder" },
 ];
 
+const TOP_BRANDS = ["Bambu Lab", "Creality", "Prusa Research", "FlashForge", "Elegoo", "Snapmaker", "Anycubic", "Raise3D", "UltiMaker"];
+
 type ExpandedSection = 'sort' | 'price' | 'volume' | 'brands' | 'motion' | 'speed' | 'features' | null;
 
 const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>(({
@@ -89,7 +91,7 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
   hasActiveFilters,
   onClearFilters,
 }, ref) => {
-  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
+  const [expandedSection, setExpandedSection] = useState<ExpandedSection>('brands');
   const [brandSearch, setBrandSearch] = useState("");
 
   const toggleSection = (section: ExpandedSection) => {
@@ -298,6 +300,24 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
               
               {expandedSection === 'brands' && (
                 <div className="px-2 pb-3 space-y-2">
+                  {/* Top brand pills */}
+                  <div className="flex flex-wrap gap-1.5 px-1">
+                    {TOP_BRANDS.map((brand) => (
+                      <button
+                        key={brand}
+                        onClick={() => handleBrandToggle(brand)}
+                        className={cn(
+                          "text-xs rounded-full px-3 py-1 transition-colors duration-150 border",
+                          advancedFilters.brands.includes(brand)
+                            ? "bg-cyan-500/20 border-cyan-500 text-cyan-400 font-semibold"
+                            : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        {brand}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Search + remaining brands */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                     <Input
@@ -308,7 +328,9 @@ const PrintersLeftSidebar = forwardRef<HTMLDivElement, PrintersLeftSidebarProps>
                     />
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-0.5">
-                    {filteredBrands.map(brand => (
+                    {filteredBrands
+                      .filter(b => !TOP_BRANDS.includes(b))
+                      .map(brand => (
                       <label
                         key={brand}
                         className={cn(
