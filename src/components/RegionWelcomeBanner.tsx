@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, MapPin, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRegion } from '@/contexts/RegionContext';
@@ -7,43 +7,58 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const BANNER_KEY = 'filascope_region_banner_dismissed';
+const SESSION_CONFIRMED_KEY = 'filascope_region_confirmed';
 
 export function RegionWelcomeBanner() {
   const { regionConfig, isLoading } = useRegion();
   const [isVisible, setIsVisible] = useState(false);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Only show if not previously dismissed and region is loaded
     if (isLoading) return;
     
+    // Don't show if confirmed this session or previously dismissed
+    const sessionConfirmed = sessionStorage.getItem(SESSION_CONFIRMED_KEY);
     const dismissed = localStorage.getItem(BANNER_KEY);
-    if (!dismissed) {
-      // Small delay to prevent flash
-      const timer = setTimeout(() => setIsVisible(true), 500);
-      return () => clearTimeout(timer);
-    }
+    if (sessionConfirmed || dismissed) return;
+
+    const timer = setTimeout(() => setIsVisible(true), 500);
+    return () => clearTimeout(timer);
   }, [isLoading]);
 
-  const handleDismiss = () => {
-    setIsVisible(false);
-    localStorage.setItem(BANNER_KEY, 'true');
-  };
+  const animateOut = useCallback(() => {
+    setIsAnimatingOut(true);
+    setTimeout(() => setIsVisible(false), 300);
+  }, []);
 
-  const handleConfirm = () => {
-    handleDismiss();
-  };
+  const handleDismiss = useCallback(() => {
+    sessionStorage.setItem(SESSION_CONFIRMED_KEY, 'true');
+    localStorage.setItem(BANNER_KEY, 'true');
+    animateOut();
+  }, [animateOut]);
+
+  const handleConfirm = useCallback(() => {
+    sessionStorage.setItem(SESSION_CONFIRMED_KEY, 'true');
+    localStorage.setItem(BANNER_KEY, 'true');
+    animateOut();
+  }, [animateOut]);
 
   if (!isVisible || isLoading) return null;
 
-  // ── Compact mobile banner: single line ──
+  const confirmLabel = `Yes, I'm in ${regionConfig.name}`;
+
+  // ── Compact mobile banner ──
   if (isMobile) {
     return (
       <div
         className={cn(
           "relative bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20",
-          "animate-in slide-in-from-top-2 duration-300"
+          "transition-all duration-300",
+          isAnimatingOut
+            ? "-translate-y-full opacity-0"
+            : "animate-in slide-in-from-top-2 duration-300"
         )}
         role="banner"
         aria-label="Region confirmation"
@@ -84,7 +99,8 @@ export function RegionWelcomeBanner() {
                   onClick={handleConfirm}
                   className="text-xs h-7 px-2"
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3.5 h-3.5 mr-1" />
+                  Yes
                 </Button>
                 <Button
                   variant="ghost"
@@ -108,7 +124,10 @@ export function RegionWelcomeBanner() {
     <div 
       className={cn(
         "relative bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20",
-        "animate-in slide-in-from-top-2 duration-300"
+        "transition-all duration-300",
+        isAnimatingOut
+          ? "-translate-y-full opacity-0"
+          : "animate-in slide-in-from-top-2 duration-300"
       )}
       role="banner"
       aria-label="Region confirmation"
@@ -158,7 +177,7 @@ export function RegionWelcomeBanner() {
                   className="text-xs"
                 >
                   <Check className="w-4 h-4 mr-1" />
-                  Looks Good
+                  {confirmLabel}
                 </Button>
                 <Button
                   variant="outline"
