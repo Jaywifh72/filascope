@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench, Globe } from "lucide-react";
+import { LogOut, Shield, Archive, Database, Settings, ChevronDown, Scissors, FolderGit2, User, GitCompareArrows, Menu, X, MoreHorizontal, BookOpen, Wrench } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 // Logo served from storage at 224px (retina for 112px display) instead of bundling the 885KB source
@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCompare } from "@/hooks/useCompare";
 import { preloadRoute } from "@/lib/preloadRoutes";
+import { useDealsCount } from "@/hooks/useDealsCount";
 const Navbar = () => {
   const {
     user,
@@ -58,6 +59,9 @@ const Navbar = () => {
 
   // Trending panel state
   const trendingPanel = useTrendingPanel();
+
+  // Deals count for badge
+  const { data: dealsData } = useDealsCount();
 
   // Check if Learn dropdown should be active
   const isLearnActive = ['/accessories', '/reference', '/learn', '/compare', '/guides', '/resources/profiles'].some(path => location.pathname.startsWith(path));
@@ -207,14 +211,7 @@ const Navbar = () => {
         { to: '/reference/slicers', label: 'Slicer Directory', icon: Scissors },
       ]
     },
-    {
-      title: 'Community',
-      icon: Globe,
-      items: [
-        
-      ],
-      comingSoonNote: 'More resources coming soon...',
-    }
+    
   ];
 
   // Flattened items for tablet/mobile "More" dropdown
@@ -268,7 +265,11 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">
               Deals
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse" aria-hidden="true" />
+              {dealsData && dealsData.totalVariants > 0 && (
+                <span className="inline-flex items-center justify-center bg-amber-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" aria-label={`${dealsData.totalVariants} active deals`}>
+                  {dealsData.totalVariants}
+                </span>
+              )}
             </LabNavLink>
             
             {/* Learn Dropdown - Mega Menu with hover support on desktop */}
@@ -399,7 +400,11 @@ const Navbar = () => {
             <LabNavLink to="/brands">Brands</LabNavLink>
             <LabNavLink to="/deals">
               Deals
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse" aria-hidden="true" />
+              {dealsData && dealsData.totalVariants > 0 && (
+                <span className="inline-flex items-center justify-center bg-amber-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" aria-label={`${dealsData.totalVariants} active deals`}>
+                  {dealsData.totalVariants}
+                </span>
+              )}
             </LabNavLink>
             
             {/* More Dropdown (Learn collapsed) */}
@@ -583,7 +588,11 @@ const Navbar = () => {
             <MobileNavLink to="/brands">Brands</MobileNavLink>
             <MobileNavLink to="/deals">
               Deals
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse" aria-hidden="true" />
+              {dealsData && dealsData.totalVariants > 0 && (
+                <span className="inline-flex items-center justify-center bg-amber-500/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1" aria-label={`${dealsData.totalVariants} active deals`}>
+                  {dealsData.totalVariants}
+                </span>
+              )}
             </MobileNavLink>
 
             <div className="border-t border-border/30 my-2" />

@@ -42,8 +42,8 @@ export function WishlistButton() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-gray-400 hover:text-teal-400 transition-colors duration-200"
-          aria-label={`Wishlist${stats.totalItems > 0 ? `, ${stats.totalItems} items` : ''}`}
+          className="relative opacity-60 hover:opacity-100 text-gray-400 hover:text-teal-400 transition-all duration-200"
+          aria-label={`Saved Items${stats.totalItems > 0 ? `, ${stats.totalItems} items` : ''}`}
         >
           <Heart
             className={`h-5 w-5 ${stats.totalItems > 0 ? "fill-teal-500 text-teal-500" : ""}`}
