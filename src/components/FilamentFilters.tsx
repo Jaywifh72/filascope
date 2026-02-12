@@ -232,8 +232,8 @@ const FilterContent = ({
                     {material}
                   </span>
                   {filterCounts && filterCounts[`material_${material}`] > 0 && (
-                    <span className="text-[10px] text-muted-foreground/60 ml-auto">
-                      {filterCounts[`material_${material}`]}
+                    <span className="text-[10px] text-slate-500 font-mono ml-auto">
+                      ({filterCounts[`material_${material}`]})
                     </span>
                   )}
                 </label>
