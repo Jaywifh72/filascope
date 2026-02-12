@@ -15,6 +15,7 @@ import { useConversionTracking } from '@/hooks/useConversionTracking';
 import { invalidatePriceCache } from '@/hooks/useCurrentPrice';
 import { cn } from '@/lib/utils';
 import { PriceUrgencyBadge } from '../urgency/PriceUrgencyBadge';
+import { PriceIntelligenceBadges } from './PriceIntelligenceBadges';
 import { useCompare } from '@/hooks/useCompare';
 import { useRegion } from '@/contexts/RegionContext';
 import { REGIONS } from '@/config/regions';
@@ -311,12 +312,12 @@ export function FilamentPurchaseSidebar({
               </div>
             )}
 
-            {/* Price Urgency Badge */}
+            {/* Price Intelligence Badges */}
             {(displayPricePerKg || displayPrice) && priceConfidence !== 'stale' && priceConfidence !== 'unknown' && (
-              <PriceUrgencyBadge
+              <PriceIntelligenceBadges
                 filamentId={filamentId}
                 currentPrice={displayPricePerKg || displayPrice}
-                size="small"
+                lastScrapedAt={lastScrapedAt}
               />
             )}
 
