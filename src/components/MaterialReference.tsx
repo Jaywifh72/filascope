@@ -232,7 +232,8 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
             variant="outline" 
             size="sm" 
             onClick={handlePrint}
-            className="gap-2 border-gray-600 text-muted-foreground hover:text-foreground shrink-0"
+            title="Download a printable one-page reference card for this material"
+            className="gap-2 border-gray-600 text-muted-foreground hover:text-foreground hover:bg-primary/10 hover:border-primary/30 shrink-0"
           >
             <Printer className="w-4 h-4" />
             Print Reference Sheet
