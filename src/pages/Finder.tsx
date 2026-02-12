@@ -63,6 +63,7 @@ import { RecentlyViewedSection } from "@/components/RecentlyViewedSection";
 import { TrendingSection } from "@/components/TrendingSection";
 import { MobileQuickMatchPrompt } from "@/components/MobileQuickMatchPrompt";
 import WhyFilaScope from "@/components/WhyFilaScope";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 
 import { MobileFilamentFilterSheet } from "@/components/filters/MobileFilamentFilterSheet";
 import { MobileActiveFilterChips } from "@/components/filters/MobileActiveFilterChips";
@@ -1571,6 +1572,7 @@ const Finder = () => {
 
       {/* Mobile Quick Match Prompt */}
       <MobileQuickMatchPrompt />
+      <ScrollToTopButton />
     </div>
   );
 };
