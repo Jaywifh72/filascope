@@ -317,12 +317,12 @@ const ReferenceSlicers = () => {
         />
 
         {/* Sticky Tab Navigation */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border pb-3">
           <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
-            <nav className="flex gap-1" role="tablist">
+            <nav className="flex gap-2" role="tablist">
               {[
-                { id: "recommendations" as SlicerTab, label: "Recommendations", icon: Star },
-                { id: "comparison" as SlicerTab, label: "Full Comparison", icon: Table },
+                { id: "recommendations" as SlicerTab, label: "Recommendations", icon: Star, count: 3 },
+                { id: "comparison" as SlicerTab, label: "Full Comparison", icon: Table, count: 20 },
                 { id: "profiles" as SlicerTab, label: "Detailed Profiles", icon: FileText, count: slicerData.length },
               ].map((tab) => (
                 <button
@@ -331,25 +331,18 @@ const ReferenceSlicers = () => {
                   aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-4 text-sm font-medium transition-all relative",
-                    "border-b-2 -mb-[1px]",
+                    "flex items-center gap-2 px-5 py-4 text-sm transition-all relative",
+                    "border-b-[3px] -mb-[1px]",
                     activeTab === tab.id
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                      ? "border-cyan-500 text-white font-semibold"
+                      : "border-transparent text-slate-400 hover:text-slate-200 transition-colors"
                   )}
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
-                  {tab.count && (
-                    <span className={cn(
-                      "ml-1 px-2 py-0.5 rounded-full text-xs font-semibold",
-                      activeTab === tab.id
-                        ? "bg-primary/20 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    )}>
-                      {tab.count}
-                    </span>
-                  )}
+                  <span className="ml-2 text-xs bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded-full">
+                    {tab.count}
+                  </span>
                 </button>
               ))}
             </nav>
