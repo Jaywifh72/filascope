@@ -26,7 +26,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { cn } from "@/lib/utils";
+import { cn, normalizeColorHex } from "@/lib/utils";
+import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { useCompare } from "@/hooks/useCompare";
@@ -244,6 +245,13 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
     isRatesLoading,
   } = useRegionalPrice(filament as FilamentWithRegionalPrices);
   
+  // Affiliate links for direct store link
+  const { getAffiliateUrl } = useAffiliateLinks();
+  const affiliateUrl = useMemo(
+    () => getAffiliateUrl(regionalUrl, filament.vendor),
+    [getAffiliateUrl, regionalUrl, filament.vendor]
+  );
+  
   // === UNIFIED PRICE RESOLUTION ===
   // Use the single source of truth for all price calculations
   const resolved = useResolvedPrice(filament);
@@ -410,10 +418,10 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
       className={cn(
         "group relative rounded-2xl transition-all duration-200 ease-out min-h-[420px] flex flex-col",
         "bg-slate-800/80 border border-slate-700/50",
-        // Hover: subtle lift + shadow + border brighten
+        // Hover: scale lift + deeper shadow + cyan border
         isOutOfStock
-          ? "opacity-75 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 hover:border-muted-foreground/20"
-          : "hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 hover:border-slate-600/80",
+          ? "opacity-75 hover:scale-[1.02] hover:shadow-xl hover:shadow-black/30 hover:border-muted-foreground/20"
+          : "hover:scale-[1.02] hover:shadow-xl hover:shadow-black/30 hover:border-cyan-500/30",
         // Active: tactile press
         "active:scale-[0.99] active:duration-[50ms]",
         // Focus: accessible cyan ring
@@ -488,96 +496,106 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          ELEMENT 1: Brand Row (logo + name + swatches)
+          ELEMENT 1: Brand Row (logo + name + prominent color swatch)
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 pt-4 pb-2 border-b border-border/30" data-card-element="1">
-        {/* Brand + Vendor Name + Swatches - single row */}
-        <div className="flex items-center gap-2 mb-3">
-          <BrandLogo
-            src={brandLogo}
-            brandName={filament.vendor || "Unknown"}
-            size="sm"
-            className="w-5 h-5 rounded"
-          />
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1 min-w-0 truncate">
-            {filament.vendor || "Unknown"}
-          </span>
+        {/* Prominent color swatch block */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
+            <div 
+              className="w-12 h-12 rounded-lg border border-border shadow-sm"
+              style={{ backgroundColor: normalizeColorHex(filament.color_hex) }}
+              role="img"
+              aria-label={`Color: ${filament.color_hex || 'N/A'}`}
+            />
+            <span className="text-[10px] text-gray-500 font-mono">
+              {filament.color_hex ? normalizeColorHex(filament.color_hex) : 'Color N/A'}
+            </span>
+          </div>
           
-          {/* Plan #4: Color swatches moved to brand row, increased to 20px */}
-          {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 ? (
-            <HoverCard openDelay={200} closeDelay={100}>
-              <HoverCardTrigger asChild>
-                <div className="flex items-center gap-1 cursor-pointer flex-shrink-0" role="group" aria-label="Color variants">
-                  {effectiveVariantIndicators.colors.slice(0, 5).map((hex, i) => {
-                    const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
-                    return (
-                      <div 
-                        key={i}
-                        className={cn(
-                          "w-5 h-5 rounded-full border shadow-sm ring-2 ring-white/20 transition-opacity",
-                          isColorInStock ? "border-border" : "border-border/50 opacity-50"
-                        )}
-                        style={{ backgroundColor: hex }}
-                        role="img"
-                        aria-label={`Color swatch ${hex}${isColorInStock ? '' : ', out of stock'}`}
-                      />
-                    );
-                  })}
-                  {effectiveVariantIndicators.colors.length > 5 && (
-                    <span className="text-[10px] text-muted-foreground ml-0.5">+{effectiveVariantIndicators.colors.length - 5}</span>
-                  )}
-                </div>
-              </HoverCardTrigger>
-              <HoverCardContent 
-                side="bottom" 
-                align="start" 
-                className="w-64 p-3 bg-popover border-border"
-              >
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold text-foreground mb-2">Color Availability</div>
-                  <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
-                    {effectiveVariantIndicators.colors.map((hex, i) => {
+          <div className="flex-1 min-w-0">
+            {/* Brand row */}
+            <div className="flex items-center gap-2 mb-1">
+              <BrandLogo
+                src={brandLogo}
+                brandName={filament.vendor || "Unknown"}
+                size="sm"
+                className="w-5 h-5 rounded"
+              />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                {filament.vendor || "Unknown"}
+              </span>
+            </div>
+            
+            {/* Variant color swatches row (for grouped products) */}
+            {hasMultipleVariants && effectiveVariantIndicators.colors.length > 0 && (
+              <HoverCard openDelay={200} closeDelay={100}>
+                <HoverCardTrigger asChild>
+                  <div className="flex items-center gap-1 cursor-pointer mt-1" role="group" aria-label="Color variants">
+                    {effectiveVariantIndicators.colors.slice(0, 5).map((hex, i) => {
                       const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
                       return (
                         <div 
                           key={i}
                           className={cn(
-                            "flex items-center gap-2 px-2 py-1 rounded text-[11px]",
-                            isColorInStock 
-                              ? "bg-emerald-500/10 text-emerald-400" 
-                              : "bg-red-500/10 text-red-400"
+                            "w-4 h-4 rounded-full border shadow-sm ring-1 ring-white/20 transition-opacity",
+                            isColorInStock ? "border-border" : "border-border/50 opacity-50"
                           )}
-                        >
-                          <div 
-                            className="w-3 h-3 rounded-full border border-border flex-shrink-0"
-                            style={{ backgroundColor: hex }}
-                          />
-                          {isColorInStock ? (
-                            <CheckCircle className="w-3 h-3 flex-shrink-0" />
-                          ) : (
-                            <XCircle className="w-3 h-3 flex-shrink-0" />
-                          )}
-                          <span className="truncate">{isColorInStock ? "In Stock" : "Out"}</span>
-                        </div>
+                          style={{ backgroundColor: hex }}
+                          role="img"
+                          aria-label={`Color swatch ${hex}${isColorInStock ? '' : ', out of stock'}`}
+                        />
                       );
                     })}
+                    {effectiveVariantIndicators.colors.length > 5 && (
+                      <span className="text-[10px] text-muted-foreground ml-0.5">+{effectiveVariantIndicators.colors.length - 5}</span>
+                    )}
                   </div>
-                  {variantIndicators?.anyInStock && (
-                    <div className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/30">
-                      {effectiveVariantIndicators.colors.filter(hex => variantIndicators?.colorStockStatus?.[hex] !== false).length} of {effectiveVariantIndicators.colors.length} colors available
+                </HoverCardTrigger>
+                <HoverCardContent 
+                  side="bottom" 
+                  align="start" 
+                  className="w-64 p-3 bg-popover border-border"
+                >
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold text-foreground mb-2">Color Availability</div>
+                    <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
+                      {effectiveVariantIndicators.colors.map((hex, i) => {
+                        const isColorInStock = variantIndicators?.colorStockStatus?.[hex] !== false;
+                        return (
+                          <div 
+                            key={i}
+                            className={cn(
+                              "flex items-center gap-2 px-2 py-1 rounded text-[11px]",
+                              isColorInStock 
+                                ? "bg-emerald-500/10 text-emerald-400" 
+                                : "bg-red-500/10 text-red-400"
+                            )}
+                          >
+                            <div 
+                              className="w-3 h-3 rounded-full border border-border flex-shrink-0"
+                              style={{ backgroundColor: hex }}
+                            />
+                            {isColorInStock ? (
+                              <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                            ) : (
+                              <XCircle className="w-3 h-3 flex-shrink-0" />
+                            )}
+                            <span className="truncate">{isColorInStock ? "In Stock" : "Out"}</span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          ) : filament.color_hex ? (
-            <div 
-              className="w-5 h-5 rounded-full border-2 border-border shadow-sm ring-2 ring-white/20 flex-shrink-0"
-              style={{ backgroundColor: filament.color_hex.startsWith('#') ? filament.color_hex : `#${filament.color_hex}` }}
-              role="img"
-              aria-label={`Color: ${filament.color_hex}`}
-            />
-          ) : null}
+                    {variantIndicators?.anyInStock && (
+                      <div className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/30">
+                        {effectiveVariantIndicators.colors.filter(hex => variantIndicators?.colorStockStatus?.[hex] !== false).length} of {effectiveVariantIndicators.colors.length} colors available
+                      </div>
+                    )}
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          </div>
         </div>
         
         {/* Product Name — line-clamp-3 with title tooltip */}
@@ -726,9 +744,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
               <div className="flex items-baseline gap-1">
-                {hasPriceRange && (
-                  <span className="text-xs text-muted-foreground mr-0.5">From</span>
-                )}
+                <span className="text-xs text-muted-foreground mr-0.5">From</span>
                 <span className={cn(
                   "text-lg font-bold leading-none",
                   isOutOfStock ? "text-muted-foreground line-through" : "text-foreground"
@@ -770,10 +786,10 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
               ) : null;
             })()}
             
-            {/* Secondary local price when best price is international */}
+            {/* Secondary local price when best price is international — green dot instead of MapPin */}
             {resolved.localPricePerKg != null && resolved.formattedLocalPricePerKg && (
               <div className="flex items-center gap-1 text-xs">
-                <MapPin className="w-3 h-3 text-emerald-400" />
+                <span className="bg-emerald-400 rounded-full w-2 h-2 inline-block flex-shrink-0" />
                 <span className="text-muted-foreground">
                   Local: {resolved.formattedLocalPricePerKg}/kg
                 </span>
@@ -831,8 +847,13 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
           Plan #8, #9 (freshness), #10
           ═══════════════════════════════════════════════════════════════ */}
       <div className="px-6 py-2 flex items-center gap-2 flex-wrap" data-card-element="4">
-        {/* FilaScore — hidden when low confidence + limited data */}
-        {overallScore !== null && !(scoreConfidence === 'low' && hasLimitedData) ? (
+        {/* FilaScore — show "Verified specs" for low confidence, numeric for medium/high */}
+        {overallScore !== null && scoreConfidence === 'low' ? (
+          <div className="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+            <Check className="w-3.5 h-3.5" />
+            Verified specs
+          </div>
+        ) : overallScore !== null && !(scoreConfidence === 'low' && hasLimitedData) ? (
           <>
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
@@ -990,7 +1011,7 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             </span>
           </button>
         </div>
-        {/* Change 2: Watch Price link for out-of-stock */}
+        {/* Watch Price link for out-of-stock */}
         {isOutOfStock && (
           <Link 
             to={`/filament/${filament.id}`} 
@@ -999,7 +1020,40 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
             Watch Price
           </Link>
         )}
+        {/* "View on Store" direct affiliate link */}
+        {!isOutOfStock && regionalUrl && (() => {
+          const domain = extractStoreDomain(regionalUrl);
+          return domain ? (
+            <a
+              href={affiliateUrl || regionalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-cyan-400/70 hover:text-cyan-400 transition-colors text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View on {domain} →
+            </a>
+          ) : null;
+        })()}
       </div>
+
+      {/* Quick Compare hover button — desktop only */}
+      <button
+        onClick={handleCompareToggle}
+        disabled={isCompareDisabled}
+        aria-label="Quick compare"
+        className={cn(
+          "absolute bottom-4 right-4 w-8 h-8 rounded-full flex items-center justify-center",
+          "opacity-0 group-hover:opacity-100 transition-opacity duration-150",
+          "hidden md:flex",
+          isSelected || isPendingSelection
+            ? "bg-primary/30 text-primary"
+            : "bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-400",
+          isCompareDisabled && "opacity-0 pointer-events-none"
+        )}
+      >
+        <Columns className="w-4 h-4" />
+      </button>
     </div>
   );
 }
