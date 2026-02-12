@@ -18,6 +18,7 @@ import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
 import { FilamentImageFallback } from "@/components/ui/FilamentImageFallback";
 import { getOptimizedImageUrl, getImageSrcSet } from "@/utils/imageOptimization";
+import { normalizeColorHex } from "@/lib/utils";
 
 export type SimilarityReason = 
   | "same_material" 
@@ -47,17 +48,18 @@ export interface SimilarFilamentData {
 interface SimilarFilamentCardProps {
   filament: SimilarFilamentData;
   showCompareToggle?: boolean;
-  /** Current product's price per kg in USD for diff calculation */
   currentPricePerKg?: number | null;
+  /** Show a prominent color swatch (for same-color matches) */
+  showColorSwatch?: boolean;
 }
 
 const REASON_BADGES: Record<SimilarityReason, { label: string; className: string }> = {
   same_material: { label: "Same Material", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
-  same_brand: { label: "Same Brand", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-  similar_price: { label: "Similar Price", className: "bg-green-500/15 text-green-400 border-green-500/30" },
+  same_brand: { label: "Same Brand", className: "bg-primary/15 text-primary border-primary/30" },
+  similar_price: { label: "Similar Price", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
   budget_pick: { label: "Budget Pick", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
   premium_pick: { label: "Premium", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-  same_color: { label: "Same Color", className: "bg-pink-500/15 text-pink-400 border-pink-500/30" },
+  same_color: { label: "Same Color", className: "bg-purple-500/15 text-purple-300 border-purple-500/30" },
 };
 
 const MATERIAL_COLORS: Record<string, string> = {
@@ -76,7 +78,7 @@ function getMaterialColor(material: string | null): string {
   return MATERIAL_COLORS[base] || "bg-violet-500/20 text-violet-400 border-violet-500/30";
 }
 
-export function SimilarFilamentCard({ filament, showCompareToggle = true, currentPricePerKg }: SimilarFilamentCardProps) {
+export function SimilarFilamentCard({ filament, showCompareToggle = true, currentPricePerKg, showColorSwatch = false }: SimilarFilamentCardProps) {
   const [imageError, setImageError] = useState(false);
   const { items, addItem, removeItem } = useCompare();
   const { currency, convertPrice, hasRates, formatPrice } = useRegion();
@@ -84,29 +86,25 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
   const isInCompare = items.some((item) => item.id === filament.id);
   const brandLogo = getBrandLogoUrl(filament.vendor, 60);
   
-  // Calculate price per kg using canonical utility
   const pricePerKg = filament.variant_price
     ? computePricePerKg(filament.variant_price, filament.net_weight_g, (filament as any).pack_quantity)
     : null;
 
-  // Calculate price difference in user's currency
   const priceDiff = (() => {
     if (!pricePerKg || !currentPricePerKg || !hasRates) return null;
     const thisConverted = convertPrice(pricePerKg, "USD");
     const currentConverted = convertPrice(currentPricePerKg, "USD");
     const diff = thisConverted - currentConverted;
-    if (Math.abs(diff) < 0.5) return null; // Ignore trivial differences
+    if (Math.abs(diff) < 0.5) return null;
     return { amount: diff, formatted: formatPrice(Math.abs(diff), { compact: true }) };
   })();
   
-  // Format nozzle temp range
   const nozzleTempRange = filament.nozzle_temp_min_c && filament.nozzle_temp_max_c
     ? `${filament.nozzle_temp_min_c}-${filament.nozzle_temp_max_c}°C`
     : filament.nozzle_temp_min_c
       ? `${filament.nozzle_temp_min_c}°C`
       : null;
   
-  // Get base material for badge
   const materialBase = filament.material?.split(/[\s-]/)[0] || filament.material;
   
   const handleCompareToggle = (e: React.MouseEvent) => {
@@ -127,6 +125,8 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       });
     }
   };
+
+  const colorHex = filament.color_hex ? normalizeColorHex(filament.color_hex) : null;
 
   const cardContent = (
     <div
@@ -199,10 +199,32 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
           className="opacity-80"
         />
         
-        {/* Material Badge */}
-        <Badge variant="outline" className={cn("text-xs rounded-full", getMaterialColor(filament.material))}>
-          {materialBase || "Unknown"}
-        </Badge>
+        <div className="flex items-center gap-1.5">
+          {/* Color swatch for same-color matches */}
+          {showColorSwatch && colorHex && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    className="w-7 h-7 rounded-full ring-2 ring-white/20 flex-shrink-0"
+                    style={{ backgroundColor: colorHex }}
+                    aria-label={`Color: ${filament.color_family || 'Unknown'}`}
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {filament.color_family || 'Color match'}
+                  {filament.color_hex && (
+                    <span className="ml-1 text-muted-foreground font-mono">{filament.color_hex.toUpperCase()}</span>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {/* Material Badge */}
+          <Badge variant="outline" className={cn("text-xs rounded-full", getMaterialColor(filament.material))}>
+            {materialBase || "Unknown"}
+          </Badge>
+        </div>
       </div>
 
       {/* Product Image */}
@@ -247,7 +269,7 @@ export function SimilarFilamentCard({ filament, showCompareToggle = true, curren
       {priceDiff && !filament.isCurrent && (
         <div className={cn(
           "flex items-center gap-1 text-xs font-medium mb-2",
-          priceDiff.amount < 0 ? "text-emerald-500" : "text-red-400"
+          priceDiff.amount < 0 ? "text-emerald-500" : "text-muted-foreground"
         )}>
           {priceDiff.amount < 0 ? (
             <>
