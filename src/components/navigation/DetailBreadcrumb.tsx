@@ -50,7 +50,7 @@ export function DetailBreadcrumb({ segments, mobileBackLabel, hideHome }: Detail
           parent && (
             <Link
               to={parent.href}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to {mobileBackLabel || parent.label}</span>
@@ -66,11 +66,11 @@ export function DetailBreadcrumb({ segments, mobileBackLabel, hideHome }: Detail
               return (
                 <li key={seg.href} className="inline-flex items-center gap-1">
                   {i > 0 && (
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
                   )}
                   {isLast ? (
                     <span
-                      className="font-medium text-foreground truncate max-w-[280px]"
+                      className="font-medium text-foreground truncate max-w-[280px] cursor-default"
                       aria-current="page"
                     >
                       {seg.label}
@@ -78,7 +78,7 @@ export function DetailBreadcrumb({ segments, mobileBackLabel, hideHome }: Detail
                   ) : (
                     <Link
                       to={seg.href}
-                      className="hover:text-foreground transition-colors inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 hover:text-primary hover:underline decoration-primary/50 underline-offset-4 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded"
                     >
                       {isHome && <Home className="w-3.5 h-3.5" />}
                       <span>{seg.label}</span>
