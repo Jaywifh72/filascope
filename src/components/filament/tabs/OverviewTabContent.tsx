@@ -360,8 +360,8 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
   const productSummary = generateProductSummary(filament);
 
   return (
-    <div className="space-y-6">
-      {/* Best Prices Section - Above the fold */}
+    <div className="space-y-6 md:space-y-6">
+      {/* ── Group 1: Pricing ── */}
       <BestPricesSection 
         filamentId={filament.id} 
         onViewAllPrices={onNavigateToPricing}
@@ -370,7 +370,10 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
         totalRetailerCount={totalRetailerCount}
       />
 
-      {/* Community Photos Link */}
+      {/* Divider: pricing → product info */}
+      <div className="border-t border-gray-800/50" />
+
+      {/* ── Group 2: Product narrative ── */}
       {photoCount != null && photoCount > 0 && onNavigateToCommunity && (
         <button
           onClick={onNavigateToCommunity}
@@ -382,26 +385,26 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
         </button>
       )}
 
-      {/* Product Summary */}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/[0.02] border-primary/20">
-        <CardContent className="p-6">
+        <CardContent className="p-4 md:p-6">
           <p className="text-base text-foreground/90 leading-relaxed">
             {productSummary}
           </p>
         </CardContent>
       </Card>
 
-      {/* Material Quick Guide — educational, collapsed by default */}
       <MaterialQuickGuide material={filament.material} sessionViewCount={sessionViewCount} />
 
-      {/* Ideal For / Not Recommended Section */}
+      {/* Divider: narrative → use cases */}
+      <div className="border-t border-gray-800/50" />
+
+      {/* ── Group 3: Use cases ── */}
       {(idealEntries.length > 0 || notRecEntries.length > 0) && (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {/* Ideal For */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
           {idealEntries.length > 0 && (
-            <Card className="bg-emerald-500/5 border-emerald-500/20">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-3">
+            <Card className="bg-emerald-500/5 border-emerald-500/20 h-fit">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   <h4 className="font-semibold text-emerald-400">Ideal For</h4>
                 </div>
@@ -410,11 +413,10 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
             </Card>
           )}
 
-          {/* Not Recommended For */}
           {notRecEntries.length > 0 && (
-            <Card className="bg-amber-500/5 border-amber-500/20">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-3">
+            <Card className="bg-amber-500/5 border-amber-500/20 h-fit">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
                   <h4 className="font-semibold text-amber-400">Not Recommended For</h4>
                 </div>
@@ -425,15 +427,17 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
         </div>
       )}
 
-      {/* Recommended Starting Settings */}
+      {/* Divider: use cases → technical specs */}
+      <div className="border-t border-gray-800/50" />
+
+      {/* ── Group 4: Technical / actionable data ── */}
       <RecommendedStartingSettings filament={filament} />
 
-      {/* Key Features */}
       {features.length > 0 && (
         <Card className="bg-card/50 border-border">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Key Features</h3>
-            <div className="grid sm:grid-cols-2 gap-3">
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold mb-3">Key Features</h3>
+            <div className="grid sm:grid-cols-2 gap-2">
               {features.map((feature, idx) => (
                 <div 
                   key={idx}
@@ -457,14 +461,12 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
         </Card>
       )}
 
-      {/* Technical Details Accordion */}
       <TechnicalDetailsAccordion filament={filament} />
 
-      {/* Use Case Tags */}
       {filament.use_case_tags && filament.use_case_tags.length > 0 && (
         <Card className="bg-card/50 border-border">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Recommended Use Cases</h3>
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-lg font-semibold mb-3">Recommended Use Cases</h3>
             <div className="flex flex-wrap gap-2">
               {filament.use_case_tags.map((tag, idx) => (
                 <Badge key={idx} variant="secondary" className="px-3 py-1">
