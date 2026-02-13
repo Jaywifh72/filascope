@@ -8,7 +8,12 @@ import {
   Loader2,
   Globe,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Package,
+  Building2,
+  ShoppingCart,
+  RefreshCw,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +179,35 @@ export function SiteFooter() {
             >
               Compare Top Picks
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Trust Badges */}
+      <div className="border-y border-border bg-muted/30 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-start gap-8 lg:gap-12 flex-wrap">
+            {[
+              { icon: Package, stat: "1,073+", label: "Filaments Tracked" },
+              { icon: Building2, stat: "48+", label: "Brands Monitored" },
+              { icon: ShoppingCart, stat: "15+", label: "Retailers Connected" },
+              { icon: RefreshCw, stat: "Daily", label: "Price Updates" },
+              { icon: Users, stat: "10,000+", label: "Makers Trust Us" },
+            ].map(({ icon: Icon, stat, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center text-center gap-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                aria-label={`${stat} ${label}`}
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{stat}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide max-w-[100px]">{label}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
