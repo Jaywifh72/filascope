@@ -290,14 +290,25 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     <>
       <Card
         className={cn(
-          "group deal-card-hover relative h-full overflow-hidden transition-all duration-200 flex flex-col cursor-pointer",
+          "group/card deal-card-hover relative h-full overflow-hidden transition-all duration-200 flex flex-col cursor-pointer",
+          "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/40",
+          "focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none",
           isVeryStale && "opacity-80"
         )}
+        role="article"
+        tabIndex={0}
+        aria-label={`${group.baseName} by ${group.representativeDeal.vendor || 'Unknown'} - ${group.bestDiscount}% off`}
         onClick={() => navigate(`/filament/${group.representativeDeal.id}`)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate(`/filament/${group.representativeDeal.id}`);
+          }
+        }}
       >
         {/* Discount Badge — tiered color system */}
         <div className={cn(
-          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-[filter] duration-200 group-hover:brightness-110",
+          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-[filter] duration-200 group-hover/card:brightness-110",
           group.bestDiscount >= 50
             ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold animate-deal-pulse"
             : group.bestDiscount >= 35
@@ -327,7 +338,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="deal-share-btn absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-muted/50 rounded-full p-1.5 transition-all duration-200 opacity-0 group-hover:opacity-100"
+              className="deal-share-btn absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-muted/50 rounded-full p-1.5 transition-all duration-200 opacity-0 group-hover/card:opacity-100"
               onClick={handleShareClick}
               aria-label="Share this deal"
             >
@@ -342,7 +353,8 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         {/* Image with fallback chain */}
         <Link
           to={`/filament/${group.representativeDeal.id}`}
-          className="block"
+          className="block relative"
+          onClick={(e) => e.stopPropagation()}
         >
           <DealCardImage
             src={group.representativeDeal.featured_image}
@@ -352,6 +364,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             vendor={group.representativeDeal.vendor}
             material={group.representativeDeal.material}
           />
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none">
+            <span className="text-[10px] text-white/80 bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">
+              View details →
+            </span>
+          </div>
         </Link>
 
         <CardContent className="p-3 flex-1 flex flex-col">
@@ -395,8 +412,8 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           )}
 
           {/* Base Product Name — brand prefix stripped */}
-          <Link to={`/filament/${group.representativeDeal.id}`}>
-            <h3 className="font-semibold text-sm mb-1.5 line-clamp-2 h-[40px] overflow-hidden hover:text-primary transition-colors" title={group.baseName}>
+          <Link to={`/filament/${group.representativeDeal.id}`} onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-semibold text-sm mb-1.5 line-clamp-2 h-[40px] overflow-hidden group-hover/card:text-primary transition-colors" title={group.baseName}>
               {displayName}
             </h3>
           </Link>
