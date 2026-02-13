@@ -403,6 +403,7 @@ const Brands = () => {
         brandCount={brandCount}
         productCount={totalProducts}
         variantCount={totalVariants}
+        verifiedCount={mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length}
         isLoading={isStatsLoading}
         onOpenQuiz={handleOpenQuiz}
         brandSuggestions={brandSuggestions}
