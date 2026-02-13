@@ -13,7 +13,7 @@ import {
   PanelLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { VaultCounts } from "@/hooks/useVaultProfile";
 
 export type VaultTab =
@@ -67,20 +67,27 @@ export function VaultSidebar({
       )}
     >
       <nav className="flex flex-col gap-1 p-2">
-        {/* Collapse toggle (tablet only) */}
+        {/* Collapse toggle */}
         {onToggleCollapse && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleCollapse}
-            className="mb-1 justify-center"
-          >
-            {collapsed ? (
-              <PanelLeft className="w-4 h-4" />
-            ) : (
-              <PanelLeftClose className="w-4 h-4" />
-            )}
-          </Button>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onToggleCollapse}
+                  className="mb-1 flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150"
+                >
+                  {collapsed ? (
+                    <PanelLeft className="w-4 h-4" />
+                  ) : (
+                    <PanelLeftClose className="w-4 h-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs">
+                {collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         {navItems.map((item) => {
@@ -92,10 +99,10 @@ export function VaultSidebar({
               key={item.id}
               onClick={() => onTabChange(item.id as VaultTab)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                "hover:bg-muted/50",
-                isActive && "bg-primary/10 text-primary border-l-2 border-primary",
-                !isActive && "text-muted-foreground"
+                "flex items-center gap-3 py-2 px-3 text-sm transition-colors duration-150 cursor-pointer relative",
+                isActive
+                  ? "bg-primary/10 border-l-2 border-primary text-primary font-medium rounded-r-lg"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg"
               )}
               title={collapsed ? item.label : undefined}
             >
@@ -106,7 +113,7 @@ export function VaultSidebar({
                   {count !== undefined && count > 0 && (
                     <span
                       className={cn(
-                        "text-xs px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center",
+                        "text-xs px-2 py-0.5 rounded-full min-w-[24px] text-center",
                         isActive
                           ? "bg-primary/20 text-primary"
                           : "bg-muted text-muted-foreground"
@@ -126,14 +133,11 @@ export function VaultSidebar({
           );
         })}
 
-        {/* Settings link */}
-        <div className="mt-2 pt-2 border-t border-border/30">
+        {/* Settings link — separated by divider */}
+        <div className="mt-2 pt-2 border-t border-border/10">
           <Link
             to="/settings"
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-              "hover:bg-muted/50 text-muted-foreground"
-            )}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-150 cursor-pointer"
             title={collapsed ? "Settings" : undefined}
           >
             <Settings className="w-4 h-4 shrink-0" />
