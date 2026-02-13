@@ -34,31 +34,30 @@ import { SlicerComparisonModal } from "@/components/reference/SlicerComparisonMo
 import { SlicerFilterPanel } from "@/components/reference/SlicerFilterPanel";
 import { MobileFilterPanel } from "@/components/reference/MobileFilterPanel";
 import { ActiveFilterBadges } from "@/components/reference/ActiveFilterBadges";
-import { getImageUrl } from '@/lib/imageUrl';
 import { SlicerLogo } from '@/components/reference/SlicerLogoFallback';
 
-// Logo mapping for slicers
+// Logo mapping for slicers — served from /public/slicers/
 const slicerLogos: Record<string, string> = {
-  "UltiMaker Cura": getImageUrl("slicers/cura.png"),
-  "PrusaSlicer": getImageUrl("slicers/prusaslicer.png"),
-  "OrcaSlicer": getImageUrl("slicers/orcaslicer.png"),
-  "Bambu Studio": getImageUrl("slicers/bambustudio.png"),
-  "Simplify3D": getImageUrl("slicers/simplify3d.png"),
-  "Creality Print": getImageUrl("slicers/crealityprint.png"),
-  "ideaMaker": getImageUrl("slicers/ideamaker.png"),
-  "SuperSlicer": getImageUrl("slicers/superslicer.png"),
-  "FlashPrint": getImageUrl("slicers/flashprint.png"),
-  "Anycubic Slicer": getImageUrl("brands/anycubic.webp"),
-  "Lychee Slicer": getImageUrl("slicers/lychee.jpg"),
-  "ChiTuBox": getImageUrl("slicers/chitubox.png"),
-  "VoxelDance Tango": getImageUrl("slicers/voxeldance.png"),
-  "Repetier-Host": getImageUrl("slicers/repetier.png"),
-  "Slic3r": getImageUrl("slicers/slic3r.png"),
-  "KISSlicer": getImageUrl("slicers/kisslicer.png"),
-  "MatterControl": getImageUrl("slicers/mattercontrol.png"),
-  "CraftWare": getImageUrl("slicers/craftware.png"),
-  "Kiri:Moto": getImageUrl("slicers/kirimoto.png"),
-  "3DPrinterOS": getImageUrl("slicers/3dprinteros.png"),
+  "UltiMaker Cura": "/slicers/cura.png",
+  "PrusaSlicer": "/slicers/prusaslicer.png",
+  "OrcaSlicer": "/slicers/orcaslicer.png",
+  "Bambu Studio": "/slicers/bambustudio.png",
+  "Simplify3D": "/slicers/simplify3d.png",
+  "Creality Print": "/slicers/crealityprint.png",
+  "ideaMaker": "/slicers/ideamaker.png",
+  "SuperSlicer": "/slicers/superslicer.png",
+  "FlashPrint": "/slicers/flashprint.png",
+  "Anycubic Slicer": "/slicers/anycubic.png",
+  "Lychee Slicer": "/slicers/lychee.png",
+  "ChiTuBox": "/slicers/chitubox.png",
+  "VoxelDance Tango": "/slicers/voxeldance.png",
+  "Repetier-Host": "/slicers/repetier.png",
+  "Slic3r": "/slicers/slic3r.png",
+  "KISSlicer": "/slicers/kisslicer.png",
+  "MatterControl": "/slicers/mattercontrol.png",
+  "CraftWare": "/slicers/craftware.png",
+  "Kiri:Moto": "/slicers/kirimoto.png",
+  "3DPrinterOS": "/slicers/3dprinteros.png",
 };
 
 const slicerComparison = [
