@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,13 +40,17 @@ import {
   FileQuestion,
   Filter,
   ChevronsUpDown,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2
 } from "lucide-react";
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
 import { getMaterialReference, MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
 import { printMaterialReference } from "@/components/MaterialReferencePrintable";
 import { MaterialReferenceEmptyState } from "@/components/compare/MaterialReferenceEmptyState";
 import { cn } from "@/lib/utils";
+import { addMaterialToCompare, isMaterialInCompare } from "@/lib/materialCompareStore";
+import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const SectionCard = ({ 
   icon: Icon, 
@@ -877,9 +881,40 @@ const BASE_MATERIALS = new Set([
 ]);
 
 const MaterialReference = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [addedToCompare, setAddedToCompare] = useState<Set<string>>(new Set());
+
+  // Sync with localStorage on mount
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const stored = localStorage.getItem('filascope_material_compare');
+        const list: string[] = stored ? JSON.parse(stored) : [];
+        setAddedToCompare(new Set(list));
+      } catch { /* ignore */ }
+    };
+    syncFromStorage();
+    window.addEventListener('material-compare-changed', syncFromStorage);
+    return () => window.removeEventListener('material-compare-changed', syncFromStorage);
+  }, []);
+
+  const handleAddToCompare = useCallback((materialName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (addedToCompare.has(materialName)) {
+      // Already added — navigate to comparison tab
+      navigate('/compare?tab=comparison');
+      return;
+    }
+    const result = addMaterialToCompare(materialName);
+    if (result === 'added') {
+      toast.success(`${materialName} added to comparison`);
+    } else if (result === 'full') {
+      toast.error('Compare tray full — remove a material first');
+    }
+  }, [addedToCompare, navigate]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategory(prev => prev === category ? null : category);
@@ -1103,6 +1138,7 @@ const MaterialReference = () => {
                         return 0;
                       }).map(({ name, hasReference }) => {
                         const isBase = BASE_MATERIALS.has(name);
+                        const isInCompare = addedToCompare.has(name);
                         return (
                         <button
                           key={name}
@@ -1132,23 +1168,39 @@ const MaterialReference = () => {
                             )}
                             {name}
                           </span>
-                          <span title="Add to compare" aria-label="Add to compare" role="img" className="shrink-0 transition-all duration-150 cursor-pointer inline-flex">
-                            {hasReference ? (
-                              <BookOpen className={cn(
-                                "w-3.5 h-3.5 transition-colors duration-150",
-                                selectedMaterial === name
-                                  ? "text-primary"
-                                  : "text-slate-600 group-hover/item:text-cyan-400"
-                              )} />
-                            ) : (
-                              <FileQuestion className={cn(
-                                "w-3.5 h-3.5 transition-colors duration-150",
-                                selectedMaterial === name
-                                  ? "text-amber-500/60"
-                                  : "text-slate-600 group-hover/item:text-amber-500/80"
-                              )} />
-                            )}
-                          </span>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  role="button"
+                                  aria-label={isInCompare ? `${name} in comparison` : "Add to material comparison"}
+                                  onClick={(e) => handleAddToCompare(name, e)}
+                                  className="shrink-0 transition-all duration-150 cursor-pointer inline-flex hover:scale-110"
+                                >
+                                  {isInCompare ? (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                                  ) : hasReference ? (
+                                    <BookOpen className={cn(
+                                      "w-3.5 h-3.5 transition-colors duration-150",
+                                      selectedMaterial === name
+                                        ? "text-primary"
+                                        : "text-slate-600 group-hover/item:text-cyan-400"
+                                    )} />
+                                  ) : (
+                                    <FileQuestion className={cn(
+                                      "w-3.5 h-3.5 transition-colors duration-150",
+                                      selectedMaterial === name
+                                        ? "text-amber-500/60"
+                                        : "text-slate-600 group-hover/item:text-amber-500/80"
+                                    )} />
+                                  )}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="text-xs">
+                                {isInCompare ? 'View in comparison' : 'Add to material comparison'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </button>
                         );
                       })}

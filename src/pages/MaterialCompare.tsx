@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import {
 } from "@/lib/materialHierarchy";
 import { MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
 import { cn } from "@/lib/utils";
+import { getMaterialCompareList } from "@/lib/materialCompareStore";
 import MaterialReference from "@/components/MaterialReference";
 
 // Helper to get numeric value from property level for comparison
@@ -385,7 +386,19 @@ const ComparisonContent = () => {
     costEfficiency: 10,
   });
 
-  // Get all available materials with info
+  // Load materials from store (added from Reference tab)
+  useEffect(() => {
+    const stored = getMaterialCompareList();
+    if (stored.length > 0) {
+      setSelectedMaterials(prev => {
+        if (prev.length === 0) return stored;
+        // Merge without duplicates
+        const merged = [...new Set([...prev, ...stored])].slice(0, 4);
+        return merged;
+      });
+    }
+  }, []);
+
   const allMaterials = useMemo(() => {
     const materials: { name: string; category: string; info: MaterialInfo }[] = [];
     
