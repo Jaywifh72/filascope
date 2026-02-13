@@ -181,19 +181,18 @@ export function BrandHeroSection({
             />
             {rating ? (
               <SpecCard
-                icon={<Star className="w-5 h-5" />}
-                label="Rating"
+                icon={<Star className="w-5 h-5 fill-amber-400 text-amber-400" />}
+                label="Community Rating"
                 value={rating.toFixed(1)}
               />
             ) : (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0 opacity-60">
-                <div className="text-primary flex-shrink-0 mt-0.5">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-start gap-3 min-w-0">
+                <div className="text-slate-600 flex-shrink-0 mt-0.5">
                   <Star className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 overflow-hidden">
                   <p className="text-xs text-gray-400 mb-1">Rating</p>
-                  <p className="text-base font-semibold text-white leading-tight">—</p>
-                  <p className="text-xs text-muted-foreground">Coming soon</p>
+                  <p className="text-sm text-slate-400 italic leading-tight">Be the first to rate</p>
                 </div>
               </div>
             )}
