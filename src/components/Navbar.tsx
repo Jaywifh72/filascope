@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCompare } from "@/hooks/useCompare";
 import { preloadRoute } from "@/lib/preloadRoutes";
 import { useDealsCount } from "@/hooks/useDealsCount";
+import { useRotatingPlaceholder } from "@/hooks/useRotatingPlaceholder";
 const Navbar = () => {
   const {
     user,
@@ -34,6 +35,7 @@ const Navbar = () => {
   const [showNavSearch, setShowNavSearch] = useState(false);
   const [navSearchValue, setNavSearchValue] = useState("");
   const navSearchRef = useRef<HTMLInputElement>(null);
+  const rotatingPlaceholder = useRotatingPlaceholder({ pathname: location.pathname });
 
   // Detect scroll for sticky nav border + nav search visibility
   useEffect(() => {
@@ -393,24 +395,35 @@ const Navbar = () => {
                 showNavSearch ? "max-w-[280px] opacity-100" : "max-w-0 opacity-0"
               )}
             >
-              <div className="relative">
+              <div 
+                className="relative"
+                onMouseEnter={rotatingPlaceholder.handlers.onMouseEnter}
+                onMouseLeave={rotatingPlaceholder.handlers.onMouseLeave}
+              >
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <input
                   ref={navSearchRef}
                   type="text"
-                  placeholder="Search..."
+                  placeholder={rotatingPlaceholder.placeholder}
                   value={navSearchValue}
-                  onChange={(e) => setNavSearchValue(e.target.value)}
+                  onChange={(e) => {
+                    setNavSearchValue(e.target.value);
+                    rotatingPlaceholder.setHasValue(e.target.value.length > 0);
+                  }}
+                  onFocus={rotatingPlaceholder.handlers.onFocus}
+                  onBlur={rotatingPlaceholder.handlers.onBlur}
                   onKeyDown={handleNavSearch}
                   className={cn(
                     "h-9 w-[240px] pl-8 pr-3 text-sm rounded-lg",
                     "bg-white/[0.07] border border-white/20 text-foreground",
-                    "placeholder:text-muted-foreground/60",
                     "shadow-inner shadow-black/20",
                     "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
-                    "transition-all duration-200"
+                    "transition-all duration-200",
+                    rotatingPlaceholder.isAnimating
+                      ? "placeholder:opacity-0 placeholder:transition-opacity placeholder:duration-200"
+                      : "placeholder:opacity-100 placeholder:transition-opacity placeholder:duration-200 placeholder:text-muted-foreground/60"
                   )}
-                  aria-label="Quick search"
+                  aria-label="Search filaments, printers, and brands"
                 />
               </div>
             </div>
