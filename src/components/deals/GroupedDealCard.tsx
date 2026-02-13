@@ -522,19 +522,24 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             {/* Primary CTA */}
             {(group.representativeDeal.product_url || hasLocalAlternative) && (
               <Button
-                variant={hasLocalAlternative ? "default" : "outline"}
                 size="sm"
                 className={cn(
-                  "deal-cta-btn w-full gap-2 text-xs py-1.5 transition-colors duration-200",
-                  hasLocalAlternative && "bg-emerald-600 hover:bg-emerald-500 text-white"
+                  "deal-cta-btn w-full gap-2 text-xs py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white active:scale-[0.98] transition-all duration-150"
                 )}
                 onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
               >
                 {hasLocalAlternative
                   ? `Buy at ${localStore!.storeName}`
-                  : "View Deal"}
-                <ExternalLink className="h-3.5 w-3.5" />
+                  : <>View Deal at <span className="truncate max-w-[160px] inline-block align-bottom">{group.storeName}</span></>}
+                <ExternalLink className="h-3 w-3" />
               </Button>
+            )}
+
+            {/* Stale price note */}
+            {isVeryStale && freshnessText && (
+              <p className="text-amber-500 text-[10px] text-center">
+                Price may differ — last checked {freshnessText} ago
+              </p>
             )}
 
             {/* Secondary CTA — original store when local alternative takes primary */}
@@ -545,8 +550,8 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 className="w-full gap-2 text-xs text-muted-foreground"
                 onClick={handleCheckPrice}
               >
-                {group.regionFlag} Check at {group.storeName}
-                <ExternalLink className="h-3.5 w-3.5" />
+                {group.regionFlag} Also at {group.storeName}
+                <ExternalLink className="h-3 w-3" />
               </Button>
             )}
           </div>
