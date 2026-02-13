@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Box, Zap, Thermometer, Loader2, CircleDot, Cog } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Box, Zap, Thermometer, Loader2, CircleDot, Cog, Star } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -12,6 +12,8 @@ import ComparisonCheckbox from "./ComparisonCheckbox";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { REGIONS } from "@/config/regions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMultiplePrinters } from "@/hooks/useMultiplePrinters";
+import { toast } from "sonner";
 
 type Printer = Database["public"]["Tables"]["printers"]["Row"] & {
   brand: { brand: string } | null;
@@ -42,6 +44,36 @@ export default function MediumStandardPrinterCard({
   const { formatPrice, currency: userCurrency, region, regionConfig } = useRegion();
   const productImage = getPrinterImage(printer);
   const badges = getPrinterBadges(printer, 2);
+  const { printers: userPrinters, addPrinter, setPrimaryPrinter, isAddingPrinter } = useMultiplePrinters();
+
+  // Check if this printer is the user's primary printer
+  const primaryUserPrinter = userPrinters.find((p) => p.is_primary);
+  const isMyPrinter = primaryUserPrinter?.printer_id === printer.printer_id;
+
+  const handleSetMyPrinter = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isMyPrinter) return;
+
+    const existing = userPrinters.find((p) => p.printer_id === printer.printer_id);
+    if (existing) {
+      setPrimaryPrinter(existing.id);
+      toast.success(`${printer.model_name} set as your printer`, {
+        description: "Filament compatibility now active.",
+      });
+    } else {
+      addPrinter(
+        { printerId: printer.printer_id || printer.id },
+        {
+          onSuccess: () => {
+            toast.success(`${printer.model_name} set as your printer`, {
+              description: "Filament compatibility now active.",
+            });
+          },
+        }
+      );
+    }
+  }, [isMyPrinter, userPrinters, printer, addPrinter, setPrimaryPrinter]);
 
   const [imageTimedOut, setImageTimedOut] = useState(false);
   const imageLoadedRef = useRef(false);
@@ -157,6 +189,28 @@ export default function MediumStandardPrinterCard({
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name}`}
     >
+      {/* Set as My Printer - Top left corner */}
+      <div className={`absolute top-2 left-2 sm:top-3 sm:left-3 z-10 ${isMyPrinter ? 'opacity-100' : 'opacity-100 sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100'} transition-opacity duration-150`}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleSetMyPrinter}
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                isMyPrinter
+                  ? 'text-cyan-400 bg-cyan-500/10'
+                  : 'text-muted-foreground/60 hover:text-cyan-400 bg-transparent hover:bg-cyan-500/10'
+              }`}
+              aria-label={isMyPrinter ? "This is your printer" : `Set ${printer.model_name} as your printer`}
+            >
+              <Star className={`h-4 w-4 ${isMyPrinter ? 'fill-cyan-400' : ''}`} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="text-xs">
+            {isMyPrinter ? "Your printer" : "Set as your printer for filament compatibility"}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
       {/* Compare Checkbox - Top right corner */}
       <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-100 sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100 transition-opacity duration-150">
         <ComparisonCheckbox
@@ -284,6 +338,12 @@ export default function MediumStandardPrinterCard({
               </div>
               {printer.variant_or_bundle_name && (
                 <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1">{printer.variant_or_bundle_name}</p>
+              )}
+              {isMyPrinter && (
+                <span className="inline-flex items-center text-xs bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full mt-1 gap-1">
+                  <Star className="h-3 w-3 fill-cyan-400" />
+                  Your Printer
+                </span>
               )}
             </div>
 
