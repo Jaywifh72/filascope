@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Maximize2, Palette } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Palette, ZoomIn } from "lucide-react";
 import { ZoomImage } from "./zoom-image";
 import { ImageLightbox } from "./image-lightbox";
 import { Skeleton } from "./skeleton";
@@ -138,7 +138,10 @@ export function ProductGallery({
       {/* Main Image Container */}
       <div
         ref={containerRef}
-        className="relative aspect-square bg-gradient-to-b from-muted/5 to-muted/10 border border-border/50 rounded-xl overflow-hidden group"
+        className={cn(
+          "relative bg-gradient-to-b from-muted/5 to-muted/10 border border-border/50 rounded-xl overflow-hidden group",
+          validImages.length === 1 ? "max-h-[400px]" : "aspect-square"
+        )}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -166,6 +169,9 @@ export function ProductGallery({
             </div>
           ))}
         </div>
+
+        {/* Bottom gradient overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background/80 via-transparent pointer-events-none" />
 
         {/* Navigation Arrows (Desktop) */}
         {validImages.length > 1 && (
@@ -203,13 +209,14 @@ export function ProductGallery({
           </>
         )}
 
-        {/* Expand indicator */}
+        {/* Click to zoom indicator */}
         <button
           onClick={() => setLightboxOpen(true)}
-          className="absolute bottom-3 right-3 bg-black/60 text-white p-1.5 rounded-md backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm text-muted-foreground text-xs px-2 py-1 rounded-lg border border-border/40 opacity-70 group-hover:opacity-100 transition-opacity duration-200 z-10"
           aria-label="Expand image"
         >
-          <Maximize2 className="w-4 h-4" />
+          <ZoomIn className="w-3 h-3" />
+          <span>Click to zoom</span>
         </button>
       </div>
 
