@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 // Logo served from storage at 224px (retina for 112px display) instead of bundling the 885KB source
 const filascopeLogo = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/render/image/public/site-assets/logo-filascope.webp?width=224&resize=contain`;
-import { CurrencySelector } from "@/components/CurrencySelector";
+
 import { RegionSelector } from "@/components/RegionSelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { RecentlyViewedDropdown } from "@/components/RecentlyViewedDropdown";
@@ -582,7 +582,7 @@ const Navbar = () => {
           <div className="flex items-center gap-3 shrink-0 ml-auto">
             <WishlistButton />
             <RecentlyViewedDropdown />
-            <CurrencySelector />
+            
             <ThemeToggle />
             
             {/* User Avatar / Login */}
