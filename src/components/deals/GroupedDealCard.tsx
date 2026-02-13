@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship, BadgeCheck, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, Package, Clock, Ship, BadgeCheck, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -220,7 +220,6 @@ function DealCardImage({
 }
 
 export function GroupedDealCard({ group }: GroupedDealCardProps) {
-  const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
@@ -229,6 +228,22 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const hasPriceRange = group.priceRange.min !== group.priceRange.max;
   const hasColors = group.colorHexes.length > 0;
   const showColorCount = group.colorCount > 1;
+
+  // Strip redundant brand prefix from product name
+  const vendor = group.representativeDeal.vendor || '';
+  const displayName = vendor && group.baseName.toLowerCase().startsWith(vendor.toLowerCase())
+    ? group.baseName.slice(vendor.length).replace(/^[\s\-–—]+/, '').trim() || group.baseName
+    : group.baseName;
+
+  // Price range context label
+  const hasWeightVariation = new Set(group.variants.map(v => (v as any).net_weight_g).filter(Boolean)).size > 1;
+  const priceRangeContext = hasPriceRange
+    ? (group.colorCount > 1 && hasColors
+        ? `across ${group.colorCount} colors`
+        : hasWeightVariation
+          ? 'varies by size'
+          : 'price varies')
+    : null;
 
   // Regional store lookup
   const localStore = getLocalStore(group.representativeDeal.vendor);
@@ -260,7 +275,6 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    // If user has a local store for this brand, prefer that URL
     if (hasLocalAlternative && localStore) {
       window.open(localStore.baseUrl, "_blank", "noopener,noreferrer");
       return;
@@ -285,12 +299,6 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     if (localStore) {
       window.open(localStore.baseUrl, "_blank", "noopener,noreferrer");
     }
-  };
-
-  const handleExpandClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setExpanded(!expanded);
   };
 
   // Find variant by color hex
@@ -380,18 +388,18 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
               onClick={(e) => e.stopPropagation()}
             >
               {getBrandLogoUrl(group.representativeDeal.vendor, 60) && (
-                <img
-                  src={getBrandLogoUrl(group.representativeDeal.vendor, 60)!}
-                  alt={`${group.representativeDeal.vendor} logo`}
-                  className="h-4 w-auto max-w-[60px] object-contain opacity-70 group-hover/brand:opacity-100 transition-opacity"
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                />
-              )}
-              <span className="text-xs text-muted-foreground group-hover/brand:text-primary transition-colors">
-                {group.representativeDeal.vendor}
-              </span>
+                  <img
+                    src={getBrandLogoUrl(group.representativeDeal.vendor, 60)!}
+                    alt={`${group.representativeDeal.vendor} logo`}
+                    className="h-4 w-4 object-contain rounded-sm opacity-70 group-hover/brand:opacity-100 transition-opacity"
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )}
+                <span className="text-xs text-muted-foreground font-medium group-hover/brand:text-primary transition-colors">
+                  {group.representativeDeal.vendor}
+                </span>
               {isVerifiedBrand(group.representativeDeal.vendor) && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -405,27 +413,34 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             </Link>
           )}
 
-          {/* Base Product Name (without color) */}
+          {/* Base Product Name — brand prefix stripped */}
           <Link to={`/filament/${group.representativeDeal.id}`}>
-            <h3 className="font-medium text-sm mb-3 line-clamp-2 h-[40px] overflow-hidden hover:text-primary transition-colors" title={group.baseName}>
-              {group.baseName}
+            <h3 className="font-semibold text-sm mb-3 line-clamp-2 h-[40px] overflow-hidden hover:text-primary transition-colors" title={group.baseName}>
+              {displayName}
             </h3>
           </Link>
 
           {/* Price Range or Single Price */}
           {hasPriceRange ? (
-            <div className="flex items-center gap-1 mb-2 text-lg font-bold text-foreground">
-              <RegionalPrice
-                amount={group.priceRange.min}
-                sourceCurrency="USD"
-                size="lg"
-              />
-              <span className="text-muted-foreground">-</span>
-              <RegionalPrice
-                amount={group.priceRange.max}
-                sourceCurrency="USD"
-                size="lg"
-              />
+            <div className="mb-2">
+              <div className="flex items-baseline gap-1">
+                <RegionalPrice
+                  amount={group.priceRange.min}
+                  sourceCurrency="USD"
+                  size="lg"
+                />
+                <span className="text-sm text-muted-foreground">–</span>
+                <span className="text-sm text-muted-foreground">
+                  <RegionalPrice
+                    amount={group.priceRange.max}
+                    sourceCurrency="USD"
+                    size="sm"
+                  />
+                </span>
+              </div>
+              {priceRangeContext && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">{priceRangeContext}</p>
+              )}
             </div>
           ) : (
             <RegionalPricePair
@@ -488,53 +503,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                     );
                   })}
                   {group.colorHexes.length > 5 && (
-                    <button
-                      onClick={handleExpandClick}
-                      className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      +{group.colorHexes.length - 5} more
-                      {expanded ? (
-                        <ChevronUp className="h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3" />
-                      )}
-                    </button>
+                    <span className="text-[10px] text-muted-foreground">
+                      +{group.colorHexes.length - 5}
+                    </span>
                   )}
                 </div>
-
-                {/* Expanded Color Grid */}
-                {expanded && (
-                  <div className="grid grid-cols-8 gap-1.5 mt-2 p-2 bg-muted/30 rounded-lg">
-                    {group.colorHexes.map((hex, i) => {
-                      const variant = getVariantByHex(hex);
-                      return (
-                        <Link
-                          key={i}
-                          to={
-                            variant
-                              ? `/filament/${variant.id}`
-                              : `/filament/${group.representativeDeal.id}`
-                          }
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-5 h-5 rounded-full border border-border/50 hover:scale-125 hover:border-primary transition-all shadow-sm"
-                          style={{ backgroundColor: hex }}
-                          title={variant?.product_title}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Variant Count Badge (reserved space) */}
-          <div className="min-h-[20px]">
-            {showColorCount && (
-              <div className="text-xs text-muted-foreground mb-2">
-                {hasColors
-                  ? `Available in ${group.colorCount} colors`
-                  : `${group.colorCount} variants available`}
               </div>
             )}
           </div>
@@ -545,12 +518,9 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
               <>
                 <span className="text-sm">{group.regionFlag}</span>
                 {group.storeName && group.storeName !== group.representativeDeal.vendor ? (
-                  <>
-                    <span>{group.storeName}</span>
-                    <span>•</span>
-                  </>
+                  <span>{group.storeName}</span>
                 ) : null}
-                <span className="text-emerald-400 font-medium">Local seller</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-medium">Local</span>
               </>
             ) : hasLocalAlternative && localStore ? (
               <>
@@ -567,14 +537,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
               </>
             ) : group.storeName && group.regionFlag ? (
               <>
+                <Ship className="h-3 w-3" />
                 <span className="text-sm">{group.regionFlag}</span>
                 {group.storeName !== group.representativeDeal.vendor ? (
-                  <>
-                    <span>{group.storeName}</span>
-                    <span>•</span>
-                  </>
+                  <span>{group.storeName}</span>
                 ) : null}
-                <span>International seller</span>
               </>
             ) : null}
           </div>
