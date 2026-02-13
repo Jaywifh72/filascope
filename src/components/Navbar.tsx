@@ -415,20 +415,35 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* Compare Button - Ghost with teal border */}
+            {/* Compare Button - Desktop */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <button onClick={() => navigate('/compare?tab=comparison')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-4 py-2", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                <button 
+                  onClick={() => compareCount > 0 ? navigate('/compare?tab=comparison') : undefined} 
+                  className={cn(
+                    "relative border rounded-lg px-4 py-2",
+                    "text-xs font-bold uppercase tracking-widest",
+                    "flex items-center gap-2",
+                    "transition-all duration-200",
+                    compareCount > 0
+                      ? "border-primary/50 hover:border-primary hover:bg-primary/10 text-primary cursor-pointer"
+                      : "border-border text-muted-foreground opacity-50 cursor-not-allowed",
+                    isActive('/compare') && "bg-primary/10 border-primary text-primary opacity-100"
+                  )}
+                >
                   <GitCompareArrows className="w-3.5 h-3.5" />
-                  Compare
+                  Compare ({compareCount}{compareCount >= 4 ? '/4' : ''})
                   {compareCount > 0 && (
                     <span 
                       className={cn(
                         "absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5",
                         "flex items-center justify-center",
-                        "bg-primary text-primary-foreground text-[11px] font-bold rounded-full",
-                        "transition-transform duration-200",
-                        isCountAnimating && "animate-[pulse_0.3s_ease-out]"
+                        "text-[11px] font-bold rounded-full",
+                        "transition-all duration-200",
+                        compareCount >= 4
+                          ? "bg-amber-500 text-white"
+                          : "bg-primary text-primary-foreground",
+                        isCountAnimating && "animate-[bounce_0.4s_ease-in-out]"
                       )}
                     >
                       {compareCount}
@@ -437,7 +452,11 @@ const Navbar = () => {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-popover border-border text-sm">
-                Compare materials side-by-side
+                {compareCount === 0 
+                  ? "Add filaments or printers to compare" 
+                  : compareCount >= 4 
+                    ? "Maximum 4 items for comparison" 
+                    : "Compare materials side-by-side"}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -495,17 +514,32 @@ const Navbar = () => {
             {/* Compare Button - Tablet */}
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
-                <button onClick={() => navigate('/compare?tab=comparison')} className={cn("relative border border-teal-500 bg-transparent hover:bg-teal-500/10", "rounded-lg px-3 py-1.5", "text-xs font-bold uppercase tracking-widest", "flex items-center gap-2", "transition-all duration-200", isActive('/compare') ? "bg-teal-500/10 text-teal-400" : "text-teal-400")}>
+                <button 
+                  onClick={() => compareCount > 0 ? navigate('/compare?tab=comparison') : undefined}
+                  className={cn(
+                    "relative border rounded-lg px-3 py-1.5",
+                    "text-xs font-bold uppercase tracking-widest",
+                    "flex items-center gap-2",
+                    "transition-all duration-200",
+                    compareCount > 0
+                      ? "border-primary/50 hover:border-primary hover:bg-primary/10 text-primary cursor-pointer"
+                      : "border-border text-muted-foreground opacity-50 cursor-not-allowed",
+                    isActive('/compare') && "bg-primary/10 border-primary text-primary opacity-100"
+                  )}
+                >
                   <GitCompareArrows className="w-3.5 h-3.5" />
-                  Compare
+                  Compare ({compareCount})
                   {compareCount > 0 && (
                     <span 
                       className={cn(
                         "absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1",
                         "flex items-center justify-center",
-                        "bg-primary text-primary-foreground text-[10px] font-bold rounded-full",
-                        "transition-transform duration-200",
-                        isCountAnimating && "animate-[pulse_0.3s_ease-out]"
+                        "text-[10px] font-bold rounded-full",
+                        "transition-all duration-200",
+                        compareCount >= 4
+                          ? "bg-amber-500 text-white"
+                          : "bg-primary text-primary-foreground",
+                        isCountAnimating && "animate-[bounce_0.4s_ease-in-out]"
                       )}
                     >
                       {compareCount}
@@ -514,7 +548,11 @@ const Navbar = () => {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="bg-popover border-border text-sm">
-                Compare materials side-by-side
+                {compareCount === 0 
+                  ? "Add filaments or printers to compare" 
+                  : compareCount >= 4 
+                    ? "Maximum 4 items for comparison" 
+                    : "Compare materials side-by-side"}
               </TooltipContent>
             </Tooltip>
           </div>
