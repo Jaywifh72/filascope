@@ -557,6 +557,7 @@ const Brands = () => {
                         priceIndicator={brand.priceIndicator}
                         colorPrimary={brand.automated?.color_primary}
                         colors={brand.colors}
+                        avgTransmissionDistance={brand.avgTransmissionDistance}
                       />
                     ))}
                 </div>
@@ -600,6 +601,7 @@ const Brands = () => {
                                 priceIndicator={brand.priceIndicator}
                                 colorPrimary={brand.automated?.color_primary}
                                 colors={brand.colors}
+                                avgTransmissionDistance={brand.avgTransmissionDistance}
                               />
                             ))}
                           </div>

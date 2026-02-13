@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { toBrandSlug } from "@/utils/brandSlug";
-import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star } from "lucide-react";
+import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star, Sun } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -20,6 +20,7 @@ interface BrandCardProps {
   priceIndicator?: "$" | "$$" | "$$$" | null;
   colorPrimary?: string | null;
   colors?: string[];
+  avgTransmissionDistance?: number | null;
 }
 
 const BrandCard = ({
@@ -36,6 +37,7 @@ const BrandCard = ({
   priceIndicator,
   colorPrimary,
   colors = [],
+  avgTransmissionDistance,
 }: BrandCardProps) => {
   const navigate = useNavigate();
   const resolvedLogoUrl = logoUrl || getBrandLogo(name);
@@ -143,16 +145,20 @@ const BrandCard = ({
               )}
             </>
           )}
-          {averageRating && averageRating > 0 ? (
+          {averageRating && averageRating > 0 && (
             <span className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-[#FFB800] text-[#FFB800] drop-shadow-[0_0_4px_rgba(255,184,0,0.6)]" />
               {averageRating.toFixed(1)}
             </span>
-          ) : !isEmpty ? (
-            <span className="text-[10px] text-muted-foreground/40 font-mono italic">No rating yet</span>
-          ) : null}
+          )}
+          {avgTransmissionDistance && avgTransmissionDistance > 0 && (
+            <span className="flex items-center gap-1 text-[10px] text-purple-400">
+              <Sun className="h-3 w-3" />
+              Avg TD {avgTransmissionDistance.toFixed(1)}
+            </span>
+          )}
           {isVerified && (
-            <span className="bg-cyan-500/10 text-cyan-400 text-[10px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/20">Verified ✓</span>
+            <span className="bg-cyan-500/10 text-cyan-400 text-xs font-medium px-2 py-0.5 rounded-full border border-cyan-500/20">Verified ✓</span>
           )}
         </div>
 
