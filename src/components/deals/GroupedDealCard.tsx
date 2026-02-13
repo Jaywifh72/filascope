@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { DealQualityDots } from "./DealQualityBadge";
 import { Link, useNavigate } from "react-router-dom";
 import { TrendingDown, Share2, ExternalLink, Package, Clock, Ship, BadgeCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -526,6 +527,12 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 <span className="text-emerald-400 font-medium">New</span>
               </>
             )}
+            <span>·</span>
+            <DealQualityDots
+              discount={group.bestDiscount}
+              isUnusualDiscount={group.isUnusualDiscount ?? false}
+              lastScrapedAt={group.lastScrapedAt}
+            />
           </div>
 
           {/* Color Swatches (reserved space) */}
