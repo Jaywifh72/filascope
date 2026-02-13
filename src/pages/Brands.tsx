@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap } from "lucide-react";
+import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers } from "lucide-react";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
 import BrandsSidebar, { type BrandFilters, DEFAULT_BRAND_FILTERS } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
@@ -664,23 +664,34 @@ const Brands = () => {
         {/* Stats Footer */}
         <div className="mt-12 border border-gray-800 rounded-lg bg-gray-900/30 p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div>
-              <p className="text-2xl font-bold text-cyan-400 font-mono">{brandCount}</p>
+            <div className="md:border-r md:border-gray-800">
+              <Building2 className="h-5 w-5 text-primary mx-auto mb-1" />
+              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{brandCount.toLocaleString()}</p>
               <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Tracked Brands</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-cyan-400 font-mono">{mergedBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length}</p>
+            <div className="md:border-r md:border-gray-800">
+              <Package className="h-5 w-5 text-primary mx-auto mb-1" />
+              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{mergedBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length.toLocaleString()}</p>
               <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Brands with Products</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-cyan-400 font-mono">{totalVariants.toLocaleString()}</p>
+            <div className="md:border-r md:border-gray-800">
+              <Layers className="h-5 w-5 text-primary mx-auto mb-1" />
+              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{totalVariants.toLocaleString()}</p>
               <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Filaments</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-cyan-400 font-mono">{mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length}</p>
+              <ShieldCheck className="h-5 w-5 text-emerald-400 mx-auto mb-1" />
+              <p className="text-2xl font-bold text-primary font-mono tabular-nums">{mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length.toLocaleString()}</p>
               <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Verified Brands</p>
             </div>
           </div>
+          <p className="text-[10px] text-muted-foreground text-center mt-3 flex items-center justify-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            Data updated daily from 15+ retailers
+          </p>
         </div>
         </div>
         </div>
