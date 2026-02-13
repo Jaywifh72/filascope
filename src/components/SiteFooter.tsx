@@ -6,7 +6,9 @@ import {
   Mail, 
   ExternalLink,
   Loader2,
-  Globe
+  Globe,
+  ArrowRight,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,37 +89,29 @@ export function SiteFooter() {
     return () => clearInterval(id);
   }, []);
 
+  const [subscribed, setSubscribed] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEmailError("");
     
     if (!email.trim()) {
-      toast({
-        title: "Email required",
-        description: "Please enter your email address.",
-        variant: "destructive",
-      });
+      setEmailError("Please enter your email address.");
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
+      setEmailError("Please enter a valid email address.");
       return;
     }
 
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    toast({
-      title: "You're subscribed!",
-      description: "Thanks for joining our community.",
-    });
-    
     setEmail("");
     setIsLoading(false);
+    setSubscribed(true);
   };
 
   const exploreLinks = [
@@ -254,36 +248,59 @@ export function SiteFooter() {
             {/* Column 4 - Connect */}
             <div>
               <FooterColumnHeader>Stay Updated</FooterColumnHeader>
-              <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                Get price drops, new filaments, and deals.
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                Get price drops, new filaments, and exclusive deals delivered weekly.
               </p>
               
               {/* Newsletter */}
-              <form onSubmit={handleNewsletterSubmit} className="mb-6">
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    type="email"
-                    placeholder="Your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-10 text-sm bg-muted/50 border-border focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 min-w-0 flex-1"
-                    disabled={isLoading}
-                    aria-label="Email address for newsletter"
-                  />
+              {subscribed ? (
+                <div className="flex items-start gap-2.5 text-sm text-primary bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 mb-6">
+                  <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>You're subscribed! Check your email to confirm.</span>
+                </div>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="mb-6 space-y-3">
+                  <div>
+                    <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+                    <Input
+                      id="newsletter-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+                      className={`h-10 text-sm bg-muted/50 border-border rounded-lg focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 w-full ${emailError ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
+                      disabled={isLoading}
+                      aria-label="Email address for newsletter"
+                      aria-invalid={!!emailError}
+                      aria-describedby={emailError ? "newsletter-error" : undefined}
+                    />
+                    {emailError && (
+                      <p id="newsletter-error" className="text-xs text-destructive mt-1.5" aria-live="polite" aria-atomic="true">
+                        {emailError}
+                      </p>
+                    )}
+                  </div>
                   <Button 
                     type="submit" 
-                    className="h-10 px-4 font-medium shrink-0"
+                    className="w-full h-10 font-medium flex items-center justify-center gap-2"
                     disabled={isLoading}
                     aria-label="Subscribe to newsletter"
                   >
                     {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        <span>Subscribing...</span>
+                      </>
                     ) : (
-                      <Mail className="h-4 w-4" aria-hidden="true" />
+                      <>
+                        <span>Subscribe</span>
+                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                      </>
                     )}
                   </Button>
-                </div>
-              </form>
+                  <p className="text-xs text-muted-foreground/50">No spam. Unsubscribe anytime.</p>
+                </form>
+              )}
 
               {/* Social Links */}
               <p className="text-xs text-muted-foreground/70 mb-3 uppercase tracking-wider font-medium">Follow Us</p>
