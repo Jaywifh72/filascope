@@ -82,7 +82,7 @@ function QuickActions() {
       icon: Star,
       label: "Write a Review",
       description: "Share your experience",
-      href: "/",
+      href: "/vault?tab=reviews",
     },
     {
       icon: FolderOpen,
@@ -94,13 +94,13 @@ function QuickActions() {
       icon: Bell,
       label: "Set Price Alert",
       description: "Track price drops",
-      href: "/",
+      href: "/vault?tab=alerts",
     },
     {
       icon: Search,
       label: "Browse Filaments",
       description: "Discover new options",
-      href: "/",
+      href: "/filaments",
     },
   ];
 
@@ -108,13 +108,13 @@ function QuickActions() {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {actions.map((action) => (
         <Link key={action.label} to={action.href}>
-          <Card className="h-full hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer group">
+          <Card className="h-full cursor-pointer group vault-quick-action">
             <CardContent className="p-4 flex flex-col items-center text-center gap-2">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <action.icon className="w-5 h-5 text-primary" />
+                <action.icon className="w-5 h-5 text-muted-foreground transition-colors duration-200 group-hover:text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">{action.label}</p>
+                <p className="text-sm font-medium text-muted-foreground transition-colors duration-200 group-hover:text-foreground">{action.label}</p>
                 <p className="text-xs text-muted-foreground">{action.description}</p>
               </div>
             </CardContent>
