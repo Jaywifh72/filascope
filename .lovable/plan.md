@@ -1,80 +1,42 @@
 
 
-## Improve Price Presentation, Brand Row, and Card Density on Deal Cards
+# Affiliate Management System — Database Migration
 
-### Overview
-Refine the GroupedDealCard to show clearer price ranges with context labels, consolidate the brand row, strip redundant brand prefixes from product names, simplify color swatches, and improve the local/shipping metadata display.
+## Overview
+Create 6 new database tables for a comprehensive affiliate management system that runs alongside the existing `affiliate_configs` table. This includes program definitions, restrictions, discount codes, campaigns, click tracking, and product overrides.
 
-### Changes (all in `src/components/deals/GroupedDealCard.tsx`)
+## Migration Details
 
-#### 1. Price Range Context and Formatting (lines 416-440)
+### Tables Created
+1. **affiliate_programs** — Brand-region affiliate program definitions with link templates, commission info, and account details. References `automated_brands(id)` (not `brands(id)` since that table doesn't exist).
+2. **affiliate_program_restrictions** — Rules/restrictions per program (PPC, coupon sites, trademarks, etc.)
+3. **affiliate_discount_codes** — Coupon/discount codes tied to programs
+4. **affiliate_campaigns** — Active promotions/launches per program
+5. **affiliate_clicks** — Outbound click tracking (high-volume analytics table)
+6. **affiliate_product_overrides** — Per-product URL overrides or exclusions
 
-**Current**: Price range shows both min and max at equal visual weight with no explanation.
+### RLS Policy Pattern
+Matches existing codebase convention:
+- **Read-only tables** (programs, restrictions, codes, campaigns, overrides): `SELECT` open to all (`USING (true)`), write operations restricted to admins via `has_role(auth.uid(), 'admin'::app_role)`
+- **affiliate_clicks**: `INSERT` open to `anon` and `authenticated` (public click tracking), `SELECT` admin-only
 
-**New behavior**:
-- "From" price becomes `text-lg font-bold text-foreground`, upper range becomes `text-sm text-muted-foreground`
-- Add context label below the range:
-  - If `group.colorCount > 1` and colors exist: `"across {colorCount} colors"` in `text-[10px] text-muted-foreground`
-  - If variants have different `net_weight_g` values: `"varies by size"` (check by comparing weights across variants)
-  - Otherwise: `"price varies"` as default
-- Single-price deals with strikethrough remain unchanged (the RegionalPricePair handles this)
+### Indexes
+Performance indexes on affiliate_programs (brand_name, region_code), affiliate_clicks (clicked_at, brand_name, program_id, region_code, source_page), and active-status composite indexes on discount_codes and campaigns.
 
-#### 2. Brand Row Consolidation (lines 376-406)
+### Triggers
+Reuses the existing `update_updated_at_column()` function for affiliate_programs, affiliate_discount_codes, and affiliate_campaigns.
 
-**Current**: Shows brand logo image + brand name text + verified badge, where logo images often fail.
+### Seed Data
+Inserts the Anycubic CA program with:
+- Full program configuration (GoAffPro network, 5% commission, link template)
+- 8 restriction entries (PPC, coupon sites, trademark, redirect links, incentivized traffic, FTC disclosure, content, mobile app)
+- 1 unassigned discount code placeholder
+- 4 campaign entries (Kobra X Launch, Kobra X Coming Soon, Christmas Sale, Kobra S1 Max Combo)
 
-**New behavior**:
-- Logo `<img>` already has `onError` that hides itself (`display: 'none'`), which is correct
-- Reduce logo to `h-4 w-4` (constrain width too) with `rounded-sm` for a tighter inline look
-- Keep the `onError` handler so broken logos vanish silently
-- Brand name stays `text-xs text-muted-foreground font-medium`
-- Verified badge stays as-is (already compact)
-
-#### 3. Product Name -- Strip Redundant Brand Prefix (lines 408-413)
-
-**Current**: `group.baseName` may include the brand name (e.g., "Amolen PETG" when brand row already shows "Amolen").
-
-**New behavior**:
-- Before rendering, strip the vendor name prefix from `baseName` if it starts with the vendor name (case-insensitive)
-- Trim any resulting leading whitespace/dashes
-- Example: vendor "Amolen", baseName "Amolen PETG" renders as "PETG"
-- Keep `line-clamp-2 h-[40px] overflow-hidden` and upgrade to `font-semibold`
-
-#### 4. Color Swatch Overflow (lines 468-540)
-
-**Current**: Shows 5 swatches + "+X more" with expand chevron, plus a separate "Available in X colors" text line below.
-
-**New behavior**:
-- Keep max 5 swatches
-- Replace the expand button with plain text: `"+{count}"` in `text-[10px] text-muted-foreground` (no chevron, no expand behavior)
-- Remove the expanded color grid entirely (lines 505-526)
-- Remove the "Available in X colors" / "X variants available" text block (lines 531-540) -- the swatches + count already communicate this
-- Remove the `expanded` state variable and `handleExpandClick` function since they're no longer needed
-- This saves ~40px of vertical space per card
-
-#### 5. Store Region / Local Seller Display (lines 542-580)
-
-**Current**: Shows region flag + store name + "Local seller" or "International seller" as text.
-
-**New behavior**:
-- **Local seller**: Show a compact green badge: `<span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-medium">Local</span>` alongside region flag and store name
-- **Ships to region but not local**: Show `Ship` icon + `"Ships to {region}"` in `text-muted-foreground` (keep current behavior but remove "International seller" label)
-- **International (no local)**: Show `{regionFlag} {storeName}` with muted "International" tag
-- Keep the local alternative logic as-is
-
-### Technical Details
-
-**Files modified**: `src/components/deals/GroupedDealCard.tsx` only
-
-**Removals**:
-- `expanded` state, `handleExpandClick`, `ChevronDown`/`ChevronUp` imports (if unused elsewhere)
-- Expanded color grid block
-- "Available in X colors" text block
-
-**New logic**:
-- `displayName` computed by stripping vendor prefix from `group.baseName`
-- `priceRangeContext` string computed from variant data (color count vs weight differences)
-- Check weight variation: `const hasWeightVariation = new Set(group.variants.map(v => v.net_weight_g).filter(Boolean)).size > 1`
-
-**No new dependencies or files needed.**
+## Technical Notes
+- The `brand_id` column references `automated_brands(id)` which is the correct table in this schema
+- The existing `affiliate_configs` table is left untouched
+- The `product_id` column in `affiliate_clicks` and `affiliate_product_overrides` is untyped (uuid) without a foreign key since it can reference filaments, printers, or accessories
+- All timestamps use `timestamptz` with `DEFAULT now()`
+- Single migration file handles all DDL, RLS, indexes, triggers, and seed data
 
