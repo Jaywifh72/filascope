@@ -38,11 +38,13 @@ function DealCardImage({
   colorHex,
   vendor,
   material,
+  dealTier = 'standard',
 }: {
   src: string | null | undefined;
   fallbackSrcs?: string[];
   alt: string;
   colorHex?: string | null;
+  dealTier?: 'exceptional' | 'great' | 'good' | 'standard';
   vendor?: string | null;
   material?: string | null;
 }) {
@@ -108,23 +110,25 @@ function DealCardImage({
     >
       {/* Color accent bar at top — brighten very dark colors so they're visible on the dark card bg */}
       <div
-        className="absolute top-0 left-0 right-0 h-1 opacity-70"
+        className={cn("absolute top-0 left-0 right-0 h-1", dealTier === 'exceptional' ? "opacity-90" : "opacity-70")}
         style={{
-          backgroundColor: (() => {
-            if (!accentColor) return undefined;
-            const match = accentColor.match(/(\d+)/g);
-            if (match && match.length >= 3) {
-              const [r, g, b] = match.map(Number);
-              const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-              if (luminance < 0.15) {
-                const br = Math.round(r + (255 - r) * 0.3);
-                const bg = Math.round(g + (255 - g) * 0.3);
-                const bb = Math.round(b + (255 - b) * 0.3);
-                return `rgb(${br}, ${bg}, ${bb})`;
-              }
-            }
-            return accentColor;
-          })(),
+          background: dealTier === 'exceptional'
+            ? 'linear-gradient(90deg, #f59e0b, #ef4444)'
+            : (() => {
+                if (!accentColor) return undefined;
+                const match = accentColor.match(/(\d+)/g);
+                if (match && match.length >= 3) {
+                  const [r, g, b] = match.map(Number);
+                  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                  if (luminance < 0.15) {
+                    const br = Math.round(r + (255 - r) * 0.3);
+                    const bg = Math.round(g + (255 - g) * 0.3);
+                    const bb = Math.round(b + (255 - b) * 0.3);
+                    return `rgb(${br}, ${bg}, ${bb})`;
+                  }
+                }
+                return accentColor;
+              })(),
         }}
       />
 
@@ -286,6 +290,11 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     | string
     | null;
 
+  const dealTier = group.bestDiscount >= 60 ? 'exceptional' as const
+    : group.bestDiscount >= 50 ? 'great' as const
+    : group.bestDiscount >= 40 ? 'good' as const
+    : 'standard' as const;
+
   return (
     <>
       <Card
@@ -293,6 +302,8 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           "group/card deal-card-hover relative h-full overflow-hidden transition-all duration-200 flex flex-col cursor-pointer",
           "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/40",
           "focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background outline-none",
+          dealTier === 'exceptional' && "border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.06)]",
+          dealTier === 'great' && "border-emerald-500/30",
           isVeryStale && "opacity-80"
         )}
         role="article"
@@ -306,6 +317,15 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           }
         }}
       >
+        {/* Hot Deal badge for exceptional tier */}
+        {dealTier === 'exceptional' && (
+          <div className="absolute -top-1 -right-1 z-20">
+            <div className="bg-gradient-to-r from-amber-500 to-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg motion-safe:animate-pulse">
+              🔥 Hot Deal
+            </div>
+          </div>
+        )}
+
         {/* Discount Badge — tiered color system */}
         <div className={cn(
           "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-[filter] duration-200 group-hover/card:brightness-110",
@@ -363,6 +383,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             colorHex={representativeColorHex}
             vendor={group.representativeDeal.vendor}
             material={group.representativeDeal.material}
+            dealTier={dealTier}
           />
           <div className="absolute bottom-2 right-2 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none">
             <span className="text-[10px] text-white/80 bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">
@@ -454,7 +475,12 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
 
           {/* "You save $X" anchoring text */}
           {!hasPriceRange && group.representativeDeal.variant_compare_at_price && group.representativeDeal.variant_price && group.representativeDeal.variant_compare_at_price > group.representativeDeal.variant_price && (
-            <div className="flex items-center gap-1 mb-1 text-xs text-emerald-400 font-medium">
+            <div className={cn(
+              "flex items-center gap-1 mb-1 text-xs",
+              dealTier === 'exceptional' ? "text-emerald-300 font-bold text-sm" :
+              dealTier === 'great' ? "text-emerald-400 font-semibold" :
+              "text-emerald-400 font-medium"
+            )}>
               <span>You save</span>
               <RegionalPrice
                 amount={group.representativeDeal.variant_compare_at_price - group.representativeDeal.variant_price}
