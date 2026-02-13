@@ -369,13 +369,26 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         )}
       </section>
 
-      {/* Multi-Material System Compatibility */}
+      {/* Multi-Material System */}
       <section className="section-card">
-        <SectionHeader icon={Package} title="Multi-Material System Compatibility" />
+        <SectionHeader icon={Package} title="Multi-Material System" />
         
-        {/* Compatible Systems */}
+        {/* Native Multi-Material Info - show first if available */}
+        {printer.native_multi_material_system && (
+          <div className="flex items-center gap-3 py-3 px-4 bg-primary/5 border border-primary/20 rounded-lg mb-4">
+            <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <span className="text-sm font-medium text-foreground">
+                Built-in Multi-Material: Yes — supports up to {printer.multi_material_max_spools || '?'} spools
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Compatible Third-Party Systems */}
         {compatibleCount > 0 ? (
           <div className="space-y-2 mb-4">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Compatible Third-Party Systems</h4>
             {compatibleSystemsList.map((system) => (
               <div 
                 key={system.key} 
@@ -395,18 +408,18 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
               </div>
             ))}
           </div>
-        ) : (
+        ) : !printer.native_multi_material_system ? (
           <div className="text-center py-6 text-muted-foreground border border-dashed border-border/50 rounded-lg mb-4">
-            No compatible multi-material systems detected
+            No multi-material support detected
           </div>
-        )}
+        ) : null}
 
         {/* Incompatible Systems (Collapsible) */}
         {incompatibleSystems.length > 0 && (
           <Collapsible open={showIncompatible} onOpenChange={setShowIncompatible}>
             <CollapsibleTrigger asChild>
               <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-between py-2">
-                <span>Not Compatible ({incompatibleSystems.length} systems)</span>
+                <span>Third-party compatibility: Not Compatible ({incompatibleSystems.length} systems)</span>
                 <ChevronDown className={cn("w-4 h-4 transition-transform", showIncompatible && "rotate-180")} />
               </button>
             </CollapsibleTrigger>
@@ -425,22 +438,6 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
               ))}
             </CollapsibleContent>
           </Collapsible>
-        )}
-
-        {/* Native System Info */}
-        {printer.native_multi_material_system && (
-          <div className="mt-4 pt-4 border-t border-border/30 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Native Multi-Material</span>
-              <span className="font-medium text-primary">Yes</span>
-            </div>
-            {printer.multi_material_max_spools && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Max Spools</span>
-                <span className="font-medium text-foreground">{printer.multi_material_max_spools}</span>
-              </div>
-            )}
-          </div>
         )}
       </section>
 

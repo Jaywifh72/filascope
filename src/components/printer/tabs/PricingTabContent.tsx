@@ -58,7 +58,7 @@ function InfoRow({
 
   let displayValue: React.ReactNode;
   if (isEmpty) {
-    displayValue = <span className="text-muted-foreground/50 italic">Not specified</span>;
+    displayValue = <span className="text-muted-foreground/50 italic">—</span>;
   } else if (isBoolean) {
     displayValue = value ? (
       <span className="inline-flex items-center gap-1.5 text-green-400">
@@ -424,7 +424,7 @@ export function PricingTabContent({
                     {suspectSameAsUsd && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="text-[10px] text-amber-400 cursor-help">⚠ Unverified</span>
+                          <span className="text-[10px] text-amber-400 cursor-help">⚠ Awaiting Verification</span>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="text-xs max-w-xs">
                           This regional MSRP matches the USD price exactly ({formatCurrencyPrice(msrpUsd!, 'USD')}), which may indicate unconverted data.
@@ -473,7 +473,7 @@ export function PricingTabContent({
               "text-sm sm:text-base font-medium",
               !printer.release_date ? "text-muted-foreground italic" : "text-foreground"
             )}>
-              {printer.release_date || 'Not specified'}
+              {printer.release_date || '—'}
             </div>
           </div>
           <div className="p-3 sm:p-6 rounded-xl bg-muted/30 border border-border/40">
