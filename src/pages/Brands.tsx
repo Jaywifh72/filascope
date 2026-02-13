@@ -555,6 +555,8 @@ const Brands = () => {
                         logoUrl={brand.automated?.logo_url}
                         averageRating={brand.averageRating}
                         priceIndicator={brand.priceIndicator}
+                        colorPrimary={brand.automated?.color_primary}
+                        colors={brand.colors}
                       />
                     ))}
                 </div>
@@ -596,6 +598,8 @@ const Brands = () => {
                                 logoUrl={brand.automated?.logo_url}
                                 averageRating={brand.averageRating}
                                 priceIndicator={brand.priceIndicator}
+                                colorPrimary={brand.automated?.color_primary}
+                                colors={brand.colors}
                               />
                             ))}
                           </div>
