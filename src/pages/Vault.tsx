@@ -94,8 +94,10 @@ const Vault = () => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
-          <TabContent activeTab={activeTab} profile={profile} counts={counts} onNavigate={setActiveTab} />
+        <main className="flex-1 min-w-0" key={activeTab}>
+          <div className="animate-fade-in">
+            <TabContent activeTab={activeTab} profile={profile} counts={counts} onNavigate={setActiveTab} />
+          </div>
         </main>
       </div>
     </div>
