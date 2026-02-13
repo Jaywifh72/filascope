@@ -847,6 +847,13 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
     </div>
   );
 };
+// Canonical/parent materials that anchor each family
+const BASE_MATERIALS = new Set([
+  'PLA', 'PLA+', 'PETG', 'ABS', 'ASA', 'TPU', 'TPE', 'Nylon', 'PC',
+  'PVA', 'HIPS', 'PP', 'POM', 'PEEK', 'PEI 1010', 'PEI 9085', 'PEKK',
+  'PPS', 'PA6', 'PA12', 'PCTG', 'PEBA', 'PPA', 'TPC',
+  'Pro PETG', 'Pro PCTG',
+]);
 
 const MaterialReference = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -1067,7 +1074,15 @@ const MaterialReference = () => {
                   {/* Material Items */}
                   {!isCollapsed && (
                     <div className="space-y-0.5 mt-1">
-                      {materials.map(({ name, hasReference }) => (
+                      {[...materials].sort((a, b) => {
+                        const aBase = BASE_MATERIALS.has(a.name);
+                        const bBase = BASE_MATERIALS.has(b.name);
+                        if (aBase && !bBase) return -1;
+                        if (!aBase && bBase) return 1;
+                        return 0;
+                      }).map(({ name, hasReference }) => {
+                        const isBase = BASE_MATERIALS.has(name);
+                        return (
                         <button
                           key={name}
                           ref={(el) => {
@@ -1084,11 +1099,16 @@ const MaterialReference = () => {
                           )}
                         >
                           <span className={cn(
-                            "text-sm transition-colors duration-150",
+                            "text-sm transition-colors duration-150 flex items-center gap-2",
                             selectedMaterial === name
                               ? "text-primary font-medium"
-                              : "text-slate-400 group-hover/item:text-slate-200"
+                              : isBase
+                                ? "text-white font-medium group-hover/item:text-slate-100"
+                                : "text-slate-400 group-hover/item:text-slate-200"
                           )}>
+                            {isBase && selectedMaterial !== name && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                            )}
                             {name}
                           </span>
                           <span title="Add to compare" aria-label="Add to compare" role="img" className="shrink-0 transition-all duration-150 cursor-pointer inline-flex">
@@ -1109,7 +1129,8 @@ const MaterialReference = () => {
                             )}
                           </span>
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
