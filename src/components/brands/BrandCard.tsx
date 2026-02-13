@@ -74,7 +74,9 @@ const BrandCard = ({
 
   const priceTierLabel = priceIndicator === '$' ? 'Budget-friendly' : priceIndicator === '$$' ? 'Mid-range' : priceIndicator === '$$$' ? 'Premium' : null;
 
-  return (
+  const hasHoverPreview = topMaterials.length > 0 || priceIndicator;
+
+  const cardContent = (
     <div
       className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
       onClick={handleClick}
@@ -236,6 +238,43 @@ const BrandCard = ({
         </div>
       </div>
     </div>
+  );
+
+  if (!hasHoverPreview || isEmpty) return cardContent;
+
+  return (
+    <TooltipProvider delayDuration={500}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {cardContent}
+        </TooltipTrigger>
+        <TooltipContent 
+          side="right" 
+          sideOffset={8} 
+          className="hidden [@media(hover:hover)]:block bg-gray-900/95 border border-border p-4 rounded-xl max-w-[220px] shadow-xl"
+        >
+          <p className="text-xs font-semibold text-foreground mb-2">{name} Highlights</p>
+          {topMaterials.length > 0 && (
+            <div className="mb-2">
+              <p className="text-[10px] text-muted-foreground mb-1">Specializes in:</p>
+              <div className="flex flex-wrap gap-1">
+                {topMaterials.slice(0, 4).map(mat => (
+                  <span key={mat} className="text-[10px] bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded border border-border/50">
+                    {mat}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {priceIndicator && (
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Price range: {priceIndicator === '$' ? 'Budget-friendly (under $25/kg)' : priceIndicator === '$$' ? 'Mid-range ($25-40/kg)' : 'Premium ($40+/kg)'}
+            </p>
+          )}
+          <p className="text-[10px] text-primary">Click to explore →</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
