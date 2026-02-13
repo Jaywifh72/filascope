@@ -1,42 +1,96 @@
 
 
-# Affiliate Management System — Database Migration
+# Admin Affiliate Hub -- Brand Programs Manager
 
 ## Overview
-Create 6 new database tables for a comprehensive affiliate management system that runs alongside the existing `affiliate_configs` table. This includes program definitions, restrictions, discount codes, campaigns, click tracking, and product overrides.
+Create a new admin page at `/old-admin/affiliate-hub` that serves as the command center for managing all affiliate programs, discount codes, campaigns, and restrictions across brands and regions. Uses the new `affiliate_programs` schema (not the old `affiliate_configs`).
 
-## Migration Details
+## File Structure
 
-### Tables Created
-1. **affiliate_programs** — Brand-region affiliate program definitions with link templates, commission info, and account details. References `automated_brands(id)` (not `brands(id)` since that table doesn't exist).
-2. **affiliate_program_restrictions** — Rules/restrictions per program (PPC, coupon sites, trademarks, etc.)
-3. **affiliate_discount_codes** — Coupon/discount codes tied to programs
-4. **affiliate_campaigns** — Active promotions/launches per program
-5. **affiliate_clicks** — Outbound click tracking (high-volume analytics table)
-6. **affiliate_product_overrides** — Per-product URL overrides or exclusions
+### New Files to Create
 
-### RLS Policy Pattern
-Matches existing codebase convention:
-- **Read-only tables** (programs, restrictions, codes, campaigns, overrides): `SELECT` open to all (`USING (true)`), write operations restricted to admins via `has_role(auth.uid(), 'admin'::app_role)`
-- **affiliate_clicks**: `INSERT` open to `anon` and `authenticated` (public click tracking), `SELECT` admin-only
+1. **`src/pages/AdminAffiliateHub.tsx`** -- Main page component
+   - Uses `AdminLayout` wrapper with `AdminPageHeader`
+   - Summary stats bar (6 metric cards)
+   - Two top-level tabs: "Brand Programs" and "Click Analytics" (placeholder)
+   - Brand Programs tab renders accordion list grouped by `brand_name`
 
-### Indexes
-Performance indexes on affiliate_programs (brand_name, region_code), affiliate_clicks (clicked_at, brand_name, program_id, region_code, source_page), and active-status composite indexes on discount_codes and campaigns.
+2. **`src/hooks/useAffiliatePrograms.ts`** -- React Query hooks
+   - `useAffiliatePrograms()` -- fetches all programs with related data
+   - `useAffiliateProgramStats()` -- fetches summary counts
+   - `useAffiliateDiscountCodes(programId)` -- codes for a program
+   - `useAffiliateCampaigns(programId)` -- campaigns for a program
+   - `useAffiliateProgramRestrictions(programId)` -- restrictions
+   - `useAffiliateClickCount()` -- 30-day click count
+   - Mutation hooks: `useCreateProgram`, `useUpdateProgram`, `useCreateDiscountCode`, `useCreateCampaign`, `useCreateRestriction`, etc.
 
-### Triggers
-Reuses the existing `update_updated_at_column()` function for affiliate_programs, affiliate_discount_codes, and affiliate_campaigns.
+3. **`src/components/admin/affiliate-hub/BrandAccordionItem.tsx`**
+   - Accordion header: brand name, region count, status dots, code/campaign counts
+   - Inner content: horizontal Tabs per region_code, plus "+" tab for adding region
 
-### Seed Data
-Inserts the Anycubic CA program with:
-- Full program configuration (GoAffPro network, 5% commission, link template)
-- 8 restriction entries (PPC, coupon sites, trademark, redirect links, incentivized traffic, FTC disclosure, content, mobile app)
-- 1 unassigned discount code placeholder
-- 4 campaign entries (Kobra X Launch, Kobra X Coming Soon, Christmas Sale, Kobra S1 Max Combo)
+4. **`src/components/admin/affiliate-hub/ProgramOverviewCard.tsx`**
+   - Section 1: Status badge, two-column grid of program details
+   - Link template in monospace code block
+   - Status/program notes callouts
+   - "Edit Program" and "Test Link" buttons
+
+5. **`src/components/admin/affiliate-hub/LinkGeneratorCard.tsx`**
+   - Section 2: Path input, "Generate Link" button, URL output with breakdown
+   - Quick copy buttons (Copy Link, Copy with UTM, Copy Homepage Link)
+   - Uses `buildAffiliateLinkLocal` from `src/utils/affiliateLinks.ts`
+
+6. **`src/components/admin/affiliate-hub/DiscountCodesCard.tsx`**
+   - Section 3: Table of codes with copy buttons, status badges, edit/deactivate
+   - "Add Discount Code" dialog with full form
+   - Posting restrictions warning callout
+   - Filter toggle for expired codes
+
+7. **`src/components/admin/affiliate-hub/CampaignsCard.tsx`**
+   - Section 4: Campaign cards sorted by status (active, upcoming, ended)
+   - Type badges, date ranges, linked discount codes
+   - "Add Campaign" dialog
+
+8. **`src/components/admin/affiliate-hub/RestrictionsCard.tsx`**
+   - Section 5: Compact restriction rows with icons by type
+   - Severity badges (red/yellow/blue)
+   - "Add Restriction" and "Copy All" buttons
+
+9. **`src/components/admin/affiliate-hub/ProgramFormDialog.tsx`**
+   - Large dialog/sheet for creating or editing a program
+   - 6 organized form sections matching the spec
+   - Live link preview in tracking section
+   - Validation: brand_name, store_base_url, tracking_parameter, tracking_value required
+
+10. **`src/components/admin/affiliate-hub/AffiliateSummaryStats.tsx`**
+    - 6 stat cards: Total Programs, Active Programs, Pending Verification, Clicks (30d), Active Codes, Active Campaigns
+
+## Files to Modify
+
+1. **`src/App.tsx`**
+   - Add lazy import for `AdminAffiliateHub`
+   - Add route: `<Route path="/old-admin/affiliate-hub" element={<AdminAffiliateHub />} />`
+
+2. **`src/components/admin/AdminSidebar.tsx`**
+   - Add "Affiliate Hub" entry to the System nav group (or create a new "Affiliates" group)
+   - Uses a suitable icon (e.g., `Handshake` or `DollarSign`)
+
+3. **`src/pages/AdminDashboard.tsx`**
+   - Add "Affiliate Hub" to quick actions grid
+
+## Data Flow
+
+- All queries use React Query (`@tanstack/react-query`) with keys like `["affiliate-programs"]`, `["affiliate-discount-codes", programId]`, etc.
+- Programs are fetched in a single query, then grouped client-side by `brand_name`
+- Related data (codes, campaigns, restrictions) fetched per-program on accordion expand (lazy loading)
+- All mutations invalidate parent query keys on success
+- Toast notifications via `sonner` for all CRUD operations
 
 ## Technical Notes
-- The `brand_id` column references `automated_brands(id)` which is the correct table in this schema
-- The existing `affiliate_configs` table is left untouched
-- The `product_id` column in `affiliate_clicks` and `affiliate_product_overrides` is untyped (uuid) without a foreign key since it can reference filaments, printers, or accessories
-- All timestamps use `timestamptz` with `DEFAULT now()`
-- Single migration file handles all DDL, RLS, indexes, triggers, and seed data
+
+- All Supabase queries go through the existing `supabase` client from `@/integrations/supabase/client`
+- Types from `src/types/affiliate.ts` are already defined and match the DB schema
+- The `buildAffiliateLinkLocal` utility from `src/utils/affiliateLinks.ts` is used for the link generator and test link features
+- No database changes needed -- all tables and RLS policies already exist
+- The old `/old-admin/affiliates` route remains untouched
+- Admin access is enforced by `AdminLayout` which checks `useAuth().isAdmin`
 
