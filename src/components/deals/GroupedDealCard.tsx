@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, Package, Clock, Ship, BadgeCheck, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, Package, Clock, Ship, BadgeCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,31 +18,6 @@ import { toBrandSlug } from "@/utils/brandSlug";
 import { isVerifiedBrand } from "@/lib/verifiedBrands";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
-/** Color-coded freshness badge with 5-tier trust signals */
-function DealFreshnessBadge({ lastScrapedAt }: { lastScrapedAt: string | null | undefined }) {
-  if (!lastScrapedAt) return null;
-
-  const days = differenceInDays(new Date(), new Date(lastScrapedAt));
-
-  const getTier = () => {
-    if (days <= 0) return { color: 'text-emerald-400', Icon: CheckCircle, label: 'Verified today' };
-    if (days <= 3) return { color: 'text-emerald-400', Icon: CheckCircle, label: `Verified ${days}d ago` };
-    if (days <= 7) return { color: 'text-cyan-400', Icon: Clock, label: `Checked ${days}d ago` };
-    if (days <= 14) return { color: 'text-amber-400', Icon: Clock, label: `Checked ${days}d ago` };
-    if (days <= 30) return { color: 'text-orange-400', Icon: AlertCircle, label: `Checked ${Math.floor(days / 7)}w ago` };
-    const months = Math.floor(days / 30);
-    return { color: 'text-red-400/50', Icon: AlertTriangle, label: `Checked ${months}mo ago — price may have changed` };
-  };
-
-  const { color, Icon, label } = getTier();
-
-  return (
-    <span className={cn("inline-flex items-center gap-1 text-[10px] mb-2", color)}>
-      <Icon className="h-3 w-3" />
-      {label}
-    </span>
-  );
-}
 
 interface GroupedDealCardProps {
   group: GroupedDeal;
@@ -120,7 +95,7 @@ function DealCardImage({
   return (
     <div
       className={cn(
-        "relative h-40 flex items-center justify-center overflow-hidden",
+        "relative h-[120px] flex items-center justify-center overflow-hidden",
         showFallbackPlaceholder ? "" : "bg-muted/30"
       )}
       style={
@@ -157,7 +132,7 @@ function DealCardImage({
         <div className="relative flex flex-col items-center justify-center text-center p-4 w-full h-full">
           {colorHex ? (
             <div
-              className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center"
+              className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center"
               style={{
                 background: `radial-gradient(circle at 35% 35%, ${colorHex}cc, ${colorHex})`,
                 boxShadow: `0 0 20px ${colorHex}30, inset 0 -2px 6px rgba(0,0,0,0.3)`,
@@ -173,7 +148,7 @@ function DealCardImage({
               )}
             </div>
           ) : (
-            <div className="w-16 h-16 rounded-full bg-muted/20 border border-border/30 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-muted/20 border border-border/30 flex items-center justify-center">
               <Package size={32} className="text-muted-foreground/40" />
             </div>
           )}
@@ -379,12 +354,12 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           />
         </Link>
 
-        <CardContent className="p-4 flex-1 flex flex-col">
+        <CardContent className="p-3 flex-1 flex flex-col">
           {/* Vendor with logo */}
           {group.representativeDeal.vendor && (
             <Link
               to={`/brands/${toBrandSlug(group.representativeDeal.vendor)}`}
-              className="flex items-center gap-1.5 mb-1.5 group/brand"
+              className="flex items-center gap-1.5 mb-1 group/brand"
               onClick={(e) => e.stopPropagation()}
             >
               {getBrandLogoUrl(group.representativeDeal.vendor, 60) && (
@@ -410,19 +385,25 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                   </TooltipContent>
                 </Tooltip>
               )}
-            </Link>
+             </Link>
+          )}
+          {/* Material badge inline */}
+          {group.representativeDeal.material && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium uppercase tracking-wide mb-1 self-start">
+              {group.representativeDeal.material}
+            </span>
           )}
 
           {/* Base Product Name — brand prefix stripped */}
           <Link to={`/filament/${group.representativeDeal.id}`}>
-            <h3 className="font-semibold text-sm mb-3 line-clamp-2 h-[40px] overflow-hidden hover:text-primary transition-colors" title={group.baseName}>
+            <h3 className="font-semibold text-sm mb-1.5 line-clamp-2 h-[40px] overflow-hidden hover:text-primary transition-colors" title={group.baseName}>
               {displayName}
             </h3>
           </Link>
 
           {/* Price Range or Single Price */}
           {hasPriceRange ? (
-            <div className="mb-2">
+            <div className="mb-1.5">
               <div className="flex items-baseline gap-1">
                 <RegionalPrice
                   amount={group.priceRange.min}
@@ -450,7 +431,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
               }
               sourceCurrency="USD"
               size="lg"
-              className="mb-2"
+              className="mb-1.5"
             />
           )}
 
@@ -466,24 +447,48 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             </div>
           )}
 
-          {/* Price Freshness Badge with 5-tier color coding */}
-          <DealFreshnessBadge lastScrapedAt={group.lastScrapedAt} />
-
-          {/* Regional Shipping Badge */}
-          {(isStoreLocal || hasLocalAlternative) && (
-            <Badge
-              variant="outline"
-              className="gap-1 text-[10px] border-emerald-500/30 bg-emerald-500/10 text-emerald-400 mb-2"
-            >
-              <Ship className="h-3 w-3" />
-              Ships to {regionName}
-            </Badge>
-          )}
+          {/* Merged metadata line: freshness + shipping + local */}
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap mb-1.5">
+            {staleDays <= 7 ? (
+              <span className="inline-flex items-center gap-0.5 text-emerald-400">
+                <Clock className="h-3 w-3" />
+                Updated recently
+              </span>
+            ) : staleDays <= 30 ? (
+              <span className="inline-flex items-center gap-0.5">
+                <Clock className="h-3 w-3" />
+                Checked {staleDays}d ago
+              </span>
+            ) : staleDays > 30 && group.lastScrapedAt ? (
+              <span className="inline-flex items-center gap-0.5 text-amber-400">
+                Price may have changed
+              </span>
+            ) : null}
+            {(isStoreLocal || hasLocalAlternative) && (
+              <>
+                <span>·</span>
+                <Ship className="h-3 w-3" />
+                <span>Ships to {regionName}</span>
+              </>
+            )}
+            {isStoreLocal && (
+              <>
+                <span>·</span>
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-medium">Local</span>
+              </>
+            )}
+            {group.representativeDeal.created_at && differenceInDays(new Date(), new Date(group.representativeDeal.created_at)) <= 7 && (
+              <>
+                <span>·</span>
+                <span className="text-emerald-400 font-medium">New</span>
+              </>
+            )}
+          </div>
 
           {/* Color Swatches (reserved space) */}
           <div className="min-h-[28px]">
             {hasColors && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                   {group.colorHexes.slice(0, 5).map((hex, i) => {
                     const variant = getVariantByHex(hex);
@@ -512,40 +517,6 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             )}
           </div>
 
-          {/* Store Region Info — local-first ordering */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-            {isStoreLocal ? (
-              <>
-                <span className="text-sm">{group.regionFlag}</span>
-                {group.storeName && group.storeName !== group.representativeDeal.vendor ? (
-                  <span>{group.storeName}</span>
-                ) : null}
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-medium">Local</span>
-              </>
-            ) : hasLocalAlternative && localStore ? (
-              <>
-                <span className="text-emerald-400 font-medium">
-                  {localStore.storeName}
-                </span>
-                <span>•</span>
-                <span className="text-muted-foreground/70">
-                  Also at <span className="text-sm">{group.regionFlag}</span>
-                  {group.storeName && group.storeName !== group.representativeDeal.vendor
-                    ? ` ${group.storeName}`
-                    : null}
-                </span>
-              </>
-            ) : group.storeName && group.regionFlag ? (
-              <>
-                <Ship className="h-3 w-3" />
-                <span className="text-sm">{group.regionFlag}</span>
-                {group.storeName !== group.representativeDeal.vendor ? (
-                  <span>{group.storeName}</span>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-
           {/* CTA Buttons */}
           <div className="flex flex-col gap-2 mt-auto">
             {/* Primary CTA */}
@@ -554,14 +525,14 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 variant={hasLocalAlternative ? "default" : "outline"}
                 size="sm"
                 className={cn(
-                  "deal-cta-btn w-full gap-2 text-xs transition-colors duration-200",
+                  "deal-cta-btn w-full gap-2 text-xs py-1.5 transition-colors duration-200",
                   hasLocalAlternative && "bg-emerald-600 hover:bg-emerald-500 text-white"
                 )}
                 onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
               >
                 {hasLocalAlternative
                   ? `Buy at ${localStore!.storeName}`
-                  : "Check if Deal is Active"}
+                  : "View Deal"}
                 <ExternalLink className="h-3.5 w-3.5" />
               </Button>
             )}
