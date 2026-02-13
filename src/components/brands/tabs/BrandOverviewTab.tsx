@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Zap, Leaf, Cpu, Package, Layers, ArrowRight, 
   Award, DollarSign, Globe, Shield, Sparkles, Target,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Star, BadgeCheck, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -32,6 +32,7 @@ interface BrandOverviewTabProps {
   hasHighSpeedProducts: boolean;
   hasEcoSpools: boolean;
   hasRFID: boolean;
+  isVerified?: boolean;
   onViewAllProducts: () => void;
   onFilterByMaterial: (material: string) => void;
 }
@@ -50,6 +51,7 @@ export function BrandOverviewTab({
   hasHighSpeedProducts,
   hasEcoSpools,
   hasRFID,
+  isVerified = false,
   onViewAllProducts,
   onFilterByMaterial,
 }: BrandOverviewTabProps) {
@@ -68,60 +70,72 @@ export function BrandOverviewTab({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Build dynamic highlights based on brand data
+  // Build dynamic highlights based on brand data — priority order
   const highlights = useMemo<HighlightCard[]>(() => {
-    const cards: HighlightCard[] = [];
+    const candidates: HighlightCard[] = [];
 
-    // Always add quality indicator
-    cards.push({
-      icon: <Award className="w-6 h-6" />,
-      title: "High Quality",
-      description: "Consistent filament quality with rigorous testing",
-    });
+    // Priority 1: Verified
+    if (isVerified) {
+      candidates.push({
+        icon: <BadgeCheck className="w-6 h-6" />,
+        title: "Verified Manufacturer",
+        description: "Quality verified by the FilaScope team",
+      });
+    }
 
-    // Add value indicator
-    cards.push({
-      icon: <DollarSign className="w-6 h-6" />,
-      title: "Great Value",
-      description: "Competitive pricing without compromising quality",
-    });
+    // Priority 2: Catalog size
+    if (groupedProducts.length >= 100) {
+      candidates.push({
+        icon: <Package className="w-6 h-6" />,
+        title: "Extensive Catalog",
+        description: `${groupedProducts.length} products across ${availableMaterials.length} material types`,
+      });
+    } else if (groupedProducts.length >= 10) {
+      candidates.push({
+        icon: <Package className="w-6 h-6" />,
+        title: "Wide Selection",
+        description: `${groupedProducts.length} products across ${availableMaterials.length} material ${availableMaterials.length === 1 ? 'type' : 'types'}`,
+      });
+    }
 
-    // Add selection indicator based on actual data
-    cards.push({
-      icon: <Package className="w-6 h-6" />,
-      title: "Wide Selection",
-      description: `${groupedProducts.length} ${groupedProducts.length === 1 ? 'product' : 'products'} across ${availableMaterials.length} material ${availableMaterials.length === 1 ? 'type' : 'types'}`,
-    });
-
-    // Add feature-specific cards
+    // Priority 3: High-speed
     if (hasHighSpeedProducts) {
-      cards.push({
+      candidates.push({
         icon: <Zap className="w-6 h-6" />,
         title: "High-Speed Ready",
-        description: "Optimized for high-speed printing up to 600mm/s",
+        description: "Includes filaments optimized for high-speed printing",
       });
-    } else if (hasEcoSpools) {
-      cards.push({
+    }
+
+    // Priority 4: Eco spools
+    if (hasEcoSpools) {
+      candidates.push({
         icon: <Leaf className="w-6 h-6" />,
-        title: "Eco-Friendly",
-        description: "Cardboard or recyclable spool materials",
+        title: "Eco-Conscious",
+        description: "Uses recyclable cardboard spools",
       });
-    } else if (hasRFID) {
-      cards.push({
+    }
+
+    // Priority 5: RFID
+    if (hasRFID) {
+      candidates.push({
         icon: <Cpu className="w-6 h-6" />,
         title: "RFID Enabled",
         description: "Automatic filament recognition and settings",
       });
-    } else {
-      cards.push({
-        icon: <Globe className="w-6 h-6" />,
-        title: "Global Shipping",
-        description: "Available worldwide with reliable delivery",
+    }
+
+    // Priority 6: Live pricing (always true for brands with products)
+    if (groupedProducts.length > 0) {
+      candidates.push({
+        icon: <TrendingUp className="w-6 h-6" />,
+        title: "Live Pricing",
+        description: "Real-time price tracking from multiple stores",
       });
     }
 
-    return cards.slice(0, 4);
-  }, [groupedProducts.length, availableMaterials.length, hasHighSpeedProducts, hasEcoSpools, hasRFID]);
+    return candidates.slice(0, 4);
+  }, [groupedProducts.length, availableMaterials.length, hasHighSpeedProducts, hasEcoSpools, hasRFID, isVerified]);
 
   // Sort products by variant count (most colors first) for popularity
   const popularProducts = useMemo(() => {
@@ -178,14 +192,14 @@ export function BrandOverviewTab({
 
   return (
     <div className="space-y-8">
-      {/* Why Choose Brand Section - only show when brand has products */}
-      {groupedProducts.length > 0 && <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Why Choose {brandName}</h3>
+      {/* Brand Highlights Section - only show with 2+ highlights */}
+      {highlights.length >= 2 && <div>
+        <h3 className="text-lg font-semibold text-white mb-4">Brand Highlights</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {highlights.map((highlight, idx) => (
             <div
               key={idx}
-              className="bg-gray-800/30 border border-gray-700 rounded-lg p-4 hover:border-primary/30 hover:bg-gray-800/50 transition-all duration-200"
+              className="bg-gray-800/30 border border-gray-700 rounded-xl p-6 hover:border-primary/30 hover:bg-gray-800/50 transition-all duration-200"
             >
               <div className="text-primary mb-3">
                 {highlight.icon}
@@ -193,7 +207,7 @@ export function BrandOverviewTab({
               <div className="text-base font-semibold text-white mb-1">
                 {highlight.title}
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-slate-400">
                 {highlight.description}
               </div>
             </div>
