@@ -239,8 +239,8 @@ const Navbar = () => {
   const learnItemsFlat = learnMenuSections.flatMap(section => section.items);
   return <>
       <nav className={cn(
-        "sticky top-0 z-50 bg-background/95 backdrop-blur-md shadow-sm dark:shadow-lg transition-all duration-300",
-        hasScrolled ? "border-b border-border/50" : "border-b border-transparent"
+         "sticky top-0 z-50 bg-background/95 backdrop-blur-md transition-all duration-300",
+         hasScrolled ? "border-b border-border/50 shadow-xl shadow-black/20" : "border-b border-transparent shadow-sm"
       )} aria-label="Main navigation">
         {/* Bottom border for depth */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
