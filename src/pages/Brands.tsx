@@ -554,8 +554,9 @@ const Brands = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredBrands
                     .filter(b => b.productLineCount > 0 || b.variantCount > 0)
-                    .map((brand) => (
+                    .map((brand, index) => (
                       <BrandCard
+                        index={index}
                         key={brand.name}
                         name={brand.name}
                         productLineCount={brand.productLineCount}
