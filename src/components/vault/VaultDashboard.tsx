@@ -48,6 +48,9 @@ export function VaultDashboard({ profile, counts, onNavigate }: VaultDashboardPr
       {/* Quick Actions */}
       <QuickActions />
 
+      {/* Recent Browsing History — always shown */}
+      {user && <BrowsingHistoryFeed userId={user.id} historyCount={counts.history} onViewAll={() => onNavigate("history")} />}
+
       {totalData === 0 ? (
         <OnboardingCard />
       ) : (
@@ -121,6 +124,110 @@ function QuickActions() {
           </Card>
         </Link>
       ))}
+    </div>
+  );
+}
+
+function BrowsingHistoryFeed({ userId, historyCount, onViewAll }: { userId: string; historyCount: number; onViewAll: () => void }) {
+  const { data: history, isLoading } = useQuery({
+    queryKey: ["vault-browsing-history-feed", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_browse_history")
+        .select("filament_id, viewed_at, filament:filaments(id, product_title, material, vendor, variant_price, featured_image)")
+        .eq("user_id", userId)
+        .order("viewed_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 2,
+  });
+
+  return (
+    <div className="bg-muted/20 border border-border/30 rounded-xl p-4">
+      <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 py-3">
+              <div className="h-10 w-10 rounded-lg bg-muted animate-pulse shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
+                <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : !history?.length ? (
+        <p className="text-sm text-muted-foreground italic py-4 text-center">
+          Your browsing activity will appear here
+        </p>
+      ) : (
+        <>
+          <div>
+            {history.map((item: any, idx: number) => {
+              const filament = item.filament;
+              if (!filament) return null;
+              const materialLabel = filament.material?.toUpperCase();
+              return (
+                <Link
+                  key={`${item.filament_id}-${idx}`}
+                  to={`/filament/${filament.id}`}
+                  className="flex items-center gap-3 py-3 border-b border-border/10 last:border-0 rounded-lg hover:bg-muted/30 transition-colors px-1 -mx-1"
+                >
+                  {/* Thumbnail */}
+                  <div className="h-10 w-10 rounded-lg bg-muted/50 overflow-hidden shrink-0">
+                    {filament.featured_image ? (
+                      <img
+                        src={filament.featured_image}
+                        alt={filament.product_title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-xs font-bold text-muted-foreground bg-gradient-to-br from-muted/80 to-muted">
+                        {(materialLabel || "?")[0]}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{filament.product_title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {materialLabel && (
+                        <span className="text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                          {materialLabel}
+                        </span>
+                      )}
+                      {filament.vendor && (
+                        <span className="text-xs text-muted-foreground">{filament.vendor}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right side */}
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    {filament.variant_price != null && (
+                      <span className="text-sm font-medium text-muted-foreground">${filament.variant_price}</span>
+                    )}
+                    <span className="text-xs text-muted-foreground/70">
+                      {formatDistanceToNow(new Date(item.viewed_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          <button
+            onClick={onViewAll}
+            className="text-sm text-primary hover:text-primary/80 transition-colors mt-3 inline-block"
+          >
+            View all {historyCount > 0 ? `${historyCount} items` : "history"} →
+          </button>
+        </>
+      )}
     </div>
   );
 }
