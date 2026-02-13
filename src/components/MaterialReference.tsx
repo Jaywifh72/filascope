@@ -880,7 +880,11 @@ const BASE_MATERIALS = new Set([
   'Pro PETG', 'Pro PCTG',
 ]);
 
-const MaterialReference = () => {
+interface MaterialReferenceProps {
+  onMaterialSelect?: (material: string | null) => void;
+}
+
+const MaterialReference = ({ onMaterialSelect }: MaterialReferenceProps = {}) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
@@ -922,6 +926,7 @@ const MaterialReference = () => {
 
   const selectMaterialAndExpand = (materialName: string) => {
     setSelectedMaterial(materialName);
+    onMaterialSelect?.(materialName);
     // Find the category this material belongs to and expand it
     const entry = allMaterials.find(m => m.name === materialName);
     if (entry) {
