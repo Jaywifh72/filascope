@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,8 @@ import {
   Sparkles,
   Settings,
   Printer,
+  X,
+  CheckCircle,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import type { VaultProfile, VaultCounts } from "@/hooks/useVaultProfile";
@@ -32,6 +35,20 @@ export function VaultDashboard({ profile, counts, onNavigate }: VaultDashboardPr
   const { user } = useAuth();
   const totalData =
     counts.wishlist + counts.purchased + counts.projects + counts.reviews + counts.alerts;
+
+  const [dismissed, setDismissed] = useState(() =>
+    localStorage.getItem("vault_onboarding_dismissed") === "true"
+  );
+
+  const handleDismiss = useCallback(() => {
+    localStorage.setItem("vault_onboarding_dismissed", "true");
+    setDismissed(true);
+  }, []);
+
+  const handleRestore = useCallback(() => {
+    localStorage.removeItem("vault_onboarding_dismissed");
+    setDismissed(false);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -56,9 +73,10 @@ export function VaultDashboard({ profile, counts, onNavigate }: VaultDashboardPr
       {/* My Setup Card */}
       {user && <MySetupCard userId={user.id} />}
 
-      {totalData === 0 ? (
-        <OnboardingCard />
-      ) : (
+      {/* Onboarding — always available, progress-aware */}
+      {!dismissed && <OnboardingCard counts={counts} onDismiss={handleDismiss} />}
+
+      {totalData > 0 && (
         <>
           {/* My Filament Library */}
           {user && <FilamentLibrary />}
@@ -79,6 +97,16 @@ export function VaultDashboard({ profile, counts, onNavigate }: VaultDashboardPr
             <AlertsSummary userId={user.id} onViewAll={() => onNavigate("alerts")} />
           )}
         </>
+      )}
+
+      {/* Restore onboarding link */}
+      {dismissed && (
+        <button
+          onClick={handleRestore}
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          Show getting started guide
+        </button>
       )}
     </div>
   );
@@ -366,16 +394,37 @@ function MySetupCard({ userId }: { userId: string }) {
   );
 }
 
-function OnboardingCard() {
+function OnboardingCard({ counts, onDismiss }: { counts: VaultCounts; onDismiss: () => void }) {
   const steps = [
-    { icon: Search, label: "Browse filaments", href: "/", step: 1 },
-    { icon: Heart, label: "Save favorites", href: "/", step: 2 },
-    { icon: Bell, label: "Set price alerts", href: "/", step: 3 },
-    { icon: FolderOpen, label: "Track your collection", href: "/vault?tab=projects", step: 4 },
+    { icon: Search, label: "Browse filaments", href: "/filaments", step: 1, complete: counts.history > 0 },
+    { icon: Heart, label: "Save favorites", href: "/filaments", step: 2, complete: counts.wishlist > 0 },
+    { icon: Bell, label: "Set price alerts", href: "/vault?tab=alerts", step: 3, complete: counts.alerts > 0 },
+    { icon: FolderOpen, label: "Track your collection", href: "/vault?tab=projects", step: 4, complete: counts.purchased > 0 || counts.projects > 0 },
   ];
 
+  const completedCount = steps.filter((s) => s.complete).length;
+  const allComplete = completedCount === 4;
+
+  if (allComplete) {
+    return (
+      <div className="flex items-center justify-between bg-muted/20 border border-border/30 rounded-xl px-4 py-3">
+        <span className="text-sm text-foreground">🎉 You've completed all setup steps!</span>
+        <button onClick={onDismiss} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/40">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <Card className="border-dashed border-2">
+    <Card className="border-dashed border-2 relative">
+      <button
+        onClick={onDismiss}
+        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/40 z-10"
+        aria-label="Dismiss onboarding"
+      >
+        <X className="w-4 h-4" />
+      </button>
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -386,6 +435,9 @@ function OnboardingCard() {
             <p className="text-sm text-muted-foreground">
               Follow these steps to build your personal filament hub
             </p>
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              {completedCount} of 4 steps complete
+            </p>
           </div>
         </div>
       </CardHeader>
@@ -395,11 +447,21 @@ function OnboardingCard() {
             <Link
               key={step.step}
               to={step.href}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors group"
+              className={`flex flex-col items-center gap-2 p-4 rounded-lg transition-colors group ${
+                step.complete ? "bg-primary/5" : "bg-muted/30 hover:bg-muted/60"
+              }`}
             >
-              <span className="text-xs font-bold text-primary">Step {step.step}</span>
-              <step.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="text-sm font-medium text-center">{step.label}</span>
+              <span className={`text-xs font-bold ${step.complete ? "text-green-500" : "text-primary"}`}>
+                Step {step.step}
+              </span>
+              {step.complete ? (
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              ) : (
+                <step.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              )}
+              <span className={`text-sm font-medium text-center ${step.complete ? "line-through text-muted-foreground" : ""}`}>
+                {step.label}
+              </span>
             </Link>
           ))}
         </div>
