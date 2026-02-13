@@ -223,7 +223,7 @@ const Deals = () => {
         </section>
 
         {/* Filters Section — sticky below navbar */}
-        <section id="deals-filters" className="sticky top-16 z-40 bg-background border-b border-border/50 shadow-sm px-4 sm:px-6 md:px-10 pb-4 pt-4">
+        <section id="deals-filters" className="sticky top-16 z-40 backdrop-blur-md bg-background/90 border-b border-border/50 shadow-md px-4 sm:px-6 md:px-10 pb-4 pt-4">
           <div className="max-w-[1600px] mx-auto">
             {/* Mobile Filter Sheet */}
             <div className="md:hidden mb-4">
@@ -252,7 +252,21 @@ const Deals = () => {
             <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Filter className="h-4 w-4" />
-                <span>Filter deals:{activeFilterCount > 0 && <span className="text-primary font-medium ml-1">({activeFilterCount} active)</span>}</span>
+                <span>Filter deals:</span>
+                {hasActiveFilters && (
+                  <span className="inline-flex items-center gap-2" aria-label={`${activeFilterCount} filters currently active`}>
+                    <span className="text-[10px] font-medium px-1.5 py-0 rounded-full bg-primary/20 text-primary border border-primary/30">
+                      {activeFilterCount} active
+                    </span>
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-[10px] text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+                      aria-label="Clear all active filters"
+                    >
+                      Clear all
+                    </button>
+                  </span>
+                )}
               </div>
               <DealFilters
                 materials={availableMaterials}
