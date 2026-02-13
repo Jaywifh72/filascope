@@ -83,6 +83,7 @@ interface PublicBrand {
 const Brands = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showEmptyBrands, setShowEmptyBrands] = useState(false);
   const [filters, setFilters] = useState<BrandFilters>({
     materials: [],
     features: [],
@@ -467,7 +468,7 @@ const Brands = () => {
                 <h2 className="font-mono text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-foreground">
                   <span className="hidden sm:inline text-muted-foreground">Brand Directory </span>
                   <span className="text-muted-foreground sm:hidden">— </span>
-                  <span className="text-primary font-bold">{filteredBrands.length.toLocaleString()}</span>
+                  <span className="text-primary font-bold">{filteredBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length.toLocaleString()}</span>
                   <span className="text-muted-foreground font-light ml-1 text-[10px] sm:text-sm">
                     {searchQuery ? `results for "${searchQuery}"` : (hasActiveFilters ? "Matching" : "Brands")}
                   </span>
@@ -535,58 +536,74 @@ const Brands = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredBrands
+                    .filter(b => b.productLineCount > 0 || b.variantCount > 0)
+                    .map((brand) => (
+                      <BrandCard
+                        key={brand.name}
+                        name={brand.name}
+                        productLineCount={brand.productLineCount}
+                        variantCount={brand.variantCount}
+                        isVerified={VERIFIED_BRANDS.includes(brand.name)}
+                        hasHighSpeed={brand.hasHighSpeed}
+                        hasEcoSpools={brand.hasEcoSpools}
+                        hasRfid={brand.hasRfid}
+                        topMaterials={brand.topMaterials}
+                        logoUrl={brand.automated?.logo_url}
+                        averageRating={brand.averageRating}
+                        priceIndicator={brand.priceIndicator}
+                      />
+                    ))}
+                </div>
                 {(() => {
-                  const activeBrands = filteredBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0);
-                  const comingSoonBrands = filteredBrands.filter(b => b.productLineCount === 0 && b.variantCount === 0);
+                  const emptyBrands = filteredBrands.filter(b => b.productLineCount === 0 && b.variantCount === 0);
+                  if (emptyBrands.length === 0) return null;
                   return (
                     <>
-                      {activeBrands.map((brand) => (
-                        <BrandCard
-                          key={brand.name}
-                          name={brand.name}
-                          productLineCount={brand.productLineCount}
-                          variantCount={brand.variantCount}
-                          isVerified={VERIFIED_BRANDS.includes(brand.name)}
-                          hasHighSpeed={brand.hasHighSpeed}
-                          hasEcoSpools={brand.hasEcoSpools}
-                          hasRfid={brand.hasRfid}
-                          topMaterials={brand.topMaterials}
-                          logoUrl={brand.automated?.logo_url}
-                          averageRating={brand.averageRating}
-                          priceIndicator={brand.priceIndicator}
-                        />
-                      ))}
-                      {comingSoonBrands.length > 0 && (
-                        <div className="col-span-full flex items-center gap-3 py-6 mt-4">
-                          <div className="h-px flex-1 bg-border/40" />
-                          <span className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                            <Clock className="h-3.5 w-3.5" />
-                            Coming Soon
-                          </span>
-                          <div className="h-px flex-1 bg-border/40" />
-                        </div>
+                      <div className="mt-6 mb-2">
+                        <button
+                          onClick={() => setShowEmptyBrands(prev => !prev)}
+                          className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors font-mono"
+                        >
+                          {showEmptyBrands ? "Hide" : "Show"} {emptyBrands.length} brands without products
+                        </button>
+                      </div>
+                      {showEmptyBrands && (
+                        <>
+                          <div className="flex items-center gap-3 py-4">
+                            <div className="h-px flex-1 bg-border/40" />
+                            <span className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                              <Clock className="h-3.5 w-3.5" />
+                              Coming Soon
+                            </span>
+                            <div className="h-px flex-1 bg-border/40" />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {emptyBrands.map((brand) => (
+                              <BrandCard
+                                key={brand.name}
+                                name={brand.name}
+                                productLineCount={brand.productLineCount}
+                                variantCount={brand.variantCount}
+                                isVerified={VERIFIED_BRANDS.includes(brand.name)}
+                                hasHighSpeed={brand.hasHighSpeed}
+                                hasEcoSpools={brand.hasEcoSpools}
+                                hasRfid={brand.hasRfid}
+                                topMaterials={brand.topMaterials}
+                                logoUrl={brand.automated?.logo_url}
+                                averageRating={brand.averageRating}
+                                priceIndicator={brand.priceIndicator}
+                              />
+                            ))}
+                          </div>
+                        </>
                       )}
-                      {comingSoonBrands.map((brand) => (
-                        <BrandCard
-                          key={brand.name}
-                          name={brand.name}
-                          productLineCount={brand.productLineCount}
-                          variantCount={brand.variantCount}
-                          isVerified={VERIFIED_BRANDS.includes(brand.name)}
-                          hasHighSpeed={brand.hasHighSpeed}
-                          hasEcoSpools={brand.hasEcoSpools}
-                          hasRfid={brand.hasRfid}
-                          topMaterials={brand.topMaterials}
-                          logoUrl={brand.automated?.logo_url}
-                          averageRating={brand.averageRating}
-                          priceIndicator={brand.priceIndicator}
-                        />
-                      ))}
                     </>
                   );
                 })()}
-              </div>
+              </>
             )}
 
         {/* Stats Footer */}
