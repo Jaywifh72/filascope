@@ -49,6 +49,17 @@ const RedditIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+function FooterColumnHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/70 pb-2">
+        {children}
+      </h3>
+      <div className="w-10 h-px bg-primary/40" aria-hidden="true" />
+    </div>
+  );
+}
+
 export function SiteFooter() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -130,39 +141,42 @@ export function SiteFooter() {
     { name: "About FilaScope", href: "/about" },
     { name: "Our Methodology", href: "/methodology" },
     { name: "Contact", href: "mailto:hello@filascope.com", external: true },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
+  ];
+
+  const legalLinks = [
+    { name: "Privacy", href: "/privacy" },
+    { name: "Terms", href: "/terms" },
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ];
 
   const socialLinks = [
-    { name: "Twitter/X", icon: TwitterIcon, href: "https://twitter.com/filascope" },
+    { name: "X", icon: TwitterIcon, href: "https://twitter.com/filascope" },
     { name: "Discord", icon: DiscordIcon, href: "https://discord.gg/filascope" },
     { name: "YouTube", icon: YouTubeIcon, href: "https://youtube.com/@filascope" },
     { name: "Reddit", icon: RedditIcon, href: "https://reddit.com/r/filascope" },
   ];
 
   return (
-    <footer className="bg-card mt-auto">
+    <footer className="mt-auto">
       {/* Pre-Footer CTA Section */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-800/80 border-t border-slate-700/30 py-10 px-8">
-        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="bg-muted/50 border-t border-border py-10 px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <h2 className="text-xl font-semibold text-white">Can't decide?</h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <h2 className="text-xl font-semibold text-foreground">Can't decide?</h2>
+            <p className="text-sm text-muted-foreground mt-1">
               Our Quick Match wizard helps you find the right filament in 60 seconds.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <Link
               to="/wizard"
-              className="bg-cyan-500 hover:bg-cyan-400 text-white font-medium px-5 py-2.5 rounded-lg transition-colors"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-5 py-2.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
             >
               Start Quick Match
             </Link>
             <Link
               to="/?sort=value_score&limit=10"
-              className="border border-slate-600 hover:border-cyan-500 text-slate-300 hover:text-white px-5 py-2.5 rounded-lg transition-colors"
+              className="border border-border hover:border-primary/50 text-muted-foreground hover:text-foreground px-5 py-2.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
             >
               Compare Top Picks
             </Link>
@@ -171,234 +185,220 @@ export function SiteFooter() {
       </div>
 
       {/* Main Footer Content */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Column 1 - Brand */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <Link to="/" className="inline-flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Activity className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-lg text-foreground tracking-tight">
-                FilaScope
-              </span>
-            </Link>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              The definitive 3D printing material database
-            </p>
-            <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} FilaScope. All rights reserved.
-            </p>
-          </div>
-
-          {/* Column 2 - Explore */}
-          <div>
-            <h3 className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-4">
-              Explore
-            </h3>
-            <ul className="space-y-2.5">
-              {exploreLinks.map((link) => (
-                <li key={link.name}>
-                  <Link 
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3 - Resources */}
-          <div>
-            <h3 className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-4">
-              Resources
-            </h3>
-            <ul className="space-y-2.5">
-              {resourceLinks.map((link) => (
-                <li key={link.name}>
-                  <Link 
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5"
-                  >
-                    {link.name}
-                    {'comingSoon' in link && link.comingSoon && (
-                      <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary leading-none">
-                        Soon
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4 - Company */}
-          <div>
-            <h3 className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-4">
-              Company
-            </h3>
-            <ul className="space-y-2.5">
-              {companyLinks.map((link) => (
-                <li key={link.name}>
-                  {link.external ? (
-                    <a 
-                      href={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {link.name}
-                      <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                    </a>
-                  ) : (
+      <div className="bg-card border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+            {/* Column 1 - Explore */}
+            <div>
+              <FooterColumnHeader>Explore</FooterColumnHeader>
+              <ul className="space-y-3">
+                {exploreLinks.map((link) => (
+                  <li key={link.name}>
                     <Link 
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
                     >
                       {link.name}
                     </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Column 5 - Connect */}
-          <div>
-            <h3 className="font-mono text-xs uppercase tracking-wider text-muted-foreground mb-4">
-              Connect
-            </h3>
-            
-            {/* Newsletter */}
-            <form onSubmit={handleNewsletterSubmit} className="mb-5">
-              <div className="flex gap-2">
-                <Input
-                  type="email"
-                  placeholder="Your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-10 sm:h-9 text-sm bg-background border-border focus:border-primary min-w-0 flex-1"
-                  disabled={isLoading}
-                  aria-label="Email address for newsletter"
-                />
-                <Button 
-                  type="submit" 
-                  size="sm"
-                  className="h-10 sm:h-9 min-w-[44px] px-3 shrink-0"
-                  disabled={isLoading}
-                  aria-label="Subscribe to newsletter"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Mail className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </Button>
-              </div>
-            </form>
+            {/* Column 2 - Resources */}
+            <div>
+              <FooterColumnHeader>Resources</FooterColumnHeader>
+              <ul className="space-y-3">
+                {resourceLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            {/* Social Links */}
-            <div className="flex gap-2 sm:gap-3 flex-wrap">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.name}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg bg-muted/50 hover:bg-primary/20 active:bg-primary/30 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors touch-manipulation"
-                  aria-label={`Follow us on ${social.name}`}
-                >
-                  <social.icon className="w-5 h-5 sm:w-4 sm:h-4" />
-                </a>
-              ))}
+            {/* Column 3 - Company */}
+            <div>
+              <FooterColumnHeader>Company</FooterColumnHeader>
+              <ul className="space-y-3">
+                {companyLinks.map((link) => (
+                  <li key={link.name}>
+                    {link.external ? (
+                      <a 
+                        href={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 inline-flex items-center gap-1 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {link.name}
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <Link 
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 4 - Connect */}
+            <div>
+              <FooterColumnHeader>Stay Updated</FooterColumnHeader>
+              <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                Get price drops, new filaments, and deals.
+              </p>
+              
+              {/* Newsletter */}
+              <form onSubmit={handleNewsletterSubmit} className="mb-6">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input
+                    type="email"
+                    placeholder="Your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-10 text-sm bg-muted/50 border-border focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 min-w-0 flex-1"
+                    disabled={isLoading}
+                    aria-label="Email address for newsletter"
+                  />
+                  <Button 
+                    type="submit" 
+                    className="h-10 px-4 font-medium shrink-0"
+                    disabled={isLoading}
+                    aria-label="Subscribe to newsletter"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Mail className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
+              </form>
+
+              {/* Social Links */}
+              <p className="text-xs text-muted-foreground/70 mb-3 uppercase tracking-wider font-medium">Follow Us</p>
+              <TooltipProvider delayDuration={200}>
+                <div className="flex gap-3">
+                  {socialLinks.map((social) => (
+                    <Tooltip key={social.name}>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={social.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-9 h-9 rounded-full bg-muted/50 hover:bg-primary/15 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+                          aria-label={`Follow us on ${social.name}`}
+                        >
+                          <social.icon className="w-4 h-4" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-popover border-border text-xs">
+                        {social.name}
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </TooltipProvider>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Region/Currency Indicator Bar */}
-      <div className="border-t border-border/50 bg-card/30">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Left - Current region display */}
-            <div className="flex items-center gap-2 text-sm flex-wrap">
-              <Globe className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <span className="text-muted-foreground">Prices shown for:</span>
-              <span className="text-foreground font-medium">
-                {regionConfig.flag} {regionConfig.name} ({currencyConfig.code})
-              </span>
-              {ratesLastUpdated && (
-                <>
-                  <span className="text-muted-foreground/50 hidden sm:inline">·</span>
-                  <span className="text-xs text-muted-foreground/70 hidden sm:inline">
-                    Rates updated: {formatRatesAge(ratesLastUpdated)}
-                  </span>
-                </>
-              )}
+      {/* Trust Signals & Bottom Bar */}
+      <div className="bg-card border-t border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Left - Copyright + data freshness */}
+            <div className="flex flex-col items-center md:items-start gap-1.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <span className="font-bold text-foreground tracking-tight">FilaScope</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                © {new Date().getFullYear()} FilaScope. All rights reserved.
+              </p>
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                <span className="text-xs text-muted-foreground/70">
+                  Data updated daily from 15+ retailers
+                </span>
+              </div>
             </div>
-            
-            {/* Right - Change selectors */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground hidden sm:inline">Change:</span>
+
+            {/* Center - Region & Currency */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Globe className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{regionConfig.flag} {regionConfig.name}</span>
+                {ratesLastUpdated && (
+                  <>
+                    <span className="text-muted-foreground/40">·</span>
+                    <span className="text-muted-foreground/60">
+                      Rates: {formatRatesAge(ratesLastUpdated)}
+                    </span>
+                  </>
+                )}
+              </div>
               <RegionSelector />
               <CurrencySelector />
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-800/50 bg-background/50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            {/* Left - Data freshness */}
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0" aria-hidden="true" />
-              <span className="text-muted-foreground">
-                Data updated daily from 15+ retailers
-              </span>
-            </div>
-
-            {/* Center - System Status (de-emphasized) */}
-            <div className="flex items-center gap-4 text-slate-600">
-              <div className="flex items-center gap-2">
-                <Activity className="h-3 w-3 text-emerald-500" aria-hidden="true" />
-                <span className="font-mono uppercase tracking-wider">
-                  System Status:
-                </span>
-                <span className="font-mono uppercase tracking-wider text-emerald-500">
-                  Optimal
-                </span>
+            {/* Right - Legal links + system status */}
+            <div className="flex flex-col items-center md:items-end gap-2">
+              <div className="flex items-center gap-3">
+                {legalLinks.map((link, i) => (
+                  <span key={link.name} className="flex items-center gap-3">
+                    <Link
+                      to={link.href}
+                      className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                    >
+                      {link.name}
+                    </Link>
+                    {i < legalLinks.length - 1 && (
+                      <span className="text-muted-foreground/30 text-xs" aria-hidden="true">·</span>
+                    )}
+                  </span>
+                ))}
               </div>
-              
-              <div className="h-3 w-px bg-border hidden sm:block" aria-hidden="true" />
-              
               <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="hidden sm:flex items-center gap-2 cursor-help">
-                      <Zap className={`h-3 w-3 ${getLatencyColor(latency)}`} aria-hidden="true" />
-                      <span className="font-mono uppercase tracking-wider">
-                        Latency:
-                      </span>
-                      <span className={`font-mono uppercase tracking-wider ${getLatencyColor(latency)}`}>
-                        {latency}ms
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-xs">Average API response time to backend</p>
-                  </TooltipContent>
-                </Tooltip>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground/50">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="h-3 w-3 text-emerald-500" aria-hidden="true" />
+                    <span className="font-mono uppercase tracking-wider">Optimal</span>
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="hidden sm:flex items-center gap-1.5 cursor-help">
+                        <Zap className={`h-3 w-3 ${getLatencyColor(latency)}`} aria-hidden="true" />
+                        <span className={`font-mono uppercase tracking-wider ${getLatencyColor(latency)}`}>
+                          {latency}ms
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-popover border-border">
+                      <p className="text-xs">Average API response time</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <span className="text-muted-foreground/30">·</span>
+                  <span>Made with <span className="text-destructive" aria-label="love">❤️</span></span>
+                </div>
               </TooltipProvider>
             </div>
-
-            {/* Right - Made with love */}
-            <span className="text-muted-foreground">
-              Made with <span className="text-destructive" aria-label="love">❤️</span> for the 3D printing community
-            </span>
           </div>
         </div>
       </div>
