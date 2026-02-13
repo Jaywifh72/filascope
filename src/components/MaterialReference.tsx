@@ -995,7 +995,7 @@ const MaterialReference = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
       {/* Material List Panel */}
-      <div className="h-fit lg:sticky lg:top-24 bg-gray-800/30 border-r border-gray-700 rounded-lg overflow-hidden">
+      <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-120px)] bg-gray-800/30 border-r border-gray-700 rounded-lg overflow-hidden flex flex-col">
         {/* Panel Header */}
         <div className="px-4 py-4 border-b border-gray-700 bg-gray-900/60">
           <div className="flex items-center justify-between mb-3">
@@ -1019,7 +1019,7 @@ const MaterialReference = () => {
         </div>
 
         {/* Material List with independent scroll */}
-        <ScrollArea className="max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+        <ScrollArea className="flex-1 min-h-0 scrollbar-thin scrollbar-thumb-slate-700 hover:scrollbar-thumb-slate-600 scrollbar-track-slate-900">
           <div className="p-2">
             {Object.entries(groupedMaterials).map(([category, materials], categoryIndex) => {
               const isCollapsed = expandedCategory !== category;
