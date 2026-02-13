@@ -850,18 +850,19 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
 const MaterialReference = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const toggleCategory = (category: string) => {
-    setCollapsedCategories(prev => {
-      const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
-      return next;
-    });
+    setExpandedCategory(prev => prev === category ? null : category);
+  };
+
+  const selectMaterialAndExpand = (materialName: string) => {
+    setSelectedMaterial(materialName);
+    // Find the category this material belongs to and expand it
+    const entry = allMaterials.find(m => m.name === materialName);
+    if (entry) {
+      setExpandedCategory(entry.category);
+    }
   };
 
   // Normalize material name to Title Case (e.g., "PLA-MARBLE" -> "PLA-Marble", "Pla silk" -> "PLA-Silk")
@@ -1021,7 +1022,7 @@ const MaterialReference = () => {
         <ScrollArea className="max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
           <div className="p-2">
             {Object.entries(groupedMaterials).map(([category, materials], categoryIndex) => {
-              const isCollapsed = collapsedCategories.has(category);
+              const isCollapsed = expandedCategory !== category;
               const categoryCount = materials.length;
               
               return (
@@ -1073,7 +1074,7 @@ const MaterialReference = () => {
                               el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                             }
                           }}
-                          onClick={() => setSelectedMaterial(name)}
+                          onClick={() => selectMaterialAndExpand(name)}
                           className={cn(
                             "w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-md cursor-pointer transition-all duration-150 text-left",
                             selectedMaterial === name
@@ -1110,7 +1111,7 @@ const MaterialReference = () => {
         {!selectedMaterial ? (
           <Card className="bg-gray-800/50 border-gray-700 flex-1 flex items-center justify-center">
             <MaterialReferenceEmptyState 
-              onSelectMaterial={(material) => setSelectedMaterial(material)}
+              onSelectMaterial={(material) => selectMaterialAndExpand(material)}
             />
           </Card>
         ) : selectedReference ? (
