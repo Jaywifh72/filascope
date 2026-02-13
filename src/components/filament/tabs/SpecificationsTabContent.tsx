@@ -28,12 +28,19 @@ interface SpecificationsTabContentProps {
   filament: Filament;
 }
 
+interface RangeData {
+  min: number;
+  max: number;
+  materialName: string;
+}
+
 interface SpecRow {
   label: string;
   value: string | number | null | undefined;
   unit?: string;
   comparison?: ComparisonContext | null;
   validation?: SpecValidationResult;
+  rangeData?: RangeData | null;
 }
 
 interface ComparisonContext {
@@ -105,7 +112,7 @@ function getComparisonContext(
   material: string | null,
   field: string,
   value: number | null | undefined
-): ComparisonContext | null {
+): { comparison: ComparisonContext; rangeData: RangeData } | null {
   if (!material || value === null || value === undefined) return null;
   
   // Normalize material name
@@ -114,16 +121,21 @@ function getComparisonContext(
   
   if (!avgData) return null;
   
-  const { min, max, avg } = avgData;
+  const { min, max } = avgData;
   
-  // Determine if value is above, standard, or below average
+  let comparison: ComparisonContext;
   if (value >= max) {
-    return { label: 'Above average', status: 'above' };
+    comparison = { label: 'Above average', status: 'above' };
   } else if (value <= min) {
-    return { label: 'Below average', status: 'below' };
+    comparison = { label: 'Below average', status: 'below' };
   } else {
-    return { label: 'Standard', status: 'standard' };
+    comparison = { label: 'Standard', status: 'standard' };
   }
+  
+  return {
+    comparison,
+    rangeData: { min, max, materialName: normalizedMaterial },
+  };
 }
 
 function ComparisonBadge({ comparison }: { comparison: ComparisonContext }) {
@@ -143,16 +155,104 @@ function ComparisonBadge({ comparison }: { comparison: ComparisonContext }) {
   );
 }
 
+/** Helper to spread getComparisonContext result into SpecRow fields */
+function withComparison(
+  material: string | null,
+  field: string,
+  value: number | null | undefined
+): { comparison?: ComparisonContext | null; rangeData?: RangeData | null } {
+  const result = getComparisonContext(material, field, value);
+  if (!result) return {};
+  return { comparison: result.comparison, rangeData: result.rangeData };
+}
+
+
+function SpecRangeBar({ 
+  value, 
+  rangeData, 
+  comparison, 
+  label, 
+  unit 
+}: { 
+  value: number;
+  rangeData: RangeData | null | undefined;
+  comparison: ComparisonContext | null | undefined;
+  label: string;
+  unit?: string;
+}) {
+  // Data source: min/max from MATERIAL_AVERAGES lookup keyed by normalized material name and spec field
+  const hasRange = rangeData && rangeData.min !== rangeData.max;
+  
+  // Calculate marker position (0-100%)
+  let position: number;
+  let rangeMin: number;
+  let rangeMax: number;
+
+  if (hasRange) {
+    rangeMin = rangeData.min;
+    rangeMax = rangeData.max;
+    // Add 10% padding on each side for values outside range
+    const padding = (rangeMax - rangeMin) * 0.1;
+    const displayMin = rangeMin - padding;
+    const displayMax = rangeMax + padding;
+    position = ((value - displayMin) / (displayMax - displayMin)) * 100;
+    position = Math.max(0, Math.min(100, position));
+  } else {
+    // No comparison baseline — show neutral centered marker
+    position = 50;
+    rangeMin = 0;
+    rangeMax = 0;
+  }
+
+  // Color based on comparison status
+  const colorConfig = comparison ? {
+    below: { fill: 'bg-amber-500/60', marker: 'bg-amber-400' },
+    standard: { fill: 'bg-gray-400/60', marker: 'bg-gray-300' },
+    above: { fill: 'bg-teal-500/60', marker: 'bg-teal-400' },
+  }[comparison.status] : { fill: 'bg-gray-600/30', marker: 'bg-gray-500' };
+
+  // Build accessible description
+  const ariaLabel = hasRange && comparison
+    ? `${label} is ${value}${unit ? ' ' + unit : ''}, ${comparison.status === 'below' ? 'below' : comparison.status === 'above' ? 'above' : 'within'} the typical ${rangeData.materialName} range of ${rangeMin}–${rangeMax}${unit ? ' ' + unit : ''}`
+    : `${label} is ${value}${unit ? ' ' + unit : ''}`;
+
+  return (
+    <div className="group relative px-3 pb-1" role="img" aria-label={ariaLabel}>
+      <div className="w-full h-1.5 bg-gray-800 rounded-full mt-1 mb-1 relative">
+        {/* Filled portion from left to marker */}
+        <div 
+          className={cn("absolute left-0 top-0 h-full rounded-full", colorConfig.fill)}
+          style={{ width: `${position}%` }}
+        />
+        {/* Marker dot */}
+        <div 
+          className={cn("absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full shadow-sm", colorConfig.marker)}
+          style={{ left: `${position}%`, transform: `translate(-50%, -50%)` }}
+        />
+      </div>
+      {/* Range labels — visible on hover only */}
+      {hasRange && (
+        <div className="flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <span className="text-[10px] text-gray-600">{rangeMin}{unit ? `${unit}` : ''}</span>
+          <span className="text-[10px] text-gray-600">{rangeMax}{unit ? `${unit}` : ''}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SpecTable({ 
   title, 
   icon, 
   specs,
-  materialContext 
+  materialContext,
+  showRangeBars = false,
 }: { 
   title: string; 
   icon: React.ReactNode; 
   specs: SpecRow[];
   materialContext?: string | null;
+  showRangeBars?: boolean;
 }) {
   const validSpecs = specs.filter(s => s.value !== null && s.value !== undefined && s.value !== '');
   if (validSpecs.length === 0) return null;
@@ -173,31 +273,46 @@ function SpecTable({
             )}
           </div>
         </div>
-        <div className="space-y-2">
-          {validSpecs.map((spec, idx) => (
-            <div 
-              key={idx}
-              className={`flex items-center justify-between py-2 px-3 rounded-lg ${idx % 2 === 0 ? 'bg-muted/20' : ''}`}
-            >
-              <span className="text-sm text-muted-foreground">{spec.label}</span>
-              <div className="flex items-center gap-2">
-                {spec.validation?.isSuspect && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="max-w-xs">
-                      <p className="text-xs">⚠ {spec.validation.warningMessage}</p>
-                    </TooltipContent>
-                  </Tooltip>
+        <div className="space-y-0">
+          {validSpecs.map((spec, idx) => {
+            const numericValue = typeof spec.value === 'number' ? spec.value : null;
+            const showBar = showRangeBars && numericValue !== null;
+            
+            return (
+              <div key={idx}>
+                <div 
+                  className={`flex items-center justify-between py-2 px-3 rounded-lg ${idx % 2 === 0 ? 'bg-muted/20' : ''}`}
+                >
+                  <span className="text-sm text-muted-foreground">{spec.label}</span>
+                  <div className="flex items-center gap-2">
+                    {spec.validation?.isSuspect && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <p className="text-xs">⚠ {spec.validation.warningMessage}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {spec.comparison && <ComparisonBadge comparison={spec.comparison} />}
+                    <span className="text-sm font-medium">
+                      {spec.value}{spec.unit ? ` ${spec.unit}` : ''}
+                    </span>
+                  </div>
+                </div>
+                {showBar && (
+                  <SpecRangeBar
+                    value={numericValue}
+                    rangeData={spec.rangeData}
+                    comparison={spec.comparison}
+                    label={spec.label}
+                    unit={spec.unit}
+                  />
                 )}
-                {spec.comparison && <ComparisonBadge comparison={spec.comparison} />}
-                <span className="text-sm font-medium">
-                  {spec.value}{spec.unit ? ` ${spec.unit}` : ''}
-                </span>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
@@ -214,37 +329,38 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
         title="Print Settings"
         icon={<ThermometerSun className="w-5 h-5" />}
         materialContext={material}
+        showRangeBars
         specs={[
           { 
             label: 'Nozzle Temperature (Min)', 
             value: filament.nozzle_temp_min_c, 
             unit: '°C',
-            comparison: getComparisonContext(material, 'nozzle_temp', filament.nozzle_temp_min_c)
+            ...withComparison(material, 'nozzle_temp', filament.nozzle_temp_min_c)
           },
           { 
             label: 'Nozzle Temperature (Max)', 
             value: filament.nozzle_temp_max_c, 
             unit: '°C',
-            comparison: getComparisonContext(material, 'nozzle_temp', filament.nozzle_temp_max_c)
+            ...withComparison(material, 'nozzle_temp', filament.nozzle_temp_max_c)
           },
           { label: 'Nozzle Sweet Spot', value: filament.nozzle_temp_sweetspot_c, unit: '°C' },
           { 
             label: 'Bed Temperature (Min)', 
             value: filament.bed_temp_min_c, 
             unit: '°C',
-            comparison: getComparisonContext(material, 'bed_temp', filament.bed_temp_min_c)
+            ...withComparison(material, 'bed_temp', filament.bed_temp_min_c)
           },
           { 
             label: 'Bed Temperature (Max)', 
             value: filament.bed_temp_max_c, 
             unit: '°C',
-            comparison: getComparisonContext(material, 'bed_temp', filament.bed_temp_max_c)
+            ...withComparison(material, 'bed_temp', filament.bed_temp_max_c)
           },
           { 
             label: 'Max Print Speed', 
             value: filament.print_speed_max_mms, 
             unit: 'mm/s',
-            comparison: getComparisonContext(material, 'print_speed', filament.print_speed_max_mms)
+            ...withComparison(material, 'print_speed', filament.print_speed_max_mms)
           },
           { label: 'Fan Speed (Min)', value: filament.fan_min_percent, unit: '%' },
           { label: 'Fan Speed (Max)', value: filament.fan_max_percent, unit: '%' },
@@ -265,7 +381,7 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
             label: 'Density', 
             value: filament.density_g_cm3, 
             unit: 'g/cm³',
-            comparison: getComparisonContext(material, 'density', filament.density_g_cm3)
+            ...withComparison(material, 'density', filament.density_g_cm3)
           },
           { label: 'Spool Outer Diameter', value: filament.spool_outer_d_mm, unit: 'mm', validation: validateSpec('spool_outer_diameter', filament.spool_outer_d_mm) },
           { label: 'Spool Width', value: filament.spool_width_mm, unit: 'mm', validation: validateSpec('spool_width', filament.spool_width_mm) },
@@ -284,7 +400,7 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
             label: 'Tensile Strength (XY)', 
             value: filament.tensile_strength_xy_mpa, 
             unit: 'MPa',
-            comparison: getComparisonContext(material, 'tensile_strength', filament.tensile_strength_xy_mpa)
+            ...withComparison(material, 'tensile_strength', filament.tensile_strength_xy_mpa)
           },
           { label: 'Tensile Strength (Z)', value: filament.tensile_strength_z_mpa, unit: 'MPa' },
           { label: 'Tensile Modulus (XY)', value: filament.tensile_modulus_xy_mpa, unit: 'MPa' },
@@ -293,7 +409,7 @@ export function SpecificationsTabContent({ filament }: SpecificationsTabContentP
             label: 'Elongation at Break (XY)', 
             value: filament.elongation_break_xy_percent, 
             unit: '%',
-            comparison: getComparisonContext(material, 'elongation', filament.elongation_break_xy_percent)
+            ...withComparison(material, 'elongation', filament.elongation_break_xy_percent)
           },
           { label: 'Elongation at Break (Z)', value: filament.elongation_break_z_percent, unit: '%' },
           { label: 'Flexural Strength', value: filament.flexural_strength_mpa, unit: 'MPa' },
