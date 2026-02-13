@@ -141,12 +141,12 @@ export default function MediumStandardPrinterCard({
 
   return (
     <article 
-      className="group relative transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 rounded-xl"
+      className="group relative rounded-xl transition-all duration-200 ease-out [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-[0_8px_30px_rgba(0,210,200,0.08)]"
       role="article"
       aria-label={`${printer.brand?.brand} ${printer.model_name}`}
     >
       {/* Compare Checkbox - Top right corner */}
-      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 opacity-100 sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100 transition-opacity duration-150">
         <ComparisonCheckbox
           checked={isSelected}
           disabled={isMaxReached}
@@ -164,8 +164,6 @@ export default function MediumStandardPrinterCard({
             rounded-xl 
             p-3 sm:p-6 
             transition-all duration-200 ease-out
-            hover:shadow-[0_0_15px_rgba(6,182,212,0.08)]
-            hover:-translate-y-0.5
             cursor-pointer
             h-full
             flex flex-row sm:flex-col
@@ -173,7 +171,7 @@ export default function MediumStandardPrinterCard({
             gap-3 sm:gap-3
             ${isSelected 
               ? 'border-primary/60 shadow-[0_0_15px_rgba(0,207,232,0.15)]' 
-              : 'border-gray-700 hover:border-cyan-500/30'
+              : 'border-gray-700 [@media(hover:hover)]:group-hover:border-cyan-500/30'
             }
           `}
         >
@@ -348,7 +346,7 @@ export default function MediumStandardPrinterCard({
 
             {/* CTA Button - Hidden on mobile, full width on desktop */}
             <button
-              className="hidden sm:flex w-full h-11 rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black font-medium text-sm transition-colors items-center justify-center gap-2 mt-auto"
+              className="hidden sm:flex w-full h-11 rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black [@media(hover:hover)]:group-hover:text-cyan-300 [@media(hover:hover)]:group-hover:border-cyan-400/60 font-medium text-sm transition-colors duration-200 items-center justify-center gap-2 mt-auto"
               onClick={(e) => e.preventDefault()}
             >
               View Details
