@@ -1410,9 +1410,30 @@ const ComparisonContent = () => {
 const MaterialCompare = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "reference";
+  const selectedMaterialParam = searchParams.get("material") || null;
 
   const handleTabChange = (value: string) => {
-    setSearchParams({ tab: value });
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set("tab", value);
+      return next;
+    });
+  };
+
+  const handleMaterialSelect = (material: string | null) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (material) {
+        next.set("material", material);
+      } else {
+        next.delete("material");
+      }
+      return next;
+    });
+  };
+
+  const clearMaterial = () => {
+    handleMaterialSelect(null);
   };
 
   return (
@@ -1423,15 +1444,30 @@ const MaterialCompare = () => {
       </Helmet>
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Finder
-            </Link>
-          </Button>
-        </div>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm mb-4" aria-label="Breadcrumb">
+          <Link
+            to="/learn"
+            className="text-slate-400 hover:text-cyan-400 transition-colors"
+          >
+            Learn
+          </Link>
+          <span className="text-slate-600">/</span>
+          {selectedMaterialParam ? (
+            <>
+              <button
+                onClick={clearMaterial}
+                className="text-slate-400 hover:text-cyan-400 transition-colors"
+              >
+                Material Knowledge Base
+              </button>
+              <span className="text-slate-600">/</span>
+              <span className="text-foreground font-medium">{selectedMaterialParam}</span>
+            </>
+          ) : (
+            <span className="text-foreground font-medium">Material Knowledge Base</span>
+          )}
+        </nav>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Materials</h1>
@@ -1457,7 +1493,7 @@ const MaterialCompare = () => {
           </TabsContent>
 
           <TabsContent value="reference">
-            <MaterialReference />
+            <MaterialReference onMaterialSelect={handleMaterialSelect} />
           </TabsContent>
         </Tabs>
       </div>
