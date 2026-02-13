@@ -71,35 +71,43 @@ export function RecentlyViewedDropdown() {
           </div>
         ) : (
           <div className="max-h-96 overflow-y-auto">
-            {items.map((item) => (
-              <Link
-                key={item.id}
-                to={item.url}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
-              >
-                {item.image ? (
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-12 h-12 rounded object-cover bg-muted shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded bg-muted flex items-center justify-center shrink-0">
-                    <Package className="w-5 h-5 text-muted-foreground/50" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">{item.brand}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  {item.price && (
-                    <p className="text-sm text-primary font-semibold">{item.price}</p>
+            {items.map((item) => {
+              if (!item.name || !item.id) return null;
+              return (
+                <Link
+                  key={item.id}
+                  to={item.url || `/filament/${item.id}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-12 h-12 rounded object-cover bg-muted shrink-0"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  {!item.image && (
+                    <div className="w-12 h-12 rounded bg-muted flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 text-muted-foreground/50" />
+                    </div>
                   )}
-                  <p className="text-xs text-muted-foreground/60">{formatTimeAgo(item.timestamp)}</p>
-                </div>
-              </Link>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{item.name || "Unknown Product"}</p>
+                    <p className="text-xs text-muted-foreground">{item.brand || "Unknown Brand"}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {item.price && (
+                      <p className="text-sm text-primary font-semibold">{item.price}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground/60">{formatTimeAgo(item.timestamp)}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </PopoverContent>
