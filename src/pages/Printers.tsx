@@ -716,72 +716,132 @@ export default function Printers() {
 
       {/* Results Header - Industrial style */}
       <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 mb-4 sm:mb-6 mt-3 sm:mt-4 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center gap-3">
-            {/* Mobile Filter Button */}
-            <MobileFilterDrawer
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              priceRange={priceRangeFilter}
-              onPriceChange={setPriceRangeFilter}
-              buildVolume={buildVolumeFilter}
-              onBuildVolumeChange={setBuildVolumeFilter}
-              advancedFilters={advancedFilters}
-              onAdvancedFiltersChange={setAdvancedFilters}
-              availableBrands={brands || []}
-              hasActiveFilters={hasActiveFilters}
-              activeFilterCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0)}
-              onClearFilters={handleClearAllFilters}
-            />
-            <DatabaseIcon className="w-5 h-5 text-primary hidden sm:block" />
-            <h2 className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground hidden sm:inline">Hardware Registry</span>
-              <span className="text-muted-foreground hidden sm:inline">—</span>
-              <span className="text-xs font-medium text-cyan-400">{filteredPrinters?.length.toLocaleString() || 0}</span>
-              <span className="text-xs text-muted-foreground">
-                {hasActiveFilters ? "matching" : "units"}
-              </span>
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Compare Selected Button */}
-            {compareCount > 0 && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  const ids = selectedPrinters.map(p => p.id).join(',');
-                  navigate(`/printers/compare?ids=${ids}`);
-                }}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-xs"
-              >
-                <GitCompareArrows className="w-3.5 h-3.5 mr-1.5" />
-                Compare Selected ({compareCount})
-              </Button>
-            )}
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAllFilters}
-                className="text-xs text-gray-400 hover:text-destructive"
-              >
-                <X className="w-3.5 h-3.5 mr-1.5" />
-                Clear Filters
-              </Button>
-            )}
-            <button
-              onClick={handleExportCSV}
-              disabled={isExporting}
-              className="border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded transition-colors duration-200 inline-flex items-center disabled:opacity-50"
-            >
-              {isExporting ? (
-                <Loader2 className="mr-1.5 animate-spin" size={14} />
-              ) : (
-                <Download className="mr-1.5" size={14} />
+        <div className="flex flex-col gap-2.5 bg-white/[0.02] border border-white/5 rounded-xl px-4 sm:px-6 py-3 sm:py-4">
+          {/* Top row */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Mobile Filter Button */}
+              <MobileFilterDrawer
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                priceRange={priceRangeFilter}
+                onPriceChange={setPriceRangeFilter}
+                buildVolume={buildVolumeFilter}
+                onBuildVolumeChange={setBuildVolumeFilter}
+                advancedFilters={advancedFilters}
+                onAdvancedFiltersChange={setAdvancedFilters}
+                availableBrands={brands || []}
+                hasActiveFilters={hasActiveFilters}
+                activeFilterCount={advancedFilterCount + (activeCategory !== 'all' ? 1 : 0) + (priceRangeFilter !== 'all' ? 1 : 0) + (buildVolumeFilter !== 'all' ? 1 : 0)}
+                onClearFilters={handleClearAllFilters}
+              />
+              <DatabaseIcon className="w-5 h-5 text-primary hidden sm:block flex-shrink-0" />
+              <h2 className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground hidden sm:inline">Hardware Registry</span>
+                <span className="text-muted-foreground hidden sm:inline">—</span>
+                {hasActiveFilters ? (
+                  <>
+                    <span className="text-xs font-semibold text-cyan-400">{filteredPrinters?.length.toLocaleString() || 0}</span>
+                    <span className="text-xs text-muted-foreground">of {printers?.length.toLocaleString() || 0} printers</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs font-medium text-cyan-400">{filteredPrinters?.length.toLocaleString() || 0}</span>
+                    <span className="text-xs text-muted-foreground">printers</span>
+                  </>
+                )}
+              </h2>
+              {hasActiveFilters && (
+                <button
+                  onClick={handleClearAllFilters}
+                  className="text-xs text-gray-400 hover:text-cyan-400 transition-colors inline-flex items-center gap-1 ml-1"
+                >
+                  <X className="w-3 h-3" />
+                  Clear all
+                </button>
               )}
-              Export CSV
-            </button>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Compare Selected Button */}
+              {compareCount > 0 && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const ids = selectedPrinters.map(p => p.id).join(',');
+                    navigate(`/printers/compare?ids=${ids}`);
+                  }}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-xs"
+                >
+                  <GitCompareArrows className="w-3.5 h-3.5 mr-1.5" />
+                  Compare Selected ({compareCount})
+                </Button>
+              )}
+              <button
+                onClick={handleExportCSV}
+                disabled={isExporting}
+                className="border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 text-xs font-mono uppercase tracking-wider px-3 py-1.5 rounded transition-colors duration-200 inline-flex items-center disabled:opacity-50"
+              >
+                {isExporting ? (
+                  <Loader2 className="mr-1.5 animate-spin" size={14} />
+                ) : (
+                  <Download className="mr-1.5" size={14} />
+                )}
+                Export CSV
+              </button>
+            </div>
           </div>
+
+          {/* Active filter pills row */}
+          {hasActiveFilters && (() => {
+            const pills: { label: string; onRemove: () => void }[] = [];
+
+            if (searchTerm) pills.push({ label: `"${searchTerm}"`, onRemove: () => setSearchTerm("") });
+            if (activeCategory !== 'all') {
+              const catLabels: Record<string, string> = { fdm: "FDM", resin: "Resin", corexy: "CoreXY", budget: "Budget", multicolor: "Multi-Color" };
+              pills.push({ label: catLabels[activeCategory] || activeCategory, onRemove: () => setActiveCategory("all") });
+            }
+            if (priceRangeFilter !== 'all') {
+              const priceLabels: Record<string, string> = { "0-300": "Under $300", "0-500": "Under $500", "500-1000": "$500–$1K", "1000-2000": "$1K–$2K", "2000-3000": "$2K–$3K", "3000+": "$3K+" };
+              pills.push({ label: priceLabels[priceRangeFilter] || priceRangeFilter, onRemove: () => setPriceRangeFilter("all") });
+            }
+            if (buildVolumeFilter !== 'all') {
+              const volLabels: Record<string, string> = { small: "Small (<200mm)", medium: "Medium (200-300mm)", large: "Large (300mm+)" };
+              pills.push({ label: volLabels[buildVolumeFilter] || buildVolumeFilter, onRemove: () => setBuildVolumeFilter("all") });
+            }
+            advancedFilters.brands.forEach(brand => {
+              pills.push({ label: brand, onRemove: () => setAdvancedFilters(prev => ({ ...prev, brands: prev.brands.filter(b => b !== brand) })) });
+            });
+            if (advancedFilters.motionSystem !== 'any') {
+              pills.push({ label: advancedFilters.motionSystem, onRemove: () => setAdvancedFilters(prev => ({ ...prev, motionSystem: "any" })) });
+            }
+            advancedFilters.features.forEach(f => {
+              const featureLabels: Record<string, string> = { auto_bed_leveling: "ABL", heated_bed: "Heated Bed", enclosed: "Enclosed", camera: "Camera", wifi: "WiFi", filament_sensor: "Filament Sensor", dual_extruder: "Dual Extruder" };
+              pills.push({ label: featureLabels[f] || f, onRemove: () => setAdvancedFilters(prev => ({ ...prev, features: prev.features.filter(x => x !== f) })) });
+            });
+            if (activeChip) {
+              const chipLabels: Record<string, string> = { popular: "Popular", under500: "Under $500", enclosed: "Enclosed", multicolor: "Multi-Color", highspeed: "High Speed", large: "Large Format", new: "New Arrivals" };
+              pills.push({ label: chipLabels[activeChip] || activeChip, onRemove: () => setActiveChip(null) });
+            }
+
+            const visible = pills.slice(0, 3);
+            const extra = pills.length - 3;
+
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {visible.map((pill, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 bg-gray-800 text-gray-300 text-xs px-2 py-0.5 rounded-full">
+                    {pill.label}
+                    <button onClick={pill.onRemove} className="hover:text-cyan-400 transition-colors">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {extra > 0 && (
+                  <span className="text-xs text-muted-foreground">+{extra} more</span>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
