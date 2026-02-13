@@ -207,11 +207,20 @@ export default function MediumStandardPrinterCard({
             </div>
 
             {/* Printer Image - Using OptimizedImage with consistent aspect ratio */}
-            <div className={`relative aspect-auto w-full h-auto sm:h-[220px] flex items-center justify-center bg-[#0d1117] rounded-lg overflow-hidden ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
+            <div className={`relative aspect-auto w-full h-auto sm:h-[220px] flex items-center justify-center rounded-lg overflow-hidden ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
               {imageTimedOut ? (
-              <div className="flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-muted/10 to-muted/5 w-full h-full relative">
-                  <PrinterIcon className="h-16 w-16 text-muted-foreground/20" />
-                  <span className="absolute bottom-2 right-2 text-xs text-muted-foreground/40 italic">Photo coming soon</span>
+                <div className="flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-gray-800/50 to-gray-900 border border-dashed border-gray-700 w-full h-full rounded-lg relative">
+                  {/* Brand logo watermark */}
+                  {getBrandLogo(printer.brand?.brand || null) && (
+                    <BrandLogo
+                      src={getBrandLogo(printer.brand?.brand || null)}
+                      brandName={printer.brand?.brand || "Brand"}
+                      size="lg"
+                      className="absolute inset-0 m-auto h-20 w-20 opacity-[0.07] pointer-events-none"
+                    />
+                  )}
+                  <PrinterIcon className="h-16 w-16 text-gray-600 relative z-[1]" />
+                  <span className="text-xs text-gray-500 relative z-[1]">Image coming soon</span>
                 </div>
               ) : (
                 <OptimizedImage
@@ -224,9 +233,17 @@ export default function MediumStandardPrinterCard({
                   onLoad={() => { imageLoadedRef.current = true; }}
                   onError={() => { setImageTimedOut(true); }}
                   fallback={
-                    <div className="flex flex-col items-center justify-center gap-1 bg-gradient-to-b from-muted/10 to-muted/5 w-full h-full relative">
-                      <PrinterIcon className="h-16 w-16 text-muted-foreground/20" />
-                      <span className="absolute bottom-2 right-2 text-xs text-muted-foreground/40 italic">Photo coming soon</span>
+                    <div className="flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-gray-800/50 to-gray-900 border border-dashed border-gray-700 w-full h-full rounded-lg relative">
+                      {getBrandLogo(printer.brand?.brand || null) && (
+                        <BrandLogo
+                          src={getBrandLogo(printer.brand?.brand || null)}
+                          brandName={printer.brand?.brand || "Brand"}
+                          size="lg"
+                          className="absolute inset-0 m-auto h-20 w-20 opacity-[0.07] pointer-events-none"
+                        />
+                      )}
+                      <PrinterIcon className="h-16 w-16 text-gray-600 relative z-[1]" />
+                      <span className="text-xs text-gray-500 relative z-[1]">Image coming soon</span>
                     </div>
                   }
                 />
