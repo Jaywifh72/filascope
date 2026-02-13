@@ -133,6 +133,8 @@ const Methodology = lazy(() => import("./pages/Methodology"));
 const CompatibilityMatrix = lazy(() => import("./pages/CompatibilityMatrix"));
 const SlicerDirectory = lazy(() => import("./pages/SlicerDirectory"));
 const ModelRepositories = lazy(() => import("./pages/ModelRepositories"));
+const Roadmap = lazy(() => import("./pages/Roadmap"));
+const RequestFeature = lazy(() => import("./pages/RequestFeature"));
 
 import { DEFAULT_QUERY_OPTIONS } from "@/lib/queryConfig";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -270,6 +272,8 @@ const App = () => (
                   <Route path="/compatibility-matrix" element={<CompatibilityMatrix />} />
                   <Route path="/slicer-directory" element={<SlicerDirectory />} />
                   <Route path="/model-repositories" element={<ModelRepositories />} />
+                  <Route path="/roadmap" element={<Roadmap />} />
+                  <Route path="/request-feature" element={<RequestFeature />} />
                   {/* Embed route — lightweight, no navbar/footer */}
                   <Route path="/embed/:id" element={<EmbedProduct />} />
                   {/* Public user profile */}

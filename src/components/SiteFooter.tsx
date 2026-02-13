@@ -13,7 +13,8 @@ import {
   Building2,
   ShoppingCart,
   RefreshCw,
-  Users
+  Users,
+  Lightbulb
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,9 +137,11 @@ export function SiteFooter() {
     { name: "Quick Match", href: "/wizard" },
   ];
 
-  const companyLinks = [
+  const companyLinks: { name: string; href: string; external?: boolean; badge?: string; icon?: React.ComponentType<{ className?: string }> }[] = [
     { name: "About FilaScope", href: "/about" },
     { name: "Our Methodology", href: "/methodology" },
+    { name: "Feature Roadmap", href: "/roadmap", badge: "New" },
+    { name: "Request a Feature", href: "/request-feature", icon: Lightbulb },
     { name: "Contact", href: "mailto:hello@filascope.com", external: true },
   ];
 
@@ -269,9 +272,13 @@ export function SiteFooter() {
                     ) : (
                       <Link 
                         to={link.href}
-                        className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                        className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded inline-flex items-center gap-1.5"
                       >
+                        {link.icon && <link.icon className="w-3.5 h-3.5" />}
                         {link.name}
+                        {link.badge && (
+                          <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded font-medium">{link.badge}</span>
+                        )}
                       </Link>
                     )}
                   </li>
