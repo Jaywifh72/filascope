@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, Building2, ArrowRight, X, Package, Layers, BadgeCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -37,9 +37,27 @@ const BrandsHeroSection = ({
 }: BrandsHeroSectionProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const PLACEHOLDERS = [
+    "Try 'flexible TPU'",
+    "Search 1,073+ filaments",
+    "Find 'Bambu Lab filament'",
+    "Try 'high temp PETG'",
+    "Search by color or brand",
+  ];
+
+  // Rotate placeholders when input is empty and not focused
+  useEffect(() => {
+    if (searchTerm || isFocused) return;
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [searchTerm, isFocused]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -137,17 +155,18 @@ const BrandsHeroSection = ({
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Search brands, e.g. Bambu Lab, Prusament..."
+                    placeholder={PLACEHOLDERS[placeholderIndex]}
                     value={searchTerm}
                     onChange={(e) => onSearchChange(e.target.value)}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setTimeout(() => setIsFocused(false), 150)}
-                    className={`w-full sm:w-[320px] md:w-[360px] h-11 pl-11 sm:pl-12 pr-10 text-sm bg-white/5 backdrop-blur-md text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-300 outline-none ${
+                    className={`w-full sm:min-w-[320px] md:min-w-[360px] h-11 pl-11 sm:pl-12 pr-10 text-sm text-foreground placeholder:text-muted-foreground rounded-xl border transition-all duration-200 outline-none ${
                       isFocused 
-                        ? "border-primary/60 shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
-                        : "border-white/10 hover:border-white/20"
+                        ? "border-primary/60 ring-2 ring-primary/20 bg-background shadow-[0_0_16px_rgba(0,207,232,0.25)]" 
+                        : "border-border-hover ring-1 ring-border/50 bg-muted/30 hover:border-muted-foreground/40 hover:ring-muted-foreground/30"
                     }`}
-                    aria-label="Search brands"
+                    aria-label="Search filaments, brands, and materials"
+                    data-search-input="true"
                   />
                   {searchTerm && (
                     <button
