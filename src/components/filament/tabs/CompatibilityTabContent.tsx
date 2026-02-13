@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,10 +25,13 @@ import {
   ChevronRight,
   Wrench,
   Flame,
+  GitCompare,
+  Check,
 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
 import { CompatibilityResult, checkPrinterFilamentCompatibility } from '@/lib/printerCompatibility';
+import { useCompare } from '@/hooks/useCompare';
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
 
@@ -234,6 +237,70 @@ function NozzleTypeCard({ isAbrasive, recommendedNozzle }: { isAbrasive: boolean
   );
 }
 
+function CompareAlternativesPrompt({ filament, selectedPrinter }: { filament: Filament; selectedPrinter: any }) {
+  const navigate = useNavigate();
+  const { addItem, isInCompare } = useCompare();
+
+  if (!selectedPrinter) return null;
+
+  const material = filament.material || '';
+  const printerBrand = selectedPrinter.brand && typeof selectedPrinter.brand === 'object' && 'brand' in selectedPrinter.brand
+    ? (selectedPrinter.brand as { brand: string }).brand
+    : null;
+  const printerName = printerBrand
+    ? `${printerBrand} ${selectedPrinter.model_name}`
+    : selectedPrinter.model_name || 'your printer';
+
+  const isAdded = isInCompare(filament.id);
+
+  const handleNavigateToCatalog = () => {
+    const params = new URLSearchParams();
+    if (material) params.set('material', material);
+    navigate(`/filaments?${params.toString()}`);
+  };
+
+  const handleAddToCompare = () => {
+    if (isAdded) return;
+    addItem({
+      id: filament.id,
+      product_title: filament.product_title || filament.display_name || 'Filament',
+      material: filament.material,
+      vendor: filament.vendor,
+      color_hex: filament.color_hex,
+      variant_price: null,
+      net_weight_g: filament.net_weight_g,
+    });
+  };
+
+  return (
+    <div className="bg-gray-800/30 border border-dashed border-gray-700 rounded-xl p-4 text-center">
+      <GitCompare className="w-6 h-6 text-teal-400 mx-auto" />
+      <h4 className="text-sm font-semibold text-gray-200 mt-2">Compare compatible alternatives</h4>
+      <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+        See how this filament stacks up against other {material || 'similar'} options compatible with your {printerName}
+      </p>
+      <div className="flex justify-center gap-3 mt-3">
+        <Button
+          size="sm"
+          onClick={handleNavigateToCatalog}
+          className="bg-teal-600 hover:bg-teal-500 text-white"
+        >
+          Compare {material || 'Similar'} Options →
+        </Button>
+        {isAdded ? (
+          <Button size="sm" variant="outline" className="bg-gray-800 text-gray-400 border-gray-600 cursor-default" disabled>
+            <Check className="w-3.5 h-3.5 mr-1.5" />
+            In Compare Tray
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" className="border-gray-600" onClick={handleAddToCompare}>
+            Add to Compare
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
 export function CompatibilityTabContent({
   filament,
   selectedPrinter,
@@ -533,6 +600,9 @@ export function CompatibilityTabContent({
           </Card>
         </Collapsible>
       )}
+
+      {/* Compare Compatible Alternatives — only when a printer is selected */}
+      <CompareAlternativesPrompt filament={filament} selectedPrinter={displayPrinter} />
 
       {/* General Compatibility Info */}
       <Card className="bg-card/50 border-border">
