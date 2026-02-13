@@ -513,11 +513,13 @@ const Navbar = () => {
             </Tooltip>
           </div>
 
+          {/* Region Selector - Prominent position */}
+          <RegionSelector />
+
           {/* Right-side utilities */}
           <div className="hidden md:block h-6 w-px bg-border" />
           <div className="flex items-center gap-3 shrink-0 ml-auto">
             <WishlistButton />
-            <RegionSelector />
             <CurrencySelector />
             <ThemeToggle />
             
