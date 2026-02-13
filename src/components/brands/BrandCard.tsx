@@ -18,6 +18,8 @@ interface BrandCardProps {
   logoUrl?: string | null;
   averageRating?: number | null;
   priceIndicator?: "$" | "$$" | "$$$" | null;
+  colorPrimary?: string | null;
+  colors?: string[];
 }
 
 const BrandCard = ({
@@ -32,6 +34,8 @@ const BrandCard = ({
   logoUrl,
   averageRating,
   priceIndicator,
+  colorPrimary,
+  colors = [],
 }: BrandCardProps) => {
   const navigate = useNavigate();
   const resolvedLogoUrl = logoUrl || getBrandLogo(name);
@@ -66,24 +70,35 @@ const BrandCard = ({
 
   const isEmpty = productLineCount === 0 && variantCount === 0;
 
-  return (
+  const priceTierLabel = priceIndicator === '$' ? 'Budget-friendly' : priceIndicator === '$$' ? 'Mid-range' : priceIndicator === '$$$' ? 'Premium' : null;
 
+  return (
     <div
-      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
+      className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
       onClick={handleClick}
     >
-      {/* Top Section - Logo Area */}
-      <div className="relative aspect-[2/1] bg-gray-800/60 flex items-center justify-center p-4">
+      {/* Color Accent Bar */}
+      <div 
+        className="h-1 w-full"
+        style={{ 
+          background: colorPrimary 
+            ? colorPrimary 
+            : 'linear-gradient(to right, hsl(var(--primary) / 0.3), transparent)' 
+        }}
+      />
+
+      {/* Top Section - Logo Area (compact) */}
+      <div className="relative h-[88px] bg-gray-800/60 flex items-center justify-center p-3">
         <BrandLogo
           src={resolvedLogoUrl}
           brandName={name}
           size="lg"
-          className="max-h-12 max-w-full object-contain"
+          className="max-h-10 max-w-full object-contain"
         />
 
         {/* Price Indicator - Top Left */}
         {priceIndicator && (
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-2.5 left-2.5">
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -105,23 +120,28 @@ const BrandCard = ({
       </div>
 
       {/* Bottom Section - Info Area */}
-      <div className="flex-1 flex flex-col bg-card p-4 space-y-2.5">
+      <div className="flex-1 flex flex-col bg-card p-4 space-y-2">
         {/* Brand Name */}
         <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
           {name}
         </h3>
 
         {/* Key Stats Row */}
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
           {isEmpty ? (
             <span className="text-xs text-gray-500 italic font-mono">Coming soon</span>
           ) : (
-            <span>
-              {productLineCount} {productLineCount === 1 ? 'product' : 'products'}
+            <>
+              <span className="font-medium text-foreground">
+                {productLineCount} {productLineCount === 1 ? 'product' : 'products'}
+              </span>
               {variantCount > productLineCount && (
-                <span className="text-muted-foreground/60"> ({variantCount} {variantCount === 1 ? 'variant' : 'variants'})</span>
+                <span className="text-[10px] text-muted-foreground">· {variantCount} colors</span>
               )}
-            </span>
+              {priceTierLabel && (
+                <span className="text-[10px] text-muted-foreground">· {priceTierLabel}</span>
+              )}
+            </>
           )}
           {averageRating && averageRating > 0 ? (
             <span className="flex items-center gap-1">
@@ -164,9 +184,25 @@ const BrandCard = ({
           </div>
         )}
 
+        {/* Color Palette Preview */}
+        {colors.length > 0 && (
+          <div className="flex items-center gap-0.5 mt-0.5">
+            {colors.slice(0, 8).map((hex, i) => (
+              <div 
+                key={i}
+                className="w-3 h-3 rounded-full border border-gray-700/50"
+                style={{ backgroundColor: hex }}
+              />
+            ))}
+            {colors.length > 8 && (
+              <span className="text-[9px] text-muted-foreground ml-0.5">+{colors.length - 8}</span>
+            )}
+          </div>
+        )}
+
         {/* Feature Badges */}
         {featureBadges.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
+          <div className="flex flex-wrap gap-1.5">
             {featureBadges.slice(0, 2).map((badge) => (
               <span
                 key={badge.label}
