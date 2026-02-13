@@ -49,6 +49,9 @@ export function VaultReviewsTab() {
         description="Share your experience with filaments and printers to help the community make better choices."
         actionLabel="Browse Filaments to Review"
         actionHref="/"
+        tip="💡 Purchased filaments get a 'Verified Purchase' badge on reviews"
+        secondaryActionLabel="Review from your purchased list →"
+        secondaryActionHref="/vault?tab=purchased"
       />
     );
   }

@@ -9,6 +9,10 @@ interface VaultEmptyStateProps {
   actionLabel?: string;
   actionHref?: string;
   onAction?: () => void;
+  tip?: string;
+  secondaryActionLabel?: string;
+  secondaryActionHref?: string;
+  onSecondaryAction?: () => void;
 }
 
 export function VaultEmptyState({
@@ -18,6 +22,10 @@ export function VaultEmptyState({
   actionLabel,
   actionHref,
   onAction,
+  tip,
+  secondaryActionLabel,
+  secondaryActionHref,
+  onSecondaryAction,
 }: VaultEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -34,6 +42,20 @@ export function VaultEmptyState({
         ) : onAction ? (
           <Button onClick={onAction}>{actionLabel}</Button>
         ) : null)}
+      {secondaryActionLabel && (
+        secondaryActionHref ? (
+          <Link to={secondaryActionHref} className="text-sm text-cyan-400 hover:text-cyan-300 mt-3 transition-colors">
+            {secondaryActionLabel}
+          </Link>
+        ) : onSecondaryAction ? (
+          <button onClick={onSecondaryAction} className="text-sm text-cyan-400 hover:text-cyan-300 mt-3 transition-colors">
+            {secondaryActionLabel}
+          </button>
+        ) : null
+      )}
+      {tip && (
+        <p className="text-xs text-slate-500 mt-3 max-w-sm">{tip}</p>
+      )}
     </div>
   );
 }

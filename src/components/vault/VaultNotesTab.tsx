@@ -119,6 +119,7 @@ export function VaultNotesTab() {
         description="Add personal notes to filaments and printers to track your experience and preferences. Visit any product page and click '📝 Add Note' in the sidebar."
         actionLabel="Browse Filaments"
         actionHref="/"
+        tip="💡 Notes are private and only visible to you — perfect for print settings and observations"
       />
     );
   }
