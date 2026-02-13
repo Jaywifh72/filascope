@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RecommendedStartingSettings } from '../RecommendedStartingSettings';
 import { Database } from '@/integrations/supabase/types';
 import { TechnicalDetailsAccordion } from '../TechnicalDetailsAccordion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -423,6 +424,9 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
           )}
         </div>
       )}
+
+      {/* Recommended Starting Settings */}
+      <RecommendedStartingSettings filament={filament} />
 
       {/* Key Features */}
       {features.length > 0 && (
