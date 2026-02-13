@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Palette, Layers, Package, Cpu, ExternalLink, TrendingUp, TrendingDown, 
-  CheckCircle2, XCircle, ChevronDown, Thermometer, AlertCircle, ArrowRight
+  CheckCircle2, XCircle, ChevronDown, ChevronRight, Thermometer, AlertCircle, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -305,7 +305,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
                   {materials.map((material) => (
                     <Link 
                       key={material}
-                      to={`/?material=${encodeURIComponent(material)}`}
+                      to={`/filaments?material=${encodeURIComponent(material)}&printer=${encodeURIComponent(printer.model_name)}`}
                       className={cn(
                         "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-200",
                         "hover:scale-105 hover:shadow-md cursor-pointer",
@@ -362,7 +362,7 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
               {materialTempHints.map((hint) => (
                 <Link 
                   key={hint.material}
-                  to={`/?material=${encodeURIComponent(hint.material)}`}
+                  to={`/filaments?material=${encodeURIComponent(hint.material)}&printer=${encodeURIComponent(printer.model_name)}`}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border border-border/40 bg-muted/30 transition-all duration-200",
                     "hover:scale-105 hover:shadow-md cursor-pointer",
@@ -468,19 +468,27 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
         {recommendedMaterials.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {recommendedMaterials.slice(0, 6).map((material: string, index: number) => (
-              <Card key={index} className="bg-card/80 border-border/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Palette className="w-4 h-4 text-primary" />
+              <Link
+                key={index}
+                to={`/filaments?material=${encodeURIComponent(material)}&printer=${encodeURIComponent(printer.model_name)}`}
+                className="block group"
+              >
+                <Card className="bg-card/80 border-border/40 hover:border-teal-500/30 hover:bg-muted/70 transition-all duration-150 cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Palette className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground">{material}</span>
+                        <p className="text-xs text-muted-foreground">Recommended</p>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5">Browse {material} filaments →</p>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-teal-400 transition-colors duration-150 flex-shrink-0" />
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-foreground">{material}</span>
-                      <p className="text-xs text-muted-foreground">Recommended</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (
