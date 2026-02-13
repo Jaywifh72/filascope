@@ -1032,17 +1032,17 @@ const MaterialReference = () => {
                   <button
                     onClick={() => toggleCategory(category)}
                     className={cn(
-                      "w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md transition-all duration-200 group border-l-2",
+                      "w-full flex items-center justify-between gap-2 px-2 py-2 rounded-md transition-all duration-200 group border-l-2 cursor-pointer",
                       isCollapsed
-                        ? "border-transparent hover:bg-gray-800/50"
+                        ? "border-transparent hover:bg-slate-800/30"
                         : "bg-gray-800/50 border-primary"
                     )}
                   >
                     <div className="flex items-center gap-2">
                       <ChevronDown className={cn(
-                        "w-3.5 h-3.5 transition-transform duration-200",
+                        "w-3.5 h-3.5 transition-all duration-200",
                         isCollapsed
-                          ? "text-muted-foreground group-hover:text-primary -rotate-90"
+                          ? "text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 -rotate-90"
                           : "text-primary rotate-0"
                       )} />
                       <span className={cn(
@@ -1077,23 +1077,35 @@ const MaterialReference = () => {
                           }}
                           onClick={() => selectMaterialAndExpand(name)}
                           className={cn(
-                            "w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-md cursor-pointer transition-all duration-150 text-left",
+                            "w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-md cursor-pointer transition-colors duration-150 text-left group/item",
                             selectedMaterial === name
                               ? "bg-primary/5 border-l-2 border-primary"
-                              : "hover:bg-gray-800/50 border-l-2 border-transparent"
+                              : "hover:bg-slate-800/50 border-l-2 border-transparent"
                           )}
                         >
                           <span className={cn(
                             "text-sm transition-colors duration-150",
-                            selectedMaterial === name ? "text-primary font-medium" : "text-foreground"
+                            selectedMaterial === name
+                              ? "text-primary font-medium"
+                              : "text-slate-400 group-hover/item:text-slate-200"
                           )}>
                             {name}
                           </span>
-                          <span title="Add to compare" aria-label="Add to compare" role="img" className="shrink-0 hover:scale-110 transition-transform duration-150 cursor-pointer inline-flex">
+                          <span title="Add to compare" aria-label="Add to compare" role="img" className="shrink-0 transition-all duration-150 cursor-pointer inline-flex">
                             {hasReference ? (
-                              <BookOpen className="w-3.5 h-3.5 text-primary" />
+                              <BookOpen className={cn(
+                                "w-3.5 h-3.5 transition-colors duration-150",
+                                selectedMaterial === name
+                                  ? "text-primary"
+                                  : "text-slate-600 group-hover/item:text-cyan-400"
+                              )} />
                             ) : (
-                              <FileQuestion className="w-3.5 h-3.5 text-amber-500/60" />
+                              <FileQuestion className={cn(
+                                "w-3.5 h-3.5 transition-colors duration-150",
+                                selectedMaterial === name
+                                  ? "text-amber-500/60"
+                                  : "text-slate-600 group-hover/item:text-amber-500/80"
+                              )} />
                             )}
                           </span>
                         </button>
