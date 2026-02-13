@@ -68,7 +68,7 @@ const BrandCard = ({
   return (
 
     <div
-      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border hover:border-primary/40'}`}
+      className={`flex flex-col min-h-[280px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
       onClick={handleClick}
     >
       {/* Top Section - Logo Area */}
@@ -164,14 +164,14 @@ const BrandCard = ({
         {/* View Filaments Button */}
         <div className="border-t border-border mt-auto pt-3">
           <button
-            className="w-full rounded-lg border border-border py-2 text-sm font-medium text-foreground/70 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:text-primary flex items-center justify-center gap-2 group/btn"
+            className="w-full rounded-lg border border-border py-2 text-sm font-medium text-cyan-400 transition-all duration-200 [@media(hover:hover)]:group-hover:text-cyan-300 [@media(hover:hover)]:group-hover:border-cyan-500/30 [@media(hover:hover)]:group-hover:bg-cyan-500/5 flex items-center justify-center gap-2 group/btn"
             onClick={(e) => {
               e.stopPropagation();
               handleClick();
             }}
           >
             {isEmpty ? 'Notify Me' : 'View Filaments'}
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform [@media(hover:hover)]:group-hover:translate-x-1" />
           </button>
         </div>
       </div>
