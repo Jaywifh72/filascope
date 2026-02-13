@@ -14,7 +14,8 @@ import {
   ShoppingCart,
   RefreshCw,
   Users,
-  Lightbulb
+  Lightbulb,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,24 +162,23 @@ export function SiteFooter() {
   return (
     <footer className="mt-auto">
       {/* Pre-Footer CTA Section */}
-      <div className="bg-muted/50 border-t border-border py-10 px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Can't decide?</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Our Quick Match wizard helps you find the right filament in 60 seconds.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
+      <div className="bg-muted border-t-2 border-primary/30 py-12 px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Can't decide?</h2>
+          <p className="text-base text-muted-foreground leading-relaxed mb-8 max-w-xl mx-auto">
+            Our Quick Match wizard helps you find the right filament in 60 seconds.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link
               to="/wizard"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-5 py-2.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 text-base rounded-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
             >
+              <Sparkles className="w-5 h-5" />
               Start Quick Match
             </Link>
             <Link
               to="/?sort=value_score&limit=10"
-              className="border border-border hover:border-primary/50 text-muted-foreground hover:text-foreground px-5 py-2.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+              className="inline-flex items-center border border-border hover:border-primary/50 text-muted-foreground hover:text-foreground font-medium px-8 py-4 text-base rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
             >
               Compare Top Picks
             </Link>
