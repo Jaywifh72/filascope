@@ -21,6 +21,7 @@ interface BrandCardProps {
   colorPrimary?: string | null;
   colors?: string[];
   avgTransmissionDistance?: number | null;
+  index?: number;
 }
 
 const BrandCard = ({
@@ -38,6 +39,7 @@ const BrandCard = ({
   colorPrimary,
   colors = [],
   avgTransmissionDistance,
+  index = 0,
 }: BrandCardProps) => {
   const navigate = useNavigate();
   const resolvedLogoUrl = logoUrl || getBrandLogo(name);
@@ -78,7 +80,8 @@ const BrandCard = ({
 
   const cardContent = (
     <div
-      className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
+      className={`flex flex-col min-h-[260px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-200 [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg [@media(hover:hover)]:hover:shadow-cyan-500/10 [@media(hover:hover)]:hover:border-cyan-500/30 animate-fade-in motion-reduce:animate-none ${isEmpty ? 'opacity-50 border border-dashed border-gray-800' : 'border border-border'}`}
+      style={{ animationDelay: `${Math.min(index * 60, 480)}ms`, animationFillMode: 'both' }}
       onClick={handleClick}
     >
       {/* Color Accent Bar */}
