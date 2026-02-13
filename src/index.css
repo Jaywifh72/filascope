@@ -600,6 +600,18 @@ select:focus-visible,
   min-height: 44px;
 }
 
+/* Vault Quick Action card hover — pointer devices only */
+@media (hover: hover) {
+  .vault-quick-action {
+    transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .vault-quick-action:hover {
+    transform: scale(1.03);
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: 0 10px 15px -3px hsl(var(--primary) / 0.1);
+  }
+}
+
 @layer components {
   /* Line draw-in animation for separator */
   @keyframes line-draw-in {
