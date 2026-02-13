@@ -68,6 +68,12 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
       sizes={sizes.sizes}
       decoding="async"
       onError={() => setFailed(true)}
+      onLoad={(e) => {
+        const img = e.currentTarget;
+        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+          setFailed(true);
+        }
+      }}
       loading="lazy"
     />
   );
