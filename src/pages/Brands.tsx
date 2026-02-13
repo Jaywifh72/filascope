@@ -611,19 +611,19 @@ const Brands = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
               <p className="text-2xl font-bold text-cyan-400 font-mono">{brandCount}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Brands</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Tracked Brands</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-cyan-400 font-mono">{totalProducts.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Product Lines</p>
+              <p className="text-2xl font-bold text-cyan-400 font-mono">{mergedBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Brands with Products</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-cyan-400 font-mono">{totalVariants.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Variants</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Total Filaments</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-cyan-400 font-mono">{featuredBrands.length}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Featured Brands</p>
+              <p className="text-2xl font-bold text-cyan-400 font-mono">{mergedBrands.filter(b => VERIFIED_BRANDS.includes(b.name)).length}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-mono mt-1">Verified Brands</p>
             </div>
           </div>
         </div>
