@@ -100,8 +100,6 @@ const Deals = () => {
     }
     return groupedDeals;
   }, [groupedDeals, dealTypeFilter]);
-
-  // Active filter count for display
   const activeFilterCount =
     selectedMaterials.length +
     selectedBrands.length +
@@ -118,7 +116,21 @@ const Deals = () => {
     priceRange[1] < maxPrice ||
     showLocalOnly;
 
-  // Compute max discount for dynamic meta description
+  const filterSummary = useMemo(() => {
+    if ((!hasActiveFilters && dealTypeFilter === "all") || filteredGroupedDeals.length === 0) return null;
+    const bestDiscount = filteredGroupedDeals.reduce((max, g) => Math.max(max, g.bestDiscount || 0), 0);
+    const avgDiscount = Math.round(
+      filteredGroupedDeals.reduce((sum, g) => sum + (g.bestDiscount || 0), 0) / filteredGroupedDeals.length
+    );
+    const brandNames = selectedBrands.length > 0
+      ? selectedBrands.slice(0, 2).join(" & ") + (selectedBrands.length > 2 ? ` +${selectedBrands.length - 2}` : "")
+      : null;
+    const materialNames = selectedMaterials.length > 0
+      ? selectedMaterials.join(", ")
+      : null;
+    return { bestDiscount, avgDiscount, brandNames, materialNames };
+  }, [filteredGroupedDeals, hasActiveFilters, dealTypeFilter, selectedBrands, selectedMaterials]);
+
   const maxDiscount = useMemo(() => {
     let max = 0;
     for (const group of groupedDeals) {
@@ -419,7 +431,27 @@ const Deals = () => {
                 hasActiveFilters={hasActiveFilters || dealTypeFilter !== "all"}
               />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <>
+                {filterSummary && (
+                  <div className="flex items-center px-3 md:px-4 py-2 rounded-lg bg-primary/5 border border-primary/10 mb-4">
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      {filterSummary.brandNames && (
+                        <span className="font-medium text-primary">{filterSummary.brandNames}</span>
+                      )}
+                      {filterSummary.brandNames && filterSummary.materialNames && " · "}
+                      {filterSummary.materialNames && (
+                        <span className="font-medium text-foreground">{filterSummary.materialNames}</span>
+                      )}
+                      {(filterSummary.brandNames || filterSummary.materialNames) ? " deals" : "Filtered deals"}
+                      {" — save up to "}
+                      <span className="font-bold text-emerald-400">{filterSummary.bestDiscount}%</span>
+                      <span className="text-muted-foreground text-[10px] md:text-xs ml-2">
+                        (avg {filterSummary.avgDiscount}% off)
+                      </span>
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredGroupedDeals.map((group, index) => (
                   <div
                     key={group.groupKey}
@@ -430,6 +462,7 @@ const Deals = () => {
                   </div>
                 ))}
               </div>
+              </>
             )}
 
             {/* End-of-results section */}
