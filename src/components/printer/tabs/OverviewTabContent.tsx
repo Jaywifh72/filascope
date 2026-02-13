@@ -81,9 +81,86 @@ function StatCard({ icon: Icon, label, value, subValue }: StatCardProps) {
 
 // Speed label helper
 function getSpeedLabel(speed: number): string {
+  if (speed >= 800) return 'Very Fast';
   if (speed >= 500) return 'Fast';
   if (speed >= 200) return 'Medium';
   return 'Standard';
+}
+
+// Size category helper
+function getSizeCategory(volumeLiters: number | null): string | null {
+  if (!volumeLiters) return null;
+  if (volumeLiters >= 20) return 'large-format';
+  if (volumeLiters >= 8) return 'medium-format';
+  return 'compact';
+}
+
+// Target user helper
+function getTargetUser(printer: any): string | null {
+  if (printer.target_user) return printer.target_user;
+  const price = printer.current_price_usd || printer.msrp_usd;
+  if (!price) return null;
+  if (price < 300) return 'beginner-friendly';
+  if (price <= 800) return 'hobbyist';
+  return 'prosumer/professional';
+}
+
+// Generate quick verdict summary
+function generateVerdictSummary(printer: any, volumeLiters: number | null, maxSpeed: number | null): string {
+  const parts: string[] = [];
+  
+  const size = getSizeCategory(volumeLiters);
+  if (size) parts.push(size);
+  if (printer.has_enclosure) parts.push('enclosed');
+  if (printer.multi_material_supported) {
+    const spools = printer.multi_material_max_spools;
+    parts.push(spools ? `${spools}-color multi-material` : 'multi-material');
+  }
+
+  const descriptor = parts.length > 0 ? `A ${parts.join(', ')} printer` : 'A 3D printer';
+
+  const features: string[] = [];
+  if (maxSpeed && maxSpeed >= 500) features.push('high-speed capabilities');
+  if (printer.has_wifi) features.push('Wi-Fi connectivity');
+  if (printer.has_enclosure && printer.active_chamber_heating) features.push('active chamber heating');
+
+  const featureStr = features.length > 0 ? ` with ${features.join(' and ')}` : '';
+
+  const target = getTargetUser(printer);
+  const targetStr = target ? ` Best for ${target} users seeking versatility.` : '';
+
+  return `${descriptor}${featureStr}.${targetStr}`;
+}
+
+// Generate verdict pills
+function generateVerdictPills(printer: any, volumeLiters: number | null, maxSpeed: number | null): { emoji: string; label: string }[] {
+  const pills: { emoji: string; label: string }[] = [];
+
+  if (maxSpeed) {
+    const label = maxSpeed >= 800 ? 'Very Fast' : maxSpeed >= 500 ? 'Fast' : maxSpeed >= 200 ? 'Medium' : 'Standard';
+    if (maxSpeed >= 200) pills.push({ emoji: '⚡', label: `${label} (${maxSpeed}mm/s)` });
+  }
+
+  if (volumeLiters) {
+    const size = parseFloat(String(volumeLiters)) >= 20 ? 'Large' : parseFloat(String(volumeLiters)) >= 8 ? 'Medium' : 'Compact';
+    pills.push({ emoji: '📦', label: `${size} Build (${volumeLiters}L)` });
+  }
+
+  if (printer.multi_material_supported) {
+    const spools = printer.multi_material_max_spools;
+    pills.push({ emoji: '🎨', label: spools ? `${spools}-Color Multi-Material` : 'Multi-Material' });
+  }
+
+  if (printer.has_enclosure) {
+    const heated = printer.active_chamber_heating;
+    pills.push({ emoji: '🏠', label: heated ? 'Enclosed & Heated' : 'Enclosed Chamber' });
+  }
+
+  if (printer.auto_bed_leveling) {
+    pills.push({ emoji: '📐', label: 'Auto Bed Leveling' });
+  }
+
+  return pills.slice(0, 4);
 }
 
 // Capability item component
@@ -189,9 +266,40 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
     acc.included_with_printer || acc.category === 'included'
   ).slice(0, 4) || [];
 
+  // Quick verdict data
+  const verdictSummary = generateVerdictSummary(printer, volumeLiters ? parseFloat(volumeLiters) : null, maxSpeed);
+  const verdictPills = generateVerdictPills(printer, volumeLiters ? parseFloat(volumeLiters) : null, maxSpeed);
+
   return (
     <div className="tab-content">
-      {/* Build Volume Visualization - Featured at top */}
+      {/* Quick Verdict */}
+      <section className="mb-8 sm:mb-10">
+        <div className="bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-5 border border-border/30">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-teal-400" />
+            <h3 className="text-base font-semibold text-foreground">Quick Verdict</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-2">
+            {verdictSummary}
+          </p>
+          {verdictPills.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {verdictPills.map((pill) => (
+                <span
+                  key={pill.label}
+                  className="inline-flex items-center gap-1 bg-muted/80 text-xs text-muted-foreground px-2.5 py-1 rounded-full border border-border/50"
+                >
+                  <span>{pill.emoji}</span>
+                  <span>{pill.label}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          <p className="text-[10px] text-muted-foreground/50 mt-2">Based on manufacturer specifications</p>
+        </div>
+      </section>
+
+      {/* Build Volume Visualization */}
       <section className="mb-8 sm:mb-10">
         <SectionHeader icon={Ruler} title="Build Volume & Dimensions" />
         <BuildVolumeCard
