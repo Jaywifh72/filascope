@@ -264,7 +264,7 @@ const Navbar = () => {
           </button>
 
           {/* Logo - Only icon and wordmark */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 active:scale-95 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded" aria-label="FilaScope home">
             <img
               src={filascopeLogo}
               alt="FilaScope"
