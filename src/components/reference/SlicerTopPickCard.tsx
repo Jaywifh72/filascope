@@ -63,10 +63,11 @@ export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore }: Slicer
   return (
     <div
       className={cn(
-        'w-[320px] min-h-[480px] flex-shrink-0 rounded-xl p-6',
+        'group w-[320px] min-h-[480px] flex-shrink-0 rounded-xl p-6',
         'flex flex-col items-center text-center gap-3',
-        'transition-all duration-300 cursor-pointer',
-        'hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/50',
+        'transition-all duration-200 cursor-pointer',
+        'hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/30',
+        'hover:shadow-lg hover:shadow-cyan-500/10 hover:border-cyan-500/30',
         isStaffPick
           ? 'bg-gray-800 border-2 border-primary'
           : 'bg-gray-800 border border-gray-700',
@@ -145,10 +146,10 @@ export function SlicerTopPickCard({ slicer, logo, bestFor, onLearnMore }: Slicer
       <div className="flex flex-col gap-2.5 w-full mt-auto">
         <button
           onClick={onLearnMore}
-          className="w-full h-11 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+          className="w-full h-11 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 transition-all"
         >
           <span>Learn More</span>
-          <ArrowRight size={16} />
+          <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
         </button>
         
         <button
