@@ -104,7 +104,7 @@ export default function Printers() {
   
   // Filter bar state
   const [activeCategory, setActiveCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [sortBy, setSortBy] = useState("price-asc");
   const [priceRangeFilter, setPriceRangeFilter] = useState("all");
   const [buildVolumeFilter, setBuildVolumeFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultAdvancedFilters);
@@ -213,7 +213,7 @@ export default function Printers() {
   // Clear all filters
   const handleClearAllFilters = () => {
     setActiveCategory('all');
-    setSortBy('name-asc');
+    setSortBy('price-asc');
     setPriceRangeFilter('all');
     setBuildVolumeFilter('all');
     setAdvancedFilters(defaultAdvancedFilters);
