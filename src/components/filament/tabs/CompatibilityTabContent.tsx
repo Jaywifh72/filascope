@@ -103,6 +103,17 @@ interface TempCardProps {
 function TempCard({ label, icon, printerValue, filamentMin, filamentMax, gradientFrom, gradientTo, isCompatible }: TempCardProps) {
   const filamentRange = filamentMin && filamentMax ? `${filamentMin}-${filamentMax}°C` : 'N/A';
   const printerMax = printerValue ? `Up to ${printerValue}°C` : 'Unknown';
+
+  // Calculate gauge positions
+  const showGauge = printerValue && filamentMin && filamentMax;
+  let leftPct = 0, rightPct = 0, isNarrow = false;
+  if (showGauge) {
+    leftPct = Math.max(0, Math.min(100, (filamentMin / printerValue) * 100));
+    rightPct = Math.max(0, Math.min(100, (filamentMax / printerValue) * 100));
+    isNarrow = (rightPct - leftPct) < 12; // labels would overlap
+  }
+
+  const fillColor = isCompatible ? 'bg-green-500/70' : 'bg-amber-500/70';
   
   return (
     <div className={cn(
@@ -129,6 +140,65 @@ function TempCard({ label, icon, printerValue, filamentMin, filamentMax, gradien
           {printerMax}
         </div>
       </div>
+
+      {/* Temperature overlap gauge */}
+      {showGauge && (
+        <div className="mt-3">
+          <div className="relative w-full h-3 bg-gray-700/50 rounded-full">
+            {/* Headroom fill (from filament max to printer max) */}
+            {rightPct < 100 && (
+              <div
+                className="absolute top-0 h-full bg-gray-500/20 rounded-r-full"
+                style={{ left: `${rightPct}%`, width: `${100 - rightPct}%` }}
+              />
+            )}
+            {/* Filament required range */}
+            <div
+              className={cn("absolute top-0 h-full rounded-full", fillColor)}
+              style={{ left: `${leftPct}%`, width: `${Math.max(rightPct - leftPct, 1)}%` }}
+            />
+            {/* Left tick */}
+            <div
+              className="absolute w-px h-4 bg-gray-400/60 -top-0.5"
+              style={{ left: `${leftPct}%` }}
+            />
+            {/* Right tick */}
+            <div
+              className="absolute w-px h-4 bg-gray-400/60 -top-0.5"
+              style={{ left: `${rightPct}%` }}
+            />
+          </div>
+          {/* Labels */}
+          <div className="relative h-3 mt-0.5">
+            {isNarrow ? (
+              <span
+                className="absolute text-[10px] text-gray-400 -translate-x-1/2 whitespace-nowrap"
+                style={{ left: `${(leftPct + rightPct) / 2}%` }}
+              >
+                {filamentMin}-{filamentMax}°C
+              </span>
+            ) : (
+              <>
+                <span
+                  className="absolute text-[10px] text-gray-400 -translate-x-1/2 whitespace-nowrap"
+                  style={{ left: `${leftPct}%` }}
+                >
+                  {filamentMin}°C
+                </span>
+                <span
+                  className="absolute text-[10px] text-gray-400 -translate-x-1/2 whitespace-nowrap"
+                  style={{ left: `${rightPct}%` }}
+                >
+                  {filamentMax}°C
+                </span>
+              </>
+            )}
+            <span className="absolute right-0 text-[10px] text-gray-500">
+              {printerValue}°C
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
