@@ -1065,6 +1065,7 @@ const PrinterDetail = () => {
                 isConverted={unifiedPricing.isConverted}
                 originalPrice={unifiedPricing.originalPrice}
                 originalCurrency={unifiedPricing.originalCurrency}
+                storeName={unifiedPricing.storeName}
               />
             );
           })()}
