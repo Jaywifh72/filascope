@@ -2,6 +2,8 @@ import { ArrowRight, Scale, Sparkles, Target, Search, GitCompare, BarChart3, Bea
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { addMaterialToCompare } from "@/lib/materialCompareStore";
+import { toast } from "sonner";
 
 interface PopularComparison {
   id: string;
@@ -53,9 +55,10 @@ export function FilamentComparisonEmptyState({
   const navigate = useNavigate();
 
   const handleComparisonClick = (comparison: PopularComparison) => {
-    // Navigate to the comparison page with the selected materials as a query
-    // For now, this will switch to the reference tab with a search
-    navigate(`/compare?tab=reference`);
+    const [a, b] = comparison.materials;
+    addMaterialToCompare(a);
+    addMaterialToCompare(b);
+    toast.success(`${a} vs ${b} added to comparison`);
   };
 
   return (
