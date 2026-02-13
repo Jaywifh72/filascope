@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import DOMPurify from 'dompurify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -144,7 +145,7 @@ export function BuyingGuideTemplate({ config }: BuyingGuideTemplateProps) {
             <h2 className="text-xl font-bold mb-3">{section.heading}</h2>
             <div 
               className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: section.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
             />
           </section>
         ))}
@@ -190,7 +191,7 @@ export function BuyingGuideTemplate({ config }: BuyingGuideTemplateProps) {
             <h2 className="text-xl font-bold mb-3">{section.heading}</h2>
             <div 
               className="prose prose-invert prose-sm max-w-none text-muted-foreground [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:text-foreground [&_a]:text-primary [&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: section.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.content, { ALLOWED_TAGS: ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'h3', 'h4'], ALLOWED_ATTR: ['href', 'class', 'target', 'rel'] }) }}
             />
           </section>
         ))}
