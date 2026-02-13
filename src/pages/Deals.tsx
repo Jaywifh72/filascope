@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X, Info, Bell } from "lucide-react";
+import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X, Info, Bell, Package, Printer, BadgeCheck, GitCompareArrows } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -469,18 +469,42 @@ const Deals = () => {
             {!isLoading && filteredGroupedDeals.length > 0 && (
               <>
                 <div className="border-t border-border w-full my-8" />
-                <div className="max-w-2xl mx-auto bg-card/50 border border-border/30 rounded-xl p-8 text-center">
+                <div className="max-w-2xl mx-auto text-center">
                   <Tag className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-foreground">That's all the deals for today!</h3>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    New deals are added regularly. Set up alerts to never miss a great price.
+                  <h3 className="text-lg font-semibold text-foreground">
+                    That's all {filteredGroupedDeals.length} deals for today!
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
+                    We found discounts from {uniqueBrandCount} brands with savings up to {maxDiscount}% off.
                   </p>
                   {lastUpdated && (
                     <p className="text-xs text-muted-foreground mt-1">
+                      <BadgeCheck className="h-3 w-3 inline mr-1 text-emerald-500" />
                       Last updated: {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
                     </p>
                   )}
-                  <div id="deal-alerts" className="flex items-center justify-center gap-3 mt-4">
+
+                  {/* Cross-promotion cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+                    <Link to="/finder" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
+                      <Package className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <p className="text-xs font-medium text-foreground">Browse Filaments</p>
+                      <p className="text-[10px] text-muted-foreground">1,073+ products</p>
+                    </Link>
+                    <Link to="/printers" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
+                      <Printer className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <p className="text-xs font-medium text-foreground">Compare Printers</p>
+                      <p className="text-[10px] text-muted-foreground">Find compatible setups</p>
+                    </Link>
+                    <Link to="/compare" className="group p-3 rounded-lg border border-border hover:border-primary/30 transition-colors text-center">
+                      <GitCompareArrows className="h-5 w-5 mx-auto mb-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <p className="text-xs font-medium text-foreground">Material Guide</p>
+                      <p className="text-[10px] text-muted-foreground">Side-by-side analysis</p>
+                    </Link>
+                  </div>
+
+                  {/* Deal Alerts + Browse */}
+                  <div id="deal-alerts" className="flex items-center justify-center gap-3 mt-6">
                     <DealNotificationSignup
                       availableMaterials={availableMaterials}
                       availableBrands={availableBrands}
@@ -492,7 +516,8 @@ const Deals = () => {
                       </Link>
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground italic mt-4">
+
+                  <p className="text-[10px] text-muted-foreground italic mt-4">
                     New deals are checked multiple times weekly
                   </p>
                 </div>
