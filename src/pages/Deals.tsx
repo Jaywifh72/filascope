@@ -329,8 +329,14 @@ const Deals = () => {
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {groupedDeals.map((group) => (
-                  <GroupedDealCard key={group.groupKey} group={group} />
+                {groupedDeals.map((group, index) => (
+                  <div
+                    key={group.groupKey}
+                    className="deal-card-enter"
+                    style={index < 12 ? { animationDelay: `${index * 30}ms` } : undefined}
+                  >
+                    <GroupedDealCard group={group} />
+                  </div>
                 ))}
               </div>
             )}

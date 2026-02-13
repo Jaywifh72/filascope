@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship, BadgeCheck } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
@@ -220,6 +220,7 @@ function DealCardImage({
 export function GroupedDealCard({ group }: GroupedDealCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const navigate = useNavigate();
   const { getAffiliateUrl } = useAffiliateLinks();
   const { getLocalStore, region } = useRegionalStores();
 
@@ -304,17 +305,18 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
     <>
       <Card
         className={cn(
-          "relative h-full overflow-hidden transition-all duration-200 flex flex-col",
-          "hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50",
+          "group deal-card-hover relative h-full overflow-hidden transition-all duration-200 flex flex-col cursor-pointer",
           isVeryStale && "opacity-80"
         )}
+        onClick={() => navigate(`/filament/${group.representativeDeal.id}`)}
       >
         {/* Discount Badge — capped at 60%, shows "Great Deal" for unusual values */}
         <div className={cn(
-          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold",
+          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold transition-[filter] duration-200 group-hover:brightness-110",
           group.isUnusualDiscount
             ? "bg-amber-500 text-amber-950"
-            : "bg-green-500 text-background"
+            : "bg-green-500 text-background",
+          !group.isUnusualDiscount && group.bestDiscount >= 50 && "animate-deal-pulse"
         )}>
           <TrendingDown className="h-3 w-3" />
           {group.isUnusualDiscount ? "Great Deal" : `${group.bestDiscount}% OFF`}
@@ -329,13 +331,13 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           </div>
         )}
 
-        {/* Share Button */}
+        {/* Share Button — hidden by default on pointer devices, visible on hover */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-muted/50 rounded-full p-1.5 transition-colors"
+              className="deal-share-btn absolute top-3 right-3 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-muted/50 rounded-full p-1.5 transition-all duration-200 opacity-0 group-hover:opacity-100"
               onClick={handleShareClick}
               aria-label="Share this deal"
             >
@@ -577,7 +579,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
                 variant={hasLocalAlternative ? "default" : "outline"}
                 size="sm"
                 className={cn(
-                  "w-full gap-2 text-xs",
+                  "deal-cta-btn w-full gap-2 text-xs transition-colors duration-200",
                   hasLocalAlternative && "bg-emerald-600 hover:bg-emerald-500 text-white"
                 )}
                 onClick={hasLocalAlternative ? handleLocalStoreClick : handleCheckPrice}
