@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, Gauge, Thermometer, Wifi, WifiOff } from "lucide-react";
+import { Box, Gauge, Thermometer, Wifi, WifiOff, Share2, Check } from "lucide-react";
+import { toast } from "sonner";
 import { SocialProofBadges } from "./SocialProofBadges";
 import { DataQualityIndicator } from "./DataQualityIndicator";
 import { generatePrinterDescription } from "@/lib/printerBenefitsGenerator";
@@ -103,10 +104,39 @@ export function PrinterHeroSection({
             {brand}
           </div>
 
-          {/* Model Name */}
-          <h1 className="text-3xl font-bold text-foreground leading-tight">
-            {printer.model_name}
-          </h1>
+          {/* Model Name + Share */}
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground leading-tight">
+              {printer.model_name}
+            </h1>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={async () => {
+                      const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({ title: `${brand ? brand + ' ' : ''}${printer.model_name}`, url: cleanUrl });
+                        } catch (e) {
+                          // User cancelled share
+                        }
+                      } else {
+                        await navigator.clipboard.writeText(cleanUrl);
+                        toast.success("Link copied!", { duration: 2000 });
+                      }
+                    }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-border/60 bg-transparent hover:bg-muted/60 transition-colors flex-shrink-0"
+                  >
+                    <Share2 className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Share this printer</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           {/* Description */}
           <p className="text-muted-foreground leading-relaxed">
