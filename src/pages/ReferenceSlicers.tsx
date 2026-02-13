@@ -731,15 +731,24 @@ const ReferenceSlicers = () => {
                     >
                       <AccordionTrigger className="hover:no-underline py-4 [&>svg]:text-gray-400 [&>svg]:transition-transform [&>svg]:duration-300 [&[data-state=open]>svg]:rotate-180">
                         <div className="flex items-center gap-4 text-left flex-1 min-w-0">
-                          <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                          <span className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm text-cyan-500 flex-shrink-0">
                             {String(index + 1).padStart(2, '0')}
                           </span>
                           <SlicerLogo src={slicerLogos[slicer.name]} name={slicer.name} className="w-10 h-10 rounded-lg p-1" />
                           <div className="min-w-0 flex-1">
                             <h3 className="text-base font-bold text-white">{slicer.name}</h3>
-                            <p className="text-sm text-gray-400 line-clamp-1 max-w-2xl">
-                              {slicer.summary.substring(0, 80)}...
+                            <p className="text-sm text-gray-400 line-clamp-2 max-w-2xl">
+                              {slicer.summary}
                             </p>
+                            {(() => {
+                              const tierInfo = getSlicerTierInfo(slicer.name);
+                              const standout = tierInfo?.topFeatures?.[0];
+                              return standout ? (
+                                <span className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded inline-block mt-1">
+                                  {standout}
+                                </span>
+                              ) : null;
+                            })()}
                           </div>
                           {(() => {
                             const tierInfo = getSlicerTierInfo(slicer.name);
