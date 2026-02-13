@@ -395,7 +395,7 @@ export function SiteFooter() {
                     </TooltipContent>
                   </Tooltip>
                   <span className="text-muted-foreground/30">·</span>
-                  <span>Made with <span className="text-destructive" aria-label="love">❤️</span></span>
+                  <span>Built by makers, for makers.</span>
                 </div>
               </TooltipProvider>
             </div>
