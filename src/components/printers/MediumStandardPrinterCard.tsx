@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, Loader2, CircleDot } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Box, Zap, Thermometer, Loader2, CircleDot, Cog } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -126,6 +126,18 @@ export default function MediumStandardPrinterCard({
     return parts.join(' • ');
   };
 
+  // Derive kinematics label from machine_style / motion_system_notes
+  const getKinematics = (): string | null => {
+    const motion = (printer.motion_system_notes || '').toLowerCase();
+    const style = (printer.machine_style || '').toLowerCase();
+    if (motion.includes('corexy') || style.includes('corexy')) return 'CoreXY';
+    if (motion.includes('delta') || style.includes('delta')) return 'Delta';
+    if (motion.includes('cartesian') || style.includes('cartesian') || style.includes('bed slinger') || motion.includes('bed slinger')) return 'Bed Slinger';
+    if (style) return style.charAt(0).toUpperCase() + style.slice(1);
+    return null;
+  };
+  const kinematics = getKinematics();
+
   // Calculate discount percentage
   const discountPercent = printer.msrp_usd && price && price < printer.msrp_usd
     ? Math.round((1 - price / printer.msrp_usd) * 100)
@@ -167,8 +179,8 @@ export default function MediumStandardPrinterCard({
             cursor-pointer
             h-full
             flex flex-row sm:flex-col
-            sm:min-h-[480px]
-            gap-3 sm:gap-3
+            sm:min-h-[420px]
+            gap-3 sm:gap-2
             ${isSelected 
               ? 'border-primary/60 shadow-[0_0_15px_rgba(0,207,232,0.15)]' 
               : 'border-gray-700 [@media(hover:hover)]:group-hover:border-cyan-500/30'
@@ -178,39 +190,39 @@ export default function MediumStandardPrinterCard({
           {/* Mobile: Left side (Image) */}
           {/* Desktop: Full width stacked layout */}
           <div className="flex-shrink-0 w-[100px] sm:w-full">
-            {/* Brand Logo - Hidden on mobile, shown on desktop */}
-            <div className="hidden sm:flex justify-center min-h-[48px] items-center">
+            {/* Brand label — inline text with optional small logo */}
+            <div className="hidden sm:flex items-center gap-1.5 mb-2">
               {getBrandLogo(printer.brand?.brand || null) ? (
                 <BrandLogo
                   src={getBrandLogo(printer.brand?.brand || null)}
                   brandName={printer.brand?.brand || "Brand"}
-                  size="lg"
-                  className="h-12 opacity-60 group-hover:opacity-90 transition-opacity duration-300"
-                />
-              ) : (
-                <span className="text-sm font-semibold text-muted-foreground/60 text-center py-2 tracking-wide">
-                  {printer.brand?.brand || "Brand"}
-                </span>
-              )}
-            </div>
-
-            {/* Feature Badges - Hidden on mobile */}
-            <div className="hidden sm:flex flex-wrap gap-1.5 justify-center mt-3 min-h-[32px]">
-              {badges.map((badge, idx) => (
-                <PrinterBadge 
-                  key={`${badge.type}-${idx}`}
-                  type={badge.type}
                   size="sm"
-                  compact
+                  className="h-5 opacity-60 group-hover:opacity-90 transition-opacity duration-300"
                 />
-              ))}
+              ) : null}
+              <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                {printer.brand?.brand || "Brand"}
+              </span>
             </div>
 
-            {/* Printer Image - Using OptimizedImage with consistent aspect ratio */}
-            <div className={`relative aspect-auto w-full h-auto sm:h-[220px] flex items-center justify-center rounded-lg overflow-hidden ${!getBrandLogo(printer.brand?.brand || null) ? 'sm:mt-4' : 'sm:mt-3'}`}>
+            {/* Feature Badges — Hidden on mobile */}
+            {badges.length > 0 && (
+              <div className="hidden sm:flex flex-wrap gap-1.5 mb-2">
+                {badges.map((badge, idx) => (
+                  <PrinterBadge 
+                    key={`${badge.type}-${idx}`}
+                    type={badge.type}
+                    size="sm"
+                    compact
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Printer Image */}
+            <div className="relative aspect-auto w-full h-auto sm:h-[200px] flex items-center justify-center rounded-lg overflow-hidden">
               {imageTimedOut ? (
                 <div className="flex flex-col items-center justify-center gap-2 bg-gradient-to-b from-gray-800/50 to-gray-900 border border-dashed border-gray-700 w-full h-full rounded-lg relative">
-                  {/* Brand logo watermark */}
                   {getBrandLogo(printer.brand?.brand || null) && (
                     <BrandLogo
                       src={getBrandLogo(printer.brand?.brand || null)}
@@ -226,7 +238,7 @@ export default function MediumStandardPrinterCard({
                 <OptimizedImage
                   src={productImage}
                   alt={`${printer.brand?.brand} ${printer.model_name}`}
-                  className="w-auto h-full max-w-full max-h-[220px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+                  className="w-auto h-full max-w-full max-h-[200px] object-contain drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
                   aspectRatio="auto"
                   objectFit="contain"
                   width={400}
@@ -252,24 +264,31 @@ export default function MediumStandardPrinterCard({
           </div>
 
           {/* Mobile: Right side (Content) / Desktop: Below image */}
-          <div className="flex flex-col flex-1 min-w-0 justify-between gap-2 sm:gap-3">
-            {/* Brand name on mobile (since logo is hidden on mobile) */}
+          <div className="flex flex-col flex-1 min-w-0 justify-between gap-1.5 sm:gap-2">
+            {/* Brand name on mobile */}
             <div className="sm:hidden text-[10px] font-bold text-primary uppercase tracking-wider">
               {printer.brand?.brand}
             </div>
 
-            {/* Printer Name */}
+            {/* Printer Name + Kinematics */}
             <div>
-              <h3 className="text-sm sm:text-lg font-semibold text-foreground leading-snug line-clamp-2">
-                {printer.model_name}
-              </h3>
+              <div className="flex items-start gap-1.5">
+                <h3 className="text-sm sm:text-lg font-semibold text-foreground leading-snug line-clamp-2">
+                  {printer.model_name}
+                </h3>
+                {kinematics && (
+                  <span className="hidden sm:inline-flex flex-shrink-0 mt-0.5 text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded">
+                    {kinematics}
+                  </span>
+                )}
+              </div>
               {printer.variant_or_bundle_name && (
                 <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1">{printer.variant_or_bundle_name}</p>
               )}
             </div>
 
             {/* Price Section */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2 flex-wrap">
                 {printer.discontinued ? (
                   <span className="text-xs sm:text-sm font-medium text-destructive/70">DISCONTINUED</span>
@@ -277,20 +296,15 @@ export default function MediumStandardPrinterCard({
                   <span className="h-5 w-20 rounded bg-muted animate-pulse" />
                 ) : price ? (
                   <>
-                    {/* Current Price */}
                     <span className="text-lg font-bold text-cyan-400 inline-flex items-center gap-1">
                       <Tag className="h-3.5 w-3.5 text-muted-foreground/50" />
                       {formatDisplayPrice(price)}
                     </span>
-                    
-                    {/* Discount Badge */}
                     {printer.msrp_usd && price < printer.msrp_usd && discountPercent && discountPercent >= 5 && (
                       <span className="bg-emerald-500/15 text-emerald-400 text-xs font-semibold px-1.5 py-0.5 rounded">
                         -{discountPercent}%
                       </span>
                     )}
-                    
-                    {/* Original Price strikethrough */}
                     {printer.msrp_usd && price < printer.msrp_usd && (
                       <span className="text-sm text-muted-foreground line-through hidden sm:inline">
                         {formatDisplayPrice(printer.msrp_usd)}
@@ -298,21 +312,15 @@ export default function MediumStandardPrinterCard({
                     )}
                   </>
                 ) : (
-                  <span className="text-sm text-muted-foreground italic">
-                    Price TBD
-                  </span>
+                  <span className="text-sm text-muted-foreground italic">Price TBD</span>
                 )}
               </div>
-              
-              {/* Verify at store - only when stale */}
               {!printer.discontinued && price && priceIsStale && (
                 <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex items-center text-xs text-amber-400/70 cursor-pointer hover:text-amber-300 transition-colors">
                   <ExternalLinkIcon size={10} className="mr-0.5" />
                   <span>Verify at store</span>
                 </Link>
               )}
-
-              {/* Check store link for TBD prices */}
               {!printer.discontinued && !price && !priceLoading && (
                 <Link to={`/printers/${printer.printer_id || printer.id}`} className="flex items-center text-xs text-cyan-400/70 cursor-pointer hover:text-cyan-300 transition-colors">
                   <span>Check store for pricing</span>
@@ -320,14 +328,11 @@ export default function MediumStandardPrinterCard({
               )}
             </div>
 
-            {/* Spec Micro-Grid - Hidden on mobile */}
-            <div className="hidden sm:grid grid-cols-3 gap-0 min-h-[24px]">
-              <div className="text-center py-2 min-w-0 border-r border-border/30">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Box className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Build Vol</span>
-                </div>
-                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
+            {/* Spec Micro-Grid — 4 columns, hidden on mobile */}
+            <div className="hidden sm:grid grid-cols-4 gap-0">
+              <div className="text-center py-1.5 min-w-0 border-r border-border/30">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-0.5">Vol</span>
+                <span className={`text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.build_volume_x_mm ? 'text-foreground' : 'text-muted-foreground/50'
                 }`}>
                   {printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm
@@ -337,26 +342,28 @@ export default function MediumStandardPrinterCard({
                     : '—'}
                 </span>
               </div>
-              <div className="text-center py-2 min-w-0 border-r border-border/30">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Zap className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Speed</span>
-                </div>
-                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
+              <div className="text-center py-1.5 min-w-0 border-r border-border/30">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-0.5">Speed</span>
+                <span className={`text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.max_print_speed_mms ? 'text-foreground' : 'text-muted-foreground/50'
                 }`}>
                   {printer.max_print_speed_mms ? `${printer.max_print_speed_mms}mm/s` : '—'}
                 </span>
               </div>
-              <div className="text-center py-2 min-w-0">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Thermometer className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Nozzle</span>
-                </div>
-                <span className={`text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
+              <div className="text-center py-1.5 min-w-0 border-r border-border/30">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-0.5">Nozzle</span>
+                <span className={`text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
                   printer.max_nozzle_temp_c ? 'text-foreground' : 'text-muted-foreground/50'
                 }`}>
                   {printer.max_nozzle_temp_c ? `${printer.max_nozzle_temp_c}°C` : '—'}
+                </span>
+              </div>
+              <div className="text-center py-1.5 min-w-0">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-0.5">Type</span>
+                <span className={`text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis block ${
+                  kinematics ? 'text-foreground' : 'text-muted-foreground/50'
+                }`}>
+                  {kinematics || '—'}
                 </span>
               </div>
             </div>
@@ -364,18 +371,16 @@ export default function MediumStandardPrinterCard({
             {/* Compatible filaments link */}
             <Link
               to="/filaments"
-              className="hidden sm:flex items-center gap-1.5 justify-center"
+              className="hidden sm:flex items-center gap-1.5 justify-center text-xs text-cyan-400/60 hover:text-cyan-300 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <CircleDot className="h-3.5 w-3.5 text-muted-foreground/50" />
-              <span className="text-xs text-cyan-400/70 hover:text-cyan-300 transition-colors">
-                View compatible filaments →
-              </span>
+              <CircleDot className="h-3 w-3" />
+              View compatible filaments →
             </Link>
 
-            {/* CTA Button - Hidden on mobile, full width on desktop */}
+            {/* CTA Button — Hidden on mobile */}
             <button
-              className="hidden sm:flex w-full h-11 rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black [@media(hover:hover)]:group-hover:text-cyan-300 [@media(hover:hover)]:group-hover:border-cyan-400/60 font-medium text-sm transition-colors duration-200 items-center justify-center gap-2 mt-auto"
+              className="hidden sm:flex w-full h-10 rounded-lg border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500 hover:text-black [@media(hover:hover)]:group-hover:text-cyan-300 [@media(hover:hover)]:group-hover:border-cyan-400/60 font-medium text-sm transition-colors duration-200 items-center justify-center gap-2 mt-auto"
               onClick={(e) => e.preventDefault()}
             >
               View Details
