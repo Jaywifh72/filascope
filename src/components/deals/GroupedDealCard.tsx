@@ -389,9 +389,9 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           )}
           {/* Material badge inline */}
           {group.representativeDeal.material && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium uppercase tracking-wide mb-1 self-start">
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-medium border-border/50 text-muted-foreground uppercase tracking-wide mt-1 w-fit">
               {group.representativeDeal.material}
-            </span>
+            </Badge>
           )}
 
           {/* Base Product Name — brand prefix stripped */}
