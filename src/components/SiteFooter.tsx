@@ -385,7 +385,7 @@ export function SiteFooter() {
                 <span className="font-bold text-foreground tracking-tight">FilaScope</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} FilaScope. All rights reserved.
+                © 2024–{new Date().getFullYear()} FilaScope. All rights reserved.
               </p>
               <div className="flex items-center gap-1.5">
                 <span className="relative flex h-1.5 w-1.5">
