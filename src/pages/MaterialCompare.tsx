@@ -386,17 +386,21 @@ const ComparisonContent = () => {
     costEfficiency: 10,
   });
 
-  // Load materials from store (added from Reference tab)
+  // Load materials from store (added from Reference tab or Popular Comparisons)
   useEffect(() => {
-    const stored = getMaterialCompareList();
-    if (stored.length > 0) {
-      setSelectedMaterials(prev => {
-        if (prev.length === 0) return stored;
-        // Merge without duplicates
-        const merged = [...new Set([...prev, ...stored])].slice(0, 4);
-        return merged;
-      });
-    }
+    const syncFromStore = () => {
+      const stored = getMaterialCompareList();
+      if (stored.length > 0) {
+        setSelectedMaterials(prev => {
+          if (prev.length === 0) return stored;
+          const merged = [...new Set([...prev, ...stored])].slice(0, 4);
+          return merged;
+        });
+      }
+    };
+    syncFromStore();
+    window.addEventListener('material-compare-changed', syncFromStore);
+    return () => window.removeEventListener('material-compare-changed', syncFromStore);
   }, []);
 
   const allMaterials = useMemo(() => {
