@@ -51,6 +51,14 @@ export function PriceAlertsSection() {
             <p className="text-muted-foreground/70 text-xs">
               Browse filaments and click "Set Price Alert" to get notified when prices drop.
             </p>
+            <div className="mt-4">
+              <Button asChild className="bg-primary hover:bg-primary/80 text-primary-foreground font-medium px-6 py-2.5 rounded-lg transition-colors">
+                <Link to="/filaments">Browse Filaments</Link>
+              </Button>
+            </div>
+            <Link to="/vault?tab=wishlist" className="inline-block text-sm text-muted-foreground hover:text-primary transition-colors mt-3">
+              Or set alerts from your wishlist →
+            </Link>
             <p className="text-xs text-slate-500 mt-3">
               💡 Get notified when filaments on your wishlist drop in price
             </p>
