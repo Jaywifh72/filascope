@@ -94,7 +94,7 @@ function PolishedAccordionItem({
       </AccordionTrigger>
       <AccordionContent 
         className={cn(
-          "p-4 bg-gray-900/30 border-x border-b border-gray-700 rounded-b-lg",
+          "px-4 pb-4 pt-3 pl-6 bg-gray-900/30 border-x border-b border-gray-700 rounded-b-lg",
           "data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up",
           "data-[state=open]:border-primary/30"
         )}
