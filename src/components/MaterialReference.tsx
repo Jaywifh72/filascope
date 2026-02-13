@@ -905,6 +905,18 @@ const MaterialReference = ({ onMaterialSelect }: MaterialReferenceProps = {}) =>
     return () => window.removeEventListener('material-compare-changed', syncFromStorage);
   }, []);
 
+  // Listen for family expansion events from hero pills
+  useEffect(() => {
+    const handleExpandFamily = (e: Event) => {
+      const familyName = (e as CustomEvent).detail as string;
+      if (familyName) {
+        setExpandedCategory(familyName);
+      }
+    };
+    window.addEventListener('expand-material-family', handleExpandFamily);
+    return () => window.removeEventListener('expand-material-family', handleExpandFamily);
+  }, []);
+
   const handleAddToCompare = useCallback((materialName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (addedToCompare.has(materialName)) {

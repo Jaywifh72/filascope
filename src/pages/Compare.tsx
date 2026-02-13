@@ -1,4 +1,5 @@
 // Filament comparison page
+import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -412,14 +413,12 @@ const Compare = () => {
       
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50 transition-colors duration-150">
-            <a href="/">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Materials
-            </a>
-          </Button>
-        </div>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm mb-4" aria-label="Breadcrumb">
+          <a href="/learn" className="text-slate-400 hover:text-cyan-400 transition-colors">Learn</a>
+          <span className="text-slate-600">/</span>
+          <span className="text-foreground font-medium">Material Knowledge Base</span>
+        </nav>
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 mb-8">
           <div className="flex-1 min-w-0">
@@ -458,20 +457,31 @@ const Compare = () => {
             </div>
           </div>
 
-          {/* Decorative Hero Visual */}
-          <div className="hidden lg:flex w-[260px] h-[260px] relative rounded-2xl border border-white/10 overflow-hidden bg-gray-900/50 items-center justify-center flex-shrink-0">
-            {/* Radial gradient overlay */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,235,0.08)_0%,_transparent_70%)]" />
-            {/* Centered rotated square */}
-            <div className="border-2 border-primary/20 w-24 h-24 rotate-45 rounded-lg" />
-            {/* Floating dots */}
-            <div className="absolute top-8 left-8 w-2 h-2 rounded-full bg-primary/40" />
-            <div className="absolute top-8 right-8 w-2 h-2 rounded-full bg-primary/40" />
-            <div className="absolute bottom-8 left-8 w-2 h-2 rounded-full bg-primary/40" />
-            <div className="absolute bottom-8 right-8 w-2 h-2 rounded-full bg-primary/40" />
-            {/* Corner labels */}
-            <span className="absolute top-3 right-3 font-mono text-[9px] uppercase tracking-wider text-primary/50">MATERIALS: 45+</span>
-            <span className="absolute bottom-3 left-3 font-mono text-[9px] uppercase tracking-wider text-primary/50">CATEGORIES: 12</span>
+          {/* Material Families Quick Nav */}
+          <div className="hidden lg:block w-[280px] flex-shrink-0 bg-slate-800/30 border border-white/5 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Material Families</h3>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {MATERIAL_CATEGORIES.map((cat) => {
+                // Use short display name
+                const shortName = cat.name.replace(/ Family$/i, '');
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      handleTabChange("reference");
+                      // Dispatch event for MaterialReference to expand this family
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('expand-material-family', { detail: cat.name }));
+                      }, 100);
+                    }}
+                    className="text-xs px-2.5 py-1 rounded-full bg-slate-700/50 text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-300 cursor-pointer transition-colors"
+                  >
+                    {shortName}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-slate-500">45+ materials · 12 categories</p>
           </div>
         </div>
 
