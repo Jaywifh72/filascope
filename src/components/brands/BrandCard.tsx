@@ -138,21 +138,28 @@ const BrandCard = ({
 
         {/* Material Badges */}
         {topMaterials.length > 0 && (
-          <div>
-            <div className="flex flex-wrap gap-1.5 max-h-[28px] overflow-hidden">
-              {topMaterials.slice(0, 4).map((material) => (
-                <span
-                  key={material}
-                  className="bg-gray-800 text-gray-300 text-[10px] font-mono px-2 py-0.5 rounded border border-gray-700/50"
-                >
-                  {material}
-                </span>
-              ))}
-            </div>
-            {topMaterials.length > 4 && (
-              <span className="text-[10px] text-gray-500 font-mono mt-1 inline-block">
-                +{topMaterials.length - 4} more
+          <div className="flex flex-wrap items-center gap-1.5">
+            {topMaterials.slice(0, 3).map((material) => (
+              <span
+                key={material}
+                className="bg-gray-800 text-gray-300 text-[10px] font-mono px-2 py-0.5 rounded border border-gray-700/50"
+              >
+                {material}
               </span>
+            ))}
+            {topMaterials.length > 3 && (
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs text-slate-500 hover:text-cyan-400 inline-flex items-center ml-1 cursor-help">
+                      +{topMaterials.length - 3} more
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-slate-800 border border-white/10 text-sm max-w-[200px]">
+                    {topMaterials.slice(3).join(', ')}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         )}
