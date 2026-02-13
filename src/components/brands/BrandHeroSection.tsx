@@ -177,6 +177,7 @@ export function BrandHeroSection({
               icon={<Tag className="w-5 h-5" />}
               label="Price Range"
               value={avgPriceRange || '—'}
+              tooltip={avgPriceRange === '$' ? 'Budget-Friendly: Typically under $25/kg' : avgPriceRange === '$$' ? 'Mid-Range: Typically $25-40/kg' : avgPriceRange === '$$$' ? 'Premium: Typically $40+/kg' : undefined}
             />
             {rating ? (
               <SpecCard
