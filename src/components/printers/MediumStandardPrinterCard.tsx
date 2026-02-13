@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, Loader2 } from "lucide-react";
+import { Printer as PrinterIcon, ExternalLinkIcon, Tag, Info, Box, Zap, Thermometer, Loader2, CircleDot } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -360,6 +360,18 @@ export default function MediumStandardPrinterCard({
                 </span>
               </div>
             </div>
+
+            {/* Compatible filaments link */}
+            <Link
+              to="/filaments"
+              className="hidden sm:flex items-center gap-1.5 justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CircleDot className="h-3.5 w-3.5 text-muted-foreground/50" />
+              <span className="text-xs text-cyan-400/70 hover:text-cyan-300 transition-colors">
+                View compatible filaments →
+              </span>
+            </Link>
 
             {/* CTA Button - Hidden on mobile, full width on desktop */}
             <button
