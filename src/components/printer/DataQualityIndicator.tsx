@@ -271,14 +271,14 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-xs text-gray-300 shadow-lg max-w-[240px]">
-                    <p>{percentage}% of specification fields have data. Help improve this listing by submitting corrections.</p>
+                    <p>This printer's specifications are sourced from manufacturer data and community contributions. Some fields are awaiting independent verification.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
               <div className="flex flex-col items-start gap-0.5">
                 <span className="text-sm font-medium">Data Quality</span>
-                <span className={`text-xs ${qualityLevel.color}`}>{qualityLevel.label}</span>
+                <span className={`text-xs ${qualityLevel.color}`}>{percentage}% — {qualityLevel.label}</span>
               </div>
             </div>
             
@@ -319,7 +319,7 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
                       </div>
                       <div className="text-center p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                         <div className="text-2xl font-bold text-amber-500">{unverifiedFields}</div>
-                        <div className="text-xs text-muted-foreground">Unverified</div>
+                        <div className="text-xs text-muted-foreground">Community Data</div>
                       </div>
                     </div>
 
@@ -414,7 +414,7 @@ export function DataQualityIndicator({ printer, className = '' }: DataQualityInd
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/30">
                       <Clock className={`h-3.5 w-3.5 ${isRecentlyVerified ? 'text-success' : 'text-muted-foreground'}`} />
                       <span className={`text-xs ${isRecentlyVerified ? 'text-success' : 'text-muted-foreground'}`}>
-                        {lastVerified ? 'Verified' : 'Unverified'}
+                        {lastVerified ? 'Verified' : 'Community Data'}
                       </span>
                     </div>
                   </TooltipTrigger>

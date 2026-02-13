@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Wifi, Monitor, Cloud, Check, X, 
   Usb, HardDrive, CreditCard, Cable, Bluetooth, 
-  Camera, Settings
+  Camera, Settings, ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FirmwareSection } from '@/components/FirmwareSection';
@@ -13,6 +13,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface ConnectivityTabContentProps {
   printer: any;
@@ -129,7 +134,7 @@ function InfoRow({
 
   let displayValue: React.ReactNode;
   if (isEmpty) {
-    displayValue = <span className="text-muted-foreground/50 italic">Not specified</span>;
+    displayValue = <span className="text-muted-foreground/50 italic">—</span>;
   } else if (isBoolean) {
     displayValue = value ? (
       <span className="inline-flex items-center gap-1.5 text-green-400">
@@ -154,7 +159,63 @@ function InfoRow({
   );
 }
 
+// Collapsible section that auto-collapses when all fields are empty
+function CollapsibleSection({ 
+  icon: Icon, 
+  title, 
+  allEmpty, 
+  children 
+}: { 
+  icon: React.ElementType; 
+  title: string; 
+  allEmpty: boolean; 
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(!allEmpty);
+
+  if (allEmpty) {
+    return (
+      <section className="section-card">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger className="w-full">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="section-header-icon">
+                  <Icon className="w-5 h-5 text-muted-foreground/50" />
+                </div>
+                <h3 className="section-title text-muted-foreground/70">{title}</h3>
+                <span className="text-xs text-muted-foreground/50 italic">— Data pending</span>
+              </div>
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground/50 transition-transform", isOpen && "rotate-180")} />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="mt-4">
+              {children}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </section>
+    );
+  }
+
+  return (
+    <section className="section-card">
+      <SectionHeader icon={Icon} title={title} />
+      {children}
+    </section>
+  );
+}
+
 export function ConnectivityTabContent({ printer, brand }: ConnectivityTabContentProps) {
+  // Check which sections have all empty fields
+  const isFieldEmpty = (v: any) => v === null || v === undefined || v === '';
+  
+  const displayControlsAllEmpty = [printer.screen_type, printer.screen_size_inch, printer.screen_resolution, printer.control_knob, printer.ui_language_options].every(isFieldEmpty);
+  const cameraAllEmpty = [printer.has_camera, printer.camera_resolution, printer.camera_count, printer.timelapse_supported, printer.ai_print_detection, printer.ai_camera_features].every(isFieldEmpty);
+  const remoteAllEmpty = [printer.cloud_platforms, printer.remote_monitoring_supported, printer.remote_control_supported, printer.has_mobile_app, printer.has_web_interface, printer.has_api_access].every(isFieldEmpty);
+  const softwareAllEmpty = [printer.slicer_software, printer.supported_file_formats, printer.supported_os].every(isFieldEmpty);
+
   // Determine cloud connectivity based on cloud_platforms or remote features
   const hasCloudConnectivity = !!(printer.cloud_platforms || printer.remote_monitoring_supported);
 
@@ -220,8 +281,11 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
         </section>
 
       {/* Display & Controls */}
-      <section className="section-card">
-        <SectionHeader icon={Monitor} title="Display & Controls" />
+      <CollapsibleSection 
+        icon={Monitor} 
+        title="Display & Controls" 
+        allEmpty={displayControlsAllEmpty}
+      >
         <div className="space-y-0">
           <InfoRow label="Screen Type" value={printer.screen_type} />
           <InfoRow label="Screen Size" value={printer.screen_size_inch} unit='"' />
@@ -229,30 +293,34 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
           <InfoRow label="Control Knob" value={printer.control_knob} />
           <InfoRow label="UI Languages" value={printer.ui_language_options} />
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Camera & Monitoring */}
-      <section className="section-card">
-        <SectionHeader icon={Camera} title="Camera & Monitoring" />
+      <CollapsibleSection
+        icon={Camera}
+        title="Camera & Monitoring"
+        allEmpty={cameraAllEmpty}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-          {/* Camera Info */}
           <div className="space-y-0">
             <InfoRow label="Built-in Camera" value={printer.has_camera} />
             <InfoRow label="Camera Resolution" value={printer.camera_resolution} />
             <InfoRow label="Camera Count" value={printer.camera_count} />
           </div>
-          {/* Features */}
           <div className="space-y-0">
             <InfoRow label="Timelapse Support" value={printer.timelapse_supported} />
             <InfoRow label="AI Print Detection" value={printer.ai_print_detection} />
             <InfoRow label="AI Camera Features" value={printer.ai_camera_features} />
           </div>
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Remote & Cloud Features */}
-      <section className="section-card">
-        <SectionHeader icon={Cloud} title="Remote & Cloud Features" />
+      <CollapsibleSection
+        icon={Cloud}
+        title="Remote & Cloud Features"
+        allEmpty={remoteAllEmpty}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <div className="space-y-0">
             <InfoRow label="Cloud Platforms" value={printer.cloud_platforms} />
@@ -265,17 +333,20 @@ export function ConnectivityTabContent({ printer, brand }: ConnectivityTabConten
             <InfoRow label="API Access" value={printer.has_api_access} />
           </div>
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Software Compatibility */}
-      <section className="section-card">
-        <SectionHeader icon={Settings} title="Software Compatibility" />
+      <CollapsibleSection
+        icon={Settings}
+        title="Software Compatibility"
+        allEmpty={softwareAllEmpty}
+      >
         <div className="space-y-0">
           <InfoRow label="Slicer Software" value={printer.slicer_software} />
           <InfoRow label="File Formats" value={printer.supported_file_formats} />
           <InfoRow label="Operating Systems" value={printer.supported_os} />
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Firmware Section */}
       <FirmwareSection 
