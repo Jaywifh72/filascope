@@ -7,6 +7,7 @@ import { SlicerLogo } from './SlicerLogoFallback';
 interface SlicerPopularCardProps {
   slicer: SlicerTierInfo;
   logo?: string;
+  bestFor?: string;
   onLearnMore: () => void;
 }
 
@@ -16,7 +17,7 @@ const priceTypeConfig: Record<PriceType, { className: string; badge?: boolean }>
   paid: { className: 'text-gray-400', badge: false },
 };
 
-export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCardProps) {
+export function SlicerPopularCard({ slicer, logo, bestFor, onLearnMore }: SlicerPopularCardProps) {
   const { addSlicer, removeSlicer, isInComparison } = useSlicerComparison();
   const inComparison = isInComparison(slicer.name.toLowerCase().replace(/\s+/g, '-'));
 
@@ -64,7 +65,14 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
           </div>
         </div>
 
-        {/* Features (show 3) */}
+          {/* Best For tag */}
+          {bestFor && (
+            <div className="text-xs text-slate-400 italic bg-slate-800/50 px-2.5 py-0.5 rounded-full inline-block max-md:mx-auto">
+              <span className="text-cyan-400 not-italic font-medium">Best for:</span> {bestFor}
+            </div>
+          )}
+
+          {/* Features (show 3) */}
         <ul className="flex flex-col gap-1.5 flex-1">
           {slicer.topFeatures.slice(0, 3).map((feature, index) => (
             <li key={index} className="flex items-center gap-2 text-sm text-gray-300 max-md:justify-center">

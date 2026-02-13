@@ -412,9 +412,9 @@ const ReferenceSlicers = () => {
                     <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-muted/10 max-lg:flex-col max-lg:overflow-visible items-stretch">
                       {topPickSlicers.slice(0, 3).map((slicer) => {
                         const bestForMap: Record<string, string> = {
-                          'Bambu Studio': 'Beginners & Multi-Color',
-                          'PrusaSlicer': 'Advanced FDM Users',
-                          'OrcaSlicer': 'Power Users & Calibration',
+                          'Bambu Studio': 'Beginners & Bambu printers',
+                          'PrusaSlicer': 'Open-source enthusiasts & tinkerers',
+                          'OrcaSlicer': 'Power users & multi-printer setups',
                         };
                         return (
                           <SlicerTopPickCard
@@ -455,14 +455,25 @@ const ReferenceSlicers = () => {
                         </AccordionTrigger>
                         <AccordionContent className="pt-4 pb-4 px-4 bg-gray-800/30 border border-t-0 border-gray-700 rounded-b-lg">
                           <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1 items-stretch">
-                            {popularSlicers.map((slicer) => (
+                            {popularSlicers.map((slicer) => {
+                              const compactBestFor: Record<string, string> = {
+                                'UltiMaker Cura': 'Plugin ecosystem',
+                                'Simplify3D': 'Professionals',
+                                'ideaMaker': 'Raise3D users',
+                                'SuperSlicer': 'Advanced calibration',
+                                'Creality Print': 'Creality printers',
+                                'Lychee Slicer': 'Resin printing',
+                              };
+                              return (
                               <SlicerPopularCard
                                 key={slicer.name}
                                 slicer={slicer}
                                 logo={slicerLogos[slicer.name]}
+                                bestFor={compactBestFor[slicer.name]}
                                 onLearnMore={() => handleLearnMore(slicer.name)}
                               />
-                            ))}
+                              );
+                            })}
                           </div>
                         </AccordionContent>
                       </AccordionItem>
