@@ -331,7 +331,7 @@ const ReferenceSlicers = () => {
         />
 
         {/* Sticky Tab Navigation */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border pb-3">
+        <div className="sticky top-[64px] z-30 bg-[#0d1117]/95 backdrop-blur-md border-b border-white/5 pb-3">
           <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
             <nav className="flex gap-2" role="tablist">
               {[
