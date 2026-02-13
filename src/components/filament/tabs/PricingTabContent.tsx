@@ -482,35 +482,10 @@ export function PricingTabContent({
       {/* Price History Chart */}
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <TrendingDown className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">Price History</h3>
-              <p className="text-xs text-muted-foreground">Track price trends over time</p>
-            </div>
-          </div>
-          
-          {/* Historical low indicator */}
-          {historicalLow && historicalLow > 0 && !historyLoading && (
-            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ArrowDown className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm text-emerald-400">Lowest recorded in 6 months:</span>
-              </div>
-              <span className="font-bold text-emerald-400">{userCurrencySymbol}{historicalLow.toFixed(2)}/kg</span>
-            </div>
-          )}
-          
           <PriceHistoryChart
             filamentId={filament.id}
             currentPrice={displayPricePerKg}
           />
-          
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Historical data is based on our periodic price checks. Actual prices may have varied.
-          </p>
         </CardContent>
       </Card>
 
