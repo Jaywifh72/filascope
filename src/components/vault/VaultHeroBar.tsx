@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Settings, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import type { VaultProfile, VaultCounts } from "@/hooks/useVaultProfile";
 
@@ -12,12 +13,12 @@ interface VaultHeroBarProps {
   onStatClick: (tab: string) => void;
 }
 
-const statItems: { key: keyof VaultCounts; label: string; tab: string }[] = [
-  { key: "wishlist", label: "Wishlist", tab: "wishlist" },
-  { key: "purchased", label: "Purchased", tab: "purchased" },
-  { key: "projects", label: "Projects", tab: "projects" },
-  { key: "reviews", label: "Reviews", tab: "reviews" },
-  { key: "alerts", label: "Alerts", tab: "alerts" },
+const statItems: { key: keyof VaultCounts; label: string; tab: string; tooltip: string }[] = [
+  { key: "wishlist", label: "Wishlist", tab: "wishlist", tooltip: "Filaments you're interested in" },
+  { key: "purchased", label: "Purchased", tab: "purchased", tooltip: "Filaments you've bought" },
+  { key: "projects", label: "Projects", tab: "projects", tooltip: "Your organized print builds" },
+  { key: "reviews", label: "Reviews", tab: "reviews", tooltip: "Your community contributions" },
+  { key: "alerts", label: "Alerts", tab: "alerts", tooltip: "Price drop notifications" },
 ];
 
 function getInitials(name: string | null, email: string | null): string {
@@ -34,6 +35,7 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 export function VaultHeroBar({ profile, counts, onStatClick }: VaultHeroBarProps) {
+  const allZero = statItems.every((s) => counts[s.key] === 0);
   const navigate = useNavigate();
   const memberSince = profile?.created_at
     ? format(new Date(profile.created_at), "MMMM yyyy")
@@ -86,16 +88,57 @@ export function VaultHeroBar({ profile, counts, onStatClick }: VaultHeroBarProps
 
       {/* Stats Row */}
       <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/40">
-        {statItems.map((stat) => (
-          <button
-            key={stat.key}
-            onClick={() => onStatClick(stat.tab)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors text-sm"
-          >
-            <span className="font-semibold">{counts[stat.key]}</span>
-            <span className="text-muted-foreground">{stat.label}</span>
-          </button>
-        ))}
+        {allZero ? (
+          <div className="flex items-center gap-2 w-full">
+            <p className="text-sm text-muted-foreground">
+              🎯 Start building your collection — browse filaments, save favorites, and track prices
+            </p>
+            <button
+              onClick={() => {
+                const onboarding = document.getElementById("vault-onboarding");
+                if (onboarding) {
+                  onboarding.scrollIntoView({ behavior: "smooth", block: "start" });
+                } else {
+                  onStatClick("wishlist");
+                }
+              }}
+              className="text-sm text-primary hover:text-primary/80 transition-colors whitespace-nowrap font-medium"
+            >
+              Get Started →
+            </button>
+          </div>
+        ) : (
+          <TooltipProvider delayDuration={300}>
+            {statItems.map((stat) => {
+              const value = counts[stat.key];
+              const isZero = value === 0;
+              return (
+                <Tooltip key={stat.key}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => onStatClick(stat.tab)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-200 text-sm cursor-pointer ${
+                        isZero
+                          ? "bg-muted/30 border border-dashed border-border/50 text-muted-foreground/50"
+                          : "bg-muted/50 border border-border/40 hover:border-primary/30"
+                      }`}
+                    >
+                      <span className={isZero ? "font-medium" : "font-bold text-primary"}>
+                        {value}
+                      </span>
+                      <span className={isZero ? "text-muted-foreground/50" : "text-muted-foreground"}>
+                        {stat.label}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    {stat.tooltip}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </TooltipProvider>
+        )}
       </div>
     </div>
   );
