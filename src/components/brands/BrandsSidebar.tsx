@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Check, Building2, Zap, Radio, Leaf, BadgeCheck, DollarSign, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Check, Building2, Zap, Radio, Leaf, BadgeCheck, DollarSign, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +13,16 @@ export interface BrandFilters {
   priceTier: string | null;
   sortBy: string;
 }
+
+export const DEFAULT_BRAND_FILTERS: BrandFilters = {
+  materials: [],
+  features: [],
+  verifiedOnly: false,
+  hasLivePricing: false,
+  filamentCountRange: null,
+  priceTier: null,
+  sortBy: "count-desc",
+};
 
 interface BrandsSidebarProps {
   filters: BrandFilters;
@@ -51,6 +61,42 @@ const SORT_OPTIONS = [
   { value: "count-asc", label: "Fewest Filaments" },
 ];
 
+function SectionHeader({ 
+  label, 
+  section, 
+  isOpen, 
+  onToggle, 
+  activeCount 
+}: { 
+  label: string; 
+  section: string; 
+  isOpen: boolean; 
+  onToggle: () => void; 
+  activeCount?: number;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+    >
+      <span className="text-sm font-medium text-white flex items-center gap-2">
+        {label}
+        {!isOpen && activeCount && activeCount > 0 ? (
+          <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0 rounded-full font-medium">
+            {activeCount}
+          </span>
+        ) : null}
+      </span>
+      <ChevronDown 
+        className={cn(
+          "h-4 w-4 text-gray-500 transition-transform duration-200",
+          isOpen && "rotate-180"
+        )} 
+      />
+    </button>
+  );
+}
+
 const BrandsSidebar = ({ 
   filters, 
   onFiltersChange, 
@@ -59,8 +105,8 @@ const BrandsSidebar = ({
 }: BrandsSidebarProps) => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     materials: true,
-    features: true,
-    verification: true,
+    features: false,
+    verification: false,
     priceTier: false,
     filamentCount: false,
     sort: false,
@@ -87,9 +133,19 @@ const BrandsSidebar = ({
     onFiltersChange({ ...filters, features: newFeatures });
   };
 
+  // Count active filters per section
+  const sortActive = filters.sortBy !== DEFAULT_BRAND_FILTERS.sortBy ? 1 : 0;
+  const priceTierActive = filters.priceTier ? 1 : 0;
+  const materialsActive = filters.materials.length;
+  const featuresActive = filters.features.length;
+  const verificationActive = (filters.verifiedOnly ? 1 : 0) + (filters.hasLivePricing ? 1 : 0);
+  const filamentCountActive = filters.filamentCountRange ? 1 : 0;
+
+  const hasActiveFilters = sortActive + priceTierActive + materialsActive + featuresActive + verificationActive + filamentCountActive > 0;
+
   return (
     <div className={cn("w-72 shrink-0 sticky top-20 self-start hidden lg:block", className)}>
-      <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
+      <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm max-h-[calc(100vh-5rem)]">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-800 bg-gradient-to-b from-white/[0.03] to-transparent">
           <div className="flex items-center gap-2.5">
@@ -106,18 +162,13 @@ const BrandsSidebar = ({
           <div className="divide-y divide-gray-800/50">
             {/* Sort Section */}
             <div>
-              <button
-                onClick={() => toggleSection('sort')}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-              >
-                <span className="text-sm font-medium text-white">Sort By</span>
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 text-gray-500 transition-transform duration-200",
-                    expandedSections.sort && "rotate-180"
-                  )} 
-                />
-              </button>
+              <SectionHeader 
+                label="Sort By" 
+                section="sort" 
+                isOpen={expandedSections.sort} 
+                onToggle={() => toggleSection('sort')} 
+                activeCount={sortActive}
+              />
               {expandedSections.sort && (
                 <div className="px-3 pb-3 space-y-1">
                   {SORT_OPTIONS.map(option => (
@@ -141,18 +192,13 @@ const BrandsSidebar = ({
 
             {/* Price Tier Section */}
             <div>
-              <button
-                onClick={() => toggleSection('priceTier')}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-              >
-                <span className="text-sm font-medium text-white">Price Tier</span>
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 text-gray-500 transition-transform duration-200",
-                    expandedSections.priceTier && "rotate-180"
-                  )} 
-                />
-              </button>
+              <SectionHeader 
+                label="Price Tier" 
+                section="priceTier" 
+                isOpen={expandedSections.priceTier} 
+                onToggle={() => toggleSection('priceTier')} 
+                activeCount={priceTierActive}
+              />
               {expandedSections.priceTier && (
                 <div className="px-3 pb-3 space-y-1">
                   {[
@@ -186,60 +232,54 @@ const BrandsSidebar = ({
 
             {/* Material Types Section */}
             <div>
-              <button
-                onClick={() => toggleSection('materials')}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-              >
-                <span className="text-sm font-medium text-white">Material Types</span>
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 text-gray-500 transition-transform duration-200",
-                    expandedSections.materials && "rotate-180"
-                  )} 
-                />
-              </button>
+              <SectionHeader 
+                label="Material Types" 
+                section="materials" 
+                isOpen={expandedSections.materials} 
+                onToggle={() => toggleSection('materials')} 
+                activeCount={materialsActive}
+              />
               {expandedSections.materials && (
                 <div className="px-3 pb-3 space-y-1">
-                  {MATERIAL_OPTIONS.map(material => (
-                    <button
-                      key={material.id}
-                      onClick={() => (materialCounts[material.id] || 0) > 0 ? toggleMaterial(material.id) : undefined}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors",
-                        filters.materials.includes(material.id)
-                          ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
-                          : "hover:bg-gray-800/50 hover:text-white",
-                        (materialCounts[material.id] || 0) === 0 && !filters.materials.includes(material.id)
-                          && "opacity-40 pointer-events-none"
-                      )}
-                    >
-                      <span className={cn("text-sm flex items-center", filters.materials.includes(material.id) ? "" : "text-gray-300")}>
-                        {filters.materials.includes(material.id) && <Check className="h-3 w-3 mr-1" />}
-                        {material.label}
-                      </span>
-                      <span className="text-xs text-gray-600 font-mono">
-                        ({materialCounts[material.id] || 0})
-                      </span>
-                    </button>
-                  ))}
+                  {MATERIAL_OPTIONS.map(material => {
+                    const count = materialCounts[material.id] || 0;
+                    const isZero = count === 0;
+                    return (
+                      <button
+                        key={material.id}
+                        onClick={() => !isZero ? toggleMaterial(material.id) : undefined}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2 rounded-md transition-colors",
+                          filters.materials.includes(material.id)
+                            ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400"
+                            : "hover:bg-gray-800/50 hover:text-white",
+                          isZero && !filters.materials.includes(material.id)
+                            && "opacity-30 pointer-events-none"
+                        )}
+                      >
+                        <span className={cn("text-sm flex items-center", filters.materials.includes(material.id) ? "" : isZero ? "text-gray-600" : "text-gray-300")}>
+                          {filters.materials.includes(material.id) && <Check className="h-3 w-3 mr-1" />}
+                          {material.label}
+                        </span>
+                        <span className={cn("text-xs font-mono", isZero ? "text-gray-700" : "text-gray-600")}>
+                          ({count})
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
             {/* Features Section */}
             <div>
-              <button
-                onClick={() => toggleSection('features')}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-              >
-                <span className="text-sm font-medium text-white">Features</span>
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 text-gray-500 transition-transform duration-200",
-                    expandedSections.features && "rotate-180"
-                  )} 
-                />
-              </button>
+              <SectionHeader 
+                label="Features" 
+                section="features" 
+                isOpen={expandedSections.features} 
+                onToggle={() => toggleSection('features')} 
+                activeCount={featuresActive}
+              />
               {expandedSections.features && (
                 <div className="px-3 pb-3 space-y-1">
                   {FEATURE_OPTIONS.map(feature => {
@@ -269,18 +309,13 @@ const BrandsSidebar = ({
 
             {/* Verification Section */}
             <div>
-              <button
-                onClick={() => toggleSection('verification')}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-              >
-                <span className="text-sm font-medium text-white">Verification</span>
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 text-gray-500 transition-transform duration-200",
-                    expandedSections.verification && "rotate-180"
-                  )} 
-                />
-              </button>
+              <SectionHeader 
+                label="Verification" 
+                section="verification" 
+                isOpen={expandedSections.verification} 
+                onToggle={() => toggleSection('verification')} 
+                activeCount={verificationActive}
+              />
               {expandedSections.verification && (
                 <div className="px-4 pb-4 space-y-4">
                   <div className="flex items-center justify-between">
@@ -313,18 +348,13 @@ const BrandsSidebar = ({
 
             {/* Filament Count Section */}
             <div>
-              <button
-                onClick={() => toggleSection('filamentCount')}
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-              >
-                <span className="text-sm font-medium text-white">Filament Count</span>
-                <ChevronDown 
-                  className={cn(
-                    "h-4 w-4 text-gray-500 transition-transform duration-200",
-                    expandedSections.filamentCount && "rotate-180"
-                  )} 
-                />
-              </button>
+              <SectionHeader 
+                label="Filament Count" 
+                section="filamentCount" 
+                isOpen={expandedSections.filamentCount} 
+                onToggle={() => toggleSection('filamentCount')} 
+                activeCount={filamentCountActive}
+              />
               {expandedSections.filamentCount && (
                 <div className="px-3 pb-3 space-y-1">
                   {FILAMENT_COUNT_OPTIONS.map(option => (
@@ -351,6 +381,19 @@ const BrandsSidebar = ({
               )}
             </div>
           </div>
+
+          {/* Clear All Filters */}
+          {hasActiveFilters && (
+            <div className="px-3 pb-3 pt-1">
+              <button
+                onClick={() => onFiltersChange(DEFAULT_BRAND_FILTERS)}
+                className="w-full py-2 text-xs text-primary hover:text-primary/80 border border-dashed border-gray-700 rounded-lg hover:border-primary/30 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <X className="h-3 w-3" />
+                Clear all filters
+              </button>
+            </div>
+          )}
         </ScrollArea>
       </div>
     </div>

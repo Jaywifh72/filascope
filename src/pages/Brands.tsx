@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap } from "lucide-react";
 import BrandsHeroSection from "@/components/BrandsHeroSection";
-import BrandsSidebar, { type BrandFilters } from "@/components/brands/BrandsSidebar";
+import BrandsSidebar, { type BrandFilters, DEFAULT_BRAND_FILTERS } from "@/components/brands/BrandsSidebar";
 import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
@@ -84,15 +84,7 @@ const Brands = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [showEmptyBrands, setShowEmptyBrands] = useState(false);
-  const [filters, setFilters] = useState<BrandFilters>({
-    materials: [],
-    features: [],
-    verifiedOnly: false,
-    hasLivePricing: false,
-    filamentCountRange: null,
-    priceTier: null,
-    sortBy: "count-desc",
-  });
+  const [filters, setFilters] = useState<BrandFilters>(DEFAULT_BRAND_FILTERS);
 
   // Fetch automated brands metadata with live-computed counts
   const { data: automatedBrands } = useQuery({
