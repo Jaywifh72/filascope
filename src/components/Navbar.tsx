@@ -151,6 +151,7 @@ const Navbar = () => {
           "group relative py-2 px-3 rounded-md",
           "text-xs font-bold uppercase tracking-widest",
           "transition-all duration-200",
+          "hover:scale-105",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           "active:scale-95 active:transition-transform active:duration-100",
           active 
@@ -287,7 +288,7 @@ const Navbar = () => {
             <LabNavLink to="/deals">
               Deals
               {dealsData && dealsData.totalVariants > 0 ? (
-                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary/20 text-primary border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
+                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary/20 text-primary border border-primary/30 group-hover:bg-primary/30 group-hover:scale-110 transition-all" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
                   {dealsData.totalVariants.toLocaleString()}
                 </span>
               ) : dealsLoading ? (
