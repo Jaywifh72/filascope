@@ -3,6 +3,7 @@ import { toBrandSlug } from "@/utils/brandSlug";
 import { Package, BadgeCheck, Zap, ArrowRight, Leaf, Radio, Star } from "lucide-react";
 import { getBrandLogo } from "@/lib/brandLogos";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 interface BrandCardProps {
@@ -83,12 +84,22 @@ const BrandCard = ({
         {/* Price Indicator - Top Left */}
         {priceIndicator && (
           <div className="absolute top-3 left-3">
-            <span
-              className={`text-xs font-bold font-mono bg-background/80 px-1.5 py-0.5 rounded ${priceIndicator === '$' ? 'text-green-500/60' : priceIndicator === '$$' ? 'text-amber-500/60' : 'text-orange-500/60'}`}
-              title={priceIndicator === '$' ? 'Budget-friendly brand' : priceIndicator === '$$' ? 'Mid-range pricing' : 'Premium pricing'}
-            >
-              {priceIndicator}
-            </span>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={`text-xs font-bold font-mono bg-background/80 px-1.5 py-0.5 rounded cursor-help ${priceIndicator === '$' ? 'text-green-500/60' : priceIndicator === '$$' ? 'text-amber-500/60' : 'text-orange-500/60'}`}
+                  >
+                    {priceIndicator}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-slate-800 border border-white/10 text-sm max-w-[200px]">
+                  {priceIndicator === '$' && 'Budget-Friendly: Typically under $25/kg'}
+                  {priceIndicator === '$$' && 'Mid-Range: Typically $25-40/kg'}
+                  {priceIndicator === '$$$' && 'Premium: Typically $40+/kg'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
       </div>
