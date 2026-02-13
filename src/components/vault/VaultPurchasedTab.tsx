@@ -42,6 +42,7 @@ export function VaultPurchasedTab() {
         description="Track your filament purchases to monitor spending, get verified purchase badges on your reviews, and reorder easily."
         actionLabel="Browse Filaments"
         actionHref="/"
+        tip="💡 Mark filaments as purchased to unlock verified review badges"
       />
     );
   }

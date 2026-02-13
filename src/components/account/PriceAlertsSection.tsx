@@ -51,6 +51,9 @@ export function PriceAlertsSection() {
             <p className="text-muted-foreground/70 text-xs">
               Browse filaments and click "Set Price Alert" to get notified when prices drop.
             </p>
+            <p className="text-xs text-slate-500 mt-3">
+              💡 Get notified when filaments on your wishlist drop in price
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -118,6 +118,7 @@ export function VaultProjectsTab() {
           description="Plan your 3D print builds with materials, costs, and progress tracking."
           actionLabel="Create First Project"
           onAction={() => setCreateOpen(true)}
+          tip="💡 Organize filaments by print project to track materials and costs"
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">

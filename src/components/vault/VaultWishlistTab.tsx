@@ -311,6 +311,7 @@ export function VaultWishlistTab() {
           }
           actionLabel="Browse Filaments"
           actionHref="/"
+          tip="💡 Tip: Click the ♡ icon on any filament to save it here"
         />
       ) : viewMode === "list" ? (
         <div className="space-y-3">
