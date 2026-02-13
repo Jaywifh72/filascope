@@ -13,6 +13,8 @@ import {
   Eye,
   ArrowRight,
   Sparkles,
+  Settings,
+  Printer,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import type { VaultProfile, VaultCounts } from "@/hooks/useVaultProfile";
@@ -50,6 +52,9 @@ export function VaultDashboard({ profile, counts, onNavigate }: VaultDashboardPr
 
       {/* Recent Browsing History — always shown */}
       {user && <BrowsingHistoryFeed userId={user.id} historyCount={counts.history} onViewAll={() => onNavigate("history")} />}
+
+      {/* My Setup Card */}
+      {user && <MySetupCard userId={user.id} />}
 
       {totalData === 0 ? (
         <OnboardingCard />
@@ -227,6 +232,135 @@ function BrowsingHistoryFeed({ userId, historyCount, onViewAll }: { userId: stri
             View all {historyCount > 0 ? `${historyCount} items` : "history"} →
           </button>
         </>
+      )}
+    </div>
+  );
+}
+
+function MySetupCard({ userId }: { userId: string }) {
+  const { data: setupData, isLoading } = useQuery({
+    queryKey: ["vault-my-setup", userId],
+    queryFn: async () => {
+      const [profileRes, printersRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("printing_setup, skill_level")
+          .eq("id", userId)
+          .single(),
+        supabase
+          .from("user_printers")
+          .select("printer_id, nickname, is_primary")
+          .eq("user_id", userId)
+          .eq("is_primary", true)
+          .limit(1),
+      ]);
+
+      let printerName: string | null = null;
+      if (printersRes.data?.[0]) {
+        const up = printersRes.data[0];
+        if (up.nickname) {
+          printerName = up.nickname;
+        } else {
+          const { data: printer } = await supabase
+            .from("printers")
+            .select("model_name, brand:printer_brands(brand)")
+            .eq("printer_id", up.printer_id)
+            .single();
+          if (printer) {
+            const brand = (printer.brand as any)?.brand;
+            printerName = brand ? `${brand} ${printer.model_name}` : printer.model_name;
+          }
+        }
+      }
+
+      const profile = profileRes.data;
+      const setup = (profile?.printing_setup as any) || {};
+      return {
+        printerName,
+        nozzleDiameter: setup.default_nozzle_diameter ?? null,
+        nozzleMaterial: setup.default_nozzle_material ?? null,
+        experienceLevel: profile?.skill_level || setup.experience_level || null,
+      };
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="bg-muted/20 border border-border/30 rounded-xl p-4 max-w-sm animate-pulse">
+        <div className="h-4 w-32 bg-muted rounded mb-4" />
+        <div className="space-y-2">
+          <div className="h-3 w-40 bg-muted rounded" />
+          <div className="h-3 w-36 bg-muted rounded" />
+          <div className="h-3 w-28 bg-muted rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  const hasSetup = setupData && (setupData.printerName || setupData.nozzleDiameter || setupData.experienceLevel);
+  const nozzleLabel = setupData?.nozzleDiameter
+    ? `${setupData.nozzleDiameter}mm${setupData.nozzleMaterial ? ` · ${setupData.nozzleMaterial}` : ""}`
+    : null;
+  const levelLabel = setupData?.experienceLevel
+    ? setupData.experienceLevel.charAt(0).toUpperCase() + setupData.experienceLevel.slice(1)
+    : null;
+
+  return (
+    <div className="bg-muted/20 border border-border/30 rounded-xl p-4 max-w-sm">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+        <Settings className="w-4 h-4 text-muted-foreground" />
+        My Printing Setup
+      </h3>
+
+      {hasSetup ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Printer className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <span className="text-muted-foreground">Printer:</span>
+            {setupData.printerName ? (
+              <span className="text-foreground truncate">{setupData.printerName}</span>
+            ) : (
+              <span className="text-muted-foreground/60 italic">Not set</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-3.5 text-center text-muted-foreground shrink-0 text-xs">⊙</span>
+            <span className="text-muted-foreground">Nozzle:</span>
+            {nozzleLabel ? (
+              <span className="text-foreground">{nozzleLabel}</span>
+            ) : (
+              <span className="text-muted-foreground/60 italic">Not set</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="w-3.5 text-center text-muted-foreground shrink-0 text-xs">◆</span>
+            <span className="text-muted-foreground">Level:</span>
+            {levelLabel ? (
+              <span className="text-foreground">{levelLabel}</span>
+            ) : (
+              <span className="text-muted-foreground/60 italic">Not set</span>
+            )}
+          </div>
+          <Link
+            to="/settings"
+            className="text-xs text-primary hover:text-primary/80 transition-colors mt-2 inline-block"
+          >
+            Edit Setup →
+          </Link>
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">
+            Set up your printer to get personalized recommendations
+          </p>
+          <Link
+            to="/settings"
+            className="text-xs text-primary hover:text-primary/80 transition-colors"
+          >
+            Configure →
+          </Link>
+        </div>
       )}
     </div>
   );
