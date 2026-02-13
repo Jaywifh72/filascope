@@ -5,11 +5,12 @@ import { toast } from "sonner";
 interface SlicerHeroSectionProps {
   slicerCount: number;
   onScrollToComparison: () => void;
+  onSlicerClick?: (name: string) => void;
 }
 
 const topSlicers = ["UltiMaker Cura", "PrusaSlicer", "Bambu Studio", "OrcaSlicer"];
 
-const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSectionProps) => {
+const SlicerHeroSection = ({ slicerCount, onScrollToComparison, onSlicerClick }: SlicerHeroSectionProps) => {
   const handleQuizClick = () => {
     toast("Quiz coming soon! Browse our recommendations below.", {
       icon: "🧭",
@@ -96,7 +97,12 @@ const SlicerHeroSection = ({ slicerCount, onScrollToComparison }: SlicerHeroSect
           <span>Most Popular:</span>
           {topSlicers.map((slicer, index) => (
             <span key={slicer} className="inline-flex items-center">
-              <span className="text-foreground/80 hover:text-cyan-400 transition-colors cursor-pointer underline-offset-4 hover:underline">{slicer}</span>
+              <button
+                onClick={() => onSlicerClick?.(slicer)}
+                className="text-slate-300 hover:text-cyan-400 cursor-pointer transition-colors underline-offset-4 hover:underline"
+              >
+                {slicer}
+              </button>
               {index < topSlicers.length - 1 && (
                 <span className="text-slate-600 mx-1">•</span>
               )}

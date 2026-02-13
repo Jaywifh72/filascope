@@ -327,6 +327,7 @@ const ReferenceSlicers = () => {
         <SlicerHeroSection 
           slicerCount={slicerComparison.length}
           onScrollToComparison={scrollToComparison}
+          onSlicerClick={handleLearnMore}
         />
 
         {/* Sticky Tab Navigation */}
