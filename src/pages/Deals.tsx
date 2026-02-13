@@ -416,7 +416,7 @@ const Deals = () => {
                   <div
                     key={group.groupKey}
                     className="deal-card-enter"
-                    style={index < 12 ? { animationDelay: `${index * 30}ms` } : undefined}
+                    style={{ animationDelay: `${Math.min(index * 50, 400)}ms` }}
                   >
                     <GroupedDealCard group={group} />
                   </div>
