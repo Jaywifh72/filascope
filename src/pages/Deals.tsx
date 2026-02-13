@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X, Info } from "lucide-react";
+import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X, Info, Bell } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -170,39 +170,54 @@ const Deals = () => {
       <div className="min-h-screen flex flex-col">
       <section className="flex-1" role="region" aria-label="Deals listings">
         {/* Hero Section — compressed */}
-        <section className="relative py-4 md:py-5 px-6 md:px-10">
+        <section className="relative py-4 md:py-6 px-6 md:px-10">
           <div className="max-w-[1600px] mx-auto">
-            {/* Badge */}
+            {/* Badge with live indicator */}
             <div className="flex items-center justify-center mb-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/30 bg-green-500/5">
-                <Tag className="h-3.5 w-3.5 text-green-400" />
-                <span className="font-mono text-[10px] uppercase tracking-wider text-green-400">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5">
+                <Tag className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
                   Today's Deals
+                </span>
+                <span className="relative flex h-2 w-2 ml-1.5" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
               </div>
             </div>
 
-            {/* Headline + Stats inline */}
-            <h1 className="text-2xl md:text-3xl font-bold text-center mb-1">
-              Best Prices <span className="text-green-400">We Found</span>
+            {/* Headline */}
+            <h1 className="text-2xl md:text-4xl font-bold text-center mb-2">
+              Best Prices <span className="text-emerald-400">We Found</span>
             </h1>
-            <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
-              <span>
-                <span className="text-foreground font-medium">{groupedDeals.length}</span> {groupedDeals.length === 1 ? "deal" : "deals"}
-                {deals.length !== groupedDeals.length && (
-                  <span className="text-muted-foreground"> ({deals.length} variants)</span>
-                )}
-              </span>
-              <span className="text-muted-foreground/50">·</span>
-              <span>Prices may vary</span>
-            </div>
 
-            {/* Deal Alerts CTA — compact */}
-            <div className="flex justify-center mt-2 mb-1">
-              <DealNotificationSignup
-                availableMaterials={availableMaterials}
-                availableBrands={availableBrands}
-              />
+            {/* Dynamic stat pills + Deal Alerts CTA */}
+            <div
+              className="flex items-center justify-center gap-3 flex-wrap"
+              aria-label={`Deal statistics: up to ${maxDiscount} percent off, ${uniqueBrandCount} brands, updated ${lastUpdated ? formatDistanceToNow(new Date(lastUpdated), { addSuffix: true }) : 'recently'}`}
+            >
+              {maxDiscount > 0 && (
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-muted-foreground">
+                  Up to <span className="text-emerald-400 font-semibold">{maxDiscount}%</span> off
+                </span>
+              )}
+              {uniqueBrandCount > 0 && (
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-muted-foreground">
+                  <span className="text-teal-400 font-semibold">{uniqueBrandCount}</span> brands
+                </span>
+              )}
+              {lastUpdated && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
+                </span>
+              )}
+              <Button variant="outline" size="sm" className="text-xs h-7 px-3 gap-1.5 rounded-full" asChild>
+                <Link to="#deal-alerts">
+                  <Bell className="h-3 w-3" />
+                  Deal Alerts
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
@@ -410,7 +425,7 @@ const Deals = () => {
                       Last updated: {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
                     </p>
                   )}
-                  <div className="flex items-center justify-center gap-3 mt-4">
+                  <div id="deal-alerts" className="flex items-center justify-center gap-3 mt-4">
                     <DealNotificationSignup
                       availableMaterials={availableMaterials}
                       availableBrands={availableBrands}
