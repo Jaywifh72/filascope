@@ -157,6 +157,17 @@ export function useDealsWithFilters() {
     return Array.from(brands).sort();
   }, [rawDeals]);
 
+  // Last updated timestamp (most recent last_scraped_at)
+  const lastUpdated = useMemo(() => {
+    let latest: string | null = null;
+    for (const deal of rawDeals) {
+      if (deal.last_scraped_at && (!latest || deal.last_scraped_at > latest)) {
+        latest = deal.last_scraped_at;
+      }
+    }
+    return latest;
+  }, [rawDeals]);
+
   // Calculate max price for slider
   const maxPrice = useMemo(() => {
     if (rawDeals.length === 0) return 200;
@@ -238,6 +249,7 @@ export function useDealsWithFilters() {
     maxPrice,
     localDealCount,
     userRegion,
+    lastUpdated,
     // Actions
     clearAllFilters,
   };
