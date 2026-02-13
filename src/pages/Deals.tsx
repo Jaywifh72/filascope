@@ -2,9 +2,8 @@ import { useMemo, useState } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Tag, Clock, Percent, Sparkles, ArrowRight, Filter, AlertTriangle, Globe, X } from "lucide-react";
+import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
 import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterSheet";
@@ -12,9 +11,13 @@ import { DealNotificationSignup } from "@/components/deals/DealNotificationSignu
 import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
 import { BrandDistribution } from "@/components/deals/BrandDistribution";
 import { BrandQuickFilters } from "@/components/deals/BrandQuickFilters";
+import { DealCardSkeletonGrid } from "@/components/deals/DealCardSkeleton";
+import { DealsEmptyState } from "@/components/deals/DealsEmptyState";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
 import { ItemListSchema } from "@/components/seo";
+import { formatDistanceToNow } from "date-fns";
 
 const Deals = () => {
   const {
@@ -38,6 +41,7 @@ const Deals = () => {
     localDealCount,
     userRegion,
     clearAllFilters,
+    lastUpdated,
   } = useDealsWithFilters();
 
   const userRegionFlag = getRegionFlag(userRegion);
@@ -169,7 +173,7 @@ const Deals = () => {
         </section>
 
         {/* Filters Section — sticky below navbar */}
-        <section className="sticky top-16 z-40 bg-background border-b border-border/50 shadow-sm px-4 sm:px-6 md:px-10 pb-4 pt-4">
+        <section id="deals-filters" className="sticky top-16 z-40 bg-background border-b border-border/50 shadow-sm px-4 sm:px-6 md:px-10 pb-4 pt-4">
           <div className="max-w-[1600px] mx-auto">
             {/* Mobile Filter Sheet */}
             <div className="md:hidden mb-4">
@@ -289,49 +293,18 @@ const Deals = () => {
         <section className="px-6 md:px-10 pb-16">
           <div className="max-w-[1600px] mx-auto">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <Card key={i} className="h-80 animate-pulse bg-muted/30" />
-                ))}
-              </div>
+              <DealCardSkeletonGrid />
             ) : groupedDeals.length === 0 ? (
-              <div className="text-center py-16">
-                {showLocalOnly ? (
-                  <>
-                    <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">No Local Deals Found</h2>
-                    <p className="text-muted-foreground mb-6">
-                      We don't have any deals shipping from your region right now.
-                      Try browsing international deals.
-                    </p>
-                    <Button variant="outline" onClick={() => setShowLocalOnly(false)}>
-                      Show International Deals
-                    </Button>
-                  </>
-                ) : hasActiveFilters ? (
-                  <>
-                    <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">No Matching Deals</h2>
-                    <p className="text-muted-foreground mb-6">
-                      Try adjusting your filters to see more results.
-                    </p>
-                    <Button variant="outline" onClick={clearAllFilters}>
-                      Clear All Filters
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">No Active Deals</h2>
-                    <p className="text-muted-foreground mb-6">
-                      Check back soon! New deals are added daily.
-                    </p>
-                    <Button asChild>
-                      <Link to="/finder">Browse All Filaments</Link>
-                    </Button>
-                  </>
-                )}
-              </div>
+              <DealsEmptyState
+                selectedMaterials={selectedMaterials}
+                selectedBrands={selectedBrands}
+                minDiscount={minDiscount}
+                showLocalOnly={showLocalOnly}
+                allGroupedDeals={groupedDeals}
+                clearAllFilters={clearAllFilters}
+                onMaterialChange={setSelectedMaterials}
+                hasActiveFilters={hasActiveFilters}
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {groupedDeals.map((group) => (
@@ -341,30 +314,42 @@ const Deals = () => {
             )}
 
             {/* End-of-results section */}
-            {groupedDeals.length > 0 && (
-              <div className="max-w-2xl mx-auto my-8 bg-card/50 border border-border/30 rounded-xl p-8 text-center">
-                <Tag className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-foreground">That's all the deals for today!</h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  New deals are added regularly. Set up alerts to never miss a great price.
-                </p>
-                <div className="flex items-center justify-center gap-3 mt-4">
-                  <DealNotificationSignup
-                    availableMaterials={availableMaterials}
-                    availableBrands={availableBrands}
-                  />
-                  <Button variant="outline" asChild>
-                    <Link to="/finder" className="gap-2">
-                      Browse All Filaments
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
+            {!isLoading && groupedDeals.length > 0 && (
+              <>
+                <div className="border-t border-border w-full my-8" />
+                <div className="max-w-2xl mx-auto bg-card/50 border border-border/30 rounded-xl p-8 text-center">
+                  <Tag className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-foreground">That's all the deals for today!</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    New deals are added regularly. Set up alerts to never miss a great price.
+                  </p>
+                  {lastUpdated && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Last updated: {formatDistanceToNow(new Date(lastUpdated), { addSuffix: true })}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-center gap-3 mt-4">
+                    <DealNotificationSignup
+                      availableMaterials={availableMaterials}
+                      availableBrands={availableBrands}
+                    />
+                    <Button variant="outline" asChild>
+                      <Link to="/finder" className="gap-2">
+                        Browse All Filaments
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground italic mt-4">
+                    New deals are checked multiple times weekly
+                  </p>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </section>
       </section>
+      <ScrollToTopButton targetId="deals-filters" />
     </div>
     </>
   );

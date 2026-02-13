@@ -39,5 +39,8 @@ export { VaultSkeleton } from "./VaultSkeleton";
 export { FilamentCardSkeleton, FilamentCardSkeletonGrid } from "@/components/FilamentCardSkeleton";
 export { PrinterCardSkeleton, PrinterCardSkeletonGrid } from "@/components/printers/PrinterCardSkeleton";
 
+// Deal card skeletons
+export { DealCardSkeleton, DealCardSkeletonGrid } from "@/components/deals/DealCardSkeleton";
+
 // Loading progress component
 export { LoadingProgress } from "@/components/LoadingProgress";
