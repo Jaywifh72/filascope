@@ -604,81 +604,86 @@ const ReferenceSlicers = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="overflow-x-auto max-w-full">
-                      <table className="w-full border-collapse text-sm min-w-[900px]">
-                        <thead>
-                          <tr className="bg-slate-800/50 border-b border-slate-700">
-                            <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                            <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                            <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                            <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">OS</th>
-                            <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Connect</th>
-                            <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
-                            <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Standout Feature</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredAndSortedSlicers.map((slicer, index) => (
-                            <tr 
-                              key={index} 
-                              className={cn(
-                                'border-b border-border/50 hover:bg-cyan-500/5 transition-colors duration-200 cursor-pointer',
-                                index % 2 === 0 ? 'bg-slate-900/30' : 'bg-transparent'
-                              )}
-                            >
-                              <td className="py-2 px-3 font-medium text-foreground sticky left-0 bg-card z-10 whitespace-nowrap">
-                                <div className="flex items-center gap-2">
-                                  <SlicerLogo src={slicerLogos[slicer.name]} name={slicer.name} className="w-5 h-5 rounded" />
-                                  {slicer.name}
-                                </div>
-                              </td>
-                              <td className="py-2 px-3">
-                                <Badge 
-                                  variant="outline" 
-                                  className={
-                                    slicer.price === "Free" 
-                                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-                                      : slicer.price === "Freemium"
-                                      ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                                      : "bg-red-500/10 text-red-400 border-red-500/30"
-                                  }
-                                >
-                                  {slicer.price}
-                                </Badge>
-                              </td>
-                              <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
-                              <td className="py-2 px-3">
-                                <div className="flex items-center gap-1">
-                                  {slicer.os === "Browser" || slicer.os === "Web" ? (
-                                    <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title={slicer.os}>{slicer.os}</span>
-                                  ) : (
-                                    <>
-                                      {slicer.os.includes("Win") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="Windows">W</span>}
-                                      {slicer.os.includes("Mac") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="macOS">M</span>}
-                                      {slicer.os.includes("Lin") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="Linux">L</span>}
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
-                              <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
-                              <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
-                              <td className="py-2 px-3"><RatingDots rating={slicer.speed} /></td>
-                              <td className="py-2 px-3"><RatingDots rating={slicer.ui} /></td>
-                              <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.connectivity}</td>
-                              <td className="py-2 px-3 text-center"><StepBadge value={slicer.step} /></td>
-                              <td className="py-2 px-3"><RatingDots rating={slicer.multiMat} /></td>
-                              <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{slicer.standout}</td>
+                    <p className="text-xs text-slate-500 italic mb-2">Scroll for more →</p>
+                    <div className="relative">
+                      <div className="overflow-x-auto max-w-full" id="detailed-table-scroll">
+                        <table className="w-full border-collapse text-sm min-w-[900px]">
+                          <thead>
+                            <tr className="bg-slate-800/50 border-b border-slate-700">
+                              <SortHeader label="Software" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                              <SortHeader label="Price" sortKey="price" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                              <SortHeader label="Focus" sortKey="focus" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                              <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">OS</th>
+                              <SortHeader label="Ease" sortKey="ease" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <SortHeader label="Control" sortKey="control" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <SortHeader label="Supports" sortKey="support" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <SortHeader label="Speed" sortKey="speed" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <SortHeader label="UI" sortKey="ui" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Connect</th>
+                              <SortHeader label="STEP" sortKey="step" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <SortHeader label="Multi-Mat" sortKey="multiMat" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} center />
+                              <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Standout Feature</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {filteredAndSortedSlicers.map((slicer, index) => (
+                              <tr 
+                                key={index} 
+                                className={cn(
+                                  'border-b border-border/50 hover:bg-cyan-500/5 transition-colors duration-200 cursor-pointer',
+                                  index % 2 === 0 ? 'bg-slate-900/30' : 'bg-transparent'
+                                )}
+                              >
+                                <td className="py-2 px-3 font-medium text-foreground sticky left-0 z-10 whitespace-nowrap bg-card">
+                                  <div className="flex items-center gap-2">
+                                    <SlicerLogo src={slicerLogos[slicer.name]} name={slicer.name} className="w-5 h-5 rounded" />
+                                    {slicer.name}
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={
+                                      slicer.price === "Free" 
+                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                                        : slicer.price === "Freemium"
+                                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                        : "bg-red-500/10 text-red-400 border-red-500/30"
+                                    }
+                                  >
+                                    {slicer.price}
+                                  </Badge>
+                                </td>
+                                <td className="py-2 px-3 text-muted-foreground">{slicer.focus}</td>
+                                <td className="py-2 px-3">
+                                  <div className="flex items-center gap-1">
+                                    {slicer.os === "Browser" || slicer.os === "Web" ? (
+                                      <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title={slicer.os}>{slicer.os}</span>
+                                    ) : (
+                                      <>
+                                        {slicer.os.includes("Win") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="Windows">W</span>}
+                                        {slicer.os.includes("Mac") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="macOS">M</span>}
+                                        {slicer.os.includes("Lin") && <span className="text-[10px] font-mono bg-slate-800 rounded px-1 py-0.5 text-slate-400" title="Linux">L</span>}
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3"><RatingDots rating={slicer.ease} /></td>
+                                <td className="py-2 px-3"><RatingDots rating={slicer.control} /></td>
+                                <td className="py-2 px-3"><RatingDots rating={slicer.support} /></td>
+                                <td className="py-2 px-3"><RatingDots rating={slicer.speed} /></td>
+                                <td className="py-2 px-3"><RatingDots rating={slicer.ui} /></td>
+                                <td className="py-2 px-3 text-muted-foreground text-xs">{slicer.connectivity}</td>
+                                <td className="py-2 px-3 text-center"><StepBadge value={slicer.step} /></td>
+                                <td className="py-2 px-3"><RatingDots rating={slicer.multiMat} /></td>
+                                <td className="py-2 px-3 text-cyan-400 text-xs whitespace-nowrap">{slicer.standout}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {/* Right edge fade gradient */}
+                      <div className="absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-card to-transparent pointer-events-none z-10" />
                     </div>
                   </div>
                 ) : (
