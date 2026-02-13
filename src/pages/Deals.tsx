@@ -18,6 +18,7 @@ import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterShee
 import { DealNotificationSignup } from "@/components/deals/DealNotificationSignup";
 import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
 import { BrandQuickFilters } from "@/components/deals/BrandQuickFilters";
+import { MaterialQuickFilters } from "@/components/deals/MaterialQuickFilters";
 import { DealCardSkeletonGrid } from "@/components/deals/DealCardSkeleton";
 import { DealsEmptyState } from "@/components/deals/DealsEmptyState";
 import { ScrollToTopButton } from "@/components/ScrollToTopButton";
@@ -294,6 +295,13 @@ const Deals = () => {
               selectedBrands={selectedBrands}
               onBrandChange={setSelectedBrands}
               className="mt-3"
+            />
+
+            {/* Material Quick Filter Chips */}
+            <MaterialQuickFilters
+              groupedDeals={groupedDeals}
+              selectedMaterials={selectedMaterials}
+              onMaterialChange={setSelectedMaterials}
             />
 
             {/* Deal Type Quick Filter Chips */}
