@@ -145,22 +145,28 @@ const Navbar = () => {
         onMouseEnter={handleMouseEnter}
         onFocus={handleMouseEnter}
         className={cn(
-          "relative py-2 px-3 transition-all duration-200 rounded-md",
+          "group relative py-2 px-3 rounded-md",
           "text-xs font-bold uppercase tracking-widest",
-          "hover:text-gray-300 hover:bg-foreground/5 transition-colors duration-150",
+          "transition-all duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "active:scale-95 active:transition-transform active:duration-100",
           active 
-            ? "text-primary bg-foreground/5" 
-            : "text-muted-foreground"
+            ? "text-primary font-extrabold bg-foreground/5 [text-shadow:0_0_20px_hsl(var(--primary)/0.3)]" 
+            : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
         )}
       >
         {children}
+        {/* Active underline */}
         <span 
           className={cn(
-            "absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-primary transition-all duration-300 rounded-full",
-            active ? "w-[calc(100%-12px)]" : "w-0"
+            "absolute bottom-0 left-1/2 -translate-x-1/2 bg-primary transition-all duration-300 rounded-full",
+            active ? "w-[calc(100%-12px)] h-[2.5px]" : "w-0 h-[2px]"
           )} 
         />
+        {/* Hover underline that slides from left */}
+        {!active && (
+          <span className="absolute bottom-0 left-[6px] h-[2px] w-0 bg-primary/40 transition-all duration-300 rounded-full group-hover:w-[calc(100%-12px)]" />
+        )}
       </Link>
     );
   };
@@ -194,10 +200,10 @@ const Navbar = () => {
         className={cn(
           "flex items-center gap-3 px-4 py-3 transition-all duration-200 relative",
           "text-sm font-medium",
-          "hover:bg-muted/50",
+          "hover:bg-muted/50 active:bg-muted",
           "focus-visible:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
           active 
-            ? "text-primary bg-primary/10 border-l-2 border-primary" 
+            ? "text-primary font-semibold bg-primary/10 border-l-2 border-primary" 
             : "text-muted-foreground border-l-2 border-transparent"
         )}
       >
@@ -278,7 +284,7 @@ const Navbar = () => {
             <LabNavLink to="/deals">
               Deals
               {dealsData && dealsData.totalVariants > 0 ? (
-                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
+                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary/20 text-primary border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
                   {dealsData.totalVariants.toLocaleString()}
                 </span>
               ) : dealsLoading ? (
@@ -444,7 +450,7 @@ const Navbar = () => {
             <LabNavLink to="/deals">
               Deals
               {dealsData && dealsData.totalVariants > 0 ? (
-                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
+                <span className="inline-flex items-center justify-center ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-primary/20 text-primary border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-label={`${dealsData.totalVariants.toLocaleString()} active deals`}>
                   {dealsData.totalVariants.toLocaleString()}
                 </span>
               ) : dealsLoading ? (
