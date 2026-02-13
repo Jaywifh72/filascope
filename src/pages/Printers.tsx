@@ -28,6 +28,7 @@ import { QuizAnswers } from "@/lib/printerQuizData";
 import { exportPrinterDatabaseCSV } from "@/lib/printerExportUtils";
 import ActiveFilterChips from "@/components/printers/ActiveFilterChips";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
+import { PrinterQuickFilterChips, type PrinterQuickFilter } from "@/components/printers/PrinterQuickFilterChips";
 
 const PRINTERS_PER_PAGE = 24;
 
@@ -101,6 +102,7 @@ export default function Printers() {
   // Search and quick filters
   const [searchTerm, setSearchTerm] = useState("");
   const [activeQuickFilters, setActiveQuickFilters] = useState<string[]>([]);
+  const [activeChip, setActiveChip] = useState<PrinterQuickFilter | null>(null);
   
   // Filter bar state
   const [activeCategory, setActiveCategory] = useState("all");
@@ -218,6 +220,7 @@ export default function Printers() {
     setBuildVolumeFilter('all');
     setAdvancedFilters(defaultAdvancedFilters);
     setActiveQuickFilters([]);
+    setActiveChip(null);
     setSearchTerm('');
     setDisplayedCount(PRINTERS_PER_PAGE);
   };
@@ -225,7 +228,7 @@ export default function Printers() {
   // Reset displayed count when filters change
   useEffect(() => {
     setDisplayedCount(PRINTERS_PER_PAGE);
-  }, [activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, searchTerm, activeQuickFilters]);
+  }, [activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, searchTerm, activeQuickFilters, activeChip]);
   
   // Save pagination state for scroll restoration
   useEffect(() => {
@@ -250,7 +253,8 @@ export default function Printers() {
     advancedFilters.minSpeed > 0 ||
     advancedFilters.maxSpeed < 1000 ||
     advancedFilters.features.length > 0 ||
-    activeQuickFilters.length > 0;
+    activeQuickFilters.length > 0 ||
+    activeChip !== null;
   
   // Printer compare context
   // Printer compare context
@@ -432,6 +436,37 @@ export default function Printers() {
         if (!matchesAny) return false;
       }
 
+      // Quick chip filter (mutually exclusive, AND logic with other filters)
+      if (activeChip) {
+        const POPULAR_BRANDS = ["Bambu Lab", "Creality", "Prusa Research"];
+        switch (activeChip) {
+          case "popular":
+            if (!printer.brand?.brand || !POPULAR_BRANDS.includes(printer.brand.brand)) return false;
+            break;
+          case "under500":
+            if (price > 500) return false;
+            break;
+          case "enclosed":
+            if (!printer.has_enclosure) return false;
+            break;
+          case "multicolor":
+            if (!printer.multi_material_supported) return false;
+            break;
+          case "highspeed":
+            if (printerSpeed < 300) return false;
+            break;
+          case "large":
+            if (maxDimension < 300) return false;
+            break;
+          case "new": {
+            const createdAt = printer.created_at ? new Date(printer.created_at).getTime() : 0;
+            const sixtyDaysAgo = Date.now() - 60 * 24 * 60 * 60 * 1000;
+            if (createdAt < sixtyDaysAgo) return false;
+            break;
+          }
+        }
+      }
+
       return true;
     });
 
@@ -450,7 +485,7 @@ export default function Printers() {
         default: return 0;
       }
     });
-  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy]);
+  }, [printers, activeCategory, priceRangeFilter, buildVolumeFilter, advancedFilters, activeQuickFilters, sortBy, activeChip]);
 
   const advancedFilterCount = 
     advancedFilters.brands.length +
@@ -771,6 +806,9 @@ export default function Printers() {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
+            {/* Quick Filter Chips */}
+            <PrinterQuickFilterChips active={activeChip} onChange={setActiveChip} />
+
             {/* Active Filter Chips */}
             {hasActiveFilters && (
               <div className="mb-4">
