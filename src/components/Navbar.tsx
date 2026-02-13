@@ -324,8 +324,10 @@ const Navbar = () => {
                 >
                   Learn
                   <ChevronDown className={cn(
-                    "w-3 h-3 transition-transform duration-200",
-                    learnDropdownOpen && "rotate-180"
+                    "w-3.5 h-3.5 transition-all duration-200",
+                    learnDropdownOpen 
+                      ? "rotate-180 text-primary" 
+                      : "text-muted-foreground/60 group-hover:text-muted-foreground"
                   )} />
                   <span 
                     className={cn(
