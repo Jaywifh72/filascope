@@ -36,7 +36,7 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
   };
 
   return (
-    <div className="w-full h-full bg-gray-800 border border-gray-700 rounded-xl p-4 grid grid-cols-[80px_1fr] gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 max-md:grid-cols-1 max-md:text-center">
+    <div className="group w-full h-full bg-gray-800 border border-gray-700 rounded-xl p-4 grid grid-cols-[80px_1fr] gap-4 transition-all duration-200 cursor-pointer hover:bg-slate-800/80 hover:border-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/10 max-md:grid-cols-1 max-md:text-center">
       {/* Logo Column */}
       <div className="flex flex-col items-center max-md:items-center">
         <div className="w-[60px] h-[60px] rounded-lg flex items-center justify-center">
@@ -81,7 +81,7 @@ export function SlicerPopularCard({ slicer, logo, onLearnMore }: SlicerPopularCa
             className="h-9 px-4 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold text-primary-foreground inline-flex items-center gap-2 transition-all"
           >
             Learn More
-            <ArrowRight size={14} />
+            <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
           </button>
           
           <button
