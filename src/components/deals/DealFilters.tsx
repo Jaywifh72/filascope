@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 interface DealFiltersProps {
@@ -232,30 +233,25 @@ export function DealFilters({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Local Only Filter */}
+      {/* Local Sellers Only Toggle */}
       {onShowLocalOnlyChange && userRegionFlag && (
-        <button
-          onClick={() => onShowLocalOnlyChange(!showLocalOnly)}
-          className={cn(
-            "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm min-h-[44px] border transition-colors",
-            showLocalOnly
-              ? "bg-primary/10 border-primary/40 text-primary font-medium"
-              : "bg-transparent border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-          )}
-        >
+        <div className="flex items-center gap-2 min-h-[44px]">
+          <Switch
+            checked={!!showLocalOnly}
+            onCheckedChange={onShowLocalOnlyChange}
+          />
           <span className={cn(
-            "inline-block h-2.5 w-2.5 rounded-full border transition-colors",
-            showLocalOnly
-              ? "bg-primary border-primary"
-              : "bg-transparent border-muted-foreground/50"
-          )} />
-          {userRegionFlag} Local Only
+            "text-sm transition-colors",
+            showLocalOnly ? "text-primary font-medium" : "text-muted-foreground"
+          )}>
+            {userRegionFlag} Local Sellers Only
+          </span>
           {showLocalOnly && localDealCount !== undefined && (
-            <Badge className="ml-1 h-5 px-1.5 text-xs bg-primary/20 text-primary border-0">
+            <Badge className="h-5 px-1.5 text-xs bg-primary/20 text-primary border-0">
               {localDealCount}
             </Badge>
           )}
-        </button>
+        </div>
       )}
 
       {/* Clear All */}

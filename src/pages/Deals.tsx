@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X } from "lucide-react";
+import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X, Info } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,7 +17,6 @@ import { DealFilters } from "@/components/deals/DealFilters";
 import { MobileDealsFilterSheet } from "@/components/deals/MobileDealsFilterSheet";
 import { DealNotificationSignup } from "@/components/deals/DealNotificationSignup";
 import { GroupedDealCard } from "@/components/deals/GroupedDealCard";
-import { BrandDistribution } from "@/components/deals/BrandDistribution";
 import { BrandQuickFilters } from "@/components/deals/BrandQuickFilters";
 import { DealCardSkeletonGrid } from "@/components/deals/DealCardSkeleton";
 import { DealsEmptyState } from "@/components/deals/DealsEmptyState";
@@ -26,6 +25,8 @@ import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
 import { ItemListSchema } from "@/components/seo";
 import { formatDistanceToNow } from "date-fns";
+
+type DealTypeFilter = "all" | "50plus" | "new-this-week" | "ongoing";
 
 const Deals = () => {
   const {
@@ -58,17 +59,55 @@ const Deals = () => {
   const { currencyConfig } = useRegion();
 
   const [disclaimerDismissed, setDisclaimerDismissed] = useState(
-    () => localStorage.getItem("filascope_deals_disclaimer_dismissed") === "true"
+    () => sessionStorage.getItem("filascope_deals_disclaimer_dismissed") === "true"
   );
   const [disclaimerHiding, setDisclaimerHiding] = useState(false);
+  const [dealTypeFilter, setDealTypeFilter] = useState<DealTypeFilter>("all");
 
   const handleDismissDisclaimer = () => {
     setDisclaimerHiding(true);
     setTimeout(() => {
       setDisclaimerDismissed(true);
-      localStorage.setItem("filascope_deals_disclaimer_dismissed", "true");
+      sessionStorage.setItem("filascope_deals_disclaimer_dismissed", "true");
     }, 300);
   };
+
+  // Handle deal type chip selection
+  const handleDealTypeChange = (type: DealTypeFilter) => {
+    const prevType = dealTypeFilter;
+    setDealTypeFilter(type);
+    if (type === "50plus") {
+      setMinDiscount(50);
+    } else if (prevType === "50plus") {
+      setMinDiscount(0);
+    }
+  };
+
+  // Filter grouped deals by deal type locally
+  const filteredGroupedDeals = useMemo(() => {
+    if (dealTypeFilter === "all" || dealTypeFilter === "50plus") return groupedDeals;
+    if (dealTypeFilter === "new-this-week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return groupedDeals.filter((g) => {
+        const scraped = g.representativeDeal.last_scraped_at;
+        return scraped && new Date(scraped) >= weekAgo;
+      });
+    }
+    if (dealTypeFilter === "ongoing") {
+      return groupedDeals.filter((g) => (g.bestDiscount ?? 0) < 50);
+    }
+    return groupedDeals;
+  }, [groupedDeals, dealTypeFilter]);
+
+  // Active filter count for display
+  const activeFilterCount =
+    selectedMaterials.length +
+    selectedBrands.length +
+    (minDiscount > 0 ? 1 : 0) +
+    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) +
+    (showLocalOnly ? 1 : 0) +
+    (dealTypeFilter !== "all" ? 1 : 0);
 
   const hasActiveFilters =
     selectedMaterials.length > 0 ||
@@ -130,55 +169,41 @@ const Deals = () => {
       )}
       <div className="min-h-screen flex flex-col">
       <section className="flex-1" role="region" aria-label="Deals listings">
-        {/* Hero Section */}
-        <section className="relative py-6 md:py-8 px-6 md:px-10">
+        {/* Hero Section — compressed */}
+        <section className="relative py-4 md:py-5 px-6 md:px-10">
           <div className="max-w-[1600px] mx-auto">
             {/* Badge */}
-            <div className="flex items-center justify-center mb-2">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-500/30 bg-green-500/5">
-                <Tag className="h-4 w-4 text-green-400" />
-                <span className="font-mono text-xs uppercase tracking-wider text-green-400">
+            <div className="flex items-center justify-center mb-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/30 bg-green-500/5">
+                <Tag className="h-3.5 w-3.5 text-green-400" />
+                <span className="font-mono text-[10px] uppercase tracking-wider text-green-400">
                   Today's Deals
                 </span>
               </div>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-3xl md:text-5xl font-bold text-center mb-2">
+            {/* Headline + Stats inline */}
+            <h1 className="text-2xl md:text-3xl font-bold text-center mb-1">
               Best Prices <span className="text-green-400">We Found</span>
             </h1>
-            <p className="text-muted-foreground text-center max-w-2xl mx-auto mt-1">
-              Discounted filaments from top brands. Prices captured periodically from retailers.
-            </p>
-
-            {/* Stats Row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm text-muted-foreground mt-3">
-              <div className="flex items-center gap-2">
-                <Percent className="h-4 w-4 text-green-400" />
-                <span>
-                  <span className="text-foreground font-medium">{groupedDeals.length}</span> {groupedDeals.length === 1 ? "deal" : "deals"}
-                  {deals.length !== groupedDeals.length && (
-                    <span className="text-muted-foreground"> ({deals.length} {deals.length === 1 ? "variant" : "variants"})</span>
-                  )}
-                </span>
-              </div>
-              <span className="hidden md:inline text-muted-foreground/50">•</span>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>Prices may vary</span>
-              </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
+              <span>
+                <span className="text-foreground font-medium">{groupedDeals.length}</span> {groupedDeals.length === 1 ? "deal" : "deals"}
+                {deals.length !== groupedDeals.length && (
+                  <span className="text-muted-foreground"> ({deals.length} variants)</span>
+                )}
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              <span>Prices may vary</span>
             </div>
 
-            {/* Deal Alerts CTA */}
-            <div className="flex justify-center mt-3 mb-2">
+            {/* Deal Alerts CTA — compact */}
+            <div className="flex justify-center mt-2 mb-1">
               <DealNotificationSignup
                 availableMaterials={availableMaterials}
                 availableBrands={availableBrands}
               />
             </div>
-
-            {/* Brand Distribution */}
-            <BrandDistribution groupedDeals={groupedDeals} className="mt-2" />
           </div>
         </section>
 
@@ -212,7 +237,7 @@ const Deals = () => {
             <div className="hidden md:flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Filter className="h-4 w-4" />
-                <span>Filter deals:</span>
+                <span>Filter deals:{activeFilterCount > 0 && <span className="text-primary font-medium ml-1">({activeFilterCount} active)</span>}</span>
               </div>
               <DealFilters
                 materials={availableMaterials}
@@ -242,21 +267,50 @@ const Deals = () => {
               className="mt-3"
             />
 
+            {/* Deal Type Quick Filter Chips */}
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none mt-2">
+              {([
+                { id: "all", label: "All Deals" },
+                { id: "50plus", label: "50%+ Off" },
+                { id: "new-this-week", label: "New This Week" },
+                { id: "ongoing", label: "Ongoing Sales" },
+              ] as const).map((chip) => (
+                <button
+                  key={chip.id}
+                  onClick={() => handleDealTypeChange(chip.id)}
+                  className={cn(
+                    "inline-flex items-center px-3 py-1 text-xs rounded-full border whitespace-nowrap transition-all",
+                    dealTypeFilter === chip.id
+                      ? "bg-primary/10 border-primary text-primary font-medium"
+                      : "bg-transparent text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
+                  )}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
             {/* Results Count + Sort Control Bar */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
               <p className="text-sm text-muted-foreground">
-                {hasActiveFilters ? (
-                  <>Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> of <span className="text-foreground font-medium">{totalDeals}</span> deals</>
+                {hasActiveFilters || dealTypeFilter !== "all" ? (
+                  <>Showing <span className="text-foreground font-medium">{filteredGroupedDeals.length}</span> of <span className="text-foreground font-medium">{totalDeals}</span> deals</>
                 ) : (
                   <>Showing all <span className="text-foreground font-medium">{totalDeals}</span> deals</>
                 )}
-                {hasActiveFilters && (
+                {(hasActiveFilters || dealTypeFilter !== "all") && (
                   <button
-                    onClick={clearAllFilters}
+                    onClick={() => { clearAllFilters(); setDealTypeFilter("all"); }}
                     className="ml-3 text-xs text-primary hover:underline transition-colors"
                   >
                     Clear all filters
                   </button>
+                )}
+                {disclaimerDismissed && (
+                  <span className="ml-3 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Info className="h-2.5 w-2.5" />
+                    Prices are approximate
+                  </span>
                 )}
               </p>
               <div className="flex items-center gap-2">
@@ -316,20 +370,20 @@ const Deals = () => {
           <div className="max-w-[1600px] mx-auto">
             {isLoading ? (
               <DealCardSkeletonGrid />
-            ) : groupedDeals.length === 0 ? (
+            ) : filteredGroupedDeals.length === 0 ? (
               <DealsEmptyState
                 selectedMaterials={selectedMaterials}
                 selectedBrands={selectedBrands}
                 minDiscount={minDiscount}
                 showLocalOnly={showLocalOnly}
                 allGroupedDeals={groupedDeals}
-                clearAllFilters={clearAllFilters}
+                clearAllFilters={() => { clearAllFilters(); setDealTypeFilter("all"); }}
                 onMaterialChange={setSelectedMaterials}
-                hasActiveFilters={hasActiveFilters}
+                hasActiveFilters={hasActiveFilters || dealTypeFilter !== "all"}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {groupedDeals.map((group, index) => (
+                {filteredGroupedDeals.map((group, index) => (
                   <div
                     key={group.groupKey}
                     className="deal-card-enter"
@@ -342,7 +396,7 @@ const Deals = () => {
             )}
 
             {/* End-of-results section */}
-            {!isLoading && groupedDeals.length > 0 && (
+            {!isLoading && filteredGroupedDeals.length > 0 && (
               <>
                 <div className="border-t border-border w-full my-8" />
                 <div className="max-w-2xl mx-auto bg-card/50 border border-border/30 rounded-xl p-8 text-center">
