@@ -146,13 +146,13 @@ const SectionDivider = ({ label }: { label: string }) => (
 );
 
 const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialReferenceInfo; basicInfo: any }) => {
-  const BASICS_SECTIONS = ["origin", "composition", "family"];
-  const PERFORMANCE_SECTIONS = ["strengths", "weaknesses", "practical"];
-  const TECHNICAL_SECTIONS = ["tds", "printSettings", "adhesion"];
+  const QUICK_START_SECTIONS = ["printSettings", "strengths", "weaknesses"];
+  const TECHNICAL_SECTIONS = ["tds", "adhesion"];
+  const CONTEXT_SECTIONS = ["practical", "family", "origin", "composition"];
   const OTHER_SECTIONS = ["postProcessing", "safety", "trivia"];
-  const ALL_SECTION_VALUES = [...BASICS_SECTIONS, ...PERFORMANCE_SECTIONS, ...TECHNICAL_SECTIONS, ...OTHER_SECTIONS];
+  const ALL_SECTION_VALUES = [...QUICK_START_SECTIONS, ...TECHNICAL_SECTIONS, ...CONTEXT_SECTIONS, ...OTHER_SECTIONS];
 
-  const [openSections, setOpenSections] = useState<string[]>(["origin"]);
+  const [openSections, setOpenSections] = useState<string[]>(["printSettings"]);
 
   const allExpanded = openSections.length >= ALL_SECTION_VALUES.length / 2;
 
@@ -254,10 +254,349 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
 
       <div className="my-6 border-t border-border/30" />
 
-      {/* BASICS Section */}
-      <SectionDivider label="Basics" />
-      
-      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(BASICS_SECTIONS)} className="space-y-3">
+      {/* QUICK START Section */}
+      <SectionDivider label="Quick Start" />
+
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(QUICK_START_SECTIONS)} className="space-y-3">
+        {/* Print Settings */}
+        {reference.printSettings && (
+          <AccordionSection icon={Settings2} title="Print Settings" value="printSettings" iconColor="text-indigo-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reference.printSettings.nozzleTemp && (
+                <div className="flex items-start gap-2 bg-gray-800/30 rounded-lg p-3">
+                  <Thermometer className="w-4 h-4 text-red-500 mt-0.5" />
+                  <div>
+                    <span className="text-xs text-muted-foreground">Nozzle Temperature</span>
+                    <p className="text-sm font-mono font-medium text-foreground">
+                      {reference.printSettings.nozzleTemp.min}°C – {reference.printSettings.nozzleTemp.max}°C
+                    </p>
+                  </div>
+                </div>
+              )}
+              {reference.printSettings.bedTemp && (
+                <div className="flex items-start gap-2 bg-gray-800/30 rounded-lg p-3">
+                  <Thermometer className="w-4 h-4 text-orange-500 mt-0.5" />
+                  <div>
+                    <span className="text-xs text-muted-foreground">Bed Temperature</span>
+                    <p className="text-sm font-mono font-medium text-foreground">
+                      {reference.printSettings.bedTemp.min}°C – {reference.printSettings.bedTemp.max}°C
+                      {reference.printSettings.bedTemp.optimal && <span className="text-muted-foreground ml-1">(optimal: {reference.printSettings.bedTemp.optimal}°C)</span>}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {reference.printSettings.coolingFan && (
+              <div className="flex items-start gap-2">
+                <Wind className="w-4 h-4 text-blue-400 mt-0.5" />
+                <div>
+                  <span className="text-sm font-medium text-foreground">Cooling Fan: {reference.printSettings.coolingFan.min}-{reference.printSettings.coolingFan.max}%</span>
+                  {reference.printSettings.coolingFan.notes && (
+                    <p className="text-sm text-muted-foreground">{reference.printSettings.coolingFan.notes}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {reference.printSettings.enclosure && (
+              <div className="flex items-start gap-2">
+                <div className={cn(
+                  "w-4 h-4 rounded-full mt-0.5 flex items-center justify-center text-[10px] font-bold",
+                  reference.printSettings.enclosure.required ? "bg-amber-500 text-amber-950" : "bg-green-500 text-green-950"
+                )}>
+                  {reference.printSettings.enclosure.required ? '!' : '✓'}
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-foreground">Enclosure: {reference.printSettings.enclosure.required ? 'Required' : 'Not Required'}</span>
+                  {reference.printSettings.enclosure.notes && (
+                    <p className="text-sm text-muted-foreground">{reference.printSettings.enclosure.notes}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {reference.printSettings.drying && (
+              <div className="flex items-start gap-2">
+                <Droplets className="w-4 h-4 text-sky-400 mt-0.5" />
+                <div>
+                  <span className="text-sm font-medium text-foreground">
+                    Drying: {reference.printSettings.drying.temp}°C for {reference.printSettings.drying.duration}
+                  </span>
+                  {reference.printSettings.drying.notes && (
+                    <p className="text-sm text-muted-foreground">{reference.printSettings.drying.notes}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {reference.printSettings.additionalNotes && reference.printSettings.additionalNotes.length > 0 && (
+              <div className="mt-2">
+                <InfoList items={reference.printSettings.additionalNotes} />
+              </div>
+            )}
+          </AccordionSection>
+        )}
+
+        {/* Strengths */}
+        <AccordionSection icon={ThumbsUp} title="Strengths" value="strengths" iconColor="text-green-500">
+          {reference.strengths.uniqueProperties && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Unique Properties</h5>
+              <InfoList items={reference.strengths.uniqueProperties} />
+            </div>
+          )}
+
+          {reference.strengths.bestUseScenarios && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Best Use Scenarios</h5>
+              <InfoList items={reference.strengths.bestUseScenarios} />
+            </div>
+          )}
+
+          {reference.strengths.advantagesOverCompetitors && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Advantages Over Competitors</h5>
+              <InfoList items={reference.strengths.advantagesOverCompetitors} />
+            </div>
+          )}
+
+          {reference.strengths.whyChooseThis && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+              <h5 className="text-sm font-medium mb-1 text-green-500">Why Choose This?</h5>
+              <p className="text-sm text-muted-foreground">{reference.strengths.whyChooseThis}</p>
+            </div>
+          )}
+        </AccordionSection>
+
+        {/* Weaknesses */}
+        <AccordionSection icon={ThumbsDown} title="Weaknesses" value="weaknesses" iconColor="text-red-500">
+          {reference.weaknesses.limitations && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Limitations</h5>
+              <InfoList items={reference.weaknesses.limitations} />
+            </div>
+          )}
+
+          {reference.weaknesses.commonProblems && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Common Problems</h5>
+              <InfoList items={reference.weaknesses.commonProblems} />
+            </div>
+          )}
+
+          {reference.weaknesses.environmentalConcerns && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Environmental Concerns</h5>
+              <InfoList items={reference.weaknesses.environmentalConcerns} />
+            </div>
+          )}
+
+          {reference.weaknesses.whenNotToUse && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <h5 className="text-sm font-medium mb-2 text-red-500">When NOT to Use</h5>
+              <InfoList items={reference.weaknesses.whenNotToUse} />
+            </div>
+          )}
+        </AccordionSection>
+      </Accordion>
+
+      {/* TECHNICAL Section */}
+      <SectionDivider label="Technical" />
+
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(TECHNICAL_SECTIONS)} className="space-y-3">
+        {/* Technical Data Sheet Profile */}
+        {reference.tdsProfile && (
+          <AccordionSection icon={FileSpreadsheet} title="Technical Data Sheet Profile" value="tds" iconColor="text-cyan-500">
+            {reference.tdsProfile.notes && (
+              <p className="text-xs text-muted-foreground italic">{reference.tdsProfile.notes}</p>
+            )}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[180px]">Property</TableHead>
+                    <TableHead className="w-[120px]">Value</TableHead>
+                    <TableHead>Implications</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reference.tdsProfile.properties.map((prop, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium text-foreground">{prop.name}</TableCell>
+                      <TableCell className="font-mono text-sm text-foreground">
+                        {prop.value} {prop.unit && <span className="text-muted-foreground">{prop.unit}</span>}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{prop.implications}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </AccordionSection>
+        )}
+
+        {/* Adhesion & Multi-Material Compatibility */}
+        {reference.adhesion && (
+          <AccordionSection icon={Link2} title="Adhesion & Multi-Material Compatibility" value="adhesion" iconColor="text-primary">
+            {reference.adhesion.bedSurfaces && (
+              <div>
+                <h5 className="text-sm font-medium mb-3 text-foreground">Bed Surface Compatibility</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {reference.adhesion.bedSurfaces.excellent && reference.adhesion.bedSurfaces.excellent.length > 0 && (
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                      <span className="text-xs font-semibold text-green-500 uppercase">Excellent</span>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {reference.adhesion.bedSurfaces.excellent.map((s, i) => (
+                          <Badge key={i} variant="outline" className="text-xs border-green-500/30 text-green-500">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {reference.adhesion.bedSurfaces.good && reference.adhesion.bedSurfaces.good.length > 0 && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                      <span className="text-xs font-semibold text-amber-500 uppercase">Good</span>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {reference.adhesion.bedSurfaces.good.map((s, i) => (
+                          <Badge key={i} variant="outline" className="text-xs border-amber-500/30 text-amber-500">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {reference.adhesion.bedSurfaces.poor && reference.adhesion.bedSurfaces.poor.length > 0 && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                      <span className="text-xs font-semibold text-red-500 uppercase">Poor</span>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {reference.adhesion.bedSurfaces.poor.map((s, i) => (
+                          <Badge key={i} variant="outline" className="text-xs border-red-500/30 text-red-500">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {reference.adhesion.releaseAgents && (
+              <div>
+                <h5 className="text-sm font-medium mb-1 text-foreground">Release Agents</h5>
+                <p className="text-sm text-muted-foreground">{reference.adhesion.releaseAgents}</p>
+              </div>
+            )}
+
+            {reference.adhesion.multiMaterial && reference.adhesion.multiMaterial.length > 0 && (
+              <div>
+                <h5 className="text-sm font-medium mb-3 text-foreground">Multi-Material Bonding</h5>
+                <div className="space-y-2">
+                  {reference.adhesion.multiMaterial.map((mm, i) => (
+                    <div key={i} className="flex items-start gap-3 bg-gray-800/30 rounded-lg p-3">
+                      <Badge 
+                        variant="outline"
+                        className="text-xs shrink-0 border-primary/30 text-primary"
+                      >
+                        {mm.material}
+                      </Badge>
+                      <div>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          mm.bondQuality === 'Strong Chemical Bond' && "text-green-500",
+                          mm.bondQuality === 'No Bond' && "text-red-500"
+                        )}>
+                          {mm.bondQuality}
+                        </span>
+                        {mm.notes && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{mm.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </AccordionSection>
+        )}
+      </Accordion>
+
+      {/* CONTEXT Section */}
+      <SectionDivider label="Context" />
+
+      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(CONTEXT_SECTIONS)} className="space-y-3">
+        {/* Practical Context */}
+        <AccordionSection icon={Factory} title="Practical Context" value="practical" iconColor="text-orange-500">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">Cost Position:</span>
+            <Badge variant={
+              reference.practicalContext.costPosition === 'Budget' ? 'secondary' :
+              reference.practicalContext.costPosition === 'Standard' ? 'outline' :
+              reference.practicalContext.costPosition === 'Premium' ? 'default' :
+              'destructive'
+            }>
+              {reference.practicalContext.costPosition}
+            </Badge>
+          </div>
+
+          {reference.practicalContext.industryAdoption && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Industry Adoption</h5>
+              <div className="flex flex-wrap gap-1.5">
+                {reference.practicalContext.industryAdoption.map((industry, i) => (
+                  <Badge key={i} variant="outline" className="text-xs border-primary/30 text-primary">{industry}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {reference.practicalContext.commonApplications && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Common Applications</h5>
+              <InfoList items={reference.practicalContext.commonApplications} />
+            </div>
+          )}
+
+          {reference.practicalContext.safetyStandards && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Safety Standards</h5>
+              <InfoList items={reference.practicalContext.safetyStandards} />
+            </div>
+          )}
+        </AccordionSection>
+
+        {/* Material Family Context */}
+        <AccordionSection icon={GitBranch} title="Material Family Context" value="family" iconColor="text-purple-500">
+          {reference.familyContext.parentPolymer && (
+            <div>
+              <h5 className="text-sm font-medium mb-1 text-foreground">Parent Polymer</h5>
+              <p className="text-sm text-muted-foreground">{reference.familyContext.parentPolymer}</p>
+            </div>
+          )}
+
+          {reference.familyContext.variants && (
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-foreground">Variants</h5>
+              <div className="flex flex-wrap gap-1.5">
+                {reference.familyContext.variants.map((variant, i) => (
+                  <Badge key={i} variant="outline" className="text-xs border-primary/30 text-primary">{variant}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {reference.familyContext.chemicalComparison && (
+            <div>
+              <h5 className="text-sm font-medium mb-1 text-foreground">Chemical Comparison</h5>
+              <p className="text-sm text-muted-foreground">{reference.familyContext.chemicalComparison}</p>
+            </div>
+          )}
+
+          {reference.familyContext.evolution && (
+            <div>
+              <h5 className="text-sm font-medium mb-1 text-foreground">Evolution</h5>
+              <p className="text-sm text-muted-foreground">{reference.familyContext.evolution}</p>
+            </div>
+          )}
+        </AccordionSection>
+
+        {/* Origin & History */}
         <AccordionSection icon={History} title="Origin & History" value="origin" iconColor="text-amber-500">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-start gap-2">
@@ -348,344 +687,6 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
             </div>
           )}
         </AccordionSection>
-
-        {/* Material Family Context */}
-        <AccordionSection icon={GitBranch} title="Material Family Context" value="family" iconColor="text-purple-500">
-          {reference.familyContext.parentPolymer && (
-            <div>
-              <h5 className="text-sm font-medium mb-1 text-foreground">Parent Polymer</h5>
-              <p className="text-sm text-muted-foreground">{reference.familyContext.parentPolymer}</p>
-            </div>
-          )}
-
-          {reference.familyContext.variants && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Variants</h5>
-              <div className="flex flex-wrap gap-1.5">
-                {reference.familyContext.variants.map((variant, i) => (
-                  <Badge key={i} variant="outline" className="text-xs border-primary/30 text-primary">{variant}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {reference.familyContext.chemicalComparison && (
-            <div>
-              <h5 className="text-sm font-medium mb-1 text-foreground">Chemical Comparison</h5>
-              <p className="text-sm text-muted-foreground">{reference.familyContext.chemicalComparison}</p>
-            </div>
-          )}
-
-          {reference.familyContext.evolution && (
-            <div>
-              <h5 className="text-sm font-medium mb-1 text-foreground">Evolution</h5>
-              <p className="text-sm text-muted-foreground">{reference.familyContext.evolution}</p>
-            </div>
-          )}
-        </AccordionSection>
-      </Accordion>
-
-      {/* PERFORMANCE Section */}
-      <SectionDivider label="Performance" />
-
-      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(PERFORMANCE_SECTIONS)} className="space-y-3">
-        {/* Strengths */}
-        <AccordionSection icon={ThumbsUp} title="Strengths" value="strengths" iconColor="text-green-500">
-          {reference.strengths.uniqueProperties && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Unique Properties</h5>
-              <InfoList items={reference.strengths.uniqueProperties} />
-            </div>
-          )}
-
-          {reference.strengths.bestUseScenarios && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Best Use Scenarios</h5>
-              <InfoList items={reference.strengths.bestUseScenarios} />
-            </div>
-          )}
-
-          {reference.strengths.advantagesOverCompetitors && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Advantages Over Competitors</h5>
-              <InfoList items={reference.strengths.advantagesOverCompetitors} />
-            </div>
-          )}
-
-          {reference.strengths.whyChooseThis && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-              <h5 className="text-sm font-medium mb-1 text-green-500">Why Choose This?</h5>
-              <p className="text-sm text-muted-foreground">{reference.strengths.whyChooseThis}</p>
-            </div>
-          )}
-        </AccordionSection>
-
-        {/* Weaknesses */}
-        <AccordionSection icon={ThumbsDown} title="Weaknesses" value="weaknesses" iconColor="text-red-500">
-          {reference.weaknesses.limitations && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Limitations</h5>
-              <InfoList items={reference.weaknesses.limitations} />
-            </div>
-          )}
-
-          {reference.weaknesses.commonProblems && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Common Problems</h5>
-              <InfoList items={reference.weaknesses.commonProblems} />
-            </div>
-          )}
-
-          {reference.weaknesses.environmentalConcerns && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Environmental Concerns</h5>
-              <InfoList items={reference.weaknesses.environmentalConcerns} />
-            </div>
-          )}
-
-          {reference.weaknesses.whenNotToUse && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <h5 className="text-sm font-medium mb-2 text-red-500">When NOT to Use</h5>
-              <InfoList items={reference.weaknesses.whenNotToUse} />
-            </div>
-          )}
-        </AccordionSection>
-
-        {/* Practical Context */}
-        <AccordionSection icon={Factory} title="Practical Context" value="practical" iconColor="text-orange-500">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground">Cost Position:</span>
-            <Badge variant={
-              reference.practicalContext.costPosition === 'Budget' ? 'secondary' :
-              reference.practicalContext.costPosition === 'Standard' ? 'outline' :
-              reference.practicalContext.costPosition === 'Premium' ? 'default' :
-              'destructive'
-            }>
-              {reference.practicalContext.costPosition}
-            </Badge>
-          </div>
-
-          {reference.practicalContext.industryAdoption && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Industry Adoption</h5>
-              <div className="flex flex-wrap gap-1.5">
-                {reference.practicalContext.industryAdoption.map((industry, i) => (
-                  <Badge key={i} variant="outline" className="text-xs border-primary/30 text-primary">{industry}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {reference.practicalContext.commonApplications && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Common Applications</h5>
-              <InfoList items={reference.practicalContext.commonApplications} />
-            </div>
-          )}
-
-          {reference.practicalContext.safetyStandards && (
-            <div>
-              <h5 className="text-sm font-medium mb-2 text-foreground">Safety Standards</h5>
-              <InfoList items={reference.practicalContext.safetyStandards} />
-            </div>
-          )}
-        </AccordionSection>
-      </Accordion>
-
-      {/* TECHNICAL Section */}
-      <SectionDivider label="Technical" />
-
-      <Accordion type="multiple" value={openSections} onValueChange={makeGroupHandler(TECHNICAL_SECTIONS)} className="space-y-3">
-        {/* Technical Data Sheet Profile */}
-        {reference.tdsProfile && (
-          <AccordionSection icon={FileSpreadsheet} title="Technical Data Sheet Profile" value="tds" iconColor="text-cyan-500">
-            {reference.tdsProfile.notes && (
-              <p className="text-xs text-muted-foreground italic">{reference.tdsProfile.notes}</p>
-            )}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[180px]">Property</TableHead>
-                    <TableHead className="w-[120px]">Value</TableHead>
-                    <TableHead>Implications</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reference.tdsProfile.properties.map((prop, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium text-foreground">{prop.name}</TableCell>
-                      <TableCell className="font-mono text-sm text-foreground">
-                        {prop.value} {prop.unit && <span className="text-muted-foreground">{prop.unit}</span>}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{prop.implications}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </AccordionSection>
-        )}
-
-        {/* Print Settings */}
-        {reference.printSettings && (
-          <AccordionSection icon={Settings2} title="Print Settings" value="printSettings" iconColor="text-indigo-500">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reference.printSettings.nozzleTemp && (
-                <div className="flex items-start gap-2 bg-gray-800/30 rounded-lg p-3">
-                  <Thermometer className="w-4 h-4 text-red-500 mt-0.5" />
-                  <div>
-                    <span className="text-xs text-muted-foreground">Nozzle Temperature</span>
-                    <p className="text-sm font-mono font-medium text-foreground">
-                      {reference.printSettings.nozzleTemp.min}°C – {reference.printSettings.nozzleTemp.max}°C
-                    </p>
-                  </div>
-                </div>
-              )}
-              {reference.printSettings.bedTemp && (
-                <div className="flex items-start gap-2 bg-gray-800/30 rounded-lg p-3">
-                  <Thermometer className="w-4 h-4 text-orange-500 mt-0.5" />
-                  <div>
-                    <span className="text-xs text-muted-foreground">Bed Temperature</span>
-                    <p className="text-sm font-mono font-medium text-foreground">
-                      {reference.printSettings.bedTemp.min}°C – {reference.printSettings.bedTemp.max}°C
-                      {reference.printSettings.bedTemp.optimal && <span className="text-muted-foreground ml-1">(optimal: {reference.printSettings.bedTemp.optimal}°C)</span>}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {reference.printSettings.coolingFan && (
-              <div className="flex items-start gap-2">
-                <Wind className="w-4 h-4 text-blue-400 mt-0.5" />
-                <div>
-                  <span className="text-sm font-medium text-foreground">Cooling Fan: {reference.printSettings.coolingFan.min}-{reference.printSettings.coolingFan.max}%</span>
-                  {reference.printSettings.coolingFan.notes && (
-                    <p className="text-sm text-muted-foreground">{reference.printSettings.coolingFan.notes}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {reference.printSettings.enclosure && (
-              <div className="flex items-start gap-2">
-                <div className={cn(
-                  "w-4 h-4 rounded-full mt-0.5 flex items-center justify-center text-[10px] font-bold",
-                  reference.printSettings.enclosure.required ? "bg-amber-500 text-amber-950" : "bg-green-500 text-green-950"
-                )}>
-                  {reference.printSettings.enclosure.required ? '!' : '✓'}
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-foreground">Enclosure: {reference.printSettings.enclosure.required ? 'Required' : 'Not Required'}</span>
-                  {reference.printSettings.enclosure.notes && (
-                    <p className="text-sm text-muted-foreground">{reference.printSettings.enclosure.notes}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {reference.printSettings.drying && (
-              <div className="flex items-start gap-2">
-                <Droplets className="w-4 h-4 text-sky-400 mt-0.5" />
-                <div>
-                  <span className="text-sm font-medium text-foreground">
-                    Drying: {reference.printSettings.drying.temp}°C for {reference.printSettings.drying.duration}
-                  </span>
-                  {reference.printSettings.drying.notes && (
-                    <p className="text-sm text-muted-foreground">{reference.printSettings.drying.notes}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {reference.printSettings.additionalNotes && reference.printSettings.additionalNotes.length > 0 && (
-              <div className="mt-2">
-                <InfoList items={reference.printSettings.additionalNotes} />
-              </div>
-            )}
-          </AccordionSection>
-        )}
-
-        {/* Adhesion & Multi-Material Compatibility */}
-        {reference.adhesion && (
-          <AccordionSection icon={Link2} title="Adhesion & Multi-Material Compatibility" value="adhesion" iconColor="text-primary">
-            {reference.adhesion.bedSurfaces && (
-              <div>
-                <h5 className="text-sm font-medium mb-3 text-foreground">Bed Surface Compatibility</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {reference.adhesion.bedSurfaces.excellent && reference.adhesion.bedSurfaces.excellent.length > 0 && (
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
-                      <span className="text-xs font-semibold text-green-500 uppercase">Excellent</span>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {reference.adhesion.bedSurfaces.excellent.map((s, i) => (
-                          <Badge key={i} variant="outline" className="text-xs border-green-500/30 text-green-500">{s}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {reference.adhesion.bedSurfaces.good && reference.adhesion.bedSurfaces.good.length > 0 && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                      <span className="text-xs font-semibold text-amber-500 uppercase">Good</span>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {reference.adhesion.bedSurfaces.good.map((s, i) => (
-                          <Badge key={i} variant="outline" className="text-xs border-amber-500/30 text-amber-500">{s}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {reference.adhesion.bedSurfaces.poor && reference.adhesion.bedSurfaces.poor.length > 0 && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                      <span className="text-xs font-semibold text-red-500 uppercase">Poor</span>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {reference.adhesion.bedSurfaces.poor.map((s, i) => (
-                          <Badge key={i} variant="outline" className="text-xs border-red-500/30 text-red-500">{s}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {reference.adhesion.releaseAgents && (
-              <div>
-                <h5 className="text-sm font-medium mb-1 text-foreground">Release Agents</h5>
-                <p className="text-sm text-muted-foreground">{reference.adhesion.releaseAgents}</p>
-              </div>
-            )}
-
-            {reference.adhesion.multiMaterial && reference.adhesion.multiMaterial.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium mb-3 text-foreground">Multi-Material Bonding</h5>
-                <div className="space-y-2">
-                  {reference.adhesion.multiMaterial.map((mm, i) => (
-                    <div key={i} className="flex items-start gap-3 bg-gray-800/30 rounded-lg p-3">
-                      <Badge 
-                        variant="outline"
-                        className="text-xs shrink-0 border-primary/30 text-primary"
-                      >
-                        {mm.material}
-                      </Badge>
-                      <div>
-                        <span className={cn(
-                          "text-sm font-medium",
-                          mm.bondQuality === 'Strong Chemical Bond' && "text-green-500",
-                          mm.bondQuality === 'No Bond' && "text-red-500"
-                        )}>
-                          {mm.bondQuality}
-                        </span>
-                        {mm.notes && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{mm.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </AccordionSection>
-        )}
       </Accordion>
 
       {/* OTHER Section */}
