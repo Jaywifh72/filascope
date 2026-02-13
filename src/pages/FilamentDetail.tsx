@@ -55,6 +55,7 @@ import { useFilamentBySlug } from "@/hooks/useFilamentBySlug";
 import { useFilamentListings } from "@/hooks/useFilamentListings";
 import { useFilamentDetailPricing } from "@/hooks/useFilamentDetailPricing";
 import { useBrowseHistory } from "@/hooks/useBrowseHistory";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useCommunityReviewStats } from "@/hooks/useCommunityReviewStats";
 
 type Filament = Database["public"]["Tables"]["filaments"]["Row"];
@@ -326,11 +327,21 @@ const FilamentDetail = () => {
 
   // Track browse history
   const { addToHistory } = useBrowseHistory();
+  const { addItem: addRecentlyViewed } = useRecentlyViewed();
   
   useEffect(() => {
     if (filament?.id) {
       incrementStat('materials_explored');
       addToHistory(filament.id, 'filament');
+      addRecentlyViewed({
+        id: filament.id,
+        name: filament.product_title || "Unknown Filament",
+        brand: filament.vendor || "",
+        price: detailPricing?.bestPrice?.spoolPrice ? `$${detailPricing.bestPrice.spoolPrice.toFixed(2)}` : "",
+        image: filament.featured_image || null,
+        url: `/filament/${filament.product_handle || filament.id}`,
+        type: "filament",
+      });
     }
   }, [filament?.id]);
 

@@ -11,6 +11,7 @@ const filascopeLogo = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/render/im
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { RegionSelector } from "@/components/RegionSelector";
 import { WishlistButton } from "@/components/wishlist/WishlistButton";
+import { RecentlyViewedDropdown } from "@/components/RecentlyViewedDropdown";
 import { TrendingPanel } from "@/components/TrendingPanel";
 import { useTrendingPanel } from "@/hooks/useTrendingPanel";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -579,6 +580,7 @@ const Navbar = () => {
           <div className="hidden md:block h-6 w-px bg-border" />
           <div className="flex items-center gap-3 shrink-0 ml-auto">
             <WishlistButton />
+            <RecentlyViewedDropdown />
             <CurrencySelector />
             <ThemeToggle />
             

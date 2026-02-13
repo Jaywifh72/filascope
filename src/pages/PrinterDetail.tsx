@@ -13,6 +13,7 @@ import { PrinterPriceChart } from "@/components/PrinterPriceChart";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback } from "react";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { 
   PrinterTabNav, 
   PrinterTabContent,
@@ -159,9 +160,21 @@ const PrinterDetail = () => {
   
   // Track browse history
   const { addToHistory } = useBrowseHistory();
+  const { addItem: addRecentlyViewed } = useRecentlyViewed();
   useEffect(() => {
     if (printer?.id) {
       addToHistory(printer.id, 'printer');
+      const brand = typeof printer.brand === 'object' && printer.brand !== null && 'brand' in printer.brand
+        ? (printer.brand as any).brand : "";
+      addRecentlyViewed({
+        id: printer.id,
+        name: printer.model_name || "Unknown Printer",
+        brand: brand || "",
+        price: printer.current_price_usd_store ? `$${printer.current_price_usd_store.toFixed(2)}` : "",
+        image: (printer as any).featured_image || null,
+        url: `/printer/${printer.printer_id || printer.id}`,
+        type: "printer",
+      });
     }
   }, [printer?.id]);
 
