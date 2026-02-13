@@ -14,11 +14,30 @@ export interface RecentlyViewedItem {
   timestamp: number;
 }
 
+function isValidItem(item: unknown): item is RecentlyViewedItem {
+  if (!item || typeof item !== "object") return false;
+  const i = item as Record<string, unknown>;
+  return (
+    typeof i.id === "string" && i.id.trim() !== "" &&
+    typeof i.name === "string" && i.name.trim() !== "" &&
+    typeof i.url === "string" && i.url.trim() !== ""
+  );
+}
+
 function loadItems(): RecentlyViewedItem[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return [];
+    const valid = parsed.filter(isValidItem);
+    // Clean up corrupted entries
+    if (valid.length !== parsed.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(valid));
+    }
+    return valid;
   } catch {
+    localStorage.removeItem(STORAGE_KEY);
     return [];
   }
 }
