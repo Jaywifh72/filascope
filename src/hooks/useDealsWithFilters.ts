@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+
+export type DealSortOption = "discount-desc" | "price-asc" | "price-desc" | "newest" | "brand-az";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDealsCount } from "@/hooks/useDealsCount";
@@ -57,6 +59,7 @@ export function useDealsWithFilters() {
   const [minDiscount, setMinDiscount] = useState(0);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
   const [showLocalOnly, setShowLocalOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<DealSortOption>("discount-desc");
   
   // Use shared deals count for accurate total (not limited by query limit)
   const { data: dealsCountData } = useDealsCount();
@@ -206,13 +209,27 @@ export function useDealsWithFilters() {
         }
         return true;
       })
-      // Sort: local deals first, then by discount descending
+      // Sort: local deals first as tiebreaker, then by selected sort
       .sort((a, b) => {
+        // Local deals first tiebreaker
         if (a.isLocal && !b.isLocal) return -1;
         if (!a.isLocal && b.isLocal) return 1;
-        return b.discount - a.discount;
+        
+        switch (sortBy) {
+          case "price-asc":
+            return (a.variant_price ?? 0) - (b.variant_price ?? 0);
+          case "price-desc":
+            return (b.variant_price ?? 0) - (a.variant_price ?? 0);
+          case "newest":
+            return (b.last_scraped_at ?? "").localeCompare(a.last_scraped_at ?? "");
+          case "brand-az":
+            return (a.vendor ?? "").localeCompare(b.vendor ?? "");
+          case "discount-desc":
+          default:
+            return b.discount - a.discount;
+        }
       });
-  }, [dealsWithStoreInfo, selectedMaterials, selectedBrands, minDiscount, priceRange, showLocalOnly]);
+  }, [dealsWithStoreInfo, selectedMaterials, selectedBrands, minDiscount, priceRange, showLocalOnly, sortBy]);
 
   // Group deals by product (color variants combined)
   const groupedDeals = useMemo(() => {
@@ -250,6 +267,9 @@ export function useDealsWithFilters() {
     localDealCount,
     userRegion,
     lastUpdated,
+    // Sort state
+    sortBy,
+    setSortBy,
     // Actions
     clearAllFilters,
   };
