@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,8 @@ import {
   BookOpen,
   FileQuestion,
   Filter,
-  ChevronsUpDown
+  ChevronsUpDown,
+  ArrowRight
 } from "lucide-react";
 import { MATERIAL_CATEGORIES, MATERIAL_INFO, getMaterialInfo } from "@/lib/materialHierarchy";
 import { getMaterialReference, MATERIAL_REFERENCE_DATA, type MaterialReferenceInfo } from "@/lib/materialReferenceData";
@@ -251,6 +253,15 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
           ))}
         </div>
       )}
+
+      {/* Browse Filaments CTA */}
+      <Link
+        to={`/?material=${encodeURIComponent(reference.name)}`}
+        className="inline-flex items-center gap-2 text-sm font-medium text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/15 border border-cyan-500/20 rounded-lg px-4 py-2 transition-all duration-150 mt-4"
+      >
+        Browse {reference.name} Filaments
+        <ArrowRight className="w-3.5 h-3.5" />
+      </Link>
 
       <div className="my-6 border-t border-border/30" />
 
@@ -559,6 +570,14 @@ const MaterialDetailView = ({ reference, basicInfo }: { reference: MaterialRefer
               <InfoList items={reference.practicalContext.safetyStandards} />
             </div>
           )}
+
+          <Link
+            to={`/?material=${encodeURIComponent(reference.name)}`}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors mt-2"
+          >
+            Shop {reference.name} filaments
+            <ArrowRight className="w-3 h-3" />
+          </Link>
         </AccordionSection>
 
         {/* Material Family Context */}
