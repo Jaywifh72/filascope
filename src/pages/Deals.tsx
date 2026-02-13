@@ -3,6 +3,14 @@ import { useRegion } from "@/contexts/RegionContext";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Tag, Clock, Percent, ArrowRight, Filter, AlertTriangle, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { DealSortOption } from "@/hooks/useDealsWithFilters";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DealFilters } from "@/components/deals/DealFilters";
@@ -42,6 +50,8 @@ const Deals = () => {
     userRegion,
     clearAllFilters,
     lastUpdated,
+    sortBy,
+    setSortBy,
   } = useDealsWithFilters();
 
   const userRegionFlag = getRegionFlag(userRegion);
@@ -231,9 +241,42 @@ const Deals = () => {
               onBrandChange={setSelectedBrands}
               className="mt-3"
             />
+
+            {/* Results Count + Sort Control Bar */}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
+              <p className="text-sm text-muted-foreground">
+                {hasActiveFilters ? (
+                  <>Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> of <span className="text-foreground font-medium">{totalDeals}</span> deals</>
+                ) : (
+                  <>Showing all <span className="text-foreground font-medium">{totalDeals}</span> deals</>
+                )}
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="ml-3 text-xs text-primary hover:underline transition-colors"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground hidden sm:inline">Sort By</span>
+                <Select value={sortBy} onValueChange={(val) => setSortBy(val as DealSortOption)}>
+                  <SelectTrigger className="w-[180px] h-9 text-sm rounded-lg border bg-muted/50 border-border text-foreground hover:bg-muted transition-colors">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border z-50">
+                    <SelectItem value="discount-desc">Biggest Discount</SelectItem>
+                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="brand-az">Brand A–Z</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </section>
-
 
         {/* Price Disclaimer — dismissible */}
         {!disclaimerDismissed && (
@@ -267,27 +310,6 @@ const Deals = () => {
             </div>
           </section>
         )}
-
-        {/* Results Count Bar */}
-        <section className="px-6 md:px-10 pb-2">
-          <div className="max-w-[1600px] mx-auto flex items-center justify-between py-2">
-            <p className="text-sm text-muted-foreground">
-              {hasActiveFilters ? (
-                <>Showing <span className="text-foreground font-medium">{groupedDeals.length}</span> of <span className="text-foreground font-medium">{totalDeals}</span> deals</>
-              ) : (
-                <>Showing all <span className="text-foreground font-medium">{totalDeals}</span> deals</>
-              )}
-            </p>
-            {hasActiveFilters && (
-              <button
-                onClick={clearAllFilters}
-                className="text-xs text-primary hover:underline transition-colors"
-              >
-                Clear all filters
-              </button>
-            )}
-          </div>
-        </section>
 
         {/* Deals Grid */}
         <section className="px-6 md:px-10 pb-16">
