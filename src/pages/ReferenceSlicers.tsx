@@ -261,12 +261,15 @@ const ReferenceSlicers = () => {
   }, [sortKey, sortDir, priceFilter, focusFilter]);
 
   const scrollToComparison = () => {
-    const element = document.getElementById('comparison-table');
-    if (element) {
-      const offset = 80;
-      const top = element.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
+    setActiveTab("comparison");
+    // Scroll to the tab bar area after switching tabs
+    requestAnimationFrame(() => {
+      const tabBar = document.querySelector('[role="tablist"]');
+      if (tabBar) {
+        const top = tabBar.getBoundingClientRect().top + window.scrollY - 20;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
   };
 
   const handleLearnMore = (slicerName: string) => {
