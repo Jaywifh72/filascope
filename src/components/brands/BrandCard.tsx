@@ -232,7 +232,7 @@ const BrandCard = ({
               handleClick();
             }}
           >
-            {isEmpty ? 'Notify Me' : 'View Filaments'}
+            {isEmpty ? 'Notify Me' : variantCount > 0 ? `View ${variantCount} Filament${variantCount === 1 ? '' : 's'}` : `View ${productLineCount} Filament${productLineCount === 1 ? '' : 's'}`}
             <ArrowRight className="h-3.5 w-3.5 transition-transform [@media(hover:hover)]:group-hover:translate-x-1" />
           </button>
         </div>
