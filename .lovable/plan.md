@@ -1,53 +1,55 @@
 
-## Add Hover States and Micro-Interactions to Deal Cards
+
+## Redesign Deal Card Freshness Badges, Discount Tiers, and Savings Display
 
 ### Overview
-Add interactive hover feedback, entrance animations, and discount badge enhancements to the deal cards on the `/deals` page, following the existing catalog card patterns.
+Replace the generic amber freshness badges and green discount badges with a tiered color system, remove noisy "Everyday Price" badges, and add "You save $X" anchoring text to deal cards.
 
 ### Changes
 
 #### 1. Modify `src/components/deals/GroupedDealCard.tsx`
 
-**Card hover state (touch-safe via group hover)**:
-- The Card already has `hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50` on line 308. These need to be wrapped for pointer-only devices. Replace with Tailwind's `@media (hover: hover)` approach using a `group` class on the card and custom CSS.
-- Share button (lines 332-348): Change to `opacity-0 group-hover:opacity-100 transition-opacity duration-200` so it's hidden by default and appears on hover. Touch devices will always show it via a CSS override.
-- CTA button (lines 576-589): Add `group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200` to warm up on card hover.
-- Discount badge (lines 313-321): Add `group-hover:brightness-110 transition-[filter] duration-200`.
+**Freshness badge rewrite** (lines 22-43, the `DealFreshnessBadge` component):
+- Replace the current 4-tier color system with a 5-tier system matching the spec:
+  - 0-3 days: `text-emerald-400` with `CheckCircle` icon, text "Verified today" or "Verified Xd ago"
+  - 4-7 days: `text-cyan-400` with `Clock` icon, text "Checked Xd ago"
+  - 8-14 days: `text-amber-400` with `Clock` icon, text "Checked Xd ago"
+  - 15-30 days: `text-orange-400` with `AlertCircle` icon, text "Checked Xw ago"
+  - 30+ days: `text-red-400/50` with `AlertTriangle` icon, text "Checked Xmo ago -- price may have changed"
+- Simplify from a Badge to an inline `span` with icon + text (lighter visual weight)
+- Import `CheckCircle`, `AlertCircle`, `AlertTriangle` from lucide-react
 
-**Implementation approach for touch safety**:
-- Add `group` class to the Card wrapper.
-- Use `@media (hover: hover)` in `src/index.css` to scope hover effects. On touch devices, share button stays visible (opacity-100 default), and no scale/shadow hover fires.
+**Discount badge tier system** (lines 313-323):
+- Replace the current binary green/amber with 5 tiers:
+  - 50%+: `bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold`
+  - 35-49%: `bg-emerald-500 text-white font-semibold`
+  - 20-34%: `bg-teal-600 text-white font-medium`
+  - 10-19%: `bg-gray-600 text-gray-200 font-medium`
+  - Under 10%: `bg-gray-700 text-gray-400 font-normal`
+- Keep the "Great Deal" label for `isUnusualDiscount`, otherwise show "X% OFF"
 
-**Discount badge pulse for 50%+ deals**:
-- Add a conditional class `animate-deal-pulse` when `group.bestDiscount >= 50`.
-- Define `deal-pulse` keyframe: scale 1 to 1.05 to 1 over 600ms, runs once (`animation-iteration-count: 1`).
+**Add "You save $X" line** (after the price section, around line 433):
+- Only show when NOT a price range (`!hasPriceRange`) and both sale and compare-at prices exist
+- Calculate savings: `variant_compare_at_price - variant_price` (use representative deal)
+- Display: `<RegionalPrice>` component in `text-xs text-emerald-400 font-medium` with "You save" prefix
 
-#### 2. Modify `src/pages/Deals.tsx`
+**Remove DealQualityBadge** (lines 440-447):
+- Remove the `<DealQualityBadge>` usage entirely -- it adds "Everyday Price" noise
+- Remove the import of `DealQualityBadge` (line 11)
+- The freshness badge already communicates recency, and the discount badge communicates value
 
-**Staggered entrance animation**:
-- Wrap each `GroupedDealCard` in a div with inline style for `animation-delay` (30ms per card, capped at 12).
-- Apply a CSS class `deal-card-enter` that does opacity 0 to 1, translateY 10px to 0, duration 300ms ease-out.
-- Respect `prefers-reduced-motion` by wrapping the animation keyframe in `@media (prefers-reduced-motion: no-preference)`.
-- Add a `key` that includes filter state to re-trigger animations on filter change (using a simple counter or filter hash).
-
-#### 3. Modify `src/index.css`
-
-Add the following CSS:
-- `deal-card-enter` keyframe and class (fade-up entrance, 300ms).
-- `deal-pulse` keyframe (scale pulse for 50%+ badges, 600ms, runs once).
-- `@media (hover: hover)` block scoping card hover effects (scale, shadow, border) to pointer devices only.
-- Touch fallback: share button stays `opacity-100` by default on touch devices.
-
-#### 4. Card click behavior
-- The card already links to the filament detail page via the product name and image `Link` components. The entire card should be clickable. Wrap the Card in a `Link` component (or add an `onClick` with `useNavigate`) so clicking anywhere navigates to the deal. The existing `e.stopPropagation()` calls on share, expand, and CTA buttons will prevent conflicts.
+#### 2. Modify `src/components/deals/DealQualityBadge.tsx`
+- No changes needed to the file itself; it just won't be imported by `GroupedDealCard` anymore. It may still be used by `DealCard.tsx` (the non-grouped version).
 
 ### Technical Details
 
-**Files modified**:
-- `src/components/deals/GroupedDealCard.tsx` -- hover classes, share visibility, CTA warmup, discount pulse, full-card click
-- `src/pages/Deals.tsx` -- staggered entrance animation wrapper divs
-- `src/index.css` -- new keyframes and hover-media-query scoping
+**Files modified**: `src/components/deals/GroupedDealCard.tsx` only
 
-**No new dependencies required.**
+**New imports**: `CheckCircle`, `AlertCircle`, `AlertTriangle` from lucide-react (replacing some existing icon imports)
 
-The approach follows the existing pattern from `filament-product-card-v6-final` memory: entrance fade-up with 50ms stagger (adjusted to 30ms here), hover effects scoped to pointer devices, and teal-tinted shadows.
+**Key implementation notes**:
+- The savings calculation uses the representative deal's `variant_compare_at_price` minus `variant_price`, wrapped in the existing `RegionalPrice` component for currency conversion
+- The freshness badge becomes a simple inline span instead of a full Badge component, reducing visual noise
+- The discount badge gradient for 50%+ uses Tailwind's `bg-gradient-to-r` utility classes
+- Touch-safety and hover behavior are unaffected since these changes are purely visual/content
+
