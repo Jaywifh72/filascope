@@ -626,6 +626,40 @@ const Brands = () => {
               </>
             )}
 
+        {/* Brand Comparison Prompt */}
+        {filteredBrands.filter(b => b.productLineCount > 0 || b.variantCount > 0).length >= 6 && (
+          <div className="mt-8 mb-6 max-w-2xl mx-auto">
+            <div className="border border-dashed border-gray-700/60 rounded-xl p-6 text-center bg-gray-900/30">
+              <GitCompare className="h-8 w-8 mx-auto mb-3 text-primary/60" />
+              <h3 className="text-base font-semibold text-foreground mb-1">
+                Can't decide between brands?
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+                Compare materials, pricing, and features side-by-side to find the best match for your printer and projects.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <Button 
+                  onClick={() => navigate('/compare')}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <GitCompare className="h-3.5 w-3.5" />
+                  Compare Brands
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/wizard')}
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Quick Match Quiz
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Footer */}
         <div className="mt-12 border border-gray-800 rounded-lg bg-gray-900/30 p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
