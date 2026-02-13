@@ -39,6 +39,8 @@ interface PurchaseSidebarProps {
   originalPrice?: number | null;
   /** Original currency code before conversion */
   originalCurrency?: CurrencyCode | null;
+  /** Store name for attribution */
+  storeName?: string | null;
 }
 
 export function PurchaseSidebar({
@@ -59,6 +61,7 @@ export function PurchaseSidebar({
   isConverted = false,
   originalPrice,
   originalCurrency,
+  storeName,
 }: PurchaseSidebarProps) {
   const navigate = useNavigate();
 
@@ -94,6 +97,7 @@ export function PurchaseSidebar({
               isConverted={isConverted}
               originalPrice={originalPrice}
               originalCurrency={originalCurrency}
+              storeName={storeName}
             />
           ) : !printer.discontinued ? (
             <div className="space-y-1">
@@ -138,6 +142,7 @@ export function PurchaseSidebar({
             brand={brand}
             isDiscontinued={printer.discontinued}
             stackedButtons
+            storeName={storeName}
           />
           {!displayPrice && !displayMsrp && !printer.discontinued && (
             <p className="text-[10px] text-gray-600 text-center mt-1">Opens manufacturer website</p>

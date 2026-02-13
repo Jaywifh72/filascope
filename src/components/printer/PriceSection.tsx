@@ -33,6 +33,8 @@ interface PriceSectionProps {
   originalPrice?: number | null;
   /** Original currency code before conversion */
   originalCurrency?: RegionalCurrencyCode | null;
+  /** Store name for attribution below price */
+  storeName?: string | null;
 }
 
 export function PriceSection({
@@ -49,6 +51,7 @@ export function PriceSection({
   isConverted = false,
   originalPrice,
   originalCurrency,
+  storeName,
 }: PriceSectionProps) {
   const {
     formatPrice,
@@ -104,17 +107,23 @@ export function PriceSection({
 
   return (
     <div className={compact ? "space-y-1" : "space-y-2"}>
-      <div className={`font-medium text-gray-400 ${compact ? 'text-xs' : 'text-sm'}`}>
-        Current Price
-      </div>
+      {/* MSRP strikethrough - only if current price is below MSRP */}
+      {hasDiscount && (
+        <div className="flex items-center gap-1.5">
+          <span className={`text-muted-foreground line-through ${compact ? 'text-xs' : 'text-sm'}`}>
+            {isConverted ? '~' : ''}{formatDisplayPrice(msrp!)}
+          </span>
+          <span className={`text-muted-foreground ${compact ? 'text-xs' : 'text-sm'}`}>MSRP</span>
+        </div>
+      )}
       
       <div className="flex items-baseline gap-2 flex-wrap">
-        {/* Price - with ~ prefix for converted prices */}
-        <span className={`font-bold text-white ${compact ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
+        {/* Price - with ~ prefix for converted prices, teal color */}
+        <span className={`font-bold text-teal-400 ${compact ? 'text-2xl' : 'text-3xl md:text-4xl'}`}>
           {isConverted ? '~' : ''}{formatDisplayPrice(displayPrice!)}
         </span>
         
-        {/* Discount Badge - GREEN filled badge */}
+        {/* Discount Badge */}
         {hasDiscount && (
           <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-semibold px-1.5 py-0.5 rounded">
             -{discountPercent}%
@@ -122,26 +131,23 @@ export function PriceSection({
         )}
         
         {!price && msrp && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             MSRP
           </span>
         )}
       </div>
 
-      {/* Original Price - gray strikethrough */}
-      {msrp && price && price !== msrp && (
-        <div className="flex items-center gap-2">
-          <span className={`text-gray-500 line-through ${compact ? 'text-xs' : 'text-sm'}`}>
-            {isConverted ? '~' : ''}{formatDisplayPrice(msrp)}
-          </span>
-          <span className={`text-gray-500 ${compact ? 'text-xs' : 'text-sm'}`}>MSRP</span>
+      {/* Store attribution */}
+      {storeName && (
+        <div className="text-xs text-muted-foreground">
+          at {storeName}
         </div>
       )}
 
       {/* Conversion source note */}
       {originalPriceText && (
-        <div className="text-xs text-muted-foreground">
-          {originalPriceText}
+        <div className="text-xs text-muted-foreground/70">
+          converted from {formatCurrencyPrice(originalPrice!, originalCurrency!)} {originalCurrency}
         </div>
       )}
 

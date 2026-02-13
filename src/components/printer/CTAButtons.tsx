@@ -1,6 +1,5 @@
 import { ArrowRight, Check, ShoppingCart, Activity, ExternalLink } from "lucide-react";
 import { usePrinterCompare, PrinterCompareItem } from "@/hooks/usePrinterCompare";
-import { useCurrency } from "@/hooks/useCurrency";
 import { useTrackPrinterEvent } from "@/hooks/usePrinterAnalytics";
 
 interface CTAButtonsProps {
@@ -13,6 +12,8 @@ interface CTAButtonsProps {
   largeButtons?: boolean;
   /** Stack buttons vertically for sidebar */
   stackedButtons?: boolean;
+  /** Store name for Buy button label */
+  storeName?: string | null;
 }
 
 export function CTAButtons({
@@ -24,9 +25,9 @@ export function CTAButtons({
   isDiscontinued,
   largeButtons = false,
   stackedButtons = false,
+  storeName,
 }: CTAButtonsProps) {
   const { addPrinter, isSelected, isMaxReached } = usePrinterCompare();
-  const { formatPrice } = useCurrency();
   const { mutate: trackEvent } = useTrackPrinterEvent();
 
   const isAlreadySelected = isSelected(printer.id);
@@ -69,15 +70,10 @@ export function CTAButtons({
               className={`w-full ${buttonHeight} ${buttonPadding} bg-primary text-primary-foreground ${fontSize} font-semibold rounded-lg flex items-center justify-center gap-2 whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group`}
             >
               <ShoppingCart className={iconSize} />
-              Buy Now
+              {storeName ? `Buy at ${storeName}` : 'Buy Now'}
               <ExternalLink className={`${iconSize} opacity-70`} />
             </button>
           </a>
-          {storePrice && !isDiscontinued && (
-            <p className="text-[10px] text-gray-500 font-mono text-center mt-1">
-              {formatPrice(storePrice, false)} in local currency
-            </p>
-          )}
         </div>
       )}
 
