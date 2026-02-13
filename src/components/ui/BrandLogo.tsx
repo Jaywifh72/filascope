@@ -35,18 +35,24 @@ export function BrandLogo({ src, brandName, className, size = "md" }: BrandLogoP
   const initial = brandName?.charAt(0)?.toUpperCase() || "?";
 
   if (!src || failed) {
+    const fallbackSizes = {
+      sm: "h-5 w-5 text-[10px]",
+      md: "h-8 w-8 text-sm",
+      lg: "h-16 w-16 text-2xl",
+    };
     return (
-      <span
+      <div
         className={cn(
-          "text-lg font-semibold text-muted-foreground font-mono text-center py-2 flex-shrink-0",
+          "rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center flex-shrink-0",
+          fallbackSizes[size],
           className
         )}
         title={brandName}
         role="img"
         aria-label={`${brandName} logo`}
       >
-        {brandName || "?"}
-      </span>
+        <span className="font-bold text-white/80">{initial}</span>
+      </div>
     );
   }
 
