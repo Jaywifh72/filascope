@@ -261,6 +261,26 @@ export function MaterialsTabContent({ printer, accessories }: MaterialsTabConten
 
   return (
     <div className="tab-content">
+      {/* Browse Compatible Filaments Banner */}
+      <section className="mb-6">
+        <div className="flex items-center justify-between bg-teal-500/5 border border-teal-500/15 rounded-xl p-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-foreground/90">
+              This printer is compatible with {displayMaterials.size > 0 ? Array.from(displayMaterials.values()).flat().length : '—'} material types
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Browse our full filament database filtered for the {printer.model_name}
+            </p>
+          </div>
+          <Button asChild size="sm" className="ml-4 bg-teal-600 hover:bg-teal-700 text-white flex-shrink-0">
+            <Link to={`/filaments?printer=${encodeURIComponent(printer.model_name)}`}>
+              Browse Compatible Filaments
+              <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
       {/* Supported Materials - Now at top with fallback logic */}
       <section className="section-card">
         <SectionHeader icon={Palette} title="Supported Materials" />

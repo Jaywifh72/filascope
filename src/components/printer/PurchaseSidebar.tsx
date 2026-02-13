@@ -1,5 +1,5 @@
-import { ArrowRight, Shield, Sparkles, Globe } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowRight, Shield, Sparkles, Globe, Layers } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 import { PriceSection } from "./PriceSection";
 import { CTAButtons } from "./CTAButtons";
 import { REGIONS } from "@/config/regions";
@@ -171,6 +171,24 @@ export function PurchaseSidebar({
           productType="printer"
           productTitle={printer.model_name}
         />
+
+        {/* Browse Compatible Filaments CTA */}
+        <Link
+          to={`/filaments?printer=${encodeURIComponent(printer.model_name)}`}
+          className="block bg-gradient-to-r from-teal-500/10 to-purple-500/10 border border-teal-500/20 rounded-xl p-3 hover:border-teal-500/40 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <Layers className="w-5 h-5 text-teal-400 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-semibold text-foreground/90 block">Compatible Filaments</span>
+              <span className="text-xs text-muted-foreground">Find filaments for this printer</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 mt-2 text-teal-400 text-xs font-medium group-hover:text-teal-300 transition-colors">
+            <span>Browse Filaments</span>
+            <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+          </div>
+        </Link>
 
         {/* Warranty Summary */}
         {warrantyYears && (

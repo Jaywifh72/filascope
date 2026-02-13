@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Box, 
   Thermometer, 
+  ArrowRight,
   Gauge, 
   Wifi, 
   Layers,
@@ -216,6 +218,17 @@ export function OverviewTabContent({ printer, brand, accessories = [], activityS
               maxBedTemp={bedMax} 
             />
           </div>
+        </div>
+
+        {/* Cross-link to filament catalog */}
+        <div className="mt-4 flex justify-end">
+          <Link
+            to={`/filaments?printer=${encodeURIComponent(printer.model_name)}`}
+            className="inline-flex items-center gap-1 text-xs text-teal-400 hover:text-teal-300 transition-colors font-medium"
+          >
+            View all compatible filaments
+            <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
       </section>
 
