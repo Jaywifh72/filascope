@@ -155,6 +155,7 @@ const ReferenceSlicers = () => {
   const [priceFilter, setPriceFilter] = useState<string>("all");
   const [focusFilter, setFocusFilter] = useState<string>("all");
   const [showDetailedTable, setShowDetailedTable] = useState(false);
+  const [openProfileId, setOpenProfileId] = useState<string | undefined>(undefined);
   
   // New filter state
   const [filters, setFilters] = useState<SlicerFilterState>(INITIAL_FILTER_STATE);
@@ -273,13 +274,23 @@ const ReferenceSlicers = () => {
   };
 
   const handleLearnMore = (slicerName: string) => {
-    // Scroll to the accordion item for this slicer
-    const element = document.getElementById(`slicer-${slicerName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
-    if (element) {
-      const offset = 80;
-      const top = element.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
+    // Find matching slicer id from slicerData
+    const match = slicerData.find(s => s.name === slicerName);
+    const targetId = match?.id || slicerName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    
+    setActiveTab("profiles");
+    setOpenProfileId(targetId);
+    
+    // Wait for tab content to render, then scroll
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const element = document.getElementById(`slicer-${slicerName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
+        if (element) {
+          const top = element.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      }, 100);
+    });
   };
 
   const handleAddToCompare = (slicerName: string) => {
@@ -693,7 +704,7 @@ const ReferenceSlicers = () => {
                   <h2 className="text-2xl font-bold text-white max-md:text-xl mb-2">Detailed Slicer Profiles</h2>
                   <p className="text-gray-400">In-depth analysis of each slicer's features and capabilities</p>
                 </div>
-                <Accordion type="single" collapsible className="space-y-2">
+                <Accordion type="single" collapsible className="space-y-2" value={openProfileId} onValueChange={setOpenProfileId}>
                   {slicerData.map((slicer, index) => (
                     <AccordionItem 
                       key={slicer.id} 
