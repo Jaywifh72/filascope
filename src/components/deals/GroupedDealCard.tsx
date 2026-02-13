@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship, BadgeCheck } from "lucide-react";
+import { TrendingDown, Share2, ExternalLink, ChevronDown, ChevronUp, Package, Clock, Ship, BadgeCheck, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPrice";
 import { DealShareModal } from "./DealShareModal";
-import { DealQualityBadge } from "./DealQualityBadge";
+
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
 import { useRegionalStores } from "@/hooks/useRegionalStores";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
@@ -18,27 +18,29 @@ import { toBrandSlug } from "@/utils/brandSlug";
 import { isVerifiedBrand } from "@/lib/verifiedBrands";
 import type { GroupedDeal } from "@/lib/groupDealsByProduct";
 
-/** Color-coded freshness badge for deal cards */
-function DealFreshnessBadge({ lastScrapedAt, freshnessText }: { lastScrapedAt: string | null | undefined; freshnessText: string }) {
-  const getFreshnessColor = () => {
-    if (!lastScrapedAt) return { text: 'text-muted-foreground', border: 'border-muted', bg: 'bg-muted/30' };
-    const days = differenceInDays(new Date(), new Date(lastScrapedAt));
-    if (days < 3) return { text: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' };
-    if (days < 21) return { text: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' };
-    if (days < 45) return { text: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10' };
-    return { text: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10' };
+/** Color-coded freshness badge with 5-tier trust signals */
+function DealFreshnessBadge({ lastScrapedAt }: { lastScrapedAt: string | null | undefined }) {
+  if (!lastScrapedAt) return null;
+
+  const days = differenceInDays(new Date(), new Date(lastScrapedAt));
+
+  const getTier = () => {
+    if (days <= 0) return { color: 'text-emerald-400', Icon: CheckCircle, label: 'Verified today' };
+    if (days <= 3) return { color: 'text-emerald-400', Icon: CheckCircle, label: `Verified ${days}d ago` };
+    if (days <= 7) return { color: 'text-cyan-400', Icon: Clock, label: `Checked ${days}d ago` };
+    if (days <= 14) return { color: 'text-amber-400', Icon: Clock, label: `Checked ${days}d ago` };
+    if (days <= 30) return { color: 'text-orange-400', Icon: AlertCircle, label: `Checked ${Math.floor(days / 7)}w ago` };
+    const months = Math.floor(days / 30);
+    return { color: 'text-red-400/50', Icon: AlertTriangle, label: `Checked ${months}mo ago — price may have changed` };
   };
 
-  const colors = getFreshnessColor();
+  const { color, Icon, label } = getTier();
 
   return (
-    <Badge
-      variant="outline"
-      className={cn("gap-1 text-[10px] mb-2", colors.border, colors.bg, colors.text)}
-    >
-      <Clock className="h-3 w-3" />
-      Checked {freshnessText} ago
-    </Badge>
+    <span className={cn("inline-flex items-center gap-1 text-[10px] mb-2", color)}>
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
   );
 }
 
@@ -310,13 +312,18 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
         )}
         onClick={() => navigate(`/filament/${group.representativeDeal.id}`)}
       >
-        {/* Discount Badge — capped at 60%, shows "Great Deal" for unusual values */}
+        {/* Discount Badge — tiered color system */}
         <div className={cn(
-          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold transition-[filter] duration-200 group-hover:brightness-110",
-          group.isUnusualDiscount
-            ? "bg-amber-500 text-amber-950"
-            : "bg-green-500 text-background",
-          !group.isUnusualDiscount && group.bestDiscount >= 50 && "animate-deal-pulse"
+          "absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-[filter] duration-200 group-hover:brightness-110",
+          group.bestDiscount >= 50
+            ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold animate-deal-pulse"
+            : group.bestDiscount >= 35
+              ? "bg-emerald-500 text-white font-semibold"
+              : group.bestDiscount >= 20
+                ? "bg-teal-600 text-white font-medium"
+                : group.bestDiscount >= 10
+                  ? "bg-gray-600 text-gray-200 font-medium"
+                  : "bg-gray-700 text-gray-400 font-normal"
         )}>
           <TrendingDown className="h-3 w-3" />
           {group.isUnusualDiscount ? "Great Deal" : `${group.bestDiscount}% OFF`}
@@ -432,19 +439,20 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
             />
           )}
 
-          {/* Price Freshness Badge with color coding */}
-          {freshnessText && (
-            <DealFreshnessBadge lastScrapedAt={group.lastScrapedAt} freshnessText={freshnessText} />
+          {/* "You save $X" anchoring text */}
+          {!hasPriceRange && group.representativeDeal.variant_compare_at_price && group.representativeDeal.variant_price && group.representativeDeal.variant_compare_at_price > group.representativeDeal.variant_price && (
+            <div className="flex items-center gap-1 mb-1 text-xs text-emerald-400 font-medium">
+              <span>You save</span>
+              <RegionalPrice
+                amount={group.representativeDeal.variant_compare_at_price - group.representativeDeal.variant_price}
+                sourceCurrency="USD"
+                size="sm"
+              />
+            </div>
           )}
 
-          {/* Deal Quality / Expiry Badge */}
-          <DealQualityBadge
-            discount={group.bestDiscount}
-            isUnusualDiscount={group.isUnusualDiscount}
-            createdAt={group.earliestCreatedAt}
-            lastScrapedAt={group.lastScrapedAt}
-            className="mb-2"
-          />
+          {/* Price Freshness Badge with 5-tier color coding */}
+          <DealFreshnessBadge lastScrapedAt={group.lastScrapedAt} />
 
           {/* Regional Shipping Badge */}
           {(isStoreLocal || hasLocalAlternative) && (
