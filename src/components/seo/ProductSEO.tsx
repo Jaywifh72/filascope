@@ -166,6 +166,7 @@ export function ProductSEO({
 
       {/* Twitter */}
       <meta property="twitter:card" content="summary_large_image" />
+      <meta property="twitter:site" content="@FilaScope" />
       <meta property="twitter:url" content={fullUrl} />
       <meta property="twitter:title" content={seoTitle} />
       <meta property="twitter:description" content={seoDescription} />
