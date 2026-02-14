@@ -1,71 +1,62 @@
 
+# Fix: OG Tag Override and Canonical URL Mismatch on Product Pages
 
-# Fix: robots.txt and sitemap.xml Returning React 404 on Production
+## Issue 1: OG Tags Not Overriding
 
-## Problem
+**Root Cause**: `index.html` contains hardcoded OG meta tags (lines 50-54) that include `og:title`, `og:type`, `og:url`, `og:image`, and `og:description` with homepage values. `react-helmet-async` should override these, but the issue is that the `index.html` meta tags exist in the raw HTML, and `react-helmet-async` can only manipulate tags it "owns". Since these are raw HTML tags not managed by Helmet, they persist alongside the Helmet-injected ones, causing duplicates or the raw HTML tag winning.
 
-Lovable hosting serves `index.html` for ALL routes (SPA catch-all), so requests to `filascope.com/robots.txt` and `filascope.com/sitemap.xml` return the React app which renders a 404 page. Google cannot read the robots.txt or discover the sitemap at the canonical URLs.
+**Fix**: Remove the page-specific OG tags from `index.html` and move them into the homepage component (Finder.tsx) via Helmet. The `index.html` should only contain truly generic fallbacks that every page shares (like `og:site_name`). Specifically:
 
-The prerender edge function already handles both correctly when called with `?path=/robots.txt` or `?path=/sitemap.xml`, but direct URL requests never reach it.
+- **Remove from `index.html`**: `og:title`, `og:description`, `og:type`, `og:url`, `og:image`, `og:image:width`, `og:image:height`, `og:image:alt`, `twitter:image`, `twitter:image:alt`
+- **Add to Finder.tsx**: A Helmet block with these same homepage-specific OG tags
+- **Keep in `index.html`**: `twitter:card`, `twitter:site`, and `og:site_name` (these are truly global)
 
-## Solution
+This way, when `ProductSEO` renders its Helmet with `og:title`, `og:type="product"`, `og:image`, etc., there are no competing raw HTML tags to conflict.
 
-A two-part fix that ensures both human and crawler access works:
+## Issue 2: Canonical URL Mismatch
 
-### Part 1: Early redirect in index.html (before React loads)
-
-Add a small inline script at the top of `<body>` in `index.html` that detects `/robots.txt`, `/sitemap.xml`, and `/sitemap-*.xml` URLs and redirects the browser to the prerender edge function. This runs before React or any JS bundle loads, so it's near-instant.
-
-```text
-if pathname is /robots.txt or /sitemap*.xml:
-  redirect (301) to prerender edge function with ?path= parameter
+**Root Cause**: In `FilamentDetail.tsx` line 763:
+```
+canonicalUrl={`/filament/${displayFilament.product_handle || id}`}
 ```
 
-This handles:
-- Google/Bing crawlers hitting the canonical URL directly
-- Webmaster tools checking robots.txt at the standard location
-- Any sitemap validator checking sitemap.xml
+`product_handle` is the Shopify product handle (e.g., `pla-basic-filament`), NOT the SEO slug used in the URL (e.g., `bambu-lab-pla-basic`). The URL uses the route parameter `id` which was resolved by `useFilamentBySlug` -- it could be the SEO slug or a UUID that got replaced. The canonical should always match the URL the user is actually on.
 
-### Part 2: Update robots.txt Sitemap directive
-
-The `public/robots.txt` Sitemap directive currently points to the old `sitemap-xml` edge function. Update the prerender's `ROBOTS_TXT` constant to use the canonical URL (`https://filascope.com/sitemap.xml`) since the redirect from Part 1 will handle routing it to the edge function. This gives Google the clean canonical sitemap URL.
-
-Also update the `public/robots.txt` file's Sitemap line to match (even though it won't be served directly, keeping it consistent avoids confusion).
-
-### Part 3: Add sitemap discovery link to index.html head
-
-Add a `<link rel="sitemap">` tag pointing to the canonical sitemap URL as a secondary discovery mechanism:
+**Fix**: Use the route parameter `id` (the slug from the URL) as the canonical, not `product_handle`:
 ```
-<link rel="sitemap" type="application/xml" href="https://filascope.com/sitemap.xml" />
+canonicalUrl={`/filament/${id}`}
 ```
 
-## Technical Details
+This ensures the canonical always matches the URL. If the user arrived via UUID and the URL was replaced via `history.replaceState`, the `id` param still reflects the original UUID -- but since `CanonicalLink` already skips UUIDs (line 28 of CanonicalLink.tsx), this is safe. For slug-based URLs (the normal case), the canonical will correctly match.
 
-### Files to modify
-
-1. **index.html** -- Add redirect script at top of `<body>` (before gtag), add `<link rel="sitemap">` to `<head>`
-2. **supabase/functions/prerender/index.ts** -- Update `ROBOTS_TXT` Sitemap line to use canonical URL
-3. **public/robots.txt** -- Update Sitemap line to canonical URL for consistency
-
-### Redirect script (index.html)
-
-```javascript
-(function() {
-  var p = window.location.pathname;
-  if (p === '/robots.txt' || /^\/sitemap(-[\w-]+)?\.xml$/.test(p)) {
-    window.location.replace(
-      'https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/prerender?path=' +
-      encodeURIComponent(p)
-    );
-  }
-})();
+Additionally, the same fix needs to apply to the `ProductJsonLd` component on line 785:
 ```
+url={`https://filascope.com/filament/${id}`}
+```
+instead of using `product_handle`.
 
-This is a ~200 byte inline script that executes before any other JS. The redirect happens instantly with no visible flash.
+## Technical Changes
 
-### Why not other approaches
+### File 1: `index.html`
+Remove these meta tags (lines 49-63):
+- `og:title` (homepage value)
+- `og:description` (homepage value)
+- `og:type` ("website")
+- `og:url` (homepage URL)
+- `og:image` (generic og-image.png)
+- `og:image:width`, `og:image:height`, `og:image:alt`
+- `twitter:image`, `twitter:image:alt`
 
-- **Vite build plugin**: Lovable hosting's SPA catch-all overrides static files in `dist/`, so even if robots.txt is in `dist/`, it won't be served.
-- **React Router routes**: Cannot set Content-Type headers from a browser SPA. The response would still be `text/html`.
-- **_redirects / netlify.toml**: Lovable hosting doesn't support these configuration files.
+Keep:
+- `twitter:card` = "summary_large_image" (global default)
+- `twitter:site` = "@FilaScope" (global default)
 
+### File 2: `src/pages/Finder.tsx`
+Add a Helmet block with the homepage-specific OG tags that were removed from `index.html`. This ensures the homepage still has correct OG tags via Helmet.
+
+### File 3: `src/pages/FilamentDetail.tsx`
+- Line 763: Change `canonicalUrl` from `displayFilament.product_handle || id` to just `id`
+- Line 785: Change `url` from `displayFilament.product_handle || displayFilament.id` to `id`
+
+### File 4: `src/components/seo/CanonicalLink.tsx`
+No changes needed -- it already skips UUID paths and sets canonical + og:url for non-UUID paths. Since product pages render `ProductSEO` which sets its own canonical and og:url, the `CanonicalLink` values get overridden by Helmet's "last rendered wins" rule for same-property tags.
