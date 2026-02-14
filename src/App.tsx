@@ -157,6 +157,7 @@ const queryClient = new QueryClient({
 
 // Navbar no longer needs compatible count - printer selector moved to hero section
 
+// eslint-disable-next-line react-refresh/only-export-components
 const App = () => (
   <ErrorBoundary>
   <ThemeProvider>
