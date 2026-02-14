@@ -19,6 +19,20 @@ const CRAWLER_AGENTS = [
 ];
 
 const BASE_URL = "https://filascope.com";
+const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1`;
+
+function buildOgImageUrl(params: {
+  type: string; title: string; subtitle?: string; price?: string; color?: string; image?: string;
+}): string {
+  const url = new URL(`${FUNCTIONS_URL}/og-image`);
+  url.searchParams.set("type", params.type);
+  url.searchParams.set("title", params.title.slice(0, 60));
+  if (params.subtitle) url.searchParams.set("subtitle", params.subtitle.slice(0, 80));
+  if (params.price) url.searchParams.set("price", params.price);
+  if (params.color) url.searchParams.set("color", params.color);
+  if (params.image) url.searchParams.set("image", params.image);
+  return url.toString();
+}
 
 const GUIDE_META: Record<string, { title: string; description: string }> = {
   "best-pla-filaments": {
@@ -278,7 +292,11 @@ async function filamentPage(slug: string, supabase: SupabaseClient): Promise<Pag
 
   return {
     type: "product", title, description, canonical,
-    ogImage: data.featured_image || undefined, ogType: "product",
+    ogImage: buildOgImageUrl({
+      type: "product", title: `${brand} ${name}`, subtitle: material,
+      price: price ? `From $${price}` : undefined, image: data.featured_image || undefined,
+    }),
+    ogType: "product",
     jsonLd: [productSchema, breadcrumbSchema(crumbs)],
     breadcrumbs: crumbs, h1: `${brand} ${name}${color ? ` — ${color}` : ""}`, bodyText: description,
   };
@@ -301,7 +319,7 @@ async function brandPage(slug: string, supabase: SupabaseClient): Promise<PageDa
 
   const crumbs = [{ name: "Home", url: "/" }, { name: "Brands", url: "/brands" }, { name: brandName, url: canonical }];
   return {
-    type: "brand", title, description, canonical, ogImage: data.logo_url || undefined, ogType: "profile",
+    type: "brand", title, description, canonical, ogImage: buildOgImageUrl({ type: "brand", title: `${brandName} Filaments`, subtitle: `${count} products`, image: data.logo_url || undefined }), ogType: "profile",
     jsonLd: [
       { "@context": "https://schema.org", "@type": "Organization", name: brandName, url: data.website_url || `${BASE_URL}${canonical}`, ...(data.logo_url && { logo: data.logo_url }), ...(data.description && { description: data.description }) },
       breadcrumbSchema(crumbs),
@@ -363,7 +381,7 @@ async function printerPage(slug: string, supabase: SupabaseClient): Promise<Page
   if (data.msrp_usd) ps.offers = { "@type": "Offer", priceCurrency: "USD", price: data.msrp_usd.toFixed(2), availability: "https://schema.org/InStock", url: `${BASE_URL}${canonical}` };
 
   const crumbs = [{ name: "Home", url: "/" }, { name: "Printers", url: "/printers" }, { name: full, url: canonical }];
-  return { type: "product", title, description, canonical, ogType: "product", jsonLd: [ps, breadcrumbSchema(crumbs)], breadcrumbs: crumbs, h1: full, bodyText: description };
+  return { type: "product", title, description, canonical, ogImage: buildOgImageUrl({ type: "product", title: full, subtitle: brandName || undefined, price: data.msrp_usd ? `From $${data.msrp_usd}` : undefined }), ogType: "product", jsonLd: [ps, breadcrumbSchema(crumbs)], breadcrumbs: crumbs, h1: full, bodyText: description };
 }
 
 async function printersListing(supabase: SupabaseClient): Promise<PageData> {
@@ -399,7 +417,7 @@ function guidePage(slug: string): PageData {
   const canonical = `/guides/${slug}`;
   const crumbs = [{ name: "Home", url: "/" }, { name: "Learn", url: "/learn" }, { name: meta.title, url: canonical }];
   return {
-    type: "guide", title, description: meta.description, canonical, ogType: "article",
+    type: "guide", title, description: meta.description, canonical, ogImage: buildOgImageUrl({ type: "guide", title: meta.title }), ogType: "article",
     jsonLd: [
       { "@context": "https://schema.org", "@type": "Article", headline: meta.title, description: meta.description, publisher: { "@type": "Organization", name: "FilaScope", url: BASE_URL }, url: `${BASE_URL}${canonical}` },
       breadcrumbSchema(crumbs),
