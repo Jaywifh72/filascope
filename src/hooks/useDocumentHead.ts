@@ -139,35 +139,35 @@ export function useDocumentHead(opts: DocumentHeadOptions) {
     if (opts.productTargetCountry) upsertMeta('property', 'product:target_country', opts.productTargetCountry);
     if (opts.productTransmissionDistance) upsertMeta('property', 'product:transmission_distance', opts.productTransmissionDistance);
 
-    // Cleanup → revert to defaults
+    // Cleanup → only revert tags that THIS call explicitly set
     return () => {
-      document.title = DEFAULTS.title;
-      upsertMeta('name', 'description', DEFAULTS.description);
-      upsertLink('canonical', DEFAULTS.canonical);
-      upsertMeta('property', 'og:title', DEFAULTS.ogTitle);
-      upsertMeta('property', 'og:description', DEFAULTS.ogDescription);
-      upsertMeta('property', 'og:url', DEFAULTS.ogUrl);
-      upsertMeta('property', 'og:type', DEFAULTS.ogType);
-      upsertMeta('property', 'og:image', DEFAULTS.ogImage);
-      upsertMeta('property', 'og:site_name', DEFAULTS.ogSiteName);
-      upsertMeta('name', 'twitter:card', DEFAULTS.twitterCard);
-      upsertMeta('name', 'twitter:site', DEFAULTS.twitterSite);
-      upsertMeta('name', 'twitter:title', DEFAULTS.twitterTitle);
-      upsertMeta('name', 'twitter:description', DEFAULTS.twitterDescription);
-      upsertMeta('name', 'twitter:image', DEFAULTS.twitterImage);
+      if (opts.title) document.title = DEFAULTS.title;
+      if (opts.description) upsertMeta('name', 'description', DEFAULTS.description);
+      if (opts.canonical) upsertLink('canonical', DEFAULTS.canonical);
+      if (opts.ogTitle || opts.title) upsertMeta('property', 'og:title', DEFAULTS.ogTitle);
+      if (opts.ogDescription || opts.description) upsertMeta('property', 'og:description', DEFAULTS.ogDescription);
+      if (opts.ogUrl || opts.canonical) upsertMeta('property', 'og:url', DEFAULTS.ogUrl);
+      if (opts.ogType) upsertMeta('property', 'og:type', DEFAULTS.ogType);
+      if (opts.ogImage) upsertMeta('property', 'og:image', DEFAULTS.ogImage);
+      if (opts.ogSiteName) upsertMeta('property', 'og:site_name', DEFAULTS.ogSiteName);
+      if (opts.twitterCard) upsertMeta('name', 'twitter:card', DEFAULTS.twitterCard);
+      if (opts.twitterSite) upsertMeta('name', 'twitter:site', DEFAULTS.twitterSite);
+      if (opts.twitterTitle || opts.title) upsertMeta('name', 'twitter:title', DEFAULTS.twitterTitle);
+      if (opts.twitterDescription || opts.description) upsertMeta('name', 'twitter:description', DEFAULTS.twitterDescription);
+      if (opts.twitterImage) upsertMeta('name', 'twitter:image', DEFAULTS.twitterImage);
 
-      // Remove optional extras that aren't in defaults
-      removeMeta('name', 'keywords');
-      removeMeta('name', 'rating');
-      removeMeta('name', 'geo.region');
-      removeMeta('property', 'og:locale');
-      removeMeta('property', 'product:brand');
-      removeMeta('property', 'product:category');
-      removeMeta('property', 'product:price:amount');
-      removeMeta('property', 'product:price:currency');
-      removeMeta('property', 'product:availability');
-      removeMeta('property', 'product:target_country');
-      removeMeta('property', 'product:transmission_distance');
+      // Remove optional extras only if they were set
+      if (opts.keywords) removeMeta('name', 'keywords');
+      if (opts.rating) removeMeta('name', 'rating');
+      if (opts.geoRegion) removeMeta('name', 'geo.region');
+      if (opts.ogLocale) removeMeta('property', 'og:locale');
+      if (opts.productBrand) removeMeta('property', 'product:brand');
+      if (opts.productCategory) removeMeta('property', 'product:category');
+      if (opts.productPriceAmount) removeMeta('property', 'product:price:amount');
+      if (opts.productPriceCurrency) removeMeta('property', 'product:price:currency');
+      if (opts.productAvailability) removeMeta('property', 'product:availability');
+      if (opts.productTargetCountry) removeMeta('property', 'product:target_country');
+      if (opts.productTransmissionDistance) removeMeta('property', 'product:transmission_distance');
     };
   }, [
     opts.title, opts.description, opts.canonical,
