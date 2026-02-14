@@ -113,7 +113,7 @@ function StatCard({ title, value, subtitle, icon: Icon, color = 'text-primary' }
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
-export default function SyncMonitor() {
+export function SyncMonitorContent() {
   const { user } = useContext(AuthContext);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('history');
@@ -342,8 +342,7 @@ export default function SyncMonitor() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <AdminPageHeader
           title="Sync Monitor"
           description="Central command center for price synchronization operations"
@@ -864,6 +863,15 @@ export default function SyncMonitor() {
             </div>
           </TabsContent>
         </Tabs>
+      </div>
+  );
+}
+
+export default function SyncMonitor() {
+  return (
+    <AdminLayout>
+      <div className="p-6">
+        <SyncMonitorContent />
       </div>
     </AdminLayout>
   );
