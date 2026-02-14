@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Clock } from "lucide-react";
+import { ChevronRight, Clock, Tag, Palette, BookOpen, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollCarousel, ScrollCarouselItem } from "@/components/ui/scroll-carousel";
 import { SimilarFilamentCard, type SimilarFilamentData, type SimilarityReason } from "./SimilarFilamentCard";
@@ -10,6 +10,25 @@ import { ConsiderInsteadBanner } from "./ConsiderInsteadBanner";
 import { toBrandSlug } from "@/utils/brandSlug";
 import { computePricePerKg } from "@/lib/resolveFilamentPrice";
 import { cn } from "@/lib/utils";
+
+// Guide links mapped by material keyword
+const MATERIAL_GUIDES: Record<string, { slug: string; title: string }[]> = {
+  PLA: [
+    { slug: 'best-pla-filaments', title: 'Best PLA Filaments in 2026' },
+    { slug: 'pla-vs-petg', title: 'PLA vs PETG: Which Should You Choose?' },
+    { slug: 'pla-vs-petg-vs-abs', title: 'PLA vs PETG vs ABS Comparison' },
+  ],
+  PETG: [
+    { slug: 'best-petg-filaments', title: 'Best PETG Filaments in 2026' },
+    { slug: 'pla-vs-petg', title: 'PLA vs PETG: Which Should You Choose?' },
+  ],
+  ABS: [
+    { slug: 'best-abs-filaments', title: 'Best ABS Filaments in 2026' },
+    { slug: 'pla-vs-petg-vs-abs', title: 'PLA vs PETG vs ABS Comparison' },
+  ],
+  TPU: [],
+  ASA: [],
+};
 
 interface CurrentFilament {
   id: string;
@@ -73,6 +92,66 @@ function FilamentCarousel({
   );
 }
 
+function RelatedCategoriesNav({ 
+  material, 
+  vendor, 
+  colorFamily 
+}: { 
+  material: string | null; 
+  vendor: string | null; 
+  colorFamily: string | null;
+}) {
+  const materialBase = material?.split(/[\s\-+]/)[0]?.toUpperCase() || null;
+  const guides = materialBase ? (MATERIAL_GUIDES[materialBase] || []) : [];
+
+  return (
+    <nav aria-label="Related categories" className="mt-10 pt-8 border-t border-border/30">
+      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+        Related Categories
+      </h3>
+      <div className="flex flex-wrap gap-3">
+        {vendor && (
+          <Link
+            to={`/brands/${toBrandSlug(vendor)}`}
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 hover:underline decoration-primary/50 transition-colors"
+          >
+            <Tag className="w-3.5 h-3.5" />
+            More from {vendor}
+          </Link>
+        )}
+        {material && (
+          <Link
+            to={`/?material=${encodeURIComponent(material)}`}
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 hover:underline decoration-primary/50 transition-colors"
+          >
+            <ArrowRight className="w-3.5 h-3.5" />
+            All {material} Filaments
+          </Link>
+        )}
+        {colorFamily && (
+          <Link
+            to={`/?color=${encodeURIComponent(colorFamily)}`}
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 hover:underline decoration-primary/50 transition-colors"
+          >
+            <Palette className="w-3.5 h-3.5" />
+            All {colorFamily} Filaments
+          </Link>
+        )}
+        {guides.map((guide) => (
+          <Link
+            key={guide.slug}
+            to={`/learn/${guide.slug}`}
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 hover:underline decoration-primary/50 transition-colors"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            {guide.title}
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSectionProps) {
   const { groupedFilaments, similarFilaments, isLoading, sortOption, setSortOption } = useSimilarFilamentsEnhanced(currentFilament);
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
@@ -130,7 +209,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
       <section className="py-12 md:py-16 px-4">
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">
-            Explore Similar Options
+            Similar {materialBase} Filaments from Other Brands
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-12 text-center bg-card/30 rounded-xl border border-border/50">
@@ -146,6 +225,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
+        <RelatedCategoriesNav material={currentFilament.material} vendor={currentFilament.vendor} colorFamily={currentFilament.color_family} />
       </section>
     );
   }
@@ -160,7 +240,7 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-foreground">
-            Explore Similar Options
+            Similar {materialBase} Filaments from Other Brands
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Based on material, brand, and color matching
@@ -279,6 +359,9 @@ export function SimilarFilamentsSection({ currentFilament }: SimilarFilamentsSec
           />
         </div>
       )}
+
+      {/* Related Categories - internal linking for SEO */}
+      <RelatedCategoriesNav material={currentFilament.material} vendor={currentFilament.vendor} colorFamily={currentFilament.color_family} />
     </section>
   );
 }
