@@ -636,7 +636,7 @@ const PrinterDetail = () => {
       <ProductSEO
         title={printerName}
         description={seoDescription}
-        canonicalUrl={`/printers/${id}`}
+        canonicalUrl={`/printers/${printer.printer_id || id}`}
         image={seoImage}
         brand={printerBrand}
         price={displayPrice}
@@ -651,7 +651,7 @@ const PrinterDetail = () => {
         image={seoImage}
         brand={printerBrand}
         sku={printer.printer_id}
-        url={`https://filascope.com/printer/${printer.printer_id || printer.id}`}
+        url={`https://filascope.com/printers/${printer.printer_id || printer.id}`}
         price={displayPrice}
         availability={!isDiscontinued}
         buildVolume={printer.build_volume_x_mm && printer.build_volume_y_mm && printer.build_volume_z_mm ? {
