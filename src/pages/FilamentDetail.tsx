@@ -760,7 +760,7 @@ const FilamentDetail = () => {
       <ProductSEO
         title={seoFullName}
         description={seoDescription}
-        canonicalUrl={`/filament/${displayFilament.product_handle || id}`}
+        canonicalUrl={`/filament/${id}`}
         image={displayFilament.featured_image}
         brand={displayFilament.vendor}
         material={displayFilament.material}
@@ -782,7 +782,7 @@ const FilamentDetail = () => {
         mpn={displayFilament.mpn}
         material={displayFilament.material}
         color={displayFilament.color_family}
-        url={`https://filascope.com/filament/${displayFilament.product_handle || displayFilament.id}`}
+        url={`https://filascope.com/filament/${id}`}
         price={validationPricePerKg}
         availability={displayFilament.variant_available ?? true}
         transmissionDistance={displayFilament.transmission_distance}
