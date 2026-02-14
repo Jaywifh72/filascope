@@ -458,3 +458,6 @@ verify_jwt = true
 
 [functions.generate-affiliate-link]
 verify_jwt = false
+
+[functions.prerender]
+verify_jwt = false
