@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegion } from "@/contexts/RegionContext";
@@ -28,15 +28,34 @@ interface UseAffiliateLinkResult {
 export function useAffiliateLink(brandName: string | null | undefined): UseAffiliateLinkResult {
   const { region } = useRegion();
 
-  const { data: program = null, isLoading: programLoading } = useQuery({
-    queryKey: ["affiliate-program-lookup", brandName, region],
+  // Step 1: Look up alias for the brand name
+  const { data: resolvedBrandName, isLoading: aliasLoading } = useQuery({
+    queryKey: ["brand-affiliate-alias", brandName],
     enabled: !!brandName,
-    staleTime: 5 * 60_000, // cache 5 min
+    staleTime: 10 * 60_000, // 10 min - rarely changes
+    gcTime: 30 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("brand_affiliate_aliases")
+        .select("affiliate_brand_name")
+        .ilike("product_vendor_name", brandName!)
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) return brandName!;
+      return data.affiliate_brand_name;
+    },
+  });
+
+  // Step 2: Look up the affiliate program using resolved name + ilike
+  const { data: program = null, isLoading: programLoading } = useQuery({
+    queryKey: ["affiliate-program-lookup", resolvedBrandName, region],
+    enabled: !!resolvedBrandName && !aliasLoading,
+    staleTime: 5 * 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("affiliate_programs")
         .select("*")
-        .eq("brand_name", brandName!)
+        .ilike("brand_name", resolvedBrandName!)
         .eq("region_code", region)
         .eq("is_active", true)
         .limit(1)
@@ -61,7 +80,6 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
         .eq("is_active", true)
         .eq("is_assigned", true);
       if (error) return [];
-      // Filter out expired codes client-side
       const now = new Date().toISOString();
       return (data || []).filter(
         (c) => !c.valid_until || c.valid_until > now
@@ -71,14 +89,23 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
 
   /**
    * Build an affiliate link synchronously from a destination URL.
-   * If we have a program, applies the link template.
-   * Otherwise returns the original URL unchanged.
+   * Handles domain mismatches between product URLs and affiliate store URLs.
    */
   const buildLink = useCallback(
     (url: string): string => {
       if (!program) return url;
       try {
-        // Extract path from the URL relative to store_base_url
+        // For awin_redirect: pass the full URL so Awin can redirect regardless of domain
+        if (program.link_generation_method === "awin_redirect") {
+          return buildAffiliateLinkLocal(program, url);
+        }
+
+        // For redirect_link: no deep linking, just return the default tracking link
+        if (program.link_generation_method === "redirect_link") {
+          return buildAffiliateLinkLocal(program, "");
+        }
+
+        // For url_parameter and others: extract path and combine with store_base_url
         const urlObj = new URL(url);
         const basePath = urlObj.pathname + urlObj.search;
         return buildAffiliateLinkLocal(program, basePath);
@@ -98,7 +125,6 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
       const finalUrl = buildLink(url);
 
       if (program) {
-        // Fire-and-forget tracking
         trackAffiliateClick(program.id, finalUrl, {
           brandName: program.brand_name,
           regionCode: program.region_code,
@@ -118,7 +144,7 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
     buildLink,
     trackAndOpen,
     discountCodes,
-    isLoading: programLoading,
+    isLoading: aliasLoading || programLoading,
     hasAffiliate: !!program,
   };
 }
