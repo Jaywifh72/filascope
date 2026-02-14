@@ -57,7 +57,7 @@ export default function ReferenceMethodology() {
           content="Learn how FilaScope gathers, verifies, and maintains the world's most comprehensive 3D printing filament database. Trusted sources for TD values, prices, and technical specifications." 
         />
         <meta name="keywords" content="filament database methodology, TD value testing, HueForge data source, 3D printing specifications, filament data verification" />
-        <link rel="canonical" href="https://filascope.com/reference/methodology" />
+        
       </Helmet>
       
       <FAQSchema faqs={methodologyFaqs} />
