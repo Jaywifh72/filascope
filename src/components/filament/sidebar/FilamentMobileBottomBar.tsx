@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { ShoppingCart, Calculator, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompare } from "@/hooks/useCompare";
 import { useRegion } from "@/contexts/RegionContext";
+import { useAffiliateLink } from "@/hooks/useAffiliateLink";
 import { cn } from "@/lib/utils";
 
 interface FilamentMobileBottomBarProps {
@@ -11,6 +13,7 @@ interface FilamentMobileBottomBarProps {
   storeName?: string;
   storeRegion?: string;
   isConverted?: boolean;
+  vendor?: string | null;
   onOpenCalculator?: () => void;
 }
 
@@ -21,10 +24,17 @@ export function FilamentMobileBottomBar({
   storeName = 'Store',
   storeRegion,
   isConverted = false,
+  vendor,
   onOpenCalculator,
 }: FilamentMobileBottomBarProps) {
   const { formatPrice, region: userRegion } = useRegion();
   const { count: compareCount } = useCompare();
+  const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(vendor);
+
+  const builtUrl = useMemo(
+    () => affiliateUrl ? (hasAffiliate ? buildLink(affiliateUrl) : affiliateUrl) : null,
+    [affiliateUrl, hasAffiliate, buildLink]
+  );
 
   // Don't show if compare bar is active
   if (compareCount > 0) return null;
@@ -46,7 +56,11 @@ export function FilamentMobileBottomBar({
 
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
-    window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+    if (hasAffiliate) {
+      trackAndOpen(affiliateUrl, { productName: cleanStoreName, sourcePage: window.location.pathname, sourceComponent: 'mobile_bottom_bar' });
+    } else {
+      window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Format price with tilde for converted prices

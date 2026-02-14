@@ -910,6 +910,7 @@ const FilamentDetail = () => {
               formattedPrice={sidebarPricePerKg ? `${formatPrice(sidebarPricePerKg)}/kg` : null}
               buyUrl={sidebarAffiliateUrl}
               storeName={sidebarRetailerName || null}
+              vendor={displayFilament.vendor}
               heroRef={heroSectionRef}
             />
 
@@ -1044,6 +1045,7 @@ const FilamentDetail = () => {
         storeName={stickyBarRetailerName || 'Store'}
         storeRegion={stickyBarCandidate?.storeRegion || detailPricing.storeRegion || undefined}
         isConverted={stickyBarCandidate?.isConverted ?? detailPricing.isConverted}
+        vendor={displayFilament.vendor}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
 
