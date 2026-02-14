@@ -1,113 +1,72 @@
 
 
-## Plan: Connect Affiliate Programs to Product Store Links
+## Fix Three Affiliate Integration Issues
 
-This plan bridges the gap between the affiliate program database (affiliate_programs table) and the actual product pages by fixing brand name matching, URL domain mapping, and ensuring all outbound link components use affiliate tracking.
-
----
-
-### Phase 1: Database Changes
-
-**A. Create `brand_affiliate_aliases` table (migration)**
-
-A new lookup table mapping product vendor names to affiliate program brand names.
-
-- Columns: `id` (uuid PK), `product_vendor_name` (text, unique), `affiliate_brand_name` (text), `created_at` (timestamptz)
-- RLS: SELECT open to all, ALL operations open to admins via `has_role()`
-- Seed with 8 initial mappings (eSun->eSUN, ELEGOO->Elegoo, etc.)
-
-**B. Add `product_url_domains` column to `affiliate_programs` (migration)**
-
-- `ALTER TABLE affiliate_programs ADD COLUMN IF NOT EXISTS product_url_domains text[] DEFAULT NULL;`
-- UPDATE each brand with known domain arrays (e.g., eSUN gets `['esun3dstore.com', 'esun3d.com', 'www.esun3d.com']`)
-
----
-
-### Phase 2: Update `useAffiliateLink` Hook
+### Issue 1: Region Fallback for CA-Only Programs
 
 **File**: `src/hooks/useAffiliateLink.ts`
 
-1. **Add alias lookup query** -- Before querying `affiliate_programs`, first check `brand_affiliate_aliases` where `product_vendor_name ILIKE brandName`. If found, use `affiliate_brand_name` for the program lookup. Cache with 10-minute staleTime.
+Update the program lookup query (Step 2, lines 50-68) to use a two-step approach:
 
-2. **Change `.eq()` to `.ilike()`** -- The `affiliate_programs` query changes from `.eq("brand_name", brandName!)` to `.ilike("brand_name", resolvedBrandName!)` for case-insensitive fallback matching.
+1. First query with exact region match: `.ilike("brand_name", resolvedBrandName).eq("region_code", region).eq("is_active", true)`
+2. If no result, run a second query without region filter: `.ilike("brand_name", resolvedBrandName).eq("is_active", true).limit(1)`
 
-3. **Update `buildLink` to handle domain mismatches** -- The current `buildLink` extracts the path from the product URL and combines it with the program's `store_base_url`. This needs smarter handling per link generation method:
-   - `url_parameter`: Extract path from source URL, combine with `store_base_url` + path + tracking params
-   - `awin_redirect`: Use the FULL original product URL as the `ued` parameter (Awin handles the redirect regardless of domain)
-   - `redirect_link`: Return `default_tracking_link` (no deep linking possible)
+This ensures brands like Eryone (CA) and Anycubic (CA) are found for US users.
 
----
+**File**: `src/components/brands/BrandHeroSection.tsx`
 
-### Phase 3: Update `AffiliateProgram` TypeScript Type
-
-**File**: `src/types/affiliate.ts`
-
-Add `product_url_domains: string[] | null;` to the `AffiliateProgram` interface.
+The brand hero also needs the same fallback -- the `useAffiliateLink` hook change covers this automatically since BrandHeroSection already uses the hook.
 
 ---
 
-### Phase 4: Update Outbound Link Components
+### Issue 2: Static href on Outbound Links
 
-After Phase 2 fixes, many components will automatically benefit since they already use `useAffiliateLink` or receive `affiliateUrl` from parent hooks. Here's the audit:
+After auditing all components, most use `window.open()` in onClick handlers (DealCard, GroupedDealCard, RetailerCard, StorePricingDisplay, HonestPriceDisplay). These are safe since there's no `<a>` href to bypass.
 
-**Already using `useAffiliateLink` (will auto-fix via alias + ilike):**
-- `FilamentPurchaseSidebar.tsx` -- uses `useAffiliateLink(vendor)` with `trackAndOpen`
-- `FilamentHeroPurchaseCard.tsx` -- uses `useAffiliateLink(vendor)` with `trackAndOpen`
-- `DealCard.tsx` -- uses `useAffiliateLink(deal.vendor)` with `trackAndOpen`
+The one component with an actual `<a>` tag using a raw URL is:
 
-**Receiving `affiliateUrl` from parent (no change needed):**
-- `StickyBuyBar.tsx` -- receives pre-built `affiliateUrl` prop from `FilamentDetail.tsx`
-- `FilamentMobileBottomBar.tsx` -- receives pre-built `affiliateUrl` prop from `FilamentDetail.tsx`
-- `BestPricesSection.tsx` -- uses `candidates[].affiliateUrl` from `useFilamentDetailPricing`
-- `StorePricingDisplay.tsx` -- receives `affiliateUrl` prop from parent sidebar
+**File**: `src/components/filament/BestPricesSection.tsx` (line 188)
 
-**Using legacy `useAffiliateLinks` (old system) -- no change, kept as fallback:**
-- `PurchaseSection.tsx` -- uses `getAffiliateUrl()` from legacy hook
-- `GroupedDealCard.tsx` -- uses `getAffiliateUrl()` from legacy hook
-- `RetailerCard.tsx` -- uses `getAffiliateUrl()` / `getAmazonUrl()` from legacy hook
-- `RetailerCompareGrid.tsx` -- uses legacy system
+The `<a href={bestRetailer.url}>` uses whatever URL came from the candidates/listings data. This URL may or may not already be an affiliate URL (depends on whether the parent hook built it). Since BestPricesSection receives `candidates[].affiliateUrl` from the parent pricing hook, the `bestRetailer.url` is already set to `c.affiliateUrl || c.productUrl` (line 74). However, if `affiliateUrl` is null (no program found), the raw URL leaks through.
 
-These legacy components will continue to work via the old `affiliate_configs` edge function. The new system takes priority wherever `useAffiliateLink` is used.
+Fix: Add `rel="nofollow sponsored noopener noreferrer"` to this `<a>` tag. The URL is already the best available (affiliate if exists, raw if not), so the main fix here is the `rel` attribute.
 
-**Brand pages -- new integration needed:**
-- `BrandHeroSection.tsx` -- "Visit Website" button at line 204 links directly to `website` prop. Will add `useAffiliateLink(brandName)` and wrap the URL through `buildLink()` when `hasAffiliate` is true. Add a subtle "Affiliate Partner" badge.
-- `BrandAboutTab.tsx` -- Two "Visit Website" links (line 178 and line 270). Same treatment: wrap through `buildLink()` when affiliate program exists.
+**File**: `src/components/brands/BrandHeroSection.tsx` (line 152-162)
+
+There's a secondary `<a>` tag at lines 152-162 that links directly to the brand website without going through the affiliate system. This is the small "Website" link next to location/founded info. It should also use `buildLink` and have `rel="nofollow sponsored noopener noreferrer"` when an affiliate program exists.
+
+Also update the `rel` attribute on the main "Visit Website" button's click handler (line 217) to include "sponsored" -- though since it uses `window.open`, the `rel` is set via the third argument which is already `noopener,noreferrer`. The `sponsored` attribute only applies to `<a>` tags for SEO purposes.
 
 ---
 
-### Phase 5: Update `buildAffiliateLinkLocal` Utility
+### Issue 3: Fix Link Verification Test
 
-**File**: `src/utils/affiliateLinks.ts`
+**File**: `src/components/admin/affiliate-hub/brand-mapping/LinkVerificationTest.tsx`
 
-Update the `awin_redirect` branch to accept full product URLs (not just paths). When the `path` argument starts with `http`, use it as-is for the `ued` parameter instead of prepending `store_base_url`. This handles the case where `esun3dstore.com` product URLs are passed but the affiliate program's `store_base_url` is `esun3d.com`.
+The tool already tests all vendors and sorts matched first (line 121). The issue described ("shows 0 matched") is because the region-locked query (`.eq("region_code", regionCode)`) fails for CA-only brands when the admin's region is US.
+
+Fix: Add the same region fallback to the `resolveAndTest` function (lines 50-58): try exact region first, then fall back to any active program for the brand. This will make Eryone and Anycubic show as green checks instead of red X's.
+
+Also update the `regionCode` field in the result to show which region was actually matched (e.g., "CA (fallback)") so admins can see when a non-exact match was used.
 
 ---
 
 ### Technical Details
 
 ```text
-Files to create:
-  - supabase migration (brand_affiliate_aliases table + product_url_domains column + seed data)
-
 Files to modify:
-  - src/types/affiliate.ts (add product_url_domains field)
-  - src/hooks/useAffiliateLink.ts (alias lookup, ilike matching, smarter buildLink)
-  - src/utils/affiliateLinks.ts (handle full URLs in awin_redirect)
-  - src/components/brands/BrandHeroSection.tsx (affiliate-tracked "Visit Website")
-  - src/components/brands/tabs/BrandAboutTab.tsx (affiliate-tracked "Visit Website")
-
-Files unchanged (auto-benefit from hook fix):
-  - FilamentPurchaseSidebar.tsx
-  - FilamentHeroPurchaseCard.tsx  
-  - DealCard.tsx
-  - StickyBuyBar.tsx (receives URL from parent)
-  - FilamentMobileBottomBar.tsx (receives URL from parent)
-  - BestPricesSection.tsx (receives URL from parent)
-
-Files unchanged (legacy system, kept as fallback):
-  - PurchaseSection.tsx
-  - GroupedDealCard.tsx
-  - RetailerCard.tsx
-  - RetailerCompareGrid.tsx
+  1. src/hooks/useAffiliateLink.ts
+     - Change program lookup queryFn to try exact region, then any region fallback
+     
+  2. src/components/filament/BestPricesSection.tsx
+     - Update rel attribute on <a> tag (line 188) to "nofollow sponsored noopener noreferrer"
+     
+  3. src/components/brands/BrandHeroSection.tsx
+     - Update small "Website" <a> tag (line 152) to use buildLink + proper rel attribute
+     - Both outbound links should use affiliate tracking
+     
+  4. src/components/admin/affiliate-hub/brand-mapping/LinkVerificationTest.tsx
+     - Add region fallback to resolveAndTest function
+     - Show fallback indicator in results
 ```
 
