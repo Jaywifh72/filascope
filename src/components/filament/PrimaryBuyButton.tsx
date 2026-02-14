@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { ShoppingCart, Check, Zap, Loader2 } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 import { calculateDiscountedPrice } from "@/lib/pricingRules";
+import { useAffiliateLink } from "@/hooks/useAffiliateLink";
 
 interface PrimaryBuyButtonProps {
   retailerName: string;
@@ -16,6 +18,7 @@ interface PrimaryBuyButtonProps {
   isLoading?: boolean;
   compareAtPrice?: number | null;
   onClick?: () => void;
+  vendor?: string | null;
 }
 
 export function PrimaryBuyButton({
@@ -31,8 +34,15 @@ export function PrimaryBuyButton({
   isLoading = false,
   compareAtPrice,
   onClick,
+  vendor,
 }: PrimaryBuyButtonProps) {
   const { formatPrice, formatRegionalPrice } = useCurrency();
+  const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(vendor);
+  
+  const builtUrl = useMemo(() => 
+    hasAffiliate ? buildLink(url) : url, 
+    [hasAffiliate, buildLink, url]
+  );
   
   // Use the appropriate formatter based on whether we have an actual regional price
   const formatPriceValue = (value: number) => 
@@ -73,10 +83,16 @@ export function PrimaryBuyButton({
       
       {/* Primary Button */}
       <a
-        href={url}
+        href={builtUrl}
         target="_blank"
-        rel="noopener noreferrer"
-        onClick={onClick}
+        rel={hasAffiliate ? "nofollow sponsored noopener noreferrer" : "noopener noreferrer"}
+        onClick={(e) => {
+          if (hasAffiliate) {
+            e.preventDefault();
+            trackAndOpen(url, { productName: retailerName, sourcePage: window.location.pathname, sourceComponent: 'primary_buy_button' });
+          }
+          onClick?.();
+        }}
         className={cn(
           "group flex items-center justify-between w-full",
           "min-h-14 py-3 px-5 rounded-lg",

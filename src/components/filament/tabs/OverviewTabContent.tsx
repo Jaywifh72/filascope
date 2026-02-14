@@ -368,6 +368,7 @@ export function OverviewTabContent({ filament, onNavigateToPricing, onNavigateTo
         candidates={priceCandidates}
         candidatesLoading={priceCandidatesLoading}
         totalRetailerCount={totalRetailerCount}
+        vendor={filament.vendor}
       />
 
       {/* Divider: pricing → product info */}

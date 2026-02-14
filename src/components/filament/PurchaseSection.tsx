@@ -268,6 +268,7 @@ export function PurchaseSection({ filament, printerBrand, printerName }: Purchas
           onClick={handlePrimaryClick}
           isLoading={isPriceLoading}
           compareAtPrice={compareAtPrice}
+          vendor={filament.vendor}
         />
       )}
       
