@@ -165,12 +165,12 @@ export function ProductSEO({
       <meta property="og:locale" content={activeRegion === 'UK' ? 'en_GB' : activeRegion === 'AU' ? 'en_AU' : activeRegion === 'CA' ? 'en_CA' : 'en_US'} />
 
       {/* Twitter */}
-      <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:site" content="@FilaScope" />
-      <meta property="twitter:url" content={fullUrl} />
-      <meta property="twitter:title" content={seoTitle} />
-      <meta property="twitter:description" content={seoDescription} />
-      <meta property="twitter:image" content={ogImageUrl} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@FilaScope" />
+      <meta name="twitter:url" content={fullUrl} />
+      <meta name="twitter:title" content={seoTitle} />
+      <meta name="twitter:description" content={seoDescription} />
+      <meta name="twitter:image" content={ogImageUrl} />
 
       {/* Product-specific meta */}
       {brand && <meta property="product:brand" content={brand} />}

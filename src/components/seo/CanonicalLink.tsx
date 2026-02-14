@@ -8,7 +8,7 @@ const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 
 // Routes where page-specific SEO components (ProductSEO, BrandSEO) handle canonical/meta tags.
 // CanonicalLink must NOT render on these to avoid duplicates.
-const DETAIL_ROUTE_PREFIXES = ['/filament/', '/printer/', '/brand/', '/accessory/'];
+const DETAIL_ROUTE_PREFIXES = ['/filament/', '/printer/', '/brand/', '/brands/', '/accessory/'];
 
 /**
  * Adds canonical link and og:url meta tags to every page.

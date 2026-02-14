@@ -70,12 +70,12 @@ export function BrandSEO({
       <meta property="og:site_name" content="FilaScope" />
 
       {/* Twitter */}
-      <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:site" content="@FilaScope" />
-      <meta property="twitter:url" content={fullUrl} />
-      <meta property="twitter:title" content={seoTitle} />
-      <meta property="twitter:description" content={seoDescription} />
-      <meta property="twitter:image" content={ogImageUrl} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@FilaScope" />
+      <meta name="twitter:url" content={fullUrl} />
+      <meta name="twitter:title" content={seoTitle} />
+      <meta name="twitter:description" content={seoDescription} />
+      <meta name="twitter:image" content={ogImageUrl} />
 
       {/* Brand-specific meta */}
       <meta name="keywords" content={`${brandName} filament, ${brandName} PLA, ${brandName} PETG, ${materials.slice(0, 3).join(', ')}, 3D printing, filament reviews, filament prices`} />
