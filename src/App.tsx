@@ -174,6 +174,23 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                {/* SEO: Global defaults — deeper Helmets (ProductSEO, BrandSEO, etc.) override these */}
+                <Helmet>
+                  <title>FilaScope — Compare 3D Printer Filaments, Specs &amp; Prices</title>
+                  <meta name="description" content="Compare 1,000+ 3D printer filaments from 48+ brands. HueForge TD values, real-time pricing, printer compatibility & specs. Find your perfect filament." />
+                  <link rel="canonical" href="https://filascope.com/" />
+                  <meta property="og:site_name" content="FilaScope" />
+                  <meta property="og:type" content="website" />
+                  <meta property="og:title" content="FilaScope — Compare 3D Printer Filaments, Specs & Prices" />
+                  <meta property="og:description" content="Compare 1,000+ 3D printer filaments from 48+ brands." />
+                  <meta property="og:url" content="https://filascope.com/" />
+                  <meta property="og:image" content="https://filascope.com/og-image.png" />
+                  <meta name="twitter:card" content="summary_large_image" />
+                  <meta name="twitter:site" content="@FilaScope" />
+                  <meta name="twitter:title" content="FilaScope — Compare 3D Printer Filaments, Specs & Prices" />
+                  <meta name="twitter:description" content="Compare 1,000+ 3D printer filaments from 48+ brands." />
+                  <meta name="twitter:image" content="https://filascope.com/og-image.png" />
+                </Helmet>
                 {/* SEO: Canonical link for all pages */}
                 <CanonicalLink />
                 {/* SEO: hreflang for multi-region international SEO */}
