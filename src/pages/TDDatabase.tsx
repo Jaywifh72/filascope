@@ -207,8 +207,13 @@ export default function TDDatabase() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             TD Value Database
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
             Searchable, exportable Transmission Distance data for HueForge and lithophane printing
+          </p>
+          <p className="mb-6">
+            <Link to="/hueforge-td-database" className="text-primary hover:underline text-sm font-medium">
+              Learn about HueForge &amp; TD Values →
+            </Link>
           </p>
           
           <div className="flex justify-center gap-8 mb-6">
