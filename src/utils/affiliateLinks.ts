@@ -51,10 +51,21 @@ export function buildAffiliateLinkLocal(
   program: AffiliateProgram,
   path: string = ""
 ): string {
+  // For redirect_link programs, return the default tracking link directly
+  if (program.link_generation_method === "redirect_link" && program.default_tracking_link) {
+    let url = program.default_tracking_link;
+    const separator = url.includes("?") ? "&" : "?";
+    url += `${separator}utm_source=filascope&utm_medium=affiliate`;
+    if (program.source_parameter && program.source_value) {
+      url += `&${program.source_parameter}=${program.source_value}`;
+    }
+    return url;
+  }
+
   let url = program.link_template
     .replace("{store_url}", program.store_base_url)
     .replace("{path}", path)
-    .replace("{tracking_value}", program.tracking_value);
+    .replace("{tracking_value}", program.tracking_value || "");
 
   // Handle {source_value} placeholder
   if (program.source_value) {

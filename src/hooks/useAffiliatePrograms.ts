@@ -96,15 +96,16 @@ export function useUpdateProgram() {
 
 /* ─── Discount Codes ─── */
 
-export function useAffiliateDiscountCodes(programId: string | undefined) {
+export function useAffiliateDiscountCodes(programId: string | undefined, allProgramIds?: string[]) {
+  const ids = allProgramIds && allProgramIds.length > 0 ? allProgramIds : programId ? [programId] : [];
   return useQuery({
-    queryKey: ["affiliate-discount-codes", programId],
-    enabled: !!programId,
+    queryKey: ["affiliate-discount-codes", ids.sort().join(",")],
+    enabled: ids.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("affiliate_discount_codes")
         .select("*")
-        .eq("program_id", programId!)
+        .in("program_id", ids)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as AffiliateDiscountCode[];
@@ -152,15 +153,16 @@ export function useUpdateDiscountCode() {
 
 /* ─── Campaigns ─── */
 
-export function useAffiliateCampaigns(programId: string | undefined) {
+export function useAffiliateCampaigns(programId: string | undefined, allProgramIds?: string[]) {
+  const ids = allProgramIds && allProgramIds.length > 0 ? allProgramIds : programId ? [programId] : [];
   return useQuery({
-    queryKey: ["affiliate-campaigns", programId],
-    enabled: !!programId,
+    queryKey: ["affiliate-campaigns", ids.sort().join(",")],
+    enabled: ids.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("affiliate_campaigns")
         .select("*")
-        .eq("program_id", programId!)
+        .in("program_id", ids)
         .order("start_date", { ascending: false });
       if (error) throw error;
       return data as AffiliateCampaign[];
@@ -217,15 +219,16 @@ export interface AffiliateProgramRestriction {
   created_at: string | null;
 }
 
-export function useAffiliateProgramRestrictions(programId: string | undefined) {
+export function useAffiliateProgramRestrictions(programId: string | undefined, allProgramIds?: string[]) {
+  const ids = allProgramIds && allProgramIds.length > 0 ? allProgramIds : programId ? [programId] : [];
   return useQuery({
-    queryKey: ["affiliate-restrictions", programId],
-    enabled: !!programId,
+    queryKey: ["affiliate-restrictions", ids.sort().join(",")],
+    enabled: ids.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("affiliate_program_restrictions")
         .select("*")
-        .eq("program_id", programId!)
+        .in("program_id", ids)
         .order("severity");
       if (error) throw error;
       return data as AffiliateProgramRestriction[];

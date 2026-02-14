@@ -207,12 +207,15 @@ export type Database = {
           created_at: string | null
           creative_asset_count: number | null
           creative_assets_location: string | null
+          deal_scope: string | null
           end_date: string | null
           id: string
           is_active: boolean | null
           notes: string | null
           program_id: string
+          region_specific: string | null
           start_date: string | null
+          target_audience: string | null
           updated_at: string | null
         }
         Insert: {
@@ -224,12 +227,15 @@ export type Database = {
           created_at?: string | null
           creative_asset_count?: number | null
           creative_assets_location?: string | null
+          deal_scope?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean | null
           notes?: string | null
           program_id: string
+          region_specific?: string | null
           start_date?: string | null
+          target_audience?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -241,12 +247,15 @@ export type Database = {
           created_at?: string | null
           creative_asset_count?: number | null
           creative_assets_location?: string | null
+          deal_scope?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean | null
           notes?: string | null
           program_id?: string
+          region_specific?: string | null
           start_date?: string | null
+          target_audience?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -456,6 +465,7 @@ export type Database = {
           applicable_products: string[] | null
           assignment_notes: string | null
           code: string | null
+          coupon_source: string | null
           created_at: string | null
           description: string | null
           discount_type: string | null
@@ -469,6 +479,8 @@ export type Database = {
           min_purchase_amount: number | null
           posting_restrictions: string | null
           program_id: string
+          scope: string | null
+          tracking_link: string | null
           updated_at: string | null
           valid_from: string | null
           valid_until: string | null
@@ -477,6 +489,7 @@ export type Database = {
           applicable_products?: string[] | null
           assignment_notes?: string | null
           code?: string | null
+          coupon_source?: string | null
           created_at?: string | null
           description?: string | null
           discount_type?: string | null
@@ -490,6 +503,8 @@ export type Database = {
           min_purchase_amount?: number | null
           posting_restrictions?: string | null
           program_id: string
+          scope?: string | null
+          tracking_link?: string | null
           updated_at?: string | null
           valid_from?: string | null
           valid_until?: string | null
@@ -498,6 +513,7 @@ export type Database = {
           applicable_products?: string[] | null
           assignment_notes?: string | null
           code?: string | null
+          coupon_source?: string | null
           created_at?: string | null
           description?: string | null
           discount_type?: string | null
@@ -511,6 +527,8 @@ export type Database = {
           min_purchase_amount?: number | null
           posting_restrictions?: string | null
           program_id?: string
+          scope?: string | null
+          tracking_link?: string | null
           updated_at?: string | null
           valid_from?: string | null
           valid_until?: string | null
@@ -621,8 +639,12 @@ export type Database = {
           cookie_duration_hours: number | null
           created_at: string | null
           deep_linking_supported: boolean | null
+          default_tracking_link: string | null
           id: string
+          impact_campaign_id: string | null
+          impact_media_partner_id: string | null
           is_active: boolean | null
+          link_generation_method: string | null
           link_template: string
           payout_currency: string | null
           payout_method: string | null
@@ -635,8 +657,9 @@ export type Database = {
           source_value: string | null
           status_notes: string | null
           store_base_url: string
-          tracking_parameter: string
-          tracking_value: string
+          tracking_domain: string | null
+          tracking_parameter: string | null
+          tracking_value: string | null
           updated_at: string | null
         }
         Insert: {
@@ -655,8 +678,12 @@ export type Database = {
           cookie_duration_hours?: number | null
           created_at?: string | null
           deep_linking_supported?: boolean | null
+          default_tracking_link?: string | null
           id?: string
+          impact_campaign_id?: string | null
+          impact_media_partner_id?: string | null
           is_active?: boolean | null
+          link_generation_method?: string | null
           link_template: string
           payout_currency?: string | null
           payout_method?: string | null
@@ -669,8 +696,9 @@ export type Database = {
           source_value?: string | null
           status_notes?: string | null
           store_base_url: string
-          tracking_parameter: string
-          tracking_value: string
+          tracking_domain?: string | null
+          tracking_parameter?: string | null
+          tracking_value?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -689,8 +717,12 @@ export type Database = {
           cookie_duration_hours?: number | null
           created_at?: string | null
           deep_linking_supported?: boolean | null
+          default_tracking_link?: string | null
           id?: string
+          impact_campaign_id?: string | null
+          impact_media_partner_id?: string | null
           is_active?: boolean | null
+          link_generation_method?: string | null
           link_template?: string
           payout_currency?: string | null
           payout_method?: string | null
@@ -703,8 +735,9 @@ export type Database = {
           source_value?: string | null
           status_notes?: string | null
           store_base_url?: string
-          tracking_parameter?: string
-          tracking_value?: string
+          tracking_domain?: string | null
+          tracking_parameter?: string | null
+          tracking_value?: string | null
           updated_at?: string | null
         }
         Relationships: [

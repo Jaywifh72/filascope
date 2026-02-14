@@ -17,12 +17,28 @@ import { toast } from "sonner";
 import { useAffiliateDiscountCodes, useCreateDiscountCode, useUpdateDiscountCode } from "@/hooks/useAffiliatePrograms";
 import type { AffiliateDiscountCode } from "@/types/affiliate";
 
+const scopeStyles: Record<string, string> = {
+  all_stores: "bg-green-500/20 text-green-400 border-green-500/30",
+  resin_products: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  pla_filament: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  specific_product: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+};
+
+const scopeLabels: Record<string, string> = {
+  all_stores: "All Stores",
+  resin_products: "Resin",
+  pla_filament: "PLA",
+  specific_product: "Product",
+};
+
 interface DiscountCodesCardProps {
   programId: string;
+  brandName?: string;
+  allProgramIds?: string[];
 }
 
-export function DiscountCodesCard({ programId }: DiscountCodesCardProps) {
-  const { data: codes = [], isLoading } = useAffiliateDiscountCodes(programId);
+export function DiscountCodesCard({ programId, brandName, allProgramIds }: DiscountCodesCardProps) {
+  const { data: codes = [], isLoading } = useAffiliateDiscountCodes(programId, allProgramIds);
   const createCode = useCreateDiscountCode();
   const updateCode = useUpdateDiscountCode();
   const [showExpired, setShowExpired] = useState(false);
@@ -105,6 +121,7 @@ export function DiscountCodesCard({ programId }: DiscountCodesCardProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
+              <TableHead>Scope</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Value</TableHead>
               <TableHead>Display Text</TableHead>
@@ -117,6 +134,7 @@ export function DiscountCodesCard({ programId }: DiscountCodesCardProps) {
             {visibleCodes.map((code) => {
               const status = getStatus(code);
               const isExpired = code.valid_until && code.valid_until < now;
+              const scope = code.scope || "all_stores";
               return (
                 <TableRow key={code.id} className={isExpired ? "opacity-50" : ""}>
                   <TableCell>
@@ -128,6 +146,11 @@ export function DiscountCodesCard({ programId }: DiscountCodesCardProps) {
                         </Button>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`text-[10px] ${scopeStyles[scope] || scopeStyles.all_stores}`}>
+                      {scopeLabels[scope] || scope}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{code.discount_type || "—"}</TableCell>
                   <TableCell className="text-sm">{code.discount_value != null ? code.discount_value : "—"}</TableCell>
