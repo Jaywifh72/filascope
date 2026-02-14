@@ -30,6 +30,7 @@ import { OfflineBanner, SWUpdateNotifier } from "./components/pwa";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
+import { HreflangTags } from "./components/seo/HreflangTags";
 
 // Lazy-load heavy global overlays that aren't needed at initial render
 const CompareTray = lazy(() => import("./components/CompareTray").then(m => ({ default: m.CompareTray })));
@@ -172,6 +173,8 @@ const App = () => (
                 <BrowserRouter>
                 {/* SEO: Canonical link for all pages */}
                 <CanonicalLink />
+                {/* SEO: hreflang for multi-region international SEO */}
+                <HreflangTags />
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
