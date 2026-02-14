@@ -124,6 +124,34 @@ function buildHtml(data: PageData): string {
 </html>`;
 }
 
+function build404Html(data: PageData): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(data.title)}</title>
+    <meta name="description" content="${escapeHtml(data.description)}" />
+    <meta name="robots" content="noindex, nofollow" />
+  </head>
+  <body>
+    <div id="root">
+      <main>
+        <h1>${escapeHtml(data.h1)}</h1>
+        <p>${escapeHtml(data.bodyText)}</p>
+        <nav>
+          <a href="${BASE_URL}/">Browse Filaments</a>
+          <a href="${BASE_URL}/printers">Browse Printers</a>
+          <a href="${BASE_URL}/deals">Today's Deals</a>
+          <a href="${BASE_URL}/brands">Browse Brands</a>
+        </nav>
+      </main>
+      <noscript><p>FilaScope requires JavaScript to display full interactive content.</p></noscript>
+    </div>
+  </body>
+</html>`;
+}
+
 // ============================================================
 // Schema helpers
 // ============================================================
@@ -402,10 +430,10 @@ function comparePage(): PageData {
 
 function fallback(path: string): PageData {
   return {
-    type: "fallback", title: "FilaScope — 3D Printer Filament Database",
-    description: "The most comprehensive 3D printer filament database. Compare specs, prices, and compatibility across 50+ brands.",
+    type: "notfound", title: "Page Not Found | FilaScope",
+    description: "The page you're looking for doesn't exist or has been moved.",
     canonical: path, ogType: "website", jsonLd: [], breadcrumbs: [{ name: "Home", url: "/" }],
-    h1: "FilaScope", bodyText: "The most comprehensive 3D printer filament database.",
+    h1: "Page Not Found", bodyText: "The page you're looking for doesn't exist or has been moved. Browse our filament database or use the search to find what you need.",
   };
 }
 
@@ -618,10 +646,16 @@ Deno.serve(async (req) => {
 
       // Crawler prerender
       const pageData = await getPageData(path, supabase);
-      const html = buildHtml(pageData);
+      const is404 = pageData.type === "notfound";
+      const html = is404 ? build404Html(pageData) : buildHtml(pageData);
       return new Response(html, {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600, s-maxage=3600", "X-Robots-Tag": "all" },
+        status: is404 ? 404 : 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": is404 ? "public, max-age=60" : "public, max-age=3600, s-maxage=3600",
+          ...(is404 ? { "X-Robots-Tag": "noindex" } : { "X-Robots-Tag": "all" }),
+        },
       });
     }
 
