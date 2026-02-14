@@ -40,12 +40,13 @@ export default function PublicCollection() {
     queryFn: async () => {
       if (!username || !slug) throw new Error("Missing params");
 
-      // Find the profile by username_slug
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
+      // Find the profile by username_slug using the public view (excludes email/sensitive fields)
+      const { data: profileRaw, error: profileError } = await supabase
+        .from("v_public_profiles" as any)
         .select("id, display_name, avatar_url, username_slug")
         .eq("username_slug", username)
         .single();
+      const profile = profileRaw as unknown as { id: string; display_name: string | null; avatar_url: string | null; username_slug: string | null } | null;
 
       if (profileError) throw profileError;
 
