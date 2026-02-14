@@ -1,50 +1,54 @@
 
 
-## Fix robots.txt and sitemap.xml Routing
+## Fix Homepage SEO Issues
 
-### Current State (Verified)
+### 1. H1 Missing Space Fix (HeroSection.tsx)
 
-- `robots.txt`: **Works on production** (Lovable hosting serves `public/` static files correctly), but shows the old `Sitemap: https://filascope.com/sitemap.xml` because the latest code hasn't been published
-- `sitemap.xml`: **404 on production** because no static file exists at `public/sitemap.xml` -- the SPA fallback intercepts and renders the React 404 page
-- The codebase already has `public/robots.txt` updated to point to the edge function URL (`https://cfqfavmhdbyjzejipiwa.supabase.co/functions/v1/sitemap-xml`)
+The H1 uses two `display: block` `<span>` elements. While they render on separate lines visually, crawlers and assistive technology concatenate inner text as "FIND YOUR PERFECTFILAMENT." -- missing the space. Fix by adding a space character or changing the text.
 
-### Solution
+**File**: `src/components/HeroSection.tsx` (lines 239-248)
+- Change to a single `<h1>` with proper spacing: "Find Your Perfect 3D Printing Filament"
+- Or keep the current uppercase design but add an explicit space: put a space character after "PERFECT" or before "FILAMENT"
 
-The fix requires only **one code change + one publish**:
+**Approach**: Keep the visual design (two-line uppercase) but ensure concatenated text reads correctly. Add a trailing space to the first span's text content.
 
-#### 1. Already Done (Previous Edit)
+### 2. Duplicate H2 Fix (Finder.tsx)
 
-`public/robots.txt` already points the Sitemap directive to the edge function URL. Google, Bing, and all major crawlers read the `Sitemap:` line from robots.txt and follow that URL -- it does NOT need to be at `/sitemap.xml` on the domain. This is standard practice and explicitly supported by the Sitemaps protocol.
+Two identical `<h2>Browse All Filaments</h2>` render on the homepage:
+- Line 982 in Finder.tsx (bridge section)  
+- Line 41 in ResultsHeader.tsx (catalog header)
 
-#### 2. Publish the App
+**File**: `src/pages/Finder.tsx` (lines 980-987)
+- Change the bridge section H2 to a different heading, e.g., "Explore the Filament Catalog" or remove it entirely since ResultsHeader already provides the H2 with count information
 
-Publishing deploys the updated `public/robots.txt` to production, which changes the Sitemap line from the broken `https://filascope.com/sitemap.xml` to the working edge function URL.
+### 3. Title Priority (Already Working)
 
-#### 3. What About /sitemap.xml on the Domain?
+The Finder.tsx Helmet already sets `<title>FilaScope -- Compare 3D Printer Filaments, Specs & Prices</title>`. React Helmet overrides the index.html default title at runtime. This should already work for browser users visiting the SPA. If crawlers see the wrong title, it is because they are not executing JavaScript -- the prerender edge function handles that case separately.
 
-No action needed. The `/sitemap.xml` path will continue to return the SPA 404 page, but this is harmless because:
-- Crawlers discover the sitemap via `robots.txt`, not by guessing `/sitemap.xml`
-- Google Search Console accepts any valid URL for sitemap submission (you can submit the edge function URL directly)
-- The `Sitemap:` directive in robots.txt is the canonical way to declare sitemap locations
+No code change needed for the title.
 
-### What This Does NOT Fix
+### 4. Schemas (Already Working)
 
-The `public/robots.txt` update is the only code change needed. After publishing:
+`WebSiteSchema` and `OrganizationSchema` are already rendered in Finder.tsx (lines 952-953). These generate JSON-LD script tags via Helmet. They work for browser users. Crawlers that don't execute JS rely on the prerender function.
 
-| URL | Status | Content |
-|-----|--------|---------|
-| `/robots.txt` | 200 OK, text/plain | Correct robots directives + edge function sitemap URL |
-| Edge function sitemap URL | 200 OK, application/xml | Full XML sitemap with all filaments, brands, printers, guides |
-| `/sitemap.xml` | 200 OK (SPA 404 page) | React 404 component (harmless -- crawlers won't hit this) |
+No code change needed.
+
+### 5. Canonical (Already Working)
+
+The `CanonicalLink` component in App.tsx renders on every route including `/`, producing `https://filascope.com/`. 
+
+No code change needed.
+
+---
+
+### Summary of Changes
+
+| File | Change |
+|------|--------|
+| `src/components/HeroSection.tsx` | Add space after "PERFECT" in the H1 to fix concatenated text |
+| `src/pages/Finder.tsx` | Change or remove the duplicate "Browse All Filaments" H2 in the bridge section (lines 980-987) |
 
 ### Technical Notes
 
-- No Vite config changes needed -- Lovable hosting already serves `public/` files with priority over the SPA fallback
-- No React Router changes needed -- robots.txt is handled as a static file, not a route
-- No index.html script injection needed
-- No build-time sitemap generation needed -- the edge function generates it dynamically with fresh data
-
-### Action Required
-
-Publish the app to deploy the updated robots.txt to production.
-
+- The title, schemas, and canonical issues the user sees on the live site are caused by the latest code not being published to production yet, not by bugs in the code. Once published, browser visitors will see all the correct metadata.
+- For crawlers that do not execute JavaScript, the prerender edge function must be routing correctly (separate concern from this fix).
