@@ -167,10 +167,10 @@ const Deals = () => {
   return (
     <>
       <Helmet>
-        <title>Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope</title>
-        <meta name="description" content={metaDescription} />
-        <meta property="og:title" content="Today's Filament Deals — Best Prices on 3D Printing Materials | FilaScope" />
-        <meta property="og:description" content={metaDescription} />
+        <title>{totalDeals > 0 ? `3D Filament Deals & Discounts — ${totalDeals} Active Offers | FilaScope` : 'Today\'s Filament Deals — Best Prices on 3D Printing Materials | FilaScope'}</title>
+        <meta name="description" content={totalDeals > 0 ? `Today's best 3D printer filament deals from ${uniqueBrandCount}+ brands. PLA, PETG, ABS & specialty materials. Save up to ${maxDiscount}%. Updated daily.` : metaDescription} />
+        <meta property="og:title" content={totalDeals > 0 ? `3D Filament Deals & Discounts — ${totalDeals} Active Offers | FilaScope` : 'Today\'s Filament Deals — Best Prices on 3D Printing Materials | FilaScope'} />
+        <meta property="og:description" content={totalDeals > 0 ? `Today's best 3D printer filament deals from ${uniqueBrandCount}+ brands. PLA, PETG, ABS & specialty materials. Save up to ${maxDiscount}%. Updated daily.` : metaDescription} />
       </Helmet>
       {dealListItems.length > 0 && (
         <ItemListSchema

@@ -287,10 +287,10 @@ export default function LearningCenter() {
   return (
     <>
     <Helmet>
-      <title>Learning Center — 3D Printing Guides & Tutorials | FilaScope</title>
-      <meta name="description" content={lcMetaDesc} />
-      <meta property="og:title" content="Learning Center — 3D Printing Guides & Tutorials | FilaScope" />
-      <meta property="og:description" content={lcMetaDesc} />
+      <title>3D Printing Guides & Tutorials — Learn | FilaScope</title>
+      <meta name="description" content="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever." />
+      <meta property="og:title" content="3D Printing Guides & Tutorials — Learn | FilaScope" />
+      <meta property="og:description" content="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever." />
     </Helmet>
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Hero Section */}

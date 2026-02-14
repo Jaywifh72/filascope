@@ -62,9 +62,10 @@ export default function ColorFinder() {
   return (
     <>
       <Helmet>
-        <title>Find by Color | FilaScope</title>
-        <meta name="description" content="Find 3D printer filaments by color — pick any color or enter a hex code to discover matching filaments from 45+ brands with pricing." />
-        <meta property="og:description" content="Find 3D printer filaments by color — pick any color or enter a hex code to discover matching filaments from 45+ brands with pricing." />
+        <title>Find Filaments by Color — Color Matching Tool | FilaScope</title>
+        <meta name="description" content="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints." />
+        <meta property="og:title" content="Find Filaments by Color — Color Matching Tool | FilaScope" />
+        <meta property="og:description" content="Match any color to real 3D printer filaments. Search by hex code, color name, or TD value. Perfect for HueForge lithophanes & color-matched prints." />
       </Helmet>
 
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 py-8 space-y-8">
