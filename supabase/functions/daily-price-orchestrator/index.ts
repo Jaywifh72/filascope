@@ -256,6 +256,8 @@ Deno.serve(async (req) => {
       const brandsFailed: string[] = [];
       let totalProductsUpdated = 0;
       const brandResults: Record<string, unknown> = {};
+      // Aggregate regional totals across all brands
+      const regionalTotals: Record<string, { brands_synced: number; products_updated: number; errors: number }> = {};
 
       for (const brand of eligibleBrands) {
         const { slug, syncType } = brand;
@@ -306,10 +308,22 @@ Deno.serve(async (req) => {
               || syncResult?.totalUpdated 
               || syncResult?.stats?.updated 
               || syncResult?.updated
+              || syncResult?.summary?.totalMatched
               || 0;
             totalProductsUpdated += updated;
             brandResults[slug] = { status: 'success', syncType, productsUpdated: updated };
             console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated)`);
+
+            // Aggregate regional totals from sync result
+            const rb = syncResult?.regionBreakdown || syncResult?.regional_breakdown;
+            if (rb && typeof rb === 'object') {
+              for (const [region, stats] of Object.entries(rb as Record<string, any>)) {
+                if (!regionalTotals[region]) regionalTotals[region] = { brands_synced: 0, products_updated: 0, errors: 0 };
+                regionalTotals[region].brands_synced++;
+                regionalTotals[region].products_updated += (stats.updated || stats.matched || 0);
+                regionalTotals[region].errors += (stats.errors || stats.rejected || 0);
+              }
+            }
           } else {
             brandsFailed.push(slug);
             brandResults[slug] = { status: 'failed', syncType, error: syncResult?.error || syncResponse.statusText };
@@ -345,11 +359,10 @@ Deno.serve(async (req) => {
           : 'partial';
 
       const completedAt = new Date().toISOString();
-      const durationSeconds = (Date.now() - Date.now()) / 1000; // will be recalculated below
       const runStartTime = run.started_at ? new Date(run.started_at).getTime() : Date.now();
       const actualDuration = (Date.now() - runStartTime) / 1000;
 
-      // Update final status
+      // Update final status with regional totals
       await supabase
         .from('orchestration_runs')
         .update({
@@ -364,6 +377,7 @@ Deno.serve(async (req) => {
             regional_brands: eligibleBrands.filter(b => b.syncType === 'regional').length,
             brand_specific_brands: eligibleBrands.filter(b => b.syncType === 'brand-specific').length,
             brand_results: brandResults,
+            regional_totals: regionalTotals,
             tier_breakdown: {
               tier1: eligibleBrands.filter(b => b.tier === 1).length,
               tier2: eligibleBrands.filter(b => b.tier === 2).length,

@@ -88,4 +88,15 @@ export interface BrandSyncJob {
   progress: BrandSyncProgress | null;
   products_processed: SyncProductResult[] | null;
   error_details: { error: string } | null;
+  regions_synced?: string[] | null;
+  regional_breakdown?: Record<string, {
+    updated?: number;
+    created?: number;
+    skipped?: number;
+    errors?: number;
+    products_found?: number;
+    duration_ms?: number;
+    error_messages?: string[];
+    reason?: string;
+  }> | null;
 }

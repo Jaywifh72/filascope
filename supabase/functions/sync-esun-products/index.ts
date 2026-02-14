@@ -145,6 +145,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -306,6 +307,33 @@ Deno.serve(async (req) => {
       
       // Update product counts
       await supabase.rpc('update_brand_product_counts', { brand_slug_param: 'esun' });
+
+      // Create sync log with regional_breakdown
+      await supabase
+        .from('brand_sync_logs')
+        .insert({
+          brand_id: brandId,
+          brand_slug: 'esun',
+          sync_type: cleanSlate ? 'clean_slate' : 'incremental',
+          status: stats.errors > stats.created ? 'failed' : stats.errors > 0 ? 'partial' : 'completed',
+          triggered_by: 'admin_ui',
+          completed_at: new Date().toISOString(),
+          duration_seconds: Math.round((Date.now() - startTime) / 1000),
+          products_discovered: stats.discovered,
+          products_created: stats.created,
+          products_updated: stats.updated,
+          products_failed: stats.errors,
+          regions_synced: ['US'],
+          regional_breakdown: {
+            US: {
+              updated: stats.updated,
+              created: stats.created,
+              skipped: stats.skipped,
+              errors: stats.errors,
+              products_found: stats.discovered,
+            }
+          },
+        });
     }
 
     // =========================================================================

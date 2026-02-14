@@ -672,6 +672,23 @@ Deno.serve(async (req) => {
         total: allScrapedProducts.length,
       });
 
+      // Build regional_breakdown JSON for Sync Monitor
+      const regionalBreakdownJson: Record<string, unknown> = {};
+      for (const rb of regionBreakdown) {
+        const errorMessages = progress.errors
+          .filter(e => e.startsWith(`${rb.region}:`))
+          .map(e => e.replace(`${rb.region}: `, ''));
+        regionalBreakdownJson[rb.region] = {
+          updated: rb.updated,
+          created: rb.created,
+          skipped: rb.skipped,
+          errors: rb.errors,
+          products_found: rb.productsFound,
+          duration_ms: rb.duration_ms,
+          ...(errorMessages.length > 0 ? { error_messages: errorMessages } : {}),
+        };
+      }
+
       // Update sync log with final results
       if (jobId) {
         await supabase
@@ -685,6 +702,8 @@ Deno.serve(async (req) => {
             products_updated: summary.updated,
             products_failed: summary.errors,
             error_details: scrapingError ? { error: scrapingError } : null,
+            regions_synced: syncRegions,
+            regional_breakdown: regionalBreakdownJson,
             products_processed: {
               progress,
               products: processedProducts,

@@ -459,6 +459,23 @@ Deno.serve(async (req) => {
 
     console.log(`[sync-regional-prices] Completed for ${brandSlug}`, summary);
 
+    // Build regional_breakdown JSON for Sync Monitor
+    const regionalBreakdownJson: Record<string, unknown> = {};
+    for (const [region, stats] of Object.entries(regionBreakdown)) {
+      regionalBreakdownJson[region] = {
+        updated: stats.updated,
+        created: 0,
+        skipped: stats.skipped,
+        errors: stats.rejected,
+        products_found: stats.found,
+        matched: stats.matched,
+        error_messages: results
+          .filter(r => r.region === region && (r.action === 'rejected' || r.action === 'error'))
+          .slice(0, 10)
+          .map(r => `${r.title}: ${r.reason}`),
+      };
+    }
+
     // Create sync log entry
     await supabase
       .from('brand_sync_logs')
@@ -473,6 +490,8 @@ Deno.serve(async (req) => {
         duration_seconds: Math.round(duration / 1000),
         products_discovered: results.length,
         products_updated: summary.totalMatched,
+        regions_synced: regions.filter(r => r !== 'US'),
+        regional_breakdown: regionalBreakdownJson,
         success_details: { regionBreakdown, dryRun },
       });
 

@@ -1379,6 +1379,7 @@ export type Database = {
           products_processed: Json | null
           products_updated: number | null
           region_code: string | null
+          regional_breakdown: Json | null
           regions_synced: string[] | null
           started_at: string
           status: string
@@ -1403,6 +1404,7 @@ export type Database = {
           products_processed?: Json | null
           products_updated?: number | null
           region_code?: string | null
+          regional_breakdown?: Json | null
           regions_synced?: string[] | null
           started_at?: string
           status: string
@@ -1427,6 +1429,7 @@ export type Database = {
           products_processed?: Json | null
           products_updated?: number | null
           region_code?: string | null
+          regional_breakdown?: Json | null
           regions_synced?: string[] | null
           started_at?: string
           status?: string

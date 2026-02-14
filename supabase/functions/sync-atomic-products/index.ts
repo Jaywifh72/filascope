@@ -678,6 +678,17 @@ Deno.serve(async (req) => {
         products_discovered: uniqueProducts.size,
         products_created: inserted,
         products_failed: errors,
+        regions_synced: ['US'],
+        regional_breakdown: {
+          US: {
+            updated: 0,
+            created: inserted,
+            skipped: filtered,
+            errors: errors,
+            products_found: uniqueProducts.size,
+            duration_ms: Date.now() - startTime,
+          }
+        },
       }).eq('id', syncLogId);
     }
 

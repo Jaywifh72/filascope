@@ -61,6 +61,10 @@ interface RegionSyncDetail {
   errors?: number;
   skipped?: number;
   reason?: string;
+  error_messages?: string[];
+  products_found?: number;
+  matched?: number;
+  duration_ms?: number;
 }
 
 interface BrandSyncLog {
@@ -80,6 +84,7 @@ interface BrandSyncLog {
   regions_synced: string[] | null;
   products_processed: Record<string, unknown>[] | null;
   success_details: Record<string, unknown> | null;
+  regional_breakdown: Record<string, unknown> | null;
 }
 
 interface StaleProduct {
@@ -161,7 +166,7 @@ export function SyncMonitorContent() {
     queryFn: async () => {
       const { data } = await supabase
         .from('brand_sync_logs')
-        .select('id, brand_slug, started_at, completed_at, status, products_updated, products_created, products_failed, duration_seconds, price_changes, sync_type, triggered_by, region_code, regions_synced, products_processed, success_details')
+        .select('id, brand_slug, started_at, completed_at, status, products_updated, products_created, products_failed, duration_seconds, price_changes, sync_type, triggered_by, region_code, regions_synced, products_processed, success_details, regional_breakdown')
         .order('started_at', { ascending: false })
         .limit(100);
       return (data || []) as BrandSyncLog[];
@@ -450,22 +455,45 @@ export function SyncMonitorContent() {
   };
   const ALL_REGIONS = ['US', 'CA', 'EU', 'UK', 'AU', 'JP'];
 
-  // Extract region details from a sync log's products_processed or success_details
+  // Extract region details from a sync log's regional_breakdown, success_details, or products_processed
   const getRegionBreakdown = useCallback((log: BrandSyncLog): Record<string, RegionSyncDetail> => {
-    // Try success_details first (structured regional data)
-    if (log.success_details) {
-      const details = log.success_details as Record<string, unknown>;
-      // Check if it has region keys directly
-      const regionKeys = Object.keys(details).filter(k => ALL_REGIONS.includes(k));
+    // Priority 1: Use dedicated regional_breakdown column (new standard)
+    if (log.regional_breakdown) {
+      const rb = log.regional_breakdown as Record<string, unknown>;
+      const regionKeys = Object.keys(rb).filter(k => ALL_REGIONS.includes(k));
       if (regionKeys.length > 0) {
         const result: Record<string, RegionSyncDetail> = {};
         regionKeys.forEach(r => {
-          const rd = details[r] as Record<string, unknown> | undefined;
+          const rd = rb[r] as Record<string, unknown> | undefined;
+          result[r] = {
+            updated: (rd?.updated as number) || (rd?.prices_updated as number) || 0,
+            created: (rd?.created as number) || 0,
+            errors: (rd?.errors as number) || (rd?.prices_failed as number) || 0,
+            skipped: (rd?.skipped as number) || 0,
+            reason: rd?.reason as string | undefined,
+            error_messages: (rd?.error_messages as string[]) || undefined,
+          };
+        });
+        return result;
+      }
+    }
+
+    // Priority 2: Try success_details (legacy structured regional data)
+    if (log.success_details) {
+      const details = log.success_details as Record<string, unknown>;
+      // Check for regionBreakdown key inside success_details
+      const regionBreakdownInDetails = details.regionBreakdown as Record<string, unknown> | undefined;
+      const source = regionBreakdownInDetails || details;
+      const regionKeys = Object.keys(source).filter(k => ALL_REGIONS.includes(k));
+      if (regionKeys.length > 0) {
+        const result: Record<string, RegionSyncDetail> = {};
+        regionKeys.forEach(r => {
+          const rd = source[r] as Record<string, unknown> | undefined;
           result[r] = {
             updated: (rd?.updated as number) || (rd?.products_updated as number) || 0,
             created: (rd?.created as number) || 0,
-            errors: (rd?.errors as number) || (rd?.failed as number) || 0,
-            skipped: (rd?.skipped as number) || 0,
+            errors: (rd?.errors as number) || (rd?.failed as number) || (rd?.prices_failed as number) || 0,
+            skipped: (rd?.skipped as number) || (rd?.rejected as number) || 0,
             reason: rd?.reason as string | undefined,
           };
         });
@@ -473,7 +501,7 @@ export function SyncMonitorContent() {
       }
     }
 
-    // Try products_processed array - group by region
+    // Priority 3: Try products_processed array - group by region
     if (log.products_processed && Array.isArray(log.products_processed)) {
       const result: Record<string, RegionSyncDetail> = {};
       (log.products_processed as Record<string, unknown>[]).forEach(p => {
@@ -487,7 +515,7 @@ export function SyncMonitorContent() {
       return result;
     }
 
-    // Fallback: use regions_synced array + totals
+    // Priority 4: use regions_synced array + totals
     if (log.regions_synced?.length) {
       const result: Record<string, RegionSyncDetail> = {};
       const perRegion = Math.ceil((log.products_updated || 0) / log.regions_synced.length);
@@ -497,7 +525,7 @@ export function SyncMonitorContent() {
       return result;
     }
 
-    // Single region fallback
+    // Priority 5: Single region fallback
     if (log.region_code) {
       return { [log.region_code]: { updated: log.products_updated || 0, created: log.products_created || 0, errors: log.products_failed || 0 } };
     }
