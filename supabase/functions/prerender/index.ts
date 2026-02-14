@@ -18,7 +18,7 @@ const CRAWLER_AGENTS = [
   "duckduckbot", "yandex", "archive.org_bot", "slurp",
 ];
 
-const BASE_URL = "https://filascope.lovable.app";
+const BASE_URL = "https://filascope.com";
 
 const GUIDE_META: Record<string, { title: string; description: string }> = {
   "best-pla-filaments": {
@@ -418,6 +418,156 @@ function isCrawler(ua: string | null): boolean {
   return CRAWLER_AGENTS.some((bot) => lower.includes(bot));
 }
 
+// ============================================================
+// Robots.txt content
+// ============================================================
+const ROBOTS_TXT = `User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /maintenance
+Disallow: /embed/
+Crawl-delay: 1
+
+Sitemap: ${BASE_URL}/sitemap.xml
+`;
+
+// ============================================================
+// Sitemap helpers
+// ============================================================
+function escapeXml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+function toW3CDate(date: string | null): string {
+  if (!date) return new Date().toISOString().split("T")[0];
+  try { return new Date(date).toISOString().split("T")[0]; } catch { return new Date().toISOString().split("T")[0]; }
+}
+
+function urlEntry(loc: string, lastmod: string, changefreq: string, priority: number): string {
+  return `  <url>\n    <loc>${escapeXml(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority.toFixed(1)}</priority>\n  </url>`;
+}
+
+function wrapUrlset(entries: string[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>`;
+}
+
+const SITEMAP_HEADERS = {
+  "Content-Type": "application/xml; charset=utf-8",
+  "Cache-Control": "public, max-age=3600, s-maxage=86400",
+};
+
+const STATIC_PAGES = [
+  { path: "/", priority: 1.0, changefreq: "daily" },
+  { path: "/deals", priority: 0.9, changefreq: "daily" },
+  { path: "/printers", priority: 0.8, changefreq: "weekly" },
+  { path: "/brands", priority: 0.7, changefreq: "weekly" },
+  { path: "/compare", priority: 0.6, changefreq: "monthly" },
+  { path: "/wizard", priority: 0.7, changefreq: "monthly" },
+  { path: "/learn", priority: 0.6, changefreq: "weekly" },
+  { path: "/matrix", priority: 0.6, changefreq: "weekly" },
+  { path: "/reference/slicers", priority: 0.5, changefreq: "monthly" },
+  { path: "/reference/repos", priority: 0.5, changefreq: "monthly" },
+  { path: "/about", priority: 0.3, changefreq: "monthly" },
+  { path: "/methodology", priority: 0.4, changefreq: "monthly" },
+];
+
+const GUIDE_SLUGS = [
+  "best-pla-filaments", "best-petg-filaments", "best-abs-filaments",
+  "pla-vs-petg", "beginners-guide", "hueforge-filaments",
+];
+
+async function sitemapFilaments(supabase: SupabaseClient): Promise<string> {
+  const entries: string[] = [];
+  let offset = 0;
+  const BATCH = 1000;
+  let hasMore = true;
+  while (hasMore) {
+    const { data, error } = await supabase.from("filaments")
+      .select("product_handle, id, updated_at")
+      .not("product_handle", "is", null)
+      .order("id").range(offset, offset + BATCH - 1);
+    if (error || !data || data.length === 0) { hasMore = false; break; }
+    for (const f of data) {
+      entries.push(urlEntry(`${BASE_URL}/filament/${f.product_handle || f.id}`, toW3CDate(f.updated_at), "weekly", 0.7));
+    }
+    hasMore = data.length >= BATCH;
+    offset += BATCH;
+  }
+  return wrapUrlset(entries);
+}
+
+async function sitemapBrands(supabase: SupabaseClient): Promise<string> {
+  const entries: string[] = [];
+  let offset = 0;
+  const BATCH = 1000;
+  let hasMore = true;
+  while (hasMore) {
+    const { data, error } = await supabase.from("automated_brands")
+      .select("brand_slug, updated_at").eq("is_visible", true)
+      .order("brand_slug").range(offset, offset + BATCH - 1);
+    if (error || !data || data.length === 0) { hasMore = false; break; }
+    for (const b of data) {
+      entries.push(urlEntry(`${BASE_URL}/brands/${b.brand_slug}`, toW3CDate(b.updated_at), "monthly", 0.8));
+    }
+    hasMore = data.length >= BATCH;
+    offset += BATCH;
+  }
+  return wrapUrlset(entries);
+}
+
+async function sitemapPrinters(supabase: SupabaseClient): Promise<string> {
+  const entries: string[] = [];
+  let offset = 0;
+  const BATCH = 1000;
+  let hasMore = true;
+  while (hasMore) {
+    const { data, error } = await supabase.from("printers")
+      .select("printer_id, id, updated_at")
+      .order("id").range(offset, offset + BATCH - 1);
+    if (error || !data || data.length === 0) { hasMore = false; break; }
+    for (const p of data) {
+      entries.push(urlEntry(`${BASE_URL}/printers/${p.printer_id || p.id}`, toW3CDate(p.updated_at), "weekly", 0.6));
+    }
+    hasMore = data.length >= BATCH;
+    offset += BATCH;
+  }
+  return wrapUrlset(entries);
+}
+
+function sitemapPages(): string {
+  const today = new Date().toISOString().split("T")[0];
+  const entries = STATIC_PAGES.map((p) => urlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority));
+  return wrapUrlset(entries);
+}
+
+function sitemapGuides(): string {
+  const today = new Date().toISOString().split("T")[0];
+  const entries = GUIDE_SLUGS.map((s) => urlEntry(`${BASE_URL}/guides/${s}`, today, "weekly", 0.9));
+  return wrapUrlset(entries);
+}
+
+function sitemapIndex(): string {
+  const subs = ["sitemap-pages.xml", "sitemap-filaments.xml", "sitemap-brands.xml", "sitemap-printers.xml", "sitemap-guides.xml"];
+  const items = subs.map((s) => `  <sitemap><loc>${BASE_URL}/${s}</loc></sitemap>`).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</sitemapindex>`;
+}
+
+// ============================================================
+// Main handler
+// ============================================================
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -429,29 +579,56 @@ Deno.serve(async (req) => {
     let path = url.searchParams.get("path") || "/";
     path = path.replace(/\/+$/, "") || "/";
 
-    if (!isCrawler(userAgent)) {
-      return new Response(null, {
-        status: 302,
-        headers: { ...corsHeaders, Location: `${BASE_URL}${path}` },
+    // --- robots.txt (served to ALL user agents) ---
+    if (path === "/robots.txt") {
+      return new Response(ROBOTS_TXT, {
+        headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" },
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // --- Sitemaps (served to ALL user agents) ---
+    if (path === "/sitemap.xml") {
+      return new Response(sitemapIndex(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+    }
+    if (path === "/sitemap-pages.xml") {
+      return new Response(sitemapPages(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+    }
+    if (path === "/sitemap-guides.xml") {
+      return new Response(sitemapGuides(), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+    }
 
-    const pageData = await getPageData(path, supabase);
-    const html = buildHtml(pageData);
+    // DB-backed sitemaps need Supabase client
+    const needsDb = ["/sitemap-filaments.xml", "/sitemap-brands.xml", "/sitemap-printers.xml"].includes(path);
 
-    return new Response(html, {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
-        "X-Robots-Tag": "all",
-      },
+    if (needsDb || isCrawler(userAgent)) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+
+      if (path === "/sitemap-filaments.xml") {
+        return new Response(await sitemapFilaments(supabase), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+      }
+      if (path === "/sitemap-brands.xml") {
+        return new Response(await sitemapBrands(supabase), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+      }
+      if (path === "/sitemap-printers.xml") {
+        return new Response(await sitemapPrinters(supabase), { headers: { ...corsHeaders, ...SITEMAP_HEADERS } });
+      }
+
+      // Crawler prerender
+      const pageData = await getPageData(path, supabase);
+      const html = buildHtml(pageData);
+      return new Response(html, {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600, s-maxage=3600", "X-Robots-Tag": "all" },
+      });
+    }
+
+    // Non-crawler, non-sitemap → redirect to SPA
+    return new Response(null, {
+      status: 302,
+      headers: { ...corsHeaders, Location: `${BASE_URL}${path}` },
     });
   } catch (err) {
     console.error("Prerender error:", err);
