@@ -2,6 +2,7 @@
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
+import { BreadcrumbSchema } from "@/components/seo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -408,6 +409,10 @@ const Compare = () => {
         <meta property="og:title" content="Compare 3D Filaments Side-by-Side | FilaScope" />
         <meta property="og:description" content="Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices." />
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://filascope.com/' },
+        { name: 'Compare', url: 'https://filascope.com/compare' },
+      ]} />
       <div className="min-h-screen bg-background relative">
       {/* Subtle background pattern matching site design */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,232,0.03)_0%,_transparent_50%)] pointer-events-none" />

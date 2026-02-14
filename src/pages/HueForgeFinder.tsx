@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/hooks/useCurrency';
-import { ItemListSchema, FAQSchema } from '@/components/seo';
+import { ItemListSchema, FAQSchema, BreadcrumbSchema } from '@/components/seo';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const hueforgeFaqs = [
@@ -145,6 +145,11 @@ export default function HueForgeFinder() {
         <link rel="canonical" href="https://filascope.com/hueforge-filaments" />
       </Helmet>
       
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://filascope.com/' },
+        { name: 'HueForge Finder', url: 'https://filascope.com/hueforge-filaments' },
+      ]} />
+
       <ItemListSchema
         name="HueForge Compatible Filaments"
         description="Filaments with verified Transmission Distance (TD) values for HueForge multicolor printing"

@@ -10,7 +10,7 @@ import BrandsActiveFilters from "@/components/brands/BrandsActiveFilters";
 import BrandCard from "@/components/brands/BrandCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ItemListSchema } from "@/components/seo";
+import { ItemListSchema, BreadcrumbSchema } from "@/components/seo";
 import { toBrandSlug } from "@/utils/brandSlug";
 import {
   Select,
@@ -380,6 +380,10 @@ const Brands = () => {
         <meta property="og:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
         <meta property="og:description" content={`Compare ${brandCount || 48}+ 3D filament brands. Browse manufacturers like Bambu Lab, Polymaker, eSUN & more. Prices, material ranges, reviews & verified partner status.`} />
       </Helmet>
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://filascope.com/' },
+        { name: 'Brands', url: 'https://filascope.com/brands' },
+      ]} />
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}
       <ItemListSchema

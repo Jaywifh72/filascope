@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { BreadcrumbSchema } from '@/components/seo';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -292,6 +293,10 @@ export default function LearningCenter() {
       <meta property="og:title" content="3D Printing Guides & Tutorials — Learn | FilaScope" />
       <meta property="og:description" content="Expert guides on 3D printing filaments. Material comparisons, buying guides, HueForge tutorials, troubleshooting tips & beginner resources. Free forever." />
     </Helmet>
+    <BreadcrumbSchema items={[
+      { name: 'Home', url: 'https://filascope.com/' },
+      { name: 'Learning Center', url: 'https://filascope.com/learn' },
+    ]} />
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Hero Section */}
       <section className="relative py-16 lg:py-20 overflow-hidden">
