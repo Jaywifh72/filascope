@@ -151,10 +151,19 @@ export function BrandHeroSection({
             )}
             {website && (
               <a 
-                href={website} 
+                href={hasAffiliate ? buildLink(website) : website} 
                 target="_blank" 
-                rel="noopener noreferrer"
+                rel="nofollow sponsored noopener noreferrer"
                 className="flex items-center gap-1.5 text-primary hover:underline"
+                onClick={(e) => {
+                  if (hasAffiliate) {
+                    e.preventDefault();
+                    trackAndOpen(website, {
+                      sourcePage: window.location.pathname,
+                      sourceComponent: 'BrandHeroSection-inline',
+                    });
+                  }
+                }}
               >
                 <Globe className="w-4 h-4" />
                 Website
