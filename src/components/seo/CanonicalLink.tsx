@@ -35,6 +35,10 @@ export function CanonicalLink() {
     <Helmet>
       <link rel="canonical" href={canonicalUrl} />
       <meta property="og:url" content={canonicalUrl} />
+      {/* Global defaults — page-specific SEO components override og:url/canonical */}
+      <meta property="og:site_name" content="FilaScope" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@FilaScope" />
     </Helmet>
   );
 }
