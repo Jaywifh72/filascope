@@ -161,10 +161,6 @@ const App = () => (
   <ErrorBoundary>
   <ThemeProvider>
   <HelmetProvider>
-    <Helmet>
-      <meta name="description" content="Explore thousands of 3D printer filaments with detailed technical specs, printer compatibility, and transmissivity data. The ultimate filament reference for HueForge and precision printing." />
-      <meta property="og:description" content="Explore thousands of 3D printer filaments with detailed technical specs, printer compatibility, and transmissivity data." />
-    </Helmet>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
       <RegionProvider>
