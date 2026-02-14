@@ -1,119 +1,129 @@
 
 
-# Daily Price Sync Orchestrator
+# Consolidated Admin Data Quality Dashboard
 
 ## Overview
-Build an automated daily orchestrator that sequences brand price syncs using existing infrastructure (`sync-regional-prices`, `brand_sync_logs`, `automated_brands`), plus an admin UI with manual trigger and live progress.
+Create a unified `/old-admin/data-quality-dashboard` page that consolidates pricing health, broken links, regional coverage, and sync activity into a single view with real-time updates, CSV exports, and quick action sidebar.
 
-## What Already Exists
-- `sync-regional-prices` edge function: syncs regional prices for a single brand
-- `brand_sync_logs` table: tracks all sync runs
-- `automated_brands` table: has `scrape_frequency_hours`, `last_scrape_at`, `next_scrape_at`
-- `CurrentSyncStatus` component: shows running syncs in real-time
-- `SyncStatusTab`: admin dashboard for sync monitoring
-- `BRAND_REGIONAL_DOMAINS` mapping in sync-regional-prices (defines which brands have regional stores)
+## What Already Exists (will be reused, not duplicated)
+- `AdminLayout`, `AdminPageHeader` -- standard admin page shell
+- `AdminSidebar` -- add new nav entry
+- `price_discrepancies` table -- pending review counts
+- `brand_sync_logs` table -- recent sync activity
+- `orchestration_runs` table -- last orchestrator run
+- `OrchestrationControl` component -- manual sync trigger
+- `PriceDiscrepancyQueue` component -- discrepancy review
+- `BrandRegionMatrix` component -- regional coverage grid
+- `get_brand_region_coverage` RPC -- coverage data
+- `useBrokenProductUrls` hook -- broken link data
+- `usePriceSync` hook -- trigger syncs
+- `price_confidence` column on filaments -- freshness tiers
+- `last_scraped_at` column on filaments -- staleness calculation
+- Recharts already installed
 
 ## Implementation Steps
 
-### 1. Database: Create `orchestration_runs` table
+### 1. Create the Dashboard Page
 
-New table to track full orchestration runs (distinct from individual brand syncs in `brand_sync_logs`):
+New file: `src/pages/admin/DataQualityDashboard.tsx`
 
-- `id` (uuid, primary key)
-- `started_at` (timestamptz, default now())
-- `completed_at` (timestamptz, nullable)
-- `status` (text: 'running', 'completed', 'failed', 'partial')
-- `brands_total` (integer)
-- `brands_synced` (integer, default 0)
-- `brands_failed` (text[], default '{}')
-- `total_products_updated` (integer, default 0)
-- `trigger_type` (text: 'cron', 'manual')
-- `triggered_by_user` (uuid, nullable)
-- `error_log` (jsonb, nullable)
-- `summary` (jsonb, nullable -- duration, per-brand results)
+Uses `AdminLayout` + `AdminPageHeader` with icon `ShieldCheck`.
 
-RLS: Admin-only read/write via `has_role()`.
+Layout structure:
+- Left column (75%): Main content sections A-F
+- Right column (25%): Quick action sidebar
 
-### 2. Edge Function: `daily-price-orchestrator`
+### 2. Section A: Overview Metrics (Top Cards Row)
 
-Core logic:
-1. Create an `orchestration_runs` row with status `running`
-2. Query `automated_brands` for brands with regional domains configured
-3. Sort by priority tier:
-   - **Tier 1 (daily)**: bambu-lab, polymaker, prusament, esun, overture, elegoo, creality, anycubic
-   - **Tier 2 (every 3 days)**: sunlu, eryone, hatchbox, colorfabb, fillamentum
-   - **Tier 3 (weekly)**: remaining brands
-4. Filter: skip brands synced within their tier's frequency window
-5. For each eligible brand, call `sync-regional-prices` via HTTP POST with all configured regions and `dryRun: false`
-6. Wait 3 seconds between brands (rate limiting)
-7. Track results per brand, update `orchestration_runs` row progressively
-8. On completion, update final status and summary
-9. Use `EdgeRuntime.waitUntil()` for background execution, return job ID immediately
+Five stat cards querying existing data:
+- **Total Products**: `SELECT COUNT(*) FROM filaments`
+- **Fresh Prices (<24h)**: `SELECT COUNT(*) FROM filaments WHERE price_confidence = 'high'`
+- **Pending Reviews**: `SELECT COUNT(*) FROM price_discrepancies WHERE status IN ('pending','manual_review')`
+- **Broken Links**: `SELECT COUNT(*) FROM broken_product_urls WHERE resolved_at IS NULL`
+- **Avg Staleness**: Calculate from `last_scraped_at` distribution
 
-The function accepts `{ trigger: 'cron' | 'manual', userId?: string }`.
+All queries run in parallel on mount.
 
-Set `verify_jwt = false` in config.toml (cron calls won't have JWT; manual calls validate auth in code).
+### 3. Section B: Stale Pricing Table
 
-### 3. Cron Job: Schedule at 2 AM EST daily
+Reuses the pattern from `AdminPriceFreshness.tsx`:
+- Query `filaments` where `last_scraped_at < NOW() - 7 days OR last_scraped_at IS NULL`
+- Columns: Product, Brand, Region, Last Checked, Days Old, Action
+- "Sync Now" button per row calls `get-current-price` via `usePriceSync`
+- Filters: brand dropdown, staleness threshold (7d/14d/30d)
+- Sort by days old descending
+- Limited to 50 rows with "Show More" pagination
 
-Use `pg_cron` + `pg_net` to call the orchestrator:
+### 4. Section C: Broken Links
 
-```text
-Schedule: 0 7 * * *  (7 AM UTC = 2 AM EST)
-```
+Reuses `useBrokenProductUrls` hook directly:
+- Table: Product, Retailer URL, Error Date, Status
+- Actions: "Re-check" (calls `get-current-price`), "Mark Discontinued" (sets `resolved_at`)
+- Shows store breakdown from `stats.storeBreakdown`
 
-Calls `daily-price-orchestrator` with `{ "trigger": "cron" }`.
+### 5. Section D: Regional Coverage Matrix
 
-No retry mechanism built into pg_cron natively -- the orchestrator itself will handle partial failures gracefully (continue to next brand on error, mark run as 'partial' if some brands fail).
+Embeds existing `BrandRegionMatrix` component directly -- it already has the color-coded grid, click-to-expand, and sync triggers.
 
-### 4. Admin UI: Orchestration Dashboard
+### 6. Section E: Price Confidence Distribution
 
-Add to `SyncStatusTab.tsx` a new section above the existing content:
+New component using Recharts `PieChart`:
+- Query: `SELECT price_confidence, COUNT(*) FROM filaments GROUP BY price_confidence`
+- 5 slices: high (green), medium (yellow), low (orange), stale (red), unknown (gray)
+- Click slice to filter the stale pricing table to that confidence tier
 
-- **"Run Full Price Sync" button**: Calls the orchestrator with `trigger: 'manual'`
-- **Last Orchestration Run card**: Shows status, brands synced/failed, products updated, duration
-- **Staleness alert**: Warning banner if no orchestration run in 36+ hours
-- Real-time progress via polling `orchestration_runs` table (reuses existing 2s polling pattern from `CurrentSyncStatus`)
+### 7. Section F: Recent Sync Activity
 
-New component: `OrchestrationControl.tsx` in `src/components/admin/inventory/sync-status/`
+Query `brand_sync_logs` ordered by `started_at DESC LIMIT 20`:
+- Columns: Brand, Type, Status, Duration, Products Updated, Started
+- Badge colors: green=completed, red=failed, yellow=running
+- Filter by brand, status
 
-### 5. Email Notification (Simplified)
+### 8. Quick Action Sidebar (Right Column)
 
-Rather than a full email system (which would need an email API key), the orchestrator will:
-- Log a completion summary to `orchestration_runs.summary` (jsonb)
-- The admin dashboard displays this prominently
-- The 36-hour staleness warning serves as the "alert if not run" mechanism
+Sticky positioned panel:
+- "Run Full Sync" button (reuses `OrchestrationControl` trigger logic)
+- "Review Price Changes" link to `/old-admin/inventory?tab=sync` (discrepancy queue)
+- "Export Weekly Report" button (triggers CSV export)
+- Last orchestration run timestamp from `orchestration_runs`
+- Pending review count badge
 
-If you want actual email delivery later, we can add a Resend or SendGrid integration.
+### 9. CSV Export Functions
 
-## Technical Details
+Utility function `downloadCSV(data, filename)`:
+- Export stale products list
+- Export price discrepancies
+- Export broken links
+Each converts query results to CSV blob and triggers browser download.
 
-### Edge Function Structure
+### 10. Real-time Updates
 
-```text
-supabase/functions/daily-price-orchestrator/index.ts
-```
+Subscribe to Supabase Realtime on:
+- `filaments` table (price_confidence changes)
+- `brand_sync_logs` table (new sync runs)
+- `price_discrepancies` table (new discrepancies)
 
-Flow:
-1. Parse request, determine trigger type
-2. For manual triggers: validate admin auth
-3. Create orchestration_runs record
-4. Return immediately with run ID
-5. Background (waitUntil): iterate brands, call sync-regional-prices, update progress
+On change events, refetch the relevant stat cards and tables.
 
-### Brands with Regional Domains (eligible for orchestration)
+### 11. Route and Navigation
 
-From the existing `BRAND_REGIONAL_DOMAINS` map: bambu-lab, elegoo, polymaker, creality, anycubic, qidi, flashforge, sunlu, eryone, jayo, kingroon, sovol, artillery, longer, two-trees, geeetech, voxelab (17 brands).
+- Add route in `App.tsx`: `<Route path="/old-admin/data-quality-dashboard" element={<DataQualityDashboard />} />`
+- Add sidebar entry in `AdminSidebar.tsx` under "Data Quality" group: `{ title: 'Quality Dashboard', href: '/old-admin/data-quality-dashboard', icon: ShieldCheck }`
 
-### Files to Create
-- `supabase/functions/daily-price-orchestrator/index.ts`
-- `src/components/admin/inventory/sync-status/OrchestrationControl.tsx`
+## Files to Create
+- `src/pages/admin/DataQualityDashboard.tsx` -- main page (~400 lines)
+- `src/lib/csvExport.ts` -- CSV utility (~30 lines)
 
-### Files to Modify
-- `supabase/config.toml` -- add function config
-- `src/components/admin/inventory/SyncStatusTab.tsx` -- add OrchestrationControl
+## Files to Modify
+- `src/App.tsx` -- add route
+- `src/components/admin/AdminSidebar.tsx` -- add nav item
 
-### Database Changes
-- New `orchestration_runs` table with RLS policies
-- pg_cron job (via SQL insert, not migration)
+## No Database Changes Required
+All data comes from existing tables and columns.
 
+## Technical Notes
+- All queries use the existing Supabase client with RLS (admin-only via `has_role`)
+- Recharts `PieChart` + `Cell` for the confidence distribution
+- `useEffect` cleanup for Realtime channel subscriptions
+- Responsive grid: 3-col on desktop, stacks on mobile
+- The page consolidates views currently scattered across 6+ separate admin pages into one unified dashboard
