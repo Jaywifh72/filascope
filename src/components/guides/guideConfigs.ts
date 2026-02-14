@@ -24,6 +24,7 @@ export interface GuideConfig {
   keywords: string[];
   filters: GuideFilamentFilters;
   layout: 'ranked-list' | 'vs-comparison' | 'editorial';
+  vsMaterials?: [string, string]; // For vs-comparison layout: [materialA, materialB]
   editorialSections: EditorialSection[];
   faqs: FAQItem[];
   relatedSlugs: string[];
@@ -67,7 +68,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Is PLA food safe?', answer: 'Raw PLA is generally considered food-safe, but the printing process introduces micro-gaps where bacteria can grow. For food contact, seal your prints with a food-safe epoxy coating.' },
       { question: 'Can PLA be used outdoors?', answer: 'PLA has low heat resistance (~60°C glass transition) and will deform in direct sunlight. For outdoor use, consider PETG or ASA instead.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'pla-vs-petg', 'beginners-guide'],
+    relatedSlugs: ['best-petg-filaments', 'pla-vs-petg', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
   },
 
   'best-petg-filaments': {
@@ -106,7 +107,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Can you print PETG without an enclosure?', answer: 'Yes. Unlike ABS, PETG doesn\'t warp significantly and doesn\'t emit harmful fumes, so an enclosure is optional.' },
       { question: 'Is PETG food safe?', answer: 'PETG itself is FDA-approved for food contact. However, printed parts have micro-gaps. For food-safe applications, use a food-safe sealant.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-abs-filaments', 'pla-vs-petg'],
+    relatedSlugs: ['best-pla-filaments', 'best-abs-filaments', 'pla-vs-petg', 'best-filament-for-bambu-lab-p1s', 'asa-vs-abs-outdoor-printing'],
   },
 
   'best-abs-filaments': {
@@ -146,7 +147,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Why does ABS warp?', answer: 'ABS has a high shrinkage rate as it cools. Without an enclosure, uneven cooling causes corners to lift. An enclosure maintaining ~45°C ambient temperature prevents this.' },
       { question: 'Can you smooth ABS prints?', answer: 'Yes! Acetone vapor smoothing eliminates layer lines and gives ABS parts a glossy, injection-molded appearance.' },
     ],
-    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'pla-vs-petg'],
+    relatedSlugs: ['best-petg-filaments', 'best-pla-filaments', 'pla-vs-petg', 'asa-vs-abs-outdoor-printing', 'best-filament-for-bambu-lab-p1s'],
   },
 
   'pla-vs-petg': {
@@ -162,6 +163,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
     keywords: ['PLA vs PETG', 'PLA or PETG', 'filament comparison', 'which filament to use'],
     filters: { materials: ['PLA', 'PETG'], sortBy: 'score', limit: 6 },
     layout: 'vs-comparison',
+    vsMaterials: ['PLA', 'PETG'],
     editorialSections: [
       {
         heading: 'Making the Right Choice',
@@ -182,7 +184,7 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'Which is stronger, PLA or PETG?', answer: 'PETG has higher impact resistance and flexibility. PLA has higher rigidity but is more brittle. For parts under mechanical stress, PETG is the better choice.' },
       { question: 'Can beginners print PETG?', answer: 'Yes, but PLA is easier. PETG requires slightly higher temperatures, more retraction tuning, and can stick too aggressively to smooth PEI sheets.' },
     ],
-    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide'],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'beginners-guide', 'pla-plus-vs-pla-pro', 'silk-pla-comparison'],
   },
 
   'beginners-guide': {
@@ -277,7 +279,272 @@ export const BUYING_GUIDE_CONFIGS: Record<string, GuideConfig> = {
       { question: 'How is TD measured?', answer: 'TD is measured by printing a calibration wedge and observing at which thickness light begins to pass through. The higher the TD value, the more translucent the filament.' },
       { question: 'Can I use any PLA for HueForge?', answer: 'Technically yes, but results vary dramatically. Filaments without measured TD values are unpredictable. We recommend using filaments from our database that have verified TD measurements.' },
     ],
+    relatedSlugs: ['best-pla-filaments', 'beginners-guide', 'pla-vs-petg', 'best-filaments-for-hueforge-lithophanes'],
+  },
+
+  'best-filaments-for-hueforge-lithophanes': {
+    slug: 'best-filaments-for-hueforge-lithophanes',
+    title: 'Best Filaments for HueForge Lithophanes',
+    seoTitle: 'Best Filaments for HueForge Lithophanes (2026) | FilaScope',
+    seoDescription: 'Top 10 filaments for HueForge lithophanes ranked by TD value. Compare opacity, prices, and settings for stunning lithophane prints.',
+    description: 'The definitive ranked list of filaments optimized for HueForge lithophane printing, sorted by Transmission Distance (TD) with real pricing and specs.',
+    category: 'buying-guide',
+    readTime: 14,
+    publishedAt: '2026-02-14',
+    updatedAt: '2026-02-14',
+    keywords: ['HueForge lithophane filament', 'best lithophane filament', 'TD value filament', 'lithophane 3D printing', 'HueForge 2026'],
+    filters: { requireTD: true, sortBy: 'td', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'What Makes a Good Lithophane Filament?',
+        content: `<p>Lithophane quality depends on three filament properties: <strong>Transmission Distance (TD)</strong>, <strong>layer adhesion</strong>, and <strong>opacity consistency</strong>. TD measures how much light passes through at a given thickness — it's the single most important spec for HueForge projects.</p>
+<p>For lithophanes, you want filaments with <strong>low TD values (0.5–2.5mm)</strong> for deep shadows and high contrast, plus filaments with <strong>higher TD values (3.0–6.0+mm)</strong> for highlights and mid-tones. The best lithophane stacks use 3–5 filaments spanning the full TD range.</p>
+<ul>
+<li><strong>Opacity:</strong> Consistent, uniform opacity across the spool ensures predictable results layer after layer.</li>
+<li><strong>Layer adhesion:</strong> Strong interlayer bonding prevents delamination in thin lithophane walls.</li>
+<li><strong>Dimensional accuracy:</strong> Tight diameter tolerance (±0.02mm) is critical — thickness variations directly affect light transmission.</li>
+<li><strong>Color purity:</strong> Avoid filaments with glitter, metallic flakes, or translucent additives that scatter light unpredictably.</li>
+</ul>`,
+        position: 'before',
+      },
+      {
+        heading: 'White vs Colored Filaments for Lithophanes',
+        content: `<p>Traditional single-color lithophanes use <strong>white filament</strong> because it transmits light most evenly. White PLA typically has TD values of 3.0–5.0mm, producing excellent contrast between thick (dark) and thin (bright) areas when backlit.</p>
+<p>However, <strong>HueForge changes the equation</strong>. Multi-color lithophanes layer different-colored filaments at varying thicknesses to create full-color images. In this case, you need:</p>
+<ul>
+<li><strong>Dark colors (black, dark brown):</strong> TD 0.5–1.5mm — for deep shadows and outlines.</li>
+<li><strong>Mid-tones (red, blue, green):</strong> TD 1.5–3.0mm — for color detail and gradients.</li>
+<li><strong>Light colors (yellow, white):</strong> TD 3.0–6.0mm — for highlights and bright areas.</li>
+</ul>
+<p>For classic single-color lithophanes, stick with white or natural PLA. For HueForge, build a stack covering the full TD spectrum.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'Recommended Settings for HueForge Printing',
+        content: `<ul>
+<li><strong>Layer height:</strong> 0.08–0.12mm for maximum detail. Lower = smoother gradients but longer print times.</li>
+<li><strong>Nozzle temperature:</strong> 200–215°C for PLA. Slightly higher than normal ensures strong layer adhesion in thin walls.</li>
+<li><strong>Print speed:</strong> 30–50mm/s. Slower speeds improve layer consistency and reduce artifacts.</li>
+<li><strong>Infill:</strong> 100% — lithophanes must be fully solid for proper light transmission.</li>
+<li><strong>Orientation:</strong> Print vertically (standing up) for best results. Horizontal printing compresses layers and reduces contrast.</li>
+<li><strong>Cooling:</strong> 100% fan after the first few layers. PLA lithophanes benefit from maximum cooling.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What TD value is best for lithophanes?', answer: 'For single-color lithophanes, a TD of 3.0–4.5mm (white PLA) gives the best contrast. For multi-color HueForge projects, you need a range: low TD (0.5–1.5) for shadows, medium (2.0–3.5) for mid-tones, and high (4.0+) for highlights.' },
+      { question: 'Can I use PETG for HueForge?', answer: 'PETG works for lithophanes but is less ideal than PLA. PETG tends to be more translucent (higher TD), making it harder to achieve deep shadows. PLA offers more predictable opacity and better TD variety across brands.' },
+      { question: 'What layer height should I use for lithophanes?', answer: '0.08mm to 0.12mm layer height is recommended. Thinner layers produce smoother tonal gradients. At 0.2mm, you lose significant detail and the transitions between light and dark become visibly stepped.' },
+    ],
+    relatedSlugs: ['hueforge-filaments', 'best-pla-filaments', 'beginners-guide'],
+  },
+
+  'pla-plus-vs-pla-pro': {
+    slug: 'pla-plus-vs-pla-pro',
+    title: 'PLA+ vs PLA Pro: Which Should You Choose?',
+    seoTitle: 'PLA+ vs PLA Pro — What\'s the Difference? | FilaScope',
+    seoDescription: 'PLA+ and PLA Pro compared: actual material differences, brand naming conventions, strength tests, and top product picks for each.',
+    description: 'Cutting through the marketing confusion — what PLA+ and PLA Pro actually mean, how they differ, and which products deliver the best value.',
+    category: 'comparison',
+    readTime: 10,
+    publishedAt: '2026-02-14',
+    updatedAt: '2026-02-14',
+    keywords: ['PLA+ vs PLA Pro', 'PLA plus', 'PLA Pro filament', 'enhanced PLA', 'PLA+ filament comparison'],
+    filters: { materials: ['PLA+', 'PLA Pro'], sortBy: 'score', limit: 10 },
+    layout: 'vs-comparison',
+    vsMaterials: ['PLA+', 'PLA Pro'],
+    editorialSections: [
+      {
+        heading: 'The Marketing Confusion Explained',
+        content: `<p>"PLA+" and "PLA Pro" are <strong>not standardized material designations</strong>. Unlike PLA or PETG, these names are brand-specific marketing terms for enhanced PLA formulations. The result? Two filaments labeled "PLA+" from different brands can have completely different properties.</p>
+<p>Here's how major brands use these terms:</p>
+<ul>
+<li><strong>eSUN PLA+:</strong> Their enhanced PLA with improved toughness and heat resistance. One of the original "PLA+" products.</li>
+<li><strong>Polymaker PolyLite PLA Pro:</strong> A modified PLA with higher impact resistance and slightly higher heat deflection temperature.</li>
+<li><strong>Bambu Lab PLA Basic vs PLA Matte:</strong> Bambu avoids both terms entirely, using descriptive names instead.</li>
+<li><strong>Overture PLA Pro:</strong> Enhanced formulation with improved layer adhesion and reduced brittleness.</li>
+</ul>
+<p>The bottom line: <strong>ignore the name, compare the specs.</strong> That's exactly what our data-driven comparison below does.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'Key Differences: PLA+ vs PLA Pro',
+        content: `<p>Despite the naming inconsistency, most "enhanced PLA" filaments share common improvements over standard PLA:</p>
+<ul>
+<li><strong>Impact resistance:</strong> 2–5× higher than standard PLA. Less brittle, more forgiving in functional parts.</li>
+<li><strong>Temperature range:</strong> Typically 205–230°C nozzle (vs 190–220°C for standard PLA). Slightly higher bed temps too.</li>
+<li><strong>Layer adhesion:</strong> Improved interlayer bonding means stronger parts in the Z-axis.</li>
+<li><strong>Heat resistance:</strong> Marginally better than PLA (~62–68°C vs ~58°C glass transition), but still not suitable for high-heat applications.</li>
+</ul>
+<p><strong>When it matters:</strong> If you're printing decorative items, standard PLA is fine. For functional parts that need to survive drops or light mechanical stress, PLA+ / PLA Pro is worth the 10–20% price premium.</p>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Is PLA+ the same as PLA Pro?', answer: 'Not exactly. Both are marketing terms for enhanced PLA, but different brands use different formulations. "PLA+" (popularized by eSUN) and "PLA Pro" (used by Polymaker, Overture) may have different additives and properties. Always compare specs, not names.' },
+      { question: 'Is PLA+ stronger than regular PLA?', answer: 'Generally yes. Most PLA+ formulations have 2–5× higher impact resistance than standard PLA, better layer adhesion, and reduced brittleness. However, the strength improvement varies significantly between brands.' },
+      { question: 'Do I need different settings for PLA+ or PLA Pro?', answer: 'Slightly. Most enhanced PLAs print at 205–230°C (5–10°C higher than standard PLA) and benefit from slightly higher bed temps (60–65°C). Retraction settings are usually the same as standard PLA.' },
+    ],
     relatedSlugs: ['best-pla-filaments', 'beginners-guide', 'pla-vs-petg'],
+  },
+
+  'best-filament-for-bambu-lab-p1s': {
+    slug: 'best-filament-for-bambu-lab-p1s',
+    title: 'Best Filaments for Bambu Lab P1S',
+    seoTitle: 'Best Filaments for Bambu Lab P1S (2026) | FilaScope',
+    seoDescription: 'Top filament picks for the Bambu Lab P1S. PLA, PETG, ABS, and TPU recommendations with AMS compatibility notes and print settings.',
+    description: 'Curated filament recommendations for Bambu Lab P1S owners — covering PLA, PETG, ABS, and TPU with AMS compatibility and tuned print profiles.',
+    category: 'buying-guide',
+    readTime: 13,
+    publishedAt: '2026-02-14',
+    updatedAt: '2026-02-14',
+    keywords: ['Bambu Lab P1S filament', 'best filament P1S', 'P1S compatible filament', 'Bambu Lab filament', 'AMS filament'],
+    filters: { materials: ['PLA', 'PETG', 'ABS', 'TPU'], sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'Bambu Lab P1S: Quick Specs Recap',
+        content: `<p>The <strong>Bambu Lab P1S</strong> is a fully enclosed CoreXY printer that handles a wide range of materials out of the box. Key specs for filament compatibility:</p>
+<ul>
+<li><strong>Max nozzle temp:</strong> 300°C — supports PLA, PETG, ABS, ASA, TPU, PA (Nylon), and PC.</li>
+<li><strong>Max bed temp:</strong> 110°C — adequate for ABS and most engineering materials.</li>
+<li><strong>Enclosure:</strong> Fully enclosed with active chamber heating — critical for ABS and PA.</li>
+<li><strong>AMS compatibility:</strong> Works with the Bambu AMS for multi-color/multi-material printing. Requires filaments with consistent diameter (±0.02mm) and smooth spool winding.</li>
+<li><strong>Max speed:</strong> 500mm/s — benefits from high-speed filament formulations.</li>
+</ul>`,
+        position: 'before',
+      },
+      {
+        heading: 'AMS Compatibility Notes',
+        content: `<p>The Bambu AMS (Automatic Material System) is popular for multi-color printing, but not all filaments work well with it:</p>
+<ul>
+<li><strong>Works great:</strong> Standard PLA, PLA+, PETG from major brands (Bambu Lab, Polymaker, eSUN). Consistent diameter and smooth winding are key.</li>
+<li><strong>Works with care:</strong> ABS and ASA work in the AMS but require drying. Moisture causes jams in the PTFE tube.</li>
+<li><strong>Avoid in AMS:</strong> TPU (too flexible for the feeder), wood-fill/carbon-fill (abrasive, clogs), and filaments on cardboard spools (can snag).</li>
+</ul>
+<p>For best AMS reliability, use filaments on Bambu-style refill spools or confirmed-compatible master spools.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'Recommended Settings by Material',
+        content: `<ul>
+<li><strong>PLA on P1S:</strong> 220°C nozzle, 60°C bed, 50–100% fan. Use the "Generic PLA" Bambu Studio profile as a starting point.</li>
+<li><strong>PETG on P1S:</strong> 240°C nozzle, 80°C bed, 30% fan. Enable the textured PEI plate for easy release.</li>
+<li><strong>ABS on P1S:</strong> 250°C nozzle, 100°C bed, 0–20% fan. Close the enclosure and enable chamber heating.</li>
+<li><strong>TPU on P1S:</strong> 220–230°C nozzle, 50°C bed, 50% fan. Print slowly (30–50mm/s). Do NOT use the AMS.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'What filament brands work best with Bambu Lab P1S?', answer: 'Bambu Lab\'s own filaments are optimized for the P1S, but Polymaker, eSUN, and Hatchbox also work excellently. The key is consistent ±0.02mm diameter tolerance and smooth spool winding for AMS compatibility.' },
+      { question: 'Can the P1S print TPU?', answer: 'Yes, the P1S prints TPU well with its direct-drive extruder. However, do NOT use TPU in the AMS — it\'s too flexible for the feeder mechanism. Feed TPU directly from an external spool holder.' },
+      { question: 'Do I need to dry filament for the P1S?', answer: 'PLA and PETG are relatively moisture-tolerant, but ABS, PA, and TPU should always be dried before printing. The enclosed chamber helps, but wet filament still causes stringing, bubbling, and poor surface quality.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'best-petg-filaments', 'best-abs-filaments'],
+  },
+
+  'silk-pla-comparison': {
+    slug: 'silk-pla-comparison',
+    title: 'Best Silk PLA Filaments Compared',
+    seoTitle: 'Best Silk PLA Filaments Compared (2026) | FilaScope',
+    seoDescription: 'Top 10 silk PLA filaments ranked. Compare sheen quality, color options, print settings, and prices for the shiniest prints.',
+    description: 'A ranked comparison of the best silk PLA filaments — the shiny, metallic-finish material that produces stunning decorative prints.',
+    category: 'buying-guide',
+    readTime: 11,
+    publishedAt: '2026-02-14',
+    updatedAt: '2026-02-14',
+    keywords: ['silk PLA filament', 'best silk PLA', 'shiny filament', 'metallic PLA', 'silk 3D printing filament'],
+    filters: { material: 'Silk PLA', sortBy: 'score', limit: 10 },
+    layout: 'ranked-list',
+    editorialSections: [
+      {
+        heading: 'What Makes Silk PLA Different?',
+        content: `<p><strong>Silk PLA</strong> contains special additives that create a smooth, glossy surface finish with a metallic sheen. Unlike standard PLA's matte or semi-gloss appearance, silk PLA prints look like polished metal or satin fabric — making it the go-to choice for decorative prints, vases, figurines, and display models.</p>
+<p>The "silk" effect comes from co-polyester additives blended into the PLA base. These additives alter the filament's flow behavior, creating the characteristic smooth, reflective surface. However, this comes with trade-offs:</p>
+<ul>
+<li><strong>Reduced strength:</strong> Silk PLA is typically 20–30% weaker than standard PLA due to the additives reducing layer adhesion.</li>
+<li><strong>Temperature sensitivity:</strong> Prints best in a narrow temperature window (typically 210–230°C). Too hot = loss of sheen. Too cold = poor adhesion.</li>
+<li><strong>Stringing:</strong> More prone to stringing than standard PLA. Fine-tune retraction settings.</li>
+<li><strong>Not for functional parts:</strong> Best used for decorative items. Use standard PLA or PLA+ for mechanical parts.</li>
+</ul>`,
+        position: 'before',
+      },
+      {
+        heading: 'Printing Tips for Silk PLA',
+        content: `<ul>
+<li><strong>Nozzle temperature:</strong> 210–230°C. Start at 215°C and increase in 5°C increments until you get the best sheen without stringing.</li>
+<li><strong>Bed temperature:</strong> 55–65°C. Standard PLA bed settings work fine.</li>
+<li><strong>Print speed:</strong> 40–60mm/s for best surface quality. Higher speeds can reduce the silk effect.</li>
+<li><strong>Cooling:</strong> 80–100% fan. Good cooling locks in the glossy finish.</li>
+<li><strong>Layer height:</strong> 0.15–0.20mm. Thinner layers enhance the silk sheen. Avoid thick 0.3mm layers.</li>
+<li><strong>Retraction:</strong> Increase retraction distance by 1mm vs standard PLA to combat stringing.</li>
+<li><strong>Vase mode:</strong> Silk PLA looks spectacular in vase/spiral mode prints. Single-wall vases showcase the sheen beautifully.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Is silk PLA as strong as regular PLA?', answer: 'No. Silk PLA is typically 20–30% weaker than standard PLA due to the co-polyester additives that create the shiny finish. It\'s best used for decorative prints, vases, and display models rather than functional or mechanical parts.' },
+      { question: 'What temperature should I print silk PLA at?', answer: '210–230°C nozzle temperature works for most silk PLA brands. Start at 215°C and adjust in 5°C increments. The optimal temperature produces maximum sheen without stringing.' },
+      { question: 'Can I mix silk PLA with regular PLA in multi-color prints?', answer: 'Yes, silk and standard PLA are compatible in multi-color prints. They share similar temperature ranges. Mixing creates an interesting contrast between matte and glossy sections.' },
+    ],
+    relatedSlugs: ['best-pla-filaments', 'pla-vs-petg', 'pla-plus-vs-pla-pro'],
+  },
+
+  'asa-vs-abs-outdoor-printing': {
+    slug: 'asa-vs-abs-outdoor-printing',
+    title: 'ASA vs ABS: Which is Better for Outdoor Printing?',
+    seoTitle: 'ASA vs ABS for Outdoor 3D Prints — Compared | FilaScope',
+    seoDescription: 'ASA vs ABS for outdoor use: UV resistance, heat tolerance, print difficulty, and weathering compared. Find the best filament for outdoor parts.',
+    description: 'A head-to-head comparison of ASA and ABS for outdoor 3D printing — covering UV resistance, weathering, print difficulty, and real-world durability.',
+    category: 'comparison',
+    readTime: 12,
+    publishedAt: '2026-02-14',
+    updatedAt: '2026-02-14',
+    keywords: ['ASA vs ABS', 'outdoor filament', 'UV resistant filament', 'ASA filament', 'ABS outdoor', 'weatherproof 3D print'],
+    filters: { materials: ['ASA', 'ABS'], sortBy: 'score', limit: 10 },
+    layout: 'vs-comparison',
+    vsMaterials: ['ASA', 'ABS'],
+    editorialSections: [
+      {
+        heading: 'Why Outdoor Printing Demands Special Materials',
+        content: `<p>Standard PLA and PETG degrade in outdoor environments. PLA warps above 60°C (easily reached in direct sunlight), while PETG yellows and becomes brittle with UV exposure over months. For parts that need to survive outdoors — garden fixtures, drone components, tool holders, enclosures — you need <strong>ASA or ABS</strong>.</p>
+<p>Both materials offer high heat resistance and good mechanical properties, but they handle UV radiation very differently. This guide compares them side by side to help you choose the right material for your outdoor project.</p>`,
+        position: 'before',
+      },
+      {
+        heading: 'UV Resistance: ASA\'s Key Advantage',
+        content: `<p><strong>ASA (Acrylonitrile Styrene Acrylate)</strong> was specifically engineered for outdoor use. It replaces the butadiene rubber in ABS with acrylic rubber, which is inherently UV-stable. The result:</p>
+<ul>
+<li><strong>ASA:</strong> Minimal color fading or surface degradation after 12+ months of direct sun exposure. Industry tests show less than 5% yellowing index change after 2,000 hours of UV exposure.</li>
+<li><strong>ABS:</strong> Noticeable yellowing within 3–6 months of outdoor exposure. Surface becomes chalky and brittle. Structural integrity degrades over time.</li>
+</ul>
+<p><strong>Verdict:</strong> For any part spending significant time outdoors, ASA is the clear winner for UV resistance.</p>`,
+        position: 'after',
+      },
+      {
+        heading: 'Print Difficulty & Settings Compared',
+        content: `<p>Both ASA and ABS require similar print conditions, but there are differences:</p>
+<ul>
+<li><strong>Enclosure:</strong> Both <em>require</em> an enclosure. ASA is slightly more tolerant of temperature variation but still warps without one.</li>
+<li><strong>Nozzle temp:</strong> ABS 230–260°C / ASA 240–270°C. ASA typically needs 5–10°C hotter.</li>
+<li><strong>Bed temp:</strong> ABS 90–110°C / ASA 90–110°C. Similar requirements.</li>
+<li><strong>Fumes:</strong> Both emit fumes — ABS produces styrene, ASA produces similar compounds. Ventilation or carbon filtration is essential for both.</li>
+<li><strong>Post-processing:</strong> ABS can be acetone-smoothed for a glossy finish. ASA does <em>not</em> dissolve in acetone as easily — use MEK or ethyl acetate for ASA smoothing.</li>
+<li><strong>Warping:</strong> Both warp, but ASA tends to warp slightly less due to its modified polymer structure.</li>
+</ul>`,
+        position: 'after',
+      },
+    ],
+    faqs: [
+      { question: 'Is ASA better than ABS for outdoor use?', answer: 'Yes. ASA\'s acrylic rubber base makes it significantly more UV-resistant than ABS. ABS yellows and becomes brittle in sunlight within months, while ASA maintains its color and strength for years of outdoor exposure.' },
+      { question: 'Can I use ABS outdoors if I paint it?', answer: 'Painting ABS with UV-resistant paint can extend its outdoor life, but the paint will eventually chip or peel, exposing the ABS underneath. For long-term outdoor use, ASA is the better material choice even if you plan to paint.' },
+      { question: 'Is ASA harder to print than ABS?', answer: 'Slightly. ASA requires 5–10°C higher nozzle temperatures and is a bit more sensitive to draft-induced warping. Both need an enclosure and ventilation. If you can print ABS successfully, ASA should not be a major challenge.' },
+    ],
+    relatedSlugs: ['best-abs-filaments', 'best-petg-filaments', 'best-filament-for-bambu-lab-p1s'],
   },
 };
 
