@@ -16,7 +16,7 @@ export function OrganizationSchema({
   name = 'FilaScope',
   url = 'https://filascope.com',
   logo = 'https://filascope.com/og-image.png',
-  description = 'The most comprehensive 3D printer filament database. Compare prices, materials, and specifications across brands.',
+  description = 'The most comprehensive 3D printer filament database. Compare prices, materials, specifications, and HueForge TD values across 1,000+ filaments from 48+ brands.',
   sameAs = [],
 }: OrganizationSchemaProps) {
   const jsonLd = {
