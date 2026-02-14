@@ -25,6 +25,7 @@ import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 import { useDealsWithFilters } from "@/hooks/useDealsWithFilters";
 import { getRegionFlag } from "@/lib/dealStoreRegion";
 import { ItemListSchema, BreadcrumbSchema } from "@/components/seo";
+import { OfferCatalogSchema } from "@/components/seo/OfferCatalogSchema";
 import { formatDistanceToNow } from "date-fns";
 
 type DealTypeFilter = "all" | "50plus" | "new-this-week" | "ongoing";
@@ -177,18 +178,12 @@ const Deals = () => {
         { name: 'Deals', url: 'https://filascope.com/deals' },
       ]} />
       {totalDeals > 0 && (
-        <Helmet>
-          <script type="application/ld+json">
-            {JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'OfferCatalog',
-              name: '3D Printer Filament Deals',
-              description: 'Current deals and discounts on 3D printer filaments from multiple retailers',
-              numberOfItems: totalDeals,
-              url: 'https://filascope.com/deals',
-            })}
-          </script>
-        </Helmet>
+        <OfferCatalogSchema
+          name="3D Printer Filament Deals"
+          description="Current deals and discounts on 3D printer filaments from multiple retailers"
+          numberOfItems={totalDeals}
+          url="https://filascope.com/deals"
+        />
       )}
       {dealListItems.length > 0 && (
         <ItemListSchema

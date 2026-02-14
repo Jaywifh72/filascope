@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useJsonLdMultiple } from './useJsonLd';
 
 const BASE_URL = 'https://filascope.com';
 
@@ -12,13 +12,9 @@ interface BrandOrganizationSchemaProps {
   priceRange?: { low: number; high: number } | null;
   location?: { city?: string; state?: string; country?: string } | null;
   founded?: string | null;
-  /** First 10 products for ItemList schema */
   topProducts?: Array<{ name: string; slug: string }>;
 }
 
-/**
- * Organization + BreadcrumbList + ItemList Schema.org structured data for brand pages.
- */
 export function BrandOrganizationSchema({
   name,
   slug,
@@ -31,28 +27,16 @@ export function BrandOrganizationSchema({
   founded,
   topProducts,
 }: BrandOrganizationSchemaProps) {
-  // Organization schema
   const orgJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name,
-    brand: {
-      '@type': 'Brand',
-      name,
-    },
+    brand: { '@type': 'Brand', name },
   };
 
   if (url) orgJsonLd.url = url;
-
-  if (logo) {
-    orgJsonLd.logo = {
-      '@type': 'ImageObject',
-      url: logo,
-    };
-  }
-
+  if (logo) orgJsonLd.logo = { '@type': 'ImageObject', url: logo };
   if (description) orgJsonLd.description = description;
-
   if (founded) orgJsonLd.foundingDate = founded;
 
   if (location && (location.city || location.country)) {
@@ -64,10 +48,7 @@ export function BrandOrganizationSchema({
   }
 
   if (productCount && productCount > 0) {
-    const offer: Record<string, unknown> = {
-      '@type': 'AggregateOffer',
-      offerCount: productCount,
-    };
+    const offer: Record<string, unknown> = { '@type': 'AggregateOffer', offerCount: productCount };
     if (priceRange) {
       offer.lowPrice = priceRange.low.toFixed(2);
       offer.highPrice = priceRange.high.toFixed(2);
@@ -76,7 +57,6 @@ export function BrandOrganizationSchema({
     orgJsonLd.makesOffer = offer;
   }
 
-  // BreadcrumbList schema
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -87,33 +67,23 @@ export function BrandOrganizationSchema({
     ],
   };
 
-  // ItemList schema for products
-  const itemListJsonLd = topProducts && topProducts.length > 0 ? {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: `${name} Filaments`,
-    numberOfItems: productCount || topProducts.length,
-    itemListElement: topProducts.map((p, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      url: `${BASE_URL}/filament/${p.slug}`,
-      name: p.name,
-    })),
-  } : null;
+  const itemListJsonLd =
+    topProducts && topProducts.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: `${name} Filaments`,
+          numberOfItems: productCount || topProducts.length,
+          itemListElement: topProducts.map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${BASE_URL}/filament/${p.slug}`,
+            name: p.name,
+          })),
+        }
+      : null;
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(orgJsonLd)}
-      </script>
-      <script type="application/ld+json">
-        {JSON.stringify(breadcrumbJsonLd)}
-      </script>
-      {itemListJsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(itemListJsonLd)}
-        </script>
-      )}
-    </Helmet>
-  );
+  useJsonLdMultiple([orgJsonLd, breadcrumbJsonLd, itemListJsonLd]);
+
+  return null;
 }

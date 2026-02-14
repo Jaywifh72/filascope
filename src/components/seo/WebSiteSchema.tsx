@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useJsonLd } from './useJsonLd';
 
 interface WebSiteSchemaProps {
   name?: string;
@@ -7,17 +7,13 @@ interface WebSiteSchemaProps {
   searchTargetUrl?: string;
 }
 
-/**
- * WebSite Schema.org structured data component
- * Enables sitelinks search box in Google search results
- */
 export function WebSiteSchema({
   name = 'FilaScope',
   url = 'https://filascope.com',
   description = 'Compare 3D printer filaments by material, price, and specifications. Find the perfect filament for your printer with real-time pricing and HueForge TD values.',
   searchTargetUrl = 'https://filascope.com/?searchTerm={search_term_string}',
 }: WebSiteSchemaProps) {
-  const jsonLd = {
+  useJsonLd({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name,
@@ -25,19 +21,10 @@ export function WebSiteSchema({
     description,
     potentialAction: {
       '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: searchTargetUrl,
-      },
+      target: { '@type': 'EntryPoint', urlTemplate: searchTargetUrl },
       'query-input': 'required name=search_term_string',
     },
-  };
+  });
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(jsonLd)}
-      </script>
-    </Helmet>
-  );
+  return null;
 }
