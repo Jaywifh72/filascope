@@ -40,7 +40,7 @@ import { useCompatibleCount } from "@/hooks/useCompatibleCount";
 import { BRAND_SPECIFIC_FUNCTIONS } from "@/lib/brand-sync-config";
 import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/HeroSection";
-import { WebSiteSchema, OrganizationSchema } from "@/components/seo";
+import { WebSiteSchema, OrganizationSchema, ItemListSchema } from "@/components/seo";
 import SectionSeparator from "@/components/SectionSeparator";
 import ResultsHeader from "@/components/ResultsHeader";
 import { FilamentFilters } from "@/components/FilamentFilters";
@@ -951,6 +951,18 @@ const Finder = () => {
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />
       <OrganizationSchema />
+      {displayedGroups.length > 0 && (
+        <ItemListSchema
+          name="3D Printer Filaments"
+          description="Browse and compare 3D printer filaments with specs, prices, and compatibility data"
+          itemListOrder="Unordered"
+          items={displayedGroups.slice(0, 20).map((g, i) => ({
+            name: g.representativeFilament.product_title || g.baseName,
+            url: `https://filascope.com/filament/${(g.representativeFilament as any).product_handle || g.representativeFilament.id}`,
+            position: i + 1,
+          }))}
+        />
+      )}
       {/* Onboarding Tour */}
       <OnboardingTour />
       
