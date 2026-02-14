@@ -17,6 +17,7 @@ export function LinkGeneratorCard({ program }: LinkGeneratorCardProps) {
   const [generatedUrl, setGeneratedUrl] = useState("");
 
   const isRedirectLink = program.link_generation_method === "redirect_link";
+  const isAwinRedirect = program.link_generation_method === "awin_redirect";
 
   const generate = () => {
     const url = buildAffiliateLinkLocal(program, path || "");
@@ -67,6 +68,59 @@ export function LinkGeneratorCard({ program }: LinkGeneratorCardProps) {
               <Button size="sm" variant="outline" asChild>
                 <a href={program.portal_url} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-3 h-3 mr-1.5" /> Open Dashboard
+                </a>
+              </Button>
+            )}
+          </div>
+        </>
+      ) : isAwinRedirect ? (
+        <>
+          {/* Awin redirect mode — deep-linkable with URL encoding */}
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground">Product URL or Path</Label>
+              <Input
+                value={path}
+                onChange={(e) => setPath(e.target.value)}
+                placeholder="/products/esun-pla-plus-black-1kg"
+                className="font-mono text-sm"
+              />
+            </div>
+            <Button onClick={generate}>Generate</Button>
+          </div>
+
+          {generatedUrl && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Generated Awin Link</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 bg-muted/50 rounded px-3 py-2 text-xs font-mono text-foreground break-all">
+                  {generatedUrl}
+                </code>
+                <Button size="icon" variant="ghost" onClick={() => copy(generatedUrl)}>
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+
+              <div className="text-xs space-y-1 bg-muted/20 rounded p-3">
+                <div><span className="text-blue-400">Redirect:</span> <span className="font-mono">www.awin1.com/cread.php</span></div>
+                <div><span className="text-green-400">Merchant:</span> <span className="font-mono">{program.awin_merchant_id}</span></div>
+                <div><span className="text-yellow-400">Publisher:</span> <span className="font-mono">{program.awin_publisher_id}</span></div>
+                <div><span className="text-purple-400">Destination:</span> <span className="font-mono">{program.store_base_url}{path || "/"}</span></div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={() => copy(generatedUrl || homepageLink)}>
+              <Copy className="w-3 h-3 mr-1.5" /> Copy Link
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => copy(homepageLink)}>
+              <Copy className="w-3 h-3 mr-1.5" /> Copy Homepage Link
+            </Button>
+            {program.portal_url && (
+              <Button size="sm" variant="outline" asChild>
+                <a href={program.portal_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3 h-3 mr-1.5" /> Open Awin Dashboard
                 </a>
               </Button>
             )}

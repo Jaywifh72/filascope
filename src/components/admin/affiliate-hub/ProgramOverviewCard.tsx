@@ -26,6 +26,7 @@ export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProp
 
   const tiers = program.commission_tiers as CommissionTier[] | null;
   const isRedirectLink = program.link_generation_method === "redirect_link";
+  const isAwinRedirect = program.link_generation_method === "awin_redirect";
 
   const handleTestLink = () => {
     const url = buildAffiliateLinkLocal(program, "/products/test-product");
@@ -64,7 +65,9 @@ export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProp
         <InfoRow label="Commission" value={
           tiers && tiers.length > 0
             ? `${Math.min(...tiers.map(t => t.rate))}% – ${Math.max(...tiers.map(t => t.rate))}% tiered`
-            : program.commission_rate ? `${program.commission_rate}% ${program.commission_type || ""}` : "—"
+            : program.commission_rate
+              ? `${program.commission_rate}% ${program.commission_type || ""}`
+              : program.commission_notes || "Not specified — check network dashboard"
         } />
         <InfoRow label="Affiliate ID" value={program.affiliate_id} mono />
         <InfoRow label="Cookie Duration" value={program.cookie_duration_hours ? `${program.cookie_duration_hours}h` : "—"} />
@@ -87,7 +90,10 @@ export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProp
             {program.store_base_url} <ExternalLink className="w-3 h-3" />
           </a>
         </div>
-        <InfoRow label="Deep Linking" value={isRedirectLink && !program.deep_linking_supported ? "Via Dashboard" : program.deep_linking_supported ? "Yes" : "No"} />
+        <InfoRow label="Deep Linking" value={
+          isRedirectLink && !program.deep_linking_supported ? "Via Dashboard" :
+          program.deep_linking_supported ? "Yes" : "No"
+        } />
 
         {/* Impact.com / redirect_link specific fields */}
         {isRedirectLink && (
@@ -95,6 +101,26 @@ export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProp
             <InfoRow label="Tracking Domain" value={program.tracking_domain} mono />
             <InfoRow label="Campaign ID" value={program.impact_campaign_id} mono />
             <InfoRow label="Partner ID" value={program.impact_media_partner_id} mono />
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground w-32 shrink-0">Default Link</span>
+              {program.default_tracking_link ? (
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="font-mono text-xs text-foreground truncate">{program.default_tracking_link}</span>
+                  <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0" onClick={() => copyText(program.default_tracking_link!)}>
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : <span className="text-muted-foreground">—</span>}
+            </div>
+          </>
+        )}
+
+        {/* Awin-specific fields */}
+        {isAwinRedirect && (
+          <>
+            <InfoRow label="Awin Merchant ID" value={program.awin_merchant_id} mono />
+            <InfoRow label="Awin Publisher ID" value={program.awin_publisher_id} mono />
+            <InfoRow label="Tracking Domain" value={program.tracking_domain} mono />
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground w-32 shrink-0">Default Link</span>
               {program.default_tracking_link ? (
