@@ -33,6 +33,9 @@ import { MarkPurchasedButton } from '@/components/purchases/MarkPurchasedDialog'
 import { PurchaseBuyToast } from '@/components/purchases/PurchaseBuyToast';
 import { AddToProjectButton } from '@/components/projects/AddToProjectButton';
 import { CheaperAlternativeCallout } from '@/components/filament/CheaperAlternativeCallout';
+import { useAffiliateLink } from '@/hooks/useAffiliateLink';
+import { AffiliateDiscountBanner } from '@/components/affiliate/AffiliateDiscountBanner';
+import { AffiliateDisclosure } from '@/components/affiliate/AffiliateDisclosure';
 
 interface FilamentPurchaseSidebarProps {
   filamentId: string;
@@ -148,6 +151,9 @@ export function FilamentPurchaseSidebar({
   // Track buy-click for purchase toast
   const [buyClicked, setBuyClicked] = useState(false);
 
+  // New affiliate program tracking
+  const { trackAndOpen, discountCodes, hasAffiliate } = useAffiliateLink(vendor);
+
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
     
@@ -156,8 +162,16 @@ export function FilamentPurchaseSidebar({
       entityId: filamentId,
       entityType: 'filament',
     });
-    
-    window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+
+    // If we have a new-style affiliate program, track and open via it
+    if (hasAffiliate) {
+      trackAndOpen(affiliateUrl, {
+        productName: productTitle || undefined,
+        sourceComponent: 'sidebar_purchase',
+      });
+    } else {
+      window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+    }
     setBuyClicked(true);
   };
   
@@ -486,12 +500,18 @@ export function FilamentPurchaseSidebar({
             productTitle={productTitle || ""}
           />
 
+          {/* Affiliate Discount Banner */}
+          {discountCodes.length > 0 && (
+            <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5" />
+          )}
+
           {/* Disclaimer */}
           <div className="pt-4 border-t border-border/40">
             <p className="text-[10px] text-muted-foreground leading-relaxed">
               Prices shown are from our database and may not reflect current store prices. 
               Click "Buy" to verify the latest price.
             </p>
+            {hasAffiliate && <AffiliateDisclosure className="mt-1" />}
           </div>
         </div>
       </aside>

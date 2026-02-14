@@ -24,6 +24,9 @@ import { RegionalAvailabilityBadge, CrossBorderNote } from '../RegionalAvailabil
 import { PriceConfidence } from '@/hooks/usePriceFreshness';
 import { HonestPriceDisplay, getCtaText, shouldUsePrimaryCta } from '@/components/price/HonestPriceDisplay';
 import { BrokenUrlReport } from '@/components/price/BrokenUrlReport';
+import { useAffiliateLink } from '@/hooks/useAffiliateLink';
+import { AffiliateDiscountBanner } from '@/components/affiliate/AffiliateDiscountBanner';
+import { AffiliateDisclosure } from '@/components/affiliate/AffiliateDisclosure';
 interface FilamentHeroPurchaseCardProps {
   filamentId: string;
   vendor: string | null;
@@ -132,6 +135,9 @@ export function FilamentHeroPurchaseCard({
   // Check if we got a 404 error from the manual price check
   const isUrl404 = hasCheckedLivePrice && manualLivePrice?.urlStatus === 'not_found';
 
+  // New affiliate program tracking
+  const { trackAndOpen, discountCodes, hasAffiliate } = useAffiliateLink(vendor);
+
   const handleBuyClick = () => {
     if (!affiliateUrl) return;
     
@@ -140,8 +146,15 @@ export function FilamentHeroPurchaseCard({
       entityId: filamentId,
       entityType: 'filament',
     });
-    
-    window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+
+    if (hasAffiliate) {
+      trackAndOpen(affiliateUrl, {
+        productName: finalRetailerName,
+        sourceComponent: 'hero_purchase_card',
+      });
+    } else {
+      window.open(affiliateUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Determine which live price to use: manual check takes precedence
@@ -488,6 +501,11 @@ export function FilamentHeroPurchaseCard({
         </button>
       )}
 
+      {/* Affiliate Discount Banner */}
+      {discountCodes.length > 0 && (
+        <AffiliateDiscountBanner discountCodes={discountCodes} className="space-y-1.5 mt-3" />
+      )}
+
       {/* Trust Signals */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/30">
         <p className="text-[10px] text-muted-foreground">
@@ -506,6 +524,7 @@ export function FilamentHeroPurchaseCard({
           <span>Easy returns</span>
         </div>
       </div>
+      {hasAffiliate && <AffiliateDisclosure />}
     </div>
   );
 }
