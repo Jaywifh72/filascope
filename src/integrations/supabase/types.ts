@@ -652,6 +652,7 @@ export type Database = {
           payout_method: string | null
           payout_schedule: string | null
           portal_url: string | null
+          product_url_domains: string[] | null
           program_notes: string | null
           referral_handle: string | null
           region_code: string
@@ -693,6 +694,7 @@ export type Database = {
           payout_method?: string | null
           payout_schedule?: string | null
           portal_url?: string | null
+          product_url_domains?: string[] | null
           program_notes?: string | null
           referral_handle?: string | null
           region_code: string
@@ -734,6 +736,7 @@ export type Database = {
           payout_method?: string | null
           payout_schedule?: string | null
           portal_url?: string | null
+          product_url_domains?: string[] | null
           program_notes?: string | null
           referral_handle?: string | null
           region_code?: string
@@ -1059,6 +1062,27 @@ export type Database = {
           updated_at?: string
           website_url?: string | null
           weight_selectors?: Json | null
+        }
+        Relationships: []
+      }
+      brand_affiliate_aliases: {
+        Row: {
+          affiliate_brand_name: string
+          created_at: string | null
+          id: string
+          product_vendor_name: string
+        }
+        Insert: {
+          affiliate_brand_name: string
+          created_at?: string | null
+          id?: string
+          product_vendor_name: string
+        }
+        Update: {
+          affiliate_brand_name?: string
+          created_at?: string | null
+          id?: string
+          product_vendor_name?: string
         }
         Relationships: []
       }

@@ -1,4 +1,4 @@
-import { Package, Layers, Tag, Star, Globe, ExternalLink, MapPin, Calendar, BadgeCheck, Heart, ShieldCheck, TrendingUp, Database } from 'lucide-react';
+import { Package, Layers, Tag, Star, Globe, ExternalLink, MapPin, Calendar, BadgeCheck, Heart, ShieldCheck, TrendingUp, Database, Handshake } from 'lucide-react';
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useAffiliateLink } from '@/hooks/useAffiliateLink';
 
 interface BrandHeroSectionProps {
   brandName: string;
@@ -102,6 +103,8 @@ export function BrandHeroSection({
     ? `${productLineCount} (${variantCount} ${variantCount === 1 ? 'variant' : 'variants'})`
     : `${productLineCount}`;
 
+
+  const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(brandName);
 
   return (
     <div className={cn("mb-8", className)}>
@@ -201,12 +204,29 @@ export function BrandHeroSection({
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 pt-2">
             {website && (
-              <Button asChild size="lg" className="w-full sm:w-auto">
-                <a href={website} target="_blank" rel="noopener noreferrer">
-                  <Globe className="w-4 h-4 mr-2" />
-                  Visit Website
-                  <ExternalLink className="w-3.5 h-3.5 ml-2" />
-                </a>
+              <Button
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  if (hasAffiliate) {
+                    trackAndOpen(website, {
+                      sourcePage: window.location.pathname,
+                      sourceComponent: 'BrandHeroSection',
+                    });
+                  } else {
+                    window.open(website, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                Visit Website
+                <ExternalLink className="w-3.5 h-3.5 ml-2" />
+                {hasAffiliate && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-xs opacity-75">
+                    <Handshake className="w-3 h-3" />
+                    Partner
+                  </span>
+                )}
               </Button>
             )}
             <Button variant="outline" size="lg" className="w-full sm:w-auto">

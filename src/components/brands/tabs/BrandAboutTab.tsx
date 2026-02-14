@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, MapPin, Calendar, Building2, ExternalLink, Mail, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAffiliateLink } from "@/hooks/useAffiliateLink";
 
 interface BrandInfo {
   summary?: string;
@@ -76,6 +77,7 @@ export function BrandAboutTab({
   productCount,
   materialsCount,
 }: BrandAboutTabProps) {
+  const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(brandName);
   if (!brandInfo) {
     return (
       <Card className="bg-gray-800/30 border-gray-700">
@@ -175,10 +177,19 @@ export function BrandAboutTab({
                       <span>Website</span>
                     </div>
                     <a
-                      href={brandInfo.website}
+                      href={hasAffiliate ? buildLink(brandInfo.website) : brandInfo.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-base text-primary hover:underline font-medium inline-flex items-center gap-1"
+                      onClick={(e) => {
+                        if (hasAffiliate) {
+                          e.preventDefault();
+                          trackAndOpen(brandInfo.website!, {
+                            sourcePage: window.location.pathname,
+                            sourceComponent: 'BrandAboutTab-CompanyInfo',
+                          });
+                        }
+                      }}
                     >
                       {formatWebsiteDisplay(brandInfo.website)}
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -266,12 +277,21 @@ export function BrandAboutTab({
                     Visit the official website for support, contact information, and the latest updates from {brandName}.
                   </p>
                   {brandInfo.website && (
-                    <Button asChild>
-                      <a href={brandInfo.website} target="_blank" rel="noopener noreferrer">
-                        <Globe className="w-4 h-4 mr-2" />
-                        Visit Website
-                        <ExternalLink className="w-3.5 h-3.5 ml-2" />
-                      </a>
+                    <Button
+                      onClick={() => {
+                        if (hasAffiliate) {
+                          trackAndOpen(brandInfo.website!, {
+                            sourcePage: window.location.pathname,
+                            sourceComponent: 'BrandAboutTab-Contact',
+                          });
+                        } else {
+                          window.open(brandInfo.website!, '_blank', 'noopener,noreferrer');
+                        }
+                      }}
+                    >
+                      <Globe className="w-4 h-4 mr-2" />
+                      Visit Website
+                      <ExternalLink className="w-3.5 h-3.5 ml-2" />
                     </Button>
                   )}
                 </div>

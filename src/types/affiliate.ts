@@ -37,6 +37,7 @@ export interface AffiliateProgram {
   link_generation_method: string | null;
   awin_merchant_id: string | null;
   awin_publisher_id: string | null;
+  product_url_domains: string[] | null;
   created_at: string | null;
   updated_at: string | null;
 }
