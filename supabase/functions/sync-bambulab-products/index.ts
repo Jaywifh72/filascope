@@ -2327,6 +2327,17 @@ Deno.serve(async (req) => {
           products_discovered: discoveredProducts.length,
           products_created: created,
           products_failed: errors,
+          regions_synced: ['US'],
+          regional_breakdown: {
+            US: {
+              updated: 0,
+              created: created,
+              skipped: skipped,
+              errors: errors,
+              products_found: discoveredProducts.length,
+              duration_ms: duration,
+            }
+          },
         })
         .eq('id', syncLogId);
     }
