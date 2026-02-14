@@ -2,7 +2,7 @@
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
-import { BreadcrumbSchema } from "@/components/seo";
+import { BreadcrumbSchema, FAQSchema, DefinedTermSetSchema } from "@/components/seo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -401,18 +401,60 @@ const Compare = () => {
   const maxSlots = 4;
   const emptySlots = maxSlots - filaments.length;
 
+  const isReferenceTab = activeTab === 'reference';
+  const pageTitle = isReferenceTab
+    ? '3D Printing Materials Guide — PLA, PETG, ABS & More | FilaScope'
+    : 'Compare 3D Filaments Side-by-Side | FilaScope';
+  const pageDescription = isReferenceTab
+    ? 'Complete guide to 3D printing filament materials. Compare PLA, PETG, ABS, TPU, ASA, Nylon & specialty materials. Properties, temperatures, use cases & recommendations.'
+    : 'Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices.';
+
+  const materialTerms = [
+    { name: 'PLA (Polylactic Acid)', description: 'The most popular 3D printing material. Biodegradable, easy to print, low odor. Glass transition ~60°C.', url: 'https://filascope.com/compare?tab=reference&material=pla' },
+    { name: 'PETG (Polyethylene Terephthalate Glycol)', description: 'Durable, chemical-resistant filament. Good balance of strength and ease of printing. Glass transition ~80°C.', url: 'https://filascope.com/compare?tab=reference&material=petg' },
+    { name: 'ABS (Acrylonitrile Butadiene Styrene)', description: 'Strong engineering plastic with good heat resistance up to 100°C. Requires enclosed printer and ventilation.', url: 'https://filascope.com/compare?tab=reference&material=abs' },
+    { name: 'TPU (Thermoplastic Polyurethane)', description: 'Flexible, rubber-like material for parts that need to bend, stretch, or absorb impact. Shore hardness 85A–95A.', url: 'https://filascope.com/compare?tab=reference&material=tpu' },
+    { name: 'ASA (Acrylonitrile Styrene Acrylate)', description: 'UV-resistant alternative to ABS. Excellent for outdoor applications with good mechanical properties.', url: 'https://filascope.com/compare?tab=reference&material=asa' },
+    { name: 'PA / Nylon (Polyamide)', description: 'Engineering-grade filament with high strength, flexibility, and abrasion resistance. Hygroscopic — requires dry storage.', url: 'https://filascope.com/compare?tab=reference&material=pa' },
+    { name: 'PET-CF (Carbon Fiber Reinforced PET)', description: 'Carbon fiber composite offering high stiffness and dimensional stability. Requires hardened nozzle.', url: 'https://filascope.com/compare?tab=reference&material=pet-cf' },
+    { name: 'PVA (Polyvinyl Alcohol)', description: 'Water-soluble support material for dual-extrusion printers. Dissolves cleanly for complex overhangs.', url: 'https://filascope.com/compare?tab=reference&material=pva' },
+    { name: 'PC (Polycarbonate)', description: 'High-performance engineering plastic with excellent impact resistance and heat deflection up to 140°C.', url: 'https://filascope.com/compare?tab=reference&material=pc' },
+    { name: 'HIPS (High Impact Polystyrene)', description: 'Limonene-soluble support material for ABS. Also used standalone for lightweight, easy-to-print parts.', url: 'https://filascope.com/compare?tab=reference&material=hips' },
+  ];
+
+  const materialFaqs = [
+    { question: 'What temperature does PLA print at?', answer: 'PLA typically prints at 190–220°C nozzle temperature with a bed temperature of 50–60°C. Most PLA filaments work well at 205°C nozzle and 55°C bed. No heated enclosure is required.' },
+    { question: 'Is PETG stronger than PLA?', answer: 'Yes, PETG is generally stronger and more durable than PLA. PETG has higher impact resistance, better chemical resistance, and a higher glass transition temperature (~80°C vs ~60°C). PLA is stiffer but more brittle.' },
+    { question: 'What is the easiest filament to print with?', answer: 'PLA is widely considered the easiest 3D printing filament. It prints at lower temperatures, doesn\'t require a heated bed or enclosure, produces minimal odor, and has excellent bed adhesion. It\'s the recommended starting material for beginners.' },
+    { question: 'Can I use PETG for outdoor parts?', answer: 'PETG has better UV resistance than PLA but is not ideal for prolonged outdoor use. For outdoor applications, ASA is the recommended material due to its excellent UV stability and weathering resistance.' },
+    { question: 'What filament needs a hardened nozzle?', answer: 'Carbon fiber (CF), glass fiber (GF), and other abrasive composite filaments require a hardened steel or ruby-tipped nozzle. Standard brass nozzles will wear out rapidly with these materials.' },
+  ];
+
   return (
     <>
       <Helmet>
-        <title>Compare 3D Filaments Side-by-Side | FilaScope</title>
-        <meta name="description" content="Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices." />
-        <meta property="og:title" content="Compare 3D Filaments Side-by-Side | FilaScope" />
-        <meta property="og:description" content="Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices." />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
       </Helmet>
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
-        { name: 'Compare', url: 'https://filascope.com/compare' },
+        ...(isReferenceTab
+          ? [{ name: 'Material Knowledge Base', url: 'https://filascope.com/compare?tab=reference' }]
+          : [{ name: 'Compare', url: 'https://filascope.com/compare' }]
+        ),
       ]} />
+      {isReferenceTab && (
+        <>
+          <DefinedTermSetSchema
+            name="3D Printing Filament Materials"
+            description="Comprehensive reference for 3D printing filament material types, properties, and recommended print settings."
+            terms={materialTerms}
+          />
+          <FAQSchema faqs={materialFaqs} />
+        </>
+      )}
       <div className="min-h-screen bg-background relative">
       {/* Subtle background pattern matching site design */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,207,232,0.03)_0%,_transparent_50%)] pointer-events-none" />

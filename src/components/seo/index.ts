@@ -11,3 +11,4 @@ export { CanonicalLink } from './CanonicalLink';
 export { SoftwareApplicationSchema } from './SoftwareApplicationSchema';
 export { BrandOrganizationSchema } from './BrandOrganizationSchema';
 export { ArticleSchema } from './ArticleSchema';
+export { DefinedTermSetSchema } from './DefinedTermSetSchema';
