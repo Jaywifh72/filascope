@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { useRegion } from '@/contexts/RegionContext';
 import { PriceConfidence, usePriceFreshness } from '@/hooks/usePriceFreshness';
 import { PriceVerificationDialog, usePriceVerification } from './PriceVerificationDialog';
+import { ReportPriceIssue } from './ReportPriceIssue';
 import { AdminPriceRefreshButton } from '@/components/admin/AdminPriceRefreshButton';
 import { cn } from '@/lib/utils';
 
@@ -277,6 +278,30 @@ export function HonestPriceDisplay({
                   className="ml-1"
                 />
               )}
+            </div>
+
+            {/* Report + Disclaimer row */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {filamentId && (
+                <ReportPriceIssue
+                  filamentId={filamentId}
+                  currentPrice={price}
+                  currency={currency}
+                  productTitle={storeName}
+                />
+              )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[10px] text-muted-foreground/70 cursor-help">
+                      Prices <span className="underline decoration-dotted">updated regularly</span> but may vary. Click through to retailer for current price.
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    {freshness.timeAgo ? `Last synced ${freshness.timeAgo}` : 'Sync date unavailable'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         ) : (

@@ -813,6 +813,24 @@ export function FilamentCard({ filament, colorMatchPercent, priceTrend, index = 
                 </a>
               ) : null;
             })()}
+
+            {/* Mini confidence badge */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={cn(
+                  "inline-flex items-center gap-0.5 text-[10px]",
+                  priceConfidence === 'high' ? "text-green-500" :
+                  priceConfidence === 'medium' ? "text-muted-foreground" :
+                  "text-amber-500"
+                )}>
+                  {priceConfidence === 'high' ? '✓' : priceConfidence === 'stale' || priceConfidence === 'unknown' ? '⚠' : '⏰'}
+                  <span className="sr-only">Price confidence: {priceConfidence}</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {timeAgo ? `Last checked ${timeAgo}` : 'No price check data'}
+              </TooltipContent>
+            </Tooltip>
             
             {/* Secondary local price when best price is international — green dot instead of MapPin */}
             {resolved.localPricePerKg != null && resolved.formattedLocalPricePerKg && (

@@ -103,18 +103,27 @@ export function PriceFreshnessIndicator({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge
-            variant="outline"
-            className={cn(
-              'gap-1 text-xs font-normal border cursor-help',
-              config.bgClass,
-              config.colorClass,
-              className
+          <div className={cn('flex flex-col gap-0.5 cursor-help', className)}>
+            <Badge
+              variant="outline"
+              className={cn(
+                'gap-1 text-xs font-normal border w-fit',
+                config.bgClass,
+                config.colorClass,
+              )}
+            >
+              <Icon className="h-3 w-3" />
+              <span>{label}</span>
+            </Badge>
+            {/* Explicit timestamp text */}
+            {freshness.timeAgo && (
+              <span className={cn('text-[11px]', config.colorClass)}>
+                {confidence === 'high' || confidence === 'medium'
+                  ? `✓ Price verified ${freshness.timeAgo}`
+                  : `⚠️ Price may be outdated (last checked ${freshness.timeAgo})`}
+              </span>
             )}
-          >
-            <Icon className="h-3 w-3" />
-            <span>{label}</span>
-          </Badge>
+          </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs max-w-[220px]">
           {freshness.timeAgo ? (
