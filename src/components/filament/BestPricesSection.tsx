@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { REGIONS } from '@/config/regions';
 import type { RegionCode } from '@/types/regional';
 import { cn } from '@/lib/utils';
 import type { PriceCandidate } from '@/hooks/useFilamentDetailPricing';
+import { useAffiliateLink } from '@/hooks/useAffiliateLink';
 
 interface BestPricesSectionProps {
   filamentId: string;
@@ -16,9 +17,11 @@ interface BestPricesSectionProps {
   totalRetailerCount?: number;
   candidates?: PriceCandidate[];
   candidatesLoading?: boolean;
+  vendor?: string | null;
 }
 
-export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCount, candidates, candidatesLoading }: BestPricesSectionProps) {
+export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCount, candidates, candidatesLoading, vendor }: BestPricesSectionProps) {
+  const { buildLink, trackAndOpen, hasAffiliate } = useAffiliateLink(vendor);
   const { region, currency, formatPrice, convertPrice, hasRates } = useRegion();
 
   const useFallbackFetch = candidates === undefined;
@@ -95,6 +98,11 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
   }, [candidates, fallbackListings, region]);
 
   const totalCount = totalRetailerCount ?? (candidates ? candidates.length : fallbackListings.length);
+
+  const buyNowUrl = useMemo(() => {
+    if (!bestRetailer) return '';
+    return hasAffiliate ? buildLink(bestRetailer.url) : bestRetailer.url;
+  }, [bestRetailer, hasAffiliate, buildLink]);
 
   if (isLoading) {
     return (
@@ -185,7 +193,17 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
             size="sm"
             className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 flex-shrink-0"
           >
-            <a href={bestRetailer.url} target="_blank" rel="nofollow sponsored noopener noreferrer">
+            <a
+              href={buyNowUrl}
+              target="_blank"
+              rel={hasAffiliate ? "nofollow sponsored noopener noreferrer" : "noopener noreferrer"}
+              onClick={(e) => {
+                if (hasAffiliate && bestRetailer) {
+                  e.preventDefault();
+                  trackAndOpen(bestRetailer.url, { productName: bestRetailer.name, sourcePage: window.location.pathname, sourceComponent: 'best_prices_section' });
+                }
+              }}
+            >
               Buy Now
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
