@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
-import { BreadcrumbSchema } from "@/components/seo";
+import { BreadcrumbSchema, ItemListSchema } from "@/components/seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -649,6 +649,15 @@ export default function Printers() {
         { name: 'Home', url: 'https://filascope.com/' },
         { name: 'Printers', url: 'https://filascope.com/printers' },
       ]} />
+      <ItemListSchema
+        name="3D Printer Database"
+        description="Browse 3D printers with filament compatibility information"
+        items={(printers || []).slice(0, 20).map((p, i) => ({
+          name: `${p.brand?.brand || ''} ${p.model_name}`.trim(),
+          url: `https://filascope.com/printers/${p.printer_id || p.id}`,
+          position: i + 1,
+        }))}
+      />
       <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}
       <PrintersHeroSection
