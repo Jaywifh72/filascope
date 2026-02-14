@@ -60,7 +60,7 @@ function HistoryListItem({ item }: { item: BrowseHistoryItem }) {
       {/* Thumbnail */}
       <div className="shrink-0 w-14 h-14 rounded-lg overflow-hidden border border-border bg-muted/30">
         {image ? (
-          <img src={getOptimizedImageUrl(image, 112)} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <img src={getOptimizedImageUrl(image, 112)} alt={title} className="w-full h-full object-cover" loading="lazy" />
         ) : colorHex ? (
           <div className="w-full h-full" style={{ backgroundColor: colorHex }} />
         ) : (

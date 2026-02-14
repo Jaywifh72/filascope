@@ -99,7 +99,7 @@ export function VaultReviewCard({ review, onEdit, onDelete, isDeleting }: VaultR
                 <Link to={productLink} className="shrink-0">
                   <img
                     src={productImage}
-                    alt=""
+                    alt={`${productBrand} ${productName}`}
                     className="w-11 h-11 rounded-lg object-cover border border-border"
                   />
                 </Link>

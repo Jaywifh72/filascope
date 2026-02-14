@@ -170,7 +170,7 @@ export function VaultNotesTab() {
                     {product?.featured_image && (
                       <img
                         src={product.featured_image}
-                        alt=""
+                        alt={`${product.vendor || ''} ${product.product_title || 'Product'} filament`.trim()}
                         className="w-10 h-10 rounded object-cover shrink-0"
                       />
                     )}
@@ -286,7 +286,7 @@ export function VaultNotesTab() {
                   {note.product?.featured_image && (
                     <img
                       src={note.product.featured_image}
-                      alt=""
+                      alt={`${note.product.product_title || 'Product'} filament`}
                       className="w-10 h-10 rounded object-cover shrink-0"
                     />
                   )}

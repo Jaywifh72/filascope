@@ -161,7 +161,7 @@ function DealCardImage({
           {vendor && getBrandLogoUrl(vendor, 48) && (
             <img
               src={getBrandLogoUrl(vendor, 48)!}
-              alt=""
+              alt={`${vendor} logo`}
               className="absolute top-2 right-2 h-5 w-auto max-w-[48px] object-contain opacity-40"
               loading="lazy"
               decoding="async"
@@ -380,7 +380,7 @@ export function GroupedDealCard({ group }: GroupedDealCardProps) {
           <DealCardImage
             src={group.representativeDeal.featured_image}
             fallbackSrcs={group.fallbackImages}
-            alt={group.baseName}
+            alt={`${group.representativeDeal.vendor || ''} ${group.baseName} ${group.representativeDeal.material || ''} filament spool`.trim()}
             colorHex={representativeColorHex}
             vendor={group.representativeDeal.vendor}
             material={group.representativeDeal.material}

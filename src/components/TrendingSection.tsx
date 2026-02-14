@@ -105,7 +105,7 @@ function TrendingCard({ filament }: { filament: TrendingFilament }) {
             <div className="w-14 h-14 rounded-lg bg-muted/30 overflow-hidden flex items-center justify-center">
               <img
                 src={getOptimizedImageUrl(filament.featured_image!, 112)}
-                alt=""
+                alt={`${filament.vendor || ''} ${name} ${filament.material || ''} filament spool`.trim()}
                 className="w-full h-full object-contain"
                 loading="lazy"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
