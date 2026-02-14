@@ -13,6 +13,7 @@ import { AffiliateSummaryStats } from "@/components/admin/affiliate-hub/Affiliat
 import { BrandAccordionItem } from "@/components/admin/affiliate-hub/BrandAccordionItem";
 import { ProgramFormDialog } from "@/components/admin/affiliate-hub/ProgramFormDialog";
 import { ClickAnalyticsTab } from "@/components/admin/affiliate-hub/ClickAnalyticsTab";
+import { BrandMappingTab } from "@/components/admin/affiliate-hub/BrandMappingTab";
 
 const AdminAffiliateHub = () => {
   const { data: programs = [], isLoading } = useAffiliatePrograms();
@@ -53,6 +54,7 @@ const AdminAffiliateHub = () => {
             <TabsList>
               <TabsTrigger value="programs">Brand Programs</TabsTrigger>
               <TabsTrigger value="analytics">Click Analytics</TabsTrigger>
+              <TabsTrigger value="mapping">Brand Mapping</TabsTrigger>
             </TabsList>
 
             <TabsContent value="programs" className="mt-4">
@@ -84,6 +86,10 @@ const AdminAffiliateHub = () => {
 
             <TabsContent value="analytics" className="mt-4">
               <ClickAnalyticsTab />
+            </TabsContent>
+
+            <TabsContent value="mapping" className="mt-4">
+              <BrandMappingTab />
             </TabsContent>
           </Tabs>
         </div>
