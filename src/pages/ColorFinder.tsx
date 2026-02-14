@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { BreadcrumbSchema } from '@/components/seo';
+import { BreadcrumbSchema, WebApplicationSchema } from '@/components/seo';
 import { Palette, Copy, Layers } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -72,6 +72,12 @@ export default function ColorFinder() {
         { name: 'Home', url: 'https://filascope.com/' },
         { name: 'Color Finder', url: 'https://filascope.com/color-finder' },
       ]} />
+      <WebApplicationSchema
+        name="FilaScope Color Finder"
+        url="https://filascope.com/color-finder"
+        applicationCategory="Utility"
+        description="Match any color to 3D printer filaments. Search by hex code, color name, or visual match."
+      />
 
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-10 py-8 space-y-8">
         {/* Header */}
