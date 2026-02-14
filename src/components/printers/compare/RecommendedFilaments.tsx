@@ -77,7 +77,7 @@ export function RecommendedFilaments({ printers }: RecommendedFilamentsProps) {
                         style={{ backgroundColor: f.color_hex }}
                       />
                     ) : f.featured_image ? (
-                      <img src={f.featured_image} alt="" className="w-6 h-6 object-contain rounded flex-shrink-0" />
+                      <img src={f.featured_image} alt={`${f.product_title} filament`} className="w-6 h-6 object-contain rounded flex-shrink-0" />
                     ) : (
                       <FlaskConical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     )}
