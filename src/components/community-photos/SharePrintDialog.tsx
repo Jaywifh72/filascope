@@ -173,7 +173,7 @@ export function SharePrintDialog({
                 <div className="grid grid-cols-3 gap-2">
                   {previews.map((src, i) => (
                     <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
-                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <img src={src} alt="Print photo preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeFile(i); }}

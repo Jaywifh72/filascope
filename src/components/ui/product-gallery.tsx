@@ -239,7 +239,7 @@ export function ProductGallery({
             >
               <img
                 src={getOptimizedImageUrl(img.url, 128)}
-                alt=""
+                alt={img.alt || productTitle}
                 className="w-full h-full object-contain"
                 loading="lazy"
                 width={64}

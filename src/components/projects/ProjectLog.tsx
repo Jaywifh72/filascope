@@ -67,7 +67,7 @@ export function ProjectLog({ projectId, entries }: ProjectLogProps) {
                 <div key={i} className="relative">
                   <img
                     src={URL.createObjectURL(p)}
-                    alt=""
+                    alt="Print photo preview"
                     className="w-16 h-16 object-cover rounded-md border border-border"
                   />
                   <button
@@ -146,7 +146,7 @@ export function ProjectLog({ projectId, entries }: ProjectLogProps) {
                         >
                           <img
                             src={photo.photo_url}
-                            alt=""
+                            alt="Print photo"
                             className="w-20 h-20 object-cover rounded-md border border-border hover:opacity-80 transition-opacity"
                           />
                         </a>

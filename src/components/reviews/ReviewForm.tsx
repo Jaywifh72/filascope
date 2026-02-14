@@ -490,7 +490,7 @@ export function ReviewForm({
           <div className="flex flex-wrap gap-2">
             {photoPreviews.map((src, i) => (
               <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
-                <img src={src} alt="" className="w-full h-full object-cover" />
+                <img src={src} alt="Review photo preview" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removePhoto(i)}
