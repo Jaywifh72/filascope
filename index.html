@@ -67,9 +67,10 @@
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://cfqfavmhdbyjzejipiwa.supabase.co" crossorigin />
 
-    <!-- DNS Prefetch for product image domains -->
-    <link rel="dns-prefetch" href="https://cdn.shopify.com" />
-    <link rel="dns-prefetch" href="https://store.bblcdn.com" />
+    <!-- Preconnect to high-frequency image CDNs (saves ~100ms DNS+TCP+TLS per origin) -->
+    <link rel="preconnect" href="https://cdn.shopify.com" crossorigin />
+    <link rel="preconnect" href="https://store.bblcdn.com" crossorigin />
+    <!-- DNS Prefetch for lower-frequency image domains -->
     <link rel="dns-prefetch" href="https://www.formfutura.com" />
     <link rel="dns-prefetch" href="https://ueeshop.ly200-cdn.com" />
     <link rel="dns-prefetch" href="https://dlh2hyjriy9yy.cloudfront.net" />
