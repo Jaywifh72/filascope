@@ -128,6 +128,13 @@ export function ProductJsonLd({
       value: `${nozzleTempMin}-${nozzleTempMax}`,
       unitCode: 'CEL',
     });
+  } else if (nozzleTempMax) {
+    additionalProperties.push({
+      '@type': 'PropertyValue',
+      name: 'Max Nozzle Temperature',
+      value: nozzleTempMax,
+      unitCode: 'CEL',
+    });
   }
 
   if (bedTempMin && bedTempMax) {
@@ -135,6 +142,13 @@ export function ProductJsonLd({
       '@type': 'PropertyValue',
       name: 'Bed Temperature Range',
       value: `${bedTempMin}-${bedTempMax}`,
+      unitCode: 'CEL',
+    });
+  } else if (bedTempMax) {
+    additionalProperties.push({
+      '@type': 'PropertyValue',
+      name: 'Max Bed Temperature',
+      value: bedTempMax,
       unitCode: 'CEL',
     });
   }

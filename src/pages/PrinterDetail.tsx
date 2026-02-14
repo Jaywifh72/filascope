@@ -96,7 +96,7 @@ import {
   Upload,
 } from "lucide-react";
 import { isDiscontinuedUrl } from "@/lib/urlValidation";
-import { ProductSEO, ProductJsonLd } from "@/components/seo";
+import { ProductSEO, ProductJsonLd, BreadcrumbSchema } from "@/components/seo";
 import { toBrandSlug } from "@/utils/brandSlug";
 
 const PrinterDetail = () => {
@@ -630,8 +630,12 @@ const PrinterDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-20 lg:pb-0">
-      {/* Breadcrumb Schema - now handled by DetailBreadcrumb */}
-
+      {/* Breadcrumb Schema */}
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: 'https://filascope.com/' },
+        { name: 'Printers', url: 'https://filascope.com/printers' },
+        { name: printerName, url: `https://filascope.com/printers/${printer.printer_id || id}` },
+      ]} />
       {/* SEO Meta Tags */}
       <ProductSEO
         title={printerName}
@@ -661,6 +665,8 @@ const PrinterDetail = () => {
         } : null}
         maxPrintSpeed={printer.max_print_speed_mms}
         printerType={printer.printer_technology}
+        nozzleTempMax={printer.max_nozzle_temp_c}
+        bedTempMax={printer.bed_max_temp_c}
       />
 
       <div className="max-w-[1400px] mx-auto p-4 lg:p-8">
