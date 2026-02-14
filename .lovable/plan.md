@@ -1,45 +1,34 @@
 
 
-# Fix Heading Hierarchy Issues
+# Update index.html Verification Tags and Preconnect Hints
 
-## 1. Homepage H1: Fix text and use CSS uppercase (HeroSection.tsx)
+## Changes Required
 
-The H1 currently has hardcoded all-caps text: `FIND YOUR PERFECT` and `FILAMENT.`. Google reads the raw HTML, so the actual text should be normal case with CSS handling the visual uppercase.
+### File: `index.html`
 
-**File: `src/components/HeroSection.tsx` (lines 242-247)**
+**1. Update placeholder text for verification meta tags (lines 7-8)**
 
-Change from:
+Change:
+```html
+<meta name="google-site-verification" content="VERIFICATION_CODE_HERE" />
+<meta name="msvalidate.01" content="BING_VERIFICATION_CODE_HERE" />
 ```
-<span class="... uppercase">FIND YOUR PERFECT </span>
-<span class="... uppercase">FILAMENT.</span>
-```
-
 To:
+```html
+<meta name="google-site-verification" content="REPLACE_WITH_GOOGLE_CODE" />
+<meta name="msvalidate.01" content="REPLACE_WITH_BING_CODE" />
 ```
-<span class="... uppercase">Find Your Perfect </span>
-<span class="... uppercase">Filament.</span>
+
+**2. Add missing preconnect for images.unsplash.com (after line 54)**
+
+Insert before the DNS prefetch comment block:
+```html
+<link rel="preconnect" href="https://images.unsplash.com" crossorigin />
 ```
 
-The `uppercase` Tailwind class is already applied, so the visual appearance will be identical. The HTML source will now contain proper-case text for search engines.
+**Already present (no changes needed):**
+- `theme-color` meta tag
+- `apple-mobile-web-app-title` meta tag
+- Preconnect to `cdn.shopify.com`
 
-## 2. Duplicate H2: No action needed
-
-The homepage currently has two distinct H2s:
-- "Explore the Filament Catalog" (bridge section in Finder.tsx)
-- "Browse All Filaments" (ResultsHeader component)
-
-These are **not duplicates** -- they have different text. The heading hierarchy is already correct.
-
-## 3. Brand Pages H1: Keep as-is
-
-Brand pages use the brand name as H1, which is acceptable. No change required per the user's guidance ("at minimum keep it as-is").
-
-## 4. Guide Pages: Already correct
-
-The `BuyingGuideTemplate` renders exactly one H1 (the guide title) with proper H2/H3 hierarchy for sections. No changes needed.
-
-## Summary
-
-Only one file needs editing:
-- **`src/components/HeroSection.tsx`**: Change hardcoded uppercase text to normal case (lines 243, 246)
-
+Only `index.html` is modified. No React component changes.
