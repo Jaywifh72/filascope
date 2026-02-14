@@ -566,10 +566,27 @@ const BrandDetail = () => {
       />
       <BrandOrganizationSchema
         name={displayName}
+        slug={brandSlug}
         url={brandInfo?.website}
         logo={brandLogo}
         description={brandInfo?.summary?.slice(0, 160)}
         productCount={filaments?.length}
+        priceRange={(() => {
+          if (!filaments || filaments.length === 0) return null;
+          const prices = filaments.map(f => f.variant_price).filter((p): p is number => p !== null && p > 0);
+          if (prices.length === 0) return null;
+          return { low: Math.min(...prices), high: Math.max(...prices) };
+        })()}
+        location={brandInfo?.location ? (() => {
+          const parts = brandInfo.location.split(',').map(s => s.trim());
+          if (parts.length >= 2) return { city: parts[0], country: parts[parts.length - 1] };
+          return { country: parts[0] };
+        })() : null}
+        founded={brandInfo?.founded || null}
+        topProducts={groupedProducts.slice(0, 10).map(g => ({
+          name: g.baseName,
+          slug: g.variants[0]?.product_handle || g.variants[0]?.id || '',
+        }))}
       />
 
       <div className="max-w-7xl mx-auto">
