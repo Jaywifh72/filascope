@@ -36,15 +36,15 @@ function buildOgImageUrl(params: {
 
 const GUIDE_META: Record<string, { title: string; description: string }> = {
   "best-pla-filaments": {
-    title: "Best PLA Filaments 2025",
+    title: "Best PLA Filaments 2026",
     description: "Top-rated PLA filaments for 3D printing. Compare brands, prices, and print quality across Bambu Lab, Polymaker, eSUN & more.",
   },
   "best-petg-filaments": {
-    title: "Best PETG Filaments 2025",
+    title: "Best PETG Filaments 2026",
     description: "Top PETG filaments ranked by print quality, strength & value. Find the best PETG for your 3D printer.",
   },
   "best-abs-filaments": {
-    title: "Best ABS Filaments 2025",
+    title: "Best ABS Filaments 2026",
     description: "Top ABS filaments for strength and heat resistance. Compare specs, warping behavior & price across brands.",
   },
   "pla-vs-petg": {
@@ -58,6 +58,26 @@ const GUIDE_META: Record<string, { title: string; description: string }> = {
   "hueforge-filaments": {
     title: "Best Filaments for HueForge",
     description: "Find the best filaments for HueForge lithophanes. TD values, color recommendations & tested filaments for multicolor prints.",
+  },
+  "best-filaments-for-hueforge-lithophanes": {
+    title: "Best Filaments for HueForge Lithophanes",
+    description: "Top 10 filaments for HueForge lithophanes ranked by TD value. Compare opacity, prices, and settings for stunning lithophane prints.",
+  },
+  "pla-plus-vs-pla-pro": {
+    title: "PLA+ vs PLA Pro — What's the Difference?",
+    description: "PLA+ and PLA Pro compared: actual material differences, brand naming conventions, strength tests, and top product picks for each.",
+  },
+  "best-filament-for-bambu-lab-p1s": {
+    title: "Best Filaments for Bambu Lab P1S",
+    description: "Top filament picks for the Bambu Lab P1S. PLA, PETG, ABS, and TPU recommendations with AMS compatibility notes and print settings.",
+  },
+  "silk-pla-comparison": {
+    title: "Best Silk PLA Filaments Compared",
+    description: "Top 10 silk PLA filaments ranked. Compare sheen quality, color options, print settings, and prices for the shiniest prints.",
+  },
+  "asa-vs-abs-outdoor-printing": {
+    title: "ASA vs ABS for Outdoor 3D Prints",
+    description: "ASA vs ABS for outdoor use: UV resistance, heat tolerance, print difficulty, and weathering compared. Find the best filament for outdoor parts.",
   },
 };
 
@@ -191,6 +211,8 @@ async function getPageData(path: string, supabase: SupabaseClient): Promise<Page
   const fm = path.match(/^\/filament\/(.+)$/);
   if (fm) return await filamentPage(fm[1], supabase);
 
+  // /brands/compare must come BEFORE /brands/:slug
+  if (path === "/brands/compare") return brandComparePage();
   const bm = path.match(/^\/brands\/(.+)$/);
   if (bm) return await brandPage(bm[1], supabase);
   if (path === "/brands") return await brandsListing(supabase);
@@ -205,6 +227,18 @@ async function getPageData(path: string, supabase: SupabaseClient): Promise<Page
   if (gm) return guidePage(gm[1]);
   if (path === "/learn") return learnPage();
   if (path === "/compare") return comparePage();
+
+  if (path === "/color-finder" || path === "/colors") return colorFinderPage();
+  if (path === "/hueforge-td-database" || path === "/td-database") return hueforgeDbPage();
+  if (path === "/hueforge-filaments") return hueforgeFinderPage();
+  if (path === "/about") return aboutPage();
+  if (path === "/methodology") return methodologyPage();
+  if (path === "/affiliate-disclosure") return affiliateDisclosurePage();
+  if (path === "/privacy") return privacyPage();
+  if (path === "/terms") return termsPage();
+  if (path === "/wizard") return wizardPage();
+  if (path === "/diagnose") return diagnosePage();
+  if (path === "/accessories") return accessoriesPage();
 
   return fallback(path);
 }
@@ -446,6 +480,131 @@ function comparePage(): PageData {
   };
 }
 
+function colorFinderPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Color Finder", url: "/color-finder" }];
+  return {
+    type: "tool", title: "3D Filament Color Finder — Search by Color | FilaScope",
+    description: "Find 3D printer filaments by exact color. Search by hex code, color name, or upload an image to match filaments visually.",
+    canonical: "/color-finder", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "3D Filament Color Finder", bodyText: "Search for 3D printer filaments by color. Match hex codes, browse color families, or find the closest filament to any color.",
+  };
+}
+
+function hueforgeDbPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "HueForge TD Database", url: "/hueforge-td-database" }];
+  return {
+    type: "tool", title: "HueForge TD Value Database — Filament Transmissivity | FilaScope",
+    description: "Complete HueForge TD value database. Search transmission distance values for 500+ filaments. Filter by brand, material & color for lithophane projects.",
+    canonical: "/hueforge-td-database", ogType: "website",
+    jsonLd: [
+      { "@context": "https://schema.org", "@type": "Dataset", name: "HueForge TD Value Database", description: "Transmission Distance (TD) values for 3D printer filaments used in HueForge lithophane printing.", url: `${BASE_URL}/hueforge-td-database`, creator: { "@type": "Organization", name: "FilaScope" } },
+      breadcrumbSchema(crumbs),
+    ],
+    breadcrumbs: crumbs, h1: "HueForge TD Value Database",
+    bodyText: "Browse transmission distance (TD) values for 500+ filaments. Essential data for HueForge lithophane and multicolor printing projects.",
+  };
+}
+
+function hueforgeFinderPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "HueForge Filament Finder", url: "/hueforge-filaments" }];
+  return {
+    type: "tool", title: "HueForge Filament Finder — TD-Ranked Filaments | FilaScope",
+    description: "Find the best filaments for HueForge projects. Browse by TD value, color, and brand. Build your perfect lithophane filament stack.",
+    canonical: "/hueforge-filaments", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "HueForge Filament Finder", bodyText: "Find and compare filaments for HueForge lithophane projects, ranked by transmission distance (TD) value.",
+  };
+}
+
+function aboutPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "About", url: "/about" }];
+  return {
+    type: "info", title: "About FilaScope — 3D Filament Database & Comparison",
+    description: "FilaScope is the most comprehensive 3D printer filament database. Compare specs, prices, and compatibility across 50+ brands and 1000+ products.",
+    canonical: "/about", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "About FilaScope", bodyText: "FilaScope is the most comprehensive 3D printer filament database, helping makers find the perfect filament for every project.",
+  };
+}
+
+function methodologyPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Methodology", url: "/methodology" }];
+  return {
+    type: "info", title: "Our Methodology — How FilaScope Ranks Filaments",
+    description: "How FilaScope scores and ranks 3D printer filaments. Our data-driven methodology covers specs, pricing, availability, and community feedback.",
+    canonical: "/methodology", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "FilaScope Methodology", bodyText: "Learn how FilaScope collects data, scores filaments, and ranks products across specs, pricing, and availability.",
+  };
+}
+
+function affiliateDisclosurePage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Affiliate Disclosure", url: "/affiliate-disclosure" }];
+  return {
+    type: "legal", title: "Affiliate Disclosure | FilaScope",
+    description: "FilaScope Affiliate Disclosure — Transparency about how we earn commissions from affiliate links while maintaining editorial independence.",
+    canonical: "/affiliate-disclosure", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "Affiliate Disclosure", bodyText: "Transparency about how FilaScope earns revenue through affiliate partnerships while maintaining editorial independence.",
+  };
+}
+
+function privacyPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Privacy Policy", url: "/privacy" }];
+  return {
+    type: "legal", title: "Privacy Policy | FilaScope",
+    description: "FilaScope Privacy Policy — Learn how we collect, use, and protect your personal information when using our 3D printing filament comparison service.",
+    canonical: "/privacy", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "Privacy Policy", bodyText: "Learn how FilaScope collects, uses, and protects your personal information.",
+  };
+}
+
+function termsPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Terms of Service", url: "/terms" }];
+  return {
+    type: "legal", title: "Terms of Service | FilaScope",
+    description: "FilaScope Terms of Service — The terms and conditions governing your use of the FilaScope 3D printer filament comparison platform.",
+    canonical: "/terms", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "Terms of Service", bodyText: "The terms and conditions governing your use of FilaScope.",
+  };
+}
+
+function wizardPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Filament Wizard", url: "/wizard" }];
+  return {
+    type: "tool", title: "Filament Wizard — Find Your Perfect 3D Filament | FilaScope",
+    description: "Answer a few questions about your project and get personalized 3D printer filament recommendations. Material, brand, and budget guidance in seconds.",
+    canonical: "/wizard", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "Filament Wizard", bodyText: "Get personalized filament recommendations based on your project requirements, printer, and budget.",
+  };
+}
+
+function diagnosePage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Print Diagnose", url: "/diagnose" }];
+  return {
+    type: "tool", title: "3D Print Problem Diagnosis Tool | FilaScope",
+    description: "Diagnose common 3D printing problems. Identify issues like stringing, warping, layer shifts, and get step-by-step fixes for your printer.",
+    canonical: "/diagnose", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "3D Print Problem Diagnosis", bodyText: "Identify and fix common 3D printing problems with step-by-step diagnosis and solutions.",
+  };
+}
+
+function accessoriesPage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Accessories", url: "/accessories" }];
+  return {
+    type: "listing", title: "3D Printer Accessories & Upgrades | FilaScope",
+    description: "Browse essential 3D printer accessories and upgrades. Nozzles, build plates, enclosures, filament dryers, and more with price comparisons.",
+    canonical: "/accessories", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "3D Printer Accessories", bodyText: "Browse and compare essential 3D printer accessories and upgrades.",
+  };
+}
+
+function brandComparePage(): PageData {
+  const crumbs = [{ name: "Home", url: "/" }, { name: "Brands", url: "/brands" }, { name: "Compare", url: "/brands/compare" }];
+  return {
+    type: "tool", title: "Compare Filament Brands — Side-by-Side Analysis | FilaScope",
+    description: "Compare 3D printing filament brands side-by-side. Analyze product variety, pricing, material options, and ratings to find the best brand for your needs.",
+    canonical: "/brands/compare", ogType: "website", jsonLd: [breadcrumbSchema(crumbs)], breadcrumbs: crumbs,
+    h1: "Compare Filament Brands", bodyText: "Compare 3D printing filament brands side-by-side across product variety, pricing, materials, and ratings.",
+  };
+}
+
 function fallback(path: string): PageData {
   return {
     type: "notfound", title: "Page Not Found | FilaScope",
@@ -520,19 +679,31 @@ const STATIC_PAGES = [
   { path: "/deals", priority: 0.9, changefreq: "daily" },
   { path: "/printers", priority: 0.8, changefreq: "weekly" },
   { path: "/brands", priority: 0.7, changefreq: "weekly" },
+  { path: "/brands/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/wizard", priority: 0.7, changefreq: "monthly" },
+  { path: "/color-finder", priority: 0.7, changefreq: "monthly" },
+  { path: "/hueforge-td-database", priority: 0.7, changefreq: "weekly" },
+  { path: "/hueforge-filaments", priority: 0.7, changefreq: "weekly" },
+  { path: "/accessories", priority: 0.6, changefreq: "weekly" },
+  { path: "/diagnose", priority: 0.6, changefreq: "monthly" },
   { path: "/learn", priority: 0.6, changefreq: "weekly" },
   { path: "/matrix", priority: 0.6, changefreq: "weekly" },
   { path: "/reference/slicers", priority: 0.5, changefreq: "monthly" },
   { path: "/reference/repos", priority: 0.5, changefreq: "monthly" },
   { path: "/about", priority: 0.3, changefreq: "monthly" },
   { path: "/methodology", priority: 0.4, changefreq: "monthly" },
+  { path: "/affiliate-disclosure", priority: 0.2, changefreq: "yearly" },
+  { path: "/privacy", priority: 0.2, changefreq: "yearly" },
+  { path: "/terms", priority: 0.2, changefreq: "yearly" },
 ];
 
 const GUIDE_SLUGS = [
   "best-pla-filaments", "best-petg-filaments", "best-abs-filaments",
   "pla-vs-petg", "beginners-guide", "hueforge-filaments",
+  "best-filaments-for-hueforge-lithophanes", "pla-plus-vs-pla-pro",
+  "best-filament-for-bambu-lab-p1s", "silk-pla-comparison",
+  "asa-vs-abs-outdoor-printing",
 ];
 
 async function sitemapFilaments(supabase: SupabaseClient): Promise<string> {
