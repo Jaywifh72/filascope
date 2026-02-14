@@ -96,6 +96,7 @@ const AdminExportData = lazy(() => import("./pages/admin/ExportData"));
 const AdminRegionTest = lazy(() => import("./pages/AdminRegionTest"));
 const AdminRegionalExpansion = lazy(() => import("./pages/AdminRegionalExpansion"));
 const AdminPriceFreshness = lazy(() => import("./pages/AdminPriceFreshness"));
+const DataQualityDashboard = lazy(() => import("./pages/admin/DataQualityDashboard"));
 const AdminPriceImport = lazy(() => import("./pages/AdminPriceImport"));
 const AdminStores = lazy(() => import("./pages/AdminStores"));
 const AdminAffiliateHub = lazy(() => import("./pages/AdminAffiliateHub"));
@@ -261,6 +262,7 @@ const App = () => (
                   <Route path="/old-admin/price-freshness" element={<AdminPriceFreshness />} />
                   <Route path="/old-admin/price-import" element={<AdminPriceImport />} />
                   <Route path="/old-admin/stores" element={<AdminStores />} />
+                  <Route path="/old-admin/data-quality-dashboard" element={<DataQualityDashboard />} />
                   <Route path="/old-admin/affiliate-hub" element={<Navigate to="/admin/affiliate-hub" replace />} />
                   <Route path="/filament/:id" element={<FilamentDetail />} />
                   <Route path="/reference/slicers" element={<ReferenceSlicers />} />
