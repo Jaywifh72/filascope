@@ -47,8 +47,10 @@ export function LinkVerificationTest() {
       .maybeSingle();
     const resolvedName = aliasData?.affiliate_brand_name || vendor;
 
-    // Step 2: Look up program
-    const { data: program } = await supabase
+    // Step 2: Look up program (exact region first, then fallback)
+    let program: any = null;
+    let matchedRegion = regionCode;
+    const { data: exactProgram } = await supabase
       .from("affiliate_programs")
       .select("*")
       .ilike("brand_name", resolvedName)
@@ -56,6 +58,21 @@ export function LinkVerificationTest() {
       .eq("is_active", true)
       .limit(1)
       .maybeSingle();
+    if (exactProgram) {
+      program = exactProgram;
+    } else {
+      const { data: fallbackProgram } = await supabase
+        .from("affiliate_programs")
+        .select("*")
+        .ilike("brand_name", resolvedName)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (fallbackProgram) {
+        program = fallbackProgram;
+        matchedRegion = `${(fallbackProgram as any).region_code} (fallback)`;
+      }
+    }
 
     // Step 3: Get a sample product URL
     const { data: sample } = await supabase
@@ -69,7 +86,7 @@ export function LinkVerificationTest() {
     const originalUrl = sample?.product_url || "(no product URL found)";
 
     if (!program) {
-      return { brand: vendor, originalUrl, affiliateUrl: null, found: false, method: null, regionCode };
+      return { brand: vendor, originalUrl, affiliateUrl: null, found: false, method: null, regionCode: matchedRegion };
     }
 
     const typedProgram = program as unknown as AffiliateProgram;
@@ -93,7 +110,7 @@ export function LinkVerificationTest() {
       affiliateUrl,
       found: true,
       method: typedProgram.link_generation_method || "url_parameter",
-      regionCode,
+      regionCode: matchedRegion,
     };
   }, []);
 

@@ -46,13 +46,14 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
     },
   });
 
-  // Step 2: Look up the affiliate program using resolved name + ilike
+  // Step 2: Look up the affiliate program using resolved name + ilike (with region fallback)
   const { data: program = null, isLoading: programLoading } = useQuery({
     queryKey: ["affiliate-program-lookup", resolvedBrandName, region],
     enabled: !!resolvedBrandName && !aliasLoading,
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Try exact region match first
+      const { data: exactMatch, error: exactError } = await supabase
         .from("affiliate_programs")
         .select("*")
         .ilike("brand_name", resolvedBrandName!)
@@ -60,11 +61,25 @@ export function useAffiliateLink(brandName: string | null | undefined): UseAffil
         .eq("is_active", true)
         .limit(1)
         .maybeSingle();
-      if (error) {
-        console.error("[useAffiliateLink] lookup error:", error);
+      if (exactError) {
+        console.error("[useAffiliateLink] lookup error:", exactError);
         return null;
       }
-      return data as AffiliateProgram | null;
+      if (exactMatch) return exactMatch as AffiliateProgram;
+
+      // Fallback: any active program for this brand (regardless of region)
+      const { data: fallback, error: fallbackError } = await supabase
+        .from("affiliate_programs")
+        .select("*")
+        .ilike("brand_name", resolvedBrandName!)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (fallbackError) {
+        console.error("[useAffiliateLink] fallback lookup error:", fallbackError);
+        return null;
+      }
+      return (fallback as AffiliateProgram) ?? null;
     },
   });
 

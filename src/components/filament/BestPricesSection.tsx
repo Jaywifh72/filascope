@@ -185,7 +185,7 @@ export function BestPricesSection({ filamentId, onViewAllPrices, totalRetailerCo
             size="sm"
             className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 flex-shrink-0"
           >
-            <a href={bestRetailer.url} target="_blank" rel="noopener noreferrer">
+            <a href={bestRetailer.url} target="_blank" rel="nofollow sponsored noopener noreferrer">
               Buy Now
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
