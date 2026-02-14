@@ -376,6 +376,7 @@ const Brands = () => {
     <>
       <Helmet>
         <title>{`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}</title>
+        <meta name="title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
         <meta name="description" content={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`} />
         <meta property="og:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
         <meta property="og:description" content={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`} />
