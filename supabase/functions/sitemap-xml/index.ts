@@ -18,14 +18,23 @@ const STATIC_PAGES: Array<{
   { path: "/deals", priority: 0.9, changefreq: "daily" },
   { path: "/printers", priority: 0.8, changefreq: "weekly" },
   { path: "/brands", priority: 0.7, changefreq: "weekly" },
+  { path: "/brands/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/compare", priority: 0.6, changefreq: "monthly" },
   { path: "/wizard", priority: 0.7, changefreq: "monthly" },
+  { path: "/color-finder", priority: 0.7, changefreq: "monthly" },
+  { path: "/hueforge-td-database", priority: 0.7, changefreq: "weekly" },
+  { path: "/hueforge-filaments", priority: 0.7, changefreq: "weekly" },
+  { path: "/accessories", priority: 0.6, changefreq: "weekly" },
+  { path: "/diagnose", priority: 0.6, changefreq: "monthly" },
   { path: "/reference/slicers", priority: 0.5, changefreq: "monthly" },
   { path: "/reference/repos", priority: 0.5, changefreq: "monthly" },
   { path: "/matrix", priority: 0.6, changefreq: "weekly" },
   { path: "/about", priority: 0.3, changefreq: "monthly" },
   { path: "/methodology", priority: 0.4, changefreq: "monthly" },
   { path: "/learn", priority: 0.6, changefreq: "weekly" },
+  { path: "/affiliate-disclosure", priority: 0.2, changefreq: "yearly" },
+  { path: "/privacy", priority: 0.2, changefreq: "yearly" },
+  { path: "/terms", priority: 0.2, changefreq: "yearly" },
 ];
 
 // Guide pages
@@ -36,6 +45,11 @@ const GUIDE_SLUGS = [
   "pla-vs-petg",
   "beginners-guide",
   "hueforge-filaments",
+  "best-filaments-for-hueforge-lithophanes",
+  "pla-plus-vs-pla-pro",
+  "best-filament-for-bambu-lab-p1s",
+  "silk-pla-comparison",
+  "asa-vs-abs-outdoor-printing",
 ];
 
 function escapeXml(str: string): string {
