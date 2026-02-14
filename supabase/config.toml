@@ -464,3 +464,6 @@ verify_jwt = false
 
 [functions.og-image]
 verify_jwt = false
+
+[functions.daily-price-orchestrator]
+verify_jwt = false

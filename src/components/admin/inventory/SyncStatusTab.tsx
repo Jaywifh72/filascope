@@ -10,6 +10,7 @@ import { RegionalFailedProducts } from './sync-status/RegionalFailedProducts';
 import { MissingRegionalUrlsReport } from './sync-status/MissingRegionalUrlsReport';
 import { SyncScheduleHints } from './sync-status/SyncScheduleHints';
 import { RegionalUrlManager } from './sync-status/RegionalUrlManager';
+import { OrchestrationControl } from './sync-status/OrchestrationControl';
 
 export function SyncStatusTab() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined);
@@ -25,6 +26,9 @@ export function SyncStatusTab() {
 
   return (
     <div className="mt-4 space-y-6">
+      {/* Orchestration Control */}
+      <OrchestrationControl />
+
       {/* Current Sync Status */}
       <CurrentSyncStatus />
 

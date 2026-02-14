@@ -8,3 +8,4 @@ export { RegionalFailedProducts } from './RegionalFailedProducts';
 export { MissingRegionalUrlsReport } from './MissingRegionalUrlsReport';
 export { SyncScheduleHints } from './SyncScheduleHints';
 export { RegionalUrlManager } from './RegionalUrlManager';
+export { OrchestrationControl } from './OrchestrationControl';
