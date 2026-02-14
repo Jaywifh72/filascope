@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { 
   Activity, 
@@ -75,6 +75,9 @@ export function SiteFooter() {
   const [latency, setLatency] = useState(14);
   const { toast } = useToast();
   const { regionConfig, currencyConfig, ratesLastUpdated } = useRegion();
+  const location = useLocation();
+  const [subscribed, setSubscribed] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   // Measure real API latency from Performance API
   useEffect(() => {
@@ -96,8 +99,10 @@ export function SiteFooter() {
     return () => clearInterval(id);
   }, []);
 
-  const [subscribed, setSubscribed] = useState(false);
-  const [emailError, setEmailError] = useState("");
+  // Hide footer on admin pages
+  const isAdmin = location.pathname.startsWith('/admin') || location.pathname.startsWith('/old-admin');
+  if (isAdmin) return null;
+
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,26 +126,49 @@ export function SiteFooter() {
     setSubscribed(true);
   };
 
-  const exploreLinks = [
-    { name: "Filaments", href: "/" },
-    { name: "Printers", href: "/printers" },
-    { name: "Brands", href: "/brands" },
-    { name: "Deals", href: "/deals" },
-    { name: "Knowledge Base", href: "/compare" },
-    { name: "Printer Compatibility", href: "/matrix" },
+  const materialLinks = [
+    { name: "PLA Filaments", href: "/?material=PLA" },
+    { name: "PETG Filaments", href: "/?material=PETG" },
+    { name: "ABS Filaments", href: "/?material=ABS" },
+    { name: "TPU Filaments", href: "/?material=TPU" },
+    { name: "ASA Filaments", href: "/?material=ASA" },
+    { name: "Nylon Filaments", href: "/?material=PA" },
+    { name: "All Materials", href: "/learn" },
   ];
 
-  const resourceLinks = [
-    { name: "Material Knowledge Base", href: "/compare" },
-    { name: "Compatibility Matrix", href: "/matrix" },
-    { name: "Slicer Directory", href: "/reference/slicers" },
-    { name: "HueForge TD Database", href: "/?material=PLA&sort=td" },
-    { name: "Quick Match", href: "/wizard" },
+  const brandLinks = [
+    { name: "Bambu Lab", href: "/brands/bambu-lab" },
+    { name: "Polymaker", href: "/brands/polymaker" },
+    { name: "eSUN", href: "/brands/esun" },
+    { name: "Prusament", href: "/brands/prusament" },
+    { name: "Overture", href: "/brands/overture" },
+    { name: "Hatchbox", href: "/brands/hatchbox" },
+    { name: "All Brands", href: "/brands" },
   ];
 
-  const companyLinks: { name: string; href: string; external?: boolean; badge?: string; icon?: React.ComponentType<{ className?: string }> }[] = [
+  const guideLinks = [
+    { name: "Best PLA Filaments", href: "/guides/best-pla-filaments" },
+    { name: "Best PETG Filaments", href: "/guides/best-petg-filaments" },
+    { name: "PLA vs PETG", href: "/guides/pla-vs-petg" },
+    { name: "Best for HueForge", href: "/guides/best-filaments-for-hueforge-lithophanes" },
+    { name: "HueForge TD Database", href: "/hueforge-td-database" },
+    { name: "Beginner's Guide", href: "/guides/beginners-guide" },
+    { name: "All Guides", href: "/learn" },
+  ];
+
+  const toolLinks = [
+    { name: "Filament Finder", href: "/" },
+    { name: "Color Finder", href: "/color-finder" },
+    { name: "Filament Compare", href: "/compare" },
+    { name: "Today's Deals", href: "/deals" },
+    { name: "Printer Database", href: "/printers" },
+  ];
+
+  const aboutLinks: { name: string; href: string; external?: boolean; badge?: string; icon?: React.ComponentType<{ className?: string }> }[] = [
     { name: "About FilaScope", href: "/about" },
-    { name: "Our Methodology", href: "/methodology" },
+    { name: "Methodology", href: "/methodology" },
+    { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
+    { name: "Privacy Policy", href: "/privacy" },
     { name: "Feature Roadmap", href: "/roadmap", badge: "New" },
     { name: "Request a Feature", href: "/request-feature", icon: Lightbulb },
     { name: "Contact", href: "mailto:hello@filascope.com", external: true },
@@ -218,12 +246,13 @@ export function SiteFooter() {
       {/* Main Footer Content */}
       <div className="bg-card border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            {/* Column 1 - Explore */}
-            <div>
-              <FooterColumnHeader>Explore</FooterColumnHeader>
+          {/* SEO Link Grid - 5 columns + newsletter */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
+            {/* Column 1 - Browse by Material */}
+            <nav aria-label="Browse by Material">
+              <FooterColumnHeader>Browse by Material</FooterColumnHeader>
               <ul className="space-y-3">
-                {exploreLinks.map((link) => (
+                {materialLinks.map((link) => (
                   <li key={link.name}>
                     <Link 
                       to={link.href}
@@ -234,13 +263,13 @@ export function SiteFooter() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
 
-            {/* Column 2 - Resources */}
-            <div>
-              <FooterColumnHeader>Resources</FooterColumnHeader>
+            {/* Column 2 - Popular Brands */}
+            <nav aria-label="Popular Brands">
+              <FooterColumnHeader>Popular Brands</FooterColumnHeader>
               <ul className="space-y-3">
-                {resourceLinks.map((link) => (
+                {brandLinks.map((link) => (
                   <li key={link.name}>
                     <Link 
                       to={link.href}
@@ -251,13 +280,47 @@ export function SiteFooter() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
 
-            {/* Column 3 - Company */}
-            <div>
-              <FooterColumnHeader>Company</FooterColumnHeader>
+            {/* Column 3 - Guides & Resources */}
+            <nav aria-label="Guides and Resources">
+              <FooterColumnHeader>Guides & Resources</FooterColumnHeader>
               <ul className="space-y-3">
-                {companyLinks.map((link) => (
+                {guideLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Column 4 - Tools */}
+            <nav aria-label="Tools">
+              <FooterColumnHeader>Tools</FooterColumnHeader>
+              <ul className="space-y-3">
+                {toolLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link 
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary active:text-primary/80 transition-colors duration-200 leading-relaxed focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none rounded"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Column 5 - About */}
+            <nav aria-label="About">
+              <FooterColumnHeader>About</FooterColumnHeader>
+              <ul className="space-y-3">
+                {aboutLinks.map((link) => (
                   <li key={link.name}>
                     {link.external ? (
                       <a 
@@ -284,20 +347,19 @@ export function SiteFooter() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
 
-            {/* Column 4 - Connect */}
+            {/* Column 6 - Newsletter & Social */}
             <div>
               <FooterColumnHeader>Stay Updated</FooterColumnHeader>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Get price drops, new filaments, and exclusive deals delivered weekly.
+                Price drops, new filaments, and deals delivered weekly.
               </p>
               
-              {/* Newsletter */}
               {subscribed ? (
                 <div className="flex items-start gap-2.5 text-sm text-primary bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 mb-6">
                   <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>You're subscribed! Check your email to confirm.</span>
+                  <span>Subscribed! Check email to confirm.</span>
                 </div>
               ) : (
                 <form onSubmit={handleNewsletterSubmit} className="mb-6 space-y-3">
