@@ -1,129 +1,172 @@
 
-
-# Consolidated Admin Data Quality Dashboard
+# Comprehensive Nightly Price Sync Monitor
 
 ## Overview
-Create a unified `/old-admin/data-quality-dashboard` page that consolidates pricing health, broken links, regional coverage, and sync activity into a single view with real-time updates, CSV exports, and quick action sidebar.
 
-## What Already Exists (will be reused, not duplicated)
-- `AdminLayout`, `AdminPageHeader` -- standard admin page shell
-- `AdminSidebar` -- add new nav entry
-- `price_discrepancies` table -- pending review counts
-- `brand_sync_logs` table -- recent sync activity
-- `orchestration_runs` table -- last orchestrator run
-- `OrchestrationControl` component -- manual sync trigger
-- `PriceDiscrepancyQueue` component -- discrepancy review
+Build a dedicated `/old-admin/sync-monitor` page that serves as the central command center for all price synchronization operations. This consolidates and extends the existing orchestration infrastructure (daily-price-orchestrator, OrchestrationControl, brand_sync_logs, orchestration_runs) into a comprehensive monitoring dashboard.
+
+## What Already Exists (will be reused)
+
+- `daily-price-orchestrator` edge function -- already handles nightly sync with tier-based scheduling
+- `orchestration_runs` table -- tracks run status, brands synced/failed, products updated
+- `brand_sync_logs` table -- per-brand sync records with detailed stats
+- `broken_product_urls` table -- 404 tracking
+- `OrchestrationControl` component -- manual trigger + progress bar
+- `RecentSyncRuns` component -- paginated sync history with filters
+- `BrandHealthGrid` component -- brand health cards
 - `BrandRegionMatrix` component -- regional coverage grid
-- `get_brand_region_coverage` RPC -- coverage data
-- `useBrokenProductUrls` hook -- broken link data
-- `usePriceSync` hook -- trigger syncs
-- `price_confidence` column on filaments -- freshness tiers
-- `last_scraped_at` column on filaments -- staleness calculation
-- Recharts already installed
+- `usePriceSync` hook -- single product sync trigger
+- `useBrokenProductUrls` hook -- broken link queries
+- `price_discrepancies` table -- price change review queue
+- `get-current-price` edge function -- on-demand scraping
+- `downloadCSV` utility -- CSV export
 
-## Implementation Steps
+## Why NOT Create New Brand Scrapers
 
-### 1. Create the Dashboard Page
+The request asks for a new `supabase/functions/brands/{brand}/` directory structure. However, the project already has 40+ dedicated brand sync functions (e.g., `sync-bambulab-products`, `sync-esun-products`, `sync-polymaker-products`, etc.) plus a multi-platform `scrape-brand-data` framework. Creating duplicate scrapers would conflict with the existing architecture. Instead, the new monitoring page will leverage these existing functions.
 
-New file: `src/pages/admin/DataQualityDashboard.tsx`
+## Database Changes
 
-Uses `AdminLayout` + `AdminPageHeader` with icon `ShieldCheck`.
+### New Table: `scrape_errors`
 
-Layout structure:
-- Left column (75%): Main content sections A-F
-- Right column (25%): Quick action sidebar
+Dedicated error tracking table (currently errors are embedded in `brand_sync_logs.error_details` JSON, which makes querying/filtering difficult).
 
-### 2. Section A: Overview Metrics (Top Cards Row)
+```
+scrape_errors
+- id (uuid, PK)
+- filament_id (uuid, FK to filaments, nullable)
+- brand_slug (text, not null)
+- region (text)
+- error_type (text) -- '404', 'timeout', 'parse_error', 'rate_limit', 'network', 'selector_fail'
+- error_message (text)
+- url (text)
+- sync_run_id (uuid, FK to brand_sync_logs, nullable)
+- is_resolved (boolean, default false)
+- resolved_at (timestamptz)
+- created_at (timestamptz, default now())
+```
 
-Five stat cards querying existing data:
-- **Total Products**: `SELECT COUNT(*) FROM filaments`
-- **Fresh Prices (<24h)**: `SELECT COUNT(*) FROM filaments WHERE price_confidence = 'high'`
-- **Pending Reviews**: `SELECT COUNT(*) FROM price_discrepancies WHERE status IN ('pending','manual_review')`
-- **Broken Links**: `SELECT COUNT(*) FROM broken_product_urls WHERE resolved_at IS NULL`
-- **Avg Staleness**: Calculate from `last_scraped_at` distribution
+RLS: Admin-only read/write via `has_role(auth.uid(), 'admin')`.
 
-All queries run in parallel on mount.
+Enable realtime on this table for live error streaming.
 
-### 3. Section B: Stale Pricing Table
+### No Other Schema Changes
 
-Reuses the pattern from `AdminPriceFreshness.tsx`:
-- Query `filaments` where `last_scraped_at < NOW() - 7 days OR last_scraped_at IS NULL`
-- Columns: Product, Brand, Region, Last Checked, Days Old, Action
-- "Sync Now" button per row calls `get-current-price` via `usePriceSync`
-- Filters: brand dropdown, staleness threshold (7d/14d/30d)
-- Sort by days old descending
-- Limited to 50 rows with "Show More" pagination
+All other data needs (sync history, brand health, orchestration tracking) are already served by existing tables.
 
-### 4. Section C: Broken Links
+## Implementation Plan
 
-Reuses `useBrokenProductUrls` hook directly:
-- Table: Product, Retailer URL, Error Date, Status
-- Actions: "Re-check" (calls `get-current-price`), "Mark Discontinued" (sets `resolved_at`)
-- Shows store breakdown from `stats.storeBreakdown`
+### 1. Create Database Migration
 
-### 5. Section D: Regional Coverage Matrix
+- Create `scrape_errors` table with indexes on `brand_slug`, `error_type`, `created_at`
+- Add RLS policies (admin-only)
+- Enable realtime: `ALTER PUBLICATION supabase_realtime ADD TABLE scrape_errors`
 
-Embeds existing `BrandRegionMatrix` component directly -- it already has the color-coded grid, click-to-expand, and sync triggers.
+### 2. Create Admin Page: `src/pages/admin/SyncMonitor.tsx`
 
-### 6. Section E: Price Confidence Distribution
+A single large page component with tab-based navigation across 6 sections. Uses `AdminLayout` + `AdminPageHeader` with `Activity` icon.
 
-New component using Recharts `PieChart`:
-- Query: `SELECT price_confidence, COUNT(*) FROM filaments GROUP BY price_confidence`
-- 5 slices: high (green), medium (yellow), low (orange), stale (red), unknown (gray)
-- Click slice to filter the stale pricing table to that confidence tier
+**Layout**: Full-width with top stats cards, then tabbed sections below.
 
-### 7. Section F: Recent Sync Activity
+#### Section A: Overview Dashboard (always visible at top)
 
-Query `brand_sync_logs` ordered by `started_at DESC LIMIT 20`:
-- Columns: Brand, Type, Status, Duration, Products Updated, Started
-- Badge colors: green=completed, red=failed, yellow=running
-- Filter by brand, status
+Five stat cards in a row:
+- **Last Sync Status**: Query `orchestration_runs` latest row; show status badge + timestamp
+- **Products Synced Today**: Query `brand_sync_logs` where `started_at > today`, sum `products_updated`
+- **Active Errors**: Count from `scrape_errors` where `is_resolved = false`
+- **Avg Sync Duration**: Average `duration_seconds` from last 30 `orchestration_runs`
+- **Next Scheduled Sync**: Calculate from last completed run + 24h, show countdown using `setInterval`
 
-### 8. Quick Action Sidebar (Right Column)
+#### Section B: Sync History Tab
 
-Sticky positioned panel:
+Reuse and extend `RecentSyncRuns` pattern:
+- Query last 30 runs from `orchestration_runs` (not just `brand_sync_logs`)
+- Expandable rows showing per-brand breakdown from `summary.brand_results` JSON
+- Actions: "Re-run" triggers `daily-price-orchestrator` with manual flag; "Download" exports run details as CSV
+
+#### Section C: Live Sync Monitor Tab
+
+- Conditionally renders when latest `orchestration_runs` status = 'running'
+- Realtime subscription on `orchestration_runs` for progress updates
+- Shows: animated progress bar, current brand count vs total, products updated counter
+- Live error feed: realtime subscription on `scrape_errors` filtered by current run, shows new errors as they arrive
+- Estimated time remaining: `(elapsed / brands_synced) * brands_remaining`
+
+#### Section D: Brand Health Matrix Tab
+
+Embed existing `BrandRegionMatrix` component directly (already has color-coded cells, click-to-expand, sync triggers). Add a row of aggregate stats at top.
+
+#### Section E: Recent Errors Tab
+
+New component querying `scrape_errors`:
+- Table: Time, Product, Brand, Region, Error Type, URL
+- Filters: brand dropdown, region dropdown, error type dropdown, date range
+- Bulk actions: "Mark Resolved" (sets `is_resolved = true`), "Retry" (calls `get-current-price`)
+- Pattern detection: Group by `brand_slug + region` and show alert if >5 errors from same source
+
+#### Section F: Stale Products Tab
+
+Query `filaments` where `last_scraped_at < NOW() - 48h OR last_scraped_at IS NULL`:
+- Columns: Product, Brand, Last Checked, Days Stale, Reason
+- "Reason" derived from: never synced, repeated failures (join `scrape_errors`), disabled brand
+- Actions: "Sync Now" per row (calls `get-current-price`), "Sync Brand" button
+
+#### Section G: Manual Sync Controls (sidebar/panel)
+
+Sticky panel at right side or bottom of page:
 - "Run Full Sync" button (reuses `OrchestrationControl` trigger logic)
-- "Review Price Changes" link to `/old-admin/inventory?tab=sync` (discrepancy queue)
-- "Export Weekly Report" button (triggers CSV export)
-- Last orchestration run timestamp from `orchestration_runs`
-- Pending review count badge
+- "Sync Single Brand" dropdown populated from `automated_brands`
+- "Sync Single Product" search input with autocomplete from `filaments`
+- Last orchestration timestamp
+- "Review Price Changes" link to `/old-admin/inventory?tab=sync`
 
-### 9. CSV Export Functions
+#### Section H: Performance Charts
 
-Utility function `downloadCSV(data, filename)`:
+Recharts visualizations:
+- Line chart: sync duration over last 30 days (from `orchestration_runs`)
+- Bar chart: products synced per day (from `brand_sync_logs` aggregated by date)
+- Success rate line (successful / total per day)
+
+### 3. Real-time Subscriptions
+
+Subscribe to:
+- `orchestration_runs` -- updates overview cards + live monitor
+- `scrape_errors` -- live error feed during active sync
+- `brand_sync_logs` -- sync history updates
+
+All channels cleaned up on unmount.
+
+### 4. CSV Exports
+
+Using existing `downloadCSV` utility:
+- Export sync history
+- Export error log
 - Export stale products list
-- Export price discrepancies
-- Export broken links
-Each converts query results to CSV blob and triggers browser download.
 
-### 10. Real-time Updates
+### 5. Route and Navigation
 
-Subscribe to Supabase Realtime on:
-- `filaments` table (price_confidence changes)
-- `brand_sync_logs` table (new sync runs)
-- `price_discrepancies` table (new discrepancies)
-
-On change events, refetch the relevant stat cards and tables.
-
-### 11. Route and Navigation
-
-- Add route in `App.tsx`: `<Route path="/old-admin/data-quality-dashboard" element={<DataQualityDashboard />} />`
-- Add sidebar entry in `AdminSidebar.tsx` under "Data Quality" group: `{ title: 'Quality Dashboard', href: '/old-admin/data-quality-dashboard', icon: ShieldCheck }`
+- Add lazy import + route in `App.tsx`: `/old-admin/sync-monitor`
+- Add sidebar entry in `AdminSidebar.tsx` under "Operations" group: `{ title: 'Sync Monitor', href: '/old-admin/sync-monitor', icon: Activity }`
 
 ## Files to Create
-- `src/pages/admin/DataQualityDashboard.tsx` -- main page (~400 lines)
-- `src/lib/csvExport.ts` -- CSV utility (~30 lines)
+
+| File | Purpose | Approx Size |
+|------|---------|-------------|
+| `src/pages/admin/SyncMonitor.tsx` | Main page with all 8 sections | ~700 lines |
+| Migration SQL | `scrape_errors` table + RLS + realtime | ~40 lines |
 
 ## Files to Modify
-- `src/App.tsx` -- add route
-- `src/components/admin/AdminSidebar.tsx` -- add nav item
 
-## No Database Changes Required
-All data comes from existing tables and columns.
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Add lazy import + route |
+| `src/components/admin/AdminSidebar.tsx` | Add "Sync Monitor" nav item |
 
 ## Technical Notes
-- All queries use the existing Supabase client with RLS (admin-only via `has_role`)
-- Recharts `PieChart` + `Cell` for the confidence distribution
-- `useEffect` cleanup for Realtime channel subscriptions
-- Responsive grid: 3-col on desktop, stacks on mobile
-- The page consolidates views currently scattered across 6+ separate admin pages into one unified dashboard
+
+- All queries use existing Supabase client with RLS (admin-only)
+- Recharts already installed for charts
+- The page is intentionally a single file to keep related sync monitoring logic co-located
+- Countdown timer for "Next Sync" uses `setInterval` with cleanup
+- Error pattern detection is client-side grouping (no new DB function needed)
+- Brand scraper architecture is NOT duplicated -- the monitoring page surfaces data from the 40+ existing sync functions
