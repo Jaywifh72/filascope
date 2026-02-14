@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useJsonLd } from './useJsonLd';
 import { useRegion } from '@/contexts/RegionContext';
 import { RegionCode, CurrencyCode } from '@/types/regional';
 
@@ -325,11 +325,6 @@ export function ProductJsonLd({
     }),
   };
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(jsonLd)}
-      </script>
-    </Helmet>
-  );
+  useJsonLd(jsonLd);
+  return null;
 }

@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useJsonLd } from './useJsonLd';
 
 interface WebApplicationOffer {
   price: string;
@@ -30,18 +30,9 @@ export function WebApplicationSchema({
   };
 
   if (offers) {
-    jsonLd.offers = {
-      '@type': 'Offer',
-      price: offers.price,
-      priceCurrency: offers.priceCurrency || 'USD',
-    };
+    jsonLd.offers = { '@type': 'Offer', price: offers.price, priceCurrency: offers.priceCurrency || 'USD' };
   }
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(jsonLd)}
-      </script>
-    </Helmet>
-  );
+  useJsonLd(jsonLd);
+  return null;
 }

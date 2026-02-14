@@ -1,4 +1,4 @@
-import { Helmet } from 'react-helmet-async';
+import { useJsonLd } from './useJsonLd';
 
 interface SoftwareApplicationOffer {
   price: string;
@@ -21,10 +21,6 @@ interface SoftwareApplicationSchemaProps {
   url?: string;
 }
 
-/**
- * SoftwareApplication Schema.org structured data component
- * Used for slicer software listings to enable rich results in Google
- */
 export function SoftwareApplicationSchema({
   name,
   description,
@@ -43,18 +39,10 @@ export function SoftwareApplicationSchema({
     applicationCategory,
   };
 
-  if (url) {
-    jsonLd.url = url;
-  }
-
+  if (url) jsonLd.url = url;
   if (offers) {
-    jsonLd.offers = {
-      '@type': 'Offer',
-      price: offers.price,
-      priceCurrency: offers.priceCurrency || 'USD',
-    };
+    jsonLd.offers = { '@type': 'Offer', price: offers.price, priceCurrency: offers.priceCurrency || 'USD' };
   }
-
   if (aggregateRating) {
     jsonLd.aggregateRating = {
       '@type': 'AggregateRating',
@@ -65,11 +53,6 @@ export function SoftwareApplicationSchema({
     };
   }
 
-  return (
-    <Helmet>
-      <script type="application/ld+json">
-        {JSON.stringify(jsonLd)}
-      </script>
-    </Helmet>
-  );
+  useJsonLd(jsonLd);
+  return null;
 }
