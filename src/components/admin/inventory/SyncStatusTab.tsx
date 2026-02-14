@@ -11,10 +11,11 @@ import { MissingRegionalUrlsReport } from './sync-status/MissingRegionalUrlsRepo
 import { SyncScheduleHints } from './sync-status/SyncScheduleHints';
 import { RegionalUrlManager } from './sync-status/RegionalUrlManager';
 import { OrchestrationControl } from './sync-status/OrchestrationControl';
+import { PriceDiscrepancyQueue } from './sync-status/PriceDiscrepancyQueue';
 
 export function SyncStatusTab() {
   const [brandFilter, setBrandFilter] = useState<string | undefined>(undefined);
-  const [viewMode, setViewMode] = useState<'overview' | 'regional'>('regional');
+  const [viewMode, setViewMode] = useState<'overview' | 'regional' | 'discrepancies'>('regional');
 
   const handleBrandClick = (brandSlug: string) => {
     setBrandFilter(brandSlug);
@@ -33,11 +34,16 @@ export function SyncStatusTab() {
       <CurrentSyncStatus />
 
       {/* View Mode Toggle */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional')}>
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'overview' | 'regional' | 'discrepancies')}>
         <TabsList>
           <TabsTrigger value="regional">Regional View</TabsTrigger>
           <TabsTrigger value="overview">Brand Overview</TabsTrigger>
+          <TabsTrigger value="discrepancies">Price Review</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="discrepancies" className="mt-4">
+          <PriceDiscrepancyQueue />
+        </TabsContent>
 
         <TabsContent value="regional" className="space-y-6 mt-4">
           {/* Regional URL Manager */}
