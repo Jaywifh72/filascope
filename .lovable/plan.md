@@ -1,51 +1,45 @@
 
 
-# Add WebApplication Schema to Compare and Color Finder Pages
+# Fix Heading Hierarchy Issues
 
-## Current State
+## 1. Homepage H1: Fix text and use CSS uppercase (HeroSection.tsx)
 
-- **/compare**: Has Helmet, BreadcrumbSchema, and conditional DefinedTermSet/FAQ schemas. Missing WebApplication schema.
-- **/color-finder**: Has Helmet and BreadcrumbSchema. Missing WebApplication schema.
-- **/hueforge-td-database**: Already has BreadcrumbSchema, DatasetSchema, and FAQSchema. No changes needed.
+The H1 currently has hardcoded all-caps text: `FIND YOUR PERFECT` and `FILAMENT.`. Google reads the raw HTML, so the actual text should be normal case with CSS handling the visual uppercase.
 
-## Changes Required
+**File: `src/components/HeroSection.tsx` (lines 242-247)**
 
-### 1. Create a reusable `WebApplicationSchema` component
+Change from:
+```
+<span class="... uppercase">FIND YOUR PERFECT </span>
+<span class="... uppercase">FILAMENT.</span>
+```
 
-**New file: `src/components/seo/WebApplicationSchema.tsx`**
+To:
+```
+<span class="... uppercase">Find Your Perfect </span>
+<span class="... uppercase">Filament.</span>
+```
 
-A small JSON-LD component (following the pattern of `SoftwareApplicationSchema`) that outputs a `WebApplication` schema block. Props: `name`, `url`, `applicationCategory`, `description`, optional `offers`.
+The `uppercase` Tailwind class is already applied, so the visual appearance will be identical. The HTML source will now contain proper-case text for search engines.
 
-Also export it from `src/components/seo/index.ts`.
+## 2. Duplicate H2: No action needed
 
-### 2. Add WebApplication schema to `/compare` page
+The homepage currently has two distinct H2s:
+- "Explore the Filament Catalog" (bridge section in Finder.tsx)
+- "Browse All Filaments" (ResultsHeader component)
 
-**File: `src/pages/Compare.tsx` (around line 447)**
+These are **not duplicates** -- they have different text. The heading hierarchy is already correct.
 
-Insert `<WebApplicationSchema>` after the existing `BreadcrumbSchema`:
-- name: "FilaScope Filament Comparison Tool"
-- url: "https://filascope.com/compare"
-- applicationCategory: "Utility"
-- description: "Compare 3D printer filaments side by side. Specs, prices, TD values, and printer compatibility."
-- offers: { price: "0", priceCurrency: "USD" }
+## 3. Brand Pages H1: Keep as-is
 
-### 3. Add WebApplication schema to `/color-finder` page
+Brand pages use the brand name as H1, which is acceptable. No change required per the user's guidance ("at minimum keep it as-is").
 
-**File: `src/pages/ColorFinder.tsx` (after line 74)**
+## 4. Guide Pages: Already correct
 
-Insert `<WebApplicationSchema>` after the existing `BreadcrumbSchema`:
-- name: "FilaScope Color Finder"
-- url: "https://filascope.com/color-finder"
-- applicationCategory: "Utility"
-- description: "Match any color to 3D printer filaments. Search by hex code, color name, or visual match."
+The `BuyingGuideTemplate` renders exactly one H1 (the guide title) with proper H2/H3 hierarchy for sections. No changes needed.
 
-### 4. No changes to `/hueforge-td-database`
+## Summary
 
-Already has all three requested schemas (Dataset, FAQPage, BreadcrumbList).
+Only one file needs editing:
+- **`src/components/HeroSection.tsx`**: Change hardcoded uppercase text to normal case (lines 243, 246)
 
-## Files Modified
-
-1. `src/components/seo/WebApplicationSchema.tsx` -- new component
-2. `src/components/seo/index.ts` -- add export
-3. `src/pages/Compare.tsx` -- add WebApplicationSchema
-4. `src/pages/ColorFinder.tsx` -- add WebApplicationSchema
