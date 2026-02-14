@@ -30,10 +30,11 @@ const severityColors: Record<string, string> = {
 
 interface RestrictionsCardProps {
   programId: string;
+  allProgramIds?: string[];
 }
 
-export function RestrictionsCard({ programId }: RestrictionsCardProps) {
-  const { data: restrictions = [] } = useAffiliateProgramRestrictions(programId);
+export function RestrictionsCard({ programId, allProgramIds }: RestrictionsCardProps) {
+  const { data: restrictions = [] } = useAffiliateProgramRestrictions(programId, allProgramIds);
   const createRestriction = useCreateRestriction();
   const deleteRestriction = useDeleteRestriction();
   const [dialogOpen, setDialogOpen] = useState(false);

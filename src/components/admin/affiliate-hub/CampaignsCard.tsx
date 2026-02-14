@@ -15,10 +15,12 @@ import type { AffiliateCampaign } from "@/types/affiliate";
 
 interface CampaignsCardProps {
   programId: string;
+  brandName?: string;
+  allProgramIds?: string[];
 }
 
-export function CampaignsCard({ programId }: CampaignsCardProps) {
-  const { data: campaigns = [] } = useAffiliateCampaigns(programId);
+export function CampaignsCard({ programId, brandName, allProgramIds }: CampaignsCardProps) {
+  const { data: campaigns = [] } = useAffiliateCampaigns(programId, allProgramIds);
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -88,19 +90,32 @@ export function CampaignsCard({ programId }: CampaignsCardProps) {
             return (
               <div key={c.id} className="rounded-md border border-border p-3 space-y-1">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-foreground">{c.campaign_name}</span>
                     {c.campaign_type && <Badge variant="outline" className="text-xs">{c.campaign_type}</Badge>}
+                    {c.deal_scope && <Badge variant="outline" className="text-xs bg-muted/50">{c.deal_scope}</Badge>}
                     <Badge variant="outline" className={status.class}>{status.label}</Badge>
+                    {c.region_specific && (
+                      <Badge variant="outline" className="text-[10px] bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                        {c.region_specific} only
+                      </Badge>
+                    )}
                   </div>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(c)}>
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
                 </div>
                 {c.campaign_description && <p className="text-sm text-muted-foreground">{c.campaign_description}</p>}
-                <div className="text-xs text-muted-foreground">
-                  {c.start_date ? new Date(c.start_date).toLocaleDateString() : "—"} → {c.end_date ? new Date(c.end_date).toLocaleDateString() : "Ongoing"}
-                  {c.creative_asset_count != null && ` · ${c.creative_asset_count} assets`}
+                <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                  <span>
+                    {c.start_date ? new Date(c.start_date).toLocaleDateString() : "—"} → {c.end_date ? new Date(c.end_date).toLocaleDateString() : "Ongoing"}
+                  </span>
+                  {c.creative_asset_count != null && <span>· {c.creative_asset_count} assets</span>}
+                  {c.target_audience && (
+                    <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">
+                      {c.target_audience}
+                    </Badge>
+                  )}
                 </div>
               </div>
             );

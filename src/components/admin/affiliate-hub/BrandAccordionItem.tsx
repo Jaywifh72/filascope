@@ -34,6 +34,9 @@ export function BrandAccordionItem({ brandName, programs }: BrandAccordionItemPr
     ? "bg-green-500"
     : "bg-muted-foreground";
 
+  // Collect all program IDs for cross-region data fetching
+  const allProgramIds = programs.map((p) => p.id);
+
   const openEdit = (p: AffiliateProgram) => {
     setEditingProgram(p);
     setEditDialogOpen(true);
@@ -75,9 +78,9 @@ export function BrandAccordionItem({ brandName, programs }: BrandAccordionItemPr
               <TabsContent key={p.region_code} value={p.region_code} className="space-y-4 mt-0">
                 <ProgramOverviewCard program={p} onEdit={() => openEdit(p)} />
                 <LinkGeneratorCard program={p} />
-                <DiscountCodesCard programId={p.id} />
-                <CampaignsCard programId={p.id} />
-                <RestrictionsCard programId={p.id} />
+                <DiscountCodesCard programId={p.id} brandName={brandName} allProgramIds={allProgramIds} />
+                <CampaignsCard programId={p.id} brandName={brandName} allProgramIds={allProgramIds} />
+                <RestrictionsCard programId={p.id} allProgramIds={allProgramIds} />
               </TabsContent>
             ))}
           </Tabs>

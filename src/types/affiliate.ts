@@ -30,6 +30,11 @@ export interface AffiliateProgram {
   commission_tiers: CommissionTier[] | any | null;
   source_parameter: string | null;
   source_value: string | null;
+  impact_campaign_id: string | null;
+  impact_media_partner_id: string | null;
+  tracking_domain: string | null;
+  default_tracking_link: string | null;
+  link_generation_method: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -60,6 +65,9 @@ export interface AffiliateDiscountCode {
   valid_until: string | null;
   is_active: boolean | null;
   posting_restrictions: string | null;
+  tracking_link: string | null;
+  scope: string | null;
+  coupon_source: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -78,6 +86,9 @@ export interface AffiliateCampaign {
   creative_asset_count: number | null;
   creative_assets_location: string | null;
   notes: string | null;
+  deal_scope: string | null;
+  target_audience: string | null;
+  region_specific: string | null;
   created_at: string | null;
   updated_at: string | null;
 }

@@ -7,13 +7,34 @@ const corsHeaders = {
 };
 
 function buildAffiliateUrl(
-  linkTemplate: string,
-  storeBaseUrl: string,
-  trackingValue: string,
+  program: Record<string, unknown>,
   path: string,
-  sourceValue?: string | null,
   utmCampaign?: string
 ): string {
+  const linkGenerationMethod = program.link_generation_method as string | null;
+  const defaultTrackingLink = program.default_tracking_link as string | null;
+  const sourceParameter = program.source_parameter as string | null;
+  const sourceValue = program.source_value as string | null;
+
+  // For redirect_link programs, return the default tracking link directly
+  if (linkGenerationMethod === "redirect_link" && defaultTrackingLink) {
+    let url = defaultTrackingLink;
+    const separator = url.includes("?") ? "&" : "?";
+    url += `${separator}utm_source=filascope&utm_medium=affiliate`;
+    if (sourceParameter && sourceValue) {
+      url += `&${sourceParameter}=${encodeURIComponent(sourceValue)}`;
+    }
+    if (utmCampaign) {
+      url += `&utm_campaign=${encodeURIComponent(utmCampaign)}`;
+    }
+    return url;
+  }
+
+  // URL parameter mode
+  const linkTemplate = program.link_template as string;
+  const storeBaseUrl = program.store_base_url as string;
+  const trackingValue = (program.tracking_value as string) || "";
+
   let url = linkTemplate
     .replace("{store_url}", storeBaseUrl)
     .replace("{path}", path)
@@ -89,14 +110,7 @@ Deno.serve(async (req) => {
     }
 
     // Build affiliate URL
-    const affiliateUrl = buildAffiliateUrl(
-      program.link_template,
-      program.store_base_url,
-      program.tracking_value,
-      path,
-      program.source_value,
-      utm_campaign
-    );
+    const affiliateUrl = buildAffiliateUrl(program, path, utm_campaign);
 
     // Log click
     const clickData = {
