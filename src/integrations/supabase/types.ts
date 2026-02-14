@@ -8314,6 +8314,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_price_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          currency: string | null
+          current_db_price: number | null
+          filament_id: string
+          id: string
+          reported_price: number
+          reporter_email: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_description: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          currency?: string | null
+          current_db_price?: number | null
+          filament_id: string
+          id?: string
+          reported_price: number
+          reporter_email?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_description?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          currency?: string | null
+          current_db_price?: number | null
+          filament_id?: string
+          id?: string
+          reported_price?: number
+          reporter_email?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_description?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       user_printer_preferences: {
         Row: {
           auto_filter: boolean | null
