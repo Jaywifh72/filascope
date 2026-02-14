@@ -2,7 +2,7 @@
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
-import { BreadcrumbSchema, FAQSchema, DefinedTermSetSchema } from "@/components/seo";
+import { BreadcrumbSchema, FAQSchema, DefinedTermSetSchema, WebApplicationSchema } from "@/components/seo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -445,6 +445,13 @@ const Compare = () => {
           : [{ name: 'Compare', url: 'https://filascope.com/compare' }]
         ),
       ]} />
+      <WebApplicationSchema
+        name="FilaScope Filament Comparison Tool"
+        url="https://filascope.com/compare"
+        applicationCategory="Utility"
+        description="Compare 3D printer filaments side by side. Specs, prices, TD values, and printer compatibility."
+        offers={{ price: "0", priceCurrency: "USD" }}
+      />
       {isReferenceTab && (
         <>
           <DefinedTermSetSchema

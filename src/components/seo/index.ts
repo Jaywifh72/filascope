@@ -9,6 +9,7 @@ export { BreadcrumbSchema } from './BreadcrumbSchema';
 export { OrganizationSchema } from './OrganizationSchema';
 export { CanonicalLink } from './CanonicalLink';
 export { SoftwareApplicationSchema } from './SoftwareApplicationSchema';
+export { WebApplicationSchema } from './WebApplicationSchema';
 export { BrandOrganizationSchema } from './BrandOrganizationSchema';
 export { ArticleSchema } from './ArticleSchema';
 export { DefinedTermSetSchema } from './DefinedTermSetSchema';
