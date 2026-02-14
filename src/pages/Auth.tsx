@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome, Eye, EyeOff } from "lucide-react";
+import { Chrome, Eye, EyeOff, Apple } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -118,6 +118,21 @@ const Auth = () => {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    try {
+      const { error } = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign in with Apple",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md p-8 bg-card border-border">
@@ -134,15 +149,26 @@ const Auth = () => {
           </p>
         </div>
 
-        <Button
-          onClick={handleGoogleSignIn}
-          className="w-full mb-6"
-          size="lg"
-          variant="outline"
-        >
-          <Chrome className="mr-2 h-5 w-5" />
-          Continue with Google
-        </Button>
+        <div className="flex flex-col gap-3 mb-6">
+          <Button
+            onClick={handleGoogleSignIn}
+            className="w-full"
+            size="lg"
+            variant="outline"
+          >
+            <Chrome className="mr-2 h-5 w-5" />
+            Continue with Google
+          </Button>
+          <Button
+            onClick={handleAppleSignIn}
+            className="w-full"
+            size="lg"
+            variant="outline"
+          >
+            <Apple className="mr-2 h-5 w-5" />
+            Continue with Apple
+          </Button>
+        </div>
 
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
