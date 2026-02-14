@@ -947,6 +947,14 @@ const Finder = () => {
         <meta name="description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
         <meta property="og:title" content="FilaScope — Compare 3D Printer Filaments, Specs & Prices" />
         <meta property="og:description" content={`Compare ${unfilteredProductCount || filamentCount || '1000'}+ 3D printer filaments from ${unfilteredBrandCount || '45'}+ brands with specs, regional pricing, and transmissivity data for HueForge. Find your perfect filament.`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://filascope.com" />
+        <meta property="og:image" content="https://filascope.com/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="FilaScope - 3D Printer Filament Database" />
+        <meta property="twitter:image" content="https://filascope.com/og-image.png" />
+        <meta property="twitter:image:alt" content="FilaScope - 3D Printer Filament Database" />
       </Helmet>
       {/* JSON-LD Structured Data for Homepage */}
       <WebSiteSchema />
