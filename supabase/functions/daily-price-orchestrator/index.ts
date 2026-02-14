@@ -5,29 +5,113 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Priority tiers for brand syncing
-const TIER_1_BRANDS = ['bambu-lab', 'polymaker', 'prusament', 'esun', 'overture', 'elegoo', 'creality', 'anycubic'];
-const TIER_2_BRANDS = ['sunlu', 'eryone', 'hatchbox', 'colorfabb', 'fillamentum'];
-// Tier 3 = all remaining brands with regional domains
+// ═══════════════════════════════════════════════════════════════════════════
+// BRAND CONFIGURATION
+// Two sync paths:
+//   1. Regional brands → calls sync-regional-prices (multi-region price scraping)
+//   2. Brand-specific brands → calls sync-{slug}-products (dedicated scraper)
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface BrandEntry {
+  slug: string;
+  syncType: 'regional' | 'brand-specific';
+  tier: 1 | 2 | 3;
+  // For brand-specific: the edge function slug (may differ from brand slug)
+  functionSlug?: string;
+}
+
+// Slug → edge function name mapping (when they differ from brand slug)
+const SLUG_TO_FUNCTION: Record<string, string> = {
+  '3d-fuel': '3dfuel',
+  'atomic-filament': 'atomic',
+  'bambu-lab': 'bambulab',
+  'proto-pasta': 'protopasta',
+  'push-plastic': 'pushplastic',
+  'siraya-tech': 'sirayatech',
+  'duramic-3d': 'duramic',
+  'paramount-3d': 'paramount',
+  'ic3d-printers': 'ic3d',
+  'treed-filaments': 'treed',
+  'spectrum-filaments': 'spectrum',
+  'gizmo-dorks': 'gizmodorks',
+  'elegoo': 'elegoo-ca',
+  'fusion-filaments': 'fusion-filaments',
+};
+
+function getFunctionSlug(brandSlug: string): string {
+  return SLUG_TO_FUNCTION[brandSlug] || brandSlug;
+}
+
+// All brands the orchestrator manages
+const ALL_BRANDS: BrandEntry[] = [
+  // ── TIER 1: Daily sync (major brands) ────────────────────────────────
+  // Regional brands (multi-store, uses sync-regional-prices)
+  { slug: 'bambu-lab',    syncType: 'regional', tier: 1 },
+  { slug: 'polymaker',    syncType: 'regional', tier: 1 },
+  { slug: 'elegoo',       syncType: 'regional', tier: 1 },
+  { slug: 'creality',     syncType: 'regional', tier: 1 },
+  { slug: 'anycubic',     syncType: 'regional', tier: 1 },
+  // Brand-specific Tier 1
+  { slug: 'esun',         syncType: 'brand-specific', tier: 1 },
+  { slug: 'prusament',    syncType: 'brand-specific', tier: 1 },
+  { slug: 'overture',     syncType: 'brand-specific', tier: 1 },
+
+  // ── TIER 2: Every 3 days ─────────────────────────────────────────────
+  // Regional brands
+  { slug: 'sunlu',        syncType: 'regional', tier: 2 },
+  { slug: 'eryone',       syncType: 'regional', tier: 2 },
+  { slug: 'jayo',         syncType: 'regional', tier: 2 },
+  { slug: 'kingroon',     syncType: 'regional', tier: 2 },
+  { slug: 'sovol',        syncType: 'regional', tier: 2 },
+  // Brand-specific Tier 2
+  { slug: 'hatchbox',     syncType: 'brand-specific', tier: 2 },
+  { slug: 'colorfabb',    syncType: 'brand-specific', tier: 2 },
+  { slug: 'fillamentum',  syncType: 'brand-specific', tier: 2 },
+  { slug: 'atomic-filament', syncType: 'brand-specific', tier: 2 },
+  { slug: 'proto-pasta',  syncType: 'brand-specific', tier: 2 },
+  { slug: 'ninjatek',     syncType: 'brand-specific', tier: 2 },
+
+  // ── TIER 3: Weekly ───────────────────────────────────────────────────
+  // Regional brands
+  { slug: 'qidi',         syncType: 'regional', tier: 3 },
+  { slug: 'flashforge',   syncType: 'regional', tier: 3 },
+  { slug: 'artillery',    syncType: 'regional', tier: 3 },
+  { slug: 'longer',       syncType: 'regional', tier: 3 },
+  { slug: 'two-trees',    syncType: 'regional', tier: 3 },
+  { slug: 'geeetech',     syncType: 'regional', tier: 3 },
+  { slug: 'voxelab',      syncType: 'regional', tier: 3 },
+  // Brand-specific Tier 3
+  { slug: '3d-fuel',      syncType: 'brand-specific', tier: 3 },
+  { slug: '3dhojor',      syncType: 'brand-specific', tier: 3 },
+  { slug: '3dxtech',      syncType: 'brand-specific', tier: 3 },
+  { slug: 'amolen',       syncType: 'brand-specific', tier: 3 },
+  { slug: 'azurefilm',    syncType: 'brand-specific', tier: 3 },
+  { slug: 'duramic-3d',   syncType: 'brand-specific', tier: 3 },
+  { slug: 'extrudr',      syncType: 'brand-specific', tier: 3 },
+  { slug: 'fiberlogy',    syncType: 'brand-specific', tier: 3 },
+  { slug: 'formfutura',   syncType: 'brand-specific', tier: 3 },
+  { slug: 'fusion-filaments', syncType: 'brand-specific', tier: 3 },
+  { slug: 'gizmo-dorks',  syncType: 'brand-specific', tier: 3 },
+  { slug: 'ic3d-printers', syncType: 'brand-specific', tier: 3 },
+  { slug: 'matter3d',     syncType: 'brand-specific', tier: 3 },
+  { slug: 'numakers',     syncType: 'brand-specific', tier: 3 },
+  { slug: 'paramount-3d', syncType: 'brand-specific', tier: 3 },
+  { slug: 'push-plastic', syncType: 'brand-specific', tier: 3 },
+  { slug: 'recreus',      syncType: 'brand-specific', tier: 3 },
+  { slug: 'siraya-tech',  syncType: 'brand-specific', tier: 3 },
+  { slug: 'spectrum-filaments', syncType: 'brand-specific', tier: 3 },
+  { slug: 'treed-filaments', syncType: 'brand-specific', tier: 3 },
+  { slug: 'ultimaker',    syncType: 'brand-specific', tier: 3 },
+  { slug: 'voxelpla',     syncType: 'brand-specific', tier: 3 },
+  { slug: 'yousu',        syncType: 'brand-specific', tier: 3 },
+  { slug: 'ziro',         syncType: 'brand-specific', tier: 3 },
+];
 
 const TIER_FREQUENCY_HOURS: Record<number, number> = {
   1: 24,      // daily
   2: 72,      // every 3 days
   3: 168,     // weekly
 };
-
-// All brands with regional domains (from sync-regional-prices BRAND_REGIONAL_DOMAINS)
-const ALL_REGIONAL_BRANDS = [
-  'bambu-lab', 'elegoo', 'polymaker', 'creality', 'anycubic', 'qidi', 'flashforge',
-  'sunlu', 'eryone', 'jayo', 'kingroon', 'sovol', 'artillery', 'longer',
-  'two-trees', 'geeetech', 'voxelab'
-];
-
-function getBrandTier(brandSlug: string): number {
-  if (TIER_1_BRANDS.includes(brandSlug)) return 1;
-  if (TIER_2_BRANDS.includes(brandSlug)) return 2;
-  return 3;
-}
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -94,7 +178,6 @@ Deno.serve(async (req) => {
       const startedAt = new Date(runningRun.started_at);
       const minutesRunning = (Date.now() - startedAt.getTime()) / 60000;
       
-      // If running for less than 30 minutes, reject
       if (minutesRunning < 30) {
         return new Response(JSON.stringify({ 
           error: 'Orchestration already running', 
@@ -113,36 +196,39 @@ Deno.serve(async (req) => {
     }
 
     // Determine eligible brands based on tier frequency
-    const eligibleBrands: string[] = [];
+    const eligibleBrands: BrandEntry[] = [];
     
-    for (const brandSlug of ALL_REGIONAL_BRANDS) {
-      const tier = getBrandTier(brandSlug);
-      const frequencyHours = TIER_FREQUENCY_HOURS[tier];
+    for (const brand of ALL_BRANDS) {
+      const frequencyHours = TIER_FREQUENCY_HOURS[brand.tier];
+      
+      // Determine sync_type filter for brand_sync_logs
+      const syncTypeFilter = brand.syncType === 'regional' ? 'regional_prices' : 'clean_slate';
       
       // Check last sync time from brand_sync_logs
       const { data: lastSync } = await supabase
         .from('brand_sync_logs')
         .select('completed_at')
-        .eq('brand_slug', brandSlug)
-        .eq('sync_type', 'regional_prices')
+        .eq('brand_slug', brand.slug)
         .in('status', ['completed', 'partial'])
         .order('completed_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       
       if (!lastSync?.completed_at) {
-        eligibleBrands.push(brandSlug);
+        eligibleBrands.push(brand);
         continue;
       }
       
       const hoursSinceSync = (Date.now() - new Date(lastSync.completed_at).getTime()) / 3600000;
       if (hoursSinceSync >= frequencyHours) {
-        eligibleBrands.push(brandSlug);
+        eligibleBrands.push(brand);
       }
     }
 
     // Sort: Tier 1 first, then Tier 2, then Tier 3
-    eligibleBrands.sort((a, b) => getBrandTier(a) - getBrandTier(b));
+    eligibleBrands.sort((a, b) => a.tier - b.tier);
+
+    console.log(`[ORCHESTRATOR] Eligible brands: ${eligibleBrands.length} (${eligibleBrands.filter(b => b.syncType === 'regional').length} regional, ${eligibleBrands.filter(b => b.syncType === 'brand-specific').length} brand-specific)`);
 
     // Create orchestration run record
     const { data: run, error: runError } = await supabase
@@ -171,37 +257,68 @@ Deno.serve(async (req) => {
       let totalProductsUpdated = 0;
       const brandResults: Record<string, unknown> = {};
 
-      for (const brandSlug of eligibleBrands) {
+      for (const brand of eligibleBrands) {
+        const { slug, syncType } = brand;
+        
         try {
-          // Call sync-regional-prices for this brand
-          const syncUrl = `${supabaseUrl}/functions/v1/sync-regional-prices`;
-          const syncResponse = await fetch(syncUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${anonKey}`,
-            },
-            body: JSON.stringify({
-              brandSlug,
-              regions: ['US', 'CA', 'EU', 'UK', 'AU'],
-              dryRun: false,
-            }),
-          });
+          let syncResponse: Response;
+          
+          if (syncType === 'regional') {
+            // ── Path 1: Regional price sync (multi-store brands) ──────
+            const syncUrl = `${supabaseUrl}/functions/v1/sync-regional-prices`;
+            console.log(`[ORCHESTRATOR] Syncing ${slug} via sync-regional-prices`);
+            syncResponse = await fetch(syncUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${anonKey}`,
+              },
+              body: JSON.stringify({
+                brandSlug: slug,
+                regions: ['US', 'CA', 'EU', 'UK', 'AU'],
+                dryRun: false,
+              }),
+            });
+          } else {
+            // ── Path 2: Brand-specific sync function ──────────────────
+            const functionSlug = getFunctionSlug(slug);
+            const functionName = `sync-${functionSlug}-products`;
+            const syncUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+            console.log(`[ORCHESTRATOR] Syncing ${slug} via ${functionName}`);
+            syncResponse = await fetch(syncUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${serviceRoleKey}`,
+              },
+              body: JSON.stringify({
+                dryRun: false,
+                triggeredBy: 'orchestrator',
+              }),
+            });
+          }
 
           const syncResult = await syncResponse.json().catch(() => null);
           
           if (syncResponse.ok) {
             brandsSynced++;
-            const updated = syncResult?.summary?.totalUpdated || syncResult?.totalUpdated || 0;
+            const updated = syncResult?.summary?.totalUpdated 
+              || syncResult?.totalUpdated 
+              || syncResult?.stats?.updated 
+              || syncResult?.updated
+              || 0;
             totalProductsUpdated += updated;
-            brandResults[brandSlug] = { status: 'success', productsUpdated: updated };
+            brandResults[slug] = { status: 'success', syncType, productsUpdated: updated };
+            console.log(`[ORCHESTRATOR] ✅ ${slug} synced (${updated} updated)`);
           } else {
-            brandsFailed.push(brandSlug);
-            brandResults[brandSlug] = { status: 'failed', error: syncResult?.error || syncResponse.statusText };
+            brandsFailed.push(slug);
+            brandResults[slug] = { status: 'failed', syncType, error: syncResult?.error || syncResponse.statusText };
+            console.error(`[ORCHESTRATOR] ❌ ${slug} failed: ${syncResult?.error || syncResponse.statusText}`);
           }
         } catch (err) {
-          brandsFailed.push(brandSlug);
-          brandResults[brandSlug] = { status: 'error', error: String(err) };
+          brandsFailed.push(slug);
+          brandResults[slug] = { status: 'error', syncType, error: String(err) };
+          console.error(`[ORCHESTRATOR] ❌ ${slug} error: ${err}`);
         }
 
         // Update progress in DB
@@ -215,7 +332,7 @@ Deno.serve(async (req) => {
           .eq('id', runId);
 
         // Rate limiting: wait 3 seconds between brands
-        if (brandSlug !== eligibleBrands[eligibleBrands.length - 1]) {
+        if (brand !== eligibleBrands[eligibleBrands.length - 1]) {
           await sleep(3000);
         }
       }
@@ -228,8 +345,9 @@ Deno.serve(async (req) => {
           : 'partial';
 
       const completedAt = new Date().toISOString();
-      const startedAt = new Date(run.started_at || Date.now());
-      const durationSeconds = (Date.now() - startedAt.getTime()) / 1000;
+      const durationSeconds = (Date.now() - Date.now()) / 1000; // will be recalculated below
+      const runStartTime = run.started_at ? new Date(run.started_at).getTime() : Date.now();
+      const actualDuration = (Date.now() - runStartTime) / 1000;
 
       // Update final status
       await supabase
@@ -241,24 +359,27 @@ Deno.serve(async (req) => {
           brands_failed: brandsFailed,
           total_products_updated: totalProductsUpdated,
           summary: {
-            duration_seconds: Math.round(durationSeconds),
+            duration_seconds: Math.round(actualDuration),
             eligible_brands: eligibleBrands.length,
+            regional_brands: eligibleBrands.filter(b => b.syncType === 'regional').length,
+            brand_specific_brands: eligibleBrands.filter(b => b.syncType === 'brand-specific').length,
             brand_results: brandResults,
             tier_breakdown: {
-              tier1: eligibleBrands.filter(b => getBrandTier(b) === 1).length,
-              tier2: eligibleBrands.filter(b => getBrandTier(b) === 2).length,
-              tier3: eligibleBrands.filter(b => getBrandTier(b) === 3).length,
+              tier1: eligibleBrands.filter(b => b.tier === 1).length,
+              tier2: eligibleBrands.filter(b => b.tier === 2).length,
+              tier3: eligibleBrands.filter(b => b.tier === 3).length,
             }
           },
         })
         .eq('id', runId);
+      
+      console.log(`[ORCHESTRATOR] ═══ Complete: ${brandsSynced} synced, ${brandsFailed.length} failed, ${totalProductsUpdated} products updated ═══`);
     };
 
     // Use EdgeRuntime.waitUntil if available, otherwise run inline
     if (typeof (globalThis as any).EdgeRuntime !== 'undefined' && (globalThis as any).EdgeRuntime.waitUntil) {
       (globalThis as any).EdgeRuntime.waitUntil(backgroundWork());
     } else {
-      // Fallback: run in background without blocking response
       backgroundWork().catch(console.error);
     }
 
@@ -266,8 +387,9 @@ Deno.serve(async (req) => {
       success: true, 
       runId,
       eligibleBrands: eligibleBrands.length,
-      brands: eligibleBrands,
-      message: `Orchestration started. Processing ${eligibleBrands.length} brands.`
+      regionalBrands: eligibleBrands.filter(b => b.syncType === 'regional').map(b => b.slug),
+      brandSpecificBrands: eligibleBrands.filter(b => b.syncType === 'brand-specific').map(b => b.slug),
+      message: `Orchestration started. Processing ${eligibleBrands.length} brands (${eligibleBrands.filter(b => b.syncType === 'regional').length} regional, ${eligibleBrands.filter(b => b.syncType === 'brand-specific').length} brand-specific).`
     }), { 
       status: 200, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
