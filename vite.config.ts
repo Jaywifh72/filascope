@@ -63,6 +63,8 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
+        // Ensure OAuth callback is never cached by the service worker
+        navigateFallbackDenylist: [/^\/~oauth/],
         // Cache strategies for different resource types
         runtimeCaching: [
           {
