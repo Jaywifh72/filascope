@@ -3818,6 +3818,51 @@ export type Database = {
         }
         Relationships: []
       }
+      orchestration_runs: {
+        Row: {
+          brands_failed: string[]
+          brands_synced: number
+          brands_total: number
+          completed_at: string | null
+          error_log: Json | null
+          id: string
+          started_at: string
+          status: string
+          summary: Json | null
+          total_products_updated: number
+          trigger_type: string
+          triggered_by_user: string | null
+        }
+        Insert: {
+          brands_failed?: string[]
+          brands_synced?: number
+          brands_total?: number
+          completed_at?: string | null
+          error_log?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          total_products_updated?: number
+          trigger_type?: string
+          triggered_by_user?: string | null
+        }
+        Update: {
+          brands_failed?: string[]
+          brands_synced?: number
+          brands_total?: number
+          completed_at?: string | null
+          error_log?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          total_products_updated?: number
+          trigger_type?: string
+          triggered_by_user?: string | null
+        }
+        Relationships: []
+      }
       performance_metrics: {
         Row: {
           connection_type: string | null
