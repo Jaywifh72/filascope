@@ -28,6 +28,7 @@ import {
   Link2Off,
   MapPin,
   Clock,
+  Handshake,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -124,6 +125,7 @@ const navGroups: NavGroup[] = [
     items: [
       { title: 'Users', href: '/old-admin/users', icon: Users },
       { title: 'Affiliates', href: '/old-admin/affiliates', icon: DollarSign },
+      { title: 'Affiliate Hub', href: '/old-admin/affiliate-hub', icon: Handshake },
       { title: 'Maintenance', href: '/old-admin/maintenance', icon: AlertTriangle },
       { title: 'Site Settings', href: '/old-admin/site-settings', icon: Settings },
       { title: 'Docs', href: '/old-admin/docs', icon: BookOpen },
