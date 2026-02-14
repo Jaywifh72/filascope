@@ -31,6 +31,13 @@ import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton"
 import { RegionWelcomeBanner } from "./components/RegionWelcomeBanner";
 import { CanonicalLink } from "./components/seo/CanonicalLink";
 import { HreflangTags } from "./components/seo/HreflangTags";
+import { useSchemaValidator } from "./hooks/useSchemaValidator";
+
+// Dev-only schema validation runner (tree-shaken in production)
+function SchemaValidatorRunner() {
+  useSchemaValidator();
+  return null;
+}
 
 // Lazy-load heavy global overlays that aren't needed at initial render
 const CompareTray = lazy(() => import("./components/CompareTray").then(m => ({ default: m.CompareTray })));
@@ -175,6 +182,7 @@ const App = () => (
                 <CanonicalLink />
                 {/* SEO: hreflang for multi-region international SEO */}
                 <HreflangTags />
+                <SchemaValidatorRunner />
                 <GlobalKeyboardHandler>
                 {/* WCAG 2.1 AA: Skip to main content link */}
                 <SkipLink />
