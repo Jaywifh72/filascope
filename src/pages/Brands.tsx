@@ -379,6 +379,8 @@ const Brands = () => {
         <meta name="description" content={`Compare ${brandCount || 48}+ 3D filament brands. Browse manufacturers like Bambu Lab, Polymaker, eSUN & more. Prices, material ranges, reviews & verified partner status.`} />
         <meta property="og:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
         <meta property="og:description" content={`Compare ${brandCount || 48}+ 3D filament brands. Browse manufacturers like Bambu Lab, Polymaker, eSUN & more. Prices, material ranges, reviews & verified partner status.`} />
+        <meta name="twitter:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
+        <meta name="twitter:description" content={`Compare ${brandCount || 48}+ 3D filament brands. Browse manufacturers like Bambu Lab, Polymaker, eSUN & more. Prices, material ranges, reviews & verified partner status.`} />
       </Helmet>
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
