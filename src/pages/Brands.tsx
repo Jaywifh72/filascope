@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, Clock, Sparkles, GitCompare, ShieldCheck, Zap, Package, Layers } from "lucide-react";
@@ -374,15 +374,14 @@ const Brands = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}</title>
-        <meta name="title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
-        <meta name="description" content={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`} />
-        <meta property="og:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
-        <meta property="og:description" content={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`} />
-        <meta name="twitter:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
-        <meta name="twitter:description" content={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`} />
-      </Helmet>
+      <DocumentHead
+        title={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}
+        description={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`}
+        ogTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}
+        ogDescription={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`}
+        twitterTitle={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}
+        twitterDescription={`Compare ${brandCount || 48}+ 3D filament brands side by side. Prices, materials, reviews & verified status for Bambu Lab, Polymaker, eSUN & more.`}
+      />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
         { name: 'Brands', url: 'https://filascope.com/brands' },

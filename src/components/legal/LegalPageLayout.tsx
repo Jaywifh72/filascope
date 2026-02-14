@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
@@ -17,10 +17,10 @@ export function LegalPageLayout({
 }: LegalPageLayoutProps) {
   return (
     <>
-      <Helmet>
-        <title>{title} | FilaScope</title>
-        <meta name="description" content={metaDescription} />
-      </Helmet>
+      <DocumentHead
+        title={`${title} | FilaScope`}
+        description={metaDescription}
+      />
       
       <div className="min-h-screen bg-background">
         {/* Hero gradient area */}

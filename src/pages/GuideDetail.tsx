@@ -13,7 +13,7 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Helmet } from 'react-helmet-async';
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { GUIDES, type GuideMetadata } from './LearningCenter';
 import { GuideRelatedProducts, GuideReadNext } from '@/components/guides/GuideComponents';
 import { BUYING_GUIDE_SLUGS } from '@/components/guides/guideConfigs';
@@ -205,14 +205,13 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      <Helmet>
-        <title>{`${guide.title} | FilaScope`}</title>
-        <meta name="description" content={guideDescription} />
-        <meta property="og:title" content={`${guide.title} | FilaScope`} />
-        <meta property="og:description" content={guideDescription} />
-        <meta property="og:type" content="article" />
-        
-      </Helmet>
+      <DocumentHead
+        title={`${guide.title} | FilaScope`}
+        description={guideDescription}
+        ogTitle={`${guide.title} | FilaScope`}
+        ogDescription={guideDescription}
+        ogType="article"
+      />
       <ArticleSchema
         headline={guide.title}
         description={guideDescription}

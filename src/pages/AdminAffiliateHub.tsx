@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,9 +31,7 @@ const AdminAffiliateHub = () => {
 
   return (
     <AdminLayout>
-      <Helmet>
-        <title>Affiliate Hub — Filascope Admin</title>
-      </Helmet>
+      <DocumentHead title="Affiliate Hub — Filascope Admin" />
       <div className="p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <AdminPageHeader

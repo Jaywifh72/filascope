@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,9 +50,7 @@ export default function RequestFeature() {
   if (submitted) {
     return (
       <>
-        <Helmet>
-          <title>Feature Requested | FilaScope</title>
-        </Helmet>
+        <DocumentHead title="Feature Requested | FilaScope" />
         <div className="min-h-screen bg-background flex items-center justify-center px-4">
           <div className="text-center max-w-md">
             <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
@@ -72,10 +70,10 @@ export default function RequestFeature() {
 
   return (
     <>
-      <Helmet>
-        <title>Request a Feature | FilaScope</title>
-        <meta name="description" content="Have an idea to improve FilaScope? Submit a feature request and help shape the future of the platform." />
-      </Helmet>
+      <DocumentHead
+        title="Request a Feature | FilaScope"
+        description="Have an idea to improve FilaScope? Submit a feature request and help shape the future of the platform."
+      />
       <div className="min-h-screen bg-background">
         <div className="max-w-xl mx-auto px-4 py-12 sm:py-16">
           <div className="text-center mb-8">

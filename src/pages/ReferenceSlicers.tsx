@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { ExternalLink, DollarSign, Monitor, FileCode, Wifi, Clock, Check, X, Star, BarChart3, ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Table, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -299,11 +299,11 @@ const ReferenceSlicers = () => {
 
   return (
     <SlicerComparisonProvider>
-      <Helmet>
-        <title>Slicer Guide — Compare 3D Printing Slicers | FilaScope</title>
-        <meta name="description" content="Compare 20 3D printing slicers with expert ratings across 15 features. Find your perfect slicer software — free and paid options reviewed." />
-        <meta property="og:description" content="Compare 20 3D printing slicers with expert ratings across 15 features. Find your perfect slicer software — free and paid options reviewed." />
-      </Helmet>
+      <DocumentHead
+        title="Slicer Guide — Compare 3D Printing Slicers | FilaScope"
+        description="Compare 20 3D printing slicers with expert ratings across 15 features. Find your perfect slicer software — free and paid options reviewed."
+        ogDescription="Compare 20 3D printing slicers with expert ratings across 15 features. Find your perfect slicer software — free and paid options reviewed."
+      />
       {/* SoftwareApplication JSON-LD for each slicer */}
       {Object.values(slicerTierData).map((slicer) => {
         const priceValue = slicer.priceType === 'paid' && slicer.priceValue

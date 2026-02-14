@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import type { Database } from "@/integrations/supabase/types";
 import { MatrixPrinterSelector } from "@/components/matrix/MatrixPrinterSelector";
 import { PopularPrinterCards, type PopularPrinter } from "@/components/matrix/PopularPrinterCards";
@@ -112,13 +112,10 @@ const Matrix = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Compatibility Matrix — FilaScope</title>
-        <meta
-          name="description"
-          content="Check which filaments are compatible with your 3D printer. Get recommended print settings for every material type."
-        />
-      </Helmet>
+      <DocumentHead
+        title="Compatibility Matrix — FilaScope"
+        description="Check which filaments are compatible with your 3D printer. Get recommended print settings for every material type."
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">

@@ -1,7 +1,7 @@
 // Filament comparison page
 import { MATERIAL_CATEGORIES } from "@/lib/materialHierarchy";
 import { useEffect, useState, useRef } from "react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { BreadcrumbSchema, FAQSchema, DefinedTermSetSchema, WebApplicationSchema } from "@/components/seo";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -432,12 +432,12 @@ const Compare = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-      </Helmet>
+      <DocumentHead
+        title={pageTitle}
+        description={pageDescription}
+        ogTitle={pageTitle}
+        ogDescription={pageDescription}
+      />
       <BreadcrumbSchema items={[
         { name: 'Home', url: 'https://filascope.com/' },
         ...(isReferenceTab

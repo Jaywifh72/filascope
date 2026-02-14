@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Rocket, ClipboardList, Lightbulb, CheckCircle2 } from "lucide-react";
 
 const categories = [
@@ -53,10 +53,10 @@ const categories = [
 export default function Roadmap() {
   return (
     <>
-      <Helmet>
-        <title>Feature Roadmap | FilaScope</title>
-        <meta name="description" content="See what's coming next on FilaScope. Our public roadmap shows features in progress, planned, and under consideration." />
-      </Helmet>
+      <DocumentHead
+        title="Feature Roadmap | FilaScope"
+        description="See what's coming next on FilaScope. Our public roadmap shows features in progress, planned, and under consideration."
+      />
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 py-12 sm:py-16">
           <div className="text-center mb-12">

@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Link } from "react-router-dom";
 import { AlertCircle, Clock, ArrowLeft, Wrench } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
@@ -46,10 +46,10 @@ const COMMON_ISSUES = [
 const GuideTroubleshooting = () => {
   return (
     <>
-      <Helmet>
-        <title>Troubleshooting Guide | FilaScope</title>
-        <meta name="description" content="Diagnose and fix common 3D printing problems. Solutions for stringing, warping, layer adhesion, and more." />
-      </Helmet>
+      <DocumentHead
+        title="Troubleshooting Guide | FilaScope"
+        description="Diagnose and fix common 3D printing problems. Solutions for stringing, warping, layer adhesion, and more."
+      />
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}

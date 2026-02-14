@@ -1,14 +1,14 @@
 import { Grid3X3 } from "lucide-react";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { FeatureComingSoon } from "@/components/FeatureComingSoon";
 
 const CompatibilityMatrix = () => (
   <>
-    <Helmet>
-      <title>Filament Compatibility Matrix | FilaScope</title>
-      <meta name="description" content="Check filament compatibility with your 3D printer. Select your printer model to see recommended materials, temperatures, and settings." />
-      <meta property="og:description" content="Check filament compatibility with your 3D printer. Select your printer model to see recommended materials, temperatures, and settings." />
-    </Helmet>
+    <DocumentHead
+      title="Filament Compatibility Matrix | FilaScope"
+      description="Check filament compatibility with your 3D printer. Select your printer model to see recommended materials, temperatures, and settings."
+      ogDescription="Check filament compatibility with your 3D printer. Select your printer model to see recommended materials, temperatures, and settings."
+    />
     <FeatureComingSoon
       featureName="Compatibility Matrix"
       description="Find which filaments work best with your printer — powered by real compatibility data and community testing."

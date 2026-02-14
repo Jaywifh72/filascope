@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import {
   Folder,
   Star,
@@ -145,10 +145,10 @@ export default function PublicCollection() {
 
   return (
     <>
-      <Helmet>
-        <title>{collection.name} by {profile.display_name || profile.username_slug} — FilaScope</title>
-        <meta name="description" content={`${collection.name}: ${items.length} filaments curated by ${profile.display_name || profile.username_slug}`} />
-      </Helmet>
+      <DocumentHead
+        title={`${collection.name} by ${profile.display_name || profile.username_slug} — FilaScope`}
+        description={`${collection.name}: ${items.length} filaments curated by ${profile.display_name || profile.username_slug}`}
+      />
 
       <div className="container mx-auto py-8 px-4 max-w-5xl">
         {/* Header */}

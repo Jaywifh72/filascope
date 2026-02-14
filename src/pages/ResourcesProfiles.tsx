@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from '@/components/seo/DocumentHead';
 import { Link } from "react-router-dom";
 import { FileText, Clock, ArrowLeft, Download, Layers, Printer, Package } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
@@ -14,10 +14,10 @@ const PLANNED_SLICERS = [
 const ResourcesProfiles = () => {
   return (
     <>
-      <Helmet>
-        <title>Print Profiles | FilaScope</title>
-        <meta name="description" content="Download optimized slicer profiles for popular 3D printers and materials. Ready-to-use profiles for Cura, PrusaSlicer, and more." />
-      </Helmet>
+      <DocumentHead
+        title="Print Profiles | FilaScope"
+        description="Download optimized slicer profiles for popular 3D printers and materials. Ready-to-use profiles for Cura, PrusaSlicer, and more."
+      />
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}

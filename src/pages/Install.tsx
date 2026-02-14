@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Download, Smartphone, Zap, WifiOff, Bell, Shield, Share, Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
@@ -36,13 +36,10 @@ const InstallPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Install FilaScope App | Offline Filament Database</title>
-        <meta
-          name="description"
-          content="Install the FilaScope app on your device for instant access to 3D printer filament data, even offline. Works on iPhone, Android, and desktop."
-        />
-      </Helmet>
+      <DocumentHead
+        title="Install FilaScope App | Offline Filament Database"
+        description="Install the FilaScope app on your device for instant access to 3D printer filament data, even offline. Works on iPhone, Android, and desktop."
+      />
 
       <div className="min-h-screen py-12 px-4">
         <div className="max-w-2xl mx-auto">

@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { DocumentHead } from "@/components/seo/DocumentHead";
 import { Link } from "react-router-dom";
 import { SlidersHorizontal, Clock, ArrowLeft, BookOpen } from "lucide-react";
 import SubscribeForUpdates from "@/components/SubscribeForUpdates";
@@ -16,10 +16,10 @@ const QUICK_REFERENCE_DATA = [
 const GuidePrintSettings = () => {
   return (
     <>
-      <Helmet>
-        <title>Print Settings Guide | FilaScope</title>
-        <meta name="description" content="Learn optimal print settings for different materials. Master layer height, print speed, temperature, and more." />
-      </Helmet>
+      <DocumentHead
+        title="Print Settings Guide | FilaScope"
+        description="Learn optimal print settings for different materials. Master layer height, print speed, temperature, and more."
+      />
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
