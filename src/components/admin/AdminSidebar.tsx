@@ -1,6 +1,7 @@
 import { useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
+  ShieldCheck,
   Users,
   Package,
   Printer,
@@ -77,6 +78,7 @@ const navGroups: NavGroup[] = [
     items: [
       { title: 'Data Health', href: '/old-admin/data-health', icon: Database },
       { title: 'Data Quality', href: '/old-admin/data-quality', icon: FileSearch },
+      { title: 'Quality Dashboard', href: '/old-admin/data-quality-dashboard', icon: ShieldCheck },
       { title: 'Price Extraction', href: '/old-admin/brand-extraction', icon: Wrench },
       { title: 'Price Verification', href: '/old-admin/price-verification', icon: DollarSign },
       { title: 'Field Coverage', href: '/old-admin/field-coverage', icon: BarChart3 },
