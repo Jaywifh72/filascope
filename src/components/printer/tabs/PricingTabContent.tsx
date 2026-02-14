@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { PrinterPriceChart } from '@/components/PrinterPriceChart';
 import { useRegion } from '@/contexts/RegionContext';
 import { useAffiliateLinks } from '@/hooks/useAffiliateLinks';
+import { useAffiliateLink } from '@/hooks/useAffiliateLink';
 import { useRegionalPriceV2 } from '@/hooks/useRegionalPriceV2';
 import { REGIONS } from '@/config/regions';
 import { formatPrice as formatCurrencyPrice } from '@/config/currencies';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CurrencyCode } from '@/types/regional';
 import { interpolateProductUrl } from '@/utils/regionalStoreUtils';
+import { AffiliateDisclosure } from '@/components/affiliate/AffiliateDisclosure';
 
 interface PricingTabContentProps {
   printer: any;
@@ -97,6 +99,7 @@ export function PricingTabContent({
 }: PricingTabContentProps) {
   const { formatPrice, currency, region, getConversionRate } = useRegion();
   const { getAffiliateUrl, getAmazonUrl } = useAffiliateLinks();
+  const { trackAndOpen, hasAffiliate } = useAffiliateLink(brand);
 
   // Fetch regional stores for this brand
   const { 
@@ -557,7 +560,13 @@ export function PricingTabContent({
                         ? "bg-primary/5 border-primary/20 hover:bg-primary/10" 
                         : "bg-muted/20 border-border hover:bg-muted/40"
                     )}
-                    onClick={() => window.open(storeUrl, '_blank')}
+                    onClick={() => {
+                      if (hasAffiliate) {
+                        trackAndOpen(storeUrl, { productName: printer.model_name || printer.display_name, sourceComponent: 'printer_regional_store' });
+                      } else {
+                        window.open(storeUrl, '_blank');
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       {/* Store Region Flag */}
@@ -616,7 +625,11 @@ export function PricingTabContent({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          window.open(storeUrl, '_blank');
+                          if (hasAffiliate) {
+                            trackAndOpen(storeUrl, { productName: printer.model_name || printer.display_name, sourceComponent: 'printer_regional_store_visit' });
+                          } else {
+                            window.open(storeUrl, '_blank');
+                          }
                         }}
                       >
                         Visit
@@ -665,6 +678,9 @@ export function PricingTabContent({
           </div>
         )}
       </section>
+
+      {/* Affiliate Disclosure */}
+      {hasAffiliate && <AffiliateDisclosure className="mt-4" />}
     </div>
   );
 }

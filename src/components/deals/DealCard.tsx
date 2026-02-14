@@ -11,6 +11,7 @@ import { RegionalPrice, RegionalPricePair } from "@/components/price/RegionalPri
 import { StorePriceBadge } from "@/components/price/StorePriceDisplay";
 import { useRegion } from "@/contexts/RegionContext";
 import { useAffiliateLinks } from "@/hooks/useAffiliateLinks";
+import { useAffiliateLink } from "@/hooks/useAffiliateLink";
 import { formatDistanceToNow } from "date-fns";
 import type { CurrencyCode } from "@/types/regional";
 
@@ -57,6 +58,7 @@ export function DealCard({
 }: DealCardProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const { getAffiliateUrl } = useAffiliateLinks();
+  const { trackAndOpen, hasAffiliate } = useAffiliateLink(deal.vendor);
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -69,7 +71,15 @@ export function DealCard({
     e.stopPropagation();
     if (deal.product_url) {
       const affiliateUrl = getAffiliateUrl(deal.product_url, deal.vendor);
-      window.open(affiliateUrl || deal.product_url, '_blank', 'noopener,noreferrer');
+      const finalUrl = affiliateUrl || deal.product_url;
+      if (hasAffiliate) {
+        trackAndOpen(finalUrl, {
+          productName: deal.product_title,
+          sourceComponent: 'deal_card',
+        });
+      } else {
+        window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
