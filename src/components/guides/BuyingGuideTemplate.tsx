@@ -85,9 +85,15 @@ export function BuyingGuideTemplate({ config }: BuyingGuideTemplateProps) {
         <title>{config.seoTitle}</title>
         <meta name="description" content={config.seoDescription} />
         <meta name="keywords" content={config.keywords.join(', ')} />
+        <link rel="canonical" href={`https://filascope.com/guides/${config.slug}`} />
         <meta property="og:title" content={config.seoTitle} />
         <meta property="og:description" content={config.seoDescription} />
+        <meta property="og:url" content={`https://filascope.com/guides/${config.slug}`} />
         <meta property="og:type" content="article" />
+        <meta property="og:image" content="https://filascope.com/og-image.png" />
+        <meta name="twitter:title" content={config.seoTitle} />
+        <meta name="twitter:description" content={config.seoDescription} />
+        <meta name="twitter:image" content="https://filascope.com/og-image.png" />
       </Helmet>
       <ArticleSchema
         headline={config.title}
