@@ -108,6 +108,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Operations',
     items: [
+      { title: 'Sync Monitor', href: '/old-admin/sync-monitor', icon: BarChart3 },
       { title: 'Import', href: '/old-admin/import', icon: Package },
       { title: 'Enrichment', href: '/old-admin/enrichment', icon: Sparkles },
       { title: 'Filament Scraper', href: '/old-admin/filament-scraper', icon: Wrench },
