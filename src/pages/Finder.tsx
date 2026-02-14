@@ -979,7 +979,7 @@ const Finder = () => {
       {/* Bridge: Discovery → Catalog transition */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Browse All Filaments</h2>
+          <h2 className="text-xl font-semibold text-foreground">Explore the Filament Catalog</h2>
           <p className="text-sm text-muted-foreground mt-1.5">
             Explore {unfilteredProductCount ? `${unfilteredProductCount.toLocaleString()}+` : "1,000+"} filaments from 48+ brands. Filter by material, printer compatibility, price, and more.
           </p>
