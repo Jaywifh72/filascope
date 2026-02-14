@@ -11,12 +11,20 @@ function buildAffiliateUrl(
   storeBaseUrl: string,
   trackingValue: string,
   path: string,
+  sourceValue?: string | null,
   utmCampaign?: string
 ): string {
   let url = linkTemplate
     .replace("{store_url}", storeBaseUrl)
     .replace("{path}", path)
     .replace("{tracking_value}", trackingValue);
+
+  // Handle {source_value} placeholder
+  if (sourceValue) {
+    url = url.replace("{source_value}", sourceValue);
+  } else {
+    url = url.replace(/[?&]source=\{source_value\}/g, "");
+  }
 
   // Determine separator for UTM params
   const separator = url.includes("?") ? "&" : "?";
@@ -86,6 +94,7 @@ Deno.serve(async (req) => {
       program.store_base_url,
       program.tracking_value,
       path,
+      program.source_value,
       utm_campaign
     );
 

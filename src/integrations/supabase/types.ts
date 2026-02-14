@@ -616,6 +616,7 @@ export type Database = {
           cart_persistence_days: number | null
           commission_notes: string | null
           commission_rate: number | null
+          commission_tiers: Json | null
           commission_type: string | null
           cookie_duration_hours: number | null
           created_at: string | null
@@ -630,6 +631,8 @@ export type Database = {
           program_notes: string | null
           referral_handle: string | null
           region_code: string
+          source_parameter: string | null
+          source_value: string | null
           status_notes: string | null
           store_base_url: string
           tracking_parameter: string
@@ -647,6 +650,7 @@ export type Database = {
           cart_persistence_days?: number | null
           commission_notes?: string | null
           commission_rate?: number | null
+          commission_tiers?: Json | null
           commission_type?: string | null
           cookie_duration_hours?: number | null
           created_at?: string | null
@@ -661,6 +665,8 @@ export type Database = {
           program_notes?: string | null
           referral_handle?: string | null
           region_code: string
+          source_parameter?: string | null
+          source_value?: string | null
           status_notes?: string | null
           store_base_url: string
           tracking_parameter: string
@@ -678,6 +684,7 @@ export type Database = {
           cart_persistence_days?: number | null
           commission_notes?: string | null
           commission_rate?: number | null
+          commission_tiers?: Json | null
           commission_type?: string | null
           cookie_duration_hours?: number | null
           created_at?: string | null
@@ -692,6 +699,8 @@ export type Database = {
           program_notes?: string | null
           referral_handle?: string | null
           region_code?: string
+          source_parameter?: string | null
+          source_value?: string | null
           status_notes?: string | null
           store_base_url?: string
           tracking_parameter?: string

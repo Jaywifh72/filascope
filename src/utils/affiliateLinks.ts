@@ -56,6 +56,14 @@ export function buildAffiliateLinkLocal(
     .replace("{path}", path)
     .replace("{tracking_value}", program.tracking_value);
 
+  // Handle {source_value} placeholder
+  if (program.source_value) {
+    url = url.replace("{source_value}", program.source_value);
+  } else {
+    // Remove &source={source_value} or ?source={source_value} if no source_value
+    url = url.replace(/[?&]source=\{source_value\}/g, "");
+  }
+
   const separator = url.includes("?") ? "&" : "?";
   url += `${separator}utm_source=filascope&utm_medium=affiliate`;
 

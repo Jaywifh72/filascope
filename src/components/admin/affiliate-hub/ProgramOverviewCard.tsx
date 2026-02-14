@@ -3,9 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, ExternalLink, Pencil, FlaskConical } from "lucide-react";
+import { Copy, ExternalLink, Pencil, FlaskConical, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
-import type { AffiliateProgram } from "@/types/affiliate";
+import type { AffiliateProgram, CommissionTier } from "@/types/affiliate";
 import { buildAffiliateLinkLocal } from "@/utils/affiliateLinks";
 
 const statusColors: Record<string, string> = {
@@ -22,7 +22,9 @@ interface ProgramOverviewCardProps {
 
 export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProps) {
   const [testLink, setTestLink] = useState("");
+  const [tiersOpen, setTiersOpen] = useState(false);
 
+  const tiers = program.commission_tiers as CommissionTier[] | null;
   const handleTestLink = () => {
     const url = buildAffiliateLinkLocal(program, "/products/test-product");
     setTestLink(url);
@@ -57,7 +59,11 @@ export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProp
       {/* Two-column grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
         <InfoRow label="Affiliate Network" value={program.affiliate_network} />
-        <InfoRow label="Commission" value={program.commission_rate ? `${program.commission_rate}% ${program.commission_type || ""}` : "—"} />
+        <InfoRow label="Commission" value={
+          tiers && tiers.length > 0
+            ? `${Math.min(...tiers.map(t => t.rate))}% – ${Math.max(...tiers.map(t => t.rate))}% tiered`
+            : program.commission_rate ? `${program.commission_rate}% ${program.commission_type || ""}` : "—"
+        } />
         <InfoRow label="Affiliate ID" value={program.affiliate_id} mono />
         <InfoRow label="Cookie Duration" value={program.cookie_duration_hours ? `${program.cookie_duration_hours}h` : "—"} />
         <InfoRow label="Referral Handle" value={program.referral_handle} mono />
@@ -81,6 +87,41 @@ export function ProgramOverviewCard({ program, onEdit }: ProgramOverviewCardProp
         </div>
         <InfoRow label="Deep Linking" value={program.deep_linking_supported ? "Yes" : "No"} />
       </div>
+
+      {/* Commission Tiers */}
+      {tiers && tiers.length > 0 && (
+        <div className="space-y-2">
+          <button
+            onClick={() => setTiersOpen(!tiersOpen)}
+            className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+          >
+            {tiersOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {tiersOpen ? "Hide" : "View"} commission tiers
+          </button>
+          {tiersOpen && (
+            <div className="rounded-md border border-border overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-muted/50 text-muted-foreground">
+                    <th className="px-3 py-1.5 text-left font-medium">Stage</th>
+                    <th className="px-3 py-1.5 text-left font-medium">Rate</th>
+                    <th className="px-3 py-1.5 text-left font-medium">Monthly Sales Range</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tiers.map((tier) => (
+                    <tr key={tier.stage} className="border-t border-border">
+                      <td className="px-3 py-1.5 text-foreground">{tier.stage}</td>
+                      <td className="px-3 py-1.5 font-mono text-foreground">{tier.rate}%</td>
+                      <td className="px-3 py-1.5 text-muted-foreground">{tier.label}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Link template */}
       <div>

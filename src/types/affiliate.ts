@@ -26,8 +26,20 @@ export interface AffiliateProgram {
   status_notes: string | null;
   is_active: boolean | null;
   program_notes: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  commission_tiers: CommissionTier[] | any | null;
+  source_parameter: string | null;
+  source_value: string | null;
   created_at: string | null;
   updated_at: string | null;
+}
+
+export interface CommissionTier {
+  stage: number;
+  rate: number;
+  min_sales: number;
+  max_sales: number | null;
+  label: string;
 }
 
 export interface AffiliateDiscountCode {
