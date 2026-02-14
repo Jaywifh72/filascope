@@ -55,6 +55,14 @@ interface ScrapeError {
   created_at: string;
 }
 
+interface RegionSyncDetail {
+  updated?: number;
+  created?: number;
+  errors?: number;
+  skipped?: number;
+  reason?: string;
+}
+
 interface BrandSyncLog {
   id: string;
   brand_slug: string;
@@ -68,6 +76,10 @@ interface BrandSyncLog {
   price_changes: number | null;
   sync_type: string;
   triggered_by: string | null;
+  region_code: string | null;
+  regions_synced: string[] | null;
+  products_processed: Record<string, unknown>[] | null;
+  success_details: Record<string, unknown> | null;
 }
 
 interface StaleProduct {
@@ -121,6 +133,8 @@ export function SyncMonitorContent() {
   const [isTriggering, setIsTriggering] = useState(false);
   const [expandedRun, setExpandedRun] = useState<string | null>(null);
   const [errorFilters, setErrorFilters] = useState({ brand: '', type: '', region: '' });
+  const [historyRegionFilter, setHistoryRegionFilter] = useState('');
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [syncBrandSlug, setSyncBrandSlug] = useState('');
   const [syncProductSearch, setSyncProductSearch] = useState('');
   const [countdown, setCountdown] = useState('');
@@ -147,7 +161,7 @@ export function SyncMonitorContent() {
     queryFn: async () => {
       const { data } = await supabase
         .from('brand_sync_logs')
-        .select('id, brand_slug, started_at, completed_at, status, products_updated, products_created, products_failed, duration_seconds, price_changes, sync_type, triggered_by')
+        .select('id, brand_slug, started_at, completed_at, status, products_updated, products_created, products_failed, duration_seconds, price_changes, sync_type, triggered_by, region_code, regions_synced, products_processed, success_details')
         .order('started_at', { ascending: false })
         .limit(100);
       return (data || []) as BrandSyncLog[];
@@ -424,6 +438,84 @@ export function SyncMonitorContent() {
   // Determine which data source to show in Sync History
   const hasOrchestrationData = runs.length > 0;
 
+  // Region flags for display
+  const REGION_FLAGS: Record<string, { flag: string; name: string }> = {
+    US: { flag: '🇺🇸', name: 'United States' },
+    CA: { flag: '🇨🇦', name: 'Canada' },
+    EU: { flag: '🇪🇺', name: 'Europe' },
+    UK: { flag: '🇬🇧', name: 'United Kingdom' },
+    AU: { flag: '🇦🇺', name: 'Australia' },
+    JP: { flag: '🇯🇵', name: 'Japan' },
+    CN: { flag: '🇨🇳', name: 'China' },
+  };
+  const ALL_REGIONS = ['US', 'CA', 'EU', 'UK', 'AU', 'JP'];
+
+  // Extract region details from a sync log's products_processed or success_details
+  const getRegionBreakdown = useCallback((log: BrandSyncLog): Record<string, RegionSyncDetail> => {
+    // Try success_details first (structured regional data)
+    if (log.success_details) {
+      const details = log.success_details as Record<string, unknown>;
+      // Check if it has region keys directly
+      const regionKeys = Object.keys(details).filter(k => ALL_REGIONS.includes(k));
+      if (regionKeys.length > 0) {
+        const result: Record<string, RegionSyncDetail> = {};
+        regionKeys.forEach(r => {
+          const rd = details[r] as Record<string, unknown> | undefined;
+          result[r] = {
+            updated: (rd?.updated as number) || (rd?.products_updated as number) || 0,
+            created: (rd?.created as number) || 0,
+            errors: (rd?.errors as number) || (rd?.failed as number) || 0,
+            skipped: (rd?.skipped as number) || 0,
+            reason: rd?.reason as string | undefined,
+          };
+        });
+        return result;
+      }
+    }
+
+    // Try products_processed array - group by region
+    if (log.products_processed && Array.isArray(log.products_processed)) {
+      const result: Record<string, RegionSyncDetail> = {};
+      (log.products_processed as Record<string, unknown>[]).forEach(p => {
+        const region = (p.region as string) || 'US';
+        if (!result[region]) result[region] = { updated: 0, created: 0, errors: 0 };
+        const action = p.action as string;
+        if (action === 'updated') result[region].updated = (result[region].updated || 0) + 1;
+        else if (action === 'created') result[region].created = (result[region].created || 0) + 1;
+        else if (action === 'error') result[region].errors = (result[region].errors || 0) + 1;
+      });
+      return result;
+    }
+
+    // Fallback: use regions_synced array + totals
+    if (log.regions_synced?.length) {
+      const result: Record<string, RegionSyncDetail> = {};
+      const perRegion = Math.ceil((log.products_updated || 0) / log.regions_synced.length);
+      log.regions_synced.forEach(r => {
+        result[r] = { updated: perRegion, errors: 0 };
+      });
+      return result;
+    }
+
+    // Single region fallback
+    if (log.region_code) {
+      return { [log.region_code]: { updated: log.products_updated || 0, created: log.products_created || 0, errors: log.products_failed || 0 } };
+    }
+
+    return {};
+  }, []);
+
+  // Filter sync logs by region
+  const filteredSyncLogs = useMemo(() => {
+    if (!historyRegionFilter) return syncLogs;
+    return syncLogs.filter(log => {
+      if (log.regions_synced?.includes(historyRegionFilter)) return true;
+      if (log.region_code === historyRegionFilter) return true;
+      const breakdown = getRegionBreakdown(log);
+      return historyRegionFilter in breakdown;
+    });
+  }, [syncLogs, historyRegionFilter, getRegionBreakdown]);
+
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -534,35 +626,47 @@ export function SyncMonitorContent() {
           {/* ── Tab B: Sync History ──────────────────────────────────────── */}
           <TabsContent value="history">
             <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">
-                    {hasOrchestrationData ? 'Orchestration Runs' : 'Brand Sync History'}
-                  </CardTitle>
-                  {!hasOrchestrationData && (
-                    <CardDescription className="text-xs">
-                      Showing individual brand syncs (no orchestration runs yet)
-                    </CardDescription>
-                  )}
+              <CardHeader className="pb-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">
+                      {hasOrchestrationData ? 'Orchestration Runs' : 'Brand Sync History'}
+                    </CardTitle>
+                    {!hasOrchestrationData && (
+                      <CardDescription className="text-xs">
+                        Showing individual brand syncs with regional breakdown
+                      </CardDescription>
+                    )}
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <Select value={historyRegionFilter} onValueChange={v => setHistoryRegionFilter(v === 'all' ? '' : v)}>
+                      <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="All Regions" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Regions</SelectItem>
+                        {ALL_REGIONS.map(r => (
+                          <SelectItem key={r} value={r}>{REGION_FLAGS[r]?.flag} {REGION_FLAGS[r]?.name || r}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      if (hasOrchestrationData) {
+                        downloadCSV(runs.map(r => ({
+                          started: r.started_at, status: r.status,
+                          brands_synced: r.brands_synced, products: r.total_products_updated,
+                          trigger: r.trigger_type,
+                        })), 'sync-history');
+                      } else {
+                        downloadCSV(filteredSyncLogs.map(l => ({
+                          started: l.started_at, brand: l.brand_slug, status: l.status,
+                          products_updated: l.products_updated || 0, regions: (l.regions_synced || []).join(','),
+                          duration_seconds: l.duration_seconds || 0, type: l.sync_type,
+                        })), 'sync-history');
+                      }
+                    }}>
+                      <Download className="w-4 h-4 mr-1" /> CSV
+                    </Button>
+                  </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => {
-                  if (hasOrchestrationData) {
-                    downloadCSV(runs.map(r => ({
-                      started: r.started_at, status: r.status,
-                      brands_synced: r.brands_synced, products: r.total_products_updated,
-                      trigger: r.trigger_type,
-                    })), 'sync-history');
-                  } else {
-                    downloadCSV(syncLogs.map(l => ({
-                      started: l.started_at, brand: l.brand_slug, status: l.status,
-                      products_updated: l.products_updated || 0,
-                      duration_seconds: l.duration_seconds || 0,
-                      type: l.sync_type,
-                    })), 'sync-history');
-                  }
-                }}>
-                  <Download className="w-4 h-4 mr-1" /> CSV
-                </Button>
               </CardHeader>
               <CardContent>
                 {hasOrchestrationData ? (
@@ -617,7 +721,7 @@ export function SyncMonitorContent() {
                                     ))}
                                   </div>
                                   {run.brands_failed.length > 0 && (
-                                    <p className="text-xs text-red-400 mt-2">Failed: {run.brands_failed.join(', ')}</p>
+                                    <p className="text-xs text-destructive mt-2">Failed: {run.brands_failed.join(', ')}</p>
                                   )}
                                 </TableCell>
                               </TableRow>
@@ -628,41 +732,181 @@ export function SyncMonitorContent() {
                     </TableBody>
                   </Table>
                 ) : (
-                  /* Fallback: brand_sync_logs table */
+                  /* Brand sync logs table with regional breakdown */
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-8" />
                         <TableHead>Started</TableHead>
                         <TableHead>Brand</TableHead>
                         <TableHead>Duration</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Updated</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Failed</TableHead>
+                        <TableHead>Regions</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
                         <TableHead>Type</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {syncLogs.map(log => (
-                        <TableRow key={log.id}>
-                          <TableCell className="text-xs whitespace-nowrap">
-                            {format(new Date(log.started_at), 'MMM d, HH:mm')}
-                          </TableCell>
-                          <TableCell className="text-xs font-medium">{log.brand_slug}</TableCell>
-                          <TableCell className="text-xs font-mono">
-                            {log.duration_seconds ? `${Math.round(log.duration_seconds)}s` : '—'}
-                          </TableCell>
-                          <TableCell><StatusBadge status={log.status} /></TableCell>
-                          <TableCell className="text-xs font-mono">{log.products_updated || 0}</TableCell>
-                          <TableCell className="text-xs font-mono">{log.products_created || 0}</TableCell>
-                          <TableCell className="text-xs font-mono text-red-400">{log.products_failed || 0}</TableCell>
-                          <TableCell className="text-xs capitalize">{log.sync_type}</TableCell>
-                        </TableRow>
-                      ))}
-                      {syncLogs.length === 0 && (
+                      {filteredSyncLogs.map(log => {
+                        const breakdown = getRegionBreakdown(log);
+                        const hasBreakdown = Object.keys(breakdown).length > 0;
+                        const isExpanded = expandedLogId === log.id;
+                        const totalUpdated = (log.products_updated || 0) + (log.products_created || 0);
+
+                        return (
+                          <>
+                            <TableRow
+                              key={log.id}
+                              className={hasBreakdown ? 'cursor-pointer' : ''}
+                              onClick={() => hasBreakdown && setExpandedLogId(isExpanded ? null : log.id)}
+                            >
+                              <TableCell className="px-2">
+                                {hasBreakdown ? (
+                                  isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+                                ) : <span className="w-4 h-4 block" />}
+                              </TableCell>
+                              <TableCell className="text-xs whitespace-nowrap">
+                                {format(new Date(log.started_at), 'MMM d, HH:mm')}
+                              </TableCell>
+                              <TableCell className="text-xs font-medium">{log.brand_slug}</TableCell>
+                              <TableCell className="text-xs font-mono">
+                                {log.duration_seconds ? `${Math.round(log.duration_seconds)}s` : '—'}
+                              </TableCell>
+                              <TableCell><StatusBadge status={log.status} /></TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {hasBreakdown ? (
+                                    ALL_REGIONS.filter(r => r in breakdown || (log.regions_synced || []).includes(r)).map(r => {
+                                      const detail = breakdown[r];
+                                      const totalForRegion = (detail?.updated || 0) + (detail?.created || 0);
+                                      const hasErrors = (detail?.errors || 0) > 0;
+                                      const notAvail = detail?.reason === 'not_available' || (totalForRegion === 0 && !hasErrors);
+                                      return (
+                                        <span
+                                          key={r}
+                                          className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border ${
+                                            notAvail
+                                              ? 'bg-muted/50 text-muted-foreground border-border/30'
+                                              : hasErrors && totalForRegion === 0
+                                                ? 'bg-destructive/10 text-destructive border-destructive/30'
+                                                : hasErrors
+                                                  ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'
+                                                  : 'bg-green-500/10 text-green-500 border-green-500/30'
+                                          }`}
+                                          title={`${REGION_FLAGS[r]?.name}: ${totalForRegion} synced, ${detail?.errors || 0} errors`}
+                                        >
+                                          <span>{REGION_FLAGS[r]?.flag}</span>
+                                          {notAvail ? (
+                                            <span>✗</span>
+                                          ) : hasErrors && totalForRegion === 0 ? (
+                                            <span>✗</span>
+                                          ) : hasErrors ? (
+                                            <span>⚠</span>
+                                          ) : (
+                                            <span>✓</span>
+                                          )}
+                                        </span>
+                                      );
+                                    })
+                                  ) : log.region_code ? (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border bg-green-500/10 text-green-500 border-green-500/30">
+                                      <span>{REGION_FLAGS[log.region_code]?.flag || '🌐'}</span>
+                                      <span>✓</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">—</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs font-mono text-right">{totalUpdated}</TableCell>
+                              <TableCell className="text-xs capitalize">{log.sync_type}</TableCell>
+                            </TableRow>
+
+                            {/* Expanded regional detail row */}
+                            {isExpanded && hasBreakdown && (
+                              <TableRow key={`${log.id}-detail`}>
+                                <TableCell colSpan={8} className="bg-muted/30 px-4 py-3">
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Regional Sync Details</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                      {ALL_REGIONS.map((r, idx) => {
+                                        const detail = breakdown[r];
+                                        const totalForRegion = (detail?.updated || 0) + (detail?.created || 0);
+                                        const hasErrors = (detail?.errors || 0) > 0;
+                                        const notAvail = !detail || detail.reason === 'not_available';
+                                        const isLast = idx === ALL_REGIONS.length - 1;
+
+                                        return (
+                                          <div
+                                            key={r}
+                                            className={`flex items-start gap-2 p-2 rounded border text-xs ${
+                                              notAvail
+                                                ? 'bg-muted/30 border-border/30 text-muted-foreground'
+                                                : hasErrors
+                                                  ? 'bg-yellow-500/5 border-yellow-500/20'
+                                                  : 'bg-green-500/5 border-green-500/20'
+                                            }`}
+                                          >
+                                            <span className="text-base leading-none mt-0.5">{REGION_FLAGS[r]?.flag || '🌐'}</span>
+                                            <div className="flex-1 min-w-0">
+                                              <span className="font-medium">{REGION_FLAGS[r]?.name || r} ({r})</span>
+                                              {notAvail ? (
+                                                <p className="text-muted-foreground">Not available</p>
+                                              ) : (
+                                                <div className="space-y-0.5">
+                                                  {(detail?.updated || 0) > 0 && (
+                                                    <p className="text-green-500">{detail!.updated} updated</p>
+                                                  )}
+                                                  {(detail?.created || 0) > 0 && (
+                                                    <p className="text-blue-500">{detail!.created} created</p>
+                                                  )}
+                                                  {(detail?.skipped || 0) > 0 && (
+                                                    <p className="text-muted-foreground">{detail!.skipped} skipped</p>
+                                                  )}
+                                                  {(detail?.errors || 0) > 0 && (
+                                                    <p className="text-destructive">{detail!.errors} errors</p>
+                                                  )}
+                                                  {totalForRegion === 0 && !hasErrors && (
+                                                    <p className="text-muted-foreground">0 products</p>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* Error details from products_processed */}
+                                    {log.products_processed && Array.isArray(log.products_processed) && (() => {
+                                      const errors = (log.products_processed as Record<string, unknown>[])
+                                        .filter(p => p.action === 'error');
+                                      if (errors.length === 0) return null;
+                                      return (
+                                        <div className="mt-2 space-y-1">
+                                          <p className="text-xs font-medium text-destructive">Errors:</p>
+                                          {errors.slice(0, 5).map((err, i) => (
+                                            <p key={i} className="text-xs text-muted-foreground pl-3">
+                                              • {(err.title as string) || (err.productId as string) || 'Unknown'} failed in {(err.region as string) || '?'}{err.reason ? ` (${err.reason})` : ''}
+                                            </p>
+                                          ))}
+                                          {errors.length > 5 && (
+                                            <p className="text-xs text-muted-foreground pl-3">…and {errors.length - 5} more</p>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </>
+                        );
+                      })}
+                      {filteredSyncLogs.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                            No sync logs found
+                            {historyRegionFilter ? `No syncs found for ${REGION_FLAGS[historyRegionFilter]?.name || historyRegionFilter}` : 'No sync logs found'}
                           </TableCell>
                         </TableRow>
                       )}
