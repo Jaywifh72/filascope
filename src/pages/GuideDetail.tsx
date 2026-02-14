@@ -13,9 +13,11 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Helmet } from 'react-helmet-async';
 import { GUIDES, type GuideMetadata } from './LearningCenter';
 import { GuideRelatedProducts, GuideReadNext } from '@/components/guides/GuideComponents';
 import { BUYING_GUIDE_SLUGS } from '@/components/guides/guideConfigs';
+import { ArticleSchema } from '@/components/seo/ArticleSchema';
 
 // Guide content components - will be imported dynamically
 import GuidePLAvsPETGvsABS from '@/components/guides/content/GuidePLAvsPETGvsABS';
@@ -197,8 +199,26 @@ function GuideDetailContent({ slug }: { slug: string | undefined }) {
 
   const categoryConfig = getCategoryConfig(guide.category);
 
+  const guideDescription = guide.description.length > 160
+    ? guide.description.substring(0, 157) + '...'
+    : guide.description;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <Helmet>
+        <title>{`${guide.title} | FilaScope`}</title>
+        <meta name="description" content={guideDescription} />
+        <meta property="og:title" content={`${guide.title} | FilaScope`} />
+        <meta property="og:description" content={guideDescription} />
+        <meta property="og:type" content="article" />
+        <link rel="canonical" href={`https://filascope.com/learn/${slug}`} />
+      </Helmet>
+      <ArticleSchema
+        headline={guide.title}
+        description={guideDescription}
+        datePublished={guide.publishedAt}
+        url={`/learn/${slug}`}
+      />
       {/* Header */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">

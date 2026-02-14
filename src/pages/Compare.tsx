@@ -403,8 +403,10 @@ const Compare = () => {
   return (
     <>
       <Helmet>
-        <title>Material Knowledge Base — Filament Reference & Comparison | FilaScope</title>
-        <meta name="description" content="Compare 3D printing filaments side by side. Analyze material properties, pricing, scores, and specifications with our interactive comparison tool." />
+        <title>Compare 3D Filaments Side-by-Side | FilaScope</title>
+        <meta name="description" content="Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices." />
+        <meta property="og:title" content="Compare 3D Filaments Side-by-Side | FilaScope" />
+        <meta property="og:description" content="Compare 3D printer filaments side by side. Specs, prices, TD values, printer compatibility & material properties. Make data-driven filament choices." />
       </Helmet>
       <div className="min-h-screen bg-background relative">
       {/* Subtle background pattern matching site design */}

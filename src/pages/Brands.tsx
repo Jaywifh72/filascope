@@ -375,9 +375,10 @@ const Brands = () => {
   return (
     <>
       <Helmet>
-        <title>Filament Brand Directory — Trusted 3D Printing Brands | FilaScope</title>
-        <meta name="description" content={`Explore ${brandCount || 48} 3D printing filament brands with ${totalProducts.toLocaleString()}+ products. Compare product lines, materials, pricing, and verified data on FilaScope.`} />
-        <meta property="og:description" content={`Explore ${brandCount || 48} 3D printing filament brands with ${totalProducts.toLocaleString()}+ products. Compare product lines, materials, pricing, and verified data on FilaScope.`} />
+        <title>{`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`}</title>
+        <meta name="description" content={`Compare ${brandCount || 48}+ 3D filament brands. Browse manufacturers like Bambu Lab, Polymaker, eSUN & more. Prices, material ranges, reviews & verified partner status.`} />
+        <meta property="og:title" content={`3D Filament Brands — Compare ${brandCount || 48}+ Manufacturers | FilaScope`} />
+        <meta property="og:description" content={`Compare ${brandCount || 48}+ 3D filament brands. Browse manufacturers like Bambu Lab, Polymaker, eSUN & more. Prices, material ranges, reviews & verified partner status.`} />
       </Helmet>
       <div className="min-h-screen">
       {/* JSON-LD Structured Data */}

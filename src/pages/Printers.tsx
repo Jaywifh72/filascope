@@ -639,9 +639,10 @@ export default function Printers() {
   return (
     <>
       <Helmet>
-        <title>3D Printer Comparison — Compare FDM & Resin Printers | FilaScope</title>
-        <meta name="description" content={`Compare ${printers?.length || 118} FDM 3D printers by build volume, speed, price, and features. Find the best printer for your budget at FilaScope.`} />
-        <meta property="og:description" content={`Compare ${printers?.length || 118} FDM 3D printers by build volume, speed, price, and features. Find the best printer for your budget at FilaScope.`} />
+        <title>3D Printer Database — Specs, Filament Compatibility | FilaScope</title>
+        <meta name="description" content={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`} />
+        <meta property="og:title" content="3D Printer Database — Specs, Filament Compatibility | FilaScope" />
+        <meta property="og:description" content={`Browse ${printers?.length || 118}+ 3D printers with detailed specs. Check filament compatibility, temperature ranges, build volumes & find the perfect printer for your materials.`} />
       </Helmet>
       <div className="min-h-screen bg-background pb-16">
       {/* Hero Section */}

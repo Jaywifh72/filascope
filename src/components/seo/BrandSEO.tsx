@@ -8,6 +8,7 @@ interface BrandSEOProps {
   productCount?: number;
   materials?: string[];
   rating?: number | null;
+  priceRange?: { low: string; high: string } | null;
 }
 
 export function BrandSEO({
@@ -18,6 +19,7 @@ export function BrandSEO({
   productCount,
   materials = [],
   rating,
+  priceRange,
 }: BrandSEOProps) {
   // Build SEO-optimized title — avoid "Filaments Filaments" for brands like "Spectrum Filaments"
   const nameHasFilaments = /filaments?/i.test(brandName);
@@ -25,12 +27,12 @@ export function BrandSEO({
     ? `${brandName} — Prices, Reviews & Specs | FilaScope`
     : `${brandName} Filaments — Prices, Reviews & Specs | FilaScope`;
 
-  // Build meta description — template: "[Brand] filaments — [X] products across [Y] material types. Compare specs, pricing, and availability on FilaScope."
-  const materialList = materials.slice(0, 3).join(', ');
+  // Build meta description with price range when available
+  const priceStr = priceRange ? ` Prices from $${priceRange.low}–$${priceRange.high}.` : '';
   const defaultDesc = productCount && materials.length > 0
-    ? `${brandName} filaments — ${productCount} products across ${materials.length} material types. Live pricing, specs, and compatibility data on FilaScope.`
+    ? `Explore ${productCount} ${brandName} filaments across ${materials.length} materials.${priceStr} Compare specs, check printer compatibility & find deals.`
     : productCount 
-      ? `${brandName} filaments — ${productCount} products including ${materialList || 'PLA, PETG, ABS'}. Live pricing, specs, and compatibility data on FilaScope.`
+      ? `Explore ${productCount} ${brandName} filaments.${priceStr} Compare specs, check printer compatibility & find deals on FilaScope.`
       : `Browse ${brandName} 3D printing filaments. Compare prices, specifications, and availability on FilaScope.`;
   
   const seoDescription = (description || defaultDesc).length > 160 
@@ -65,7 +67,7 @@ export function BrandSEO({
       {image && <meta property="twitter:image" content={image} />}
 
       {/* Brand-specific meta */}
-      <meta name="keywords" content={`${brandName} filament, ${brandName} PLA, ${brandName} PETG, ${materialList}, 3D printing, filament reviews, filament prices`} />
+      <meta name="keywords" content={`${brandName} filament, ${brandName} PLA, ${brandName} PETG, ${materials.slice(0, 3).join(', ')}, 3D printing, filament reviews, filament prices`} />
       
       {/* Rating if available */}
       {rating && rating > 0 && (
