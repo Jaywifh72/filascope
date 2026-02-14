@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Handshake, Plus } from "lucide-react";
 import { useAffiliatePrograms } from "@/hooks/useAffiliatePrograms";
 import { AffiliateSummaryStats } from "@/components/admin/affiliate-hub/AffiliateSummaryStats";
@@ -28,6 +30,9 @@ const AdminAffiliateHub = () => {
 
   return (
     <AdminLayout>
+      <Helmet>
+        <title>Affiliate Hub — Filascope Admin</title>
+      </Helmet>
       <div className="p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <AdminPageHeader
@@ -56,9 +61,18 @@ const AdminAffiliateHub = () => {
                   {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
                 </div>
               ) : grouped.length === 0 ? (
-                <p className="text-muted-foreground text-center py-12">
-                  No affiliate programs configured yet. Click "Add Program" to get started.
-                </p>
+                <EmptyState
+                  icon={Handshake}
+                  title="No Affiliate Programs Yet"
+                  message="Get started by adding your first affiliate program. You can configure brand-direct links, discount codes, and campaigns."
+                  action={{
+                    label: "Add Your First Program",
+                    icon: Plus,
+                    onClick: () => setCreateOpen(true),
+                    variant: "default",
+                  }}
+                  size="lg"
+                />
               ) : (
                 <Accordion type="multiple" className="space-y-2">
                   {grouped.map(([brandName, progs]) => (

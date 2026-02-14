@@ -238,7 +238,7 @@ export function ClickAnalyticsTab() {
           <CardHeader className="pb-2"><CardTitle className="text-sm">Clicks Over Time</CardTitle></CardHeader>
           <CardContent>
             {dailyLoading ? <Skeleton className="h-64 w-full" /> : lineChartData.length === 0 ? (
-              <p className="text-muted-foreground text-center py-16 text-sm">No click data for this period</p>
+              <p className="text-muted-foreground text-center py-16 text-sm">No click data yet. Clicks will appear here once users start clicking affiliate links on the site.</p>
             ) : (
               <LazyChartWrapper height={260}>
                 <Suspense fallback={<Skeleton className="h-64 w-full" />}>
@@ -360,7 +360,7 @@ export function ClickAnalyticsTab() {
           {recentLoading ? (
             <div className="space-y-2">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
           ) : !recentData?.clicks.length ? (
-            <p className="text-muted-foreground text-center py-8 text-sm">No clicks found for the selected filters</p>
+            <p className="text-muted-foreground text-center py-8 text-sm">No click data yet. Clicks will appear here once users start clicking affiliate links on the site.</p>
           ) : (
             <>
               <Table>
