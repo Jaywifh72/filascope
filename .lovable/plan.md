@@ -1,53 +1,42 @@
 
 
-## Fix Three Affiliate Integration Issues
+## Route All Outbound Buy Links Through affiliate_programs
 
-### Issue 1: Region Fallback for CA-Only Programs
-
-**File**: `src/hooks/useAffiliateLink.ts`
-
-Update the program lookup query (Step 2, lines 50-68) to use a two-step approach:
-
-1. First query with exact region match: `.ilike("brand_name", resolvedBrandName).eq("region_code", region).eq("is_active", true)`
-2. If no result, run a second query without region filter: `.ilike("brand_name", resolvedBrandName).eq("is_active", true).limit(1)`
-
-This ensures brands like Eryone (CA) and Anycubic (CA) are found for US users.
-
-**File**: `src/components/brands/BrandHeroSection.tsx`
-
-The brand hero also needs the same fallback -- the `useAffiliateLink` hook change covers this automatically since BrandHeroSection already uses the hook.
+This fix ensures that every outbound `<a>` tag uses the new `affiliate_programs` system for its `href`, so even right-click "Open in New Tab" goes to the correct affiliate-tracked URL.
 
 ---
 
-### Issue 2: Static href on Outbound Links
+### Change 1: PrimaryBuyButton.tsx -- Add affiliate link building
 
-After auditing all components, most use `window.open()` in onClick handlers (DealCard, GroupedDealCard, RetailerCard, StorePricingDisplay, HonestPriceDisplay). These are safe since there's no `<a>` href to bypass.
+Add a `vendor` prop. When provided, call `useAffiliateLink(vendor)` to get `buildLink`, `trackAndOpen`, and `hasAffiliate`.
 
-The one component with an actual `<a>` tag using a raw URL is:
+- Compute `builtUrl = useMemo(() => hasAffiliate ? buildLink(url) : url, [hasAffiliate, buildLink, url])`
+- Set `href={builtUrl}` instead of `href={url}`
+- Set `rel` to `"nofollow sponsored noopener noreferrer"` when `hasAffiliate`, otherwise `"noopener noreferrer"`
+- On click: if `hasAffiliate`, call `e.preventDefault()` then `trackAndOpen(url, { productName: retailerName, sourceComponent: 'primary_buy_button' })`. Otherwise, call the existing `onClick` prop.
 
-**File**: `src/components/filament/BestPricesSection.tsx` (line 188)
+### Change 2: BestPricesSection.tsx -- Add affiliate link building
 
-The `<a href={bestRetailer.url}>` uses whatever URL came from the candidates/listings data. This URL may or may not already be an affiliate URL (depends on whether the parent hook built it). Since BestPricesSection receives `candidates[].affiliateUrl` from the parent pricing hook, the `bestRetailer.url` is already set to `c.affiliateUrl || c.productUrl` (line 74). However, if `affiliateUrl` is null (no program found), the raw URL leaks through.
+Add a `vendor` prop (optional string). When provided, call `useAffiliateLink(vendor)`.
 
-Fix: Add `rel="nofollow sponsored noopener noreferrer"` to this `<a>` tag. The URL is already the best available (affiliate if exists, raw if not), so the main fix here is the `rel` attribute.
+- Compute `builtUrl` from `buildLink(bestRetailer.url)` when affiliate exists
+- Update the "Buy Now" `<a>` tag's `href` to use `builtUrl`
+- Add `onClick` handler with `e.preventDefault()` + `trackAndOpen()` for click tracking
+- The `rel` attribute is already correct
 
-**File**: `src/components/brands/BrandHeroSection.tsx` (line 152-162)
+### Change 3: PurchaseSection.tsx -- Pass vendor to PrimaryBuyButton
 
-There's a secondary `<a>` tag at lines 152-162 that links directly to the brand website without going through the affiliate system. This is the small "Website" link next to location/founded info. It should also use `buildLink` and have `rel="nofollow sponsored noopener noreferrer"` when an affiliate program exists.
+The component already has `filament.vendor`. Pass it as a prop:
+```
+<PrimaryBuyButton vendor={filament.vendor} ... />
+```
 
-Also update the `rel` attribute on the main "Visit Website" button's click handler (line 217) to include "sponsored" -- though since it uses `window.open`, the `rel` is set via the third argument which is already `noopener,noreferrer`. The `sponsored` attribute only applies to `<a>` tags for SEO purposes.
+### Change 4: OverviewTabContent.tsx -- Pass vendor to BestPricesSection
 
----
-
-### Issue 3: Fix Link Verification Test
-
-**File**: `src/components/admin/affiliate-hub/brand-mapping/LinkVerificationTest.tsx`
-
-The tool already tests all vendors and sorts matched first (line 121). The issue described ("shows 0 matched") is because the region-locked query (`.eq("region_code", regionCode)`) fails for CA-only brands when the admin's region is US.
-
-Fix: Add the same region fallback to the `resolveAndTest` function (lines 50-58): try exact region first, then fall back to any active program for the brand. This will make Eryone and Anycubic show as green checks instead of red X's.
-
-Also update the `regionCode` field in the result to show which region was actually matched (e.g., "CA (fallback)") so admins can see when a non-exact match was used.
+The component already has the `filament` object. Pass vendor:
+```
+<BestPricesSection vendor={filament.vendor} ... />
+```
 
 ---
 
@@ -55,18 +44,19 @@ Also update the `regionCode` field in the result to show which region was actual
 
 ```text
 Files to modify:
-  1. src/hooks/useAffiliateLink.ts
-     - Change program lookup queryFn to try exact region, then any region fallback
+  1. src/components/filament/PrimaryBuyButton.tsx
+     - Add vendor prop, useAffiliateLink hook, useMemo for builtUrl
+     - Update href, rel, and onClick handler
      
   2. src/components/filament/BestPricesSection.tsx
-     - Update rel attribute on <a> tag (line 188) to "nofollow sponsored noopener noreferrer"
+     - Add vendor prop, useAffiliateLink hook, useMemo for builtUrl
+     - Update "Buy Now" <a> tag href and add onClick
      
-  3. src/components/brands/BrandHeroSection.tsx
-     - Update small "Website" <a> tag (line 152) to use buildLink + proper rel attribute
-     - Both outbound links should use affiliate tracking
+  3. src/components/filament/PurchaseSection.tsx
+     - Pass vendor={filament.vendor} to PrimaryBuyButton
      
-  4. src/components/admin/affiliate-hub/brand-mapping/LinkVerificationTest.tsx
-     - Add region fallback to resolveAndTest function
-     - Show fallback indicator in results
+  4. src/components/filament/tabs/OverviewTabContent.tsx
+     - Pass vendor={filament.vendor} to BestPricesSection
 ```
 
+No database changes needed. The `useAffiliateLink` hook already handles alias resolution, case-insensitive matching, and region fallback.
