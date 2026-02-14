@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { useRegion } from '@/contexts/RegionContext';
 import { RegionCode, CurrencyCode } from '@/types/regional';
+import { buildOgImageUrl } from '@/lib/ogImageUrl';
 
 interface ProductSEOProps {
   title: string;
@@ -14,6 +15,10 @@ interface ProductSEOProps {
   currency?: CurrencyCode;
   availability?: boolean;
   transmissionDistance?: number | null;
+  /** Hex color code for the filament color (used for OG image accent) */
+  colorHex?: string | null;
+  /** Featured product image URL */
+  featuredImage?: string | null;
   /** Override region for SEO purposes */
   region?: RegionCode;
   /** Product type for category meta */
@@ -93,6 +98,8 @@ export function ProductSEO({
   transmissionDistance,
   region: overrideRegion,
   productType = 'filament',
+  colorHex,
+  featuredImage,
 }: ProductSEOProps) {
   const { region: userRegion, currency: userCurrency, currencyConfig } = useRegion();
   
@@ -130,6 +137,16 @@ export function ProductSEO({
   // Canonical should be without region for SEO consolidation
   const canonicalFullUrl = baseUrl;
 
+  // Build dynamic OG image URL
+  const ogImageUrl = buildOgImageUrl({
+    type: 'product',
+    title: brand ? `${brand} ${title}` : title,
+    subtitle: material || undefined,
+    price: price ? `From $${price}` : undefined,
+    color: colorHex || undefined,
+    image: featuredImage || image || undefined,
+  });
+
   return (
     <Helmet>
       {/* Primary Meta Tags */}
@@ -143,7 +160,7 @@ export function ProductSEO({
       <meta property="og:url" content={fullUrl} />
       <meta property="og:title" content={seoTitle} />
       <meta property="og:description" content={seoDescription} />
-      {image && <meta property="og:image" content={image} />}
+      <meta property="og:image" content={ogImageUrl} />
       <meta property="og:site_name" content="FilaScope" />
       <meta property="og:locale" content={activeRegion === 'UK' ? 'en_GB' : activeRegion === 'AU' ? 'en_AU' : activeRegion === 'CA' ? 'en_CA' : 'en_US'} />
 
@@ -152,7 +169,7 @@ export function ProductSEO({
       <meta property="twitter:url" content={fullUrl} />
       <meta property="twitter:title" content={seoTitle} />
       <meta property="twitter:description" content={seoDescription} />
-      {image && <meta property="twitter:image" content={image} />}
+      <meta property="twitter:image" content={ogImageUrl} />
 
       {/* Product-specific meta */}
       {brand && <meta property="product:brand" content={brand} />}

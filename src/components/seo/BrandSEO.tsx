@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { buildOgImageUrl } from '@/lib/ogImageUrl';
 
 interface BrandSEOProps {
   brandName: string;
@@ -43,6 +44,15 @@ export function BrandSEO({
     ? canonicalUrl 
     : `https://filascope.com${canonicalUrl}`;
 
+  // Build dynamic OG image URL
+  const nameHasFilamentsForOg = /filaments?/i.test(brandName);
+  const ogImageUrl = buildOgImageUrl({
+    type: 'brand',
+    title: nameHasFilamentsForOg ? brandName : `${brandName} Filaments`,
+    subtitle: productCount ? `${productCount} products` : undefined,
+    image: image || undefined,
+  });
+
   return (
     <Helmet>
       {/* Primary Meta Tags */}
@@ -56,7 +66,7 @@ export function BrandSEO({
       <meta property="og:url" content={fullUrl} />
       <meta property="og:title" content={seoTitle} />
       <meta property="og:description" content={seoDescription} />
-      {image && <meta property="og:image" content={image} />}
+      <meta property="og:image" content={ogImageUrl} />
       <meta property="og:site_name" content="FilaScope" />
 
       {/* Twitter */}
@@ -64,7 +74,7 @@ export function BrandSEO({
       <meta property="twitter:url" content={fullUrl} />
       <meta property="twitter:title" content={seoTitle} />
       <meta property="twitter:description" content={seoDescription} />
-      {image && <meta property="twitter:image" content={image} />}
+      <meta property="twitter:image" content={ogImageUrl} />
 
       {/* Brand-specific meta */}
       <meta name="keywords" content={`${brandName} filament, ${brandName} PLA, ${brandName} PETG, ${materials.slice(0, 3).join(', ')}, 3D printing, filament reviews, filament prices`} />
