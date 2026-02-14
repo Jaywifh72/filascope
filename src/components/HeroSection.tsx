@@ -240,10 +240,10 @@ const HeroSection = ({ searchTerm, onSearchChange, filamentCount, productCount, 
               className="animate-fade-in mb-4"
             >
               <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-white">
-                FIND YOUR PERFECT{' '}
+                Find Your Perfect{' '}
               </span>
               <span className="block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] uppercase text-primary">
-                FILAMENT.
+                Filament.
               </span>
             </h1>
             
